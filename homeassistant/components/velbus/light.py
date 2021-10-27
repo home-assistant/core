@@ -30,10 +30,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class VelbusLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
 
+    _attr_supported_feature = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+
     def __init__(self, channel):
         """Initialize the dimmer."""
         super().__init__(channel)
-        self._attr_supported_feature = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
         self._attr_name = self._channel.get_name()
 
     @property
@@ -79,10 +80,12 @@ class VelbusLight(VelbusEntity, LightEntity):
 class VelbusButtonLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
 
+    _attr_entity_registry_enabled_default = False
+    _attr_supported_feature = SUPPORT_FLASH
+
     def __init__(self, channel):
         """Initialize the button light (led)."""
         super().__init__(channel)
-        self._attr_supported_feature = SUPPORT_FLASH
         self._attr_name = f"LED {self._channel.get_name()}"
 
     @property
@@ -112,8 +115,3 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
         """Instruct the velbus light to turn off."""
         attr, *args = "set_led_state", "off"
         await getattr(self._channel, attr)(*args)
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Disable these entities by default."""
-        return False
