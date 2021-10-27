@@ -119,8 +119,8 @@ class ValloxState:
     def get_uuid(self) -> UUID | None:
         """Return cached UUID value."""
         uuid = get_uuid(self.metric_cache)
-        if uuid is None or not isinstance(uuid, UUID):
-            return None
+        if not isinstance(uuid, UUID):
+            raise ValueError
         return uuid
 
 
