@@ -185,6 +185,13 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
 
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        if not self.data_service.site_id:
+            return None
+        return self.data_service.site_id + "_Energy-" + self.entity_description.json_key
+
 
 class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API power flow sensor."""
