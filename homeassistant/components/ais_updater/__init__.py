@@ -82,14 +82,23 @@ def _set_update_status(hass, status):
     attr = state.attributes
     new_attr = attr.copy()
     info = ""
+    progress = 0.5
+    buffer = 0.7
     if status == UPDATE_STATUS_DOWNLOADING:
         info = "Pobieram."
     elif status == UPDATE_STATUS_INSTALLING:
         info = "Instaluje."
     elif status == UPDATE_STATUS_RESTART:
         info = "Restartuje."
+    if ":" in status:
+        full_status = status
+        status = full_status.split(":")[0]
+        progress = full_status.split(":")[1]
+        buffer = full_status.split(":")[2]
     new_attr[ATTR_UPDATE_STATUS] = status
     new_attr[ATTR_UPDATE_CHECK_TIME] = get_current_dt()
+    new_attr["progress"] = progress
+    new_attr["buffer"] = buffer
     hass.states.set(ENTITY_ID, info, new_attr)
 
     # inform about downloading
@@ -603,7 +612,7 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "fix_script": fix_script,
                 ATTR_UPDATE_STATUS: system_status,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
-                "ais_cloud_services_host": ais_global.AIS_HOST
+                "ais_cloud_services_host": ais_global.AIS_HOST,
             },
         )
         if need_to_update and go_to_download:
@@ -872,7 +881,7 @@ def do_fix_scripts_permissions():
         )
     except Exception as e:
         _LOGGER.error("do_fix_scripts_permissions: " + str(e))
-        
+
 
 def do_install_upgrade(hass, call):
     # get the version status from sensor
