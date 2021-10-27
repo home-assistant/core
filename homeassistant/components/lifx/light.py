@@ -465,7 +465,7 @@ class LIFXLight(LightEntity):
             manufacturer="LIFX",
             name=self.name,
         )
-        if model := (_map.get(self.bulb.product) or self.bulb.product) is not None:
+        if (model := (_map.get(self.bulb.product) or self.bulb.product)) is not None:
             info[ATTR_MODEL] = str(model)
         if (version := self.bulb.host_firmware_version) is not None:
             info[ATTR_SW_VERSION] = version
