@@ -3,7 +3,6 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from aurorapy.client import AuroraError
-import pytest
 
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_DEVICE_NAME,
@@ -13,11 +12,8 @@ from homeassistant.components.aurora_abb_powerone.const import (
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
 )
-from homeassistant.components.aurora_abb_powerone.sensor import AuroraSensor
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
-from homeassistant.exceptions import InvalidStateError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -117,36 +113,6 @@ async def test_sensors(hass):
         energy = hass.states.get("sensor.total_energy")
         assert energy
         assert energy.state == "12.35"
-
-
-async def test_sensor_invalid_type(hass):
-    """Test invalid sensor type during setup."""
-    entities = []
-    mock_entry = _mock_config_entry()
-
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.measure",
-        side_effect=_simulated_returns,
-    ):
-        mock_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
-
-        client = hass.data[DOMAIN][mock_entry.unique_id]
-        data = mock_entry.data
-    with pytest.raises(InvalidStateError):
-        entities.append(
-            AuroraSensor(
-                client,
-                data,
-                SensorEntityDescription(
-                    key="wrongsensor",
-                    device_class="gas",
-                    native_unit_of_measurement="mph",
-                    name="WrongSensor",
-                ),
-            )
-        )
 
 
 async def test_sensor_dark(hass):

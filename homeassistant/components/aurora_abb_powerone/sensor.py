@@ -26,9 +26,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.exceptions import InvalidStateError
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 
 from .aurora_device import AuroraDevice
 from .const import DEFAULT_ADDRESS, DOMAIN
@@ -107,12 +105,6 @@ class AuroraSensor(AuroraDevice, SensorEntity):
         """Initialize the sensor."""
         super().__init__(client, data)
         self.entity_description = entity_description
-        if entity_description.key == "totalenergy":
-            self._attr_last_reset = dt_util.utc_from_timestamp(0)
-        elif entity_description.key not in [s.key for s in SENSOR_TYPES]:
-            raise InvalidStateError(
-                f"Unrecognised sensor type  '{entity_description.key}'"
-            )
         self.availableprev = True
 
     def update(self):
