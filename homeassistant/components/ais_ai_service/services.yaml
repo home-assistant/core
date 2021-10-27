@@ -217,3 +217,13 @@ set_context:
 
 welcome_home:
   description: 'Głosowy komunikat powitalny. Akcja wykonywana jest automatycznie podczas uruchomienia systemu.'
+
+ais_setup_component:
+  description: 'Ponowne wczytanie komponentu po uruchmieniu systemu, przydatne, gdy np. podczas uruchamiania nie dało się połączyć z komponentem.'
+  fields:
+    domain:
+      description: 'Domena komponentu'
+      example: 'satel_integra'
+    config:
+      description: 'Konfiguracja'
+        example: 'host: 10.10.10.30'

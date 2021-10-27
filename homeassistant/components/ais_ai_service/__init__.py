@@ -18,6 +18,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant import core
+from homeassistant.setup import async_setup_component
 from homeassistant.components import ais_cloud, ais_drives_service, conversation
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.blueprint import BlueprintInputs
@@ -2297,6 +2298,18 @@ async def async_setup(hass, config):
             conf = intents[intent_type] = []
         conf.extend(_create_matcher(utterance) for utterance in utterances)
 
+    async def async_ais_setup_component(service):
+        # check and reload component if needed
+        domain = service.data["domain"]
+        # for example satel_integra
+        # check if this domain is already setup
+        if domain in hass.config.components:
+            return True
+        ha_config = hass.config
+        result = await async_setup_component(hass, domain, ha_config)
+        _LOGGER.error(str(result))
+
+
     async def process(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
@@ -2918,6 +2931,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "say_it", say_it)
     hass.services.async_register(DOMAIN, "say_in_browser", say_in_browser)
     hass.services.async_register(DOMAIN, "welcome_home", welcome_home)
+    hass.services.async_register(DOMAIN, "ais_setup_component", async_ais_setup_component)
     hass.services.async_register(
         DOMAIN, "publish_command_to_frame", publish_command_to_frame
     )
