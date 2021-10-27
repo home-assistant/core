@@ -3,6 +3,12 @@
 from google_nest_sdm.device import Device
 
 from homeassistant.components.nest.device_info import NestDeviceInfo
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+)
 
 
 def test_device_custom_name():
@@ -25,10 +31,10 @@ def test_device_custom_name():
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
     assert device_info.device_info == {
-        "identifiers": {("nest", "some-device-id")},
-        "name": "My Doorbell",
-        "manufacturer": "Google Nest",
-        "model": "Doorbell",
+        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
+        ATTR_NAME: "My Doorbell",
+        ATTR_MANUFACTURER: "Google Nest",
+        ATTR_MODEL: "Doorbell",
     }
 
 
@@ -50,10 +56,10 @@ def test_device_name_room():
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
     assert device_info.device_info == {
-        "identifiers": {("nest", "some-device-id")},
-        "name": "Some Room",
-        "manufacturer": "Google Nest",
-        "model": "Doorbell",
+        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
+        ATTR_NAME: "Some Room",
+        ATTR_MANUFACTURER: "Google Nest",
+        ATTR_MODEL: "Doorbell",
     }
 
 
@@ -69,10 +75,10 @@ def test_device_no_name():
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
     assert device_info.device_info == {
-        "identifiers": {("nest", "some-device-id")},
-        "name": "Doorbell",
-        "manufacturer": "Google Nest",
-        "model": "Doorbell",
+        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
+        ATTR_NAME: "Doorbell",
+        ATTR_MANUFACTURER: "Google Nest",
+        ATTR_MODEL: "Doorbell",
     }
 
 
@@ -96,8 +102,8 @@ def test_device_invalid_type():
     assert device_info.device_model is None
     assert device_info.device_brand == "Google Nest"
     assert device_info.device_info == {
-        "identifiers": {("nest", "some-device-id")},
-        "name": "My Doorbell",
-        "manufacturer": "Google Nest",
-        "model": None,
+        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
+        ATTR_NAME: "My Doorbell",
+        ATTR_MANUFACTURER: "Google Nest",
+        ATTR_MODEL: None,
     }

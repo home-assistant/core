@@ -255,7 +255,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.2
 
 # homeassistant.components.unifi
-aiounifi==27
+aiounifi==28
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -346,9 +346,6 @@ auroranoaa==0.0.2
 
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.6
-
-# homeassistant.components.stream
-av==8.0.3
 
 # homeassistant.components.avea
 # avea==1.5.1
@@ -766,6 +763,9 @@ gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
 guppy3==3.1.0
+
+# homeassistant.components.stream
+ha-av==8.0.4-rc.1
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.0.2
@@ -2019,7 +2019,7 @@ pyzerproc==0.4.8
 qnapstats==0.4.0
 
 # homeassistant.components.quantum_gateway
-quantum-gateway==0.0.5
+quantum-gateway==0.0.6
 
 # homeassistant.components.rachio
 rachiopy==1.0.3

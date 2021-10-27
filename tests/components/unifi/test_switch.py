@@ -16,7 +16,7 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.components.unifi.switch import POE_SWITCH
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
+from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -282,6 +282,33 @@ DPI_APPS = [
     }
 ]
 
+DPI_GROUP_REMOVED_EVENT = {
+    "meta": {"rc": "ok", "message": "dpigroup:delete"},
+    "data": [
+        {
+            "_id": "5f976f4ae3c58f018ec7dff6",
+            "name": "dpi group",
+            "site_id": "name",
+            "dpiapp_ids": [],
+        }
+    ],
+}
+
+DPI_APP_DISABLED_EVENT = {
+    "meta": {"rc": "ok", "message": "dpiapp:sync"},
+    "data": [
+        {
+            "_id": "5f976f62e3c58f018ec7e17d",
+            "apps": [],
+            "blocked": False,
+            "cats": [],
+            "enabled": False,
+            "log": False,
+            "site_id": "name",
+        }
+    ],
+}
+
 
 async def test_no_clients(hass, aioclient_mock):
     """Test the update_clients function when no clients are found."""
@@ -444,15 +471,15 @@ async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
         options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
         clients_response=[CLIENT_1, UNBLOCKED],
         devices_response=[DEVICE_1],
+        dpigroup_response=DPI_GROUPS,
+        dpiapp_response=DPI_APPS,
     )
 
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 3
 
-    poe_switch = hass.states.get("switch.poe_client_1")
-    assert poe_switch is not None
-
-    block_switch = hass.states.get("switch.block_client_2")
-    assert block_switch is not None
+    assert hass.states.get("switch.poe_client_1") is not None
+    assert hass.states.get("switch.block_client_2") is not None
+    assert hass.states.get("switch.block_media_streaming") is not None
 
     mock_unifi_websocket(
         data={
@@ -462,13 +489,18 @@ async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
     )
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    assert hass.states.get("switch.poe_client_1") is None
+    assert hass.states.get("switch.block_client_2") is None
+    assert hass.states.get("switch.block_media_streaming") is not None
+
+    mock_unifi_websocket(data=DPI_GROUP_REMOVED_EVENT)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.block_media_streaming") is None
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
-
-    poe_switch = hass.states.get("switch.poe_client_1")
-    assert poe_switch is None
-
-    block_switch = hass.states.get("switch.block_client_2")
-    assert block_switch is None
 
 
 async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
@@ -543,6 +575,28 @@ async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
         "mac": "00:00:00:00:01:01",
         "cmd": "unblock-sta",
     }
+
+
+async def test_dpi_switches(hass, aioclient_mock, mock_unifi_websocket):
+    """Test the update_items function with some clients."""
+    await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        dpigroup_response=DPI_GROUPS,
+        dpiapp_response=DPI_APPS,
+    )
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    dpi_switch = hass.states.get("switch.block_media_streaming")
+    assert dpi_switch is not None
+    assert dpi_switch.state == STATE_ON
+    assert dpi_switch.attributes["icon"] == "mdi:network"
+
+    mock_unifi_websocket(data=DPI_APP_DISABLED_EVENT)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
 
 
 async def test_new_client_discovered_on_block_control(

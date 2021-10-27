@@ -182,7 +182,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.2
 
 # homeassistant.components.unifi
-aiounifi==27
+aiounifi==28
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -237,9 +237,6 @@ auroranoaa==0.0.2
 
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.6
-
-# homeassistant.components.stream
-av==8.0.3
 
 # homeassistant.components.axis
 axis==44
@@ -465,6 +462,9 @@ growattServer==1.1.0
 
 # homeassistant.components.profiler
 guppy3==3.1.0
+
+# homeassistant.components.stream
+ha-av==8.0.4-rc.1
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.0.2

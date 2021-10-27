@@ -84,6 +84,8 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
 
         super().__init__(coordinator)
 
+        self._available = False
+
         self._id = heater.device_id
         self._attr_unique_id = heater.device_id
         self._attr_name = heater.name
@@ -131,6 +133,11 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             )
             await self.coordinator.async_request_refresh()
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._available
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -139,7 +146,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
 
     @callback
     def _update_attr(self, heater):
-        self._attr_available = heater.available
+        self._available = heater.available
         self._attr_extra_state_attributes = {
             "open_window": heater.open_window,
             "heating": heater.is_heating,

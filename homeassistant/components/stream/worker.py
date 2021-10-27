@@ -140,6 +140,8 @@ class SegmentBuffer:
         self._output_video_stream = self._av_output.add_stream(
             template=self._input_video_stream
         )
+        if self._output_video_stream.name == "hevc":
+            self._output_video_stream.codec_tag = "hvc1"
         # Check if audio is requested
         self._output_audio_stream = None
         if self._input_audio_stream and self._input_audio_stream.name in AUDIO_CODECS:
