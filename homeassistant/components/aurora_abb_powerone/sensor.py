@@ -84,11 +84,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
 
+<<<<<<< HEAD
     client = hass.data[DOMAIN][config_entry.unique_id]
     data = config_entry.data
 
     for sens in SENSOR_TYPES:
         entities.append(AuroraSensor(client, data, sens))
+=======
+    sensor_types = [
+        {"parameter": "instantaneouspower", "name": "Power Output"},
+        {"parameter": "temperature", "name": "Temperature"},
+    ]
+    client = hass.data[DOMAIN][config_entry.unique_id]
+    data = config_entry.data
+
+    for sens in sensor_types:
+        entities.append(AuroraSensor(client, data, sens["name"], sens["parameter"]))
+>>>>>>> Convert variable names to snake case
 
     _LOGGER.debug("async_setup_entry adding %d entities", len(entities))
     async_add_entities(entities, True)
@@ -118,8 +130,12 @@ class AuroraSensor(AuroraDeviceEntity, SensorEntity):
         else:
             raise InvalidStateError(f"Unrecognised typename '{type_name}'")
         self._attr_name = f"{name}"
+<<<<<<< HEAD
 >>>>>>> Remove duplicated code.
         self.availableprev = True
+=======
+        self.available_prev = True
+>>>>>>> Convert variable names to snake case
 
     def update(self):
         """Fetch new state data for the sensor.
@@ -127,7 +143,7 @@ class AuroraSensor(AuroraDeviceEntity, SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            self.availableprev = self._attr_available
+            self.available_prev = self._attr_available
             self.client.connect()
             if self.entity_description.key == "instantaneouspower":
                 # read ADC channel 3 (grid power output)
@@ -158,7 +174,7 @@ class AuroraSensor(AuroraDeviceEntity, SensorEntity):
             else:
                 raise error
         finally:
-            if self._attr_available != self.availableprev:
+            if self._attr_available != self.available_prev:
                 if self._attr_available:
                     _LOGGER.info("Communication with %s back online", self.name)
                 else:

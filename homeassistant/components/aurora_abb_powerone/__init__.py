@@ -28,9 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     comport = entry.data[CONF_PORT]
     address = entry.data[CONF_ADDRESS]
-    serclient = AuroraSerialClient(address, comport, parity="N", timeout=1)
+    ser_client = AuroraSerialClient(address, comport, parity="N", timeout=1)
 
-    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = serclient
+    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = ser_client
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
