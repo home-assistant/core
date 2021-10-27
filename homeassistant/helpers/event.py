@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Iterable
+from collections.abc import Awaitable, Iterable, Sequence
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -767,9 +767,9 @@ class _TrackTemplateResultInfo:
     def __init__(
         self,
         hass: HomeAssistant,
-        track_templates: Iterable[TrackTemplate],
+        track_templates: Sequence[TrackTemplate],
         action: Callable,
-        has_master_template: bool = False,
+        has_super_template: bool = False,
     ) -> None:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
@@ -778,7 +778,7 @@ class _TrackTemplateResultInfo:
         for track_template_ in track_templates:
             track_template_.template.hass = hass
         self._track_templates = track_templates
-        self._has_master_template = has_master_template
+        self._has_super_template = has_super_template
 
         self._last_result: dict[Template, bool | str | TemplateError] = {}
 
@@ -955,43 +955,57 @@ class _TrackTemplateResultInfo:
         info_changed = False
         now = event.time_fired if not replayed and event else dt_util.utcnow()
 
-        first = True
-        master_result: bool | str | TemplateError | None = None
-
-        for track_template_ in track_templates or self._track_templates:
-            # If the master template did not render to True, don't update other templates
-            if master_result is not None and master_result is not True:
-                break
-
-            update = self._render_template_if_ready(track_template_, now, event)
-
-            if self._has_master_template and first:
-                first = False
-
-                if isinstance(update, TrackTemplateResult):
-                    master_result = update.result
-                else:
-                    master_result = self._last_result.get(track_template_.template)
-
-                if (
-                    isinstance(update, TrackTemplateResult)
-                    and update.last_result is not True
-                    and update.result is True
-                ):
-                    # Master template changed from not True to True, force re-render
-                    # of all templates in the group
-                    event = None
-
+        def _apply_update(
+            update: bool | TrackTemplateResult, template: Template
+        ) -> bool:
+            """Handle updates of a tracked template."""
             if not update:
-                continue
+                return False
 
-            template = track_template_.template
             self._setup_time_listener(template, self._info[template].has_time)
-
-            info_changed = True
 
             if isinstance(update, TrackTemplateResult):
                 updates.append(update)
+
+            return True
+
+        block_updates = False
+        super_template = self._track_templates[0] if self._has_super_template else None
+
+        track_templates = track_templates or self._track_templates
+
+        # Update the super template first
+        if super_template is not None:
+            update = self._render_template_if_ready(super_template, now, event)
+            info_changed |= _apply_update(update, super_template.template)
+
+            if isinstance(update, TrackTemplateResult):
+                super_result = update.result
+            else:
+                super_result = self._last_result.get(super_template.template)
+
+            # If the super template did not render to True, don't update other templates
+            if super_result is not None and super_result is not True:
+                block_updates = True
+
+            if (
+                isinstance(update, TrackTemplateResult)
+                and update.last_result is not True
+                and update.result is True
+            ):
+                # Super template changed from not True to True, force re-render
+                # of all templates in the group
+                event = None
+                track_templates = self._track_templates
+
+        # Then update the remaining templates unless blocked by the super template
+        if not block_updates:
+            for track_template_ in track_templates:
+                if track_template_ == super_template:
+                    continue
+
+                update = self._render_template_if_ready(track_template_, now, event)
+                info_changed |= _apply_update(update, track_template_.template)
 
         if info_changed:
             assert self._track_state_changes
@@ -1043,11 +1057,11 @@ TrackTemplateResultListener = Callable[
 @bind_hass
 def async_track_template_result(
     hass: HomeAssistant,
-    track_templates: Iterable[TrackTemplate],
+    track_templates: Sequence[TrackTemplate],
     action: TrackTemplateResultListener,
     raise_on_template_error: bool = False,
     strict: bool = False,
-    has_master_template: bool = False,
+    has_super_template: bool = False,
 ) -> _TrackTemplateResultInfo:
     """Add a listener that fires when the result of a template changes.
 
@@ -1078,8 +1092,8 @@ def async_track_template_result(
         tracking.
     strict
         When set to True, raise on undefined variables.
-    has_master_template
-        When set to True, the first template will block rendering other
+    has_super_template
+        When set to True, the first template will block rendering of other
         templates if it doesn't render as True.
 
     Returns
@@ -1088,7 +1102,7 @@ def async_track_template_result(
 
     """
     tracker = _TrackTemplateResultInfo(
-        hass, track_templates, action, has_master_template
+        hass, track_templates, action, has_super_template
     )
     tracker.async_setup(raise_on_template_error, strict=strict)
     return tracker
