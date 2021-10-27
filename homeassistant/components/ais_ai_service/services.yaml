@@ -226,4 +226,4 @@ ais_setup_component:
       example: 'satel_integra'
     config:
       description: 'Konfiguracja'
-        example: 'host: 10.10.10.30'
+      example: 'host: 10.10.10.30'
