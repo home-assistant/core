@@ -178,13 +178,13 @@ async def _generate_mean_statistics(start, end, init_value, max_diff):
 async def _generate_sum_statistics(start, end, init_value, max_diff):
     statistics = []
     now = start
-    sum = init_value
+    sum_ = init_value
     while now < end:
-        sum = sum + random() * max_diff
+        sum_ = sum_ + random() * max_diff
         statistics.append(
             {
                 "start": now,
-                "sum": sum,
+                "sum": sum_,
             }
         )
         now = now + datetime.timedelta(hours=1)
@@ -220,14 +220,14 @@ async def _insert_statistics(hass):
         "has_sum": True,
     }
     statistic_id = f"{DOMAIN}:energy_consumption"
-    sum = 0
+    sum_ = 0
     last_stats = await hass.async_add_executor_job(
         get_last_statistics, hass, 1, statistic_id, True
     )
     if "domain:energy_consumption" in last_stats:
-        sum = last_stats["domain.electricity_total"]["sum"]
+        sum_ = last_stats["domain.electricity_total"]["sum"] or 0
     statistics = _generate_sum_statistics(
-        yesterday_midnight, yesterday_midnight + datetime.timedelta(days=1), sum, 1
+        yesterday_midnight, yesterday_midnight + datetime.timedelta(days=1), sum_, 1
     )
     async_add_external_statistics(hass, metadata, statistics)
 
@@ -239,7 +239,8 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
-    await _insert_statistics(hass)
+    if "recorder" in hass.config.components:
+        await _insert_statistics(hass)
     return True
 
 
