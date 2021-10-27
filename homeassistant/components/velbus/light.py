@@ -30,15 +30,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class VelbusLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
 
-    @property
-    def name(self):
-        """Return the display name of this entity."""
-        return self._channel.get_name()
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+    def __init__(self, channel):
+        """Initialize the dimmer."""
+        super().__init__(channel)
+        self._attr_supported_feature = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+        self._attr_name = self._channel.get_name()
 
     @property
     def is_on(self):
@@ -83,15 +79,11 @@ class VelbusLight(VelbusEntity, LightEntity):
 class VelbusButtonLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
 
-    @property
-    def name(self):
-        """Return the display name of this entity."""
-        return f"LED {self._channel.get_name()}"
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_FLASH
+    def __init__(self, channel):
+        """Initialize the button light (led)."""
+        super().__init__(channel)
+        self._attr_supported_feature = SUPPORT_FLASH
+        self._attr_name = f"LED {self._channel.get_name()}"
 
     @property
     def is_on(self):
