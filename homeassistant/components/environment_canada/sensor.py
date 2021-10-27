@@ -96,7 +96,7 @@ class ECAlertSensor(CoordinatorEntity, SensorEntity):
             ATTR_STATION: metadata.get("station"),
         }
 
-        if value is None:
+        if not value:
             return 0
 
         for index, alert in enumerate(value, start=1):
