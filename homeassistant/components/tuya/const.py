@@ -715,7 +715,9 @@ TUYA_COUNTRIES = [
     Country("Saint Lucia", "1-758", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Saint Martin", "590", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Saint Pierre and Miquelon", "508", TuyaCloudOpenAPIEndpoint.EUROPE),
-    Country("Saint Vincent and the Grenadines", "1-784", TuyaCloudOpenAPIEndpoint.EUROPE),
+    Country(
+        "Saint Vincent and the Grenadines", "1-784", TuyaCloudOpenAPIEndpoint.EUROPE
+    ),
     Country("Samoa", "685", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("San Marino", "378", TuyaCloudOpenAPIEndpoint.EUROPE),
     Country("Sao Tome and Principe", "239", TuyaCloudOpenAPIEndpoint.AMERICA),
