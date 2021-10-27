@@ -83,7 +83,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a configuration from config.yaml."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="already_configured")
 
         conf = {}
         conf[ATTR_SERIAL_NUMBER] = "sn_unknown_yaml"
