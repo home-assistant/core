@@ -11,7 +11,6 @@ from homeassistant import config_entries
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from .conftest import MockPchkConnectionManager, init_integration, setup_component
 
@@ -98,7 +97,6 @@ async def test_async_setup_entry_raises_timeout_error(hass, entry):
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_async_setup_from_configuration_yaml(hass):
     """Test a successful setup using data from configuration.yaml."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     with patch("homeassistant.components.lcn.async_setup_entry") as async_setup_entry:
         await setup_component(hass)

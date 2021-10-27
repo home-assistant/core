@@ -159,8 +159,7 @@ async def _async_get_device_automations(
 
     for device_id in match_device_ids:
         combined_results[device_id] = []
-        device = device_registry.async_get(device_id)
-        if device is None:
+        if (device := device_registry.async_get(device_id)) is None:
             raise DeviceNotFound
         for entry_id in device.config_entries:
             if config_entry := hass.config_entries.async_get_entry(entry_id):
@@ -221,8 +220,7 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
 
     capabilities = capabilities.copy()
 
-    extra_fields = capabilities.get("extra_fields")
-    if extra_fields is None:
+    if (extra_fields := capabilities.get("extra_fields")) is None:
         capabilities["extra_fields"] = []
     else:
         capabilities["extra_fields"] = voluptuous_serialize.convert(
@@ -318,7 +316,9 @@ async def websocket_device_automation_get_action_capabilities(hass, connection, 
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/condition/capabilities",
-        vol.Required("condition"): dict,
+        vol.Required("condition"): cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
+            {}, extra=vol.ALLOW_EXTRA
+        ),
     }
 )
 @websocket_api.async_response
@@ -335,7 +335,9 @@ async def websocket_device_automation_get_condition_capabilities(hass, connectio
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/trigger/capabilities",
-        vol.Required("trigger"): dict,
+        vol.Required("trigger"): DEVICE_TRIGGER_BASE_SCHEMA.extend(
+            {}, extra=vol.ALLOW_EXTRA
+        ),
     }
 )
 @websocket_api.async_response

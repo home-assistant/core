@@ -347,7 +347,7 @@ class TestTrendBinarySensor:
                     }
                 },
             )
-        assert self.hass.states.all() == []
+        assert self.hass.states.all("binary_sensor") == []
 
     def test_invalid_sensor_does_not_create(self):
         """Test invalid sensor."""
@@ -364,7 +364,7 @@ class TestTrendBinarySensor:
                     }
                 },
             )
-        assert self.hass.states.all() == []
+        assert self.hass.states.all("binary_sensor") == []
 
     def test_no_sensors_does_not_create(self):
         """Test no sensors."""
@@ -372,7 +372,7 @@ class TestTrendBinarySensor:
             assert setup.setup_component(
                 self.hass, "binary_sensor", {"binary_sensor": {"platform": "trend"}}
             )
-        assert self.hass.states.all() == []
+        assert self.hass.states.all("binary_sensor") == []
 
 
 async def test_reload(hass):

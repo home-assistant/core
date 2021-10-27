@@ -125,13 +125,11 @@ def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set | None
     First try the statemachine, then entity registry.
     This is the equivalent of entity helper get_supported_features.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
     if not entry.capabilities:
         return None
@@ -629,9 +627,7 @@ class Profiles:
     @callback
     def apply_profile(self, name: str, params: dict) -> None:
         """Apply a profile."""
-        profile = self.data.get(name)
-
-        if profile is None:
+        if (profile := self.data.get(name)) is None:
             return
 
         if profile.hs_color is not None:
@@ -679,9 +675,7 @@ class LightEntity(ToggleEntity):
     @property
     def _light_internal_color_mode(self) -> str:
         """Return the color mode of the light with backwards compatibility."""
-        color_mode = self.color_mode
-
-        if color_mode is None:
+        if (color_mode := self.color_mode) is None:
             # Backwards compatibility for color_mode added in 2021.4
             # Add warning in 2021.6, remove in 2021.10
             supported = self._light_internal_supported_color_modes

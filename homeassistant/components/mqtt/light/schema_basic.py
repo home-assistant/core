@@ -50,8 +50,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
-from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subscription
+from .. import subscription
 from ... import mqtt
+from ..const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
@@ -151,9 +152,7 @@ VALUE_TEMPLATE_KEYS = [
     CONF_XY_VALUE_TEMPLATE,
 ]
 
-PLATFORM_SCHEMA_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is deprecated, support will be removed in 2021.10
-    cv.deprecated(CONF_VALUE_TEMPLATE, CONF_STATE_VALUE_TEMPLATE),
+_PLATFORM_SCHEMA_BASE = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -211,10 +210,22 @@ PLATFORM_SCHEMA_BASIC = vol.All(
             vol.Optional(CONF_XY_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_XY_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
-        }
+        },
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema),
+    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
+)
+
+PLATFORM_SCHEMA_BASIC = vol.All(
+    # CONF_VALUE_TEMPLATE is deprecated, support will be removed in 2021.10
+    cv.deprecated(CONF_VALUE_TEMPLATE, CONF_STATE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE,
+)
+
+DISCOVERY_SCHEMA_BASIC = vol.All(
+    # CONF_VALUE_TEMPLATE is deprecated, support will be removed in 2021.10
+    cv.deprecated(CONF_VALUE_TEMPLATE, CONF_STATE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 
@@ -267,7 +278,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_BASIC
+        return DISCOVERY_SCHEMA_BASIC
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -655,8 +666,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        brightness = self._brightness
-        if brightness:
+        if brightness := self._brightness:
             brightness = min(round(brightness), 255)
         return brightness
 
@@ -727,10 +737,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     @property
     def white_value(self):
         """Return the white property."""
-        white_value = self._white_value
-        if white_value:
-            white_value = min(round(white_value), 255)
-            return white_value
+        if white_value := self._white_value:
+            return min(round(white_value), 255)
         return None
 
     @property
@@ -828,8 +836,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         def render_rgbx(color, template, color_mode):
             """Render RGBx payload."""
-            tpl = self._command_templates[template]
-            if tpl:
+            if tpl := self._command_templates[template]:
                 keys = ["red", "green", "blue"]
                 if color_mode == COLOR_MODE_RGBW:
                     keys.append("white")

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import math
-from typing import cast
 
 from aioesphomeapi import (
     SensorInfo,
@@ -12,7 +11,6 @@ from aioesphomeapi import (
     TextSensorState,
 )
 from aioesphomeapi.model import LastResetType
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_TIMESTAMP,
@@ -23,7 +21,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
 
@@ -33,8 +30,6 @@ from . import (
     esphome_state_property,
     platform_async_setup_entry,
 )
-
-ICON_SCHEMA = vol.Schema(cv.icon)
 
 
 async def async_setup_entry(
@@ -76,13 +71,6 @@ _STATE_CLASSES: EsphomeEnumMapper[SensorStateClass, str | None] = EsphomeEnumMap
 
 class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     """A sensor implementation for esphome."""
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        if not self._static_info.icon or self._static_info.device_class:
-            return None
-        return cast(str, ICON_SCHEMA(self._static_info.icon))
 
     @property
     def force_update(self) -> bool:
@@ -132,11 +120,6 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
 
 class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
     """A text sensor implementation for ESPHome."""
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._static_info.icon
 
     @esphome_state_property
     def native_value(self) -> str | None:

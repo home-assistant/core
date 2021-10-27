@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from numbers import Real
 
 from homeassistant.components.sensor import (
@@ -113,8 +112,6 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         precision=1,
     ),
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

@@ -35,6 +35,7 @@ homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
+homeassistant.components.efergy.*
 homeassistant.components.elgato.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
@@ -48,6 +49,7 @@ homeassistant.components.frontend.*
 homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
 homeassistant.components.gios.*
+homeassistant.components.goalzero.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.history.*
@@ -56,17 +58,22 @@ homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
+homeassistant.components.input_select.*
 homeassistant.components.integration.*
 homeassistant.components.iqvia.*
+homeassistant.components.jewish_calendar.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
+homeassistant.components.lookin.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.modbus.*
+homeassistant.components.modem_callerid.*
+homeassistant.components.media_source.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*
@@ -74,6 +81,7 @@ homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*
+homeassistant.components.nfandroidtv.*
 homeassistant.components.no_ip.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
@@ -101,6 +109,7 @@ homeassistant.components.simplisafe.*
 homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
+homeassistant.components.stookalert.*
 homeassistant.components.stream.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
@@ -122,6 +131,7 @@ homeassistant.components.uptimerobot.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
 homeassistant.components.water_heater.*
+homeassistant.components.watttime.*
 homeassistant.components.weather.*
 homeassistant.components.websocket_api.*
 homeassistant.components.zodiac.*

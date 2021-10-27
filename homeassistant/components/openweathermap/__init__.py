@@ -71,8 +71,7 @@ async def async_migrate_entry(hass, entry):
     _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
 
     if version == 1:
-        mode = data[CONF_MODE]
-        if mode == FORECAST_MODE_FREE_DAILY:
+        if (mode := data[CONF_MODE]) == FORECAST_MODE_FREE_DAILY:
             mode = FORECAST_MODE_ONECALL_DAILY
 
         new_data = {**data, CONF_MODE: mode}

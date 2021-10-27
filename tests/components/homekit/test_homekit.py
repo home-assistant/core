@@ -27,14 +27,12 @@ from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
-    CONF_AUTO_START,
     DEFAULT_PORT,
     DOMAIN,
     HOMEKIT,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODE_BRIDGE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
-    SERVICE_HOMEKIT_START,
     SERVICE_HOMEKIT_UNPAIR,
 )
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
@@ -45,7 +43,6 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
     DEVICE_CLASS_BATTERY,
@@ -147,7 +144,7 @@ def _mock_pyhap_bridge():
 
 async def test_setup_min(hass, mock_zeroconf):
     """Test async_setup with min config options."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
@@ -182,63 +179,6 @@ async def test_setup_min(hass, mock_zeroconf):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert mock_homekit().async_start.called is True
-
-
-async def test_setup_auto_start_disabled(hass, mock_zeroconf):
-    """Test async_setup with auto start disabled and test service calls."""
-    await async_setup_component(hass, "persistent_notification", {})
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_NAME: "Test Name", CONF_PORT: 11111, CONF_IP_ADDRESS: "172.0.0.0"},
-        options={CONF_AUTO_START: False},
-    )
-    entry.add_to_hass(hass)
-
-    with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
-        mock_homekit.return_value = homekit = Mock()
-        type(homekit).async_start = AsyncMock()
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    mock_homekit.assert_any_call(
-        hass,
-        "Test Name",
-        11111,
-        "172.0.0.0",
-        ANY,
-        ANY,
-        {},
-        HOMEKIT_MODE_BRIDGE,
-        None,
-        entry.entry_id,
-        entry.title,
-        devices=[],
-    )
-
-    # Test auto_start disabled
-    homekit.reset_mock()
-    homekit.async_start.reset_mock()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-    assert homekit.async_start.called is False
-
-    # Test start call with driver is ready
-    homekit.reset_mock()
-    homekit.async_start.reset_mock()
-    homekit.status = STATUS_READY
-
-    await hass.services.async_call(DOMAIN, SERVICE_HOMEKIT_START, blocking=True)
-    await hass.async_block_till_done()
-    assert homekit.async_start.called is True
-
-    # Test start call with driver started
-    homekit.reset_mock()
-    homekit.async_start.reset_mock()
-    homekit.status = STATUS_STOPPED
-
-    await hass.services.async_call(DOMAIN, SERVICE_HOMEKIT_START, blocking=True)
-    await hass.async_block_till_done()
-    assert homekit.async_start.called is False
 
 
 async def test_homekit_setup(hass, hk_driver, mock_zeroconf):
@@ -370,7 +310,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_zeroconf):
 
 async def test_homekit_add_accessory(hass, mock_zeroconf):
     """Add accessory if config exists and get_acc returns an accessory."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -408,7 +348,7 @@ async def test_homekit_warn_add_accessory_bridge(
     hass, acc_category, mock_zeroconf, caplog
 ):
     """Test we warn when adding cameras or tvs to a bridge."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -673,7 +613,7 @@ async def test_homekit_stop(hass):
 
 async def test_homekit_reset_accessories(hass, mock_zeroconf):
     """Test resetting HomeKit accessories."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -718,7 +658,7 @@ async def test_homekit_reset_accessories(hass, mock_zeroconf):
 
 async def test_homekit_unpair(hass, device_reg, mock_zeroconf):
     """Test unpairing HomeKit accessories."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -760,7 +700,7 @@ async def test_homekit_unpair(hass, device_reg, mock_zeroconf):
 
 async def test_homekit_unpair_missing_device_id(hass, device_reg, mock_zeroconf):
     """Test unpairing HomeKit accessories with invalid device id."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -798,7 +738,7 @@ async def test_homekit_unpair_missing_device_id(hass, device_reg, mock_zeroconf)
 
 async def test_homekit_unpair_not_homekit_device(hass, device_reg, mock_zeroconf):
     """Test unpairing HomeKit accessories with a non-homekit device id."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -846,7 +786,7 @@ async def test_homekit_unpair_not_homekit_device(hass, device_reg, mock_zeroconf
 
 async def test_homekit_reset_accessories_not_supported(hass, mock_zeroconf):
     """Test resetting HomeKit accessories with an unsupported entity."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -890,7 +830,7 @@ async def test_homekit_reset_accessories_not_supported(hass, mock_zeroconf):
 
 async def test_homekit_reset_accessories_state_missing(hass, mock_zeroconf):
     """Test resetting HomeKit accessories when the state goes missing."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -932,7 +872,7 @@ async def test_homekit_reset_accessories_state_missing(hass, mock_zeroconf):
 
 async def test_homekit_reset_accessories_not_bridged(hass, mock_zeroconf):
     """Test resetting HomeKit accessories when the state is not bridged."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -974,7 +914,7 @@ async def test_homekit_reset_accessories_not_bridged(hass, mock_zeroconf):
 
 async def test_homekit_reset_single_accessory(hass, mock_zeroconf):
     """Test resetting HomeKit single accessory."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -1013,7 +953,7 @@ async def test_homekit_reset_single_accessory(hass, mock_zeroconf):
 
 async def test_homekit_reset_single_accessory_unsupported(hass, mock_zeroconf):
     """Test resetting HomeKit single accessory with an unsupported entity."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -1050,7 +990,7 @@ async def test_homekit_reset_single_accessory_unsupported(hass, mock_zeroconf):
 
 async def test_homekit_reset_single_accessory_state_missing(hass, mock_zeroconf):
     """Test resetting HomeKit single accessory when the state goes missing."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -1086,7 +1026,7 @@ async def test_homekit_reset_single_accessory_state_missing(hass, mock_zeroconf)
 
 async def test_homekit_reset_single_accessory_no_match(hass, mock_zeroconf):
     """Test resetting HomeKit single accessory when the entity id does not match."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -1292,7 +1232,7 @@ async def test_homekit_async_get_integration_fails(
 
 async def test_yaml_updates_update_config_entry_for_name(hass, mock_zeroconf):
     """Test async_setup with imported config."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_IMPORT,
@@ -1369,7 +1309,7 @@ async def test_homekit_ignored_missing_devices(
     hass, hk_driver, device_reg, entity_reg, mock_zeroconf
 ):
     """Test HomeKit handles a device in the entity registry but missing from the device registry."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = await async_init_integration(hass)
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
 
@@ -1564,7 +1504,7 @@ async def test_homekit_finds_linked_humidity_sensors(
 
 async def test_reload(hass, mock_zeroconf):
     """Test we can reload from yaml."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_IMPORT,
@@ -1729,7 +1669,7 @@ async def test_homekit_start_in_accessory_mode_missing_entity(
 
 async def test_wait_for_port_to_free(hass, hk_driver, mock_zeroconf, caplog):
     """Test we wait for the port to free before declaring unload success."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},

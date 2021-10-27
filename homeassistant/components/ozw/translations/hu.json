@@ -5,7 +5,7 @@
             "addon_install_failed": "Nem siker\u00fclt telep\u00edteni az OpenZWave b\u0151v\u00edtm\u00e9nyt.",
             "addon_set_config_failed": "Nem siker\u00fclt be\u00e1ll\u00edtani az OpenZWave konfigur\u00e1ci\u00f3t.",
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van.",
+            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
             "mqtt_required": "Az MQTT integr\u00e1ci\u00f3 nincs be\u00e1ll\u00edtva",
             "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
         },
@@ -24,7 +24,7 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Haszn\u00e1ld az OpenZWave Supervisor b\u0151v\u00edtm\u00e9nyt"
+                    "use_addon": "OpenZWave Supervisor b\u0151v\u00edtm\u00e9ny haszn\u00e1lata"
                 },
                 "description": "Szeretn\u00e9 haszn\u00e1lni az OpenZWave Supervisor b\u0151v\u00edtm\u00e9nyt?",
                 "title": "V\u00e1lassza ki a csatlakoz\u00e1si m\u00f3dot"

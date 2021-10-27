@@ -134,7 +134,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock):
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
 
-    assert device.update.call_count == 2
+    assert fritz().update_devices.call_count == 2
     assert state
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 19
     assert state.attributes[ATTR_TEMPERATURE] == 20
@@ -143,19 +143,19 @@ async def test_update(hass: HomeAssistant, fritz: Mock):
 async def test_update_error(hass: HomeAssistant, fritz: Mock):
     """Test update with error."""
     device = FritzDeviceClimateMock()
-    device.update.side_effect = HTTPError("Boom")
+    fritz().update_devices.side_effect = HTTPError("Boom")
     assert not await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert device.update.call_count == 1
+    assert fritz().update_devices.call_count == 1
     assert fritz().login.call_count == 1
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    assert device.update.call_count == 2
+    assert fritz().update_devices.call_count == 2
     assert fritz().login.call_count == 2
 
 
@@ -299,7 +299,7 @@ async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock):
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
 
-    assert device.update.call_count == 2
+    assert fritz().update_devices.call_count == 2
     assert state
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_COMFORT
 
@@ -310,6 +310,6 @@ async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock):
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
 
-    assert device.update.call_count == 3
+    assert fritz().update_devices.call_count == 3
     assert state
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_ECO

@@ -6,16 +6,16 @@ from unittest.mock import patch
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import (
+    DEFAULT_ENTRY_TITLE,
     FLUX_DISCOVERY,
     IP_ADDRESS,
     MAC_ADDRESS,
-    _mocked_bulb,
     _patch_discovery,
     _patch_wifibulb,
 )
@@ -25,7 +25,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_configuring_flux_led_causes_discovery(hass: HomeAssistant) -> None:
     """Test that specifying empty config does discovery."""
-    with patch("homeassistant.components.flux_led.BulbScanner.scan") as discover:
+    with patch(
+        "homeassistant.components.flux_led.AIOBulbScanner.async_scan"
+    ) as discover:
         discover.return_value = [FLUX_DISCOVERY]
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -65,15 +67,26 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
         assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_config_entry_retry_when_state_missing(hass: HomeAssistant) -> None:
-    """Test that a config entry is retried when state is missing."""
+async def test_config_entry_fills_unique_id_with_directed_discovery(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the unique id is added if its missing via directed (not broadcast) discovery."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=None
     )
     config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb()
-    bulb.raw_state = None
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+
+    async def _discovery(self, *args, address=None, **kwargs):
+        # Only return discovery results when doing directed discovery
+        return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
+
+    with patch(
+        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
+    ), _patch_wifibulb():
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert config_entry.state == ConfigEntryState.LOADED
+
+    assert config_entry.unique_id == MAC_ADDRESS
+    assert config_entry.data[CONF_NAME] == DEFAULT_ENTRY_TITLE
+    assert config_entry.title == DEFAULT_ENTRY_TITLE

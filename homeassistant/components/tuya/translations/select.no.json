@@ -1,0 +1,49 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Deaktivert",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Automatisk",
+            "1": "Av",
+            "2": "P\u00e5"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "Lav f\u00f8lsomhet",
+            "1": "H\u00f8y f\u00f8lsomhet"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "Lav effekt modus",
+            "1": "Kontinuerlig arbeidsmodus"
+        },
+        "tuya__led_type": {
+            "halogen": "Halogen",
+            "incandescent": "Gl\u00f8dende",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Av",
+            "pos": "Angi bytteplassering",
+            "relay": "Angi sl\u00e5 av/p\u00e5 -tilstand"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "Lav f\u00f8lsomhet",
+            "1": "Middels f\u00f8lsomhet",
+            "2": "H\u00f8y f\u00f8lsomhet"
+        },
+        "tuya__record_mode": {
+            "1": "Registrer bare hendelser",
+            "2": "Kontinuerlig opptak"
+        },
+        "tuya__relay_status": {
+            "last": "Husk siste tilstand",
+            "memory": "Husk siste tilstand",
+            "off": "Av",
+            "on": "P\u00e5",
+            "power_off": "Av",
+            "power_on": "P\u00e5"
+        }
+    }
+}

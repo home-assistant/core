@@ -21,6 +21,11 @@ LIGHT_TRANSITION_MIN_FIRMWARE_DATE: Final = 20210226
 # max light transition time in milliseconds
 MAX_TRANSITION_TIME: Final = 5000
 
+RGBW_MODELS: Final = (
+    "SHBLB-1",
+    "SHRGBW2",
+)
+
 MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
     "SHBDUO-1",
     "SHCB-1",
@@ -28,6 +33,14 @@ MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
     "SHDM-2",
     "SHRGBW2",
     "SHVIN-1",
+)
+
+# Bulbs that support white & color modes
+DUAL_MODE_LIGHT_MODELS: Final = (
+    "SHBDUO-1",
+    "SHBLB-1",
+    "SHCB-1",
+    "SHRGBW2",
 )
 
 # Used in "_async_update_data" as timeout for polling data from devices.
@@ -132,3 +145,6 @@ UPTIME_DEVIATION: Final = 5
 
 # Max RPC switch/input key instances
 MAX_RPC_KEY_INSTANCES = 4
+
+# Time to wait before reloading entry upon device config change
+ENTRY_RELOAD_COOLDOWN = 60
