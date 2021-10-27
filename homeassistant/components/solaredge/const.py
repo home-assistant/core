@@ -149,7 +149,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="purchased_power",
         json_key="Purchased",
-        name="Imported Energy",
+        name="Imported Power",
         entity_registry_enabled_default=False,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
@@ -158,7 +158,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="production_power",
         json_key="Production",
-        name="Production Energy",
+        name="Production Power",
         entity_registry_enabled_default=False,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
@@ -167,7 +167,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="consumption_power",
         json_key="Consumption",
-        name="Consumption Energy",
+        name="Consumption Power",
         entity_registry_enabled_default=False,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
@@ -176,7 +176,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="selfconsumption_power",
         json_key="SelfConsumption",
-        name="SelfConsumption Energy",
+        name="SelfConsumption Power",
         entity_registry_enabled_default=False,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
@@ -185,7 +185,7 @@ SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="feedin_power",
         json_key="FeedIn",
-        name="Exported Energy",
+        name="Exported Power",
         entity_registry_enabled_default=False,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
