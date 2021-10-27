@@ -173,14 +173,13 @@ class ZWaveTiltCover(ZWaveCover):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        if self.data_template:
-            self._attr_current_cover_tilt_position = kwargs[ATTR_TILT_POSITION]
-            tilt_value = self.data_template.current_tilt_value(self.info.platform_data)
-            if tilt_value:
-                await self.info.node.async_set_value(
-                    tilt_value,
-                    percent_to_zwave_position(kwargs[ATTR_TILT_POSITION]),
-                )
+        self._attr_current_cover_tilt_position = kwargs[ATTR_TILT_POSITION]
+        tilt_value = self.data_template.current_tilt_value(self.info.platform_data)
+        if tilt_value:
+            await self.info.node.async_set_value(
+                tilt_value,
+                percent_to_zwave_position(kwargs[ATTR_TILT_POSITION]),
+            )
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
