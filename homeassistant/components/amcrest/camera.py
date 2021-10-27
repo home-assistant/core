@@ -495,7 +495,6 @@ class AmcrestCam(Camera):
 
     async def async_set_privacy(self, privacy_mode: bool) -> None:
         """Set privacy mode in the camera."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self._set_pm, privacy_mode)
 
     async def async_ptz_control(self, movement: str, travel_time: float) -> None:
