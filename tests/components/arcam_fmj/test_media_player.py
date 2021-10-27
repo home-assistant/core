@@ -12,7 +12,13 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SERVICE_SELECT_SOURCE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+)
 
 from .conftest import MOCK_HOST, MOCK_NAME, MOCK_PORT, MOCK_UUID
 
@@ -32,10 +38,13 @@ async def test_properties(player, state):
     """Test standard properties."""
     assert player.unique_id == f"{MOCK_UUID}-1"
     assert player.device_info == {
-        "name": f"Arcam FMJ ({MOCK_HOST})",
-        "identifiers": {("arcam_fmj", MOCK_UUID), ("arcam_fmj", MOCK_HOST, MOCK_PORT)},
-        "model": "Arcam FMJ AVR",
-        "manufacturer": "Arcam",
+        ATTR_NAME: f"Arcam FMJ ({MOCK_HOST})",
+        ATTR_IDENTIFIERS: {
+            ("arcam_fmj", MOCK_UUID),
+            ("arcam_fmj", MOCK_HOST, MOCK_PORT),
+        },
+        ATTR_MODEL: "Arcam FMJ AVR",
+        ATTR_MANUFACTURER: "Arcam",
     }
     assert not player.should_poll
 
