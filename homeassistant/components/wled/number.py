@@ -107,7 +107,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
                 segment_id=self._segment, speed=int(value)
             )
         elif key == ATTR_INTENSITY:
-            return await self.coordinator.wled.segment(
+            await self.coordinator.wled.segment(
                 segment_id=self._segment, intensity=int(value)
             )
 
