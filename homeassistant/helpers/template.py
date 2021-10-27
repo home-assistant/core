@@ -832,12 +832,7 @@ def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | 
 
 
 def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
-    state_obj = _get_template_state_from_state(
-        hass, entity_id, hass.states.get(entity_id)
-    )
-    if state_obj is None:
-        _LOGGER.warning("Template warning: entity '%s' doesn't exist", entity_id)
-    return state_obj
+    return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
 
 
 def _get_template_state_from_state(
