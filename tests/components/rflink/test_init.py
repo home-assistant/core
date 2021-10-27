@@ -7,6 +7,7 @@ from voluptuous.error import MultipleInvalid
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.rflink import (
+    CONF_KEEPALIVE_IDLE,
     CONF_RECONNECT_INTERVAL,
     DATA_ENTITY_LOOKUP,
     EVENT_KEY_COMMAND,
@@ -380,3 +381,53 @@ async def test_not_connected(hass, monkeypatch):
     RflinkCommand.set_rflink_protocol(None)
     with pytest.raises(HomeAssistantError):
         await test_device._async_handle_command("turn_on")
+
+
+async def test_keepalive(hass, monkeypatch, caplog):
+    """Validate negative keepalive values."""
+    keepalive_value = -3
+    domain = "rflink"
+    config = {
+        "rflink": {
+            "host": "10.10.0.1",
+            "port": 1234,
+            CONF_KEEPALIVE_IDLE: keepalive_value,
+        }
+    }
+
+    # setup mocking rflink module
+    _, _, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+    assert (
+        f"A bogus TCP Keepalive IDLE timer was provided ({keepalive_value} secs)"
+        in caplog.text
+    )
+
+
+async def test2_keepalive(hass, monkeypatch, caplog):
+    """Validate very short keepalive values."""
+    keepalive_value = 30
+    domain = "rflink"
+    config = {
+        "rflink": {
+            "host": "10.10.0.1",
+            "port": 1234,
+            CONF_KEEPALIVE_IDLE: keepalive_value,
+        }
+    }
+
+    # setup mocking rflink module
+    _, _, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+    assert (
+        f"A very short TCP Keepalive IDLE timer was provided ({keepalive_value} secs)"
+        in caplog.text
+    )
+
+
+async def test3_keepalive(hass, monkeypatch, caplog):
+    """Validate keepalive=0 value."""
+    domain = "rflink"
+    config = {"rflink": {"host": "10.10.0.1", "port": 1234, CONF_KEEPALIVE_IDLE: 0}}
+
+    # setup mocking rflink module
+    _, _, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+    assert "TCP Keepalive IDLE timer was provided" not in caplog.text
