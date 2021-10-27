@@ -69,12 +69,6 @@ class AmcrestSwitch(SwitchEntity):
         """Return True if entity is available."""
         return self._api.available
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if the entity is on."""
-        return self._is_on
-        # return self._api.privacy_config().splitlines()[0].split("=")[1] == "true"
-
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._turn_switch(True)
@@ -93,4 +87,4 @@ class AmcrestSwitch(SwitchEntity):
     def update(self) -> None:
         """Update switch."""
         io_res = self._api.privacy_config().splitlines()[0].split("=")[1]
-        self._is_on = io_res == "true"
+        self._attr_is_on = io_res == "true"

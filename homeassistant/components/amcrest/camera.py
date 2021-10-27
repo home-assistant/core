@@ -85,7 +85,6 @@ _DEFAULT_TT = 0.2
 
 _ATTR_PRESET = "preset"
 _ATTR_COLOR_BW = "color_bw"
-_ATTR_PRIVACY_MODE = "privacy_mode"
 
 _CBW_COLOR = "color"
 _CBW_AUTO = "auto"
@@ -103,7 +102,6 @@ _SRV_PTZ_SCHEMA = _SRV_SCHEMA.extend(
         vol.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): cv.small_float,
     }
 )
-_PRIV_MODE_SCHEMA = _SRV_SCHEMA.extend({vol.Required(_ATTR_PRIVACY_MODE): cv.boolean})
 
 CAMERA_SERVICES = {
     _SRV_EN_REC: (_SRV_SCHEMA, "async_enable_recording", ()),
