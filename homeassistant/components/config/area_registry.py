@@ -3,7 +3,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
-from homeassistant.helpers.area_registry import async_get_registry
+from homeassistant.helpers.area_registry import async_get
 
 
 async def async_setup(hass):
@@ -16,10 +16,10 @@ async def async_setup(hass):
 
 
 @websocket_api.websocket_command({vol.Required("type"): "config/area_registry/list"})
-@websocket_api.async_response
-async def websocket_list_areas(hass, connection, msg):
+@callback
+def websocket_list_areas(hass, connection, msg):
     """Handle list areas command."""
-    registry = await async_get_registry(hass)
+    registry = async_get(hass)
     connection.send_result(
         msg["id"],
         [_entry_dict(entry) for entry in registry.async_list_areas()],
@@ -34,10 +34,10 @@ async def websocket_list_areas(hass, connection, msg):
     }
 )
 @websocket_api.require_admin
-@websocket_api.async_response
-async def websocket_create_area(hass, connection, msg):
+@callback
+def websocket_create_area(hass, connection, msg):
     """Create area command."""
-    registry = await async_get_registry(hass)
+    registry = async_get(hass)
 
     data = dict(msg)
     data.pop("type")
@@ -58,10 +58,10 @@ async def websocket_create_area(hass, connection, msg):
     }
 )
 @websocket_api.require_admin
-@websocket_api.async_response
-async def websocket_delete_area(hass, connection, msg):
+@callback
+def websocket_delete_area(hass, connection, msg):
     """Delete area command."""
-    registry = await async_get_registry(hass)
+    registry = async_get(hass)
 
     try:
         registry.async_delete(msg["area_id"])
@@ -80,10 +80,10 @@ async def websocket_delete_area(hass, connection, msg):
     }
 )
 @websocket_api.require_admin
-@websocket_api.async_response
-async def websocket_update_area(hass, connection, msg):
+@callback
+def websocket_update_area(hass, connection, msg):
     """Handle update area websocket command."""
-    registry = await async_get_registry(hass)
+    registry = async_get(hass)
 
     data = dict(msg)
     data.pop("type")
