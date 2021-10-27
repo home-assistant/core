@@ -77,7 +77,7 @@ def create_node_updates_binary_sensor(coordinator, host_name, node_name):
         coordinator=coordinator,
         unique_id=f"proxmox_{node_name}_update_required",
         name=f"{node_name}_update_required",
-        icon="",
+        icon="mdi-update",
         host_name=host_name,
         node_name=node_name,
     )
