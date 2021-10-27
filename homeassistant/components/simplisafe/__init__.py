@@ -201,11 +201,12 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-async def async_register_base_station(
+@callback
+def _async_register_base_station(
     hass: HomeAssistant, entry: ConfigEntry, system: SystemV2 | SystemV3
 ) -> None:
     """Register a new bridge."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, system.system_id)},
@@ -473,9 +474,7 @@ class SimpliSafe:
         for system in self.systems.values():
             self._system_notifications[system.system_id] = set()
 
-            self._hass.async_create_task(
-                async_register_base_station(self._hass, self.entry, system)
-            )
+            _async_register_base_station(self._hass, self.entry, system)
 
             # Future events will come from the websocket, but since subscription to the
             # websocket doesn't provide the most recent event, we grab it from the REST

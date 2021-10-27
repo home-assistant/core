@@ -267,7 +267,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
-            device_id = await _async_setup_device_registry(
+            device_id = _async_setup_device_registry(
                 hass, entry, entry_data.device_info
             )
             entry_data.async_update_device_state(hass)
@@ -320,14 +320,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_setup_device_registry(
+@callback
+def _async_setup_device_registry(
     hass: HomeAssistant, entry: ConfigEntry, device_info: EsphomeDeviceInfo
 ) -> str:
     """Set up device registry feature for a particular config entry."""
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},

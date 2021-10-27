@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     assert hub.bond_id is not None
     hub_name = hub.name or hub.bond_id
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry_id,
         identifiers={(DOMAIN, hub.bond_id)},
