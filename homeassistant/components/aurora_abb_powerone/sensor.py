@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -39,18 +40,21 @@ SENSOR_TYPES = [
         key="instantaneouspower",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
+        state_class=STATE_CLASS_MEASUREMENT,
         name="Power Output",
     ),
     SensorEntityDescription(
         key="temp",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
         name="Temperature",
     ),
     SensorEntityDescription(
         key="totalenergy",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         name="Total Energy",
     ),
 ]
@@ -93,8 +97,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
 
 class AuroraSensor(AuroraDevice, SensorEntity):
     """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
-
-    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(
         self,
