@@ -20,7 +20,15 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
-from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
+from .const import (
+    CONTROLLER,
+    DOMAIN,
+    ENTITY_MAP,
+    IDENTIFIER_ACCESSORY_ID,
+    IDENTIFIER_SERIAL_NUMBER,
+    KNOWN_DEVICES,
+    TRIGGERS,
+)
 from .storage import EntityMapStorage
 
 
@@ -131,8 +139,12 @@ class HomeKitEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
-        serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
-        return f"homekit-{serial}-{self._iid}"
+        info = self.accessory_info
+        serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        if serial:
+            return f"homekit-{serial}-{self._iid}"
+        # Some accessories do not have a serial number
+        return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
 
     @property
     def name(self) -> str:
@@ -149,9 +161,18 @@ class HomeKitEntity(Entity):
         """Return the device info."""
         info = self.accessory_info
         accessory_serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        if accessory_serial:
+            # Some accessories do not have a serial number
+            identifier = (DOMAIN, IDENTIFIER_SERIAL_NUMBER, accessory_serial)
+        else:
+            identifier = (
+                DOMAIN,
+                IDENTIFIER_ACCESSORY_ID,
+                f"{self._accessory.unique_id}_{self._aid}",
+            )
 
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, "serial-number", accessory_serial)},
+            identifiers={identifier},
             manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
             model=info.value(CharacteristicsTypes.MODEL, ""),
             name=info.value(CharacteristicsTypes.NAME),
@@ -162,7 +183,11 @@ class HomeKitEntity(Entity):
         # via_device otherwise it would be self referential.
         bridge_serial = self._accessory.connection_info["serial-number"]
         if accessory_serial != bridge_serial:
-            device_info[ATTR_VIA_DEVICE] = (DOMAIN, "serial-number", bridge_serial)
+            device_info[ATTR_VIA_DEVICE] = (
+                DOMAIN,
+                IDENTIFIER_SERIAL_NUMBER,
+                bridge_serial,
+            )
 
         return device_info
 
