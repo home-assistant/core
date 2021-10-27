@@ -767,6 +767,55 @@ async def test_cost_sensor_handle_gas(hass, hass_storage) -> None:
     assert state.state == "50.0"
 
 
+async def test_cost_sensor_handle_gas_kwh(hass, hass_storage) -> None:
+    """Test gas cost price from sensor entity."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "gas",
+            "stat_energy_from": "sensor.gas_consumption",
+            "entity_energy_from": "sensor.gas_consumption",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.5,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    now = dt_util.utcnow()
+
+    hass.states.async_set(
+        "sensor.gas_consumption",
+        100,
+        energy_attributes,
+    )
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await setup_integration(hass)
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "0.0"
+
+    # gas use bumped to 10 kWh
+    hass.states.async_set(
+        "sensor.gas_consumption",
+        200,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "50.0"
+
+
 @pytest.mark.parametrize("state_class", [None])
 async def test_cost_sensor_wrong_state_class(
     hass, hass_storage, caplog, state_class
