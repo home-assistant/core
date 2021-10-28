@@ -53,6 +53,7 @@ ABBREVIATIONS = {
     "fanspd_lst": "fan_speed_list",
     "flsh_tlng": "flash_time_long",
     "flsh_tsht": "flash_time_short",
+    "f_name": "friendly_name",
     "fx_cmd_t": "effect_command_topic",
     "fx_list": "effect_list",
     "fx_stat_t": "effect_state_topic",
