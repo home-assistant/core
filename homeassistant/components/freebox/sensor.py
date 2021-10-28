@@ -177,6 +177,9 @@ class FreeboxDiskSensor(FreeboxSensor):
     @callback
     def async_update_state(self) -> None:
         """Update the Freebox disk sensor."""
-        self._attr_native_value = round(
-            self._partition["free_bytes"] * 100 / self._partition["total_bytes"], 2
-        )
+        value = None
+        if self._partition.get("total_bytes"):
+            value = round(
+                self._partition["free_bytes"] * 100 / self._partition["total_bytes"], 2
+            )
+        self._attr_native_value = value
