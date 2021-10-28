@@ -123,10 +123,9 @@ class TasmotaAvailability(TasmotaEntity):
         )
         await super().async_added_to_hass()
 
-    @callback
-    def availability_updated(self, available: bool) -> None:
+    async def availability_updated(self, available: bool) -> None:
         """Handle updated availability."""
-        self._tasmota_entity.poll_status()
+        await self._tasmota_entity.poll_status()
         self._available = available
         self.async_write_ha_state()
 
