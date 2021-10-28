@@ -79,7 +79,7 @@ async def test_state_none(hass: HomeAssistant) -> None:
         assert entity_state.state == STATE_OFF
 
 
-async def test_state_off_without_log(caplog: Any, hass: HomeAssistant) -> None:
+async def test_state_off_without_log(caplog: pytest.LogCaptureFixture, hass: HomeAssistant) -> None:
     """Test with none state."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
