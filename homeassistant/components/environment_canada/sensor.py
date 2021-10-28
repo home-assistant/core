@@ -36,31 +36,34 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(ECAlertSensor(coordinator, desc) for desc in ALERT_TYPES)
 
 
-class ECSensor(CoordinatorEntity, SensorEntity):
-    """Implementation of an Environment Canada sensor."""
+class ECBaseSensor(CoordinatorEntity, SensorEntity):
+    """Environment Canada sensor base."""
 
     def __init__(self, coordinator, description):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.ec_data = coordinator.ec_data
-
-        self._attr_attribution = self.ec_data.metadata["attribution"]
+        self._ec_data = coordinator.ec_data
+        self._attr_attribution = self._ec_data.metadata["attribution"]
         self._attr_name = f"{coordinator.config_entry.title} {description.name}"
-        self._attr_unique_id = f"{self.ec_data.metadata['location']}-{description.key}"
+        self._attr_unique_id = f"{self._ec_data.metadata['location']}-{description.key}"
         self._attr_extra_state_attributes = {
-            ATTR_LOCATION: self.ec_data.metadata.get("location"),
-            ATTR_STATION: self.ec_data.metadata.get("station"),
+            ATTR_LOCATION: self._ec_data.metadata.get("location"),
+            ATTR_STATION: self._ec_data.metadata.get("station"),
         }
+
+
+class ECSensor(ECBaseSensor):
+    """Environment Canada sensor for conditions."""
 
     @property
     def native_value(self):
         """Update current conditions."""
         sensor_type = self.entity_description.key
         if sensor_type == "timestamp":
-            return self.ec_data.metadata.get("timestamp")
+            return self._ec_data.metadata.get("timestamp")
 
-        value = self.ec_data.conditions.get(sensor_type, {}).get("value")
+        value = self._ec_data.conditions.get(sensor_type, {}).get("value")
         if sensor_type == "tendency":
             value = str(value).capitalize()
         elif isinstance(value, str) and len(value) > 255:
@@ -71,29 +74,18 @@ class ECSensor(CoordinatorEntity, SensorEntity):
         return value
 
 
-class ECAlertSensor(CoordinatorEntity, SensorEntity):
-    """Implementation of an Environment Canada sensor."""
-
-    def __init__(self, coordinator, description):
-        """Initialize the alert sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self.ec_data = coordinator.ec_data
-
-        self._attr_attribution = self.ec_data.metadata["attribution"]
-        self._attr_name = f"{coordinator.config_entry.title} {description.name}"
-        self._attr_unique_id = f"{self.ec_data.metadata['location']}-{description.key}"
+class ECAlertSensor(ECBaseSensor):
+    """Environment Canada sensor for alerts."""
 
     @property
     def native_value(self):
         """Return the state."""
         alert_name = self.entity_description.key
-        value = self.ec_data.alerts.get(alert_name, {}).get("value")
+        value = self._ec_data.alerts.get(alert_name, {}).get("value")
 
-        metadata = self.ec_data.metadata
         self._attr_extra_state_attributes = {
-            ATTR_LOCATION: metadata.get("location"),
-            ATTR_STATION: metadata.get("station"),
+            ATTR_LOCATION: self._ec_data.metadata.get("location"),
+            ATTR_STATION: self._ec_data.metadata.get("station"),
         }
 
         if not value:
