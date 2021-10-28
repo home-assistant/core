@@ -18,6 +18,7 @@ from homeassistant.components.wallbox.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from tests.components.wallbox import entry, setup_integration
 from tests.components.wallbox.const import (
     CONF_ERROR,
     CONF_JWT,
@@ -162,3 +163,43 @@ async def test_form_validate_input(hass):
 
     assert result2["title"] == "Wallbox Portal"
     assert result2["data"]["station"] == "12345"
+
+
+async def test_form_reauth(hass):
+    """Test we handle reauth flow."""
+    await setup_integration(hass)
+    assert entry.state == config_entries.ConfigEntryState.LOADED
+
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://api.wall-box.com/auth/token/user",
+            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            status_code=200,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            json=test_response,
+            status_code=200,
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+        )
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "station": "12345",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+
+    await hass.config_entries.async_unload(entry.entry_id)

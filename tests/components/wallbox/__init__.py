@@ -18,14 +18,9 @@ from homeassistant.components.wallbox.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
+from .const import CONF_ERROR, CONF_JWT, CONF_STATUS, CONF_TTL, CONF_USER_ID
+
 from tests.common import MockConfigEntry
-from tests.components.wallbox.const import (
-    CONF_ERROR,
-    CONF_JWT,
-    CONF_STATUS,
-    CONF_TTL,
-    CONF_USER_ID,
-)
 
 test_response = json.loads(
     json.dumps(

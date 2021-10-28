@@ -6,10 +6,10 @@ import logging
 import requests
 from wallbox import Wallbox
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -50,7 +50,7 @@ class WallboxCoordinator(DataUpdateCoordinator):
             return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
-                raise InvalidAuth from wallbox_connection_error
+                raise ConfigEntryAuthFailed from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
     def _validate(self):
@@ -122,20 +122,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
     )
 
-    await wallbox_coordinator.async_validate_input()
+    try:
+        await wallbox_coordinator.async_validate_input()
 
-    await wallbox_coordinator.async_config_entry_first_refresh()
-
-    hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}})
-    hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallbox_coordinator
-
-    for platform in PLATFORMS:
-
+    except InvalidAuth:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+                data=entry.data,
+            )
         )
+        return False
 
-    return True
+    else:
+
+        await wallbox_coordinator.async_config_entry_first_refresh()
+
+        hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}})
+        hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallbox_coordinator
+
+        for platform in PLATFORMS:
+
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+            )
+
+        return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
