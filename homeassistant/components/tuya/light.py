@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -28,6 +29,8 @@ from . import HomeAssistantTuyaData
 from .base import IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, WorkMode
 from .util import remap_value
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -441,6 +444,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
+        _LOGGER.debug("light kwargs -> %s, cm = %s", kwargs, self.color_mode)
         commands = [{"code": self.entity_description.key, "value": True}]
 
         if self._color_data_type and (
