@@ -27,7 +27,12 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_WINDOW,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
+    SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -177,6 +182,16 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
 class ZWaveTiltCover(ZWaveCover):
     """Representation of a Fibaro Z-Wave cover device."""
+
+    _attr_supported_features = (
+        SUPPORT_OPEN
+        | SUPPORT_CLOSE
+        | SUPPORT_STOP
+        | SUPPORT_SET_POSITION
+        | SUPPORT_OPEN_TILT
+        | SUPPORT_CLOSE_TILT
+        | SUPPORT_SET_TILT_POSITION
+    )
 
     def __init__(
         self,
