@@ -431,6 +431,7 @@ async def async_setup_entry(  # noqa: C901
     # Set up device registry
     if router.device_identifiers or router.device_connections:
         device_info = DeviceInfo(
+            configuration_url=router.url,
             connections=router.device_connections,
             identifiers=router.device_identifiers,
             name=router.device_name,
