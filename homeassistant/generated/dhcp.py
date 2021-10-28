@@ -359,6 +359,11 @@ DHCP = [
     {
         "domain": "tplink",
         "hostname": "k[lp]*",
+        "macaddress": "005F67*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
         "macaddress": "1027F5*"
     },
     {
