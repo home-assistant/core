@@ -3,12 +3,7 @@ import logging
 
 from homeassistant import core
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, ENTITY_CATEGORIES
 from homeassistant.helpers import entity_registry as er
 
 from .auth import Auth
@@ -71,10 +66,7 @@ class AlexaConfig(AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category in (
-                ENTITY_CATEGORY_CONFIG,
-                ENTITY_CATEGORY_DIAGNOSTIC,
-            )
+            auxiliary_entity = registry_entry.entity_category in ENTITY_CATEGORIES
         else:
             auxiliary_entity = False
         return not auxiliary_entity
