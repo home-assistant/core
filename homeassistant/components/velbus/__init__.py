@@ -176,12 +176,11 @@ class VelbusEntity(Entity):
         self.async_write_ha_state()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        # TODO: fix identifiers
         return DeviceInfo(
             identifiers={
-                (
+                (  # type: ignore
                     DOMAIN,
                     self._channel.get_module_address(),
                     self._channel.get_module_serial(),
