@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_VIA_DEVICE,
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
+    CONF_FRIENDLY_NAME,
     CONF_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -184,6 +185,7 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     }
 )
 
@@ -607,7 +609,16 @@ class MqttEntity(
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
         await super().async_added_to_hass()
+        await self.set_friendly_name()
         await self._subscribe_topics()
+
+    async def set_friendly_name(self):
+        """Set default friendly_name if defined in config."""
+        entry = self.registry_entry
+        friendly_name = self._config.get(CONF_FRIENDLY_NAME)
+        if entry and entry.name is None and friendly_name:
+            ent_reg = await self.hass.helpers.entity_registry.async_get_registry()
+            ent_reg.async_update_entity(entry.entity_id, name=friendly_name)
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
