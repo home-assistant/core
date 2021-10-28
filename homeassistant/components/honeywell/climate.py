@@ -78,8 +78,6 @@ PLATFORM_SCHEMA = vol.All(
     ),
 )
 
-HVAC_MODES = ["off","auto","cool","heat"]
-
 HVAC_MODE_TO_HW_MODE = {
     "SwitchOffAllowed": {HVAC_MODE_OFF: "off"},
     "SwitchAutoAllowed": {HVAC_MODE_HEAT_COOL: "auto"},
