@@ -149,9 +149,10 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=DEVICE_CLASS_LOCK,
     ),
     NotificationZWaveJSEntityDescription(
-        # NotificationType 6: Access Control - State Id 16 (door/window open)
+        # NotificationType 6: Access Control - State Id 22 (door/window open)
         key=NOTIFICATION_ACCESS_CONTROL,
-        states=("22",),
+        off_state="23",
+        states=("22", "23"),
         device_class=DEVICE_CLASS_DOOR,
     ),
     NotificationZWaveJSEntityDescription(
