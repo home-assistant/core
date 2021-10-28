@@ -204,12 +204,10 @@ class HERETravelTimeData:
 
 def build_hass_attribution(source_attribution: dict) -> str | None:
     """Build a hass frontend ready string out of the sourceAttribution."""
-    suppliers = source_attribution.get("supplier")
-    if suppliers is not None:
+    if (suppliers := source_attribution.get("supplier")) is not None:
         supplier_titles = []
         for supplier in suppliers:
-            title = supplier.get("title")
-            if title is not None:
+            if (title := supplier.get("title")) is not None:
                 supplier_titles.append(title)
         joined_supplier_titles = ",".join(supplier_titles)
         attribution = f"With the support of {joined_supplier_titles}. All information is provided without warranty of any kind."
@@ -219,10 +217,10 @@ def build_hass_attribution(source_attribution: dict) -> str | None:
 
 def convert_time_to_isodate(timestr: str) -> str | None:
     """Take a string like 08:00:00 and combine it with the current date."""
-    parsed_time = dt.parse_time(timestr)
-    if parsed_time is None:
+    if (parsed_time := dt.parse_time(timestr)) is None:
         return None
-    combined = datetime.combine(dt.start_of_local_day(), parsed_time)
-    if combined < datetime.now():
+    if (
+        combined := datetime.combine(dt.start_of_local_day(), parsed_time)
+    ) < datetime.now():
         combined = combined + timedelta(days=1)
     return combined.isoformat()
