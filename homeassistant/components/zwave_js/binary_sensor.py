@@ -19,6 +19,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_LOCK,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_PLUG,
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
@@ -65,6 +66,7 @@ NOTIFICATION_GAS = "18"
 class NotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
     """Represent a Z-Wave JS binary sensor entity description."""
 
+    off_state: str = "0"
     states: tuple[str, ...] | None = None
 
 
@@ -185,6 +187,15 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 8: Power Management -
+        # State Id's 2, 3 (Mains status)
+        key=NOTIFICATION_POWER_MANAGEMENT,
+        off_state="2",
+        states=("2", "3"),
+        device_class=DEVICE_CLASS_PLUG,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
+        # NotificationType 8: Power Management -
         # State Id's 10, 11, 17 (Battery maintenance status)
         key=NOTIFICATION_POWER_MANAGEMENT,
         states=("10", "11", "17"),
@@ -263,16 +274,41 @@ async def async_setup_entry(
                 # ignore idle key (0)
                 if state_key == "0":
                     continue
+
+                notification_description: NotificationZWaveJSEntityDescription | None = (
+                    None
+                )
+
+                for description in NOTIFICATION_SENSOR_MAPPINGS:
+                    if (
+                        int(description.key)
+                        == info.primary_value.metadata.cc_specific[
+                            CC_SPECIFIC_NOTIFICATION_TYPE
+                        ]
+                    ) and (not description.states or state_key in description.states):
+                        notification_description = description
+                        break
+
+                if (
+                    notification_description
+                    and notification_description.off_state == state_key
+                ):
+                    continue
+
                 entities.append(
-                    ZWaveNotificationBinarySensor(config_entry, client, info, state_key)
+                    ZWaveNotificationBinarySensor(
+                        config_entry, client, info, state_key, notification_description
+                    )
                 )
         elif info.platform_hint == "property" and (
-            description := PROPERTY_SENSOR_MAPPINGS.get(
+            property_description := PROPERTY_SENSOR_MAPPINGS.get(
                 info.primary_value.property_name
             )
         ):
             entities.append(
-                ZWavePropertyBinarySensor(config_entry, client, info, description)
+                ZWavePropertyBinarySensor(
+                    config_entry, client, info, property_description
+                )
             )
         else:
             # boolean sensor
@@ -325,12 +361,12 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         client: ZwaveClient,
         info: ZwaveDiscoveryInfo,
         state_key: str,
+        description: NotificationZWaveJSEntityDescription | None = None,
     ) -> None:
         """Initialize a ZWaveNotificationBinarySensor entity."""
         super().__init__(config_entry, client, info)
         self.state_key = state_key
-        # check if we have a custom mapping for this value
-        if description := self._get_sensor_description():
+        if description:
             self.entity_description = description
 
         # Entity class attributes
@@ -347,19 +383,6 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         if self.info.primary_value.value is None:
             return None
         return int(self.info.primary_value.value) == int(self.state_key)
-
-    @callback
-    def _get_sensor_description(self) -> NotificationZWaveJSEntityDescription | None:
-        """Try to get a device specific mapping for this sensor."""
-        for description in NOTIFICATION_SENSOR_MAPPINGS:
-            if (
-                int(description.key)
-                == self.info.primary_value.metadata.cc_specific[
-                    CC_SPECIFIC_NOTIFICATION_TYPE
-                ]
-            ) and (not description.states or self.state_key in description.states):
-                return description
-        return None
 
 
 class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
