@@ -191,6 +191,14 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 8: Power Management -
+        # State Id's 6, 7, 8, 9 (power status)
+        key=NOTIFICATION_POWER_MANAGEMENT,
+        states=("6", "7", "8", "9"),
+        device_class=DEVICE_CLASS_SAFETY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
+        # NotificationType 8: Power Management -
         # State Id's 10, 11, 17 (Battery maintenance status)
         key=NOTIFICATION_POWER_MANAGEMENT,
         states=("10", "11", "17"),
