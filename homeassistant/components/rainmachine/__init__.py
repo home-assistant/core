@@ -135,9 +135,11 @@ def async_get_controller_for_service_call(
     device_registry = dr.async_get(hass)
 
     if device_entry := device_registry.async_get(device_id):
-        for entry_id in device_entry.config_entries:
-            if controller := hass.data[DOMAIN][entry_id][DATA_CONTROLLER]:
-                return cast(Controller, controller)
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.entry_id in device_entry.config_entries:
+                return cast(
+                    Controller, hass.data[DOMAIN][entry.entry_id][DATA_CONTROLLER]
+                )
 
     raise ValueError(f"No controller for device ID: {device_id}")
 
