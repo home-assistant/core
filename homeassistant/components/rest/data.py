@@ -3,6 +3,7 @@ import logging
 
 import httpx
 
+from homeassistant.components.rest.utils import render_template
 from homeassistant.helpers.httpx_client import get_async_client
 
 DEFAULT_TIMEOUT = 10
@@ -51,21 +52,8 @@ class RestData:
                 self._hass, verify_ssl=self._verify_ssl
             )
 
-        rendered_headers = None
-        if self._headers:
-            rendered_headers = {}
-            for header_name, template_header in self._headers.items():
-                value = template_header.async_render()
-                if value is not None:
-                    rendered_headers[header_name] = value
-
-        rendered_params = None
-        if self._params:
-            rendered_params = {}
-            for param_name, template_param in self._params.items():
-                value = template_param.async_render()
-                if value is not None:
-                    rendered_params[param_name] = value
+        rendered_headers = render_template(self._headers)
+        rendered_params = render_template(self._params)
 
         _LOGGER.debug("Updating from %s", self._resource)
         try:

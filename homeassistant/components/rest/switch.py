@@ -7,6 +7,7 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.components.rest.utils import render_template
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
@@ -210,21 +211,8 @@ class RestSwitch(SwitchEntity):
         """Send a state update to the device."""
         websession = async_get_clientsession(self.hass, self._verify_ssl)
 
-        rendered_headers = None
-        if self._headers:
-            rendered_headers = {}
-            for header_name, template_header in self._headers.items():
-                value = template_header.async_render()
-                if value is not None:
-                    rendered_headers[header_name] = value
-
-        rendered_params = None
-        if self._params:
-            rendered_params = {}
-            for param_name, template_param in self._params.items():
-                value = template_param.async_render()
-                if value is not None:
-                    rendered_params[param_name] = value
+        rendered_headers = render_template(self._headers)
+        rendered_params = render_template(self._params)
 
         with async_timeout.timeout(self._timeout):
             req = await getattr(websession, self._method)(
@@ -249,21 +237,8 @@ class RestSwitch(SwitchEntity):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass, self._verify_ssl)
 
-        rendered_headers = None
-        if self._headers:
-            rendered_headers = {}
-            for header_name, template_header in self._headers.items():
-                value = template_header.async_render()
-                if value is not None:
-                    rendered_headers[header_name] = value
-
-        rendered_params = None
-        if self._params:
-            rendered_params = {}
-            for param_name, template_param in self._params.items():
-                value = template_param.async_render()
-                if value is not None:
-                    rendered_params[param_name] = value
+        rendered_headers = render_template(self._headers)
+        rendered_params = render_template(self._params)
 
         with async_timeout.timeout(self._timeout):
             req = await websession.get(
