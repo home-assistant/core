@@ -220,9 +220,7 @@ def create_coordinator_container_vm(
     )
 
 
-def create_coordinator_node_updates(
-    hass, proxmox, host_name, node_name
-):
+def create_coordinator_node_updates(hass, proxmox, host_name, node_name):
     """Create and return a DataUpdateCoordinator for a node update status."""
 
     async def async_update_data():
@@ -236,9 +234,7 @@ def create_coordinator_node_updates(
         node_updates = await hass.async_add_executor_job(poll_api)
 
         if node_updates is None:
-            _LOGGER.warning(
-                "Update status not found in node %s", node_name
-            )
+            _LOGGER.warning("Update status not found in node %s", node_name)
             return None
 
         return parse_api_node_updates(node_updates)

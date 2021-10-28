@@ -37,7 +37,9 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
                 sensors.append(vm_sensor)
 
             for container_id in node_config["containers"]:
-                coordinator = host_name_coordinators[node_name]["machines"][container_id]
+                coordinator = host_name_coordinators[node_name]["machines"][
+                    container_id
+                ]
 
                 # unfound container case
                 if (coordinator_data := coordinator.data) is None:
@@ -126,12 +128,10 @@ class ProxmoxNodeUpdateBinarySensor(ProxmoxEntity, BinarySensorEntity):
         name,
         icon,
         host_name,
-        node_name
+        node_name,
     ):
         """Create the binary sensor for node updates."""
-        super().__init__(
-            coordinator, unique_id, name, icon, host_name, node_name
-        )
+        super().__init__(coordinator, unique_id, name, icon, host_name, node_name)
 
     @property
     def is_on(self):
