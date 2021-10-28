@@ -477,20 +477,21 @@ class EntityPlatform:
                         processed_dev_info[key] = device_info[key]  # type: ignore[misc]
 
                 if "configuration_url" in device_info:
-                    configuration_url = str(device_info["configuration_url"])
-                    if urlparse(configuration_url).scheme in [
-                        "http",
-                        "https",
-                        "homeassistant",
-                    ]:
-                        processed_dev_info["configuration_url"] = configuration_url
-                    elif device_info["configuration_url"] is None:
+                    if device_info["configuration_url"] is None:
                         processed_dev_info["configuration_url"] = None  # type: ignore[assignment]
                     else:
-                        _LOGGER.warning(
-                            "Ignoring invalid device configuration_url '%s'",
-                            configuration_url,
-                        )
+                        configuration_url = str(device_info["configuration_url"])
+                        if urlparse(configuration_url).scheme in [
+                            "http",
+                            "https",
+                            "homeassistant",
+                        ]:
+                            processed_dev_info["configuration_url"] = configuration_url
+                        else:
+                            _LOGGER.warning(
+                                "Ignoring invalid device configuration_url '%s'",
+                                configuration_url,
+                            )
 
                 try:
                     device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
