@@ -33,6 +33,7 @@
    - service: ais_cloud.get_radio_types
    - service: ais_cloud.get_podcast_types
    - service: ais_cloud.get_rss_news_category
+   - service: ais_cloud.get_backup_info
    - service: ais_yt_service.search
    - service: ais_audiobooks_service.get_authors
    - service: ais_shell_command.disable_irda_remote
