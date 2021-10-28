@@ -458,7 +458,9 @@ class EntityPlatform:
             device_id = None
 
             if config_entry_id is not None and device_info is not None:
-                processed_dev_info = {"config_entry_id": config_entry_id}
+                processed_dev_info: dict[str, str | None] = {
+                    "config_entry_id": config_entry_id
+                }
                 for key in (
                     "connections",
                     "default_manufacturer",
@@ -478,7 +480,7 @@ class EntityPlatform:
 
                 if "configuration_url" in device_info:
                     if device_info["configuration_url"] is None:
-                        processed_dev_info["configuration_url"] = None  # type: ignore[assignment]
+                        processed_dev_info["configuration_url"] = None
                     else:
                         configuration_url = str(device_info["configuration_url"])
                         if urlparse(configuration_url).scheme in [
