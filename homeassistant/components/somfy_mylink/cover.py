@@ -8,6 +8,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import STATE_CLOSED, STATE_OPEN
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -115,13 +116,13 @@ class SomfyShade(RestoreEntity, CoverEntity):
         return self._closed
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self._target_id)},
-            "name": self._name,
-            "manufacturer": MANUFACTURER,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._target_id)},
+            manufacturer=MANUFACTURER,
+            name=self._name,
+        )
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
