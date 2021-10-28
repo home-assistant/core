@@ -328,9 +328,13 @@ def _async_setup_device_registry(
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
+    configuration_url = None
+    if device_info.webserver_port > 0:
+        configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
+        configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
         name=device_info.name,
         manufacturer="espressif",
@@ -768,16 +772,9 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        info = DeviceInfo(
+        return DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
         )
-        if self._device_info.webserver_port > 0:
-            info[
-                "configuration_url"
-            ] = f"http://{self._entry_data.client.address}:{self._device_info.webserver_port}"
-        else:
-            info["configuration_url"] = None
-        return info
 
     @property
     def name(self) -> str:
