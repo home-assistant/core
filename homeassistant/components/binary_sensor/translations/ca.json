@@ -31,6 +31,7 @@
             "is_not_plugged_in": "{entity_name} est\u00e0 desendollat",
             "is_not_powered": "{entity_name} no est\u00e0 alimentat",
             "is_not_present": "{entity_name} no est\u00e0 present",
+            "is_not_running": "{entity_name} no est\u00e0 funcionant",
             "is_not_tampered": "{entity_name} no detecta manipulaci\u00f3",
             "is_not_unsafe": "{entity_name} \u00e9s segur",
             "is_occupied": "{entity_name} est\u00e0 ocupat",
@@ -41,6 +42,7 @@
             "is_powered": "{entity_name} est\u00e0 alimentat",
             "is_present": "{entity_name} est\u00e0 present",
             "is_problem": "{entity_name} est\u00e0 detectant un problema",
+            "is_running": "{entity_name} est\u00e0 funcionant",
             "is_smoke": "{entity_name} est\u00e0 detectant fum",
             "is_sound": "{entity_name} est\u00e0 detectant so",
             "is_tampered": "{entity_name} detecta manipulaci\u00f3",
@@ -81,6 +83,7 @@
             "not_plugged_in": "{entity_name} desendollat",
             "not_powered": "{entity_name} no est\u00e0 alimentat",
             "not_present": "{entity_name} no est\u00e0 present",
+            "not_running": "{entity_name} para de funcionar",
             "not_unsafe": "{entity_name} es torna segur",
             "occupied": "{entity_name} s'ocupa",
             "opened": "{entity_name} s'ha obert",
@@ -88,6 +91,7 @@
             "powered": "{entity_name} alimentat",
             "present": "{entity_name} present",
             "problem": "{entity_name} ha comen\u00e7at a detectar un problema",
+            "running": "{entity_name} comen\u00e7a a funcionar",
             "smoke": "{entity_name} ha comen\u00e7at a detectar fum",
             "sound": "{entity_name} ha comen\u00e7at a detectar so",
             "turned_off": "{entity_name} apagat",
@@ -96,6 +100,19 @@
             "update": "{entity_name} obt\u00e9 una nova actualitzaci\u00f3 disponible",
             "vibration": "{entity_name} ha comen\u00e7at a detectar vibraci\u00f3"
         }
+    },
+    "device_class": {
+        "cold": "fred",
+        "gas": "gas",
+        "heat": "calor",
+        "moisture": "humitat",
+        "motion": "moviment",
+        "occupancy": "ocupaci\u00f3",
+        "power": "pot\u00e8ncia",
+        "problem": "problema",
+        "smoke": "fum",
+        "sound": "so",
+        "vibration": "vibraci\u00f3"
     },
     "state": {
         "_": {
@@ -175,6 +192,7 @@
             "on": "Problema"
         },
         "running": {
+            "off": "No funcionant",
             "on": "En funcionament"
         },
         "safety": {

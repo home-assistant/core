@@ -123,7 +123,7 @@ async def async_setup_entry(hass, config_entry):
 
     devices = bridge.get_devices()
     bridge_device = devices[BRIDGE_DEVICE_ID]
-    await _async_register_bridge_device(hass, config_entry.entry_id, bridge_device)
+    _async_register_bridge_device(hass, config_entry.entry_id, bridge_device)
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
     hass.data[DOMAIN][config_entry.entry_id] = {
@@ -164,7 +164,7 @@ async def async_setup_lip(hass, config_entry, lip_devices):
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
     button_devices_by_lip_id = _async_merge_lip_leap_data(lip_devices, bridge)
-    button_devices_by_dr_id = await _async_register_button_devices(
+    button_devices_by_dr_id = _async_register_button_devices(
         hass, config_entry_id, bridge_device, button_devices_by_lip_id
     )
     _async_subscribe_pico_remote_events(hass, lip, button_devices_by_lip_id)
@@ -200,9 +200,10 @@ def _async_merge_lip_leap_data(lip_devices, bridge):
     return button_devices_by_id
 
 
-async def _async_register_bridge_device(hass, config_entry_id, bridge_device):
+@callback
+def _async_register_bridge_device(hass, config_entry_id, bridge_device):
     """Register the bridge device in the device registry."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         name=bridge_device["name"],
         manufacturer=MANUFACTURER,
@@ -212,11 +213,12 @@ async def _async_register_bridge_device(hass, config_entry_id, bridge_device):
     )
 
 
-async def _async_register_button_devices(
+@callback
+def _async_register_button_devices(
     hass, config_entry_id, bridge_device, button_devices_by_id
 ):
     """Register button devices (Pico Remotes) in the device registry."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     button_devices_by_dr_id = {}
 
     for device in button_devices_by_id.values():

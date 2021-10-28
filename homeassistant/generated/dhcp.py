@@ -168,6 +168,11 @@ DHCP = [
     },
     {
         "domain": "guardian",
+        "hostname": "gvc*",
+        "macaddress": "B4E62D*"
+    },
+    {
+        "domain": "guardian",
         "hostname": "guardian*",
         "macaddress": "30AEA4*"
     },
@@ -303,6 +308,11 @@ DHCP = [
         "macaddress": "A4D578*"
     },
     {
+        "domain": "simplisafe",
+        "hostname": "simplisafe*",
+        "macaddress": "30AEA4*"
+    },
+    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*"
@@ -350,6 +360,11 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "005F67*"
     },
     {
         "domain": "tplink",

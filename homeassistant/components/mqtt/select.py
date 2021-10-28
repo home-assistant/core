@@ -168,7 +168,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             self._attr_current_option = option
             self.async_write_ha_state()
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             option,
