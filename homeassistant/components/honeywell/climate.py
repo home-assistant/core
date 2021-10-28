@@ -372,7 +372,7 @@ class HoneywellUSThermostat(ClimateEntity):
             _LOGGER.error("Can not get system mode")
             return
         # Check that we got a valid mode back
-        if mode in HVAC_MODES:
+        if mode in HW_MODE_TO_HVAC_MODE:
             try:
                 # Set permanent hold
                 setattr(self._device, f"hold_{mode}", True)
