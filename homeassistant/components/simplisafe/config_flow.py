@@ -68,7 +68,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return SimpliSafeOptionsFlowHandler(config_entry)
 
     async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
-        """Handle the configuration via dhcp."""
+        """Handle the configuration via DHCP."""
         return await self.async_step_user()
 
     async def async_step_input_auth_code(
