@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from devolo_plc_api.device import Device
 
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -21,7 +20,6 @@ class DevoloEntity(CoordinatorEntity):
     ) -> None:
         """Initialize a devolo home network device."""
         super().__init__(coordinator)
-        self.entity_description: SensorEntityDescription
 
         self._device = device
         self._device_name = device_name
