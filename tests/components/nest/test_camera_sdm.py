@@ -199,6 +199,7 @@ async def test_camera_stream(hass, auth):
     assert cam is not None
     assert cam.state == STATE_STREAMING
     assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_HLS
+    assert round(cam.attributes["stream_aspect_ratio"], 3) == 1.333
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
@@ -704,6 +705,7 @@ async def test_camera_web_rtc(hass, auth, hass_ws_client):
     assert cam is not None
     assert cam.state == STATE_STREAMING
     assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_WEB_RTC
+    assert round(cam.attributes["stream_aspect_ratio"], 3) == 1.333
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -861,3 +863,39 @@ async def test_camera_multiple_streams(hass, auth, hass_ws_client):
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"]["answer"] == "v=0\r\ns=-\r\n"
+
+
+async def test_doorbell_aspect_ratio(hass, auth, hass_ws_client):
+    """Test workaround for bug in SDM API returning wrong resolution."""
+    # Set up a device that looks like the Nest Doorbell (battery). It
+    # is currently the only doorbell that supports WebRTC
+    devices = {
+        DEVICE_ID: Device.MakeDevice(
+            {
+                "name": DEVICE_ID,
+                "type": "sdm.devices.types.DOORBELL",
+                "traits": {
+                    "sdm.devices.traits.Info": {"customName": "My Camera"},
+                    "sdm.devices.traits.CameraLiveStream": {
+                        "maxVideoResolution": {
+                            "width": 640,
+                            "height": 480,
+                        },
+                        "videoCodecs": ["H264"],
+                        "audioCodecs": ["AAC"],
+                        "supportedProtocols": ["WEB_RTC"],
+                    },
+                },
+            },
+            auth=auth,
+        )
+    }
+    return await async_setup_sdm_platform(hass, PLATFORM, devices)
+
+    assert len(hass.states.async_all()) == 1
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == STATE_STREAMING
+    assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_WEB_RTC
+    # Assert apsect ratio is flipped
+    assert round(cam.attributes["stream_aspect_ratio"], 3) == 0.75

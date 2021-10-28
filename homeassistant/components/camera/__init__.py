@@ -433,6 +433,11 @@ class Camera(Entity):
             return None
         return STREAM_TYPE_HLS
 
+    @property
+    def stream_aspect_ratio(self) -> float | None:
+        """Return the frontend stream aspect ratio of the stream resolution, or width divided by height."""
+        return None
+
     async def create_stream(self) -> Stream | None:
         """Create a Stream for stream_source."""
         # There is at most one stream (a decode worker) per camera
@@ -574,6 +579,9 @@ class Camera(Entity):
             attrs["frontend_stream_type"] = self.frontend_stream_type
             # Remove after home-assistant/frontend#10298 is merged into nightly
             attrs["stream_type"] = self.frontend_stream_type
+
+        if self.stream_aspect_ratio:
+            attrs["stream_aspect_ratio"] = self.stream_aspect_ratio
 
         return attrs
 

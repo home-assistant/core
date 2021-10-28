@@ -127,6 +127,27 @@ class NestCamera(Camera):
             return STREAM_TYPE_WEB_RTC
         return STREAM_TYPE_HLS
 
+    @property
+    def stream_aspect_ratio(self) -> float | None:
+        """Return the aspect ratio of the frontend video stream, width / height."""
+        if CameraLiveStreamTrait.NAME not in self._device.traits:
+            return None
+        trait = self._device.traits[CameraLiveStreamTrait.NAME]
+        max_resolution = trait.max_video_resolution
+        if not max_resolution.width or not max_resolution.height:
+            return None
+        assert isinstance(max_resolution.width, int)
+        assert isinstance(max_resolution.height, int)
+        if (
+            self._device.type == "sdm.devices.types.DOORBELL"
+            and self.frontend_stream_type == STREAM_TYPE_WEB_RTC
+            and max_resolution.width > max_resolution.height
+        ):
+            # The SDM API has a bug where it always returns 640x480 resolution. We know the battery powered webrtc
+            # doorbell is vertical video, so flip the aspect ratio as a workaround if we can tell it's wrong.
+            return max_resolution.height / max_resolution.width
+        return max_resolution.width / max_resolution.height
+
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         if not self.supported_features & SUPPORT_STREAM:
