@@ -24,7 +24,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
@@ -38,9 +38,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VenstarEntity
+from . import VenstarDataUpdateCoordinator, VenstarEntity
 from .const import (
     _LOGGER,
     ATTR_FAN_STATE,
@@ -68,7 +70,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Venstar thermostat."""
     venstar_data_coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
@@ -103,7 +109,11 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class VenstarThermostat(VenstarEntity, ClimateEntity):
     """Representation of a Venstar thermostat."""
 
-    def __init__(self, venstar_data_coordinator, config):
+    def __init__(
+        self,
+        venstar_data_coordinator: VenstarDataUpdateCoordinator,
+        config: ConfigEntry,
+    ) -> None:
         """Initialize the thermostat."""
         super().__init__(venstar_data_coordinator, config)
         self._mode_map = {

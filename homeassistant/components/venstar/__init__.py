@@ -5,6 +5,7 @@ from datetime import timedelta
 from requests import RequestException
 from venstarcolortouch import VenstarColorTouch
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -106,7 +107,11 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
 class VenstarEntity(CoordinatorEntity):
     """Representation of a Venstar entity."""
 
-    def __init__(self, venstar_data_coordinator, config):
+    def __init__(
+        self,
+        venstar_data_coordinator: VenstarDataUpdateCoordinator,
+        config: ConfigEntry,
+    ) -> None:
         """Initialize the data object."""
         super().__init__(venstar_data_coordinator)
         self._config = config
@@ -136,12 +141,10 @@ class VenstarEntity(CoordinatorEntity):
     @property
     def device_info(self):
         """Return the device information for this entity."""
-        ven_type = self._client.get_type()
-        ven_apiver = self._client.get_api_ver()
         return {
             "identifiers": {(DOMAIN, self._config.entry_id)},
             "name": self._client.name,
             "manufacturer": "Venstar",
-            "model": f"{self._client.model}-{ven_type}",
-            "sw_version": ven_apiver,
+            "model": f"{self._client.model}-{self._client.get_type()}",
+            "sw_version": self._client.get_api_ver(),
         }
