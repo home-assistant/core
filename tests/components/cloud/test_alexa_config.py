@@ -38,9 +38,9 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     entity_entry3 = entity_registry.async_get_or_create(
         "light",
         "test",
-        "light_hidden_id",
-        suggested_object_id="hidden_light",
-        entity_category="hidden",
+        "light_system_id",
+        suggested_object_id="system_light",
+        entity_category="system",
     )
 
     entity_conf = {"should_expose": False}

@@ -147,9 +147,9 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
     entity_entry3 = entity_registry.async_get_or_create(
         "switch",
         "test",
-        "switch_hidden_id",
-        suggested_object_id="hidden_switch",
-        entity_category="hidden",
+        "switch_system_id",
+        suggested_object_id="system_switch",
+        entity_category="system",
     )
 
     # These should not show up in the sync request

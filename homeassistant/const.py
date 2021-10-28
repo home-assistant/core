@@ -714,7 +714,7 @@ CAST_APP_ID_HOMEASSISTANT: Final = "B12CE3CA"
 
 ENTITY_CATEGORY_CONFIG: Final = "config"
 ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
-ENTITY_CATEGORY_HIDDEN: Final = "hidden"
+ENTITY_CATEGORY_SYSTEM: Final = "system"
 
 # Entity categories which will:
 # - Not be exposed to cloud, alexa, or google_home components
@@ -722,5 +722,5 @@ ENTITY_CATEGORY_HIDDEN: Final = "hidden"
 ENTITY_CATEGORIES: Final[list[str]] = [
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    ENTITY_CATEGORY_HIDDEN,
+    ENTITY_CATEGORY_SYSTEM,
 ]
