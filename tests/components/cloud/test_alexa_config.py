@@ -22,24 +22,24 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     entity_registry = mock_registry(hass)
 
     entity_entry1 = entity_registry.async_get_or_create(
-        "switch",
+        "light",
         "test",
-        "switch_config_id",
-        suggested_object_id="config_switch",
+        "light_config_id",
+        suggested_object_id="config_light",
         entity_category="config",
     )
     entity_entry2 = entity_registry.async_get_or_create(
-        "switch",
+        "light",
         "test",
-        "switch_diagnostic_id",
-        suggested_object_id="diagnostic_switch",
+        "light_diagnostic_id",
+        suggested_object_id="diagnostic_light",
         entity_category="diagnostic",
     )
     entity_entry3 = entity_registry.async_get_or_create(
-        "switch",
+        "light",
         "test",
-        "switch_hidden_id",
-        suggested_object_id="hidden_switch",
+        "light_hidden_id",
+        suggested_object_id="hidden_light",
         entity_category="hidden",
     )
 
