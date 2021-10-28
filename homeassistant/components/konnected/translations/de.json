@@ -32,9 +32,7 @@
             "not_konn_panel": "Kein anerkanntes Konnected.io-Ger\u00e4t"
         },
         "error": {
-            "bad_host": "Ung\u00fcltige Override-API-Host-URL",
-            "one": "eins",
-            "other": "andere"
+            "bad_host": "Ung\u00fcltige Override-API-Host-URL"
         },
         "step": {
             "options_binary": {

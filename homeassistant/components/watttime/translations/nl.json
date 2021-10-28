@@ -38,5 +38,15 @@
                 "description": "Voer uw gebruikersnaam en wachtwoord in:"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Toon gemonitorde locatie op de kaart"
+                },
+                "title": "Configureer WattTime"
+            }
+        }
     }
 }
