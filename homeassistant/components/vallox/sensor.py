@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import cached_property
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -53,6 +52,9 @@ class ValloxSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_name = f"{name} {description.name}"
 
+        uuid = self.coordinator.data.get_uuid()
+        self._attr_unique_id = f"{uuid}-{description.key}"
+
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
@@ -60,14 +62,6 @@ class ValloxSensor(CoordinatorEntity, SensorEntity):
             return None
 
         return self.coordinator.data.get_metric(metric_key)
-
-    @cached_property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        uuid = self.coordinator.data.get_uuid()
-        if not uuid:
-            return None
-        return f"{DOMAIN}-{uuid}-{self.entity_description.key}"
 
 
 class ValloxProfileSensor(ValloxSensor):

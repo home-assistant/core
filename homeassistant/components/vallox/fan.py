@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from functools import cached_property
 import logging
 from typing import Any, NamedTuple
 
@@ -100,6 +99,8 @@ class ValloxFan(CoordinatorEntity, FanEntity):
 
         self._attr_name = name
 
+        self._attr_unique_id = str(self.coordinator.data.get_uuid())
+
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
@@ -131,14 +132,6 @@ class ValloxFan(CoordinatorEntity, FanEntity):
             attr.description: _convert_fan_speed_value(data.get_metric(attr.metric_key))
             for attr in EXTRA_STATE_ATTRIBUTES
         }
-
-    @cached_property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        uuid = self.coordinator.data.get_uuid()
-        if not uuid:
-            return None
-        return f"{DOMAIN}-{uuid}-fan"
 
     async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
         """
