@@ -15,6 +15,7 @@ from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES,
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORY_HIDDEN,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -120,6 +121,7 @@ class GoogleConfig(AbstractConfig):
             auxiliary_entity = registry_entry.entity_category in (
                 ENTITY_CATEGORY_CONFIG,
                 ENTITY_CATEGORY_DIAGNOSTIC,
+                ENTITY_CATEGORY_HIDDEN,
             )
         else:
             auxiliary_entity = False
