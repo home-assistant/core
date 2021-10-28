@@ -151,22 +151,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self._attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
         self._last_event = None
 
-        if system.alarm_going_off:
-            self._attr_state = STATE_ALARM_TRIGGERED
-        elif system.state == SystemStates.away:
-            self._attr_state = STATE_ALARM_ARMED_AWAY
-        elif system.state in (
-            SystemStates.away_count,
-            SystemStates.exit_delay,
-            SystemStates.home_count,
-        ):
-            self._attr_state = STATE_ALARM_ARMING
-        elif system.state == SystemStates.home:
-            self._attr_state = STATE_ALARM_ARMED_HOME
-        elif system.state == SystemStates.off:
-            self._attr_state = STATE_ALARM_DISARMED
-        else:
-            self._attr_state = None
+        self._set_state_from_system_data()
 
     @callback
     def _is_code_valid(self, code: str | None, state: str) -> bool:
@@ -181,6 +166,17 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return False
 
         return True
+
+    @callback
+    def _set_state_from_system_data(self) -> None:
+        """Set the state based on the latest REST API data."""
+        if self._system.alarm_going_off:
+            self._attr_state = STATE_ALARM_TRIGGERED
+        elif state := STATE_MAP_FROM_REST_API.get(self._system.state):
+            self._attr_state = state
+        else:
+            LOGGER.error("Unknown system state (REST API): %s", self._system.state)
+            self._attr_state = None
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -266,11 +262,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
 
         self._errors = 0
 
-        if state := STATE_MAP_FROM_REST_API.get(self._system.state):
-            self._attr_state = state
-        else:
-            LOGGER.error("Unknown system state (REST API): %s", self._system.state)
-            self._attr_state = None
+        self._set_state_from_system_data()
 
     @callback
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
