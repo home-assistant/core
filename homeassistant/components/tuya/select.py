@@ -75,6 +75,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Heater
+    # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
+    "qn": (
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            name="Temperature Level",
+            icon="mdi:thermometer-lines",
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
