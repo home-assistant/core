@@ -452,6 +452,6 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         """Publish state change to MQTT."""
         if (new_state := event.data.get("new_state")) is None:
             return
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass, self._state_topic, new_state.state, self._qos, True
         )
