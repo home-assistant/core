@@ -356,6 +356,12 @@ def aeotec_nano_shutter_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_aeotec_nano_shutter_state.json"))
 
 
+@pytest.fixture(name="fibaro_fgr222_shutter_state", scope="session")
+def fibaro_fgr222_shutter_state_fixture():
+    """Load the Fibaro FGR222 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_fibaro_fgr222_state.json"))
+
+
 @pytest.fixture(name="aeon_smart_switch_6_state", scope="session")
 def aeon_smart_switch_6_state_fixture():
     """Load the AEON Labs (ZW096) Smart Switch 6 node state fixture data."""
@@ -739,6 +745,14 @@ def qubino_shutter_cover_fixture(client, qubino_shutter_state):
 def aeotec_nano_shutter_cover_fixture(client, aeotec_nano_shutter_state):
     """Mock a Aeotec Nano Shutter node."""
     node = Node(client, copy.deepcopy(aeotec_nano_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fibaro_fgr222_shutter")
+def fibaro_fgr222_shutter_cover_fixture(client, fibaro_fgr222_shutter_state):
+    """Mock a Fibaro FGR222 Shutter node."""
+    node = Node(client, copy.deepcopy(fibaro_fgr222_shutter_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
