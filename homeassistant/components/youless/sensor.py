@@ -21,6 +21,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -71,12 +72,12 @@ class YoulessBaseSensor(CoordinatorEntity, SensorEntity):
         self._sensor_id = sensor_id
 
         self._attr_unique_id = f"{DOMAIN}_{device}_{sensor_id}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"{device}_{device_group}")},
-            "name": friendly_name,
-            "manufacturer": "YouLess",
-            "model": self.coordinator.data.model,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{device}_{device_group}")},
+            manufacturer="YouLess",
+            model=self.coordinator.data.model,
+            name=friendly_name,
+        )
 
     @property
     def get_sensor(self) -> YoulessSensor | None:
