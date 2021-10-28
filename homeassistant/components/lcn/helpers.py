@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -245,6 +245,73 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
                 data[host_name][CONF_ENTITIES].append(entity_config)
 
     return list(data.values())
+
+
+def purge_entity_registry(
+    hass: HomeAssistant, entry_id: str, entry_data: ConfigType
+) -> None:
+    """Remove orphans from entity registry which are not in entry data."""
+    entity_registry = er.async_get(hass)
+
+    # Find all entities that are referenced in the config entry.
+    references_config_entry = {
+        entity.entity_id
+        for entity in entity_registry.entities.values()
+        if entity.config_entry_id == entry_id
+    }
+
+    # Find all entities that are referenced by the entry_data.
+    references_entry_data = set()
+    for entity_data in entry_data[CONF_ENTITIES]:
+        unique_entity_id = generate_unique_id(
+            entry_id, entity_data[CONF_ADDRESS], entity_data[CONF_RESOURCE]
+        )
+        entity_id = entity_registry.async_get_entity_id(
+            entity_data[CONF_DOMAIN], DOMAIN, unique_entity_id
+        )
+        if entity_id is not None:
+            references_entry_data.add(entity_id)
+
+    orphaned_ids = references_config_entry - references_entry_data
+    for orphaned_id in orphaned_ids:
+        entity_registry.async_remove(orphaned_id)
+
+
+def purge_device_registry(
+    hass: HomeAssistant, entry_id: str, entry_data: ConfigType
+) -> None:
+    """Remove orphans from device registry which are not in entry data."""
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    # Find all devices that are referenced in the entity registry.
+    references_entities = {
+        entry.device_id for entry in entity_registry.entities.values()
+    }
+
+    # Find device that references the host.
+    references_host = set()
+    host_device = device_registry.async_get_device({(DOMAIN, entry_id)})
+    if host_device is not None:
+        references_host.add(host_device.id)
+
+    # Find all devices that are referenced by the entry_data.
+    references_entry_data = set()
+    for device_data in entry_data[CONF_DEVICES]:
+        unique_device_id = generate_unique_id(entry_id, device_data[CONF_ADDRESS])
+        device = device_registry.async_get_device({(DOMAIN, unique_device_id)})
+        if device is not None:
+            references_entry_data.add(device.id)
+
+    orphaned_ids = (
+        set(device_registry.devices)
+        - references_entities
+        - references_host
+        - references_entry_data
+    )
+
+    for device_id in orphaned_ids:
+        device_registry.async_remove_device(device_id)
 
 
 def register_lcn_host_device(hass: HomeAssistant, config_entry: ConfigEntry) -> None:

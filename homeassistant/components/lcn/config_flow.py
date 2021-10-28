@@ -16,9 +16,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
+from .helpers import purge_device_registry, purge_entity_registry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,13 +93,10 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # check if we already have a host with the same address configured
         if entry := get_config_entry(self.hass, data):
             entry.source = config_entries.SOURCE_IMPORT
-
             # Cleanup entity and device registry, if we imported from configuration.yaml to
             # remove orphans when entities were removed from configuration
-            entity_registry = er.async_get(self.hass)
-            entity_registry.async_clear_config_entry(entry.entry_id)
-            device_registry = dr.async_get(self.hass)
-            device_registry.async_clear_config_entry(entry.entry_id)
+            purge_entity_registry(self.hass, entry.entry_id, data)
+            purge_device_registry(self.hass, entry.entry_id, data)
 
             self.hass.config_entries.async_update_entry(entry, data=data)
             return self.async_abort(reason="existing_configuration_updated")
