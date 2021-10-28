@@ -115,17 +115,12 @@ class CommandSwitch(SwitchEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = friendly_name
         self._state = False
-        self._command_on = (
-            CommandData(hass, command_on, timeout) if command_on else command_on
-        )
-        self._command_off = (
-            CommandData(hass, command_off, timeout) if command_off else command_off
-        )
-        self._command_state = (
-            CommandData(hass, command_state, timeout)
-            if command_state
-            else command_state
-        )
+        self._command_on = CommandData(hass, command_on, timeout)
+        self._command_off = CommandData(hass, command_off, timeout)
+        if command_state:
+            self._command_state = CommandData(hass, command_state, timeout)
+        else:
+            self._command_state = None
         self._icon_template = icon_template
         self._value_template = value_template
         self._timeout = timeout

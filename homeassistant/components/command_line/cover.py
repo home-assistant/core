@@ -103,22 +103,13 @@ class CommandCover(CoverEntity):
         self._hass = hass
         self._name = name
         self._state = None
-        self._command_open = (
-            CommandData(hass, command_open, timeout) if command_open else command_open
-        )
-        self._command_close = (
-            CommandData(hass, command_close, timeout)
-            if command_close
-            else command_close
-        )
-        self._command_stop = (
-            CommandData(hass, command_stop, timeout) if command_stop else command_stop
-        )
-        self._command_state = (
-            CommandData(hass, command_state, timeout)
-            if command_state
-            else command_state
-        )
+        self._command_open = CommandData(hass, command_open, timeout)
+        self._command_close = CommandData(hass, command_close, timeout)
+        self._command_stop = CommandData(hass, command_stop, timeout)
+        if command_state:
+            self._command_state = CommandData(hass, command_state, timeout)
+        else:
+            self._command_state = None
         self._value_template = value_template
         self._timeout = timeout
         self._attr_unique_id = unique_id
