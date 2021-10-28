@@ -79,6 +79,27 @@ async def test_state_none(hass: HomeAssistant) -> None:
         assert entity_state.state == STATE_OFF
 
 
+async def test_state_off_without_log(caplog: Any, hass: HomeAssistant) -> None:
+    """Test with none state."""
+    with tempfile.TemporaryDirectory() as tempdirname:
+        path = os.path.join(tempdirname, "switch_status")
+        await setup_test_entity(
+            hass,
+            {
+                "test": {
+                    "command_on": f"echo 1 > {path}",
+                    "command_off": f"echo 0 > {path}",
+                    "command_state": "foobar",
+                }
+            },
+        )
+
+        entity_state = hass.states.get("switch.test")
+        assert entity_state
+        assert entity_state.state == STATE_OFF
+        assert "Command failed" not in caplog.text
+
+
 async def test_state_value(hass: HomeAssistant) -> None:
     """Test with state value."""
     with tempfile.TemporaryDirectory() as tempdirname:
