@@ -12,6 +12,7 @@ from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES,
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORY_HIDDEN,
 )
 from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry as er, start
@@ -136,6 +137,7 @@ class CloudGoogleConfig(AbstractConfig):
             auxiliary_entity = registry_entry.entity_category in (
                 ENTITY_CATEGORY_CONFIG,
                 ENTITY_CATEGORY_DIAGNOSTIC,
+                ENTITY_CATEGORY_HIDDEN,
             )
         else:
             auxiliary_entity = False
