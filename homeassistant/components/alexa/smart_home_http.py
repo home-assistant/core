@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORY_HIDDEN,
 )
 from homeassistant.helpers import entity_registry as er
 
@@ -74,6 +75,7 @@ class AlexaConfig(AbstractConfig):
             auxiliary_entity = registry_entry.entity_category in (
                 ENTITY_CATEGORY_CONFIG,
                 ENTITY_CATEGORY_DIAGNOSTIC,
+                ENTITY_CATEGORY_HIDDEN,
             )
         else:
             auxiliary_entity = False
