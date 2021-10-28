@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_COMMAND_STOP,
     CONF_COVERS,
     CONF_FRIENDLY_NAME,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 import homeassistant.helpers.config_validation as cv
@@ -30,6 +31,7 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -61,6 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_config.get(CONF_COMMAND_STATE),
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
+                device_config.get(CONF_UNIQUE_ID),
             )
         )
 
@@ -84,6 +87,7 @@ class CommandCover(CoverEntity):
         command_state,
         value_template,
         timeout,
+        unique_id,
     ):
         """Initialize the cover."""
         self._hass = hass
@@ -95,6 +99,7 @@ class CommandCover(CoverEntity):
         self._command_state = command_state
         self._value_template = value_template
         self._timeout = timeout
+        self._attr_unique_id = unique_id
 
     def _move_cover(self, command):
         """Execute the actual commands."""
