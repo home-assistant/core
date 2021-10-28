@@ -55,12 +55,14 @@ SERVICE_NAME_UPGRADE_FIRMWARE = "upgrade_firmware"
 
 SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Required(CONF_UID): cv.string,
     }
 )
 
 SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Optional(CONF_URL): cv.url,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_FILENAME): cv.string,
