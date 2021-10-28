@@ -70,8 +70,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Venstar thermostat."""
-    client = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([VenstarThermostat(config_entry, client)], True)
+    venstar_data_coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        [
+            VenstarThermostat(
+                venstar_data_coordinator,
+                config_entry,
+            )
+        ],
+        True,
+    )
 
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
@@ -95,9 +103,9 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class VenstarThermostat(VenstarEntity, ClimateEntity):
     """Representation of a Venstar thermostat."""
 
-    def __init__(self, config, client):
+    def __init__(self, venstar_data_coordinator, config):
         """Initialize the thermostat."""
-        super().__init__(config, client)
+        super().__init__(venstar_data_coordinator, config)
         self._mode_map = {
             HVAC_MODE_HEAT: self._client.MODE_HEAT,
             HVAC_MODE_COOL: self._client.MODE_COOL,
