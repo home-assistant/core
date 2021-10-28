@@ -55,6 +55,14 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
+UPDATE_INTERVALS = {
+    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
+    DATA_PROGRAMS: timedelta(seconds=30),
+    DATA_RESTRICTIONS_CURRENT: timedelta(minutes=1),
+    DATA_RESTRICTIONS_UNIVERSAL: timedelta(minutes=1),
+    DATA_ZONES: timedelta(seconds=15),
+}
+
 # Constants expected by the RainMachine API for Service Data
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
@@ -230,7 +238,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             LOGGER,
             name=f'{controller.name} ("{api_category}")',
-            update_interval=DEFAULT_UPDATE_INTERVAL,
+            update_interval=UPDATE_INTERVALS[api_category],
             update_method=partial(async_update, api_category),
         )
         controller_init_tasks.append(coordinator.async_refresh())
