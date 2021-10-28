@@ -768,9 +768,16 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return DeviceInfo(
+        info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
         )
+        if self._device_info.webserver_port > 0:
+            info[
+                "configuration_url"
+            ] = f"http://{self._entry_data.client.address}:{self._device_info.webserver_port}"
+        else:
+            info["configuration_url"] = None
+        return info
 
     @property
     def name(self) -> str:
