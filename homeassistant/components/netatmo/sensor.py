@@ -294,7 +294,7 @@ MODULE_TYPE_INDOOR = "NAModule4"
 
 
 class BatteryData(NamedTuple):
-    """Metadata for a batter."""
+    """Metadata for a battery."""
 
     full: int
     high: int
