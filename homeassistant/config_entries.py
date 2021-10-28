@@ -8,7 +8,7 @@ from enum import Enum
 import functools
 import logging
 from types import MappingProxyType, MethodType
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Final, Optional, cast
 import weakref
 
 from homeassistant import data_entry_flow, loader
@@ -67,6 +67,8 @@ STORAGE_VERSION = 1
 PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
+
+STEP_USER: Final = "user"
 
 
 class ConfigEntryState(Enum):
