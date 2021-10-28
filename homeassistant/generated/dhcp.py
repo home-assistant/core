@@ -303,6 +303,11 @@ DHCP = [
         "macaddress": "A4D578*"
     },
     {
+        "domain": "simplisafe",
+        "hostname": "simplisafe*",
+        "macaddress": "30AEA4*"
+    },
+    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*"

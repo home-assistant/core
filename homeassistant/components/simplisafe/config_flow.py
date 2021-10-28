@@ -18,7 +18,7 @@ from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_USER_ID, DOMAIN, LOGGER
 
@@ -66,6 +66,10 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> SimpliSafeOptionsFlowHandler:
         """Define the config flow to handle options."""
         return SimpliSafeOptionsFlowHandler(config_entry)
+
+    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+        """Handle the configuration via dhcp."""
+        return await self.async_step_user()
 
     async def async_step_input_auth_code(
         self, user_input: dict[str, Any] | None = None
