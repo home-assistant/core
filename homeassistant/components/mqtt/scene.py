@@ -121,7 +121,7 @@ class MqttScene(
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_ON],
