@@ -214,6 +214,10 @@ async def test_step_reauth_wrong_account(hass, api, mock_async_from_auth):
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "wrong_account"
 
+    assert len(hass.config_entries.async_entries()) == 1
+    [config_entry] = hass.config_entries.async_entries(DOMAIN)
+    assert config_entry.unique_id == "12345"
+
 
 async def test_step_user(hass, mock_async_from_auth):
     """Test the user step."""
