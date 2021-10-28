@@ -110,12 +110,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 token := await async_get_token(self.hass, host)
             ):
                 updates[CONF_ACCESS_TOKEN] = token
-            self.hass.config_entries.async_update_entry(
-                entry, data={**entry.data, **updates}
-            )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id)
-            )
+            new_data = {**entry.data, **updates}
+            if new_data != dict(entry.data):
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, **updates}
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
             raise AbortFlow("already_configured")
 
         self._discovered = {CONF_HOST: host, CONF_NAME: bond_id}

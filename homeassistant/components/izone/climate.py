@@ -316,8 +316,7 @@ class ControllerDevice(ClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         if not self._controller.is_on:
             return HVAC_MODE_OFF
-        mode = self._controller.mode
-        if mode == Controller.Mode.FREE_AIR:
+        if (mode := self._controller.mode) == Controller.Mode.FREE_AIR:
             return HVAC_MODE_FAN_ONLY
         for (key, value) in self._state_to_pizone.items():
             if value == mode:

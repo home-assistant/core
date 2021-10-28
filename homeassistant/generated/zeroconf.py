@@ -189,6 +189,11 @@ ZEROCONF = {
             "domain": "nut"
         }
     ],
+    "_plexmediasvr._tcp.local.": [
+        {
+            "domain": "plex"
+        }
+    ],
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise"

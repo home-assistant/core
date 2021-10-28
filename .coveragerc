@@ -1112,6 +1112,7 @@ omit =
     homeassistant/components/tuya/__init__.py
     homeassistant/components/tuya/base.py
     homeassistant/components/tuya/binary_sensor.py
+    homeassistant/components/tuya/camera.py
     homeassistant/components/tuya/climate.py
     homeassistant/components/tuya/const.py
     homeassistant/components/tuya/fan.py
@@ -1120,6 +1121,7 @@ omit =
     homeassistant/components/tuya/scene.py
     homeassistant/components/tuya/select.py
     homeassistant/components/tuya/sensor.py
+    homeassistant/components/tuya/siren.py
     homeassistant/components/tuya/switch.py
     homeassistant/components/twentemilieu/const.py
     homeassistant/components/twentemilieu/sensor.py
@@ -1173,6 +1175,7 @@ omit =
     homeassistant/components/vilfo/const.py
     homeassistant/components/vivotek/camera.py
     homeassistant/components/vlc/media_player.py
+    homeassistant/components/vlc_telnet/__init__.py
     homeassistant/components/vlc_telnet/media_player.py
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/__init__.py

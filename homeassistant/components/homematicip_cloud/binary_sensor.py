@@ -544,8 +544,8 @@ class HomematicipSecuritySensorGroup(
     @property
     def is_on(self) -> bool:
         """Return true if safety issue detected."""
-        parent_is_on = super().is_on
-        if parent_is_on:
+        if super().is_on:
+            # parent is on
             return True
 
         if (

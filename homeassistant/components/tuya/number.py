@@ -8,6 +8,7 @@ from tuya_iot.device import TuyaDeviceStatusRange
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,24 +28,42 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.WATER_SET,
             name="Water Level",
             icon="mdi:cup-water",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             name="Temperature",
             icon="mdi:thermometer",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.WARM_TIME,
             name="Heat Preservation Time",
             icon="mdi:timer",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.POWDER_SET,
             name="Powder",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Siren Alarm
+    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    "sgbj": (
+        NumberEntityDescription(
+            key=DPCode.ALARM_TIME,
+            name="Time",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Vibration Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    "zd": (
+        NumberEntityDescription(
+            key=DPCode.SENSITIVITY,
+            name="Sensitivity",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
 }
@@ -121,7 +140,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             return None
 
         # Raw value
-        value = self.tuya_device.status.get(self.entity_description.key)
+        value = self.device.status.get(self.entity_description.key)
 
         # Scale integer/float value
         if value and isinstance(self._type_data, IntegerTypeData):

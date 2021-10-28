@@ -290,7 +290,6 @@ class KNXModule:
         """Start XKNX object. Connect to tunneling or Routing device."""
         await self.xknx.start()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
-        self.connected = True
 
     async def stop(self, event: Event) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""

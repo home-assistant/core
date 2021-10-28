@@ -11,6 +11,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -34,6 +35,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.WARM,
             name="Heat preservation",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
     # Pet Water Feeder
@@ -43,11 +45,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.FILTER_RESET,
             name="Filter reset",
             icon="mdi:filter",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.PUMP_RESET,
             name="Water pump reset",
             icon="mdi:pump",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH,
@@ -57,7 +61,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.WATER_RESET,
             name="Reset of water usage days",
             icon="mdi:water-sync",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
     # Cirquit Breaker
@@ -66,6 +70,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.CHILD_LOCK,
             name="Child Lock",
             icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
@@ -79,6 +84,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.CHILD_LOCK,
             name="Child Lock",
             icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
@@ -147,17 +153,19 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.ANION,
             name="Ionizer",
             icon="mdi:minus-circle-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.FILTER_RESET,
             name="Filter cartridge reset",
             icon="mdi:filter",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.LOCK,
             name="Child lock",
             icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH,
@@ -167,6 +175,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.WET,
             name="Humidification",
             icon="mdi:water-percent",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
     # Power Socket
@@ -176,6 +185,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.CHILD_LOCK,
             name="Child Lock",
             icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
@@ -237,7 +247,17 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_OUTLET,
         ),
     ),
+    # Siren Alarm
+    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    "sgbj": (
+        SwitchEntityDescription(
+            key=DPCode.MUFFLING,
+            name="Mute",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Diffuser
+    # https://developer.tuya.com/en/docs/iot/categoryxxj?id=Kaiuz1f9mo6bl
     "xxj": (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
@@ -252,7 +272,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.SWITCH_VOICE,
             name="Voice",
             icon="mdi:account-voice",
-            entity_registry_enabled_default=False,
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
 }
@@ -312,7 +332,7 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self.tuya_device.status.get(self.entity_description.key, False)
+        return self.device.status.get(self.entity_description.key, False)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

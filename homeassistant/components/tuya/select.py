@@ -8,6 +8,7 @@ from tuya_iot.device import TuyaDeviceStatusRange
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,14 +33,31 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.CONCENTRATION_SET,
             name="Concentration",
             icon="mdi:altimeter",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.MATERIAL,
             name="Material",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.MODE,
             name="Mode",
+            icon="mdi:coffee",
+        ),
+    ),
+    # Siren Alarm
+    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    "sgbj": (
+        SelectEntityDescription(
+            key=DPCode.ALARM_VOLUME,
+            name="Volume",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.BRIGHT_STATE,
+            name="Brightness",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
 }
@@ -105,7 +123,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         # Raw value
-        value = self.tuya_device.status.get(self.entity_description.key)
+        value = self.device.status.get(self.entity_description.key)
         if value is None or value not in self._attr_options:
             return None
 

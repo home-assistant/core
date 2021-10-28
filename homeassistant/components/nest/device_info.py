@@ -48,8 +48,7 @@ class NestDeviceInfo:
                 return trait.custom_name
         # Build a name from the room/structure.  Note: This room/structure name
         # is not associated with a home assistant Area.
-        parent_relations = self._device.parent_relations
-        if parent_relations:
+        if parent_relations := self._device.parent_relations:
             items = sorted(parent_relations.items())
             names = [name for id, name in items]
             return " ".join(names)

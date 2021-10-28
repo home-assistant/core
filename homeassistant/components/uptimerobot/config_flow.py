@@ -111,21 +111,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_API_KEY] == import_config[CONF_API_KEY]:
-                LOGGER.warning(
-                    "Already configured. This YAML configuration has already been imported. Please remove it"
-                )
-                return self.async_abort(reason="already_configured")
-
-        imported_config = {CONF_API_KEY: import_config[CONF_API_KEY]}
-
-        _, account = await self._validate_input(imported_config)
-        if account:
-            await self.async_set_unique_id(str(account.user_id))
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=account.email, data=imported_config)
-        return self.async_abort(reason="unknown")

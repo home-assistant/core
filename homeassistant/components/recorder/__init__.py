@@ -463,9 +463,7 @@ class Recorder(threading.Thread):
         if event.event_type in self.exclude_t:
             return False
 
-        entity_id = event.data.get(ATTR_ENTITY_ID)
-
-        if entity_id is None:
+        if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
             return True
 
         if isinstance(entity_id, str):
@@ -496,8 +494,7 @@ class Recorder(threading.Thread):
 
     def do_adhoc_statistics(self, **kwargs):
         """Trigger an adhoc statistics run."""
-        start = kwargs.get("start")
-        if not start:
+        if not (start := kwargs.get("start")):
             start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 

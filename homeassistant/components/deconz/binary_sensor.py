@@ -15,8 +15,8 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_TAMPER,
     DEVICE_CLASS_VIBRATION,
     DOMAIN,
     BinarySensorEntity,
@@ -169,7 +169,7 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
 
     TYPE = DOMAIN
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = DEVICE_CLASS_TAMPER
 
     def __init__(self, device, gateway):
         """Initialize deCONZ binary sensor."""
