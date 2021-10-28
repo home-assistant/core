@@ -196,8 +196,7 @@ MODELS_LIGHT = (
     + MODELS_LIGHT_MONO
 )
 
-# pylint: disable=fixme
-# TODO: use const from pythonmiio(upstream lib) once new release with the constant has been published
+# TODO: use const from pythonmiio once new release with the constant has been published. # pylint: disable=fixme
 ROCKROBO_S5_MAX = "roborock.vacuum.s5e"
 MODELS_VACUUM = [
     ROCKROBO_V1,
