@@ -5,10 +5,11 @@ import pytest
 from simplipy.errors import InvalidCredentialsError, SimplipyError
 
 from homeassistant import data_entry_flow
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.components.simplisafe.config_flow import CONF_AUTH_CODE
 from homeassistant.components.simplisafe.const import CONF_USER_ID
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
 from tests.common import MockConfigEntry
@@ -108,6 +109,36 @@ async def test_options_flow(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert entry.options == {CONF_CODE: "4321"}
+
+
+async def test_step_dhcp(hass, mock_async_from_auth):
+    """Test the DHCP step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data={
+            IP_ADDRESS: "192.168.1.100",
+            HOSTNAME: "simplisafe_basestation",
+            MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
+    ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    assert len(hass.config_entries.async_entries()) == 1
+    [config_entry] = hass.config_entries.async_entries(DOMAIN)
+    assert config_entry.data == {CONF_USER_ID: "12345", CONF_TOKEN: "token123"}
 
 
 async def test_step_reauth_old_format(hass, mock_async_from_auth):
