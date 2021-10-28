@@ -207,6 +207,8 @@ class ZWaveTiltCover(ZWaveCover):
                 tilt_value,
                 percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
             )
+            # The following 2 lines are a workaround for the issue 3611 in the zwave_js code (https://github.com/zwave-js/node-zwave-js/issues/3611).
+            # As soon as the issue is fixed, the 2 lines should be removed.
             await asyncio.sleep(2.5)
             await self.info.node.async_refresh_cc_values(tilt_value.command_class)
 
