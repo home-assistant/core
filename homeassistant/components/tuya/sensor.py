@@ -29,6 +29,8 @@ from homeassistant.const import (
     DEVICE_CLASS_VOLTAGE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -533,37 +535,46 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             elif self._status_range.type == "Enum":
                 self._type_data = EnumTypeData.from_json(self._status_range.values)
 
-        # Logic to ensure the set device class and API received Unit Of Measurement
-        # match Home Assistants requirements.
-        if (
-            self.device_class is not None
-            and not self.device_class.startswith(DOMAIN)
-            and description.native_unit_of_measurement is None
-        ):
-            # We cannot have a device class, if the UOM isn't set or the
-            # device class cannot be found in the validation mapping.
+        # For temperature sensors check whether TEMP_UNIT_CONVERT is available and, if so,
+        # use the unit of measurement specified by it
+        if description.key == DPCode.TEMP_CURRENT:
+            unit_convert = device.status.get(DPCode.TEMP_UNIT_CONVERT, "").lower()
+            if unit_convert == "f":
+                self._attr_native_unit_of_measurement = TEMP_FAHRENHEIT
+            else:
+                self._attr_native_unit_of_measurement = TEMP_CELSIUS
+        else:
+            # Logic to ensure the set device class and API received Unit Of Measurement
+            # match Home Assistants requirements.
             if (
-                self.unit_of_measurement is None
-                or self.device_class not in DEVICE_CLASS_UNITS
+                self.device_class is not None
+                and not self.device_class.startswith(DOMAIN)
+                and description.native_unit_of_measurement is None
             ):
-                self._attr_device_class = None
-                return
+                # We cannot have a device class, if the UOM isn't set or the
+                # device class cannot be found in the validation mapping.
+                if (
+                    self.unit_of_measurement is None
+                    or self.device_class not in DEVICE_CLASS_UNITS
+                ):
+                    self._attr_device_class = None
+                    return
 
-            uoms = DEVICE_CLASS_UNITS[self.device_class]
-            self._uom = uoms.get(self.unit_of_measurement) or uoms.get(
-                self.unit_of_measurement.lower()
-            )
+                uoms = DEVICE_CLASS_UNITS[self.device_class]
+                self._uom = uoms.get(self.unit_of_measurement) or uoms.get(
+                    self.unit_of_measurement.lower()
+                )
 
-            # Unknown unit of measurement, device class should not be used.
-            if self._uom is None:
-                self._attr_device_class = None
-                return
+                # Unknown unit of measurement, device class should not be used.
+                if self._uom is None:
+                    self._attr_device_class = None
+                    return
 
-            # Found unit of measurement, use the standardized Unit
-            # Use the target conversion unit (if set)
-            self._attr_native_unit_of_measurement = (
-                self._uom.conversion_unit or self._uom.unit
-            )
+                # Found unit of measurement, use the standardized Unit
+                # Use the target conversion unit (if set)
+                self._attr_native_unit_of_measurement = (
+                    self._uom.conversion_unit or self._uom.unit
+                )
 
     @property
     def native_value(self) -> StateType:
