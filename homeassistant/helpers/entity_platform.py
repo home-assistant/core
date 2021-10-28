@@ -484,6 +484,8 @@ class EntityPlatform:
                         "homeassistant",
                     ]:
                         processed_dev_info["configuration_url"] = configuration_url
+                    elif device_info["configuration_url"] is None:
+                        processed_dev_info["configuration_url"] = None  # type: ignore[assignment]
                     else:
                         _LOGGER.warning(
                             "Ignoring invalid device configuration_url '%s'",
