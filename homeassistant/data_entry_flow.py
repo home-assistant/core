@@ -21,6 +21,7 @@ RESULT_TYPE_EXTERNAL_STEP_DONE = "external_done"
 RESULT_TYPE_SHOW_PROGRESS = "progress"
 RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
 
+STEP_ID_INIT: Final = "init"
 STEP_ID_USER: Final = "user"
 
 # Event that is fired when a flow is progressed via external or progress source.
