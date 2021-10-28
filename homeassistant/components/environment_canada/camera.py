@@ -35,19 +35,12 @@ class ECCamera(CoordinatorEntity, Camera):
         self._attr_entity_registry_enabled_default = False
 
         self.content_type = "image/gif"
-        self.image = None
-        self.observation_time = None
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        if not hasattr(self.radar_object, "timestamp"):
-            return None
-        self.observation_time = self.radar_object.timestamp
+        self._attr_extra_state_attributes = {
+            ATTR_OBSERVATION_TIME: self.radar_object.timestamp,
+        }
         return self.radar_object.image
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        return {ATTR_OBSERVATION_TIME: self.observation_time}
