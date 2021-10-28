@@ -46,6 +46,14 @@ set_system_properties:
   name: Set system properties
   description: Set one or more system properties
   fields:
+    device_id:
+      name: Valve Controller
+      description: The valve controller to remove the sensor from
+      required: true
+      selector:
+        device:
+          integration: simplisafe
+          model: alarm_control_panel
     alarm_duration:
       name: Alarm duration
       description: The length of a triggered alarm

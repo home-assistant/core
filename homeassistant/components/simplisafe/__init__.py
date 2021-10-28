@@ -49,6 +49,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     CONF_CODE,
+    CONF_DEVICE_ID,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
