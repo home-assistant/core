@@ -1,4 +1,6 @@
 """Support for monitoring a GreenEye Monitor energy monitor."""
+from __future__ import annotations
+
 import logging
 from typing import Any
 
