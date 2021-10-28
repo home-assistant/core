@@ -28,6 +28,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORY_HIDDEN,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -59,6 +60,7 @@ FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) 
 ENTITY_CATEGORIES: Final[list[str]] = [
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORY_HIDDEN,
 ]
 
 ENTITY_CATEGORIES_SCHEMA: Final = vol.In(ENTITY_CATEGORIES)
@@ -193,7 +195,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    entity_category: Literal["config", "diagnostic"] | None = None
+    entity_category: Literal["config", "diagnostic", "hidden"] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None

@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_TARGET,
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORY_HIDDEN,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
@@ -370,6 +371,7 @@ def async_extract_referenced_entity_ids(
         if ent_entry.entity_category in (
             ENTITY_CATEGORY_CONFIG,
             ENTITY_CATEGORY_DIAGNOSTIC,
+            ENTITY_CATEGORY_HIDDEN,
         ):
             continue
 
