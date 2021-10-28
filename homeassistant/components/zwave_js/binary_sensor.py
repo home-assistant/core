@@ -23,11 +23,13 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
+    DEVICE_CLASS_TAMPER,
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -166,7 +168,8 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         # NotificationType 7: Home Security - State Id's 3, 4, 9 (tampering)
         key=NOTIFICATION_HOME_SECURITY,
         states=("3", "4", "9"),
-        device_class=DEVICE_CLASS_SAFETY,
+        device_class=DEVICE_CLASS_TAMPER,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 7: Home Security - State Id's 5, 6 (glass breakage)
@@ -179,6 +182,14 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         key=NOTIFICATION_HOME_SECURITY,
         states=("7", "8"),
         device_class=DEVICE_CLASS_MOTION,
+    ),
+    NotificationZWaveJSEntityDescription(
+        # NotificationType 8: Power Management -
+        # State Id's 10, 11, 17 (Battery maintenance status)
+        key=NOTIFICATION_POWER_MANAGEMENT,
+        states=("10", "11", "17"),
+        device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 9: System - State Id's 1, 2, 6, 7
@@ -228,6 +239,7 @@ BOOLEAN_SENSOR_MAPPINGS: dict[str, BinarySensorEntityDescription] = {
     CommandClass.BATTERY: BinarySensorEntityDescription(
         key=str(CommandClass.BATTERY),
         device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
