@@ -1190,7 +1190,7 @@ pyzerproc==0.4.8
 rachiopy==1.0.3
 
 # homeassistant.components.rainmachine
-regenmaschine==3.2.0
+regenmaschine==2021.10.0
 
 # homeassistant.components.renault
 renault-api==0.1.4
