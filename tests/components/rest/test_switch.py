@@ -152,7 +152,7 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
 
 async def test_setup_with_templated_headers_params(hass, aioclient_mock):
     """Test setup with valid configuration."""
-    aioclient_mock.get("http://localhost", status=HTTP_OK)
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
         SWITCH_DOMAIN,
