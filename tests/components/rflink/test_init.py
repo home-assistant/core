@@ -10,13 +10,20 @@ from homeassistant.components.rflink import (
     CONF_KEEPALIVE_IDLE,
     CONF_RECONNECT_INTERVAL,
     DATA_ENTITY_LOOKUP,
+    DOMAIN as RFLINK_DOMAIN,
     EVENT_KEY_COMMAND,
     EVENT_KEY_SENSOR,
     SERVICE_SEND_COMMAND,
     TMP_ENTITY,
     RflinkCommand,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_STOP_COVER, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_PORT,
+    SERVICE_STOP_COVER,
+    SERVICE_TURN_OFF,
+)
 
 
 async def mock_rflink(
@@ -386,11 +393,11 @@ async def test_not_connected(hass, monkeypatch):
 async def test_keepalive(hass, monkeypatch, caplog):
     """Validate negative keepalive values."""
     keepalive_value = -3
-    domain = "rflink"
+    domain = RFLINK_DOMAIN
     config = {
-        "rflink": {
-            "host": "10.10.0.1",
-            "port": 1234,
+        RFLINK_DOMAIN: {
+            CONF_HOST: "10.10.0.1",
+            CONF_PORT: 1234,
             CONF_KEEPALIVE_IDLE: keepalive_value,
         }
     }
@@ -406,11 +413,11 @@ async def test_keepalive(hass, monkeypatch, caplog):
 async def test2_keepalive(hass, monkeypatch, caplog):
     """Validate very short keepalive values."""
     keepalive_value = 30
-    domain = "rflink"
+    domain = RFLINK_DOMAIN
     config = {
-        "rflink": {
-            "host": "10.10.0.1",
-            "port": 1234,
+        RFLINK_DOMAIN: {
+            CONF_HOST: "10.10.0.1",
+            CONF_PORT: 1234,
             CONF_KEEPALIVE_IDLE: keepalive_value,
         }
     }
@@ -425,8 +432,10 @@ async def test2_keepalive(hass, monkeypatch, caplog):
 
 async def test3_keepalive(hass, monkeypatch, caplog):
     """Validate keepalive=0 value."""
-    domain = "rflink"
-    config = {"rflink": {"host": "10.10.0.1", "port": 1234, CONF_KEEPALIVE_IDLE: 0}}
+    domain = RFLINK_DOMAIN
+    config = {
+        RFLINK_DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234, CONF_KEEPALIVE_IDLE: 0}
+    }
 
     # setup mocking rflink module
     _, _, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
