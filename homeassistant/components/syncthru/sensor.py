@@ -1,4 +1,5 @@
 """Support for Samsung Printers with SyncThru web interface."""
+from __future__ import annotations
 
 import logging
 
@@ -9,6 +10,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -129,9 +131,13 @@ class SyncThruSensor(CoordinatorEntity, SensorEntity):
         return self._unit_of_measurement
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device information."""
-        return {"identifiers": device_identifiers(self.syncthru)}
+        if (identifiers := device_identifiers(self.syncthru)) is None:
+            return None
+        return DeviceInfo(
+            identifiers=identifiers,
+        )
 
 
 class SyncThruMainSensor(SyncThruSensor):
