@@ -140,7 +140,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         await self._player.clear_queue()
 
     @log_command_error("join_players")
-    async def async_join_players(self, group_members: list):
+    async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         await self._group_manager.async_join_players(self.entity_id, group_members)
 
