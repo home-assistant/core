@@ -245,39 +245,16 @@ def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
     return data
 
 
-@bind_hass
-def publish(hass: HomeAssistant, topic, payload, qos=None, retain=None) -> None:
+def publish(hass: HomeAssistant, topic, payload, qos=0, retain=False) -> None:
     """Publish message to an MQTT topic."""
     hass.add_job(async_publish, hass, topic, payload, qos, retain)
 
 
-@callback
-@bind_hass
-def async_publish(
-    hass: HomeAssistant, topic: Any, payload, qos=None, retain=None
+async def async_publish(
+    hass: HomeAssistant, topic: Any, payload, qos=0, retain=False
 ) -> None:
     """Publish message to an MQTT topic."""
-    data = _build_publish_data(topic, qos, retain)
-    data[ATTR_PAYLOAD] = payload
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
-
-
-@bind_hass
-def publish_template(
-    hass: HomeAssistant, topic, payload_template, qos=None, retain=None
-) -> None:
-    """Publish message to an MQTT topic."""
-    hass.add_job(async_publish_template, hass, topic, payload_template, qos, retain)
-
-
-@bind_hass
-def async_publish_template(
-    hass: HomeAssistant, topic, payload_template, qos=None, retain=None
-) -> None:
-    """Publish message to an MQTT topic using a template payload."""
-    data = _build_publish_data(topic, qos, retain)
-    data[ATTR_PAYLOAD_TEMPLATE] = payload_template
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
+    await hass.data[DATA_MQTT].async_publish(topic, str(payload), qos, retain)
 
 
 AsyncDeprecatedMessageCallbackType = Callable[
