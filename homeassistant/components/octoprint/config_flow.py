@@ -22,7 +22,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _schema_with_defaults(username="", host=None, port=80, path="/", ssl=False):
+def _schema_with_defaults(username="", host="", port=80, path="/", ssl=False):
     return vol.Schema(
         {
             vol.Required(CONF_USERNAME, default=username): cv.string,
