@@ -29,7 +29,8 @@ async def test_setup_device_not_found(hass: HomeAssistant):
     """Test setup entry."""
     entry = configure_integration(hass)
     with patch(
-        "devolo_plc_api.device.Device.async_connect", side_effect=DeviceNotFound
+        "homeassistant.components.devolo_home_network.Device.async_connect",
+        side_effect=DeviceNotFound,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -51,7 +52,9 @@ async def test_unload_entry(hass: HomeAssistant):
 async def test_hass_stop(hass: HomeAssistant):
     """Test homeassistant stop event."""
     entry = configure_integration(hass)
-    with patch("devolo_plc_api.device.Device.async_disconnect") as async_disconnect:
+    with patch(
+        "homeassistant.components.devolo_home_network.Device.async_disconnect"
+    ) as async_disconnect:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)

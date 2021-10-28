@@ -1,38 +1,39 @@
 """Generic platform."""
 from __future__ import annotations
 
-import logging
-
 from devolo_plc_api.device import Device
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 
-
-class DevoloEntity(Entity):
+class DevoloEntity(CoordinatorEntity):
     """Representation of a devolo home network device."""
 
-    def __init__(self, device: Device, device_name: str) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, device: Device, device_name: str
+    ) -> None:
         """Initialize a devolo home network device."""
+        super().__init__(coordinator)
+        self.entity_description: SensorEntityDescription
+
         self._device = device
         self._device_name = device_name
 
-        self._attr_state = 0
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._device.serial_number)},
-            "manufacturer": "devolo",
-            "model": self._device.product,
-            "name": self._device_name,
-            "sw_version": self._device.firmware_version,
-        }
-
-    def _set_availability(self, available: bool) -> None:
-        """Set availability and log if changed."""
-        if self.available and not available:
-            _LOGGER.warning("Unable to connect to %s", self._device_name)
-        if not self.available and available:
-            _LOGGER.warning("Reconnected to %s", self._device_name)
-        self._attr_available = available
+        self._attr_device_info = DeviceInfo(
+            configuration_url=f"http://{self._device.ip}",
+            identifiers={(DOMAIN, str(self._device.serial_number))},
+            manufacturer="devolo",
+            model=self._device.product,
+            name=self._device_name,
+            sw_version=self._device.firmware_version,
+        )
+        self._attr_unique_id = (
+            f"{self._device.serial_number}_{self.entity_description.key}"
+        )

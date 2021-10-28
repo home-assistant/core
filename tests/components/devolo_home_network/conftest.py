@@ -1,11 +1,11 @@
 """Fixtures for tests."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from . import async_connect
-from .const import DISCOVERY_INFO
+from .const import CONNECTED_STATIONS, DISCOVERY_INFO, NEIGHBOR_ACCESS_POINTS, PLCNET
 
 
 @pytest.fixture()
@@ -13,6 +13,15 @@ def mock_device():
     """Mock connecting to a devolo home network device."""
     with patch("devolo_plc_api.device.Device.async_connect", async_connect), patch(
         "devolo_plc_api.device.Device.async_disconnect"
+    ), patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_connected_station",
+        new=AsyncMock(return_value=CONNECTED_STATIONS),
+    ), patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_neighbor_access_points",
+        new=AsyncMock(return_value=NEIGHBOR_ACCESS_POINTS),
+    ), patch(
+        "devolo_plc_api.plcnet_api.plcnetapi.PlcNetApi.async_get_network_overview",
+        new=AsyncMock(return_value=PLCNET),
     ):
         yield
 

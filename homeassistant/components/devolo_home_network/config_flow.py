@@ -38,7 +38,7 @@ async def validate_input(
     await device.async_disconnect()
 
     return {
-        SERIAL_NUMBER: device.serial_number,
+        SERIAL_NUMBER: str(device.serial_number),
         TITLE: device.hostname.split(".")[0],
     }
 
