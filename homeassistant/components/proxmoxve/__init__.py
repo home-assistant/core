@@ -152,7 +152,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         for node_config in host_config["nodes"]:
             node_name = node_config["node"]
-            node_coordinators = coordinators[host_name][node_name] = { "machines": {} }
+            node_coordinators = coordinators[host_name][node_name] = {"machines": {}}
 
             for vm_id in node_config["vms"]:
                 coordinator = create_coordinator_container_vm(
