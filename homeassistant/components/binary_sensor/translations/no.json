@@ -31,6 +31,7 @@
             "is_not_plugged_in": "{entity_name} er koblet fra",
             "is_not_powered": "{entity_name} er spenningsl\u00f8s",
             "is_not_present": "{entity_name} er ikke tilstede",
+            "is_not_running": "{entity_name} kj\u00f8rer ikke",
             "is_not_tampered": "{entity_name} oppdager ikke manipulering",
             "is_not_unsafe": "{entity_name} er trygg",
             "is_occupied": "{entity_name} er opptatt",
@@ -41,6 +42,7 @@
             "is_powered": "{entity_name} er spenningssatt",
             "is_present": "{entity_name} er tilstede",
             "is_problem": "{entity_name} registrerer et problem",
+            "is_running": "{entity_name} kj\u00f8rer",
             "is_smoke": "{entity_name} registrerer r\u00f8yk",
             "is_sound": "{entity_name} registrerer lyd",
             "is_tampered": "{entity_name} oppdager manipulering",
@@ -81,6 +83,7 @@
             "not_plugged_in": "{entity_name} koblet fra",
             "not_powered": "{entity_name} spenningsl\u00f8s",
             "not_present": "{entity_name} ikke til stede",
+            "not_running": "{entity_name} kj\u00f8rer ikke lenger",
             "not_unsafe": "{entity_name} ble trygg",
             "occupied": "{entity_name} ble opptatt",
             "opened": "{entity_name} \u00e5pnet",
@@ -88,6 +91,7 @@
             "powered": "{entity_name} spenningssatt",
             "present": "{entity_name} tilstede",
             "problem": "{entity_name} begynte \u00e5 registrere et problem",
+            "running": "{entity_name} begynte \u00e5 kj\u00f8re",
             "smoke": "{entity_name} begynte \u00e5 registrere r\u00f8yk",
             "sound": "{entity_name} begynte \u00e5 registrere lyd",
             "turned_off": "{entity_name} sl\u00e5tt av",
@@ -96,6 +100,19 @@
             "update": "{entity_name} har en oppdatering tilgjengelig",
             "vibration": "{entity_name} begynte \u00e5 oppdage vibrasjon"
         }
+    },
+    "device_class": {
+        "cold": "kald",
+        "gas": "Gass",
+        "heat": "varme",
+        "moisture": "fuktighet",
+        "motion": "bevegelse",
+        "occupancy": "Bruk",
+        "power": "kraft",
+        "problem": "problem",
+        "smoke": "r\u00f8yk",
+        "sound": "lyd",
+        "vibration": "vibrasjon"
     },
     "state": {
         "_": {
@@ -173,6 +190,10 @@
         "problem": {
             "off": "",
             "on": ""
+        },
+        "running": {
+            "off": "Kj\u00f8rer ikke",
+            "on": "Kj\u00f8rer"
         },
         "safety": {
             "off": "Sikker",
