@@ -78,6 +78,8 @@ PLATFORM_SCHEMA = vol.All(
     ),
 )
 
+HVAC_MODES = ["off","auto","cool","heat"]
+
 HVAC_MODE_TO_HW_MODE = {
     "SwitchOffAllowed": {HVAC_MODE_OFF: "off"},
     "SwitchAutoAllowed": {HVAC_MODE_HEAT_COOL: "auto"},
@@ -372,14 +374,14 @@ class HoneywellUSThermostat(ClimateEntity):
             _LOGGER.error("Can not get system mode")
             return
         # Check that we got a valid mode back
-        if mode in HW_MODE_TO_HVAC_MODE.keys():
+        if mode in HVAC_MODES:
             try:
                 # Set permanent hold
                 setattr(self._device, f"hold_{mode}", True)
             except somecomfort.SomeComfortError:
                 _LOGGER.error("Couldn't set permanent hold")
         else:
-            _LOGGER.error("Invalid system mode returned: %s." % mode)
+            _LOGGER.error("Invalid system mode returned: %s.", mode)
 
     def _turn_away_mode_off(self) -> None:
         """Turn away/hold off."""
