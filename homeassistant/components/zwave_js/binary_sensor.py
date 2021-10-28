@@ -223,6 +223,15 @@ PROPERTY_SENSOR_MAPPINGS: dict[str, PropertyZWaveJSEntityDescription] = {
 }
 
 
+# Mappings for boolean sensors
+BOOLEAN_SENSOR_MAPPINGS: dict[str, BinarySensorEntityDescription] = {
+    CommandClass.BATTERY: BinarySensorEntityDescription(
+        key=str(CommandClass.BATTERY),
+        device_class=DEVICE_CLASS_BATTERY,
+    ),
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -282,11 +291,10 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
         # Entity class attributes
         self._attr_name = self.generate_name(include_value_name=True)
-        self._attr_device_class = (
-            DEVICE_CLASS_BATTERY
-            if self.info.primary_value.command_class == CommandClass.BATTERY
-            else None
-        )
+        if description := BOOLEAN_SENSOR_MAPPINGS.get(
+            self.info.primary_value.command_class
+        ):
+            self.entity_description = description
 
     @property
     def is_on(self) -> bool | None:
