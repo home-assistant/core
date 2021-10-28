@@ -453,7 +453,6 @@ class LIFXLight(LightEntity):
     def __init__(self, bulb, effects_conductor):
         """Initialize the light."""
         self.bulb = bulb
-        self.real_mac_addr = self.bulb.mac_addr
         self.effects_conductor = effects_conductor
         self.registered = True
         self.postponed_update = None
@@ -461,15 +460,14 @@ class LIFXLight(LightEntity):
 
     def get_mac_addr(self):
         """Increment the last byte of the mac address by one for FW>3.70."""
-        real_mac_addr = self.bulb.mac_addr
         if (
             self.bulb.host_firmware_version
             and AwesomeVersion(self.bulb.host_firmware_version) >= FIX_MAC_FW
         ):
             octets = [int(octet, 16) for octet in self.bulb.mac_addr.split(":")]
             octets[5] = (octets[5] + 1) % 256
-            real_mac_addr = ":".join(f"{octet:02x}" for octet in octets)
-        return real_mac_addr
+            return ":".join(f"{octet:02x}" for octet in octets)
+        return self.bulb.mac_addr
 
     @property
     def device_info(self) -> DeviceInfo:
