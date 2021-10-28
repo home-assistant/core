@@ -22,6 +22,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
@@ -83,7 +84,7 @@ SENSOR_POWER_PRODUCTION_THIS_YEAR = "power_production_this_year"
 class ViCareSensorEntityDescription(SensorEntityDescription, ViCareRequiredKeysMixin):
     """Describes ViCare sensor entity."""
 
-    unit_getter: Callable[[Device], bool | None] | None = None
+    unit_getter: Callable[[Device], str | None] | None = None
 
 
 GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
@@ -185,7 +186,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         name="Power production current",
         native_unit_of_measurement=POWER_WATT,
         value_getter=lambda api: api.getPowerProductionCurrent(),
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
@@ -312,7 +313,7 @@ def _build_entity(name, vicare_api, device_config, sensor):
     try:
         sensor.value_getter(vicare_api)
 
-        if callable(sensor.unit_getter):
+        if sensor.unit_getter:
             with suppress(PyViCareNotSupportedFeatureError):
                 vicare_unit = sensor.unit_getter(vicare_api)
                 if vicare_unit is not None:
