@@ -379,7 +379,7 @@ class HoneywellUSThermostat(ClimateEntity):
             except somecomfort.SomeComfortError:
                 _LOGGER.error("Couldn't set permanent hold")
         else:
-            _LOGGER.error("Invalid system mode returned: %s.", mode)
+            _LOGGER.error("Invalid system mode returned: %s", mode)
 
     def _turn_away_mode_off(self) -> None:
         """Turn away/hold off."""
