@@ -130,16 +130,14 @@ async def ws_get_statistics_during_period(
     start_time_str = msg["start_time"]
     end_time_str = msg.get("end_time")
 
-    start_time = dt_util.parse_datetime(start_time_str)
-    if start_time:
+    if start_time := dt_util.parse_datetime(start_time_str):
         start_time = dt_util.as_utc(start_time)
     else:
         connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
         return
 
     if end_time_str:
-        end_time = dt_util.parse_datetime(end_time_str)
-        if end_time:
+        if end_time := dt_util.parse_datetime(end_time_str):
             end_time = dt_util.as_utc(end_time)
         else:
             connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
@@ -194,11 +192,8 @@ class HistoryPeriodView(HomeAssistantView):
     ) -> web.Response:
         """Return history over a period of time."""
         datetime_ = None
-        if datetime:
-            datetime_ = dt_util.parse_datetime(datetime)
-
-            if datetime_ is None:
-                return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
+        if datetime and (datetime_ := dt_util.parse_datetime(datetime)) is None:
+            return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
 
         now = dt_util.utcnow()
 
@@ -212,8 +207,7 @@ class HistoryPeriodView(HomeAssistantView):
             return self.json([])
 
         if end_time_str := request.query.get("end_time"):
-            end_time = dt_util.parse_datetime(end_time_str)
-            if end_time:
+            if end_time := dt_util.parse_datetime(end_time_str):
                 end_time = dt_util.as_utc(end_time)
             else:
                 return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)

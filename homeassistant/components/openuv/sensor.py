@@ -157,8 +157,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
                 self._attr_native_value = UV_LEVEL_LOW
         elif self.entity_description.key == TYPE_MAX_UV_INDEX:
             self._attr_native_value = data["uv_max"]
-            uv_max_time = parse_datetime(data["uv_max_time"])
-            if uv_max_time:
+            if uv_max_time := parse_datetime(data["uv_max_time"]):
                 self._attr_extra_state_attributes.update(
                     {ATTR_MAX_UV_TIME: as_local(uv_max_time)}
                 )

@@ -161,8 +161,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.mac = discovery_info.get("properties", {}).get("mac")
         if self.mac is None:
             poch = discovery_info.get("properties", {}).get("poch", "")
-            result = search(r"mac=\w+", poch)
-            if result is not None:
+            if (result := search(r"mac=\w+", poch)) is not None:
                 self.mac = result.group(0).split("=")[1]
 
         if not name or not self.host or not self.mac:

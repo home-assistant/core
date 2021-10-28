@@ -106,8 +106,6 @@ SERVICE_TO_METHOD = {
 
 def _add_player(hass, async_add_entities, host, port=None, name=None):
     """Add Bluesound players."""
-    if host in [x.host for x in hass.data[DATA_BLUESOUND]]:
-        return
 
     @callback
     def _init_player(event=None):
@@ -127,6 +125,11 @@ def _add_player(hass, async_add_entities, host, port=None, name=None):
     @callback
     def _add_player_cb():
         """Add player after first sync fetch."""
+        if player.id in [x.id for x in hass.data[DATA_BLUESOUND]]:
+            _LOGGER.warning("Player already added %s", player.id)
+            return
+
+        hass.data[DATA_BLUESOUND].append(player)
         async_add_entities([player])
         _LOGGER.info("Added device with name: %s", player.name)
 
@@ -138,7 +141,6 @@ def _add_player(hass, async_add_entities, host, port=None, name=None):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
     player = BluesoundPlayer(hass, host, port, name, _add_player_cb)
-    hass.data[DATA_BLUESOUND].append(player)
 
     if hass.is_running:
         _init_player()
@@ -208,6 +210,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._polling_session = async_get_clientsession(hass)
         self._polling_task = None  # The actual polling task.
         self._name = name
+        self._id = None
         self._icon = None
         self._capture_items = []
         self._services_items = []
@@ -225,6 +228,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._bluesound_device_name = None
 
         self._init_callback = init_callback
+
         if self.port is None:
             self.port = DEFAULT_PORT
 
@@ -251,6 +255,8 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         if not self._name:
             self._name = self._sync_status.get("@name", self.host)
+        if not self._id:
+            self._id = self._sync_status.get("@id", None)
         if not self._bluesound_device_name:
             self._bluesound_device_name = self._sync_status.get("@name", self.host)
         if not self._icon:
@@ -259,17 +265,19 @@ class BluesoundPlayer(MediaPlayerEntity):
         if (master := self._sync_status.get("master")) is not None:
             self._is_master = False
             master_host = master.get("#text")
+            master_port = master.get("@port", "11000")
+            master_id = f"{master_host}:{master_port}"
             master_device = [
                 device
                 for device in self._hass.data[DATA_BLUESOUND]
-                if device.host == master_host
+                if device.id == master_id
             ]
 
-            if master_device and master_host != self.host:
+            if master_device and master_id != self.id:
                 self._master = master_device[0]
             else:
                 self._master = None
-                _LOGGER.error("Master not found %s", master_host)
+                _LOGGER.error("Master not found %s", master_id)
         else:
             if self._master is not None:
                 self._master = None
@@ -287,14 +295,14 @@ class BluesoundPlayer(MediaPlayerEntity):
                 await self.async_update_status()
 
         except (asyncio.TimeoutError, ClientError, BluesoundPlayer._TimeoutException):
-            _LOGGER.info("Node %s is offline, retrying later", self._name)
+            _LOGGER.info("Node %s:%s is offline, retrying later", self.name, self.port)
             await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
             self.start_polling()
 
         except CancelledError:
-            _LOGGER.debug("Stopping the polling of node %s", self._name)
+            _LOGGER.debug("Stopping the polling of node %s:%s", self.name, self.port)
         except Exception:
-            _LOGGER.exception("Unexpected error in %s", self._name)
+            _LOGGER.exception("Unexpected error in %s:%s", self.name, self.port)
             raise
 
     def start_polling(self):
@@ -314,12 +322,14 @@ class BluesoundPlayer(MediaPlayerEntity):
 
             await self.force_update_sync_status(self._init_callback, True)
         except (asyncio.TimeoutError, ClientError):
-            _LOGGER.info("Node %s is offline, retrying later", self.host)
+            _LOGGER.info("Node %s:%s is offline, retrying later", self.host, self.port)
             self._retry_remove = async_track_time_interval(
                 self._hass, self.async_init, NODE_RETRY_INITIATION
             )
         except Exception:
-            _LOGGER.exception("Unexpected when initiating error in %s", self.host)
+            _LOGGER.exception(
+                "Unexpected when initiating error in %s:%s", self.host, self.port
+            )
             raise
 
     async def async_update(self):
@@ -366,9 +376,9 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             if raise_timeout:
-                _LOGGER.info("Timeout: %s", self.host)
+                _LOGGER.info("Timeout: %s:%s", self.host, self.port)
                 raise
-            _LOGGER.debug("Failed communicating: %s", self.host)
+            _LOGGER.debug("Failed communicating: %s:%s", self.host, self.port)
             return None
 
         return data
@@ -403,7 +413,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
                 group_name = self._status.get("groupName")
                 if group_name != self._group_name:
-                    _LOGGER.debug("Group name change detected on device: %s", self.host)
+                    _LOGGER.debug("Group name change detected on device: %s", self.id)
                     self._group_name = group_name
 
                     # rebuild ordered list of entity_ids that are in the group, master is first
@@ -660,6 +670,11 @@ class BluesoundPlayer(MediaPlayerEntity):
         return mute
 
     @property
+    def id(self):
+        """Get id of device."""
+        return self._id
+
+    @property
     def name(self):
         """Return the name of the device."""
         return self._name
@@ -831,8 +846,8 @@ class BluesoundPlayer(MediaPlayerEntity):
         if master_device:
             _LOGGER.debug(
                 "Trying to join player: %s to master: %s",
-                self.host,
-                master_device[0].host,
+                self.id,
+                master_device[0].id,
             )
 
             await master_device[0].async_add_slave(self)
@@ -877,7 +892,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._master is None:
             return
 
-        _LOGGER.debug("Trying to unjoin player: %s", self.host)
+        _LOGGER.debug("Trying to unjoin player: %s", self.id)
         await self._master.async_remove_slave(self)
 
     async def async_add_slave(self, slave_device):
@@ -896,7 +911,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Increase sleep time on player."""
         sleep_time = await self.send_bluesound_command("/Sleep")
         if sleep_time is None:
-            _LOGGER.error("Error while increasing sleep time on player: %s", self.host)
+            _LOGGER.error("Error while increasing sleep time on player: %s", self.id)
             return 0
 
         return int(sleep_time.get("sleep", "0"))

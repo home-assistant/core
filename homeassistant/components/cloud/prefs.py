@@ -54,9 +54,7 @@ class CloudPreferences:
 
     async def async_initialize(self):
         """Finish initializing the preferences."""
-        prefs = await self._store.async_load()
-
-        if prefs is None:
+        if (prefs := await self._store.async_load()) is None:
             prefs = self._empty_config("")
 
         self._prefs = prefs

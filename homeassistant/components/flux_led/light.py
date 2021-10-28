@@ -165,7 +165,7 @@ CUSTOM_EFFECT_DICT: Final = {
     vol.Required(CONF_COLORS): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=16),
-        [vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple))],
+        [vol.All(vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte)))],
     ),
     vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
         vol.Range(min=0, max=100), vol.Coerce(int)

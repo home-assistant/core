@@ -117,8 +117,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         self._element.add_callback(self._watch_area)
 
         # We do not get changed_by back from resync.
-        last_state = await self.async_get_last_state()
-        if not last_state:
+        if not (last_state := await self.async_get_last_state()):
             return
 
         if ATTR_CHANGED_BY_KEYPAD in last_state.attributes:

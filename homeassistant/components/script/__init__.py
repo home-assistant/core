@@ -96,9 +96,7 @@ def entities_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    script_entity = component.get_entity(entity_id)
-
-    if script_entity is None:
+    if (script_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(script_entity.script.referenced_entities)
@@ -127,9 +125,7 @@ def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    script_entity = component.get_entity(entity_id)
-
-    if script_entity is None:
+    if (script_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(script_entity.script.referenced_devices)
@@ -158,9 +154,7 @@ def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    script_entity = component.get_entity(entity_id)
-
-    if script_entity is None:
+    if (script_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(script_entity.script.referenced_areas)
@@ -178,8 +172,7 @@ async def async_setup(hass, config):
 
     async def reload_service(service):
         """Call a service to reload scripts."""
-        conf = await component.async_prepare_reload()
-        if conf is None:
+        if (conf := await component.async_prepare_reload()) is None:
             return
 
         await _async_process_config(hass, conf, component)

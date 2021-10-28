@@ -50,9 +50,7 @@ def async_is_user_onboarded(hass):
 async def async_setup(hass, config):
     """Set up the onboarding component."""
     store = OnboadingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
-    data = await store.async_load()
-
-    if data is None:
+    if (data := await store.async_load()) is None:
         data = {"done": []}
 
     if STEP_USER not in data["done"]:

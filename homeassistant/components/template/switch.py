@@ -148,8 +148,7 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
 
             # restore state after startup
             await super().async_added_to_hass()
-            state = await self.async_get_last_state()
-            if state:
+            if state := await self.async_get_last_state():
                 self._state = state.state == STATE_ON
 
             # no need to listen for events

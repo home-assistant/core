@@ -620,8 +620,7 @@ def list_statistic_ids(
         platform_statistic_ids = platform.list_statistic_ids(hass, statistic_type)
 
         for statistic_id, info in platform_statistic_ids.items():
-            unit = info["unit_of_measurement"]
-            if unit is not None:
+            if (unit := info["unit_of_measurement"]) is not None:
                 # Display unit according to user settings
                 unit = _configured_unit(unit, units)
             platform_statistic_ids[statistic_id]["unit_of_measurement"] = unit

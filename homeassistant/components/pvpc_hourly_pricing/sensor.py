@@ -66,8 +66,7 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._pvpc_data.state = state.state
 
         # Update 'state' value in hour changes

@@ -1,7 +1,7 @@
 """Test the motionEye camera."""
 import copy
 from typing import Any, cast
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, call
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadGateway
@@ -14,20 +14,31 @@ from motioneye_client.const import (
     KEY_CAMERAS,
     KEY_MOTION_DETECTION,
     KEY_NAME,
+    KEY_TEXT_OVERLAY_CUSTOM_TEXT,
+    KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
+    KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
+    KEY_TEXT_OVERLAY_LEFT,
+    KEY_TEXT_OVERLAY_RIGHT,
+    KEY_TEXT_OVERLAY_TIMESTAMP,
     KEY_VIDEO_STREAMING,
 )
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.camera import async_get_image, async_get_mjpeg_stream
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import (
+    CONF_ACTION,
     CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_USERNAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MOTIONEYE_MANUFACTURER,
+    SERVICE_ACTION,
+    SERVICE_SET_TEXT_OVERLAY,
+    SERVICE_SNAPSHOT,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -35,6 +46,7 @@ from homeassistant.helpers.device_registry import async_get_registry
 import homeassistant.util.dt as dt_util
 
 from . import (
+    TEST_CAMERA,
     TEST_CAMERA_DEVICE_IDENTIFIER,
     TEST_CAMERA_ENTITY_ID,
     TEST_CAMERA_ID,
@@ -379,3 +391,155 @@ async def test_get_stream_from_camera_with_broken_host(
     await hass.async_block_till_done()
     with pytest.raises(HTTPBadGateway):
         await async_get_mjpeg_stream(hass, Mock(), TEST_CAMERA_ENTITY_ID)
+
+
+async def test_set_text_overlay_bad_extra_key(hass: HomeAssistant) -> None:
+    """Test text overlay with incorrect input data."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID, "extra_key": "foo"}
+    with pytest.raises(vol.error.MultipleInvalid):
+        await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+
+
+async def test_set_text_overlay_bad_entity_identifier(hass: HomeAssistant) -> None:
+    """Test text overlay with bad entity identifier."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {
+        ATTR_ENTITY_ID: "some random string",
+        KEY_TEXT_OVERLAY_LEFT: KEY_TEXT_OVERLAY_TIMESTAMP,
+    }
+
+    client.reset_mock()
+    await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+    await hass.async_block_till_done()
+    assert not client.async_set_camera.called
+
+
+async def test_set_text_overlay_bad_empty(hass: HomeAssistant) -> None:
+    """Test text overlay with incorrect input data."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+    with pytest.raises(vol.error.MultipleInvalid):
+        await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, {})
+        await hass.async_block_till_done()
+
+
+async def test_set_text_overlay_bad_no_left_or_right(hass: HomeAssistant) -> None:
+    """Test text overlay with incorrect input data."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID}
+    with pytest.raises(vol.error.MultipleInvalid):
+        await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+        await hass.async_block_till_done()
+
+
+async def test_set_text_overlay_good(hass: HomeAssistant) -> None:
+    """Test a working text overlay."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    custom_left_text = "one\ntwo\nthree"
+    custom_right_text = "four\nfive\nsix"
+    data = {
+        ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
+        KEY_TEXT_OVERLAY_LEFT: KEY_TEXT_OVERLAY_CUSTOM_TEXT,
+        KEY_TEXT_OVERLAY_RIGHT: KEY_TEXT_OVERLAY_CUSTOM_TEXT,
+        KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT: custom_left_text,
+        KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT: custom_right_text,
+    }
+    client.async_get_camera = AsyncMock(return_value=copy.deepcopy(TEST_CAMERA))
+
+    await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+    await hass.async_block_till_done()
+    assert client.async_get_camera.called
+
+    expected_camera = copy.deepcopy(TEST_CAMERA)
+    expected_camera[KEY_TEXT_OVERLAY_LEFT] = KEY_TEXT_OVERLAY_CUSTOM_TEXT
+    expected_camera[KEY_TEXT_OVERLAY_RIGHT] = KEY_TEXT_OVERLAY_CUSTOM_TEXT
+    expected_camera[KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT] = "one\\ntwo\\nthree"
+    expected_camera[KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT] = "four\\nfive\\nsix"
+    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, expected_camera)
+
+
+async def test_set_text_overlay_good_entity_id(hass: HomeAssistant) -> None:
+    """Test a working text overlay with entity_id."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {
+        ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
+        KEY_TEXT_OVERLAY_LEFT: KEY_TEXT_OVERLAY_TIMESTAMP,
+    }
+    client.async_get_camera = AsyncMock(return_value=copy.deepcopy(TEST_CAMERA))
+    await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+    await hass.async_block_till_done()
+    assert client.async_get_camera.called
+
+    expected_camera = copy.deepcopy(TEST_CAMERA)
+    expected_camera[KEY_TEXT_OVERLAY_LEFT] = KEY_TEXT_OVERLAY_TIMESTAMP
+    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, expected_camera)
+
+
+async def test_set_text_overlay_bad_device(hass: HomeAssistant) -> None:
+    """Test a working text overlay."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {
+        ATTR_DEVICE_ID: "not a device",
+        KEY_TEXT_OVERLAY_LEFT: KEY_TEXT_OVERLAY_TIMESTAMP,
+    }
+    client.reset_mock()
+    client.async_get_camera = AsyncMock(return_value=copy.deepcopy(TEST_CAMERA))
+    await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+    await hass.async_block_till_done()
+    assert not client.async_get_camera.called
+    assert not client.async_set_camera.called
+
+
+async def test_set_text_overlay_no_such_camera(hass: HomeAssistant) -> None:
+    """Test a working text overlay."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {
+        ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
+        KEY_TEXT_OVERLAY_LEFT: KEY_TEXT_OVERLAY_TIMESTAMP,
+    }
+    client.reset_mock()
+    client.async_get_camera = AsyncMock(return_value={})
+    await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+    await hass.async_block_till_done()
+    assert not client.async_set_camera.called
+
+
+async def test_request_action(hass: HomeAssistant) -> None:
+    """Test requesting an action."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {
+        ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
+        CONF_ACTION: "foo",
+    }
+    await hass.services.async_call(DOMAIN, SERVICE_ACTION, data)
+    await hass.async_block_till_done()
+    assert client.async_action.call_args == call(TEST_CAMERA_ID, data[CONF_ACTION])
+
+
+async def test_request_snapshot(hass: HomeAssistant) -> None:
+    """Test requesting a snapshot."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID}
+
+    await hass.services.async_call(DOMAIN, SERVICE_SNAPSHOT, data)
+    await hass.async_block_till_done()
+    assert client.async_action.call_args == call(TEST_CAMERA_ID, "snapshot")

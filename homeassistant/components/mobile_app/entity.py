@@ -44,9 +44,8 @@ class MobileAppEntity(RestoreEntity):
                 self.hass, SIGNAL_SENSOR_UPDATE, self._handle_update
             )
         )
-        state = await self.async_get_last_state()
 
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             return
 
         self.async_restore_last_state(state)

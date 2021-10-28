@@ -102,8 +102,7 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
 
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._state = state.state
             self._state_attributes = state.attributes
             if "id" in self._state_attributes:

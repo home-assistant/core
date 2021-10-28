@@ -1026,8 +1026,7 @@ class MediaPlayerImageView(HomeAssistantView):
         media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
-        player = self.component.get_entity(entity_id)
-        if player is None:
+        if (player := self.component.get_entity(entity_id)) is None:
             status = (
                 HTTPStatus.NOT_FOUND
                 if request[KEY_AUTHENTICATED]
@@ -1071,9 +1070,8 @@ async def websocket_handle_thumbnail(hass, connection, msg):
     Async friendly.
     """
     component = hass.data[DOMAIN]
-    player = component.get_entity(msg["entity_id"])
 
-    if player is None:
+    if (player := component.get_entity(msg["entity_id"])) is None:
         connection.send_message(
             websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
         )

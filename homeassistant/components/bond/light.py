@@ -180,8 +180,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness:
+        if brightness := kwargs.get(ATTR_BRIGHTNESS):
             await self._hub.bond.action(
                 self._device.device_id,
                 Action.set_brightness(round((brightness * 100) / 255)),
