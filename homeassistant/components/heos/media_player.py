@@ -297,7 +297,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         }
 
     @property
-    def group_members(self) -> list:
+    def group_members(self) -> list[str]:
         """List of players which are grouped together."""
         return self._group_manager.group_membership.get(self.entity_id, [])
 
