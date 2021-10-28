@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Final
 
+from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.aioscanner import AIOBulbScanner
 
@@ -34,7 +35,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: Final = ["light"]
+PLATFORMS_BY_TYPE: Final = {DeviceType.Bulb: ["light"], DeviceType.Switch: ["switch"]}
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5
 
@@ -149,7 +150,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from ex
     coordinator = FluxLedUpdateCoordinator(hass, device)
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(
+        entry, PLATFORMS_BY_TYPE[device.device_type]
+    )
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
     return True
@@ -157,7 +160,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    device: AIOWifiLedBulb = hass.data[DOMAIN][entry.entry_id].device
+    platforms = PLATFORMS_BY_TYPE[device.device_type]
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
         coordinator = hass.data[DOMAIN].pop(entry.entry_id)
         await coordinator.device.async_stop()
     return unload_ok

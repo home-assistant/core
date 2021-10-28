@@ -6,7 +6,6 @@ import logging
 import random
 from typing import Any, Final, cast
 
-from flux_led.aiodevice import AIOWifiLedBulb
 from flux_led.const import (
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM,
@@ -47,11 +46,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import (
-    ATTR_MANUFACTURER,
     ATTR_MODE,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
     CONF_DEVICES,
     CONF_HOST,
     CONF_MAC,
@@ -59,10 +54,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PROTOCOL,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -92,15 +86,15 @@ from .const import (
     MODE_RGB,
     MODE_RGBW,
     MODE_WHITE,
-    SIGNAL_STATE_UPDATED,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
+from .entity import FluxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLUX_LED: Final = SUPPORT_EFFECT | SUPPORT_TRANSITION
+SUPPORT_FLUX_LED: Final = SUPPORT_TRANSITION
 
 
 FLUX_COLOR_MODE_TO_HASS: Final = {
@@ -108,9 +102,9 @@ FLUX_COLOR_MODE_TO_HASS: Final = {
     FLUX_COLOR_MODE_RGBW: COLOR_MODE_RGBW,
     FLUX_COLOR_MODE_RGBWW: COLOR_MODE_RGBWW,
     FLUX_COLOR_MODE_CCT: COLOR_MODE_COLOR_TEMP,
-    FLUX_COLOR_MODE_DIM: COLOR_MODE_WHITE,
 }
 
+EFFECT_SUPPORT_MODES = {COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
@@ -202,6 +196,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+def _flux_color_mode_to_hass(flux_color_mode: str, flux_color_modes: set[str]) -> str:
+    """Map the flux color mode to Home Assistant color mode."""
+    if flux_color_mode == FLUX_COLOR_MODE_DIM:
+        if len(flux_color_modes) > 1:
+            return COLOR_MODE_WHITE
+        return COLOR_MODE_BRIGHTNESS
+    return FLUX_COLOR_MODE_TO_HASS.get(flux_color_mode, COLOR_MODE_ONOFF)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -221,6 +224,9 @@ async def async_setup_platform(
             host,
         )
         custom_effects = device_config.get(CONF_CUSTOM_EFFECT, {})
+        custom_effect_colors = None
+        if CONF_COLORS in custom_effects:
+            custom_effect_colors = str(custom_effects[CONF_COLORS])
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -231,7 +237,7 @@ async def async_setup_platform(
                     CONF_NAME: device_config[CONF_NAME],
                     CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
                     CONF_MODE: device_config.get(ATTR_MODE, MODE_AUTO),
-                    CONF_CUSTOM_EFFECT_COLORS: str(custom_effects.get(CONF_COLORS)),
+                    CONF_CUSTOM_EFFECT_COLORS: custom_effect_colors,
                     CONF_CUSTOM_EFFECT_SPEED_PCT: custom_effects.get(
                         CONF_SPEED_PCT, DEFAULT_EFFECT_SPEED
                     ),
@@ -284,10 +290,8 @@ async def async_setup_entry(
     )
 
 
-class FluxLight(CoordinatorEntity, LightEntity):
+class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
     """Representation of a Flux light."""
-
-    coordinator: FluxLedUpdateCoordinator
 
     def __init__(
         self,
@@ -299,39 +303,24 @@ class FluxLight(CoordinatorEntity, LightEntity):
         custom_effect_transition: str,
     ) -> None:
         """Initialize the light."""
-        super().__init__(coordinator)
-        self._device: AIOWifiLedBulb = coordinator.device
-        self._responding = True
-        self._attr_name = name
-        self._attr_unique_id = unique_id
+        super().__init__(coordinator, unique_id, name)
         self._attr_supported_features = SUPPORT_FLUX_LED
         self._attr_min_mireds = (
             color_temperature_kelvin_to_mired(self._device.max_temp) + 1
         )  # for rounding
         self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
         self._attr_supported_color_modes = {
-            FLUX_COLOR_MODE_TO_HASS.get(mode, COLOR_MODE_ONOFF)
+            _flux_color_mode_to_hass(mode, self._device.color_modes)
             for mode in self._device.color_modes
         }
-        self._attr_effect_list = FLUX_EFFECT_LIST
-        if custom_effect_colors:
-            self._attr_effect_list = [*FLUX_EFFECT_LIST, EFFECT_CUSTOM]
+        if self._attr_supported_color_modes.intersection(EFFECT_SUPPORT_MODES):
+            self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_effect_list = FLUX_EFFECT_LIST
+            if custom_effect_colors:
+                self._attr_effect_list = [*FLUX_EFFECT_LIST, EFFECT_CUSTOM]
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
-        if self.unique_id:
-            self._attr_device_info = {
-                "connections": {(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
-                ATTR_MODEL: f"0x{self._device.model_num:02X}",
-                ATTR_NAME: self.name,
-                ATTR_SW_VERSION: str(self._device.version_num),
-                ATTR_MANUFACTURER: "FluxLED/Magic Home",
-            }
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return cast(bool, self._device.is_on)
 
     @property
     def brightness(self) -> int:
@@ -373,7 +362,9 @@ class FluxLight(CoordinatorEntity, LightEntity):
     @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        return FLUX_COLOR_MODE_TO_HASS.get(self._device.color_mode, COLOR_MODE_ONOFF)
+        return _flux_color_mode_to_hass(
+            self._device.color_mode, self._device.color_modes
+        )
 
     @property
     def effect(self) -> str | None:
@@ -381,17 +372,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
         if (current_mode := self._device.preset_pattern_num) == EFFECT_CUSTOM_CODE:
             return EFFECT_CUSTOM
         return EFFECT_ID_NAME.get(current_mode)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the attributes."""
-        return {"ip_address": self._device.ipaddr}
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the specified or all lights on."""
-        await self._async_turn_on(**kwargs)
-        self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
 
     async def _async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
@@ -442,7 +422,6 @@ class FluxLight(CoordinatorEntity, LightEntity):
                 rgbcw = kwargs[ATTR_RGBWW_COLOR]
             await self._device.async_set_levels(*rgbcw_to_rgbwc(rgbcw))
             return
-        # Handle switch to White Color Mode
         if ATTR_WHITE in kwargs:
             await self._device.async_set_levels(w=kwargs[ATTR_WHITE])
             return
@@ -491,8 +470,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
             rgbwc = self.rgbwc_color
             await self._device.async_set_levels(*rgbww_brightness(rgbwc, brightness))
             return
-        # Handle White Color Mode and Brightness Only Color Mode
-        if self.color_mode in (COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS):
+        # Handle Brightness Only Color Mode
+        if self.color_mode in {COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS}:
             await self._device.async_set_levels(w=brightness)
             return
         raise ValueError(f"Unsupported color mode {self.color_mode}")
@@ -506,27 +485,3 @@ class FluxLight(CoordinatorEntity, LightEntity):
             speed_pct,
             transition,
         )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the specified or all lights off."""
-        await self._device.async_turn_off()
-        self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if self.coordinator.last_update_success != self._responding:
-            self.async_write_ha_state()
-        self._responding = self.coordinator.last_update_success
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_STATE_UPDATED.format(self._device.ipaddr),
-                self.async_write_ha_state,
-            )
-        )
-        await super().async_added_to_hass()

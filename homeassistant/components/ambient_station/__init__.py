@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioambient import Client
+from aioambient import Websocket
 from aioambient.errors import WebsocketError
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,18 +15,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
     ATTR_LAST_DATA,
     CONF_APP_KEY,
-    DATA_CLIENT,
     DOMAIN,
     LOGGER,
     TYPE_SOLARRADIATION,
@@ -59,32 +58,28 @@ def async_hydrate_station_data(data: dict[str, Any]) -> dict[str, Any]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Ambient PWS as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_APP_KEY]
         )
-    session = aiohttp_client.async_get_clientsession(hass)
 
     try:
         ambient = AmbientStation(
             hass,
             entry,
-            Client(
-                entry.data[CONF_API_KEY],
-                entry.data[CONF_APP_KEY],
-                session=session,
-            ),
+            Websocket(entry.data[CONF_APP_KEY], entry.data[CONF_API_KEY]),
         )
         hass.loop.create_task(ambient.ws_connect())
-        hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = ambient
+        hass.data[DOMAIN][entry.entry_id] = ambient
     except WebsocketError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
     async def _async_disconnect_websocket(_: Event) -> None:
-        await ambient.client.websocket.disconnect()
+        await ambient.websocket.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(
@@ -97,10 +92,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an Ambient PWS config entry."""
-    ambient = hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-    hass.async_create_task(ambient.ws_disconnect())
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        ambient = hass.data[DOMAIN].pop(entry.entry_id)
+        hass.async_create_task(ambient.ws_disconnect())
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return unload_ok
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -127,21 +124,23 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: Client) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, websocket: Websocket
+    ) -> None:
         """Initialize."""
         self._entry = entry
         self._entry_setup_complete = False
         self._hass = hass
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
-        self.client = client
         self.stations: dict[str, dict] = {}
+        self.websocket = websocket
 
     async def _attempt_connect(self) -> None:
         """Attempt to connect to the socket (retrying later on fail)."""
 
         async def connect(timestamp: int | None = None) -> None:
             """Connect."""
-            await self.client.websocket.connect()
+            await self.websocket.connect()
 
         try:
             await connect()
@@ -195,16 +194,16 @@ class AmbientStation:
                 self._entry_setup_complete = True
             self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
-        self.client.websocket.on_connect(on_connect)
-        self.client.websocket.on_data(on_data)
-        self.client.websocket.on_disconnect(on_disconnect)
-        self.client.websocket.on_subscribed(on_subscribed)
+        self.websocket.on_connect(on_connect)
+        self.websocket.on_data(on_data)
+        self.websocket.on_disconnect(on_disconnect)
+        self.websocket.on_subscribed(on_subscribed)
 
         await self._attempt_connect()
 
     async def ws_disconnect(self) -> None:
         """Disconnect from the websocket."""
-        await self.client.websocket.disconnect()
+        await self.websocket.disconnect()
 
 
 class AmbientWeatherEntity(Entity):
@@ -221,11 +220,11 @@ class AmbientWeatherEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         self._ambient = ambient
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, mac_address)},
-            "name": station_name,
-            "manufacturer": "Ambient Weather",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, mac_address)},
+            manufacturer="Ambient Weather",
+            name=station_name,
+        )
         self._attr_name = f"{station_name}_{description.name}"
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._mac_address = mac_address

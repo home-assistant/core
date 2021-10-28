@@ -1,4 +1,5 @@
 """The tests for the TTS component."""
+from http import HTTPStatus
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -15,7 +16,6 @@ from homeassistant.components.media_player.const import (
 import homeassistant.components.tts as tts
 from homeassistant.components.tts import _get_cache_files
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
@@ -486,7 +486,7 @@ async def test_setup_component_and_test_service_with_receive_voice(
         "en",
         None,
     )
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert await req.read() == demo_data
 
 
@@ -523,7 +523,7 @@ async def test_setup_component_and_test_service_with_receive_voice_german(
         "de",
         None,
     )
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert await req.read() == demo_data
 
 
@@ -539,7 +539,7 @@ async def test_setup_component_and_web_view_wrong_file(hass, hass_client):
     url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
 
     req = await client.get(url)
-    assert req.status == HTTP_NOT_FOUND
+    assert req.status == HTTPStatus.NOT_FOUND
 
 
 async def test_setup_component_and_web_view_wrong_filename(hass, hass_client):
@@ -554,7 +554,7 @@ async def test_setup_component_and_web_view_wrong_filename(hass, hass_client):
     url = "/api/tts_proxy/265944dsk32c1b2a621be5930510bb2cd_en_-_demo.mp3"
 
     req = await client.get(url)
-    assert req.status == HTTP_NOT_FOUND
+    assert req.status == HTTPStatus.NOT_FOUND
 
 
 async def test_setup_component_test_without_cache(hass, empty_cache_dir):
@@ -682,7 +682,7 @@ async def test_setup_component_load_cache_retrieve_without_mem_cache(
     url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
 
     req = await client.get(url)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert await req.read() == demo_data
 
 
@@ -698,7 +698,7 @@ async def test_setup_component_and_web_get_url(hass, hass_client):
     data = {"platform": "demo", "message": "There is someone at the door."}
 
     req = await client.post(url, json=data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     response = await req.json()
     assert response == {
         "url": "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
@@ -718,7 +718,7 @@ async def test_setup_component_and_web_get_url_bad_config(hass, hass_client):
     data = {"message": "There is someone at the door."}
 
     req = await client.post(url, json=data)
-    assert req.status == 400
+    assert req.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_tags_with_wave(hass, demo_provider):

@@ -1,5 +1,6 @@
 """Test Zeroconf component setup process."""
 from ipaddress import ip_address
+from typing import Any
 from unittest.mock import call, patch
 
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
@@ -39,7 +40,9 @@ def service_update_mock(ipv6, zeroconf, services, handlers, *, limit_service=Non
         handlers[0](zeroconf, service, f"_name.{service}", ServiceStateChange.Added)
 
 
-def get_service_info_mock(service_type, name, *args, **kwargs):
+def get_service_info_mock(
+    service_type: str, name: str, *args: Any, **kwargs: Any
+) -> AsyncServiceInfo:
     """Return service info for get_service_info."""
     return AsyncServiceInfo(
         service_type,
@@ -53,7 +56,9 @@ def get_service_info_mock(service_type, name, *args, **kwargs):
     )
 
 
-def get_service_info_mock_without_an_address(service_type, name):
+def get_service_info_mock_without_an_address(
+    service_type: str, name: str
+) -> AsyncServiceInfo:
     """Return service info for get_service_info without any addresses."""
     return AsyncServiceInfo(
         service_type,
@@ -631,6 +636,42 @@ async def test_info_from_service_with_addresses(hass):
         get_service_info_mock_without_an_address(service_type, f"test.{service_type}")
     )
     assert info is None
+
+
+async def test_info_from_service_with_link_local_address_first(hass):
+    """Test that the link local address is ignored."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = ["169.254.12.3", "192.168.66.12"]
+    info = zeroconf.info_from_service(service_info)
+    assert info["host"] == "192.168.66.12"
+
+
+async def test_info_from_service_with_link_local_address_second(hass):
+    """Test that the link local address is ignored."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = ["192.168.66.12", "169.254.12.3"]
+    info = zeroconf.info_from_service(service_info)
+    assert info["host"] == "192.168.66.12"
+
+
+async def test_info_from_service_with_link_local_address_only(hass):
+    """Test that the link local address is ignored."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = ["169.254.12.3"]
+    info = zeroconf.info_from_service(service_info)
+    assert info is None
+
+
+async def test_info_from_service_prefers_ipv4(hass):
+    """Test that ipv4 addresses are preferred."""
+    service_type = "_test._tcp.local."
+    service_info = get_service_info_mock(service_type, f"test.{service_type}")
+    service_info.addresses = ["2001:db8:3333:4444:5555:6666:7777:8888", "192.168.66.12"]
+    info = zeroconf.info_from_service(service_info)
+    assert info["host"] == "192.168.66.12"
 
 
 async def test_get_instance(hass, mock_async_zeroconf):

@@ -71,8 +71,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # the whirlpool library needs to be updated to be able to support more
     # than one device, so we use only the first one for now
-    aircon = AirConEntity(said_list[0], auth)
-    async_add_entities([aircon], True)
+    aircons = [AirConEntity(said, auth) for said in said_list]
+    async_add_entities(aircons, True)
 
 
 class AirConEntity(ClimateEntity):
@@ -156,8 +156,7 @@ class AirConEntity(ClimateEntity):
             await self._aircon.set_power_on(False)
             return
 
-        mode = HVAC_MODE_TO_AIRCON_MODE.get(hvac_mode)
-        if not mode:
+        if not (mode := HVAC_MODE_TO_AIRCON_MODE.get(hvac_mode)):
             raise ValueError(f"Invalid hvac mode {hvac_mode}")
 
         await self._aircon.set_mode(mode)
@@ -172,8 +171,7 @@ class AirConEntity(ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set fan mode."""
-        fanspeed = FAN_MODE_TO_AIRCON_FANSPEED.get(fan_mode)
-        if not fanspeed:
+        if not (fanspeed := FAN_MODE_TO_AIRCON_FANSPEED.get(fan_mode)):
             raise ValueError(f"Invalid fan mode {fan_mode}")
         await self._aircon.set_fanspeed(fanspeed)
 

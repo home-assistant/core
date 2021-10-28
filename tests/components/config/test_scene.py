@@ -1,4 +1,5 @@
 """Test Automation config panel."""
+from http import HTTPStatus
 import json
 from unittest.mock import patch
 
@@ -40,7 +41,7 @@ async def test_create_scene(hass, hass_client):
             ),
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"result": "ok"}
 
@@ -91,7 +92,7 @@ async def test_update_scene(hass, hass_client):
             ),
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"result": "ok"}
 
@@ -148,7 +149,7 @@ async def test_bad_formatted_scene(hass, hass_client):
             ),
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"result": "ok"}
 
@@ -202,7 +203,7 @@ async def test_delete_scene(hass, hass_client):
         resp = await client.delete("/api/config/scene/config/light_on")
         await hass.async_block_till_done()
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"result": "ok"}
 

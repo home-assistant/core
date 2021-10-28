@@ -27,6 +27,8 @@ EVENT_ALIVE = "alive"
 class ZWaveBaseEntity(Entity):
     """Generic Entity Class for a Z-Wave Device."""
 
+    _attr_should_poll = False
+
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
     ) -> None:
@@ -243,8 +245,3 @@ class ZWaveBaseEntity(Entity):
         ):
             self.watched_value_ids.add(return_value.value_id)
         return return_value
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False

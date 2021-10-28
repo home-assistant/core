@@ -201,8 +201,7 @@ class RadioThermostat(ClimateEntity):
 
     def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
-        code = FAN_MODE_TO_CODE.get(fan_mode)
-        if code is not None:
+        if (code := FAN_MODE_TO_CODE.get(fan_mode)) is not None:
             self.device.fmode = code
 
     @property
@@ -322,8 +321,7 @@ class RadioThermostat(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         temperature = round_temp(temperature)

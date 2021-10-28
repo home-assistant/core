@@ -15,6 +15,8 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_DEVICES,
     DOMAIN as UNIFI_DOMAIN,
 )
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.util.dt as dt_util
 
@@ -73,6 +75,12 @@ async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("sensor.wired_client_tx").state == "5678.0"
     assert hass.states.get("sensor.wireless_client_rx").state == "2345.0"
     assert hass.states.get("sensor.wireless_client_tx").state == "6789.0"
+
+    ent_reg = er.async_get(hass)
+    assert (
+        ent_reg.async_get("sensor.wired_client_rx").entity_category
+        == ENTITY_CATEGORY_DIAGNOSTIC
+    )
 
     # Verify state update
 
@@ -178,6 +186,12 @@ async def test_uptime_sensors(
     assert len(hass.states.async_all()) == 2
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
     assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T01:00:00+00:00"
+
+    ent_reg = er.async_get(hass)
+    assert (
+        ent_reg.async_get("sensor.client1_uptime").entity_category
+        == ENTITY_CATEGORY_DIAGNOSTIC
+    )
 
     # Verify normal new event doesn't change uptime
     # 4 seconds has passed

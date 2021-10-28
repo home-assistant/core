@@ -43,8 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Meteo-France from legacy config file."""
-    conf = config.get(DOMAIN)
-    if not conf:
+    if not (conf := config.get(DOMAIN)):
         return True
 
     for city_conf in conf:
