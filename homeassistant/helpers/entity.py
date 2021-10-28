@@ -26,9 +26,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    ENTITY_CATEGORY_HIDDEN,
+    ENTITY_CATEGORIES,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -56,12 +54,6 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
-
-ENTITY_CATEGORIES: Final[list[str]] = [
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    ENTITY_CATEGORY_HIDDEN,
-]
 
 ENTITY_CATEGORIES_SCHEMA: Final = vol.In(ENTITY_CATEGORIES)
 
