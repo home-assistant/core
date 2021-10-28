@@ -180,11 +180,7 @@ class VelbusEntity(Entity):
         """Return the device info."""
         return DeviceInfo(
             identifiers={
-                (  # type: ignore
-                    DOMAIN,
-                    self._channel.get_module_address(),
-                    self._channel.get_module_serial(),
-                )
+                (DOMAIN, self._channel.get_module_address()),
             },
             manufacturer="Velleman",
             model=self._channel.get_module_type_name(),
