@@ -158,7 +158,16 @@ def async_migrate_entities_unique_ids(
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    entries = {entry.unique_id: entry for entry in registry_entries}
+    light_entries = {
+        entry.unique_id: entry
+        for entry in registry_entries
+        if entry.domain == LIGHT_DOMAIN
+    }
+    switch_entries = {
+        entry.unique_id: entry
+        for entry in registry_entries
+        if entry.domain == SWITCH_DOMAIN
+    }
 
     for device in device_manager.device_map.values():
         # Old lights where in `tuya.{device_id}` format, now the DPCode is added.
@@ -172,8 +181,8 @@ def async_migrate_entities_unique_ids(
         # `tuya.{device_id}` -> `tuya.{device_id}{SWITCH_LED}`
         if (
             device.category in ("dc", "dd", "dj", "fs", "fwl", "jsq", "xdd", "xxj")
-            and (entry := entries.get(f"tuya.{device.id}"))
-            and entry.platform == LIGHT_DOMAIN
+            and (entry := light_entries.get(f"tuya.{device.id}"))
+            and f"tuya.{device.id}{DPCode.SWITCH_LED}" not in light_entries
         ):
             entity_registry.async_update_entity(
                 entry.entity_id, new_unique_id=f"tuya.{device.id}{DPCode.SWITCH_LED}"
@@ -194,7 +203,7 @@ def async_migrate_entities_unique_ids(
         #
         # In all other cases, the unique ID is not changed.
         if device.category in ("bh", "cwysj", "cz", "dlq", "kg", "kj", "pc", "xxj"):
-            for postfix, dpcode in [
+            for postfix, dpcode in (
                 ("", DPCode.SWITCH),
                 ("_1", DPCode.SWITCH_1),
                 ("_2", DPCode.SWITCH_2),
@@ -208,10 +217,10 @@ def async_migrate_entities_unique_ids(
                 ("_usb4", DPCode.SWITCH_USB4),
                 ("_usb5", DPCode.SWITCH_USB5),
                 ("_usb6", DPCode.SWITCH_USB6),
-            ]:
+            ):
                 if (
-                    entry := entries.get(f"tuya.{device.id}{postfix}")
-                ) and entry.platform == SWITCH_DOMAIN:
+                    entry := switch_entries.get(f"tuya.{device.id}{postfix}")
+                ) and f"tuya.{device.id}{dpcode}" not in switch_entries:
                     entity_registry.async_update_entity(
                         entry.entity_id, new_unique_id=f"tuya.{device.id}{dpcode}"
                     )
