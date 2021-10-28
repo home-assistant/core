@@ -126,7 +126,7 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
