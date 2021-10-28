@@ -36,6 +36,7 @@ CONF_COMPONENT_REPORTING = "include_used_components"
 
 DOMAIN = "ais_updater"
 SERVICE_SET_UPDATE_STATUS = "set_update_status"
+SERVICE_SET_UPDATE_PROGRESS = "set_update_progress"
 SERVICE_CHECK_VERSION = "check_version"
 SERVICE_UPGRADE_PACKAGE = "upgrade_package"
 SERVICE_EXECUTE_UPGRADE = "execute_upgrade"
@@ -82,23 +83,15 @@ def _set_update_status(hass, status):
     attr = state.attributes
     new_attr = attr.copy()
     info = ""
-    progress = 0.5
-    buffer = 0.7
     if status == UPDATE_STATUS_DOWNLOADING:
         info = "Pobieram."
     elif status == UPDATE_STATUS_INSTALLING:
         info = "Instaluje."
     elif status == UPDATE_STATUS_RESTART:
         info = "Restartuje."
-    if ":" in status:
-        full_status = status
-        status = full_status.split(":")[0]
-        progress = full_status.split(":")[1]
-        buffer = full_status.split(":")[2]
+
     new_attr[ATTR_UPDATE_STATUS] = status
     new_attr[ATTR_UPDATE_CHECK_TIME] = get_current_dt()
-    new_attr["progress"] = progress
-    new_attr["buffer"] = buffer
     hass.states.set(ENTITY_ID, info, new_attr)
 
     # inform about downloading
@@ -106,6 +99,21 @@ def _set_update_status(hass, status):
         hass.services.call(
             "ais_ai_service", "say_it", {"text": "Aktualizacja. " + info}
         )
+
+
+def _set_update_progress(hass, progress):
+    state = hass.states.get(ENTITY_ID)
+    attr = state.attributes
+    status = state.state
+    new_attr = attr.copy()
+    set_progress = 0.5
+    set_buffer = 0.1
+    if ":" in progress:
+        set_progress = progress.split(":")[0]
+        set_buffer = progress.split(":")[1]
+    new_attr["progress"] = set_progress
+    new_attr["buffer"] = set_buffer
+    hass.states.set(ENTITY_ID, status, new_attr)
 
 
 async def async_setup(hass, config):
@@ -277,6 +285,11 @@ async def async_setup(hass, config):
         else:
             _set_update_status(hass, UPDATE_STATUS_UNKNOWN)
 
+    def set_update_progress(call):
+        _LOGGER.info("set_update_progress")
+        if "progress" in call.data:
+            _set_update_progress(hass, call.data["progress"])
+
     def execute_upgrade(call):
         _LOGGER.info("execute_upgrade")
         _set_update_status(hass, UPDATE_STATUS_CHECKING)
@@ -298,6 +311,7 @@ async def async_setup(hass, config):
 
     # register services
     hass.services.async_register(DOMAIN, SERVICE_SET_UPDATE_STATUS, set_update_status)
+    hass.services.async_register(DOMAIN, SERVICE_SET_UPDATE_PROGRESS, set_update_progress)
     hass.services.async_register(DOMAIN, SERVICE_CHECK_VERSION, check_version)
     hass.services.async_register(DOMAIN, SERVICE_UPGRADE_PACKAGE, upgrade_package)
     hass.services.async_register(DOMAIN, SERVICE_EXECUTE_UPGRADE, execute_upgrade)

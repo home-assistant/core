@@ -7,9 +7,7 @@ import datetime
 import json
 import logging
 import re
-import subprocess
 import warnings
-import platform
 
 from aiohttp.web import json_response
 import async_timeout
@@ -2309,7 +2307,6 @@ async def async_setup(hass, config):
         result = await async_setup_component(hass, domain, ha_config)
         _LOGGER.error(str(result))
 
-
     async def process(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
@@ -3750,6 +3747,8 @@ def _process_command_from_frame(hass, service):
         _LOGGER.info("sip_event " + str(event_data))
     elif service.data["topic"] == "ais/set_update_status":
         hass.services.call("ais_updater", "set_update_status", {"status": service.data["payload"]})
+    elif service.data["topic"] == "ais/set_update_progress":
+        hass.services.call("ais_updater", "set_update_progress", {"progress": service.data["payload"]})
     else:
         # TODO process this without mqtt
         # player_status and speech_status
