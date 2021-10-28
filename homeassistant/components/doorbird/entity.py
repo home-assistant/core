@@ -33,5 +33,5 @@ class DoorBirdEntity(Entity):
             model=self._doorstation_info[DOORBIRD_INFO_KEY_DEVICE_TYPE],
             name=self._doorstation.name,
             sw_version=f"{firmware} {firmware_build}",
-            configuration_url="https://webadmin.doorbird.com/"
+            configuration_url="https://webadmin.doorbird.com/",
         )
