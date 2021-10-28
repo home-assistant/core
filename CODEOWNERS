@@ -118,6 +118,7 @@ homeassistant/components/denonavr/* @ol-iver @starkillerOG
 homeassistant/components/derivative/* @afaucogney
 homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/devolo_home_control/* @2Fake @Shutgun
+homeassistant/components/devolo_home_network/* @2Fake @Shutgun
 homeassistant/components/dexcom/* @gagebenne
 homeassistant/components/dhcp/* @bdraco
 homeassistant/components/dht/* @thegardenmonkey
