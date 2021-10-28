@@ -168,6 +168,11 @@ DHCP = [
     },
     {
         "domain": "guardian",
+        "hostname": "gvc*",
+        "macaddress": "B4E62D*"
+    },
+    {
+        "domain": "guardian",
         "hostname": "guardian*",
         "macaddress": "30AEA4*"
     },
