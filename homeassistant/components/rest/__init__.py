@@ -37,6 +37,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import COORDINATOR, DOMAIN, PLATFORM_IDX, REST, REST_DATA, REST_IDX
 from .data import RestData
 from .schema import CONFIG_SCHEMA  # noqa: F401
+from .utils import inject_hass_in_templates_list
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,6 +161,8 @@ def create_rest_data_from_config(hass, config):
     if resource_template is not None:
         resource_template.hass = hass
         resource = resource_template.async_render(parse_result=False)
+
+    inject_hass_in_templates_list(hass, [headers, params])
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
