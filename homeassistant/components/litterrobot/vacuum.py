@@ -17,7 +17,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STATUS,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
-    StateVacuumEntity,
+    VacuumEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF
@@ -75,7 +75,7 @@ async def async_setup_entry(
     )
 
 
-class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
+class LitterRobotCleaner(LitterRobotControlEntity, VacuumEntity):
     """Litter-Robot "Vacuum" Cleaner."""
 
     @property
