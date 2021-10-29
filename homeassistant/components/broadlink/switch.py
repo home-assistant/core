@@ -25,8 +25,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN, SWITCH_DOMAIN
@@ -146,17 +144,6 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         self._command_on = command_on
         self._command_off = command_off
         self._attr_name = f"{device.name} Switch"
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
-            default_manufacturer="Broadlink",
-            default_model="User-defined Switch",
-            default_name=self._attr_name,
-            identifiers={(DOMAIN, device.mac_address)},
-            via_device=(
-                DOMAIN,
-                device.mac_address,
-            ),
-        )
 
     async def async_added_to_hass(self):
         """Call when the switch is added to hass."""
