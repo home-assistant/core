@@ -135,7 +135,7 @@ async def async_setup_entry(
     coordinator = sma_data[PYSMA_COORDINATOR]
     used_sensors = sma_data[PYSMA_SENSORS]
     device_info = sma_data[PYSMA_DEVICE_INFO]
-    device_info["configuration_url"] = sma_data[PYSMA_OBJECT]._url
+    device_info["configuration_url"] = sma_data[PYSMA_OBJECT].url
 
     entities = []
     for sensor in used_sensors:
@@ -167,6 +167,8 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self._enabled_default = self._sensor.enabled
         self._config_entry_unique_id = config_entry_unique_id
         self._device_info = device_info
+
+        self._attr_entity_category = self._sensor.entity_category
 
         if self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
