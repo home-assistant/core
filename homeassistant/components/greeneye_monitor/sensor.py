@@ -136,6 +136,7 @@ class GEMSensor(SensorEntity):
 
         self._sensor = self._get_sensor(monitor)
         self._sensor.add_listener(self.async_write_ha_state)
+        self.async_write_ha_state()
 
         return True
 
