@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from homeassistant.components.number import NumberEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -41,6 +42,23 @@ class WallboxSensorEntityDescription(SensorEntityDescription):
     """Describes Wallbox sensor entity."""
 
     precision: int | None = None
+
+
+@dataclass
+class WallboxNumberEntityDescription(NumberEntityDescription):
+    """Describes Wallbox sensor entity."""
+
+    min_value: float = 0
+
+
+NUMBER_TYPES: dict[str, NumberEntityDescription] = {
+    CONF_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
+        key=CONF_MAX_CHARGING_CURRENT_KEY,
+        name="Max. Charging Current",
+        device_class=DEVICE_CLASS_CURRENT,
+        min_value=6,
+    )
+}
 
 
 SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {

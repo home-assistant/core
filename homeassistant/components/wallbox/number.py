@@ -8,13 +8,18 @@ from .const import (
     CONF_MAX_AVAILABLE_POWER_KEY,
     CONF_MAX_CHARGING_CURRENT_KEY,
     DOMAIN,
-    SENSOR_TYPES,
+    NUMBER_TYPES,
+    WallboxNumberEntityDescription,
 )
 
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Create wallbox sensor entities in HASS."""
     coordinator = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
+
+    filtered_data = {
+        k: coordinator.data[k] for k in NUMBER_TYPES if k in coordinator.data
+    }
     # Check if the user is authorized to change current, if so, add number component:
     try:
         await coordinator.async_set_charging_current(
@@ -23,20 +28,28 @@ async def async_setup_entry(hass, config, async_add_entities):
     except InvalidAuth:
         pass
     else:
-        async_add_entities([WallboxNumber(coordinator, config)])
+        async_add_entities(
+            [
+                WallboxNumber(coordinator, config, description)
+                for ent in filtered_data
+                if (description := NUMBER_TYPES[ent])
+            ]
+        )
 
 
 class WallboxNumber(CoordinatorEntity, NumberEntity):
     """Representation of the Wallbox portal."""
 
-    def __init__(self, coordinator, config):
+    def __init__(
+        self, coordinator, config, description: WallboxNumberEntityDescription
+    ):
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
-        sensor_description = SENSOR_TYPES[CONF_MAX_CHARGING_CURRENT_KEY]
+        self.entity_description = description
         self._coordinator = coordinator
-        self._attr_name = f"{config.title} {sensor_description.name}"
-        self._attr_min_value = 6
-        self._attr_device_class = sensor_description.device_class
+        self._attr_name = f"{config.title} {description.name}"
+        self._attr_min_value = description.min_value
+        self._attr_device_class = description.device_class
 
     @property
     def max_value(self):

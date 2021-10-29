@@ -18,7 +18,6 @@ from .const import (
     CONF_MAX_CHARGING_CURRENT_KEY,
     CONF_STATION,
     DOMAIN,
-    SENSOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,16 +70,8 @@ class WallboxCoordinator(DataUpdateCoordinator):
                 CONF_MAX_CHARGING_CURRENT_KEY
             ]
 
-            filtered_data = {k: data[k] for k in SENSOR_TYPES if k in data}
+            return data
 
-            for key, value in filtered_data.items():
-                if (sensor_round := SENSOR_TYPES[key].precision) is not None:
-                    try:
-                        filtered_data[key] = round(value, sensor_round)
-                    except TypeError:
-                        _LOGGER.debug("Cannot format %s", key)
-
-            return filtered_data
         except requests.exceptions.HTTPError as wallbox_connection_error:
             raise ConnectionError from wallbox_connection_error
 
