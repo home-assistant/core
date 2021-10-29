@@ -46,6 +46,7 @@ from .const import (
     GROUPS,
     PYSMA_COORDINATOR,
     PYSMA_DEVICE_INFO,
+    PYSMA_OBJECT,
     PYSMA_SENSORS,
 )
 
@@ -134,6 +135,7 @@ async def async_setup_entry(
     coordinator = sma_data[PYSMA_COORDINATOR]
     used_sensors = sma_data[PYSMA_SENSORS]
     device_info = sma_data[PYSMA_DEVICE_INFO]
+    device_info["configuration_url"] = sma_data[PYSMA_OBJECT]._url
 
     entities = []
     for sensor in used_sensors:
@@ -211,6 +213,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
             model=self._device_info["type"],
             name=self._device_info["name"],
             sw_version=self._device_info["sw_version"],
+            configuration_url=self._device_info["configuration_url"],
         )
 
     @property
