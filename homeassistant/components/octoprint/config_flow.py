@@ -25,11 +25,11 @@ _LOGGER = logging.getLogger(__name__)
 def _schema_with_defaults(username="", host="", port=80, path="/", ssl=False):
     return vol.Schema(
         {
-            vol.Required(CONF_USERNAME, default=username): cv.string,
-            vol.Required(CONF_HOST, default=host): cv.string,
-            vol.Optional(CONF_PORT, default=port): cv.port,
-            vol.Optional(CONF_PATH, default=path): cv.string,
-            vol.Optional(CONF_SSL, default=ssl): cv.boolean,
+            vol.Required(CONF_USERNAME, default=username): str,
+            vol.Required(CONF_HOST, default=host): str,
+            vol.Required(CONF_PORT, default=port): cv.port,
+            vol.Required(CONF_PATH, default=path): str,
+            vol.Required(CONF_SSL, default=ssl): bool,
         },
         extra=vol.ALLOW_EXTRA,
     )
