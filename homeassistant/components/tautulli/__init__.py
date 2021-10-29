@@ -6,9 +6,6 @@ from pytautulli import PyTautulli, exceptions
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
     CONF_API_KEY,
     CONF_HOST,
     CONF_PATH,
@@ -22,13 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_MONITORED_USERS,
-    DATA_KEY_API,
-    DATA_KEY_COORDINATOR,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from .const import CONF_MONITORED_USERS, DATA_KEY_COORDINATOR, DEFAULT_NAME, DOMAIN
 from .coordinator import TautulliDataUpdateCoordinator
 
 PLATFORMS = [SENSOR_DOMAIN]
@@ -52,13 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (exceptions.PyTautulliAuthenticationException) as ex:
         raise ConfigEntryAuthFailed(ex) from ex
 
-    coordinator = TautulliDataUpdateCoordinator(hass, api_client)
-    await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_KEY_API: api_client,
-        DATA_KEY_COORDINATOR: coordinator,
-    }
+    cordnator = TautulliDataUpdateCoordinator(hass, api_client)
+    await cordnator.async_config_entry_first_refresh()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_KEY_COORDINATOR: cordnator}
     if not entry.options:
         options = {CONF_MONITORED_USERS: entry.data.get(CONF_MONITORED_USERS)}
         hass.config_entries.async_update_entry(entry, options=options)
@@ -87,15 +74,12 @@ class TautulliEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the Tautulli entity."""
         super().__init__(coordinator)
-        self._server_unique_id = server_unique_id
         self._attr_name = name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about the application."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
-            ATTR_NAME: "Activity Sensor",
-            ATTR_MANUFACTURER: DEFAULT_NAME,
-            "entry_type": "service",
-        }
+        self._server_unique_id = server_unique_id
+        self._attr_device_info = DeviceInfo(
+            configuration_url=coordinator.api_client._host.base_url,
+            entry_type="service",
+            identifiers={(DOMAIN, server_unique_id)},
+            manufacturer=DEFAULT_NAME,
+            name="Activity Sensor",
+        )

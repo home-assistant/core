@@ -6,7 +6,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.components.tautulli.coordinator import TautulliDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
@@ -33,8 +32,9 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
+from .coordinator import TautulliDataUpdateCoordinator
 
-# Deprecated in Home Assistant 2021.11
+# Deprecated in Home Assistant 2021.12
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
