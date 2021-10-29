@@ -342,7 +342,7 @@ async def async_setup_entry(  # noqa: C901
                 {
                     prop: value
                     for prop, value in call.data.items()
-                    if prop != ATTR_SYSTEM_ID
+                    if prop != ATTR_DEVICE_ID
                 }
             )
         except SimplipyError as err:
