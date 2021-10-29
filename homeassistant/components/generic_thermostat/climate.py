@@ -336,7 +336,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if self._temp_target_temperature_step is not None:
             return self._temp_target_temperature_step
         # if a target_temperature_step is not defined, fallback to equal the precision
-        return super().precision
+        return self.precision
 
     @property
     def temperature_unit(self):
