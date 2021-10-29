@@ -66,7 +66,7 @@ async def test_sensor_actions(hass: HomeAssistant) -> None:
     entity_state = hass.states.get(TEST_SENSOR_ACTION_ENTITY_ID)
     assert entity_state
     assert entity_state.state == "0"
-    assert entity_state.attributes.get(KEY_ACTIONS) == []
+    assert entity_state.attributes.get(KEY_ACTIONS) is None
 
 
 async def test_sensor_device_info(hass: HomeAssistant) -> None:

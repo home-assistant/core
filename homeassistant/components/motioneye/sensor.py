@@ -81,9 +81,11 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
         return len(self._camera.get(KEY_ACTIONS, [])) if self._camera else 0
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Add actions as attribute."""
-        return {KEY_ACTIONS: self._camera.get(KEY_ACTIONS, []) if self._camera else []}
+        return {
+            KEY_ACTIONS: self._camera.get(KEY_ACTIONS, None) if self._camera else None
+        }
 
     @callback
     def _handle_coordinator_update(self) -> None:
