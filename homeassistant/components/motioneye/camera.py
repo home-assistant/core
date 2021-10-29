@@ -125,17 +125,17 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_TEXT_OVERLAY,
         SCHEMA_SERVICE_SET_TEXT,
-        "set_text_overlay",
+        "async_set_text_overlay",
     )
     platform.async_register_entity_service(
         SERVICE_ACTION,
         {vol.Required(CONF_ACTION): cv.string},
-        "request_action",
+        "async_request_action",
     )
     platform.async_register_entity_service(
         SERVICE_SNAPSHOT,
         {},
-        "request_snapshot",
+        "async_request_snapshot",
     )
 
 
@@ -260,7 +260,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
 
-    async def set_text_overlay(
+    async def async_set_text_overlay(
         self,
         left_text: str = None,
         right_text: str = None,
@@ -287,10 +287,10 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
             ).decode("UTF-8")
         await self._client.async_set_camera(self._camera_id, camera)
 
-    async def request_action(self, action: str) -> None:
+    async def async_request_action(self, action: str) -> None:
         """Call a motionEye action on a camera."""
         await self._client.async_action(self._camera_id, action)
 
-    async def request_snapshot(self) -> None:
+    async def async_request_snapshot(self) -> None:
         """Request a motionEye snapshot be saved."""
-        await self.request_action(KEY_ACTION_SNAPSHOT)
+        await self.async_request_action(KEY_ACTION_SNAPSHOT)
