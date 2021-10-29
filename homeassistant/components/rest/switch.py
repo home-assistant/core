@@ -27,7 +27,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .utils import inject_hass_in_templates, render_templates
+from .utils import inject_hass_in_templates_list, render_templates
 
 _LOGGER = logging.getLogger(__name__)
 CONF_BODY_OFF = "body_off"
@@ -92,8 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         body_on.hass = hass
     if body_off is not None:
         body_off.hass = hass
-    inject_hass_in_templates(hass, headers)
-    inject_hass_in_templates(hass, params)
+    inject_hass_in_templates_list(hass, [headers, params])
     timeout = config.get(CONF_TIMEOUT)
 
     try:
