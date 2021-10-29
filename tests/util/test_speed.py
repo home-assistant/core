@@ -44,17 +44,20 @@ def test_convert_nonnumeric_value():
         speed_util.convert("a", SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR)
 
 
-def test_convert_from_kph():
-    """Test conversion from kph to other units."""
-    kph = 5
-    assert speed_util.convert(
-        kph, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR
-    ) == pytest.approx(3.10686, abs=1e-5)
-
-
-def test_convert_from_mph():
-    """Test conversion from mph to other units."""
-    mph = 5
-    assert speed_util.convert(
-        mph, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
-    ) == pytest.approx(8.04672, abs=1e-5)
+@pytest.mark.parametrize(
+    "from_value, from_unit, expected, to_unit",
+    [
+        (5, SPEED_KILOMETERS_PER_HOUR, 3.10686, SPEED_MILES_PER_HOUR),
+        (5, SPEED_MILES_PER_HOUR, 8.04672, SPEED_KILOMETERS_PER_HOUR),
+        (5, SPEED_INCHES_PER_DAY, 127, SPEED_MILLIMETERS_PER_DAY),
+        (5, SPEED_MILLIMETERS_PER_DAY, 0.19685, SPEED_INCHES_PER_DAY),
+        (5, SPEED_INCHES_PER_DAY, 127, SPEED_MILLIMETERS_PER_DAY),
+        (5, SPEED_METERS_PER_SECOND, 708661, SPEED_INCHES_PER_HOUR),
+        (5000, SPEED_INCHES_PER_HOUR, 0.03528, SPEED_METERS_PER_SECOND),
+    ],
+)
+def test_convert_different_units(from_value, from_unit, expected, to_unit):
+    """Test conversion between units."""
+    assert speed_util.convert(from_value, from_unit, to_unit) == pytest.approx(
+        expected, rel=1e-4
+    )
