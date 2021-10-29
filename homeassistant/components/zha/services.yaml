@@ -127,6 +127,62 @@ set_zigbee_cluster_attribute:
       selector:
         text:
 
+
+get_zigbee_cluster_attribute:
+  name: Get zigbee cluster attribute
+  description: >-
+    Get attribute value for the specified cluster on the specified entity.
+  fields:
+    ieee:
+      name: IEEE
+      description: IEEE address for the device
+      required: true
+      example: "00:0d:6f:00:05:7d:2d:34"
+      selector:
+        text:
+    endpoint_id:
+      name: Endpoint ID
+      description: Endpoint id for the cluster
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: box
+    cluster_id:
+      name: Cluster ID
+      description: ZCL cluster to retrieve attributes for
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+    cluster_type:
+      name: Cluster Type
+      description: type of the cluster
+      default: "in"
+      selector:
+        select:
+          options:
+            - "in"
+            - "out"
+    attribute:
+      name: Attribute
+      description: id of the attribute to get
+      required: true
+      example: 0
+      selector:
+        number:
+          min: 1
+          max: 65535
+    manufacturer:
+      name: Manufacturer
+      description: manufacturer code
+      example: 0x00FC
+      selector:
+        text:
+
+
 issue_zigbee_cluster_command:
   name: Issue zigbee cluster command
   description: >-

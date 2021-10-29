@@ -99,6 +99,7 @@ ATTR_QR_CODE = "qr_code"
 SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
 SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = "set_zigbee_cluster_attribute"
+SERVICE_GET_ZIGBEE_CLUSTER_ATTRIBUTE = "get_zigbee_cluster_attribute"
 SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = "issue_zigbee_cluster_command"
 SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND = "issue_zigbee_group_command"
 SERVICE_DIRECT_ZIGBEE_BIND = "issue_direct_zigbee_bind"
@@ -143,6 +144,16 @@ SERVICE_SCHEMAS = {
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_ATTRIBUTE): vol.Any(cv.positive_int, str),
             vol.Required(ATTR_VALUE): vol.Any(int, cv.boolean, cv.string),
+            vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+        }
+    ),
+    SERVICE_GET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema(
+        {
+            vol.Required(ATTR_IEEE): EUI64.convert,
+            vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
+            vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
+            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
+            vol.Required(ATTR_ATTRIBUTE): vol.Any(cv.positive_int, str),
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }
     ),
@@ -1496,6 +1507,7 @@ def async_unload_api(hass: HomeAssistant) -> None:
     hass.services.async_remove(DOMAIN, SERVICE_PERMIT)
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
     hass.services.async_remove(DOMAIN, SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE)
+    hass.services.async_remove(DOMAIN, SERVICE_GET_ZIGBEE_CLUSTER_ATTRIBUTE)
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND)
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND)
     hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_SQUAWK)
