@@ -1,5 +1,6 @@
 """Test the Litter-Robot vacuum entity."""
 from datetime import timedelta
+from unittest.mock import Mock
 
 import pytest
 from voluptuous.error import MultipleInvalid
@@ -10,6 +11,8 @@ from homeassistant.components.litterrobot.vacuum import (
     SERVICE_RESET_WASTE_DRAWER,
     SERVICE_SET_SLEEP_MODE,
     SERVICE_SET_WAIT_TIME,
+    TYPE_LITTER_BOX,
+    LitterRobotCleaner,
 )
 from homeassistant.components.vacuum import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -24,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from .common import VACUUM_ENTITY_ID
-from .conftest import setup_integration
+from .conftest import create_mock_robot, setup_integration
 
 from tests.common import async_fire_time_changed
 
@@ -44,6 +47,16 @@ async def test_vacuum(hass: HomeAssistant, mock_account):
     assert vacuum
     assert vacuum.state == STATE_DOCKED
     assert vacuum.attributes["is_sleeping"] is False
+
+
+async def test_vacuum_status_when_sleeping(hass):
+    """Tests the vacuum status when sleeping."""
+    robot = create_mock_robot({"sleepModeActive": "102:00:00"})
+    vacuum = LitterRobotCleaner(robot, TYPE_LITTER_BOX, Mock())
+    vacuum.hass = hass
+
+    assert vacuum
+    assert vacuum.status == "Ready (Sleeping)"
 
 
 async def test_no_robots(hass: HomeAssistant, mock_account_with_no_robots):

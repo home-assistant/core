@@ -47,13 +47,12 @@ async def async_setup_entry(
     """Set up Litter-Robot cleaner using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    for robot in hub.account.robots:
-        entities.append(
+    async_add_entities(
+        [
             LitterRobotCleaner(robot=robot, entity_type=TYPE_LITTER_BOX, hub=hub)
-        )
-
-    async_add_entities(entities, True)
+            for robot in hub.account.robots
+        ]
+    )
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
