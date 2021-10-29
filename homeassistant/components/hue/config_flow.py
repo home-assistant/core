@@ -11,7 +11,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components import ssdp
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.const import CONF_HOST, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -207,14 +207,15 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge = bridge
         return await self.async_step_link()
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(self, discovery_info: dict[str, Any]):
         """Handle a discovered Hue bridge.
 
         This flow is triggered by the Zeroconf component. It will check if the
         host is already configured and delegate to the import step if not.
         """
         bridge = self._async_get_bridge(
-            discovery_info["host"], discovery_info["properties"]["bridgeid"]
+            discovery_info[zeroconf.ATTR_HOST],
+            discovery_info[zeroconf.ATTR_PROPERTIES]["bridgeid"],
         )
 
         await self.async_set_unique_id(bridge.id)
