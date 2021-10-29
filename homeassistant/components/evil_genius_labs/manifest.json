@@ -2,7 +2,7 @@
   "domain": "evil_genius_labs",
   "name": "Evil Genius Labs",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/fibonacci",
+  "documentation": "https://www.home-assistant.io/integrations/evil_genius_labs",
   "requirements": ["pyevilgenius==1.0.0"],
   "ssdp": [],
   "zeroconf": [],
