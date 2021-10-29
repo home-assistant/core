@@ -117,8 +117,7 @@ class PwmSimpleLed(LightEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Handle entity about to be added to hass event."""
         await super().async_added_to_hass()
-        last_state = await self.async_get_last_state()
-        if last_state:
+        if last_state := await self.async_get_last_state():
             self._is_on = last_state.state == STATE_ON
             self._brightness = last_state.attributes.get(
                 "brightness", DEFAULT_BRIGHTNESS
@@ -193,8 +192,7 @@ class PwmRgbLed(PwmSimpleLed):
     async def async_added_to_hass(self):
         """Handle entity about to be added to hass event."""
         await super().async_added_to_hass()
-        last_state = await self.async_get_last_state()
-        if last_state:
+        if last_state := await self.async_get_last_state():
             self._color = last_state.attributes.get("hs_color", DEFAULT_COLOR)
 
     @property

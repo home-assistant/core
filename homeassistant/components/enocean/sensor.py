@@ -139,8 +139,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         if self._attr_native_value is not None:
             return
 
-        state = await self.async_get_last_state()
-        if state is not None:
+        if (state := await self.async_get_last_state()) is not None:
             self._attr_native_value = state.state
 
     def value_changed(self, packet):

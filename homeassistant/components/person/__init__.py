@@ -420,8 +420,7 @@ class Person(RestoreEntity):
     async def async_added_to_hass(self):
         """Register device trackers."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._parse_source_state(state)
 
         if self.hass.is_running:

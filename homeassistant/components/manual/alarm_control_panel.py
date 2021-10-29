@@ -427,8 +427,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             if (
                 state.state in (STATE_ALARM_PENDING, STATE_ALARM_ARMING)
                 and hasattr(state, "attributes")
