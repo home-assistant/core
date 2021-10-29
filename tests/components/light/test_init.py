@@ -1646,25 +1646,25 @@ async def test_light_service_call_color_conversion_named_tuple(
                 entity5.entity_id,
                 entity6.entity_id,
             ],
-            "brightness_pct": 50,
+            "brightness_pct": 25,
             "rgb_color": color_util.RGBColor(128, 0, 0),
         },
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 128, "hs_color": (0.0, 100.0)}
+    assert data == {"brightness": 64, "hs_color": (0.0, 100.0)}
     _, data = entity1.last_call("turn_on")
-    assert data == {"brightness": 128, "rgb_color": (128, 0, 0)}
+    assert data == {"brightness": 64, "rgb_color": (128, 0, 0)}
     _, data = entity2.last_call("turn_on")
-    assert data == {"brightness": 128, "xy_color": (0.701, 0.299)}
+    assert data == {"brightness": 64, "xy_color": (0.701, 0.299)}
     _, data = entity3.last_call("turn_on")
-    assert data == {"brightness": 128, "rgb_color": (128, 0, 0)}
+    assert data == {"brightness": 64, "rgb_color": (128, 0, 0)}
     _, data = entity4.last_call("turn_on")
-    assert data == {"brightness": 128, "hs_color": (0.0, 100.0)}
+    assert data == {"brightness": 64, "hs_color": (0.0, 100.0)}
     _, data = entity5.last_call("turn_on")
-    assert data == {"brightness": 128, "rgbw_color": (128, 0, 0, 0)}
+    assert data == {"brightness": 64, "rgbw_color": (128, 0, 0, 0)}
     _, data = entity6.last_call("turn_on")
-    assert data == {"brightness": 128, "rgbww_color": (128, 0, 0, 0, 0)}
+    assert data == {"brightness": 64, "rgbww_color": (128, 0, 0, 0, 0)}
 
 
 async def test_light_service_call_color_temp_emulation(
