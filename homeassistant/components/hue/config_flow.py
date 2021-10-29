@@ -16,6 +16,7 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .bridge import authenticate_bridge
 from .const import (
@@ -207,7 +208,9 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge = bridge
         return await self.async_step_link()
 
-    async def async_step_zeroconf(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Handle a discovered Hue bridge.
 
         This flow is triggered by the Zeroconf component. It will check if the
