@@ -161,7 +161,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.1.0
+aioesphomeapi==10.2.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -750,7 +750,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==0.12.2
+greeclimate==0.12.3
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
@@ -1989,7 +1989,7 @@ pyvera==0.3.13
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==1.4.0
+pyvesync==1.4.1
 
 # homeassistant.components.vizio
 pyvizio==0.1.57
@@ -2193,7 +2193,7 @@ solaredge==0.0.2
 solax==0.2.8
 
 # homeassistant.components.honeywell
-somecomfort==0.7.0
+somecomfort==0.8.0
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "home_control": "The devolo Home Control Central Unit does not work with this integration."
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "flow_title": "{product} ({name})",

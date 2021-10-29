@@ -38,5 +38,15 @@
                 "description": "Inserisci il tuo nome utente e password:"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Mostra la posizione monitorata sulla mappa"
+                },
+                "title": "Configura WattTime"
+            }
+        }
     }
 }

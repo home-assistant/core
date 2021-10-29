@@ -11,6 +11,8 @@ DOMAIN: Final = "network"
 STORAGE_KEY: Final = "core.network"
 STORAGE_VERSION: Final = 1
 
+DATA_NETWORK: Final = "network"
+
 ATTR_ADAPTERS: Final = "adapters"
 ATTR_CONFIGURED_ADAPTERS: Final = "configured_adapters"
 DEFAULT_CONFIGURED_ADAPTERS: list[str] = []

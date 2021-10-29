@@ -8,6 +8,7 @@ from homeassistant.components import network
 from homeassistant.components.network.const import (
     ATTR_ADAPTERS,
     ATTR_CONFIGURED_ADAPTERS,
+    DOMAIN,
     MDNS_TARGET_IP,
     STORAGE_KEY,
     STORAGE_VERSION,
@@ -59,10 +60,10 @@ async def test_async_detect_interfaces_setting_non_loopback_route(hass, hass_sto
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
     ):
-        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
-    network_obj = hass.data[network.DOMAIN]
+    network_obj = hass.data[DOMAIN]
     assert network_obj.configured_adapters == []
 
     assert network_obj.adapters == [
@@ -121,10 +122,10 @@ async def test_async_detect_interfaces_setting_loopback_route(hass, hass_storage
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
     ):
-        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
-    network_obj = hass.data[network.DOMAIN]
+    network_obj = hass.data[DOMAIN]
     assert network_obj.configured_adapters == []
     assert network_obj.adapters == [
         {
@@ -182,10 +183,10 @@ async def test_async_detect_interfaces_setting_empty_route(hass, hass_storage):
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
     ):
-        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
-    network_obj = hass.data[network.DOMAIN]
+    network_obj = hass.data[DOMAIN]
     assert network_obj.configured_adapters == []
     assert network_obj.adapters == [
         {
@@ -243,10 +244,10 @@ async def test_async_detect_interfaces_setting_exception(hass, hass_storage):
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
     ):
-        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
-    network_obj = hass.data[network.DOMAIN]
+    network_obj = hass.data[DOMAIN]
     assert network_obj.configured_adapters == []
     assert network_obj.adapters == [
         {
@@ -309,10 +310,10 @@ async def test_interfaces_configured_from_storage(hass, hass_storage):
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
     ):
-        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
-    network_obj = hass.data[network.DOMAIN]
+    network_obj = hass.data[DOMAIN]
     assert network_obj.configured_adapters == ["eth0", "eth1", "vtun0"]
 
     assert network_obj.adapters == [
@@ -378,10 +379,10 @@ async def test_interfaces_configured_from_storage_websocket_update(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
     ):
-        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
-    network_obj = hass.data[network.DOMAIN]
+    network_obj = hass.data[DOMAIN]
     assert network_obj.configured_adapters == ["eth0", "eth1", "vtun0"]
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json({"id": 1, "type": "network"})
@@ -507,7 +508,7 @@ async def test_async_get_source_ip_matching_interface(hass, hass_storage):
         "homeassistant.components.network.util.socket.socket",
         return_value=_mock_socket(["192.168.1.5"]),
     ):
-        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
         assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "192.168.1.5"
@@ -528,7 +529,7 @@ async def test_async_get_source_ip_interface_not_match(hass, hass_storage):
         "homeassistant.components.network.util.socket.socket",
         return_value=_mock_socket(["192.168.1.5"]),
     ):
-        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
         assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "169.254.3.2"
@@ -549,7 +550,7 @@ async def test_async_get_source_ip_cannot_determine_target(hass, hass_storage):
         "homeassistant.components.network.util.socket.socket",
         return_value=_mock_socket([None]),
     ):
-        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
         assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "192.168.1.5"
@@ -570,7 +571,7 @@ async def test_async_get_ipv4_broadcast_addresses_default(hass, hass_storage):
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
     ):
-        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
     assert await network.async_get_ipv4_broadcast_addresses(hass) == {
@@ -593,7 +594,7 @@ async def test_async_get_ipv4_broadcast_addresses_multiple(hass, hass_storage):
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
     ):
-        assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
     assert await network.async_get_ipv4_broadcast_addresses(hass) == {
