@@ -26,7 +26,7 @@ VALID_UNITS: tuple[str, ...] = (
 HRS_TO_SECS = 60 * 60  # 1 hr = 3600 seconds
 KM_TO_M = 1000  # 1 km = 1000 m
 KM_TO_MILE = 0.62137119  # 1 km = 0.62137119 mi
-KM_TO_IN = 39370.0787  # 1 km = 39370.0787 in
+M_TO_IN = 39.3700787  # 1 m = 39.3700787 in
 
 # Units in terms of m/s
 UNIT_CONVERSION: dict[str, float] = {
@@ -34,8 +34,8 @@ UNIT_CONVERSION: dict[str, float] = {
     SPEED_KILOMETERS_PER_HOUR: HRS_TO_SECS / KM_TO_M,
     SPEED_MILES_PER_HOUR: HRS_TO_SECS * KM_TO_MILE / KM_TO_M,
     SPEED_MILLIMETERS_PER_DAY: (24 * HRS_TO_SECS) * 1000,
-    SPEED_INCHES_PER_DAY: (24 * HRS_TO_SECS) * KM_TO_IN,
-    SPEED_INCHES_PER_HOUR: HRS_TO_SECS * KM_TO_IN,
+    SPEED_INCHES_PER_DAY: (24 * HRS_TO_SECS) * M_TO_IN,
+    SPEED_INCHES_PER_HOUR: HRS_TO_SECS * M_TO_IN,
 }
 
 
@@ -52,5 +52,5 @@ def convert(value: float, unit_1: str, unit_2: str) -> float:
     if unit_1 == unit_2:
         return value
 
-    mph = value / UNIT_CONVERSION[unit_1]
-    return mph * UNIT_CONVERSION[unit_2]
+    meters_per_second = value / UNIT_CONVERSION[unit_1]
+    return meters_per_second * UNIT_CONVERSION[unit_2]
