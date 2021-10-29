@@ -20,36 +20,31 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(devices)
 
 
-class MaxCubeShutter(BinarySensorEntity):
+class MaxCubeBinarySensorBase(BinarySensorEntity):
+    def __init__(self, handler, device):
+        """Initialize MAX! Cube BinarySensorEntity."""
+        self._cubehandle = handler
+        self._device = device
+        self._room = handler.cube.room_by_id(device.room_id)
+
+    def update(self):
+        """Get latest data from MAX! Cube."""
+        self._cubehandle.update()
+
+
+class MaxCubeShutter(MaxCubeBinarySensorBase):
     """Representation of a MAX! Cube Binary Sensor device."""
 
     def __init__(self, handler, device):
         """Initialize MAX! Cube BinarySensorEntity."""
-        room = handler.cube.room_by_id(device.room_id)
-        self._name = f"{room.name} {device.name}"
-        self._cubehandle = handler
-        self._device = device
+        super().__init__(handler, device)
 
-    @property
-    def name(self):
-        """Return the name of the BinarySensorEntity."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._device.serial
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_WINDOW
+        self._attr_name = f"{self._room.name} {self._device.name}"
+        self._attr_unique_id = self._device.serial
+        self._attr_device_class = DEVICE_CLASS_WINDOW
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on/open."""
         return self._device.is_open
 
-    def update(self):
-        """Get latest data from MAX! Cube."""
-        self._cubehandle.update()
