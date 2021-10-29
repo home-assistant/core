@@ -75,6 +75,23 @@ SCHEMA_TEXT_OVERLAY = vol.In(
         KEY_TEXT_OVERLAY_CAMERA_NAME,
     ]
 )
+SCHEMA_SERVICE_SET_TEXT = vol.Schema(
+    vol.All(
+        {
+            vol.Optional(KEY_TEXT_OVERLAY_LEFT): SCHEMA_TEXT_OVERLAY,
+            vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
+            vol.Optional(KEY_TEXT_OVERLAY_RIGHT): SCHEMA_TEXT_OVERLAY,
+            vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
+        },
+        cv.has_at_least_one_key(
+            KEY_TEXT_OVERLAY_LEFT,
+            KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
+            KEY_TEXT_OVERLAY_RIGHT,
+            KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
+        ),
+    ),
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup_entry(
@@ -107,23 +124,7 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_TEXT_OVERLAY,
-        vol.Schema(
-            vol.All(
-                {
-                    vol.Optional(KEY_TEXT_OVERLAY_LEFT): SCHEMA_TEXT_OVERLAY,
-                    vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
-                    vol.Optional(KEY_TEXT_OVERLAY_RIGHT): SCHEMA_TEXT_OVERLAY,
-                    vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
-                },
-                cv.has_at_least_one_key(
-                    KEY_TEXT_OVERLAY_LEFT,
-                    KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
-                    KEY_TEXT_OVERLAY_RIGHT,
-                    KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
-                ),
-            ),
-            extra=vol.ALLOW_EXTRA,
-        ),
+        SCHEMA_SERVICE_SET_TEXT,
         "set_text_overlay",
     )
     platform.async_register_entity_service(
@@ -270,20 +271,21 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         # Fetch the very latest camera config to reduce the risk of updating with a
         # stale configuration.
         camera = await self._client.async_get_camera(self._camera_id)
-        if camera:
-            if left_text is not None:
-                camera[KEY_TEXT_OVERLAY_LEFT] = left_text
-            if right_text is not None:
-                camera[KEY_TEXT_OVERLAY_RIGHT] = right_text
-            if custom_left_text is not None:
-                camera[KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT] = custom_left_text.encode(
-                    "unicode_escape"
-                ).decode("UTF-8")
-            if custom_right_text is not None:
-                camera[KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT] = custom_right_text.encode(
-                    "unicode_escape"
-                ).decode("UTF-8")
-            await self._client.async_set_camera(self._camera_id, camera)
+        if not camera:
+            return
+        if left_text is not None:
+            camera[KEY_TEXT_OVERLAY_LEFT] = left_text
+        if right_text is not None:
+            camera[KEY_TEXT_OVERLAY_RIGHT] = right_text
+        if custom_left_text is not None:
+            camera[KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT] = custom_left_text.encode(
+                "unicode_escape"
+            ).decode("UTF-8")
+        if custom_right_text is not None:
+            camera[KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT] = custom_right_text.encode(
+                "unicode_escape"
+            ).decode("UTF-8")
+        await self._client.async_set_camera(self._camera_id, camera)
 
     async def request_action(self, action: str) -> None:
         """Call a motionEye action on a camera."""
