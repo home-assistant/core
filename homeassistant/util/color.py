@@ -196,7 +196,7 @@ class GamutType:
     blue: XYPoint = attr.ib()
 
 
-def color_name_to_rgb(color_name: str) -> tuple[int, int, int]:
+def color_name_to_rgb(color_name: str) -> RGBColor:
     """Convert color name to RGB hex value."""
     # COLORS map has no spaces in it, so make the color_name have no
     # spaces in it as well for matching purposes
@@ -204,7 +204,7 @@ def color_name_to_rgb(color_name: str) -> tuple[int, int, int]:
     if not hex_value:
         raise ValueError("Unknown color")
 
-    return tuple(hex_value)  # type: ignore[return-value]
+    return hex_value
 
 
 # pylint: disable=invalid-name
