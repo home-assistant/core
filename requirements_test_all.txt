@@ -678,13 +678,11 @@ ondilo==0.2.0
 # homeassistant.components.onvif
 onvif-zeep-async==1.2.0
 
-
 # homeassistant.components.oocsi
 oocsi == 0.4.2
 
 # homeassistant.components.opengarage
 open-garage==0.1.6
-
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
