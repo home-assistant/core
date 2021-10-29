@@ -24,6 +24,8 @@ DOMAIN = "metoffice"
 DEFAULT_NAME = "Met Office"
 ATTRIBUTION = "Data provided by the Met Office"
 
+ATTR_FORECAST_DAYTIME = "daytime"
+
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
 
 METOFFICE_COORDINATES = "metoffice_coordinates"
