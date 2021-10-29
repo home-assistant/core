@@ -19,11 +19,9 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     CONF_ADDRESS,
     CONF_NAME,
-    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -32,13 +30,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import (
-    CONF_CREDENTIALS,
-    CONF_IDENTIFIERS,
-    CONF_RECONFIGURE,
-    CONF_START_OFF,
-    DOMAIN,
-)
+from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,12 +46,6 @@ PLATFORMS = [MP_DOMAIN, REMOTE_DOMAIN]
 
 async def async_setup_entry(hass, entry):
     """Set up a config entry for Apple TV."""
-    if entry.options.get(CONF_RECONFIGURE, False):
-        hass.config_entries.async_update_entry(
-            entry, options={**entry.options, CONF_RECONFIGURE: False}
-        )
-        raise ConfigEntryAuthFailed("reconfiguration was requested")
-
     manager = AppleTVManager(hass, entry)
     hass.data.setdefault(DOMAIN, {})[entry.unique_id] = manager
 
@@ -83,8 +69,6 @@ async def async_setup_entry(hass, entry):
 
     hass.async_create_task(setup_platforms())
 
-    entry.async_on_unload(entry.add_update_listener(async_config_entry_changed))
-
     return True
 
 
@@ -103,24 +87,17 @@ async def async_migrate_entry(hass, config_entry):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version == 1:
+    if config_entry.version in [1, 2]:
         new = {**config_entry.data}
 
-        # Not used anymore
-        del new[CONF_PROTOCOL]
+        new.setdefault(CONF_IDENTIFIERS, []).append(config_entry.unique_id)
 
         config_entry.data = {**new}
-        config_entry.version = 2
+        config_entry.version = 3
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
     return True
-
-
-async def async_config_entry_changed(hass, config_entry):
-    """Reload config entry if reconfiguration was requested."""
-    if config_entry.options[CONF_RECONFIGURE]:
-        await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class AppleTVEntity(Entity):
@@ -262,16 +239,16 @@ class AppleTVManager:
         while self._is_on and self.atv is None:
             try:
                 conf = await self._scan()
+                raise exceptions.AuthenticationError()
                 if conf:
                     await self._connect(conf)
             except exceptions.AuthenticationError:
-                # TODO: re-auth should be triggered here - how?
+                self.config_entry.async_start_reauth(self.hass)
                 asyncio.create_task(self.disconnect())
                 _LOGGER.exception(
                     "Authentication failed for %s, try reconfiguring device",
                     self.config_entry.data[CONF_NAME],
                 )
-                break
             except asyncio.CancelledError:
                 pass
             except Exception:  # pylint: disable=broad-except
