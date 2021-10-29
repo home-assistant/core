@@ -4,6 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SOURCE_TYPE_ROUTER,
 )
@@ -50,7 +51,7 @@ async def async_get_scanner(hass, config):
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=config,
+            data=config[DEVICE_TRACKER_DOMAIN],
         )
     )
 
@@ -85,8 +86,7 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
 
     def get_hostname(self):
         """Return the hostname of the given device or None if we don't know."""
-        hostname = self._device["name"]
-        if hostname == "--":
+        if (hostname := self._device["name"]) == "--":
             return None
 
         return hostname

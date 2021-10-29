@@ -121,12 +121,12 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
     def device_info(self) -> DeviceInfo | None:
         """Return the device information."""
         if self.is_connected:
-            return {
-                "name": self.name,
-                "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-                "via_device": (
+            return DeviceInfo(
+                name=self.name,
+                connections={(CONNECTION_NETWORK_MAC, self._mac)},
+                via_device=(
                     CONNECTION_NETWORK_MAC,
                     self.coordinator.data[API_CLIENTS][self._mac][API_ACCESS_POINT],
                 ),
-            }
+            )
         return None

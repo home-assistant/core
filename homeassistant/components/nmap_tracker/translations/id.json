@@ -8,6 +8,7 @@
         "step": {
             "init": {
                 "data": {
+                    "interval_seconds": "Interval pindai",
                     "track_new_devices": "Lacak perangkat baru"
                 }
             }

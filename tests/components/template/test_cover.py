@@ -327,7 +327,7 @@ async def test_template_out_of_bounds(hass, start_ha):
 )
 async def test_template_open_or_position(hass, start_ha, caplog_setup_text):
     """Test that at least one of open_cover or set_position is used."""
-    assert hass.states.async_all() == []
+    assert hass.states.async_all("cover") == []
     assert "Invalid config for [cover.template]" in caplog_setup_text
 
 

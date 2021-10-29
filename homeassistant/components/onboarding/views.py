@@ -1,5 +1,6 @@
 """Onboarding views."""
 import asyncio
+from http import HTTPStatus
 
 from aiohttp.web_exceptions import HTTPUnauthorized
 import voluptuous as vol
@@ -9,7 +10,6 @@ from homeassistant.components.auth import indieauth
 from homeassistant.components.http.const import KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_FORBIDDEN
 from homeassistant.core import callback
 from homeassistant.helpers.system_info import async_get_system_info
 
@@ -124,7 +124,7 @@ class UserOnboardingView(_BaseOnboardingView):
 
         async with self._lock:
             if self._async_is_done():
-                return self.json_message("User step already done", HTTP_FORBIDDEN)
+                return self.json_message("User step already done", HTTPStatus.FORBIDDEN)
 
             provider = _async_get_hass_provider(hass)
             await provider.async_initialize()
@@ -179,7 +179,7 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
         async with self._lock:
             if self._async_is_done():
                 return self.json_message(
-                    "Core config step already done", HTTP_FORBIDDEN
+                    "Core config step already done", HTTPStatus.FORBIDDEN
                 )
 
             await self._async_mark_done(hass)
@@ -217,7 +217,7 @@ class IntegrationOnboardingView(_BaseOnboardingView):
         async with self._lock:
             if self._async_is_done():
                 return self.json_message(
-                    "Integration step already done", HTTP_FORBIDDEN
+                    "Integration step already done", HTTPStatus.FORBIDDEN
                 )
 
             await self._async_mark_done(hass)
@@ -227,13 +227,13 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                 request.app["hass"], data["client_id"], data["redirect_uri"]
             ):
                 return self.json_message(
-                    "invalid client id or redirect uri", HTTP_BAD_REQUEST
+                    "invalid client id or redirect uri", HTTPStatus.BAD_REQUEST
                 )
 
             refresh_token = await hass.auth.async_get_refresh_token(refresh_token_id)
             if refresh_token is None or refresh_token.credential is None:
                 return self.json_message(
-                    "Credentials for user not available", HTTP_FORBIDDEN
+                    "Credentials for user not available", HTTPStatus.FORBIDDEN
                 )
 
             # Return authorization code so we can redirect user and log them in
@@ -257,7 +257,7 @@ class AnalyticsOnboardingView(_BaseOnboardingView):
         async with self._lock:
             if self._async_is_done():
                 return self.json_message(
-                    "Analytics config step already done", HTTP_FORBIDDEN
+                    "Analytics config step already done", HTTPStatus.FORBIDDEN
                 )
 
             await self._async_mark_done(hass)

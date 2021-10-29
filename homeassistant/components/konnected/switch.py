@@ -11,7 +11,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import DeviceInfo, ToggleEntity
 
 from .const import (
     CONF_ACTIVATION,
@@ -77,11 +77,9 @@ class KonnectedSwitch(ToggleEntity):
         return device_data.get("panel")
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(KONNECTED_DOMAIN, self._device_id)},
-        }
+        return DeviceInfo(identifiers={(KONNECTED_DOMAIN, self._device_id)})
 
     @property
     def available(self):

@@ -12,7 +12,7 @@ from twentemilieu import (
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, ATTR_NAME, CONF_ID
+from homeassistant.const import CONF_ID, DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -73,6 +73,8 @@ async def async_setup_entry(
 
 class TwenteMilieuSensor(SensorEntity):
     """Defines a Twente Milieu sensor."""
+
+    _attr_device_class = DEVICE_CLASS_DATE
 
     def __init__(
         self,
@@ -145,8 +147,8 @@ class TwenteMilieuSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about Twente Milieu."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
-            ATTR_NAME: "Twente Milieu",
-            ATTR_MANUFACTURER: "Twente Milieu",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer="Twente Milieu",
+            name="Twente Milieu",
+        )

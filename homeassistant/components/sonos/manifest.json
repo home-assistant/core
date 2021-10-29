@@ -3,7 +3,7 @@
   "name": "Sonos",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sonos",
-  "requirements": ["soco==0.23.3"],
+  "requirements": ["soco==0.24.0"],
   "dependencies": ["ssdp"],
   "after_dependencies": ["plex", "zeroconf"],
   "zeroconf": ["_sonos._tcp.local."],

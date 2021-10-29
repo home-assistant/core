@@ -9,6 +9,7 @@ import pyatmo
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -24,6 +25,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_MBAR,
@@ -41,7 +43,14 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_WEATHER_AREAS, DATA_HANDLER, DOMAIN, MANUFACTURER, SIGNAL_NAME
+from .const import (
+    CONF_WEATHER_AREAS,
+    DATA_HANDLER,
+    DOMAIN,
+    MANUFACTURER,
+    SIGNAL_NAME,
+    TYPE_WEATHER,
+)
 from .data_handler import (
     HOMECOACH_DATA_CLASS_NAME,
     PUBLICDATA_DATA_CLASS_NAME,
@@ -143,6 +152,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="Rain",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
+        state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
@@ -151,6 +161,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="sum_rain_1",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
@@ -159,6 +170,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="sum_rain_24",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=LENGTH_MILLIMETERS,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         icon="mdi:weather-rainy",
     ),
     NetatmoSensorEntityDescription(
@@ -166,6 +178,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Battery Percent",
         netatmo_name="battery_percent",
         entity_registry_enabled_default=True,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -225,6 +238,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Reachability",
         netatmo_name="reachable",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         icon="mdi:signal",
     ),
     NetatmoSensorEntityDescription(
@@ -232,6 +246,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Radio",
         netatmo_name="rf_status",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         icon="mdi:signal",
     ),
     NetatmoSensorEntityDescription(
@@ -239,6 +254,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Radio Level",
         netatmo_name="rf_status",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -248,6 +264,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Wifi",
         netatmo_name="wifi_status",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         icon="mdi:wifi",
     ),
     NetatmoSensorEntityDescription(
@@ -255,6 +272,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Wifi Level",
         netatmo_name="wifi_status",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -488,6 +506,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
 
         self._attr_name = f"{MANUFACTURER} {self._device_name} {description.name}"
         self._model = device["type"]
+        self._netatmo_type = TYPE_WEATHER
         self._attr_unique_id = f"{self._id}-{description.key}"
 
     @property
@@ -686,7 +705,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         await super().async_added_to_hass()
 
         assert self.device_info and "name" in self.device_info
-        self.data_handler.listeners.append(
+        self.data_handler.config_entry.async_on_unload(
             async_dispatcher_connect(
                 self.hass,
                 f"netatmo-config-{self.device_info['name']}",

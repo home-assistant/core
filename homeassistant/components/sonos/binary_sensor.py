@@ -1,20 +1,18 @@
 """Entity representing a Sonos power sensor."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     BinarySensorEntity,
 )
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SONOS_CREATE_BATTERY
 from .entity import SonosEntity
 from .speaker import SonosSpeaker
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_BATTERY_POWER_SOURCE = "power_source"
 
@@ -34,6 +32,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     """Representation of a Sonos power entity."""
 
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the sensor."""
@@ -49,7 +49,7 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
         """Return the entity's device class."""
         return DEVICE_CLASS_BATTERY_CHARGING
 
-    async def async_update(self) -> None:
+    async def _async_poll(self) -> None:
         """Poll the device for the current state."""
         await self.speaker.async_poll_battery()
 

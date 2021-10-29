@@ -92,8 +92,7 @@ class CurrencylayerSensor(SensorEntity):
     def update(self):
         """Update current date."""
         self.rest.update()
-        value = self.rest.data
-        if value is not None:
+        if (value := self.rest.data) is not None:
             self._state = round(value[f"{self._base}{self._quote}"], 4)
 
 

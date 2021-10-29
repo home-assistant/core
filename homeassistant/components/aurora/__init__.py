@@ -7,17 +7,10 @@ from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -25,7 +18,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    ATTR_ENTRY_TYPE,
     ATTRIBUTION,
     AURORA_API,
     CONF_THRESHOLD,
@@ -78,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -145,12 +137,12 @@ class AuroraEntity(CoordinatorEntity):
         self._attr_icon = icon
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Define the device based on name."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.unique_id)},
-            ATTR_NAME: self.coordinator.name,
-            ATTR_MANUFACTURER: "NOAA",
-            ATTR_MODEL: "Aurora Visibility Sensor",
-            ATTR_ENTRY_TYPE: "service",
-        }
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, str(self.unique_id))},
+            manufacturer="NOAA",
+            model="Aurora Visibility Sensor",
+            name=self.coordinator.name,
+        )

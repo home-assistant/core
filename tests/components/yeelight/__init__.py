@@ -37,6 +37,17 @@ CAPABILITIES = {
     "name": "",
 }
 
+ID_DECIMAL = f"{int(ID, 16):08d}"
+
+ZEROCONF_DATA = {
+    "host": IP_ADDRESS,
+    "port": 54321,
+    "hostname": f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
+    "type": "_miio._udp.local.",
+    "name": f"yeelink-light-strip1_miio{ID_DECIMAL}._miio._udp.local.",
+    "properties": {"epoch": "1", "mac": "000000000000"},
+}
+
 NAME = "name"
 SHORT_ID = hex(int("0x000000000015243f", 16))
 UNIQUE_NAME = f"yeelight_{MODEL}_{SHORT_ID}"
@@ -125,6 +136,7 @@ def _mocked_bulb(cannot_connect=False):
     )
     type(bulb).get_model_specs = MagicMock(return_value=_MODEL_SPECS[MODEL])
     bulb.capabilities = CAPABILITIES.copy()
+    bulb.available = True
     bulb.last_properties = PROPERTIES.copy()
     bulb.music_mode = False
     bulb.async_get_properties = AsyncMock()

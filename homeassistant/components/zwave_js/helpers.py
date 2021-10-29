@@ -1,7 +1,8 @@
 """Helper functions for Z-Wave JS integration."""
 from __future__ import annotations
 
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
@@ -86,9 +87,8 @@ def async_get_node_from_device_id(
     """
     if not dev_reg:
         dev_reg = dr.async_get(hass)
-    device_entry = dev_reg.async_get(device_id)
 
-    if not device_entry:
+    if not (device_entry := dev_reg.async_get(device_id)):
         raise ValueError(f"Device ID {device_id} is not valid")
 
     # Use device config entry ID's to validate that this is a valid zwave_js device
@@ -229,8 +229,7 @@ def async_get_node_status_sensor_entity_id(
         ent_reg = er.async_get(hass)
     if not dev_reg:
         dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get(device_id)
-    if not device:
+    if not (device := dev_reg.async_get(device_id)):
         raise HomeAssistantError("Invalid Device ID provided")
 
     entry_id = next(entry_id for entry_id in device.config_entries)

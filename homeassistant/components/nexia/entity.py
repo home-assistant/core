@@ -1,7 +1,7 @@
 """The nexia integration base entity."""
-
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -11,6 +11,7 @@ from .const import (
     SIGNAL_THERMOSTAT_UPDATE,
     SIGNAL_ZONE_UPDATE,
 )
+from .coordinator import NexiaDataUpdateCoordinator
 
 
 class NexiaEntity(CoordinatorEntity):
@@ -49,15 +50,17 @@ class NexiaThermostatEntity(NexiaEntity):
         self._thermostat = thermostat
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self._thermostat.thermostat_id)},
-            "name": self._thermostat.get_name(),
-            "model": self._thermostat.get_model(),
-            "sw_version": self._thermostat.get_firmware(),
-            "manufacturer": MANUFACTURER,
-        }
+        assert isinstance(self.coordinator, NexiaDataUpdateCoordinator)
+        return DeviceInfo(
+            configuration_url=self.coordinator.nexia_home.root_url,
+            identifiers={(DOMAIN, self._thermostat.thermostat_id)},
+            manufacturer=MANUFACTURER,
+            model=self._thermostat.get_model(),
+            name=self._thermostat.get_name(),
+            sw_version=self._thermostat.get_firmware(),
+        )
 
     async def async_added_to_hass(self):
         """Listen for signals for services."""

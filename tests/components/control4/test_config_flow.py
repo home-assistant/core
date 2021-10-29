@@ -6,7 +6,7 @@ from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import Unauthorized
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.control4.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.data_entry_flow import STEP_ID_INIT
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +47,7 @@ def _get_mock_c4_director(getAllItemInfo={}):
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -166,7 +167,7 @@ async def test_option_flow(hass):
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
-    assert result["step_id"] == "init"
+    assert result["step_id"] == STEP_ID_INIT
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -186,7 +187,7 @@ async def test_option_flow_defaults(hass):
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
-    assert result["step_id"] == "init"
+    assert result["step_id"] == STEP_ID_INIT
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}

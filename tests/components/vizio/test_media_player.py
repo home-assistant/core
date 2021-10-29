@@ -38,6 +38,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
 )
+from homeassistant.components.media_player.const import ATTR_INPUT_SOURCE_LIST
 from homeassistant.components.vizio import validate_apps
 from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,
@@ -102,8 +103,8 @@ def _get_ha_power_state(vizio_power_state: bool | None) -> str:
 
 def _assert_sources_and_volume(attr: dict[str, Any], vizio_device_class: str) -> None:
     """Assert source list, source, and volume level based on attr dict and device class."""
-    assert attr["source_list"] == INPUT_LIST
-    assert attr["source"] == CURRENT_INPUT
+    assert attr[ATTR_INPUT_SOURCE_LIST] == INPUT_LIST
+    assert attr[ATTR_INPUT_SOURCE] == CURRENT_INPUT
     assert (
         attr["volume_level"]
         == float(int(MAX_VOLUME[vizio_device_class] / 2))
@@ -236,7 +237,7 @@ def _assert_source_list_with_apps(
         if app_to_remove in list_to_test:
             list_to_test.remove(app_to_remove)
 
-    assert attr["source_list"] == list_to_test
+    assert attr[ATTR_INPUT_SOURCE_LIST] == list_to_test
 
 
 async def _test_service(
@@ -533,8 +534,8 @@ async def test_setup_with_apps(
     ):
         attr = hass.states.get(ENTITY_ID).attributes
         _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + APP_NAME_LIST), attr)
-        assert CURRENT_APP in attr["source_list"]
-        assert attr["source"] == CURRENT_APP
+        assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
+        assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
         assert "app_id" not in attr
 
@@ -561,8 +562,8 @@ async def test_setup_with_apps_include(
     ):
         attr = hass.states.get(ENTITY_ID).attributes
         _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
-        assert CURRENT_APP in attr["source_list"]
-        assert attr["source"] == CURRENT_APP
+        assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
+        assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
         assert "app_id" not in attr
 
@@ -579,8 +580,8 @@ async def test_setup_with_apps_exclude(
     ):
         attr = hass.states.get(ENTITY_ID).attributes
         _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
-        assert CURRENT_APP in attr["source_list"]
-        assert attr["source"] == CURRENT_APP
+        assert CURRENT_APP in attr[ATTR_INPUT_SOURCE_LIST]
+        assert attr[ATTR_INPUT_SOURCE] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
         assert "app_id" not in attr
 
@@ -598,7 +599,7 @@ async def test_setup_with_apps_additional_apps_config(
         ADDITIONAL_APP_CONFIG["config"],
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        assert attr["source_list"].count(CURRENT_APP) == 1
+        assert attr[ATTR_INPUT_SOURCE_LIST].count(CURRENT_APP) == 1
         _assert_source_list_with_apps(
             list(
                 INPUT_LIST_WITH_APPS
@@ -613,8 +614,8 @@ async def test_setup_with_apps_additional_apps_config(
             ),
             attr,
         )
-        assert ADDITIONAL_APP_CONFIG["name"] in attr["source_list"]
-        assert attr["source"] == ADDITIONAL_APP_CONFIG["name"]
+        assert ADDITIONAL_APP_CONFIG["name"] in attr[ATTR_INPUT_SOURCE_LIST]
+        assert attr[ATTR_INPUT_SOURCE] == ADDITIONAL_APP_CONFIG["name"]
         assert attr["app_name"] == ADDITIONAL_APP_CONFIG["name"]
         assert "app_id" not in attr
 
@@ -673,7 +674,7 @@ async def test_setup_with_unknown_app_config(
     ):
         attr = hass.states.get(ENTITY_ID).attributes
         _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + APP_NAME_LIST), attr)
-        assert attr["source"] == UNKNOWN_APP
+        assert attr[ATTR_INPUT_SOURCE] == UNKNOWN_APP
         assert attr["app_name"] == UNKNOWN_APP
         assert attr["app_id"] == UNKNOWN_APP_CONFIG
 
@@ -690,7 +691,7 @@ async def test_setup_with_no_running_app(
     ):
         attr = hass.states.get(ENTITY_ID).attributes
         _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + APP_NAME_LIST), attr)
-        assert attr["source"] == "CAST"
+        assert attr[ATTR_INPUT_SOURCE] == "CAST"
         assert "app_id" not in attr
         assert "app_name" not in attr
 
@@ -735,7 +736,7 @@ async def test_apps_update(
         ):
             # Check source list, remove TV inputs, and verify that the integration is
             # using the default APPS list
-            sources = hass.states.get(ENTITY_ID).attributes["source_list"]
+            sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
             apps = list(set(sources) - set(INPUT_LIST))
             assert len(apps) == len(APPS)
 
@@ -747,6 +748,6 @@ async def test_apps_update(
                 await hass.async_block_till_done()
                 # Check source list, remove TV inputs, and verify that the integration is
                 # now using the APP_LIST list
-                sources = hass.states.get(ENTITY_ID).attributes["source_list"]
+                sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
                 apps = list(set(sources) - set(INPUT_LIST))
                 assert len(apps) == len(APP_LIST)

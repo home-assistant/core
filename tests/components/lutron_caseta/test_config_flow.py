@@ -7,7 +7,7 @@ from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY
 from pylutron_caseta.smartbridge import Smartbridge
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.lutron_caseta import DOMAIN
 import homeassistant.components.lutron_caseta.config_flow as CasetaConfigFlow
 from homeassistant.components.lutron_caseta.const import (
@@ -195,7 +195,6 @@ async def test_duplicate_bridge_import(hass):
 
 async def test_already_configured_with_ignored(hass):
     """Test ignored entries do not break checking for existing entries."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, source=config_entries.SOURCE_IGNORE
@@ -217,7 +216,7 @@ async def test_already_configured_with_ignored(hass):
 
 async def test_form_user(hass, tmpdir):
     """Test we get the form and can pair."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     hass.config.config_dir = await hass.async_add_executor_job(
         tmpdir.mkdir, "tls_assets"
     )
@@ -268,7 +267,7 @@ async def test_form_user(hass, tmpdir):
 
 async def test_form_user_pairing_fails(hass, tmpdir):
     """Test we get the form and we handle pairing failure."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     hass.config.config_dir = await hass.async_add_executor_job(
         tmpdir.mkdir, "tls_assets"
     )
@@ -313,7 +312,7 @@ async def test_form_user_pairing_fails(hass, tmpdir):
 
 async def test_form_user_reuses_existing_assets_when_pairing_again(hass, tmpdir):
     """Test the tls assets saved on disk are reused when pairing again."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     hass.config.config_dir = await hass.async_add_executor_job(
         tmpdir.mkdir, "tls_assets"
     )
@@ -413,7 +412,7 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(hass, tmpdir)
 
 async def test_zeroconf_host_already_configured(hass, tmpdir):
     """Test starting a flow from discovery when the host is already configured."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     hass.config.config_dir = await hass.async_add_executor_job(
         tmpdir.mkdir, "tls_assets"
     )
@@ -438,7 +437,6 @@ async def test_zeroconf_host_already_configured(hass, tmpdir):
 
 async def test_zeroconf_lutron_id_already_configured(hass):
     """Test starting a flow from discovery when lutron id already configured."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "4.5.6.7"}, unique_id="abc"
@@ -463,7 +461,6 @@ async def test_zeroconf_lutron_id_already_configured(hass):
 
 async def test_zeroconf_not_lutron_device(hass):
     """Test starting a flow from discovery when it is not a lutron device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -484,7 +481,7 @@ async def test_zeroconf_not_lutron_device(hass):
 )
 async def test_zeroconf(hass, source, tmpdir):
     """Test starting a flow from discovery."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     hass.config.config_dir = await hass.async_add_executor_job(
         tmpdir.mkdir, "tls_assets"
     )

@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Hashable
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable, Hashable
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -104,8 +104,8 @@ class ActiveConnection:
         self.last_id = cur_id
 
     @callback
-    def async_close(self) -> None:
-        """Close down connection."""
+    def async_handle_close(self) -> None:
+        """Handle closing down connection."""
         for unsub in self.subscriptions.values():
             unsub()
 

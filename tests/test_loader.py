@@ -7,7 +7,7 @@ from homeassistant import core, loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 
-from tests.common import MockModule, async_mock_service, mock_integration
+from tests.common import MockModule, mock_integration
 
 
 async def test_component_dependencies(hass):
@@ -69,13 +69,10 @@ def test_component_loader_non_existing(hass):
 
 async def test_component_wrapper(hass):
     """Test component wrapper."""
-    calls = async_mock_service(hass, "persistent_notification", "create")
-
     components = loader.Components(hass)
     components.persistent_notification.async_create("message")
-    await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(hass.states.async_entity_ids("persistent_notification")) == 1
 
 
 async def test_helpers_wrapper(hass):
@@ -543,3 +540,9 @@ async def test_custom_integration_missing(hass, caplog):
 
         with pytest.raises(loader.IntegrationNotFound):
             await loader.async_get_integration(hass, "test1")
+
+
+async def test_validation(hass):
+    """Test we raise if invalid domain passed in."""
+    with pytest.raises(ValueError):
+        await loader.async_get_integration(hass, "some.thing")

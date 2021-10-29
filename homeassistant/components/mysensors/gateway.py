@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 import logging
 import socket
 import sys
-from typing import Any, Callable
+from typing import Any
 
 import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
@@ -185,7 +185,9 @@ async def _get_gateway(
 
         def pub_callback(topic: str, payload: str, qos: int, retain: bool) -> None:
             """Call MQTT publish function."""
-            mqtt.async_publish(topic, payload, qos, retain)
+            hass.async_create_task(
+                mqtt.async_publish(hass, topic, payload, qos, retain)
+            )
 
         def sub_callback(
             topic: str, sub_cb: Callable[[str, ReceivePayloadType, int], None], qos: int
@@ -232,6 +234,8 @@ async def _get_gateway(
             protocol_version=version,
         )
     gateway.event_callback = event_callback
+    gateway.metric = hass.config.units.is_metric
+
     if persistence:
         await gateway.start_persistence()
 

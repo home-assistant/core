@@ -389,7 +389,9 @@ async def test_ssdp_legacy_not_supported(hass: HomeAssistant, remote: Mock):
 
 
 async def test_ssdp_websocket_success_populates_mac_address(
-    hass: HomeAssistant, remotews: Mock
+    hass: HomeAssistant,
+    remote: Mock,
+    remotews: Mock,
 ):
     """Test starting a flow from ssdp for a supported device populates the mac."""
     result = await hass.config_entries.flow.async_init(
@@ -441,7 +443,9 @@ async def test_ssdp_model_not_supported(hass: HomeAssistant, remote: Mock):
     assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-async def test_ssdp_not_successful(hass: HomeAssistant, remote: Mock):
+async def test_ssdp_not_successful(
+    hass: HomeAssistant, remote: Mock, no_mac_address: Mock
+):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -469,7 +473,9 @@ async def test_ssdp_not_successful(hass: HomeAssistant, remote: Mock):
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-async def test_ssdp_not_successful_2(hass: HomeAssistant, remote: Mock):
+async def test_ssdp_not_successful_2(
+    hass: HomeAssistant, remote: Mock, no_mac_address: Mock
+):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -564,7 +570,9 @@ async def test_import_legacy(hass: HomeAssistant, remote: Mock):
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
 
 
-async def test_import_legacy_without_name(hass: HomeAssistant, remote: Mock):
+async def test_import_legacy_without_name(
+    hass: HomeAssistant, remote: Mock, no_mac_address: Mock
+):
     """Test importing from yaml without a name."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
@@ -651,7 +659,7 @@ async def test_import_unknown_host(hass: HomeAssistant, remotews: Mock):
     assert result["reason"] == RESULT_UNKNOWN_HOST
 
 
-async def test_dhcp(hass: HomeAssistant, remotews: Mock):
+async def test_dhcp(hass: HomeAssistant, remote: Mock, remotews: Mock):
     """Test starting a flow from dhcp."""
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
@@ -677,7 +685,7 @@ async def test_dhcp(hass: HomeAssistant, remotews: Mock):
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-async def test_zeroconf(hass: HomeAssistant, remotews: Mock):
+async def test_zeroconf(hass: HomeAssistant, remote: Mock, remotews: Mock):
     """Test starting a flow from zeroconf."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -715,7 +723,7 @@ async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, remotews_soundbar:
 
 
 async def test_zeroconf_no_device_info(
-    hass: HomeAssistant, remotews_no_device_info: Mock
+    hass: HomeAssistant, remote: Mock, remotews_no_device_info: Mock
 ):
     """Test starting a flow from zeroconf where device_info returns None."""
     result = await hass.config_entries.flow.async_init(

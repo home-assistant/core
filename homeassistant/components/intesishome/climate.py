@@ -1,6 +1,7 @@
 """Support for IntesisHome and airconwithme Smart AC Controllers."""
 import logging
 from random import randrange
+from typing import NamedTuple
 
 from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
 import voluptuous as vol
@@ -53,6 +54,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
+class SwingSettings(NamedTuple):
+    """Settings for swing mode."""
+
+    vvane: str
+    hvane: str
+
+
 MAP_IH_TO_HVAC_MODE = {
     "auto": HVAC_MODE_HEAT_COOL,
     "cool": HVAC_MODE_COOL,
@@ -73,10 +82,10 @@ MAP_PRESET_MODE_TO_IH = {v: k for k, v in MAP_IH_TO_PRESET_MODE.items()}
 IH_SWING_STOP = "auto/stop"
 IH_SWING_SWING = "swing"
 MAP_SWING_TO_IH = {
-    SWING_OFF: {"vvane": IH_SWING_STOP, "hvane": IH_SWING_STOP},
-    SWING_BOTH: {"vvane": IH_SWING_SWING, "hvane": IH_SWING_SWING},
-    SWING_HORIZONTAL: {"vvane": IH_SWING_STOP, "hvane": IH_SWING_SWING},
-    SWING_VERTICAL: {"vvane": IH_SWING_SWING, "hvane": IH_SWING_STOP},
+    SWING_OFF: SwingSettings(vvane=IH_SWING_STOP, hvane=IH_SWING_STOP),
+    SWING_BOTH: SwingSettings(vvane=IH_SWING_SWING, hvane=IH_SWING_SWING),
+    SWING_HORIZONTAL: SwingSettings(vvane=IH_SWING_STOP, hvane=IH_SWING_SWING),
+    SWING_VERTICAL: SwingSettings(vvane=IH_SWING_SWING, hvane=IH_SWING_STOP),
 }
 
 
@@ -250,13 +259,10 @@ class IntesisAC(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-
-        if hvac_mode:
+        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(hvac_mode)
 
-        if temperature:
+        if temperature := kwargs.get(ATTR_TEMPERATURE):
             _LOGGER.debug("Setting %s to %s degrees", self._device_type, temperature)
             await self._controller.set_temperature(self._device_id, temperature)
             self._target_temp = temperature
@@ -305,13 +311,12 @@ class IntesisAC(ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode):
         """Set the vertical vane."""
-        swing_settings = MAP_SWING_TO_IH.get(swing_mode)
-        if swing_settings:
+        if swing_settings := MAP_SWING_TO_IH.get(swing_mode):
             await self._controller.set_vertical_vane(
-                self._device_id, swing_settings.get("vvane")
+                self._device_id, swing_settings.vvane
             )
             await self._controller.set_horizontal_vane(
-                self._device_id, swing_settings.get("hvane")
+                self._device_id, swing_settings.hvane
             )
 
     async def async_update(self):

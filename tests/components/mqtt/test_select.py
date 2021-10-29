@@ -309,11 +309,21 @@ async def test_discovery_removal_select(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_select(hass, mqtt_mock, caplog):
     """Test update of discovered select."""
-    data1 = '{ "name": "Beer", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
-    data2 = '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
+    config1 = {
+        "name": "Beer",
+        "state_topic": "test-topic",
+        "command_topic": "test-topic",
+        "options": ["milk", "beer"],
+    }
+    config2 = {
+        "name": "Milk",
+        "state_topic": "test-topic",
+        "command_topic": "test-topic",
+        "options": ["milk", "beer"],
+    }
 
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, select.DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, select.DOMAIN, config1, config2
     )
 
 

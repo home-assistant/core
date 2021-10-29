@@ -123,15 +123,15 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info dictionary."""
-        return {
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "name": self.name,
-            "manufacturer": SHARK,
-            "model": self.model,
-            "sw_version": self.sharkiq.get_property_value(
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.serial_number)},
+            manufacturer=SHARK,
+            model=self.model,
+            name=self.name,
+            sw_version=self.sharkiq.get_property_value(
                 Properties.ROBOT_FIRMWARE_VERSION
             ),
-        }
+        )
 
     @property
     def supported_features(self) -> int:

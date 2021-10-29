@@ -33,14 +33,20 @@
             "button": "Knop",
             "button1": "Eerste knop",
             "button2": "Tweede knop",
-            "button3": "Derde knop"
+            "button3": "Derde knop",
+            "button4": "Vierde knop"
         },
         "trigger_type": {
+            "btn_down": "{subtype} knop omlaag",
+            "btn_up": "{subtype} knop omhoog",
             "double": "{subtype} dubbel geklikt",
+            "double_push": "{subtype} dubbele druk",
             "long": "{subtype} lang geklikt",
+            "long_push": "{subtype} lange druk",
             "long_single": "{subtype} lang geklikt en daarna \u00e9\u00e9n keer geklikt",
             "single": "{subtype} enkel geklikt",
             "single_long": "{subtype} een keer geklikt en daarna lang geklikt",
+            "single_push": "{subtype} een druk",
             "triple": "{subtype} driemaal geklikt"
         }
     }

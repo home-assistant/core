@@ -25,7 +25,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.3.0"]
+REQUIREMENTS = ["pyotp==2.6.0"]
 
 CONF_MESSAGE = "message"
 
@@ -56,10 +56,10 @@ def _generate_secret() -> str:
 
 
 def _generate_random() -> int:
-    """Generate a 8 digit number."""
+    """Generate a 32 digit number."""
     import pyotp  # pylint: disable=import-outside-toplevel
 
-    return int(pyotp.random_base32(length=8, chars=list("1234567890")))
+    return int(pyotp.random_base32(length=32, chars=list("1234567890")))
 
 
 def _generate_otp(secret: str, count: int) -> str:
@@ -110,7 +110,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
     @property
     def input_schema(self) -> vol.Schema:
         """Validate login flow input data."""
-        return vol.Schema({INPUT_FIELD_CODE: str})
+        return vol.Schema({vol.Required(INPUT_FIELD_CODE): str})
 
     async def _async_load(self) -> None:
         """Load stored data."""
@@ -118,9 +118,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             if self._user_settings is not None:
                 return
 
-            data = await self._user_store.async_load()
-
-            if data is None:
+            if (data := await self._user_store.async_load()) is None:
                 data = {STORAGE_USERS: {}}
 
             self._user_settings = {
@@ -207,8 +205,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id)
-        if notify_setting is None:
+        if (notify_setting := self._user_settings.get(user_id)) is None:
             return False
 
         # user_input has been validate in caller
@@ -225,8 +222,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id)
-        if notify_setting is None:
+        if (notify_setting := self._user_settings.get(user_id)) is None:
             raise ValueError("Cannot find user_id")
 
         def generate_secret_and_one_time_password() -> str:
@@ -249,8 +245,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id)
-        if notify_setting is None:
+        if (notify_setting := self._user_settings.get(user_id)) is None:
             _LOGGER.error("Cannot find user %s", user_id)
             return
 
