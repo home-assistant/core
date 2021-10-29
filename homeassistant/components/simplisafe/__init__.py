@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Iterable
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -48,8 +48,8 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
+    ATTR_DEVICE_ID,
     CONF_CODE,
-    CONF_DEVICE_ID,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -132,19 +132,29 @@ VOLUME_MAP = {
     "off": Volume.OFF,
 }
 
-SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
+SERVICE_NAME_CLEAR_NOTIFICATIONS = "clear_notifications"
+SERVICE_NAME_REMOVE_PIN = "remove_pin"
+SERVICE_NAME_SET_PIN = "set_pin"
+SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
 
-SERVICE_REMOVE_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
-    {vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string}
+SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
+    }
 )
 
-SERVICE_SET_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
-    {vol.Required(ATTR_PIN_LABEL): cv.string, vol.Required(ATTR_PIN_VALUE): cv.string}
+SERVICE_SET_PIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_PIN_LABEL): cv.string,
+        vol.Required(ATTR_PIN_VALUE): cv.string,
+    }
 )
 
 SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Optional(ATTR_ALARM_DURATION): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
@@ -234,18 +244,18 @@ def _async_register_base_station(
 
 
 @callback
-def _async_get_simplisafe_for_service_call(
+def _async_get_system_for_service_call(
     hass: HomeAssistant, call: ServiceCall
-) -> SystemV3:
+) -> SystemV2 | SystemV3:
     """Get the SimpliSafe manager object related to a service call (by device ID)."""
-    device_id = call.data[CONF_DEVICE_ID]
+    device_id = call.data[ATTR_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
     if alarm_control_panel_device_entry := device_registry.async_get(device_id):
         if base_station_device_entry := device_registry.async_get(
             alarm_control_panel_device_entry.via_device_id
         ):
-            identifiers = list(sum(base_station_device_entry.identifiers, ()))
+            (identifiers,) = base_station_device_entry.identifiers
             [system_id] = [i for i in identifiers if i != DOMAIN]
             for entry in hass.config_entries.async_entries(DOMAIN):
                 if entry.entry_id in alarm_control_panel_device_entry.config_entries:
@@ -286,61 +296,31 @@ async def async_setup_entry(  # noqa: C901
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    @callback
-    def verify_system_exists(
-        coro: Callable[..., Awaitable]
-    ) -> Callable[..., Awaitable]:
-        """Log an error if a service call uses an invalid system ID."""
-
-        async def decorator(call: ServiceCall) -> None:
-            """Decorate."""
-            system_id = int(call.data[ATTR_SYSTEM_ID])
-            if system_id not in simplisafe.systems:
-                LOGGER.error("Unknown system ID in service call: %s", system_id)
-                return
-            await coro(call)
-
-        return decorator
-
-    @callback
-    def v3_only(coro: Callable[..., Awaitable]) -> Callable[..., Awaitable]:
-        """Log an error if the decorated coroutine is called with a v2 system."""
-
-        async def decorator(call: ServiceCall) -> None:
-            """Decorate."""
-            system = simplisafe.systems[int(call.data[ATTR_SYSTEM_ID])]
-            if system.version != 3:
-                LOGGER.error("Service only available on V3 systems")
-                return
-            await coro(call)
-
-        return decorator
-
-    @verify_system_exists
     @_verify_domain_control
-    async def clear_notifications(call: ServiceCall) -> None:
+    async def async_clear_notifications(call: ServiceCall) -> None:
         """Clear all active notifications."""
-        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
+        system = _async_get_system_for_service_call(hass, call)
+
         try:
             await system.async_clear_notifications()
         except SimplipyError as err:
             LOGGER.error("Error during service call: %s", err)
 
-    @verify_system_exists
     @_verify_domain_control
-    async def remove_pin(call: ServiceCall) -> None:
+    async def async_remove_pin(call: ServiceCall) -> None:
         """Remove a PIN."""
-        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
+        system = _async_get_system_for_service_call(hass, call)
+
         try:
             await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
         except SimplipyError as err:
             LOGGER.error("Error during service call: %s", err)
 
-    @verify_system_exists
     @_verify_domain_control
-    async def set_pin(call: ServiceCall) -> None:
+    async def async_set_pin(call: ServiceCall) -> None:
         """Set a PIN."""
-        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
+        system = _async_get_system_for_service_call(hass, call)
+
         try:
             await system.async_set_pin(
                 call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE]
@@ -348,12 +328,15 @@ async def async_setup_entry(  # noqa: C901
         except SimplipyError as err:
             LOGGER.error("Error during service call: %s", err)
 
-    @verify_system_exists
-    @v3_only
     @_verify_domain_control
-    async def set_system_properties(call: ServiceCall) -> None:
+    async def async_set_system_properties(call: ServiceCall) -> None:
         """Set one or more system parameters."""
-        system = cast(SystemV3, simplisafe.systems[call.data[ATTR_SYSTEM_ID]])
+        system = _async_get_system_for_service_call(hass, call)
+
+        if not isinstance(system, SystemV3):
+            LOGGER.error("Can only set system properties on V3 systems")
+            return
+
         try:
             await system.async_set_properties(
                 {
@@ -366,15 +349,17 @@ async def async_setup_entry(  # noqa: C901
             LOGGER.error("Error during service call: %s", err)
 
     for service, method, schema in (
-        ("clear_notifications", clear_notifications, None),
-        ("remove_pin", remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
-        ("set_pin", set_pin, SERVICE_SET_PIN_SCHEMA),
+        (SERVICE_NAME_CLEAR_NOTIFICATIONS, async_clear_notifications, None),
+        (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
+        (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
         (
-            "set_system_properties",
-            set_system_properties,
+            SERVICE_NAME_SET_SYSTEM_PROPERTIES,
+            async_set_system_properties,
             SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
         ),
     ):
+        if hass.services.has_service(DOMAIN, service):
+            continue
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
     current_options = {**entry.options}
@@ -406,6 +391,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    if len(hass.config_entries.async_entries(DOMAIN)) == 1:
+        # If this is the last instance of SimpliSafe, deregister any services defined
+        # during integration setup:
+        for service_name in (
+            SERVICE_NAME_CLEAR_NOTIFICATIONS,
+            SERVICE_NAME_REMOVE_PIN,
+            SERVICE_NAME_SET_PIN,
+            SERVICE_NAME_SET_SYSTEM_PROPERTIES,
+        ):
+            hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
 
