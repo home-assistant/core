@@ -275,9 +275,7 @@ def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     if (component := hass.data.get(DOMAIN)) is None:
         raise HomeAssistantError("Camera integration not set up")
 
-    camera = component.get_entity(entity_id)
-
-    if camera is None:
+    if (camera := component.get_entity(entity_id)) is None:
         raise HomeAssistantError("Camera not found")
 
     if not camera.is_on:
@@ -596,9 +594,7 @@ class CameraView(HomeAssistantView):
 
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
-        camera = self.component.get_entity(entity_id)
-
-        if camera is None:
+        if (camera := self.component.get_entity(entity_id)) is None:
             raise web.HTTPNotFound()
 
         camera = cast(Camera, camera)

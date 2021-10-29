@@ -130,8 +130,7 @@ class MelCloudDevice:
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         model = None
-        unit_infos = self.device.units
-        if unit_infos is not None:
+        if (unit_infos := self.device.units) is not None:
             model = ", ".join([x["model"] for x in unit_infos if x["model"]])
         return DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, self.device.mac)},

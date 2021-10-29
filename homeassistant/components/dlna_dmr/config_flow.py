@@ -81,8 +81,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("async_step_user: user_input: %s", user_input)
 
         if user_input is not None:
-            host = user_input.get(CONF_HOST)
-            if not host:
+            if not (host := user_input.get(CONF_HOST)):
                 # No device chosen, user might want to directly enter an URL
                 return await self.async_step_manual()
             # User has chosen a device, ask for confirmation

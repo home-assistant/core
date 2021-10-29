@@ -613,8 +613,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         metadata: dict[str, Any] = extra.get("metadata") or {}
 
         title = extra.get("title") or metadata.get("title") or "Home Assistant"
-        thumb = extra.get("thumb")
-        if thumb:
+        if thumb := extra.get("thumb"):
             metadata["album_art_uri"] = thumb
 
         # Translate metadata keys from HA names to DIDL-Lite names
@@ -666,8 +665,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not self._device:
             return None
 
-        play_mode = self._device.play_mode
-        if not play_mode:
+        if not (play_mode := self._device.play_mode):
             return None
 
         if play_mode == PlayMode.VENDOR_DEFINED:
@@ -700,8 +698,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not self._device:
             return None
 
-        play_mode = self._device.play_mode
-        if not play_mode:
+        if not (play_mode := self._device.play_mode):
             return None
 
         if play_mode == PlayMode.VENDOR_DEFINED:
