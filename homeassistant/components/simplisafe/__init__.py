@@ -143,10 +143,10 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
             vol.Range(min=30, max=480),
         ),
         vol.Optional(ATTR_ALARM_VOLUME): vol.All(
-            cv.string, lambda value: VOLUME_MAP[value], vol.In(VOLUME_MAP)
+            cv.string, lambda value: VOLUME_MAP[value]
         ),
         vol.Optional(ATTR_CHIME_VOLUME): vol.All(
-            cv.string, lambda value: VOLUME_MAP[value], vol.In(VOLUME_MAP)
+            cv.string, lambda value: VOLUME_MAP[value]
         ),
         vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
             cv.time_period,
@@ -166,7 +166,7 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         ),
         vol.Optional(ATTR_LIGHT): cv.boolean,
         vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-            cv.string, lambda value: VOLUME_MAP[value], vol.In(VOLUME_MAP)
+            cv.string, lambda value: VOLUME_MAP[value]
         ),
     }
 )
