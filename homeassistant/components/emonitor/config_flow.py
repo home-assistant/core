@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
@@ -55,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {vol.Required("host", default=self.discovered_ip): str}
             ),

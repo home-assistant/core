@@ -4,6 +4,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from .const import CONF_LISTEN_PORT, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
@@ -39,7 +40,7 @@ class EmulatedRokuFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             default_port = DEFAULT_PORT
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_NAME, default=default_name): str,

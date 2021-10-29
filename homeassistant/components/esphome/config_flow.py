@@ -19,7 +19,7 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_USER, FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import CONF_NOISE_PSK, DOMAIN, DomainData
@@ -55,7 +55,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = error
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(fields), errors=errors
+            step_id=STEP_ID_USER, data_schema=vol.Schema(fields), errors=errors
         )
 
     async def async_step_user(

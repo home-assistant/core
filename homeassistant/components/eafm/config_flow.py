@@ -3,6 +3,7 @@ from aioeafm import get_stations
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -48,7 +49,7 @@ class UKFloodsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_stations")
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             errors=errors,
             data_schema=vol.Schema(
                 {vol.Required("station"): vol.In(sorted(self.stations))}

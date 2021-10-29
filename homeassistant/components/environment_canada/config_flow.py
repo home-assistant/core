@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_LANGUAGE, CONF_STATION, CONF_TITLE, DOMAIN
@@ -93,7 +94,7 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id=STEP_ID_USER, data_schema=data_schema, errors=errors
         )
 
     async def async_step_import(self, import_data):

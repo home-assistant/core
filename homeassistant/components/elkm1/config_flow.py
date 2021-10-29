@@ -18,6 +18,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.util import slugify
 
 from . import async_wait_for_elk_to_sync
@@ -134,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id=STEP_ID_USER, data_schema=DATA_SCHEMA, errors=errors
         )
 
     async def async_step_import(self, user_input):

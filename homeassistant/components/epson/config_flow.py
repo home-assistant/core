@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from . import validate_projector
 from .const import DOMAIN
@@ -52,5 +53,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input.pop(CONF_NAME), data=user_input
                 )
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id=STEP_ID_USER, data_schema=DATA_SCHEMA, errors=errors
         )

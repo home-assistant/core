@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER
 
 from .const import (
     ATTR_SERIAL,
@@ -218,7 +219,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id=STEP_ID_USER, data_schema=data_schema, errors=errors
         )
 
     async def async_step_user_custom_url(self, user_input=None):
@@ -377,4 +378,6 @@ class EzvizOptionsFlowHandler(OptionsFlow):
             ): str,
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id=STEP_ID_INIT, data_schema=vol.Schema(options)
+        )

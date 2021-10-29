@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_USER, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -170,7 +170,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self.ip_address,
             }
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=self._async_generate_schema(),
             errors=errors,
         )

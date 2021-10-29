@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_USER, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -47,7 +47,7 @@ class EfergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = error
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_API_KEY): str,

@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistantError
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.util.json import load_json
 
 from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN
@@ -47,7 +48,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "pin_request_failed"
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {vol.Required(CONF_API_KEY, default=stored_api_key): str}
             ),

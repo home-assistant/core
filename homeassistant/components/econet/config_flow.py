@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from .const import DOMAIN
 
@@ -27,7 +28,7 @@ class EcoNetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the start of the config flow."""
         if not user_input:
             return self.async_show_form(
-                step_id="user",
+                step_id=STEP_ID_USER,
                 data_schema=self.data_schema,
             )
 
@@ -46,7 +47,7 @@ class EcoNetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if errors:
             return self.async_show_form(
-                step_id="user",
+                step_id=STEP_ID_USER,
                 data_schema=self.data_schema,
                 errors=errors,
             )
