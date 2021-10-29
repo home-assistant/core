@@ -17,9 +17,6 @@ async def async_setup_entry(hass, config, async_add_entities):
     """Create wallbox sensor entities in HASS."""
     coordinator = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
 
-    filtered_data = {
-        k: coordinator.data[k] for k in NUMBER_TYPES if k in coordinator.data
-    }
     # Check if the user is authorized to change current, if so, add number component:
     try:
         await coordinator.async_set_charging_current(
@@ -31,8 +28,8 @@ async def async_setup_entry(hass, config, async_add_entities):
         async_add_entities(
             [
                 WallboxNumber(coordinator, config, description)
-                for ent in filtered_data
-                if (description := NUMBER_TYPES[ent])
+                for ent in coordinator.data
+                if (description := NUMBER_TYPES.get(ent))
             ]
         )
 

@@ -1,6 +1,7 @@
 """Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
+import logging
+
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -13,20 +14,18 @@ from .const import (
 CONF_STATION = "station"
 UPDATE_INTERVAL = 30
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Create wallbox sensor entities in HASS."""
     coordinator = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
 
-    filtered_data = {
-        k: coordinator.data[k] for k in SENSOR_TYPES if k in coordinator.data
-    }
-
     async_add_entities(
         [
             WallboxSensor(coordinator, config, description)
-            for ent in filtered_data
-            if (description := SENSOR_TYPES[ent])
+            for ent in coordinator.data
+            if (description := SENSOR_TYPES.get(ent))
         ]
     )
 
@@ -52,6 +51,7 @@ class WallboxSensor(CoordinatorEntity, SensorEntity):
                 return round(
                     self.coordinator.data[self.entity_description.key], sensor_round
                 )
-            except TypeError as ex:
-                raise IntegrationError from ex
+            except TypeError:
+                _LOGGER.debug("Cannot format %s", self._attr_name)
+                return None
         return self.coordinator.data[self.entity_description.key]
