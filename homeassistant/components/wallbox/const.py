@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
@@ -50,6 +54,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         precision=2,
         native_unit_of_measurement=POWER_KILO_WATT,
         device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_MAX_AVAILABLE_POWER_KEY: WallboxSensorEntityDescription(
         key=CONF_MAX_AVAILABLE_POWER_KEY,
@@ -57,12 +62,14 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         precision=0,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_CHARGING_SPEED_KEY: WallboxSensorEntityDescription(
         key=CONF_CHARGING_SPEED_KEY,
         icon="mdi:speedometer",
         name="Charging Speed",
         precision=0,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_ADDED_RANGE_KEY: WallboxSensorEntityDescription(
         key=CONF_ADDED_RANGE_KEY,
@@ -70,6 +77,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         name="Added Range",
         precision=0,
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     CONF_ADDED_ENERGY_KEY: WallboxSensorEntityDescription(
         key=CONF_ADDED_ENERGY_KEY,
@@ -77,22 +85,26 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         precision=2,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     CONF_CHARGING_TIME_KEY: WallboxSensorEntityDescription(
         key=CONF_CHARGING_TIME_KEY,
         icon="mdi:timer",
         name="Charging Time",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_COST_KEY: WallboxSensorEntityDescription(
         key=CONF_COST_KEY,
         icon="mdi:ev-station",
         name="Cost",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_STATE_OF_CHARGE_KEY: WallboxSensorEntityDescription(
         key=CONF_STATE_OF_CHARGE_KEY,
         name="State of Charge",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_CURRENT_MODE_KEY: WallboxSensorEntityDescription(
         key=CONF_CURRENT_MODE_KEY,
@@ -115,5 +127,6 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         name="Max. Charging Current",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 }
