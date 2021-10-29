@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_USER, FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import configure_mydevolo
@@ -38,11 +38,13 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.show_advanced_options:
             self.data_schema[vol.Required(CONF_MYDEVOLO, default=self._url)] = str
         if user_input is None:
-            return self._show_form(step_id="user")
+            return self._show_form(step_id=STEP_ID_USER)
         try:
             return await self._connect_mydevolo(user_input)
         except CredentialsInvalid:
-            return self._show_form(step_id="user", errors={"base": "invalid_auth"})
+            return self._show_form(
+                step_id=STEP_ID_USER, errors={"base": "invalid_auth"}
+            )
 
     async def async_step_zeroconf(
         self, discovery_info: DiscoveryInfoType

@@ -13,7 +13,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER, FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .receiver import ConnectDenonAVR
@@ -79,7 +79,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-        return self.async_show_form(step_id="init", data_schema=settings_schema)
+        return self.async_show_form(step_id=STEP_ID_INIT, data_schema=settings_schema)
 
 
 class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -128,7 +128,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "discovery_error"
 
         return self.async_show_form(
-            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
+            step_id=STEP_ID_USER, data_schema=CONFIG_SCHEMA, errors=errors
         )
 
     async def async_step_select(

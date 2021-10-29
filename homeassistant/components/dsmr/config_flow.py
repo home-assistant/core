@@ -18,7 +18,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER, FlowResult
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -190,7 +190,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         list_of_types = ["Serial", "Network"]
 
         schema = vol.Schema({vol.Required(CONF_TYPE): vol.In(list_of_types)})
-        return self.async_show_form(step_id="user", data_schema=schema)
+        return self.async_show_form(step_id=STEP_ID_USER, data_schema=schema)
 
     async def async_step_setup_network(
         self, user_input: dict[str, Any] | None = None
@@ -344,7 +344,7 @@ class DSMROptionFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="init",
+            step_id=STEP_ID_INIT,
             data_schema=vol.Schema(
                 {
                     vol.Optional(

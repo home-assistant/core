@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_URL,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER, FlowResult
 from homeassistant.exceptions import IntegrationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -104,7 +104,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema(
             {vol.Optional(CONF_HOST): vol.In(self._discoveries.keys())}
         )
-        return self.async_show_form(step_id="user", data_schema=data_schema)
+        return self.async_show_form(step_id=STEP_ID_USER, data_schema=data_schema)
 
     async def async_step_manual(self, user_input: FlowInput = None) -> FlowResult:
         """Manual URL entry by the user."""
@@ -446,7 +446,7 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
         ] = bool
 
         return self.async_show_form(
-            step_id="init",
+            step_id=STEP_ID_INIT,
             data_schema=vol.Schema(fields),
             errors=errors,
         )

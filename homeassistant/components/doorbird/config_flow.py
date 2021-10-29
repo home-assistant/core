@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER
 from homeassistant.util.network import is_link_local
 
 from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
@@ -88,7 +89,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         data = self.discovery_schema or _schema_with_defaults()
-        return self.async_show_form(step_id="user", data_schema=data, errors=errors)
+        return self.async_show_form(
+            step_id=STEP_ID_USER, data_schema=data, errors=errors
+        )
 
     async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered doorbird device."""
@@ -162,7 +165,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         options_schema = vol.Schema(
             {vol.Optional(CONF_EVENTS, default=", ".join(current_events)): str}
         )
-        return self.async_show_form(step_id="init", data_schema=options_schema)
+        return self.async_show_form(step_id=STEP_ID_INIT, data_schema=options_schema)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

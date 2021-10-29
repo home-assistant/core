@@ -17,6 +17,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
@@ -102,7 +103,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             hosts.append(CONF_MANUAL_INPUT)
 
             return self.async_show_form(
-                step_id="user",
+                step_id=STEP_ID_USER,
                 data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(hosts)}),
             )
 

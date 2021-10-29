@@ -5,6 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER
 
 from .const import CONF_SERVER, DOMAIN, MG_DL, MMOL_L, SERVER_OUS, SERVER_US
 
@@ -48,7 +49,7 @@ class DexcomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id=STEP_ID_USER, data_schema=DATA_SCHEMA, errors=errors
         )
 
     @staticmethod
@@ -80,4 +81,4 @@ class DexcomOptionsFlowHandler(config_entries.OptionsFlow):
                 ): vol.In({MG_DL, MMOL_L}),
             }
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(step_id=STEP_ID_INIT, data_schema=data_schema)
