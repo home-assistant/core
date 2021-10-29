@@ -1922,7 +1922,8 @@ class AisColudData:
                     + r" -xr\!ais_update"
                     + r" -xr\!*.log"
                     + r" -xr\!*.db"
-                    + r" -xr\!home-assistant* "
+                    + r" -xr\!home-assistant*"
+                    + r" -xr\!.ais_apt "
                     + home_dir
                     + "backup.zip "
                     + home_dir
@@ -2088,10 +2089,11 @@ class AisColudData:
         if "type" in call.data:
             backup_type = call.data["type"]
 
+        # we need to use password even if it's empty - to prevent the prompt
+        password = "-p" + password
+
         # HA backup
         if backup_type in ("all", "ha"):
-            # we need to use password even if it's empty - to prevent the prompt
-            password = "-p" + password
             # 1. download
             self.get_backup_info(
                 call, 1, None, None, None, "Pobieram kopie konfiguracji"
@@ -2138,9 +2140,6 @@ class AisColudData:
 
         # Zigbee backup
         if backup_type in ("all", "zigbee"):
-            # we need to use password even if it's empty - to prevent the prompt
-            if password == "":
-                password = "-p" + password
             # 1. download
             self.get_backup_info(
                 call, 1, None, None, None, "Pobieram kopie konfiguracji zigbee"
