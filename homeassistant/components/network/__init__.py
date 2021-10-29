@@ -2,25 +2,21 @@
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_interface
-import logging
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import util
-from .const import DOMAIN, IPV4_BROADCAST_ADDR
+from .const import IPV4_BROADCAST_ADDR
 from .models import Adapter
-from .network import Network
-
-ZEROCONF_DOMAIN = "zeroconf"  # cannot import from zeroconf due to circular dep
-_LOGGER = logging.getLogger(__name__)
+from .network import Network, async_get_network
 
 
 @bind_hass
 async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
     """Get the network adapter configuration."""
-    network: Network = hass.data[DOMAIN]
+    network: Network = await async_get_network(hass)
     return network.adapters
 
 
@@ -88,20 +84,10 @@ async def async_get_ipv4_broadcast_addresses(hass: HomeAssistant) -> set[IPv4Add
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up network for Home Assistant."""
-
-    hass.data[DOMAIN] = network = Network(hass)
-    await network.async_setup()
-    if ZEROCONF_DOMAIN in config:
-        await network.async_migrate_from_zeroconf(config[ZEROCONF_DOMAIN])
-    network.async_configure()
-
-    _LOGGER.debug("Adapters: %s", network.adapters)
-
     # Avoid circular issue: http->network->websocket_api->http
     from .websocket import (  # pylint: disable=import-outside-toplevel
         async_register_websocket_commands,
     )
 
     async_register_websocket_commands(hass)
-
     return True

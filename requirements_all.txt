@@ -872,9 +872,6 @@ ibmiotf==0.3.4
 # homeassistant.components.ping
 icmplib==3.0
 
-# homeassistant.components.network
-ifaddr==0.1.7
-
 # homeassistant.components.iglo
 iglo==1.2.7
 
