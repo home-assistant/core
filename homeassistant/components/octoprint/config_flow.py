@@ -1,9 +1,9 @@
 """Config flow for OctoPrint integration."""
 import logging
-from urllib.parse import urlsplit
 
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant import config_entries, data_entry_flow, exceptions
 from homeassistant.const import (
@@ -140,6 +140,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle discovery flow."""
+        return self.async_abort(reason="auth_failed")
         uuid = discovery_info["properties"]["uuid"]
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured()
@@ -162,14 +163,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured()
 
-        url = urlsplit(discovery_info["presentationURL"])
+        url = URL(discovery_info["presentationURL"])
         self.context["title_placeholders"] = {
-            CONF_HOST: url.hostname,
+            CONF_HOST: url.host,
         }
 
         self.discovery_schema = _schema_with_defaults(
-            host=url.hostname,
+            host=url.host,
+            path=url.path,
             port=url.port,
+            ssl=url.scheme == "https",
         )
 
         return await self.async_step_user()
