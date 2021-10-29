@@ -210,6 +210,7 @@ class DPCode(str, Enum):
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
     LED_TYPE_3 = "led_type_3"
+    LEVEL = "level"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
