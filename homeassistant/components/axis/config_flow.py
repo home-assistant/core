@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_link_local
 
@@ -106,7 +107,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             description_placeholders=self.device_config,
             data_schema=vol.Schema(data),
             errors=errors,

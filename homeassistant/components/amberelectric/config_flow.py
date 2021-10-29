@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_TOKEN
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from .const import CONF_SITE_ID, CONF_SITE_NAME, CONF_SITE_NMI, DOMAIN
 
@@ -64,7 +65,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = {CONF_API_TOKEN: ""}
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             description_placeholders={"api_url": API_URL},
             data_schema=vol.Schema(
                 {

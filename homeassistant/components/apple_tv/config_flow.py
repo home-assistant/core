@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER, AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -140,7 +140,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_confirm()
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {vol.Required(DEVICE_INPUT, default=default_suggestion): str}
             ),
@@ -380,7 +380,7 @@ class AppleTVOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=self.options)
 
         return self.async_show_form(
-            step_id="init",
+            step_id=STEP_ID_INIT,
             data_schema=vol.Schema(
                 {
                     vol.Optional(

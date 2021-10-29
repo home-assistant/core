@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_USER, FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_APP_KEY, DOMAIN
@@ -27,7 +27,7 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _show_form(self, errors: dict | None = None) -> FlowResult:
         """Show the form to the user."""
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=self.data_schema,
             errors=errors if errors else {},
         )

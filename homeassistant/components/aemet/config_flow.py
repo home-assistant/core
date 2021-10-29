@@ -5,6 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_STATION_UPDATES, DEFAULT_NAME, DOMAIN
@@ -46,7 +47,9 @@ class AemetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id=STEP_ID_USER, data_schema=schema, errors=errors
+        )
 
     @staticmethod
     @callback
@@ -75,7 +78,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): bool,
             }
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(step_id=STEP_ID_INIT, data_schema=data_schema)
 
 
 async def _is_aemet_api_online(hass, api_key):

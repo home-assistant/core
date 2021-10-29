@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER, FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from . import async_get_geography_id
@@ -249,7 +249,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the start of the config flow."""
         if not user_input:
             return self.async_show_form(
-                step_id="user", data_schema=PICK_INTEGRATION_TYPE_SCHEMA
+                step_id=STEP_ID_USER, data_schema=PICK_INTEGRATION_TYPE_SCHEMA
             )
 
         if user_input["type"] == INTEGRATION_TYPE_GEOGRAPHY_COORDS:
@@ -274,7 +274,7 @@ class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="init",
+            step_id=STEP_ID_INIT,
             data_schema=vol.Schema(
                 {
                     vol.Required(

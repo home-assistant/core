@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -77,7 +78,7 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = {}
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
@@ -227,4 +228,4 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
             )
 
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(step_id=STEP_ID_INIT, data_schema=data_schema)

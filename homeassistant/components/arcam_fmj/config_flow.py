@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_UDN
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, DOMAIN_DATA_ENTRIES
@@ -64,7 +65,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(fields), errors=errors
+            step_id=STEP_ID_USER, data_schema=vol.Schema(fields), errors=errors
         )
 
     async def async_step_confirm(self, user_input=None):

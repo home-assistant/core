@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_USER, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -33,7 +33,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,

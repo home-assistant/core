@@ -4,6 +4,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from .const import DOMAIN
 
@@ -18,7 +19,7 @@ class AirtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+            return self.async_show_form(step_id=STEP_ID_USER, data_schema=DATA_SCHEMA)
 
         errors = {}
 
@@ -39,7 +40,7 @@ class AirtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if errors:
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors=errors
+                step_id=STEP_ID_USER, data_schema=DATA_SCHEMA, errors=errors
             )
 
         return self.async_create_entry(

@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DEVICE_CLASSES
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER
 
 from .const import (
     CONF_ALT_NIGHT_MODE,
@@ -67,7 +68,7 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_protocol()
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_PROTOCOL): vol.In(
@@ -157,7 +158,7 @@ class AlarmDecoderOptionsFlowHandler(config_entries.OptionsFlow):
                 return await self.async_step_zone_select()
 
         return self.async_show_form(
-            step_id="init",
+            step_id=STEP_ID_INIT,
             data_schema=vol.Schema(
                 {
                     vol.Required(EDIT_KEY, default=EDIT_SETTINGS): vol.In(

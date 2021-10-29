@@ -4,6 +4,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DOMAIN
@@ -42,7 +43,7 @@ class AtagConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(DATA_SCHEMA),
             errors=errors if errors else {},
         )

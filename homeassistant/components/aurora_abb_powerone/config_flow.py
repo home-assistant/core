@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from .const import (
     ATTR_FIRMWARE,
@@ -144,4 +145,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         schema = vol.Schema(config_options)
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id=STEP_ID_USER, data_schema=schema, errors=errors
+        )

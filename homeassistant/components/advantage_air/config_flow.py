@@ -4,6 +4,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
@@ -51,7 +52,7 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=ADVANTAGE_AIR_SCHEMA,
             errors=errors,
         )

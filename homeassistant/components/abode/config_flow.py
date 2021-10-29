@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from .const import DEFAULT_CACHEDB, DOMAIN, LOGGER
 
@@ -118,13 +119,13 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=vol.Schema(self.data_schema)
+                step_id=STEP_ID_USER, data_schema=vol.Schema(self.data_schema)
             )
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
 
-        return await self._async_abode_login(step_id="user")
+        return await self._async_abode_login(step_id=STEP_ID_USER)
 
     async def async_step_mfa(self, user_input=None):
         """Handle a multi-factor authentication (MFA) flow."""

@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
@@ -54,7 +55,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors = {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str}),
             errors=errors,
         )

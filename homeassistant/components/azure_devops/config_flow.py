@@ -10,6 +10,7 @@ from homeassistant.components.azure_devops.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigFlow
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 
 class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -26,7 +27,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ORG, default=self._organization): str,
