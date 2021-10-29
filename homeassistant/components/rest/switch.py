@@ -5,7 +5,6 @@ import logging
 
 import aiohttp
 import async_timeout
-from utils import inject_hass_in_templates, render_templates
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -27,6 +26,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+
+from .utils import inject_hass_in_templates, render_templates
 
 _LOGGER = logging.getLogger(__name__)
 CONF_BODY_OFF = "body_off"

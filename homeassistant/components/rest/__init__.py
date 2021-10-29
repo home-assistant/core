@@ -4,7 +4,6 @@ import asyncio
 import logging
 
 import httpx
-from utils import inject_hass_in_templates
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -38,6 +37,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import COORDINATOR, DOMAIN, PLATFORM_IDX, REST, REST_DATA, REST_IDX
 from .data import RestData
 from .schema import CONFIG_SCHEMA  # noqa: F401
+from .utils import inject_hass_in_templates
 
 _LOGGER = logging.getLogger(__name__)
 
