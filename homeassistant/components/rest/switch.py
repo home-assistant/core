@@ -5,12 +5,9 @@ import logging
 
 import aiohttp
 import async_timeout
+from utils import inject_hass_in_templates, render_templates
 import voluptuous as vol
 
-from homeassistant.components.rest.utils import (
-    inject_hass_in_templates,
-    render_templates,
-)
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,

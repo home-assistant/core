@@ -4,10 +4,10 @@ import asyncio
 import logging
 
 import httpx
+from utils import inject_hass_in_templates
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.rest.utils import inject_hass_in_templates
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_AUTHENTICATION,
