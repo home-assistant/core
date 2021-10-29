@@ -88,6 +88,7 @@ ATTR_QR_CODE = "qr_code"
 SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
 SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = "set_zigbee_cluster_attribute"
+SERVICE_GET_ZIGBEE_CLUSTER_ATTRIBUTE = "get_zigbee_cluster_attribute"
 SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = "issue_zigbee_cluster_command"
 SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND = "issue_zigbee_group_command"
 SERVICE_DIRECT_ZIGBEE_BIND = "issue_direct_zigbee_bind"
@@ -128,6 +129,16 @@ SERVICE_SCHEMAS = {
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_ATTRIBUTE): vol.Any(cv.positive_int, str),
             vol.Required(ATTR_VALUE): vol.Any(int, cv.boolean, cv.string),
+            vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+        }
+    ),
+    SERVICE_GET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema(
+        {
+            vol.Required(ATTR_IEEE): EUI64.convert,
+            vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
+            vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
+            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
+            vol.Required(ATTR_ATTRIBUTE): vol.Any(cv.positive_int, str),
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }
     ),
@@ -1034,11 +1045,61 @@ def async_load_api(hass):
             response,
         )
 
+
+    async def get_zigbee_cluster_attributes(service):
+        """Get zigbee attribute for cluster on zha entity."""
+        msg=service.data
+        zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+        ieee = msg[ATTR_IEEE]
+        endpoint_id = msg[ATTR_ENDPOINT_ID]
+        cluster_id = msg[ATTR_CLUSTER_ID]
+        cluster_type = msg[ATTR_CLUSTER_TYPE]
+        attribute = msg[ATTR_ATTRIBUTE]
+        manufacturer = msg.get(ATTR_MANUFACTURER) or None
+        zha_device = zha_gateway.get_device(ieee)
+        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+            manufacturer = zha_device.manufacturer_code
+        success = failure = None
+        if zha_device is not None:
+            cluster = zha_device.async_get_cluster(
+                endpoint_id, cluster_id, cluster_type=cluster_type
+            )
+            success, failure = await cluster.read_attributes(
+                [attribute], allow_cache=False, only_cache=False, manufacturer=manufacturer
+            )
+        _LOGGER.debug(
+            "Read attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s],",
+            ATTR_CLUSTER_ID,
+            cluster_id,
+            ATTR_CLUSTER_TYPE,
+            cluster_type,
+            ATTR_ENDPOINT_ID,
+            endpoint_id,
+            ATTR_ATTRIBUTE,
+            attribute,
+            ATTR_MANUFACTURER,
+            manufacturer,
+            RESPONSE,
+            str(success.get(attribute)),
+            "failure",
+            failure,
+        )
+
+
+
+
     hass.helpers.service.async_register_admin_service(
         DOMAIN,
         SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
         set_zigbee_cluster_attributes,
         schema=SERVICE_SCHEMAS[SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE],
+    )
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN,
+        SERVICE_GET_ZIGBEE_CLUSTER_ATTRIBUTE,
+        get_zigbee_cluster_attributes,
+        schema=SERVICE_SCHEMAS[SERVICE_GET_ZIGBEE_CLUSTER_ATTRIBUTE],
     )
 
     async def issue_zigbee_cluster_command(service):
@@ -1256,6 +1317,7 @@ def async_unload_api(hass):
     hass.services.async_remove(DOMAIN, SERVICE_PERMIT)
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
     hass.services.async_remove(DOMAIN, SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE)
+    hass.services.async_remove(DOMAIN, SERVICE_GET_ZIGBEE_CLUSTER_ATTRIBUTE)
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND)
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND)
     hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_SQUAWK)
