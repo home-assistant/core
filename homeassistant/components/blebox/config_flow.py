@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -69,7 +70,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         log_fn("%s at %s:%d (%s)", LOG_MSG[message_id], host, port, exception)
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=schema,
             errors={"base": message_id},
             description_placeholders={"address": f"{host}:{port}"},
@@ -83,7 +84,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return self.async_show_form(
-                step_id="user",
+                step_id=STEP_ID_USER,
                 data_schema=schema,
                 errors={},
                 description_placeholders={},

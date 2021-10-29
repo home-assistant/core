@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.components.zeroconf import async_get_instance
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from .const import (
     CONF_HOSTNAME,
@@ -116,7 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_credentials()
 
         return self.async_show_form(
-            step_id="user", data_schema=HOST_SCHEMA, errors=errors
+            step_id=STEP_ID_USER, data_schema=HOST_SCHEMA, errors=errors
         )
 
     async def async_step_credentials(self, user_input=None):

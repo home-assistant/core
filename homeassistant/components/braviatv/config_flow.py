@@ -14,7 +14,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_USER, FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -94,7 +94,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_HOST] = "invalid_host"
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema({vol.Required(CONF_HOST, default=""): str}),
             errors=errors,
         )
@@ -168,7 +168,7 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {
                     vol.Optional(
