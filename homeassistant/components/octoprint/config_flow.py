@@ -140,7 +140,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle discovery flow."""
-        return self.async_abort(reason="auth_failed")
         uuid = discovery_info["properties"]["uuid"]
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured()
