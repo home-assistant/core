@@ -8,6 +8,7 @@ from aiohttp.web_exceptions import HTTPBadGateway
 from motioneye_client.client import (
     MotionEyeClientError,
     MotionEyeClientInvalidAuthError,
+    MotionEyeClientURLParseError,
 )
 from motioneye_client.const import (
     KEY_CAMERAS,
@@ -20,6 +21,7 @@ import pytest
 from homeassistant.components.camera import async_get_image, async_get_mjpeg_stream
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import (
+    CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_USERNAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -320,3 +322,60 @@ async def test_device_info(hass: HomeAssistant) -> None:
         for entry in er.async_entries_for_device(entity_registry, device.id)
     ]
     assert TEST_CAMERA_ENTITY_ID in entities_from_device
+
+
+async def test_camera_option_stream_url_template(
+    aiohttp_server: Any, hass: HomeAssistant
+) -> None:
+    """Verify camera with a stream URL template option."""
+    client = create_mock_motioneye_client()
+
+    stream_handler = Mock(return_value="")
+    app = web.Application()
+    app.add_routes([web.get(f"/{TEST_CAMERA_NAME}/{TEST_CAMERA_ID}", stream_handler)])
+    stream_server = await aiohttp_server(app)
+
+    client = create_mock_motioneye_client()
+
+    config_entry = create_mock_motioneye_config_entry(
+        hass,
+        data={
+            CONF_URL: f"http://localhost:{stream_server.port}",
+            # The port won't be used as the client is a mock.
+            CONF_SURVEILLANCE_USERNAME: TEST_SURVEILLANCE_USERNAME,
+        },
+        options={
+            CONF_STREAM_URL_TEMPLATE: (
+                f"http://localhost:{stream_server.port}/" "{{ name }}/{{ id }}"
+            )
+        },
+    )
+
+    await setup_mock_motioneye_config_entry(
+        hass, config_entry=config_entry, client=client
+    )
+    await hass.async_block_till_done()
+
+    # It won't actually get a stream from the dummy handler, so just catch
+    # the expected exception, then verify the right handler was called.
+    with pytest.raises(HTTPBadGateway):
+        await async_get_mjpeg_stream(hass, Mock(), TEST_CAMERA_ENTITY_ID)
+    assert stream_handler.called
+    assert not client.get_camera_stream_url.called
+
+
+async def test_get_stream_from_camera_with_broken_host(
+    aiohttp_server: Any, hass: HomeAssistant
+) -> None:
+    """Test getting a stream with a broken URL (no host)."""
+
+    client = create_mock_motioneye_client()
+    config_entry = create_mock_motioneye_config_entry(hass, data={CONF_URL: "http://"})
+    client.get_camera_stream_url = Mock(side_effect=MotionEyeClientURLParseError)
+
+    await setup_mock_motioneye_config_entry(
+        hass, config_entry=config_entry, client=client
+    )
+    await hass.async_block_till_done()
+    with pytest.raises(HTTPBadGateway):
+        await async_get_mjpeg_stream(hass, Mock(), TEST_CAMERA_ENTITY_ID)
