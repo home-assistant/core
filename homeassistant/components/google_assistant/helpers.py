@@ -346,8 +346,7 @@ class GoogleConfigStore:
 
     async def async_load(self):
         """Store current configuration to disk."""
-        data = await self._store.async_load()
-        if data:
+        if data := await self._store.async_load():
             self._data = data
 
 
