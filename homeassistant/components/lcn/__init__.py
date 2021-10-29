@@ -10,6 +10,7 @@ import pypck
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -183,7 +184,7 @@ def host_input_received(
     # fire event: lcn_transmitter, lcn_transponder or lcn_fingerprint
     if isinstance(inp, pypck.inputs.ModStatusAccessControl):
         event_data = {
-            "device_id": device.id,
+            CONF_DEVICE_ID: device.id,
             "segment_id": address[0],
             "module_id": address[1],
             "code": inp.code,
@@ -207,7 +208,7 @@ def host_input_received(
                 if not selected:
                     continue
                 event_data = {
-                    "device_id": device.id,
+                    CONF_DEVICE_ID: device.id,
                     "segment_id": address[0],
                     "module_id": address[1],
                     "key": pypck.lcn_defs.Key(table * 8 + key).name.lower(),
@@ -249,7 +250,7 @@ class LcnEntity(Entity):
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         address = f"{'g' if self.address[2] else 'm'}{self.address[0]:03d}{self.address[1]:03d}"
-        model = f"LCN {get_device_model(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])}"
+        model = f"LCN resource ({get_device_model(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])})"
 
         return {
             "identifiers": {(DOMAIN, self.unique_id)},

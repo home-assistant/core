@@ -11,7 +11,7 @@ from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEM
 from homeassistant.components.homeassistant.triggers import event
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
@@ -45,11 +45,11 @@ TRIGGER_SCHEMA = vol.Any(
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for LCN devices."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
 
     triggers: list[dict] = []
-    if device.model.startswith("group"):
+    if device.model.startswith(("LCN host", "LCN group", "LCN resource")):  # type: ignore[union-attr]
         return triggers
 
     base_trigger = {
