@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -54,7 +55,7 @@ class ForkedDaapdOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="options", data=user_input)
 
         return self.async_show_form(
-            step_id="init",
+            step_id=STEP_ID_INIT,
             data_schema=vol.Schema(
                 {
                     vol.Optional(
@@ -141,16 +142,16 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=validate_result[1], data=user_input
                 )
             return self.async_show_form(
-                step_id="user",
+                step_id=STEP_ID_USER,
                 data_schema=vol.Schema(fill_in_schema_dict(user_input)),
                 errors={"base": validate_result[0]},
             )
         if self.discovery_schema:  # stop at form to allow user to set up manually
             return self.async_show_form(
-                step_id="user", data_schema=self.discovery_schema, errors={}
+                step_id=STEP_ID_USER, data_schema=self.discovery_schema, errors={}
             )
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(DATA_SCHEMA_DICT), errors={}
+            step_id=STEP_ID_USER, data_schema=vol.Schema(DATA_SCHEMA_DICT), errors={}
         )
 
     async def async_step_zeroconf(self, discovery_info):

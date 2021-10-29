@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.data_entry_flow import STEP_ID_USER
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -79,7 +80,7 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id=STEP_ID_USER, data_schema=DATA_SCHEMA, errors=errors
         )
 
 

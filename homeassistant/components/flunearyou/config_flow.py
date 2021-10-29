@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_USER, FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN, LOGGER
@@ -39,7 +39,9 @@ class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the start of the config flow."""
         if not user_input:
-            return self.async_show_form(step_id="user", data_schema=self.data_schema)
+            return self.async_show_form(
+                step_id=STEP_ID_USER, data_schema=self.data_schema
+            )
 
         unique_id = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
 
@@ -55,6 +57,8 @@ class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except FluNearYouError as err:
             LOGGER.error("Error while configuring integration: %s", err)
-            return self.async_show_form(step_id="user", errors={"base": "unknown"})
+            return self.async_show_form(
+                step_id=STEP_ID_USER, errors={"base": "unknown"}
+            )
 
         return self.async_create_entry(title=unique_id, data=user_input)

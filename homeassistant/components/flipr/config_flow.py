@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from .const import CONF_FLIPR_ID, DOMAIN
 
@@ -76,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
             ),

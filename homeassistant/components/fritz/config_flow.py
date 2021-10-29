@@ -21,7 +21,7 @@ from homeassistant.components.ssdp import (
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER, FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .common import FritzBoxTools
@@ -168,7 +168,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     def _show_setup_form_init(self, errors: dict[str, str] | None = None) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
@@ -313,4 +313,4 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
             }
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(step_id=STEP_ID_INIT, data_schema=data_schema)

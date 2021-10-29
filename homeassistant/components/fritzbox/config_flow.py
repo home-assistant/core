@@ -15,7 +15,7 @@ from homeassistant.components.ssdp import (
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_USER, FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
@@ -116,7 +116,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = result
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
+            step_id=STEP_ID_USER, data_schema=DATA_SCHEMA_USER, errors=errors
         )
 
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:

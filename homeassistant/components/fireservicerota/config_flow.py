@@ -4,6 +4,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from .const import DOMAIN, URL_LIST
 
@@ -86,7 +87,7 @@ class FireServiceRotaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.hass.config_entries.async_reload(entry.entry_id)
         return self.async_abort(reason="reauth_successful")
 
-    def _show_setup_form(self, user_input=None, errors=None, step_id="user"):
+    def _show_setup_form(self, user_input=None, errors=None, step_id=STEP_ID_USER):
         """Show the setup form to the user."""
 
         if user_input is None:

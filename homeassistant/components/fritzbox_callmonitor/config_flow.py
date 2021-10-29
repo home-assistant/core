@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER
 
 from .base import FritzBoxPhonebook
 from .const import (
@@ -142,7 +143,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA_USER, errors={}
+                step_id=STEP_ID_USER, data_schema=DATA_SCHEMA_USER, errors={}
             )
 
         self._host = user_input[CONF_HOST]
@@ -154,7 +155,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if result == RESULT_INVALID_AUTH:
             return self.async_show_form(
-                step_id="user",
+                step_id=STEP_ID_USER,
                 data_schema=DATA_SCHEMA_USER,
                 errors={"base": RESULT_INVALID_AUTH},
             )
@@ -241,7 +242,7 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is None:
             return self.async_show_form(
-                step_id="init",
+                step_id=STEP_ID_INIT,
                 data_schema=option_schema_prefixes,
                 errors={},
             )
@@ -250,7 +251,7 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
 
         if not self._are_prefixes_valid(prefixes):
             return self.async_show_form(
-                step_id="init",
+                step_id=STEP_ID_INIT,
                 data_schema=option_schema_prefixes,
                 errors={"base": RESULT_MALFORMED_PREFIXES},
             )
