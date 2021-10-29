@@ -247,7 +247,7 @@ def _async_register_base_station(
 def _async_get_system_for_service_call(
     hass: HomeAssistant, call: ServiceCall
 ) -> SystemV2 | SystemV3:
-    """Get the SimpliSafe manager object related to a service call (by device ID)."""
+    """Get the SimpliSafe system related to a service call (by device ID)."""
     device_id = call.data[ATTR_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
