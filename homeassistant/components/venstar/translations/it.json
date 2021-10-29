@@ -5,17 +5,18 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "E-mail",
+                    "host": "Host",
                     "password": "Password",
-                    "timeout": "Tempo scaduto"
+                    "pin": "Codice PIN",
+                    "ssl": "Utilizza un certificato SSL",
+                    "username": "Nome utente"
                 },
-                "title": "Connettiti al tuo Sense Energy Monitor"
+                "title": "Collegati al termostato Venstar"
             }
         }
     }
