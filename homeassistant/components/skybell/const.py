@@ -22,9 +22,4 @@ AGENT_IDENTIFIER = f"HomeAssistant/{__version__}"
 IMAGE_AVATAR = "avatar"
 IMAGE_ACTIVITY = "activity"
 
-CONF_ACTIVITY_NAME = "activity_name"
-CONF_AVATAR_NAME = "avatar_name"
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
-
-CAMERA_TYPES = {"activity": "Last Activity", "avatar": None}
