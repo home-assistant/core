@@ -38,7 +38,7 @@ class FireServiceRotaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form(user_input, errors)
 
-        return await self._validate_and_create_entry(user_input, "user")
+        return await self._validate_and_create_entry(user_input, STEP_ID_USER)
 
     async def _validate_and_create_entry(self, user_input, step_id):
         """Check if config is valid and create entry if so."""
@@ -79,7 +79,7 @@ class FireServiceRotaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_TOKEN: token_info,
         }
 
-        if step_id == "user":
+        if step_id == STEP_ID_USER:
             return self.async_create_entry(title=self._username, data=data)
 
         entry = await self.async_set_unique_id(self.unique_id)
@@ -93,7 +93,7 @@ class FireServiceRotaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
-        if step_id == "user":
+        if step_id == STEP_ID_USER:
             schema = {
                 vol.Required(CONF_URL, default="www.brandweerrooster.nl"): vol.In(
                     URL_LIST
