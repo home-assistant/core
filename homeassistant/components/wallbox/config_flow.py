@@ -83,12 +83,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
                     self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 )
                 return self.async_abort(reason="reauth_successful")
-            self.async_abort(reason="reauth_invalid")
+            errors["base"] = "reauth_invalid"
         except ConnectionError:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )

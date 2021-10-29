@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
+            "reauth_invalid": "Re-authentication failed, Serial Number was invalid",
             "unknown": "Unexpected error"
         },
         "step": {

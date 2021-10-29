@@ -3,10 +3,7 @@ import json
 
 import requests_mock
 
-from homeassistant.components.wallbox import (
-    CONF_CONNECTIONS,
-    CONF_MAX_CHARGING_CURRENT_KEY,
-)
+from homeassistant.components.wallbox import CONF_MAX_CHARGING_CURRENT_KEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -78,7 +75,7 @@ async def test_wallbox_refresh_failed_invalid_auth(hass: HomeAssistant):
             status_code=403,
         )
 
-        wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
+        wallbox = hass.data[DOMAIN][entry.entry_id]
 
         await wallbox.async_refresh()
 
@@ -104,7 +101,7 @@ async def test_wallbox_refresh_failed_connection_error(hass: HomeAssistant):
             status_code=403,
         )
 
-        wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
+        wallbox = hass.data[DOMAIN][entry.entry_id]
 
         await wallbox.async_refresh()
 
