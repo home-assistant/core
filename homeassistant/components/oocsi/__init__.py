@@ -1,7 +1,6 @@
 """The Oocsi for HomeAssistant integration."""
 from __future__ import annotations
 
-# , OOCSIDisconnect
 import logging
 
 from oocsi import OOCSI as oocsiApi
@@ -9,7 +8,6 @@ from oocsi import OOCSI as oocsiApi
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity
 
 from .const import DATA_OOCSI, DOMAIN, OOCSI_ENTITY
 
@@ -40,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api.send("heyOOCSI", {"homeassistant": "on"})
     # Create interview storage
     if OOCSI_ENTITY not in hass.data:
-        hass.data[OOCSI_ENTITY] = {}
+        hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY] = {}
 
     # Start interviewing process
     hass.async_create_task(_async_interviewer(hass, entry, api))
@@ -50,31 +48,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
-async def _async_interviewer(hass: HomeAssistant, entry: ConfigEntry, api: api) -> bool:
-    """Listen for interview replies"""
+async def _async_interviewer(hass: HomeAssistant, entry: ConfigEntry, api):
+    """Listen for interview replies."""
 
     def handle_interview_event(sender, recipient, event):
         # Handle interview by comparing interview entries to previous registrations
         if (
-            bool(hass.data[OOCSI_ENTITY]) is False
-            or not event.items() <= hass.data[OOCSI_ENTITY].items()
+            bool(hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY]) is False
+            or not event.items()
+            <= hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY].items()
         ):
             # add new entries
-            hass.data[OOCSI_ENTITY] = hass.data[OOCSI_ENTITY] | event
+            hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY] = (
+                hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY] | event
+            )
             # Check which platforms must be started for the interviewed entities
 
-            for device in hass.data[OOCSI_ENTITY]:
+            for device in hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY]:
 
-                for key in hass.data[OOCSI_ENTITY][device]["components"]:
+                for key in hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY][device][
+                    "components"
+                ]:
 
                     # for type in hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][key][]
 
                     if (
-                        hass.data[OOCSI_ENTITY][device]["components"][key]["type"]
+                        hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY][device][
+                            "components"
+                        ][key]["type"]
                         not in PLATFORMS
                     ):
                         PLATFORMS.append(
-                            hass.data[OOCSI_ENTITY][device]["components"][key]["type"]
+                            hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY][device][
+                                "components"
+                            ][key]["type"]
                         )
                 # Start platforms
             hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -87,34 +94,43 @@ async def _async_interviewer(hass: HomeAssistant, entry: ConfigEntry, api: api) 
 async def async_create_new_platform_entity(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    api: api,
-    entity_type: entity_type,
-    async_add: async_add_entities,
-    platform: platform,
+    api,
+    entity_type,
+    async_add_entities,
+    platform,
 ):
-    """Addd entities per platform"""
+    """Add entities per platform."""
     # Per platform get their entries and create an entity dictionary
     entities = []
-    for device in hass.data[OOCSI_ENTITY]:
+    for device in hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY]:
         print(device)
-        print(hass.data[OOCSI_ENTITY])
-        
-        for key in hass.data[OOCSI_ENTITY][device]["components"]:
+        print(hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY])
 
-            if hass.data[OOCSI_ENTITY][device]["components"][key]["type"] == platform:
-                
+        for key in hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY][device][
+            "components"
+        ]:
+
+            if (
+                hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY][device]["components"][
+                    key
+                ]["type"]
+                == platform
+            ):
+
                 entities.append(
                     entity_type(
                         hass,
                         key,
                         api,
-                        hass.data[OOCSI_ENTITY][device]["components"][key],
+                        hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY][device][
+                            "components"
+                        ][key],
                         device,
                     )
                 )
             _LOGGER.info("added %s from %s as entity", key, device)
         # Add entities
-    async_add(entities)
+    async_add_entities(entities)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

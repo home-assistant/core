@@ -4,9 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from oocsi import OOCSI
-
-# , OOCSIDisconnect
+from oocsi import OOCSI, OOCSIDisconnect
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -38,42 +36,47 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self):
+        """Build global variables for configuration flow."""
+        self.name = CONF_NAME
+        self.port = CONF_PORT
+        self.host = CONF_HOST
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
-        if user_input is None:
-            return self._async_show_form_popup()
-
         if user_input is not None:
             try:
                 await self._connect_to_oocsi(user_input)
+
             except OOCSIDisconnect:
                 errors["base"] = "cannot_connect"
-            return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data={
-                    CONF_NAME: self.name,
-                    CONF_HOST: self.host,
-                    CONF_PORT: self.port,
-                },
-            )
-        return self._async_show_form_popup()
+            else:
+                await self.async_set_unique_id(user_input[CONF_NAME])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data={
+                        CONF_NAME: self.name,
+                        CONF_HOST: self.host,
+                        CONF_PORT: self.port,
+                    },
+                )
 
-    def _async_show_form_popup(
-        self, errors: dict[str, str] | None = None
-    ) -> FlowResult:
         return self.async_show_form(
-            step_id="user", data_schema=USER_CONFIG_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=USER_CONFIG_SCHEMA,
+            errors=errors,
         )
 
     async def _connect_to_oocsi(self, user_input):
-        """Attempt oocsi connection details"""
+        """Attempt oocsi connection details."""
         self.name = user_input[CONF_NAME]
         self.host = user_input[CONF_HOST]
         self.port = user_input[CONF_PORT]
-        oocsiconnect = OOCSI(self.name, self.host, self.port, None, _LOGGER.info, 3)
+        oocsiconnect = OOCSI(self.name, self.host, self.port, None, _LOGGER.info, 1)
         oocsiconnect.stop()
 
 
