@@ -447,7 +447,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self._home_status.async_set_room_thermpoint(
-            self._id, STATE_NETATMO_MANUAL, temp
+            self._id, STATE_NETATMO_MANUAL, min(temp, DEFAULT_MAX_TEMP)
         )
 
         self.async_write_ha_state()
