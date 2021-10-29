@@ -83,9 +83,9 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Add actions as attribute."""
-        return {
-            KEY_ACTIONS: self._camera.get(KEY_ACTIONS, None) if self._camera else None
-        }
+        if actions := (self._camera.get(KEY_ACTIONS) if self._camera else None):
+            return {KEY_ACTIONS: actions}
+        return None
 
     @callback
     def _handle_coordinator_update(self) -> None:
