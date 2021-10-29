@@ -239,15 +239,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # First check for config file. If for some reason it is no longer there
         # or knx is no longer mentioned, stop the reload.
         config = await async_integration_yaml_config(hass, DOMAIN)
-
         if not config or DOMAIN not in config:
             return
-
-        await knx_module.xknx.stop()
 
         await asyncio.gather(
             *(platform.async_reset() for platform in async_get_platforms(hass, DOMAIN))
         )
+        await knx_module.xknx.stop()
 
         await async_setup(hass, config)
 
