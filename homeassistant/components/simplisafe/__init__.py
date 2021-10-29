@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from simplipy import API
 from simplipy.device import Device, DeviceTypes
@@ -142,8 +142,9 @@ SERVICE_SET_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {vol.Required(ATTR_PIN_LABEL): cv.string, vol.Required(ATTR_PIN_VALUE): cv.string}
 )
 
-SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Optional(ATTR_ALARM_DURATION): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
@@ -230,6 +231,28 @@ def _async_register_base_station(
         model=system.version,
         name=system.address,
     )
+
+
+@callback
+def _async_get_simplisafe_for_service_call(
+    hass: HomeAssistant, call: ServiceCall
+) -> SystemV3:
+    """Get the SimpliSafe manager object related to a service call (by device ID)."""
+    device_id = call.data[CONF_DEVICE_ID]
+    device_registry = dr.async_get(hass)
+
+    if alarm_control_panel_device_entry := device_registry.async_get(device_id):
+        if base_station_device_entry := device_registry.async_get(
+            alarm_control_panel_device_entry.via_device_id
+        ):
+            identifiers = list(sum(base_station_device_entry.identifiers, ()))
+            [system_id] = [i for i in identifiers if i != DOMAIN]
+            for entry in hass.config_entries.async_entries(DOMAIN):
+                if entry.entry_id in alarm_control_panel_device_entry.config_entries:
+                    simplisafe = hass.data[DOMAIN][entry.entry_id]
+                    return simplisafe.systems[system_id]
+
+    raise ValueError(f"No controller for device ID: {device_id}")
 
 
 async def async_setup_entry(  # noqa: C901
