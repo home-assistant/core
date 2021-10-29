@@ -3,6 +3,7 @@ import json
 from unittest.mock import patch
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
+from homeassistant.helpers.device_registry import async_get as get_dev_reg
 
 from . import NewDateTime
 from .const import (
@@ -47,6 +48,9 @@ async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_tim
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    dev_reg = get_dev_reg(hass)
+    assert len(dev_reg.devices) == 1
 
     running_sensor_ids = hass.states.async_entity_ids("sensor")
     assert len(running_sensor_ids) > 0
@@ -104,6 +108,9 @@ async def test_two_sensor_sites_running(hass, requests_mock, legacy_patchable_ti
     entry2.add_to_hass(hass)
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
+
+    dev_reg = get_dev_reg(hass)
+    assert len(dev_reg.devices) == 2
 
     running_sensor_ids = hass.states.async_entity_ids("sensor")
     assert len(running_sensor_ids) > 0

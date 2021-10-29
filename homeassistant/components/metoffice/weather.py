@@ -10,9 +10,11 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import device_info
 from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
@@ -76,8 +78,10 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         super().__init__(coordinator)
 
         mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
-        self._name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
-        self._unique_id = hass_data[METOFFICE_COORDINATES]
+        self._metoffice_name = hass_data[METOFFICE_NAME]
+        self._coordinates = hass_data[METOFFICE_COORDINATES]
+        self._name = f"{DEFAULT_NAME} {self._metoffice_name} {mode_label}"
+        self._unique_id = self._coordinates
         if not use_3hourly:
             self._unique_id = f"{self._unique_id}_{MODE_DAILY}"
 
@@ -174,3 +178,8 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return device_info(self._coordinates, self._metoffice_name)

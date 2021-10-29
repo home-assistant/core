@@ -13,9 +13,11 @@ from homeassistant.const import (
     UV_INDEX,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import device_info
 from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
@@ -181,8 +183,10 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
 
         self.entity_description = description
         mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
-        self._attr_name = f"{hass_data[METOFFICE_NAME]} {description.name} {mode_label}"
-        self._attr_unique_id = f"{description.name}_{hass_data[METOFFICE_COORDINATES]}"
+        self._metoffice_name = hass_data[METOFFICE_NAME]
+        self._coordinates = hass_data[METOFFICE_COORDINATES]
+        self._attr_name = f"{self._metoffice_name} {description.name} {mode_label}"
+        self._attr_unique_id = f"{description.name}_{self._coordinates}"
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
 
@@ -253,3 +257,8 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         return (
             self.entity_description.entity_registry_enabled_default and self.use_3hourly
         )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return device_info(self._coordinates, self._metoffice_name)
