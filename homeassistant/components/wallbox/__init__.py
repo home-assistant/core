@@ -16,10 +16,9 @@ from .const import (
     CONF_CONNECTIONS,
     CONF_DATA_KEY,
     CONF_MAX_CHARGING_CURRENT_KEY,
-    CONF_ROUND,
-    CONF_SENSOR_TYPES,
     CONF_STATION,
     DOMAIN,
+    SENSOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,10 +71,10 @@ class WallboxCoordinator(DataUpdateCoordinator):
                 CONF_MAX_CHARGING_CURRENT_KEY
             ]
 
-            filtered_data = {k: data[k] for k in CONF_SENSOR_TYPES if k in data}
+            filtered_data = {k: data[k] for k in SENSOR_TYPES if k in data}
 
             for key, value in filtered_data.items():
-                if (sensor_round := CONF_SENSOR_TYPES[key][CONF_ROUND]) is not None:
+                if (sensor_round := SENSOR_TYPES[key].precision) is not None:
                     try:
                         filtered_data[key] = round(value, sensor_round)
                     except TypeError:
