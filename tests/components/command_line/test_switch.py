@@ -8,6 +8,8 @@ import tempfile
 from typing import Any
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import setup
 from homeassistant.components.switch import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import (
@@ -79,7 +81,9 @@ async def test_state_none(hass: HomeAssistant) -> None:
         assert entity_state.state == STATE_OFF
 
 
-async def test_state_off_without_log(caplog: pytest.LogCaptureFixture, hass: HomeAssistant) -> None:
+async def test_state_off_without_log(
+    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+) -> None:
     """Test with none state."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
