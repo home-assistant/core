@@ -71,7 +71,7 @@ class EvilGeniusUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Update Evil Genius data."""
-        if self.info is None:
+        if not hasattr(self, "info"):
             async with timeout(5):
                 self.info = await self.client.get_info()
 
