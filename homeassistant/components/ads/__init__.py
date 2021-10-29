@@ -10,10 +10,33 @@ import async_timeout
 import pyads
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+)
+from homeassistant.components.cover import (
+    DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
+    DOMAIN as COVER_DOMAIN,
+)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.sensor import (  # CONF_STATE_CLASS,; DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,; STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
+    DOMAIN as SENSOR_DOMAIN,
+)
+from homeassistant.components.switch import (  # DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
+    DOMAIN as SWITCH_DOMAIN,
+)
 from homeassistant.const import (
+    CONF_BINARY_SENSORS,
+    CONF_COVERS,
     CONF_DEVICE,
+    CONF_DEVICE_CLASS,
     CONF_IP_ADDRESS,
+    CONF_LIGHTS,
+    CONF_NAME,
     CONF_PORT,
+    CONF_SENSORS,
+    CONF_SWITCHES,
+    CONF_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
@@ -37,6 +60,10 @@ CONF_ADS_VALUE = "value"
 CONF_ADS_VAR = "adsvar"
 CONF_ADS_VAR_BRIGHTNESS = "adsvar_brightness"
 CONF_ADS_VAR_POSITION = "adsvar_position"
+CONF_ADS_VAR_SET_POS = "adsvar_set_position"
+CONF_ADS_VAR_OPEN = "adsvar_open"
+CONF_ADS_VAR_CLOSE = "adsvar_close"
+CONF_ADS_VAR_STOP = "adsvar_stop"
 
 STATE_KEY_STATE = "state"
 STATE_KEY_BRIGHTNESS = "brightness"
@@ -46,6 +73,57 @@ DOMAIN = "ads"
 
 SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 
+BINARY_SENSOR_DEFAULT_NAME = "ADS binary sensor"
+COVER_DEFAULT_NAME = "ADS Cover"
+SENSOR_DEFAULT_NAME = "ADS sensor"
+
+PLATFORMS = (
+    (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS),
+    (COVER_DOMAIN, CONF_COVERS),
+    (LIGHT_DOMAIN, CONF_LIGHTS),
+    (SENSOR_DOMAIN, CONF_SENSORS),
+    (SWITCH_DOMAIN, CONF_SWITCHES),
+)
+
+BINARY_SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ADS_VAR): cv.string,
+        vol.Optional(CONF_NAME, default=BINARY_SENSOR_DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+    }
+)
+
+COVER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ADS_VAR): cv.string,
+        vol.Optional(CONF_ADS_VAR_POSITION): cv.string,
+        vol.Optional(CONF_ADS_VAR_SET_POS): cv.string,
+        vol.Optional(CONF_ADS_VAR_CLOSE): cv.string,
+        vol.Optional(CONF_ADS_VAR_OPEN): cv.string,
+        vol.Optional(CONF_ADS_VAR_STOP): cv.string,
+        vol.Optional(CONF_NAME, default=COVER_DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
+    }
+)
+
+SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ADS_VAR): cv.string,
+        vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
+        vol.Optional(CONF_ADS_TYPE, default=ADSTYPE_INT): vol.In(
+            [
+                ADSTYPE_INT,
+                ADSTYPE_UINT,
+                ADSTYPE_BYTE,
+                ADSTYPE_DINT,
+                ADSTYPE_UDINT,
+            ]
+        ),
+        vol.Optional(CONF_NAME, default=SENSOR_DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=""): cv.string,
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -53,6 +131,11 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_DEVICE): cv.string,
                 vol.Required(CONF_PORT): cv.port,
                 vol.Optional(CONF_IP_ADDRESS): cv.string,
+                vol.Optional(CONF_BINARY_SENSORS): vol.All(
+                    cv.ensure_list, [BINARY_SENSOR_SCHEMA]
+                ),
+                vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVER_SCHEMA]),
+                vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
             }
         )
     },
@@ -117,6 +200,12 @@ def setup(hass, config):
         return False
 
     hass.data[DATA_ADS] = ads
+
+    # load platforms
+    for component, conf_key in PLATFORMS:
+        if conf_key in conf:
+            hass.helpers.discovery.load_platform(component, DOMAIN, conf, conf)
+
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
 
     def handle_write_data_by_name(call):

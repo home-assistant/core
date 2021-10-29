@@ -1,64 +1,47 @@
 """Support for ADS covers."""
-import voluptuous as vol
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
     CoverEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_COVERS, CONF_DEVICE_CLASS, CONF_NAME
 
 from . import (
     CONF_ADS_VAR,
+    CONF_ADS_VAR_CLOSE,
+    CONF_ADS_VAR_OPEN,
     CONF_ADS_VAR_POSITION,
+    CONF_ADS_VAR_SET_POS,
+    CONF_ADS_VAR_STOP,
     DATA_ADS,
     STATE_KEY_POSITION,
     STATE_KEY_STATE,
     AdsEntity,
 )
 
-DEFAULT_NAME = "ADS Cover"
 
-CONF_ADS_VAR_SET_POS = "adsvar_set_position"
-CONF_ADS_VAR_OPEN = "adsvar_open"
-CONF_ADS_VAR_CLOSE = "adsvar_close"
-CONF_ADS_VAR_STOP = "adsvar_stop"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_ADS_VAR_POSITION): cv.string,
-        vol.Optional(CONF_ADS_VAR_SET_POS): cv.string,
-        vol.Optional(CONF_ADS_VAR_CLOSE): cv.string,
-        vol.Optional(CONF_ADS_VAR_OPEN): cv.string,
-        vol.Optional(CONF_ADS_VAR_STOP): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info):
     """Set up the cover platform for ADS."""
-    ads_hub = hass.data[DATA_ADS]
+    entities = []
 
-    ads_var_is_closed = config.get(CONF_ADS_VAR)
-    ads_var_position = config.get(CONF_ADS_VAR_POSITION)
-    ads_var_pos_set = config.get(CONF_ADS_VAR_SET_POS)
-    ads_var_open = config.get(CONF_ADS_VAR_OPEN)
-    ads_var_close = config.get(CONF_ADS_VAR_CLOSE)
-    ads_var_stop = config.get(CONF_ADS_VAR_STOP)
-    name = config[CONF_NAME]
-    device_class = config.get(CONF_DEVICE_CLASS)
+    if discovery_info is None:  # pragma: no cover
+        return
 
-    add_entities(
-        [
+    ads_hub = hass.data.get(DATA_ADS)
+
+    for entry in discovery_info[CONF_COVERS]:
+        ads_var_is_closed = entry.get(CONF_ADS_VAR)
+        ads_var_position = entry.get(CONF_ADS_VAR_POSITION)
+        ads_var_pos_set = entry.get(CONF_ADS_VAR_SET_POS)
+        ads_var_open = entry.get(CONF_ADS_VAR_OPEN)
+        ads_var_close = entry.get(CONF_ADS_VAR_CLOSE)
+        ads_var_stop = entry.get(CONF_ADS_VAR_STOP)
+        name = entry.get(CONF_NAME)
+        device_class = entry.get(CONF_DEVICE_CLASS)
+        entities.append(
             AdsCover(
                 ads_hub,
                 ads_var_is_closed,
@@ -70,8 +53,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 name,
                 device_class,
             )
-        ]
-    )
+        )
+
+    add_entities(entities)
 
 
 class AdsCover(AdsEntity, CoverEntity):

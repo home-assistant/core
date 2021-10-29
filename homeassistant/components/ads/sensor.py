@@ -1,47 +1,32 @@
 """Support for ADS sensors."""
-import voluptuous as vol
-
 from homeassistant.components import ads
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.helpers.typing import StateType
 
 from . import CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR, STATE_KEY_STATE, AdsEntity
 
-DEFAULT_NAME = "ADS sensor"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
-        vol.Optional(CONF_ADS_TYPE, default=ads.ADSTYPE_INT): vol.In(
-            [
-                ads.ADSTYPE_INT,
-                ads.ADSTYPE_UINT,
-                ads.ADSTYPE_BYTE,
-                ads.ADSTYPE_DINT,
-                ads.ADSTYPE_UDINT,
-            ]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=""): cv.string,
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info):
     """Set up an ADS sensor device."""
+    entities = []
+
+    if discovery_info is None:  # pragma: no cover
+        return
+
     ads_hub = hass.data.get(ads.DATA_ADS)
 
-    ads_var = config[CONF_ADS_VAR]
-    ads_type = config[CONF_ADS_TYPE]
-    name = config[CONF_NAME]
-    unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-    factor = config.get(CONF_ADS_FACTOR)
+    for entry in discovery_info[CONF_SENSORS]:
+        ads_var = entry.get(CONF_ADS_VAR)
+        ads_type = entry.get(CONF_ADS_TYPE)
+        name = entry.get(CONF_NAME)
+        unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
+        factor = entry.get(CONF_ADS_FACTOR)
+        entities.append(
+            AdsSensor(ads_hub, ads_var, ads_type, name, unit_of_measurement, factor)
+        )
 
-    entity = AdsSensor(ads_hub, ads_var, ads_type, name, unit_of_measurement, factor)
-
-    add_entities([entity])
+    add_entities(entities)
 
 
 class AdsSensor(AdsEntity, SensorEntity):
