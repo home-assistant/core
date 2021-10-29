@@ -252,6 +252,8 @@ def _async_get_system_for_service_call(
     device_registry = dr.async_get(hass)
 
     if alarm_control_panel_device_entry := device_registry.async_get(device_id):
+        if TYPE_CHECKING:
+            assert alarm_control_panel_device_entry.via_device_id
         if base_station_device_entry := device_registry.async_get(
             alarm_control_panel_device_entry.via_device_id
         ):
