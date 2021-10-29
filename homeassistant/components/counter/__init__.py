@@ -240,14 +240,15 @@ class Counter(RestoreEntity):
         await super().async_added_to_hass()
         # __init__ will set self._state to self._initial, only override
         # if needed.
-        if self._config[CONF_RESTORE]:
-            state = await self.async_get_last_state()
-            if state is not None:
-                self._state = self.compute_next_state(int(state.state))
-                self._config[CONF_INITIAL] = state.attributes.get(ATTR_INITIAL)
-                self._config[CONF_MAXIMUM] = state.attributes.get(ATTR_MAXIMUM)
-                self._config[CONF_MINIMUM] = state.attributes.get(ATTR_MINIMUM)
-                self._config[CONF_STEP] = state.attributes.get(ATTR_STEP)
+        if (
+            self._config[CONF_RESTORE]
+            and (state := await self.async_get_last_state()) is not None
+        ):
+            self._state = self.compute_next_state(int(state.state))
+            self._config[CONF_INITIAL] = state.attributes.get(ATTR_INITIAL)
+            self._config[CONF_MAXIMUM] = state.attributes.get(ATTR_MAXIMUM)
+            self._config[CONF_MINIMUM] = state.attributes.get(ATTR_MINIMUM)
+            self._config[CONF_STEP] = state.attributes.get(ATTR_STEP)
 
     @callback
     def async_decrement(self) -> None:

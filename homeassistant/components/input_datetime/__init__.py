@@ -270,8 +270,7 @@ class InputDatetime(RestoreEntity):
         default_value = py_datetime.datetime.today().strftime("%Y-%m-%d 00:00:00")
 
         # Priority 2: Old state
-        old_state = await self.async_get_last_state()
-        if old_state is None:
+        if (old_state := await self.async_get_last_state()) is None:
             self._current_datetime = dt_util.parse_datetime(default_value)
             return
 
