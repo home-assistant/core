@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Callable
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
@@ -22,10 +24,11 @@ from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from . import HomeAssistantTuyaData
 from .base import TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode
 
 
 @dataclass
@@ -37,6 +40,9 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     # Value to consider binary sensor to be "on"
     on_value: bool | float | int | str = True
+
+    # Off delay for the binary sensor
+    off_delay: timedelta | None = None
 
 
 # Commonly used sensors
@@ -134,6 +140,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=DPCode.PIR,
             device_class=DEVICE_CLASS_MOTION,
             on_value="pir",
+            off_delay=timedelta(seconds=10),
         ),
         TAMPER_BINARY_SENSOR,
     ),
@@ -281,6 +288,8 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     """Tuya Binary Sensor Entity."""
 
     entity_description: TuyaBinarySensorEntityDescription
+    _attr_is_on = False
+    _off_delay_listener: Callable[[], None] | None = None
 
     def __init__(
         self,
@@ -293,10 +302,58 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if sensor is on."""
-        dpcode = self.entity_description.dpcode or self.entity_description.key
-        if dpcode not in self.device.status:
-            return False
-        return self.device.status[dpcode] == self.entity_description.on_value
+    @callback
+    def async_off_delay_handler(self, _: datetime) -> None:
+        """Switch binary sensor off after a delay."""
+        self._off_delay_listener = None
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
+    @callback
+    def _async_handle_update(self) -> None:
+        """Handle when payload is received for this device."""
+        self._attr_is_on = False
+        if (
+            dpcode := self.entity_description.dpcode or self.entity_description.key
+        ) in self.device.status:
+            self._attr_is_on = (
+                self.device.status[dpcode] == self.entity_description.on_value
+            )
+
+            # In case of an off delay, the device will not report the state again
+            # with a different or off value.
+            if self.entity_description.off_delay:
+                if self._off_delay_listener is not None:
+                    self._off_delay_listener()
+                    self._off_delay_listener = None
+
+                if self._attr_is_on:
+                    self._off_delay_listener = async_call_later(
+                        self.hass,
+                        self.entity_description.off_delay,
+                        self.async_off_delay_handler,
+                    )
+
+        self.async_write_ha_state()
+
+    @callback
+    def _async_removed_from_hass(self) -> None:
+        """Handle when entity is removed from hass."""
+        if self._off_delay_listener is not None:
+            self._off_delay_listener()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        # Only update the state on adding, when this is a binary sensor
+        # that doesn't have a off_delay. The state might not be current.
+        if self.entity_description.off_delay is None:
+            self._async_handle_update()
+
+        self.async_on_remove(self._async_removed_from_hass)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{self.device.id}",
+                self._async_handle_update,
+            )
+        )
