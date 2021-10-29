@@ -87,17 +87,11 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
-    CONF_CHARGING_TIME_KEY: WallboxSensorEntityDescription(
-        key=CONF_CHARGING_TIME_KEY,
-        icon="mdi:timer",
-        name="Charging Time",
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
     CONF_COST_KEY: WallboxSensorEntityDescription(
         key=CONF_COST_KEY,
         icon="mdi:ev-station",
         name="Cost",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     CONF_STATE_OF_CHARGE_KEY: WallboxSensorEntityDescription(
         key=CONF_STATE_OF_CHARGE_KEY,
