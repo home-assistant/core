@@ -1,6 +1,8 @@
 """Light/LED support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
+from typing import Any
+
 from skybellpy.device import SkybellDevice
 
 from homeassistant.components.light import (
@@ -20,12 +22,12 @@ from . import SkybellEntity
 from .const import DATA_COORDINATOR, DATA_DEVICES, DOMAIN
 
 
-def _to_skybell_level(level) -> int:
+def _to_skybell_level(level: int) -> int:
     """Convert the given Home Assistant light level (0-255) to Skybell (0-100)."""
     return int((level * 100) / 255)
 
 
-def _to_hass_level(level) -> int:
+def _to_hass_level(level: int) -> int:
     """Convert the given Skybell (0-100) light level to Home Assistant (0-255)."""
     return int((level * 255) / 100)
 
@@ -66,7 +68,7 @@ class SkybellLight(SkybellEntity, LightEntity):
         self._attr_name = device.name
         self._attr_unique_id = f"{server_unique_id}/{self.name}"
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if ATTR_HS_COLOR in kwargs:
             rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
@@ -76,7 +78,7 @@ class SkybellLight(SkybellEntity, LightEntity):
         else:
             self._device.led_intensity = _to_skybell_level(255)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._device.led_intensity = 0
 

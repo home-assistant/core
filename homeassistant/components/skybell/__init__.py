@@ -1,7 +1,7 @@
 """Support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
-from logging import getLogger
+import logging
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from skybellpy import Skybell
@@ -17,11 +17,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
     CONF_EMAIL,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -29,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -47,13 +43,11 @@ from .const import (
     MIN_TIME_BETWEEN_UPDATES,
 )
 
-_LOGGER = getLogger(__name__)
-
 PLATFORMS = [BINARY_SENSOR, CAMERA, LIGHT, SENSOR, SWITCH]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        # Deprecated in Home Assistant 2021.10
+        # Deprecated in Home Assistant 2021.12
         cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
@@ -120,11 +114,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for device in devices:
                     await hass.async_add_executor_job(device.refresh)
         except (ConnectTimeout, HTTPError) as err:
-            raise UpdateFailed(f"Failed to communicating with device {err}") from err
+            raise UpdateFailed(f"Failed to communicate with device: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
-        _LOGGER,
+        logging.getLogger(__name__),
         name=DEFAULT_NAME,
         update_method=async_update_data,
         update_interval=MIN_TIME_BETWEEN_UPDATES,
@@ -159,16 +153,16 @@ class SkybellEntity(CoordinatorEntity):
         """Initialize a SkyBell entity."""
         super().__init__(coordinator)
         self._device = device
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, device._info_json.get("mac"))},
+            identifiers={
                 (DOMAIN, f"{server_unique_id}-{device._info_json.get('serialNo')}")
             },
-            "connections": {(dr.CONNECTION_NETWORK_MAC, device._info_json.get("mac"))},
-            ATTR_MANUFACTURER: DEFAULT_NAME,
-            ATTR_MODEL: device.type,
-            ATTR_NAME: device.name,
-            ATTR_SW_VERSION: device._info_json.get("firmwareVersion"),
-        }
+            manufacturer=DEFAULT_NAME,
+            model=device.type,
+            name=device.name,
+            sw_version=device._info_json.get("firmwareVersion"),
+        )
 
     @property
     def extra_state_attributes(self) -> dict:

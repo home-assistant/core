@@ -39,18 +39,14 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     ),
 )
 
-# Deprecated in Home Assistant 2021.10
-PLATFORM_SCHEMA = cv.deprecated(
-    vol.All(
-        PLATFORM_SCHEMA.extend(
-            {
-                vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
-                vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-                    cv.ensure_list, [vol.In(BINARY_SENSOR_TYPES)]
-                ),
-            }
-        )
-    )
+# Deprecated in Home Assistant 2021.12
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
+        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
+            cv.ensure_list, [vol.In(BINARY_SENSOR_TYPES)]
+        ),
+    }
 )
 
 

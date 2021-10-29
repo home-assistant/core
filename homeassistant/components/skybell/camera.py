@@ -31,25 +31,21 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-# Deprecated in Home Assistant 2021.10
-PLATFORM_SCHEMA = cv.deprecated(
-    vol.All(
-        PLATFORM_SCHEMA.extend(
-            {
-                vol.Optional(
-                    CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]
-                ): vol.All(cv.ensure_list, [vol.In([IMAGE_AVATAR, IMAGE_ACTIVITY])]),
-                vol.Optional(CONF_ACTIVITY_NAME): cv.string,
-                vol.Optional(CONF_AVATAR_NAME): cv.string,
-            }
-        )
-    )
+# Deprecated in Home Assistant 2021.12
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]): vol.All(
+            cv.ensure_list, [vol.In([IMAGE_AVATAR, IMAGE_ACTIVITY])]
+        ),
+        vol.Optional(CONF_ACTIVITY_NAME): cv.string,
+        vol.Optional(CONF_AVATAR_NAME): cv.string,
+    }
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+) -> None:
     """Set up Skybell switch."""
     skybell = hass.data[DOMAIN][entry.entry_id]
 

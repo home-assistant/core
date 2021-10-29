@@ -1,6 +1,8 @@
 """Switch support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
+from typing import Any
+
 from skybellpy.device import SkybellDevice
 import voluptuous as vol
 
@@ -30,18 +32,14 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     ),
 )
 
-# Deprecated in Home Assistant 2021.10
-PLATFORM_SCHEMA = cv.deprecated(
-    vol.All(
-        PLATFORM_SCHEMA.extend(
-            {
-                vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
-                vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-                    cv.ensure_list, [vol.In(SWITCH_TYPES)]
-                ),
-            }
-        )
-    )
+# Deprecated in Home Assistant 2021.12
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
+        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
+            cv.ensure_list, [vol.In(SWITCH_TYPES)]
+        ),
+    }
 )
 
 
@@ -87,11 +85,11 @@ class SkybellSwitch(SkybellEntity, SwitchEntity):
         self._attr_name = f"{device.name} {description.name}"
         self._attr_unique_id = f"{server_unique_id}/{description.key}"
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         setattr(self._device, self.entity_description.key, True)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         setattr(self._device, self.entity_description.key, False)
 
