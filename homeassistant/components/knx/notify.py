@@ -20,10 +20,10 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> KNXNotificationService | None:
     """Get the KNX notification service."""
-    if not discovery_info or not discovery_info["platform_config"]:
+    if not discovery_info:
         return None
 
-    platform_config = discovery_info["platform_config"]
+    platform_config: dict = discovery_info
     xknx: XKNX = hass.data[DOMAIN].xknx
 
     notification_devices = []

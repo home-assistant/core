@@ -8,6 +8,7 @@ from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 from xknx.telegram.address import parse_device_group_address
 
+from homeassistant import config_entries
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
@@ -26,9 +27,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, DOMAIN, PRESET_MODES
+from .const import (
+    CONTROLLER_MODES,
+    CURRENT_HVAC_ACTIONS,
+    DATA_KNX_CONFIG,
+    DOMAIN,
+    PRESET_MODES,
+    SupportedPlatforms,
+)
 from .knx_entity import KnxEntity
 from .schema import ClimateSchema
 
@@ -37,23 +45,19 @@ CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}
 PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up climate(s) for KNX platform."""
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-
-    platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
+        SupportedPlatforms.CLIMATE.value
+    ]
 
-    _async_migrate_unique_id(hass, platform_config)
-    async_add_entities(
-        KNXClimate(xknx, entity_config) for entity_config in platform_config
-    )
+    _async_migrate_unique_id(hass, config)
+    async_add_entities(KNXClimate(xknx, entity_config) for entity_config in config)
 
 
 @callback
