@@ -47,7 +47,7 @@ def ensure_valid_path(value):
 
 
 PLATFORMS = ["binary_sensor", "sensor"]
-DEFAULT_NAME = "Octoprint"
+DEFAULT_NAME = "OctoPrint"
 CONF_NUMBER_OF_TOOLS = "number_of_tools"
 CONF_BED = "bed"
 
