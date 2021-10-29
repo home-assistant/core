@@ -232,6 +232,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         if self._model == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
 
+        self._attr_max_temp = DEFAULT_MAX_TEMP
         self._attr_unique_id = f"{self._id}-{self._model}"
 
     async def async_added_to_hass(self) -> None:
