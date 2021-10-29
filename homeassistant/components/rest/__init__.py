@@ -7,6 +7,7 @@ import httpx
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.rest.utils import inject_hass_in_templates
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -161,13 +162,8 @@ def create_rest_data_from_config(hass, config):
         resource_template.hass = hass
         resource = resource_template.async_render(parse_result=False)
 
-    if headers is not None:
-        for template_header in headers.values():
-            template_header.hass = hass
-
-    if params is not None:
-        for template_param in params.values():
-            template_param.hass = hass
+    inject_hass_in_templates(hass, headers)
+    inject_hass_in_templates(hass, params)
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
