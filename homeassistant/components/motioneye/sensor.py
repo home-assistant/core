@@ -12,6 +12,7 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import MotionEyeEntity, get_camera_from_cameras, listen_for_new_cameras
@@ -75,8 +76,8 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
         return f"{camera_prepend}Actions"
 
     @property
-    def state(self) -> int:
-        """Return the state of the sensor."""
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
         return len(self._camera.get(KEY_ACTIONS, [])) if self._camera else 0
 
     @property
