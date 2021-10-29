@@ -183,10 +183,11 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
 
         self.entity_description = description
         mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
-        self._metoffice_name = hass_data[METOFFICE_NAME]
-        self._coordinates = hass_data[METOFFICE_COORDINATES]
-        self._attr_name = f"{self._metoffice_name} {description.name} {mode_label}"
-        self._attr_unique_id = f"{description.name}_{self._coordinates}"
+        self._device_info = get_device_info(
+            coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
+        )
+        self._attr_name = f"{hass_data[METOFFICE_NAME]} {description.name} {mode_label}"
+        self._attr_unique_id = f"{description.name}_{hass_data[METOFFICE_COORDINATES]}"
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
 
@@ -261,4 +262,4 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return get_device_info(self._coordinates, self._metoffice_name)
+        return self._device_info

@@ -10,6 +10,8 @@ from homeassistant.util import utcnow
 
 from . import NewDateTime
 from .const import (
+    DEVICE_KEY_KINGSLYNN,
+    DEVICE_KEY_WAVERTREE,
     METOFFICE_CONFIG_KINGSLYNN,
     METOFFICE_CONFIG_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
@@ -130,6 +132,8 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
 
     dev_reg = get_dev_reg(hass)
     assert len(dev_reg.devices) == 1
+    device_wavertree = dev_reg.async_get_device(identifiers=DEVICE_KEY_WAVERTREE)
+    assert device_wavertree.name == "Met Office Wavertree"
 
     # Wavertree 3-hourly weather platform expected results
     weather = hass.states.get("weather.met_office_wavertree_3_hourly")
@@ -222,6 +226,10 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
 
     dev_reg = get_dev_reg(hass)
     assert len(dev_reg.devices) == 2
+    device_kingslynn = dev_reg.async_get_device(identifiers=DEVICE_KEY_KINGSLYNN)
+    assert device_kingslynn.name == "Met Office King's Lynn"
+    device_wavertree = dev_reg.async_get_device(identifiers=DEVICE_KEY_WAVERTREE)
+    assert device_wavertree.name == "Met Office Wavertree"
 
     # Wavertree 3-hourly weather platform expected results
     weather = hass.states.get("weather.met_office_wavertree_3_hourly")

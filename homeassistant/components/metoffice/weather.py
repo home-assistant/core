@@ -78,10 +78,11 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         super().__init__(coordinator)
 
         mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
-        self._metoffice_name = hass_data[METOFFICE_NAME]
-        self._coordinates = hass_data[METOFFICE_COORDINATES]
-        self._name = f"{DEFAULT_NAME} {self._metoffice_name} {mode_label}"
-        self._unique_id = self._coordinates
+        self._device_info = get_device_info(
+            coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
+        )
+        self._name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
+        self._unique_id = hass_data[METOFFICE_COORDINATES]
         if not use_3hourly:
             self._unique_id = f"{self._unique_id}_{MODE_DAILY}"
 
@@ -182,4 +183,4 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return get_device_info(self._coordinates, self._metoffice_name)
+        return self._device_info
