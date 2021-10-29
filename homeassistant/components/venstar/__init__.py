@@ -1,9 +1,11 @@
 """The venstar component."""
 import asyncio
+from datetime import timedelta
 
 from requests import RequestException
 from venstarcolortouch import VenstarColorTouch
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -11,8 +13,9 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
 
@@ -37,11 +40,13 @@ async def async_setup_entry(hass, config):
         proto=protocol,
     )
 
-    try:
-        await hass.async_add_executor_job(client.update_info)
-    except (OSError, RequestException) as ex:
-        raise ConfigEntryNotReady(f"Unable to connect to the thermostat: {ex}") from ex
-    hass.data.setdefault(DOMAIN, {})[config.entry_id] = client
+    venstar_data_coordinator = VenstarDataUpdateCoordinator(
+        hass,
+        venstar_connection=client,
+    )
+    await venstar_data_coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[config.entry_id] = venstar_data_coordinator
     hass.config_entries.async_setup_platforms(config, PLATFORMS)
 
     return True
@@ -55,35 +60,74 @@ async def async_unload_entry(hass, config):
     return unload_ok
 
 
-class VenstarEntity(Entity):
-    """Get the latest data and update."""
+class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
+    """Class to manage fetching Venstar data."""
 
-    def __init__(self, config, client):
-        """Initialize the data object."""
-        self._config = config
-        self._client = client
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        *,
+        venstar_connection: VenstarColorTouch,
+    ) -> None:
+        """Initialize global Venstar data updater."""
+        self.client = venstar_connection
 
-    async def async_update(self):
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=60),
+        )
+
+    async def _async_update_data(self) -> None:
         """Update the state."""
         try:
-            info_success = await self.hass.async_add_executor_job(
-                self._client.update_info
-            )
+            await self.hass.async_add_executor_job(self.client.update_info)
         except (OSError, RequestException) as ex:
-            _LOGGER.error("Exception during info update: %s", ex)
+            raise update_coordinator.UpdateFailed(
+                f"Exception during Venstar info update: {ex}"
+            ) from ex
 
         # older venstars sometimes cannot handle rapid sequential connections
         await asyncio.sleep(3)
 
         try:
-            sensor_success = await self.hass.async_add_executor_job(
-                self._client.update_sensors
-            )
+            await self.hass.async_add_executor_job(self.client.update_sensors)
         except (OSError, RequestException) as ex:
-            _LOGGER.error("Exception during sensor update: %s", ex)
+            raise update_coordinator.UpdateFailed(
+                f"Exception during Venstar sensor update: {ex}"
+            ) from ex
+        return None
 
-        if not info_success or not sensor_success:
-            _LOGGER.error("Failed to update data")
+
+class VenstarEntity(CoordinatorEntity):
+    """Representation of a Venstar entity."""
+
+    def __init__(
+        self,
+        venstar_data_coordinator: VenstarDataUpdateCoordinator,
+        config: ConfigEntry,
+    ) -> None:
+        """Initialize the data object."""
+        super().__init__(venstar_data_coordinator)
+        self._config = config
+        self._update_attr()
+        self.coordinator = venstar_data_coordinator
+
+    @property
+    def _client(self):
+        """Return the venstar client."""
+        return self.coordinator.client
+
+    @callback
+    def _update_attr(self) -> None:
+        """Update the state and attributes."""
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attr()
+        self.async_write_ha_state()
 
     @property
     def name(self):
@@ -102,8 +146,6 @@ class VenstarEntity(Entity):
             "identifiers": {(DOMAIN, self._config.entry_id)},
             "name": self._client.name,
             "manufacturer": "Venstar",
-            # pylint: disable=protected-access
-            "model": f"{self._client.model}-{self._client._type}",
-            # pylint: disable=protected-access
-            "sw_version": self._client._api_ver,
+            "model": f"{self._client.model}-{self._client.get_type()}",
+            "sw_version": self._client.get_api_ver(),
         }

@@ -2369,7 +2369,7 @@ vallox-websocket-api==2.8.1
 velbus-aio==2021.10.7
 
 # homeassistant.components.venstar
-venstarcolortouch==0.14
+venstarcolortouch==0.15
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2

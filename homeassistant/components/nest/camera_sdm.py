@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import datetime
-import io
 import logging
+from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageDraw, ImageFilter
 from google_nest_sdm.camera_traits import (
     CameraEventImageTrait,
     CameraImageTrait,
@@ -37,17 +36,10 @@ from .device_info import NestDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
+PLACEHOLDER = Path(__file__).parent / "placeholder.png"
+
 # Used to schedule an alarm to refresh the stream before expiration
 STREAM_EXPIRATION_BUFFER = datetime.timedelta(seconds=30)
-
-# The Google Home app dispays a placeholder image that appears as a faint
-# light source (dim, blurred sphere) giving the user an indication the camera
-# is available, not just a blank screen. These constants define a blurred
-# ellipse at the top left of the thumbnail.
-PLACEHOLDER_ELLIPSE_BLUR = 0.1
-PLACEHOLDER_ELLIPSE_XY = [-0.4, 0.3, 0.3, 0.4]
-PLACEHOLDER_OVERLAY_COLOR = "#ffffff"
-PLACEHOLDER_ELLIPSE_OPACITY = 255
 
 
 async def async_setup_sdm_entry(
@@ -73,30 +65,6 @@ async def async_setup_sdm_entry(
     async_add_entities(entities)
 
 
-def placeholder_image(width: int | None = None, height: int | None = None) -> Image:
-    """Return a camera image preview for cameras without live thumbnails."""
-    if not width or not height:
-        return Image.new("RGB", (1, 1))
-    # Draw a dark scene with a fake light source
-    blank = Image.new("RGB", (width, height))
-    overlay = Image.new("RGB", blank.size, color=PLACEHOLDER_OVERLAY_COLOR)
-    ellipse = Image.new("L", blank.size, color=0)
-    draw = ImageDraw.Draw(ellipse)
-    draw.ellipse(
-        (
-            width * PLACEHOLDER_ELLIPSE_XY[0],
-            height * PLACEHOLDER_ELLIPSE_XY[1],
-            width * PLACEHOLDER_ELLIPSE_XY[2],
-            height * PLACEHOLDER_ELLIPSE_XY[3],
-        ),
-        fill=PLACEHOLDER_ELLIPSE_OPACITY,
-    )
-    mask = ellipse.filter(
-        ImageFilter.GaussianBlur(radius=width * PLACEHOLDER_ELLIPSE_BLUR)
-    )
-    return Image.composite(overlay, blank, mask)
-
-
 class NestCamera(Camera):
     """Devices that support cameras."""
 
@@ -112,6 +80,7 @@ class NestCamera(Camera):
         self._event_image_bytes: bytes | None = None
         self._event_image_cleanup_unsub: Callable[[], None] | None = None
         self.is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
+        self._placeholder_image: bytes | None = None
 
     @property
     def should_poll(self) -> bool:
@@ -251,10 +220,11 @@ class NestCamera(Camera):
                 return None
             # Nest Web RTC cams only have image previews for events, and not
             # for "now" by design to save batter, and need a placeholder.
-            image = placeholder_image(width=width, height=height)
-            with io.BytesIO() as content:
-                image.save(content, format="JPEG", optimize=True)
-                return content.getvalue()
+            if not self._placeholder_image:
+                self._placeholder_image = await self.hass.async_add_executor_job(
+                    PLACEHOLDER.read_bytes
+                )
+            return self._placeholder_image
         return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
 
     async def _async_active_event_image(self) -> bytes | None:
