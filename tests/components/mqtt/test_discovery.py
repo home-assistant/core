@@ -543,6 +543,37 @@ async def test_discovery_expansion_2(hass, mqtt_mock, caplog):
     assert state.state == STATE_OFF
 
 
+@pytest.mark.no_fail_on_log_exception
+async def test_discovery_expansion_3(hass, mqtt_mock, caplog):
+    """Test expansion of broken discovery payload."""
+    data = (
+        '{ "~": "some/base/topic",'
+        '  "name": "DiscoveryExpansionTest1",'
+        '  "stat_t": "test_topic/~",'
+        '  "cmd_t": "~/test_topic",'
+        '  "availability": "incorrect",'
+        '  "dev":{'
+        '    "ids":["5706DF"],'
+        '    "name":"DiscoveryExpansionTest1 Device",'
+        '    "mdl":"Generic",'
+        '    "sw":"1.2.3.4",'
+        '    "mf":"None",'
+        '    "sa":"default_area"'
+        "  }"
+        "}"
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.DiscoveryExpansionTest1") is None
+    # Make sure the malformed availability data does not trip up discovery by asserting
+    # there are schema valdiation errors in the log
+    assert (
+        "voluptuous.error.MultipleInvalid: expected a dictionary @ data['availability'][0]"
+        in caplog.text
+    )
+
+
 ABBREVIATIONS_WHITE_LIST = [
     # MQTT client/server/trigger settings
     "CONF_BIRTH_MESSAGE",
