@@ -222,12 +222,12 @@ async def test_get_still_image_from_camera(
     server = await aiohttp_server(app)
     client = create_mock_motioneye_client()
     client.get_camera_snapshot_url = Mock(
-        return_value=f"http://localhost:{server.port}/foo"
+        return_value=f"http://127.0.0.1:{server.port}/foo"
     )
     config_entry = create_mock_motioneye_config_entry(
         hass,
         data={
-            CONF_URL: f"http://localhost:{server.port}",
+            CONF_URL: f"http://127.0.0.1:{server.port}",
             CONF_SURVEILLANCE_USERNAME: TEST_SURVEILLANCE_USERNAME,
         },
     )
