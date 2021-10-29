@@ -5,7 +5,8 @@ from types import MappingProxyType
 from typing import Any
 
 import aiohttp
-from motioneye_client.client import MotionEyeClient
+from jinja2 import Template
+from motioneye_client.client import MotionEyeClient, MotionEyeClientURLParseError
 from motioneye_client.const import (
     DEFAULT_SURVEILLANCE_USERNAME,
     KEY_MOTION_DETECTION,
@@ -41,6 +42,7 @@ from . import (
 from .const import (
     CONF_CLIENT,
     CONF_COORDINATOR,
+    CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     DOMAIN,
@@ -129,11 +131,24 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         ):
             auth = camera[KEY_STREAMING_AUTH_MODE]
 
+        streaming_template = self._options.get(CONF_STREAM_URL_TEMPLATE, "").strip()
+        streaming_url = None
+
+        if streaming_template:
+            # Note: Can't use homeassistant.helpers.template as it requires hass
+            # which is not available during entity construction.
+            streaming_url = Template(streaming_template).render(**camera)
+        else:
+            try:
+                streaming_url = self._client.get_camera_stream_url(camera)
+            except MotionEyeClientURLParseError:
+                pass
+
         return {
             CONF_NAME: camera[KEY_NAME],
             CONF_USERNAME: self._surveillance_username if auth is not None else None,
             CONF_PASSWORD: self._surveillance_password if auth is not None else None,
-            CONF_MJPEG_URL: self._client.get_camera_stream_url(camera) or "",
+            CONF_MJPEG_URL: streaming_url or "",
             CONF_STILL_IMAGE_URL: self._client.get_camera_snapshot_url(camera),
             CONF_AUTHENTICATION: auth,
         }
