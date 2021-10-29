@@ -6,14 +6,13 @@ import logging
 import requests
 from wallbox import Wallbox
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_CONNECTIONS,
     CONF_DATA_KEY,
     CONF_MAX_CHARGING_CURRENT_KEY,
     CONF_ROUND,
@@ -125,37 +124,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await wallbox_coordinator.async_validate_input()
 
-    except InvalidAuth:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-                data=entry.data,
-            )
-        )
-        return False
+    except InvalidAuth as ex:
+        raise ConfigEntryAuthFailed from ex
 
-    else:
+    await wallbox_coordinator.async_config_entry_first_refresh()
 
-        await wallbox_coordinator.async_config_entry_first_refresh()
+    hass.data.setdefault(DOMAIN, {entry.entry_id: {}})
+    hass.data[DOMAIN][entry.entry_id] = wallbox_coordinator
 
-        hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}})
-        hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallbox_coordinator
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-        for platform in PLATFORMS:
-
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
-
-        return True
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][CONF_CONNECTIONS].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

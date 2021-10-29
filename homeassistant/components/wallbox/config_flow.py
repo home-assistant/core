@@ -74,16 +74,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
             if not self._reauth_entry:
                 self._abort_if_unique_id_configured()
                 info = await validate_input(self.hass, user_input)
-
-            if not self._reauth_entry:
                 return self.async_create_entry(title=info["title"], data=user_input)
-            self.hass.config_entries.async_update_entry(
-                self._reauth_entry, data=user_input, unique_id=user_input["station"]
-            )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-            )
-            return self.async_abort(reason="reauth_successful")
+            if user_input["station"] == self._reauth_entry.data[CONF_STATION]:
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry, data=user_input, unique_id=user_input["station"]
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                )
+                return self.async_abort(reason="reauth_successful")
+            self.async_abort(reason="reauth_invalid")
         except ConnectionError:
             errors["base"] = "cannot_connect"
         except InvalidAuth:

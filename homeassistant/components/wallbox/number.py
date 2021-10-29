@@ -6,7 +6,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import InvalidAuth
 from .const import (
-    CONF_CONNECTIONS,
     CONF_MAX_AVAILABLE_POWER_KEY,
     CONF_MAX_CHARGING_CURRENT_KEY,
     CONF_NAME,
@@ -17,7 +16,7 @@ from .const import (
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Create wallbox sensor entities in HASS."""
-    coordinator = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
+    coordinator = hass.data[DOMAIN][config.entry_id]
     # Check if the user is authorized to change current, if so, add number component:
     try:
         await coordinator.async_set_charging_current(

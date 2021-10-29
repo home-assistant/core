@@ -5,7 +5,6 @@ from homeassistant.const import CONF_DEVICE_CLASS
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    CONF_CONNECTIONS,
     CONF_ICON,
     CONF_NAME,
     CONF_SENSOR_TYPES,
@@ -19,7 +18,7 @@ UPDATE_INTERVAL = 30
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Create wallbox sensor entities in HASS."""
-    coordinator = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
+    coordinator = hass.data[DOMAIN][config.entry_id]
 
     async_add_entities(
         WallboxSensor(coordinator, idx, ent, config)
