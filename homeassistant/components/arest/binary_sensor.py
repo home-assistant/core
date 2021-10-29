@@ -1,5 +1,6 @@
 """Support for an exposed aREST RESTful API of a device."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
@@ -10,13 +11,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_NAME,
-    CONF_PIN,
-    CONF_RESOURCE,
-    HTTP_OK,
-)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_PIN, CONF_RESOURCE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -78,7 +73,7 @@ class ArestBinarySensor(BinarySensorEntity):
 
         if pin is not None:
             request = requests.get(f"{resource}/mode/{pin}/i", timeout=10)
-            if request.status_code != HTTP_OK:
+            if request.status_code != HTTPStatus.OK:
                 _LOGGER.error("Can't set mode of %s", resource)
 
     def update(self):

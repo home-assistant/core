@@ -97,6 +97,28 @@ async def test_sensor(hass):
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-bme280_pressure"
 
+    state = hass.states.get("sensor.nettigo_air_monitor_bmp180_temperature")
+    assert state
+    assert state.state == "7.6"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+
+    entry = registry.async_get("sensor.nettigo_air_monitor_bmp180_temperature")
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-bmp180_temperature"
+
+    state = hass.states.get("sensor.nettigo_air_monitor_bmp180_pressure")
+    assert state
+    assert state.state == "1032"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PRESSURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_HPA
+
+    entry = registry.async_get("sensor.nettigo_air_monitor_bmp180_pressure")
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-bmp180_pressure"
+
     state = hass.states.get("sensor.nettigo_air_monitor_bmp280_temperature")
     assert state
     assert state.state == "5.6"

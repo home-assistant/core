@@ -20,6 +20,7 @@ from homeassistant.const import (
     PRESSURE_INHG,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util.distance import convert as convert_distance
@@ -182,10 +183,10 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
     @property
     def device_info(self):
         """Device info."""
-        return {
-            "identifiers": {(DOMAIN,)},
-            "manufacturer": "Met Éireann",
-            "model": "Forecast",
-            "default_name": "Forecast",
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            default_name="Forecast",
+            entry_type="service",
+            identifiers={(DOMAIN,)},
+            manufacturer="Met Éireann",
+            model="Forecast",
+        )

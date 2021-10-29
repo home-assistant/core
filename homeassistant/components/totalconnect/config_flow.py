@@ -1,5 +1,5 @@
 """Config flow for the Total Connect component."""
-from total_connect_client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -37,7 +37,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             client = await self.hass.async_add_executor_job(
-                TotalConnectClient.TotalConnectClient, username, password, None
+                TotalConnectClient, username, password, None
             )
 
             if client.is_valid_credentials():
@@ -130,7 +130,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         client = await self.hass.async_add_executor_job(
-            TotalConnectClient.TotalConnectClient,
+            TotalConnectClient,
             self.username,
             user_input[CONF_PASSWORD],
             self.usercodes,

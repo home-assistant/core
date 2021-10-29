@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_api_key": "\u7121\u52b9\u306aAPI\u30ad\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d4c\u5ea6"
+                }
+            }
+        }
+    }
+}

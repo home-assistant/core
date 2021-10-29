@@ -15,12 +15,12 @@
                 "title": "Nem siker\u00fclt import\u00e1lni a Cas\u00e9ta h\u00edd konfigur\u00e1ci\u00f3j\u00e1t."
             },
             "link": {
-                "description": "A(z) {name} {host} p\u00e1ros\u00edt\u00e1s\u00e1hoz az \u0171rlap elk\u00fcld\u00e9se ut\u00e1n nyomja meg a h\u00edd h\u00e1tulj\u00e1n tal\u00e1lhat\u00f3 fekete gombot.",
-                "title": "P\u00e1ros\u00edtsd a h\u00edddal"
+                "description": "{name} ({host}) p\u00e1ros\u00edt\u00e1s\u00e1hoz az \u0171rlap elk\u00fcld\u00e9se ut\u00e1n nyomja meg a bridge h\u00e1tulj\u00e1n tal\u00e1lhat\u00f3 fekete gombot.",
+                "title": "P\u00e1ros\u00edt\u00e1s a h\u00edddal"
             },
             "user": {
                 "data": {
-                    "host": "Hoszt"
+                    "host": "C\u00edm"
                 },
                 "description": "Add meg az eszk\u00f6z IP-c\u00edm\u00e9t.",
                 "title": "Automatikus csatlakoz\u00e1s a h\u00eddhoz"

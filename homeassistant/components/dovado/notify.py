@@ -22,9 +22,7 @@ class DovadoSMSNotificationService(BaseNotificationService):
 
     def send_message(self, message, **kwargs):
         """Send SMS to the specified target phone number."""
-        target = kwargs.get(ATTR_TARGET)
-
-        if not target:
+        if not (target := kwargs.get(ATTR_TARGET)):
             _LOGGER.error("One target is required")
             return
 

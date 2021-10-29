@@ -128,6 +128,13 @@ class SolarEdgeSensorEntity(CoordinatorEntity, SensorEntity):
 
         self._attr_name = f"{platform_name} ({description.name})"
 
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        if not self.data_service.site_id:
+            return None
+        return f"{self.data_service.site_id}_{self.entity_description.key}"
+
 
 class SolarEdgeOverviewSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API overview sensor."""
@@ -150,6 +157,13 @@ class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        if not self.data_service.site_id:
+            return None
+        return f"{self.data_service.site_id}"
 
 
 class SolarEdgeInventorySensor(SolarEdgeSensorEntity):

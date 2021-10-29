@@ -219,7 +219,7 @@ class Fan(HomeAccessory):
             # the rotation speed is mapped to 1 otherwise the update is ignored
             # in order to avoid this incorrect behavior.
             if percentage == 0 and state == STATE_ON:
-                percentage = 1
+                percentage = max(1, self.char_speed.properties[PROP_MIN_STEP])
             if percentage is not None:
                 self.char_speed.set_value(percentage)
 

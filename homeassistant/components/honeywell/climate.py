@@ -57,6 +57,8 @@ ATTR_FAN_ACTION = "fan_action"
 
 ATTR_PERMANENT_HOLD = "permanent_hold"
 
+PRESET_HOLD = "Hold"
+
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_REGION),
     PLATFORM_SCHEMA.extend(
@@ -161,7 +163,7 @@ class HoneywellUSThermostat(ClimateEntity):
         self._attr_temperature_unit = (
             TEMP_CELSIUS if device.temperature_unit == "C" else TEMP_FAHRENHEIT
         )
-        self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY]
+        self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_HOLD]
         self._attr_is_aux_heat = device.system_mode == "emheat"
 
         # not all honeywell HVACs support all modes
@@ -268,7 +270,12 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        return PRESET_AWAY if self._away else None
+        if self._away:
+            return PRESET_AWAY
+        if self._is_permanent_hold():
+            return PRESET_HOLD
+
+        return None
 
     @property
     def fan_mode(self) -> str | None:
@@ -282,8 +289,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     def _set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         try:
             # Get current mode
@@ -310,11 +316,9 @@ class HoneywellUSThermostat(ClimateEntity):
 
         try:
             if HVAC_MODE_HEAT_COOL in self._hvac_mode_map:
-                temperature = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-                if temperature:
+                if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
                     self._device.setpoint_cool = temperature
-                temperature = kwargs.get(ATTR_TARGET_TEMP_LOW)
-                if temperature:
+                if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                     self._device.setpoint_heat = temperature
         except somecomfort.SomeComfortError as err:
             _LOGGER.error("Invalid temperature %s: %s", temperature, err)
@@ -356,8 +360,26 @@ class HoneywellUSThermostat(ClimateEntity):
                 "Temperature %.1f out of range", getattr(self, f"_{mode}_away_temp")
             )
 
+    def _turn_hold_mode_on(self) -> None:
+        """Turn permanent hold on."""
+        try:
+            # Get current mode
+            mode = self._device.system_mode
+        except somecomfort.SomeComfortError:
+            _LOGGER.error("Can not get system mode")
+            return
+        # Check that we got a valid mode back
+        if mode in HW_MODE_TO_HVAC_MODE:
+            try:
+                # Set permanent hold
+                setattr(self._device, f"hold_{mode}", True)
+            except somecomfort.SomeComfortError:
+                _LOGGER.error("Couldn't set permanent hold")
+        else:
+            _LOGGER.error("Invalid system mode returned: %s", mode)
+
     def _turn_away_mode_off(self) -> None:
-        """Turn away off."""
+        """Turn away/hold off."""
         self._away = False
         try:
             # Disabling all hold modes
@@ -370,6 +392,9 @@ class HoneywellUSThermostat(ClimateEntity):
         """Set new preset mode."""
         if preset_mode == PRESET_AWAY:
             self._turn_away_mode_on()
+        elif preset_mode == PRESET_HOLD:
+            self._away = False
+            self._turn_hold_mode_on()
         else:
             self._turn_away_mode_off()
 

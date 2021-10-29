@@ -72,7 +72,7 @@ async def async_unload_entry(
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     # Remove zone2 and zone3 entities if needed
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     unique_id = config_entry.unique_id or config_entry.entry_id
     zone2_id = f"{unique_id}-Zone2"

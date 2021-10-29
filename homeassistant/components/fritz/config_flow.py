@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import socket
 from typing import Any
 from urllib.parse import ParseResult, urlparse
 
@@ -85,8 +86,16 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_check_configured_entry(self) -> ConfigEntry | None:
         """Check if entry is configured."""
+
+        current_host = await self.hass.async_add_executor_job(
+            socket.gethostbyname, self._host
+        )
+
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] == self._host:
+            entry_host = await self.hass.async_add_executor_job(
+                socket.gethostbyname, entry.data[CONF_HOST]
+            )
+            if entry_host == current_host:
                 return entry
         return None
 

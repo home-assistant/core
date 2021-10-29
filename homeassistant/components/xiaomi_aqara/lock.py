@@ -22,8 +22,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for device in gateway.devices["lock"]:
-        model = device["model"]
-        if model == "lock.aq1":
+        if device["model"] == "lock.aq1":
             entities.append(XiaomiAqaraLock(device, "Lock", gateway, config_entry))
     async_add_entities(entities)
 
@@ -63,14 +62,12 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
-        value = data.get(VERIFIED_WRONG_KEY)
-        if value is not None:
+        if (value := data.get(VERIFIED_WRONG_KEY)) is not None:
             self._verified_wrong_times = int(value)
             return True
 
         for key in (FINGER_KEY, PASSWORD_KEY, CARD_KEY):
-            value = data.get(key)
-            if value is not None:
+            if (value := data.get(key)) is not None:
                 self._changed_by = int(value)
                 self._verified_wrong_times = 0
                 self._state = STATE_UNLOCKED

@@ -33,7 +33,8 @@
             "button": "przycisk",
             "button1": "pierwszy",
             "button2": "drugi",
-            "button3": "trzeci"
+            "button3": "trzeci",
+            "button4": "Czwarty przycisk"
         },
         "trigger_type": {
             "double": "przycisk \"{subtype}\" zostanie dwukrotnie naci\u015bni\u0119ty",
