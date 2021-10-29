@@ -16,7 +16,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_USER, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -148,7 +148,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_zone()
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id=STEP_ID_USER, data_schema=DATA_SCHEMA, errors=errors
         )
 
     async def async_step_zone(self, user_input: dict | None = None):

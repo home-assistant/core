@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER, FlowResult
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -93,7 +93,7 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(data_schema),
             errors=errors or {},
         )
@@ -126,4 +126,6 @@ class CanaryOptionsFlowHandler(OptionsFlow):
             ): int,
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id=STEP_ID_INIT, data_schema=vol.Schema(options)
+        )

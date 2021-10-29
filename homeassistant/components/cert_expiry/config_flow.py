@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from .const import DEFAULT_PORT, DOMAIN
 from .errors import (
@@ -73,7 +74,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_PORT] = DEFAULT_PORT
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,

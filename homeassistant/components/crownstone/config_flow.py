@@ -17,7 +17,12 @@ from homeassistant.components import usb
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowHandler, FlowResult
+from homeassistant.data_entry_flow import (
+    STEP_ID_INIT,
+    STEP_ID_USER,
+    FlowHandler,
+    FlowResult,
+)
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
@@ -151,7 +156,7 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
         errors: dict[str, str] = {}
         if user_input is None:
             return self.async_show_form(
-                step_id="user",
+                step_id=STEP_ID_USER,
                 data_schema=vol.Schema(
                     {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
                 ),
@@ -176,7 +181,7 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
         # show form again, with the errors
         if errors:
             return self.async_show_form(
-                step_id="user",
+                step_id=STEP_ID_USER,
                 data_schema=vol.Schema(
                     {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
                 ),
@@ -248,7 +253,7 @@ class CrownstoneOptionsFlowHandler(BaseCrownstoneFlowHandler, OptionsFlow):
 
             return self.async_create_new_entry()
 
-        return self.async_show_form(step_id="init", data_schema=options_schema)
+        return self.async_show_form(step_id=STEP_ID_INIT, data_schema=options_schema)
 
     def async_create_new_entry(self) -> FlowResult:
         """Create a new entry."""

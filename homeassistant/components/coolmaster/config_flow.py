@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.data_entry_flow import STEP_ID_USER
 
 from .const import AVAILABLE_MODES, CONF_SUPPORTED_MODES, DEFAULT_PORT, DOMAIN
 
@@ -41,7 +42,7 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+            return self.async_show_form(step_id=STEP_ID_USER, data_schema=DATA_SCHEMA)
 
         errors = {}
 
@@ -56,7 +57,7 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if errors:
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors=errors
+                step_id=STEP_ID_USER, data_schema=DATA_SCHEMA, errors=errors
             )
 
         return self._async_get_entry(user_input)

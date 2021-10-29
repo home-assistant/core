@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_USER, FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from . import APIRatelimitExceeded, CO2Error, InvalidAuth, UnknownError, get_data
@@ -103,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return self.async_show_form(
-                step_id="user",
+                step_id=STEP_ID_USER,
                 data_schema=data_schema,
             )
 

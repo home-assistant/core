@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -101,7 +101,7 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
         }
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(options_schema)
+            step_id=STEP_ID_INIT, data_schema=vol.Schema(options_schema)
         )
 
 
@@ -155,7 +155,7 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="user",
+            step_id=STEP_ID_USER,
             data_schema=_get_config_schema(self.hass, user_input),
             errors=errors,
         )
