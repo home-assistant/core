@@ -101,7 +101,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def device_info(coordinates, name) -> DeviceInfo:
+def get_device_info(coordinates: str, name: str) -> DeviceInfo:
     """Return device registry information."""
     return DeviceInfo(
         entry_type="service",

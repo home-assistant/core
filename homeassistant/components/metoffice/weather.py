@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import device_info
+from . import get_device_info
 from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
@@ -182,4 +182,4 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return device_info(self._coordinates, self._metoffice_name)
+        return get_device_info(self._coordinates, self._metoffice_name)
