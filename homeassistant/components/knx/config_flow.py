@@ -38,6 +38,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        self._tunnels = []
         return await self.async_step_type()
 
     async def async_step_type(self, user_input: dict | None = None) -> FlowResult:
@@ -218,7 +219,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if CONF_KNX_TUNNELING in config:
             return self.async_create_entry(
-                title=config[CONF_HOST],
+                title=config[CONF_KNX_TUNNELING][CONF_HOST],
                 data={
                     CONF_HOST: config[CONF_KNX_TUNNELING][CONF_HOST],
                     CONF_PORT: config[CONF_KNX_TUNNELING][CONF_PORT],
@@ -229,6 +230,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
                 },
             )
+
         if CONF_KNX_ROUTING in config:
             return self.async_create_entry(
                 title=CONF_KNX_ROUTING,
