@@ -106,16 +106,16 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (
                     DOMAIN,
                     f"{self._api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
                 )
             },
-            "name": "Surveillance Station",
-            "manufacturer": "Synology",
-            "model": self._api.information.model,
-            "sw_version": self._version,
-            "via_device": (DOMAIN, self._api.information.serial),
-        }
+            name="Surveillance Station",
+            manufacturer="Synology",
+            model=self._api.information.model,
+            sw_version=self._version,
+            via_device=(DOMAIN, self._api.information.serial),
+        )

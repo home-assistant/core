@@ -29,6 +29,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ConsoleData, XboxUpdateCoordinator
@@ -127,8 +128,7 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        app_details = self.data.app_details
-        if not app_details:
+        if not (app_details := self.data.app_details):
             return None
         return (
             app_details.localized_properties[0].product_title
@@ -138,8 +138,7 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        app_details = self.data.app_details
-        if not app_details:
+        if not (app_details := self.data.app_details):
             return None
         image = _find_media_image(app_details.localized_properties[0].images)
 
@@ -215,21 +214,20 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             await self.client.smartglass.launch_app(self._console.id, media_id)
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         # Turns "XboxOneX" into "Xbox One X" for display
         matches = re.finditer(
             ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)",
             self._console.console_type,
         )
-        model = " ".join([m.group(0) for m in matches])
 
-        return {
-            "identifiers": {(DOMAIN, self._console.id)},
-            "name": self._console.name,
-            "manufacturer": "Microsoft",
-            "model": model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._console.id)},
+            manufacturer="Microsoft",
+            model=" ".join([m.group(0) for m in matches]),
+            name=self._console.name,
+        )
 
 
 def _find_media_image(images: list[Image]) -> Image | None:

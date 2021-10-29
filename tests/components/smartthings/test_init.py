@@ -58,7 +58,7 @@ async def test_unrecoverable_api_errors_create_new_flow(
     config_entry.add_to_hass(hass)
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=401
+        request_info=request_info, history=None, status=HTTPStatus.UNAUTHORIZED
     )
 
     # Assert setup returns false

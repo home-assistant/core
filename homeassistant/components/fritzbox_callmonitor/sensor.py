@@ -19,6 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTR_PREFIXES,
@@ -175,15 +176,15 @@ class FritzBoxCallSensor(SensorEntity):
         return self._attributes
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "name": self._fritzbox_phonebook.fph.modelname,
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "manufacturer": MANUFACTURER,
-            "model": self._fritzbox_phonebook.fph.modelname,
-            "sw_version": self._fritzbox_phonebook.fph.fc.system_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer=MANUFACTURER,
+            model=self._fritzbox_phonebook.fph.modelname,
+            name=self._fritzbox_phonebook.fph.modelname,
+            sw_version=self._fritzbox_phonebook.fph.fc.system_version,
+        )
 
     @property
     def unique_id(self):

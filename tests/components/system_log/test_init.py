@@ -1,5 +1,6 @@
 """Test system log component."""
 import asyncio
+from http import HTTPStatus
 import logging
 import queue
 from unittest.mock import MagicMock, patch
@@ -40,7 +41,7 @@ async def get_error_log(hass, hass_client, expected_count):
 
     client = await hass_client()
     resp = await client.get("/api/error/all")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     data = await resp.json()
 

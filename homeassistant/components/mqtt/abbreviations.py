@@ -245,6 +245,7 @@ ABBREVIATIONS = {
 
 DEVICE_ABBREVIATIONS = {
     "cns": "connections",
+    "cu": "configuration_url",
     "ids": "identifiers",
     "name": "name",
     "mf": "manufacturer",

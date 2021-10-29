@@ -118,6 +118,7 @@ restore_full:
   fields:
     slug:
       name: Slug
+      required: true
       description: Slug of backup to restore from.
       selector:
         text:
@@ -132,6 +133,12 @@ restore_partial:
   name: Restore from partial backup.
   description: Restore from partial backup.
   fields:
+    slug:
+      name: Slug
+      required: true
+      description: Slug of backup to restore from.
+      selector:
+        text:
     homeassistant:
       name: Home Assistant settings
       description: Restore Home Assistant
@@ -149,3 +156,9 @@ restore_partial:
       example: ["core_ssh", "core_samba", "core_mosquitto"]
       selector:
         object:
+    password:
+      name: Password
+      description: Optional password.
+      example: "password"
+      selector:
+        text:

@@ -156,6 +156,8 @@ PLATFORM_SCHEMA_LEGACY = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
+DISCOVERY_SCHEMA_LEGACY = PLATFORM_SCHEMA_LEGACY.extend({}, extra=vol.REMOVE_EXTRA)
+
 
 async def async_setup_entity_legacy(
     hass, config, async_add_entities, config_entry, discovery_data
@@ -185,7 +187,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_LEGACY
+        return DISCOVERY_SCHEMA_LEGACY
 
     def _setup_from_config(self, config):
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
@@ -378,7 +380,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_TURN_ON == 0:
             return
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._payloads[CONF_PAYLOAD_TURN_ON],
@@ -393,7 +395,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_TURN_OFF == 0:
             return None
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._payloads[CONF_PAYLOAD_TURN_OFF],
@@ -408,7 +410,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_STOP == 0:
             return None
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._payloads[CONF_PAYLOAD_STOP],
@@ -423,7 +425,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
             return None
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._payloads[CONF_PAYLOAD_CLEAN_SPOT],
@@ -438,7 +440,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_LOCATE == 0:
             return None
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._payloads[CONF_PAYLOAD_LOCATE],
@@ -453,7 +455,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_PAUSE == 0:
             return None
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._payloads[CONF_PAYLOAD_START_PAUSE],
@@ -468,7 +470,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         if self.supported_features & SUPPORT_RETURN_HOME == 0:
             return None
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._command_topic,
             self._payloads[CONF_PAYLOAD_RETURN_TO_BASE],
@@ -485,7 +487,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         ) or fan_speed not in self._fan_speed_list:
             return None
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass, self._set_fan_speed_topic, fan_speed, self._qos, self._retain
         )
         self._status = f"Setting fan to {fan_speed}..."
@@ -501,7 +503,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             message = json.dumps(message)
         else:
             message = command
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass, self._send_command_topic, message, self._qos, self._retain
         )
         self._status = f"Sending command {message}..."

@@ -35,11 +35,11 @@ class SmartTubEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self.spa.id)},
-            "manufacturer": self.spa.brand,
-            "model": self.spa.model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.spa.id)},
+            manufacturer=self.spa.brand,
+            model=self.spa.model,
+        )
 
     @property
     def name(self) -> str:

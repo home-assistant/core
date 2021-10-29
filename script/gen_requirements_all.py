@@ -106,6 +106,10 @@ regex==2021.8.28
 # anyio has a bug that was fixed in 3.3.1
 # can remove after httpx/httpcore updates its anyio version pin
 anyio>=3.3.1
+
+# websockets 10.0 is broken with AWS
+# https://github.com/aaugustin/websockets/issues/1065
+websockets==9.1
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

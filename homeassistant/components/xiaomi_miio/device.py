@@ -7,12 +7,12 @@ import logging
 from construct.core import ChecksumError
 from miio import Device, DeviceException
 
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MAC, CONF_MODEL, DOMAIN
+from .const import CONF_MAC, CONF_MODEL, DOMAIN, AuthException, SetupException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,14 +48,11 @@ class ConnectXiaomiDevice:
             )
         except DeviceException as error:
             if isinstance(error.__cause__, ChecksumError):
-                raise ConfigEntryAuthFailed(error) from error
+                raise AuthException(error) from error
 
-            _LOGGER.error(
-                "DeviceException during setup of xiaomi device with host %s: %s",
-                host,
-                error,
-            )
-            return False
+            raise SetupException(
+                f"DeviceException during setup of xiaomi device with host {host}"
+            ) from error
 
         _LOGGER.debug(
             "%s %s %s detected",
@@ -63,7 +60,6 @@ class ConnectXiaomiDevice:
             self._device_info.firmware_version,
             self._device_info.hardware_version,
         )
-        return True
 
 
 class XiaomiMiioEntity(Entity):
@@ -90,17 +86,17 @@ class XiaomiMiioEntity(Entity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "manufacturer": "Xiaomi",
-            "name": self._name,
-            "model": self._model,
-        }
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer="Xiaomi",
+            model=self._model,
+            name=self._name,
+        )
 
         if self._mac is not None:
-            device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
+            device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
 
         return device_info
 
@@ -130,17 +126,17 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "manufacturer": "Xiaomi",
-            "name": self._device_name,
-            "model": self._model,
-        }
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer="Xiaomi",
+            model=self._model,
+            name=self._device_name,
+        )
 
         if self._mac is not None:
-            device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
+            device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
 
         return device_info
 

@@ -560,7 +560,7 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
 
         # Copy last hourly statistic to the newly created 5-minute statistics table
         sum_statistics = get_metadata_with_session(
-            instance.hass, session, None, statistic_type="sum"
+            instance.hass, session, statistic_type="sum"
         )
         for metadata_id, _ in sum_statistics.values():
             last_statistic = (
@@ -579,6 +579,10 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
                         sum=last_statistic.sum,
                     )
                 )
+    elif new_version == 23:
+        # Add name column to StatisticsMeta
+        _add_columns(session, "statistics_meta", ["name VARCHAR(255)"])
+
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

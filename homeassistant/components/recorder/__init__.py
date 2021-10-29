@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 import concurrent.futures
 from datetime import datetime, timedelta
 import logging
@@ -249,6 +249,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     exclude = conf[CONF_EXCLUDE]
     exclude_t = exclude.get(CONF_EVENT_TYPES, [])
+    if EVENT_STATE_CHANGED in exclude_t:
+        _LOGGER.warning(
+            "State change events are excluded, recorder will not record state changes."
+            "This will become an error in Home Assistant Core 2022.2"
+        )
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
@@ -361,6 +366,13 @@ class StatisticsTask(NamedTuple):
     start: datetime
 
 
+class ExternalStatisticsTask(NamedTuple):
+    """An object to insert into the recorder queue to run an external statistics task."""
+
+    metadata: dict
+    statistics: Iterable[dict]
+
+
 class WaitTask:
     """An object to insert into the recorder queue to tell it set the _queue_watch event."""
 
@@ -463,9 +475,7 @@ class Recorder(threading.Thread):
         if event.event_type in self.exclude_t:
             return False
 
-        entity_id = event.data.get(ATTR_ENTITY_ID)
-
-        if entity_id is None:
+        if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
             return True
 
         if isinstance(entity_id, str):
@@ -496,8 +506,7 @@ class Recorder(threading.Thread):
 
     def do_adhoc_statistics(self, **kwargs):
         """Trigger an adhoc statistics run."""
-        start = kwargs.get("start")
-        if not start:
+        if not (start := kwargs.get("start")):
             start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 
@@ -594,6 +603,11 @@ class Recorder(threading.Thread):
     def async_update_statistics_metadata(self, statistic_id, unit_of_measurement):
         """Update statistics metadata for a statistic_id."""
         self.queue.put(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
+
+    @callback
+    def async_external_statistics(self, metadata, stats):
+        """Schedule external statistics."""
+        self.queue.put(ExternalStatisticsTask(metadata, stats))
 
     @callback
     def _async_setup_periodic_tasks(self):
@@ -774,6 +788,13 @@ class Recorder(threading.Thread):
         # Schedule a new statistics task if this one didn't finish
         self.queue.put(StatisticsTask(start))
 
+    def _run_external_statistics(self, metadata, stats):
+        """Run statistics task."""
+        if statistics.add_external_statistics(self, metadata, stats):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        self.queue.put(StatisticsTask(metadata, stats))
+
     def _process_one_event(self, event):
         """Process one event."""
         if isinstance(event, PurgeTask):
@@ -795,6 +816,9 @@ class Recorder(threading.Thread):
             statistics.update_statistics_metadata(
                 self, event.statistic_id, event.unit_of_measurement
             )
+            return
+        if isinstance(event, ExternalStatisticsTask):
+            self._run_external_statistics(event.metadata, event.statistics)
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()

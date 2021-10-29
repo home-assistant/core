@@ -66,9 +66,7 @@ class DefaultAgent(AbstractConversationAgent):
         intents = self.hass.data.setdefault(DOMAIN, {})
 
         for intent_type, utterances in config.get("intents", {}).items():
-            conf = intents.get(intent_type)
-
-            if conf is None:
+            if (conf := intents.get(intent_type)) is None:
                 conf = intents[intent_type] = []
 
             conf.extend(create_matcher(utterance) for utterance in utterances)

@@ -551,7 +551,10 @@ async def test_webhook_problem_shows_error(hass, smartthings_mock):
     data = {"error": {}}
     request_info = Mock(real_url="http://example.com")
     error = APIResponseError(
-        request_info=request_info, history=None, data=data, status=422
+        request_info=request_info,
+        history=None,
+        data=data,
+        status=HTTPStatus.UNPROCESSABLE_ENTITY,
     )
     error.is_target_error = Mock(return_value=True)
     smartthings_mock.apps.side_effect = error
@@ -591,7 +594,10 @@ async def test_api_error_shows_error(hass, smartthings_mock):
     data = {"error": {}}
     request_info = Mock(real_url="http://example.com")
     error = APIResponseError(
-        request_info=request_info, history=None, data=data, status=400
+        request_info=request_info,
+        history=None,
+        data=data,
+        status=HTTPStatus.BAD_REQUEST,
     )
     smartthings_mock.apps.side_effect = error
 

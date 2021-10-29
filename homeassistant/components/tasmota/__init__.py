@@ -5,6 +5,7 @@ import asyncio
 import logging
 
 from hatasmota.const import (
+    CONF_IP,
     CONF_MAC,
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -48,13 +49,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     websocket_api.async_register_command(hass, websocket_remove_device)
     hass.data[DATA_UNSUB] = []
 
-    def _publish(
+    async def _publish(
         topic: str,
         payload: mqtt.PublishPayloadType,
-        qos: int | None = None,
-        retain: bool | None = None,
+        qos: int | None,
+        retain: bool | None,
     ) -> None:
-        mqtt.async_publish(hass, topic, payload, qos, retain)
+        await mqtt.async_publish(hass, topic, payload, qos, retain)
 
     async def _subscribe_topics(sub_state: dict | None, topics: dict) -> dict:
         # Optionally mark message handlers as callback
@@ -70,9 +71,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    def async_discover_device(config: TasmotaDeviceConfig, mac: str) -> None:
+    async def async_discover_device(config: TasmotaDeviceConfig, mac: str) -> None:
         """Discover and add a Tasmota device."""
-        async_setup_device(hass, mac, config, entry, tasmota_mqtt, device_registry)
+        await async_setup_device(
+            hass, mac, config, entry, tasmota_mqtt, device_registry
+        )
 
     async def async_device_removed(event: Event) -> None:
         """Handle the removal of a device."""
@@ -87,7 +90,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         macs = [c[1] for c in device.connections if c[0] == CONNECTION_NETWORK_MAC]
         for mac in macs:
-            clear_discovery_topic(mac, entry.data[CONF_DISCOVERY_PREFIX], tasmota_mqtt)
+            await clear_discovery_topic(
+                mac, entry.data[CONF_DISCOVERY_PREFIX], tasmota_mqtt
+            )
 
     hass.data[DATA_UNSUB].append(
         hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, async_device_removed)
@@ -138,7 +143,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def _remove_device(
+async def _remove_device(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     mac: str,
@@ -153,7 +158,9 @@ def _remove_device(
 
     _LOGGER.debug("Removing tasmota device %s", mac)
     device_registry.async_remove_device(device.id)
-    clear_discovery_topic(mac, config_entry.data[CONF_DISCOVERY_PREFIX], tasmota_mqtt)
+    await clear_discovery_topic(
+        mac, config_entry.data[CONF_DISCOVERY_PREFIX], tasmota_mqtt
+    )
 
 
 def _update_device(
@@ -165,16 +172,17 @@ def _update_device(
     """Add or update device registry."""
     _LOGGER.debug("Adding or updating tasmota device %s", config[CONF_MAC])
     device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        configuration_url=f"http://{config[CONF_IP]}/",
         connections={(CONNECTION_NETWORK_MAC, config[CONF_MAC])},
         manufacturer=config[CONF_MANUFACTURER],
         model=config[CONF_MODEL],
         name=config[CONF_NAME],
         sw_version=config[CONF_SW_VERSION],
-        config_entry_id=config_entry.entry_id,
     )
 
 
-def async_setup_device(
+async def async_setup_device(
     hass: HomeAssistant,
     mac: str,
     config: TasmotaDeviceConfig,
@@ -184,7 +192,7 @@ def async_setup_device(
 ) -> None:
     """Set up the Tasmota device."""
     if not config:
-        _remove_device(hass, config_entry, mac, tasmota_mqtt, device_registry)
+        await _remove_device(hass, config_entry, mac, tasmota_mqtt, device_registry)
     else:
         _update_device(hass, config_entry, config, device_registry)
 
@@ -200,8 +208,7 @@ async def websocket_remove_device(
     device_id = msg["device_id"]
     dev_registry = await hass.helpers.device_registry.async_get_registry()
 
-    device = dev_registry.async_get(device_id)
-    if not device:
+    if not (device := dev_registry.async_get(device_id)):
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
         )

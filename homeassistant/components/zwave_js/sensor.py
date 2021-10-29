@@ -40,12 +40,14 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -100,6 +102,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
     ENTITY_DESC_KEY_BATTERY: ZwaveSensorEntityDescription(
         ENTITY_DESC_KEY_BATTERY,
         device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ENTITY_DESC_KEY_CURRENT: ZwaveSensorEntityDescription(
@@ -160,6 +163,8 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
     ENTITY_DESC_KEY_SIGNAL_STRENGTH: ZwaveSensorEntityDescription(
         ENTITY_DESC_KEY_SIGNAL_STRENGTH,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ENTITY_DESC_KEY_TEMPERATURE: ZwaveSensorEntityDescription(
@@ -452,7 +457,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
     """Representation of a node status sensor."""
 
     _attr_should_poll = False
-    _attr_entity_registry_enabled_default = False
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, node: ZwaveNode
@@ -472,9 +477,9 @@ class ZWaveNodeStatusSensor(SensorEntity):
             f"{self.client.driver.controller.home_id}.{node.node_id}.node_status"
         )
         # device is precreated in main handler
-        self._attr_device_info = {
-            "identifiers": {get_device_id(self.client, self.node)},
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={get_device_id(self.client, self.node)},
+        )
         self._attr_native_value: str = node.status.name.lower()
 
     async def async_poll_value(self, _: bool) -> None:

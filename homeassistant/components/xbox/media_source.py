@@ -17,7 +17,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_IMAGE,
     MEDIA_CLASS_VIDEO,
 )
-from homeassistant.components.media_source.const import MEDIA_MIME_TYPES
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSource,
@@ -87,9 +86,7 @@ class XboxSource(MediaSource):
         kind = category.split("#", 1)[1]
         return PlayMedia(url, MIME_TYPE_MAP[kind])
 
-    async def async_browse_media(
-        self, item: MediaSourceItem, media_types: tuple[str] = MEDIA_MIME_TYPES
-    ) -> BrowseMediaSource:
+    async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
         title, category, _ = async_parse_identifier(item)
 

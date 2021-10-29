@@ -13,6 +13,13 @@
       "hardware_serial": -1,
       "software_serial": -1,
       "hardware_type": -1
+    },
+    {
+      "address": [0, 5, true],
+      "name": "",
+      "hardware_serial": -1,
+      "software_serial": -1,
+      "hardware_type": -1
     }
   ],
   "entities": [
@@ -23,6 +30,15 @@
       "domain": "switch",
       "domain_data": {
         "output": "OUTPUT1"
+      }
+    },
+    {
+      "address": [0, 5, true],
+      "name": "Switch_Group5",
+      "resource": "relay1",
+      "domain": "switch",
+      "domain_data": {
+        "output": "RELAY1"
       }
     }
   ]

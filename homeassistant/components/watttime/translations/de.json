@@ -27,7 +27,7 @@
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Bitte gib das Passwort f\u00fcr {ame} erneut ein:",
+                "description": "Bitte gib das Passwort f\u00fcr {username} erneut ein:",
                 "title": "Integration erneut authentifizieren"
             },
             "user": {
@@ -36,6 +36,16 @@
                     "username": "Benutzername"
                 },
                 "description": "Gib deinen Benutzernamen und dein Passwort ein:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "\u00dcberwachten Standort auf der Karte anzeigen"
+                },
+                "title": "WattTime konfigurieren"
             }
         }
     }

@@ -89,7 +89,10 @@ class TemperatureSensor(SensorBase):
     def native_value(self) -> float:
         """Return the state of the sensor."""
         trait: TemperatureTrait = self._device.traits[TemperatureTrait.NAME]
-        return trait.ambient_temperature_celsius
+        # Round for display purposes because the API returns 5 decimal places.
+        # This can be removed if the SDM API issue is fixed, or a frontend
+        # display fix is added for all integrations.
+        return float(round(trait.ambient_temperature_celsius, 1))
 
 
 class HumiditySensor(SensorBase):
@@ -104,7 +107,8 @@ class HumiditySensor(SensorBase):
         return f"{self._device_info.device_name} Humidity"
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         trait: HumidityTrait = self._device.traits[HumidityTrait.NAME]
-        return trait.ambient_humidity_percent
+        # Cast without loss of precision because the API always returns an integer.
+        return int(trait.ambient_humidity_percent)
