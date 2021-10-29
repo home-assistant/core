@@ -1,0 +1,83 @@
+start_program:
+  description: Selects a program - starting it.
+  fields:
+    entity_id:
+      description: Name of an entity associated with the home appliance.
+      example: "switch.dishwasher_power"
+    program:
+      description: Program to select
+      example: "Dishcare.Dishwasher.Program.Auto2"
+    option_key:
+      description: Option key.
+      example: "BSH.Common.Option.StartInRelative"
+    option_value:
+      description: Value of the option.
+      example: 1800
+    option_unit:
+      description: Units for the option.
+      example: "seconds"
+select_program:
+  description: Selects a program without starting it.
+  fields:
+    entity_id:
+      description: Name of an entity associated with the home appliance.
+      example: "switch.dryer_power"
+    program:
+      description: Program to select
+      example: "LaundryCare.Dryer.Program.Cotton"
+    option_key:
+      description: Option key.
+      example: "LaundryCare.Dryer.Option.DryingTarget"
+    option_value:
+      description: Value of the option.
+      example: "LaundryCare.Dryer.EnumType.DryingTarget.CupboardDry"
+    option_unit:
+      description: Units for the option.
+pause_program:
+  description: Pauses the current running program.
+  fields:
+    entity_id:
+      description: Name of an entity associated with the home appliance.
+      example: "switch.dryer_power"
+resume_program:
+  description: Resumes a paused program.
+  fields:
+    entity_id:
+      description: Name of an entity associated with the home appliance.
+      example: "switch.dryer_power"
+set_option_active:
+  description: Sets an option for the active program.
+  fields:
+    entity_id:
+      description: Name of an entity associated with the home appliance.
+      example: "switch.dryer_power"
+    key:
+      description: Option key.
+      example: "LaundryCare.Dryer.Program.Cotton"
+    value:
+      description: Value of the option.
+      example: "LaundryCare.Dryer.Program.Cotton"
+set_option_selected:
+  description: Sets an option for the selected program.
+  fields:
+    entity_id:
+      description: Name of an entity associated with the home appliance.
+      example: "switch.dryer_power"
+    key:
+      description: Option key.
+      example: "LaundryCare.Dryer.Program.Cotton"
+    value:
+      description: Value of the option.
+      example: "LaundryCare.Dryer.Program.Cotton"
+change_setting:
+  description: Changes a setting.
+  fields:
+    entity_id:
+      description: Name of an entity associated with the home appliance.
+      example: "switch.dryer_power"
+    key:
+      description: Option key.
+      example: "LaundryCare.Dryer.Program.Cotton"
+    value:
+      description: Value of the option.
+      example: "LaundryCare.Dryer.Program.Cotton"
