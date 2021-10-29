@@ -207,7 +207,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge = bridge
         return await self.async_step_link()
 
-    async def async_step_zeroconf(self, discovery_info: dict[str, Any]):
+    async def async_step_zeroconf(self, discovery_info: dict[str, Any]) -> FlowResult:
         """Handle a discovered Hue bridge.
 
         This flow is triggered by the Zeroconf component. It will check if the
