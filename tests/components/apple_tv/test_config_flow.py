@@ -825,21 +825,3 @@ async def test_option_start_off(hass):
     assert result2["type"] == "create_entry"
 
     assert config_entry.options[CONF_START_OFF]
-
-
-async def test_option_reconfigure(hass):
-    """Test force of reconfigure flag."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="dmapid", options={CONF_RECONFIGURE: False}
-    )
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_RECONFIGURE: True}
-    )
-    assert result2["type"] == "create_entry"
-
-    assert config_entry.options[CONF_RECONFIGURE]

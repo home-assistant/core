@@ -96,7 +96,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         for entry in self._async_current_entries():
             for identifier in self.atv.all_identifiers:
-                if identifier in entry.data[CONF_IDENTIFIERS]:
+                if identifier in entry.data.get(CONF_IDENTIFIERS, [entry.unique_id]):
                     return entry.unique_id
         return self.atv.identifier
 
@@ -250,7 +250,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not allow_exist:
             for identifier in self.atv.all_identifiers:
                 for entry in self._async_current_entries():
-                    if identifier in entry.data[CONF_IDENTIFIERS]:
+                    if identifier in entry.data.get(
+                        CONF_IDENTIFIERS, [entry.unique_id]
+                    ):
                         raise DeviceAlreadyConfigured()
 
     async def async_step_confirm(self, user_input=None):
