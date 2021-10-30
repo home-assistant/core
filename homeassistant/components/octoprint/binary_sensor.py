@@ -68,8 +68,7 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if binary sensor is on."""
-        printer = self.coordinator.data["printer"]
-        if not printer:
+        if not (printer := self.coordinator.data["printer"]):
             return None
 
         return bool(self._get_flag_state(printer))

@@ -130,8 +130,7 @@ class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
         if not job:
             return None
 
-        state = job.progress.completion
-        if not state:
+        if not (state := job.progress.completion):
             return 0
 
         return round(state, 2)
