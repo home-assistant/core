@@ -99,9 +99,7 @@ class LitterRobotControlEntity(LitterRobotEntity):
     @staticmethod
     def parse_time_at_default_timezone(time_str: str) -> time | None:
         """Parse a time string and add default timezone."""
-        parsed_time = dt_util.parse_time(time_str)
-
-        if parsed_time is None:
+        if (parsed_time := dt_util.parse_time(time_str)) is None:
             return None
 
         return (

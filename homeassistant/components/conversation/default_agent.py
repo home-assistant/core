@@ -118,9 +118,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         for intent_type, matchers in intents.items():
             for matcher in matchers:
-                match = matcher.match(text)
-
-                if not match:
+                if not (match := matcher.match(text)):
                     continue
 
                 return await intent.async_handle(

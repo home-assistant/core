@@ -97,9 +97,8 @@ async def async_start(  # noqa: C901
         payload = msg.payload
         topic = msg.topic
         topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
-        match = TOPIC_MATCHER.match(topic_trimmed)
 
-        if not match:
+        if not (match := TOPIC_MATCHER.match(topic_trimmed)):
             if topic_trimmed.endswith("config"):
                 _LOGGER.warning(
                     "Received message on illegal discovery topic '%s'", topic
