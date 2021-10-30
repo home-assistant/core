@@ -1,13 +1,15 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
 import logging
 
-from afsapi import AFSAPI
+# use local override until https://github.com/zhelev/python-afsapi/pull/4 is accepted
+from .afsapi import AFSAPI
 import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -306,3 +308,20 @@ class AFSAPIDevice(MediaPlayerEntity):
     async def async_select_source(self, source):
         """Select input source."""
         await self.fs_device.set_mode(source)
+
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play selected media or channel."""
+        supported_media_types = [MEDIA_TYPE_CHANNEL]
+
+        if media_type not in supported_media_types:
+            _LOGGER.error("Supported media types: %s", supported_media_types)
+            return
+        if (
+            media_type == MEDIA_TYPE_CHANNEL
+            and not isinstance(media_id, int)
+            and not media_id.isnumeric()
+        ):
+            _LOGGER.error("Media id for %s needs to be a number", MEDIA_TYPE_CHANNEL)
+            return
+
+        await self.fs_device.set_preset(media_id)
