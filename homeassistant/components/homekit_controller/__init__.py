@@ -19,7 +19,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .config_flow import normalize_hkid
-from .connection import HKDevice
+from .connection import HKDevice, valid_serial_number
 from .const import (
     CONTROLLER,
     DOMAIN,
@@ -141,7 +141,7 @@ class HomeKitEntity(Entity):
         """Return the ID of this device."""
         info = self.accessory_info
         serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
-        if serial:
+        if valid_serial_number(serial):
             return f"homekit-{serial}-{self._iid}"
         # Some accessories do not have a serial number
         return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
@@ -161,7 +161,7 @@ class HomeKitEntity(Entity):
         """Return the device info."""
         info = self.accessory_info
         accessory_serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
-        if accessory_serial:
+        if valid_serial_number(accessory_serial):
             # Some accessories do not have a serial number
             identifier = (DOMAIN, IDENTIFIER_SERIAL_NUMBER, accessory_serial)
         else:

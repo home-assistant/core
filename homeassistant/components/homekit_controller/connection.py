@@ -36,6 +36,16 @@ MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
 _LOGGER = logging.getLogger(__name__)
 
 
+def valid_serial_number(serial):
+    """Return if the serial number appears to be valid."""
+    if not serial:
+        return False
+    try:
+        return float("".join(serial.rsplit(".", 1))) > 1
+    except ValueError:
+        return True
+
+
 def get_accessory_information(accessory):
     """Obtain the accessory information service of a HomeKit device."""
     result = {}
@@ -211,7 +221,7 @@ class HKDevice:
 
             serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
 
-            if serial_number:
+            if valid_serial_number(serial_number):
                 identifiers = {(DOMAIN, IDENTIFIER_SERIAL_NUMBER, serial_number)}
             else:
                 # Some accessories do not have a serial number
