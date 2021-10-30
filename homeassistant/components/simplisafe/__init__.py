@@ -143,7 +143,7 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
             vol.Range(min=30, max=480),
         ),
         vol.Optional(ATTR_ALARM_VOLUME): vol.All(
-            cv.string, lambda value: VOLUME_MAP[value]
+            vol.In(VOLUME_MAP), VOLUME_MAP.get
         ),
         vol.Optional(ATTR_CHIME_VOLUME): vol.All(
             cv.string, lambda value: VOLUME_MAP[value]
