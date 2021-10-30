@@ -10,11 +10,12 @@
 
 import logging
 
-from aurorapy.client import AuroraSerialClient
+from aurorapy.client import AuroraError, AuroraSerialClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
@@ -29,9 +30,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     comport = entry.data[CONF_PORT]
     address = entry.data[CONF_ADDRESS]
     ser_client = AuroraSerialClient(address, comport, parity="N", timeout=1)
+    # To handle yaml import attempts in darkeness, (re)try connecting only if
+    # unique_id not yet assigned.
+    if entry.unique_id is None:
+        try:
+            ser_client.connect()
+        except AuroraError as error:
+            if "No response after" in str(error):
+                raise ConfigEntryNotReady("No response (could be dark)") from error
+        entry.unique_id = ser_client.serial_number()
 
-    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = ser_client
-
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ser_client
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

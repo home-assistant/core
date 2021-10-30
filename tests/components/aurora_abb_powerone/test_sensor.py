@@ -12,16 +12,10 @@ from homeassistant.components.aurora_abb_powerone.const import (
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_fire_time_changed,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_CONFIG = {
     "sensor": {
@@ -56,25 +50,8 @@ def _mock_config_entry():
         },
         source="dummysource",
         entry_id="13579",
+        unique_id="654321",
     )
-
-
-async def test_setup_platform_valid_config(hass):
-    """Test that (deprecated) yaml import still works."""
-    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "aurorapy.client.AuroraSerialClient.measure",
-        side_effect=_simulated_returns,
-    ), patch(
-        "aurorapy.client.AuroraSerialClient.cumulated_energy",
-        side_effect=_simulated_returns,
-    ), assert_setup_component(
-        1, "sensor"
-    ):
-        assert await async_setup_component(hass, "sensor", TEST_CONFIG)
-        await hass.async_block_till_done()
-    power = hass.states.get("sensor.power_output")
-    assert power
-    assert power.state == "45.7"
 
 
 async def test_sensors(hass):
