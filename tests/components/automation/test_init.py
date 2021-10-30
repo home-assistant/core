@@ -12,6 +12,7 @@ from homeassistant.components.automation import (
     DOMAIN,
     EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
+    SERVICE_STOP,
     SERVICE_TRIGGER,
 )
 from homeassistant.const import (
@@ -655,7 +656,9 @@ async def test_reload_config_handles_load_fails(hass, calls):
     assert len(calls) == 2
 
 
-@pytest.mark.parametrize("service", ["turn_off_stop", "turn_off_no_stop", "reload"])
+@pytest.mark.parametrize(
+    "service", ["turn_off_stop", "turn_off_no_stop", "reload", "stop"]
+)
 async def test_automation_stops(hass, calls, service):
     """Test that turning off / reloading stops any running actions as appropriate."""
     entity_id = "automation.hello"
@@ -698,6 +701,13 @@ async def test_automation_stops(hass, calls, service):
             automation.DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: entity_id, automation.CONF_STOP_ACTIONS: False},
+            blocking=True,
+        )
+    elif service == "stop":
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_STOP,
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
     else:

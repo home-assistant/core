@@ -44,3 +44,10 @@ trigger:
 reload:
   name: Reload
   description: Reload the automation configuration.
+
+stop:
+  name: Stop
+  description: Stop currently running actions of an automation
+  target:
+    entity:
+      domain: automation

@@ -101,6 +101,7 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
+SERVICE_STOP = "stop"
 
 _LOGGER = logging.getLogger(__name__)
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
@@ -253,6 +254,7 @@ async def async_setup(hass, config):
         {vol.Optional(CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS): cv.boolean},
         "async_turn_off",
     )
+    component.async_register_entity_service(SERVICE_STOP, {}, "async_stop")
 
     async def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
@@ -568,6 +570,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             await self.action_script.async_stop()
 
         self.async_write_ha_state()
+
+    async def async_stop(self, **kwargs: Any) -> None:
+        """Stop execution of all actions of the automation."""
+        await self.action_script.async_stop()
 
     async def _async_attach_triggers(
         self, home_assistant_start: bool
