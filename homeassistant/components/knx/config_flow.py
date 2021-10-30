@@ -52,8 +52,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if gateways:
                 supported_connection_types.insert(0, CONF_KNX_AUTOMATIC)
                 self._tunnels = [
-                    gateway for gateway in gateways
-                    if gateway.supports_tunnelling
+                    gateway for gateway in gateways if gateway.supports_tunnelling
                 ]
 
         if user_input is not None:
@@ -72,9 +71,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual_tunnel(user_input)
 
         fields = {
-            vol.Required(CONF_KNX_CONNECTION_TYPE)] = vol.In(
-                supported_connection_types
-            )
+            vol.Required(CONF_KNX_CONNECTION_TYPE): vol.In(supported_connection_types)
         }
 
         return self.async_show_form(
@@ -111,10 +108,14 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         fields = {
-            vol.Required(CONF_HOST, default=_gateway_ip): str
-            vol.Required(CONF_PORT, default=_gateway_port): vol.Coerce(int)
-            vol.Required(CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS): str
-            vol.Required(ConnectionSchema.CONF_KNX_ROUTE_BACK, default=False):  vol.Coerce(bool)
+            vol.Required(CONF_HOST, default=_gateway_ip): str,
+            vol.Required(CONF_PORT, default=_gateway_port): vol.Coerce(int),
+            vol.Required(
+                CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
+            ): str,
+            vol.Required(
+                ConnectionSchema.CONF_KNX_ROUTE_BACK, default=False
+            ): vol.Coerce(bool),
         }
 
         return self.async_show_form(
@@ -161,9 +162,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
-        fields = {
-            vol.Required(CONF_KNX_GATEWAY): vol.In(tunnel_repr)
-        }
+        fields = {vol.Required(CONF_KNX_GATEWAY): vol.In(tunnel_repr)}
 
         return self.async_show_form(
             step_id="tunnel", data_schema=vol.Schema(fields), errors=errors

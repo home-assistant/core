@@ -19,7 +19,7 @@
           "host": "IP Address of KNX gateway",
           "port": "Port of KNX gateway",
           "individual_address": "Individual address for the connection",
-          "route_back": "When True the KNXnet/IP Server shall use the IP address and the port number from the IP package received as the target IP address or port number for the response to the KNXnet/IP Client (for NAT/Docker)"
+          "route_back": "Route Back / NAT Mode"
         }
       },
       "routing": {

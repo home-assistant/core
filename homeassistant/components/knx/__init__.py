@@ -18,12 +18,7 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-    SERVICE_RELOAD,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery
@@ -191,13 +186,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = {**entry.data, **conf}
 
     try:
-        knx_module = KNXModule(hass, config)
-        hass.data[DOMAIN] = knx_module
+        knx_module = KNXModule(hass, config, entry)
         await knx_module.start()
     except XKNXException as ex:
         raise ConfigEntryNotReady from ex
-    else:
-        hass.data[DOMAIN] = knx_module
+
+    hass.data[DOMAIN] = knx_module
 
     if CONF_KNX_EXPOSE in config:
         for expose_config in config[CONF_KNX_EXPOSE]:
@@ -256,14 +250,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
     )
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Remove all KNX components and load new ones from config."""
-        await hass.config_entries.async_reload(entry.entry_id)
-
-    async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
-    )
-
     return True
 
 
@@ -315,19 +301,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class KNXModule:
     """Representation of KNX Object."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: ConfigType, entry: ConfigEntry
+    ) -> None:
         """Initialize KNX module."""
         self.hass = hass
         self.config = config
         self.connected = False
         self.exposures: list[KNXExposeSensor | KNXExposeTime] = []
         self.service_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
-        self.hass_remove_listener = None
+        self.entry = entry
 
         self.init_xknx()
         self._knx_event_callback: TelegramQueue.Callback = self.register_callback()
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
+        )
+
+        self.entry.async_on_unload(
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         )
 
     def init_xknx(self) -> None:
@@ -344,16 +336,9 @@ class KNXModule:
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
         await self.xknx.start()
-        self.hass_remove_listener = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.stop
-        )
 
     async def stop(self, event: Event | None = None) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""
-        #  If we delete the config entry HA would still listen for the stop event and call this cb
-        if self.hass_remove_listener:
-            self.hass_remove_listener()
-            self.hass_remove_listener = None
         await self.xknx.stop()
 
     def connection_config(self) -> ConnectionConfig:
