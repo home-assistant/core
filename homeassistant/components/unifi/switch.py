@@ -401,11 +401,9 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
     def calculate_enabled(self) -> bool:
         """Calculate if all apps are enabled."""
         return all(
-            [
-                self.controller.api.dpi_apps[app_id].enabled
-                for app_id in self._item.dpiapp_ids
-                if app_id in self.controller.api.dpi_apps
-            ]
+            self.controller.api.dpi_apps[app_id].enabled
+            for app_id in self._item.dpiapp_ids
+            if app_id in self.controller.api.dpi_apps
         )
 
     @property
