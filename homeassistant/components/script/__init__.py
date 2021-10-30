@@ -172,8 +172,7 @@ async def async_setup(hass, config):
 
     async def reload_service(service):
         """Call a service to reload scripts."""
-        conf = await component.async_prepare_reload()
-        if conf is None:
+        if (conf := await component.async_prepare_reload()) is None:
             return
 
         await _async_process_config(hass, conf, component)
