@@ -321,7 +321,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set a new target fan mode."""
-        await self.hass.async_add_executor_job(partial(self._set_fan_mode, fan_mode))
+        await self.hass.async_add_executor_job(self._set_fan_mode, fan_mode)
         self.async_write_ha_state()
 
     def _set_fan_mode(self, fan_mode):
@@ -336,7 +336,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set a new target operation mode."""
-        await self.hass.async_add_executor_job(partial(self._set_hvac_mode, hvac_mode))
+        await self.hass.async_add_executor_job(self._set_hvac_mode, hvac_mode)
         self.async_write_ha_state()
 
     def _set_hvac_mode(self, hvac_mode):
@@ -345,7 +345,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set a new target humidity."""
-        await self.hass.async_add_executor_job(partial(self._set_humidity, humidity))
+        await self.hass.async_add_executor_job(self._set_humidity, humidity)
         self.async_write_ha_state()
 
     def _set_humidity(self, humidity):
@@ -357,9 +357,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the hold mode."""
-        await self.hass.async_add_executor_job(
-            partial(self._set_preset_mode, preset_mode)
-        )
+        await self.hass.async_add_executor_job(self._set_preset_mode, preset_mode)
         self.async_write_ha_state()
 
     def _set_preset_mode(self, preset_mode):
