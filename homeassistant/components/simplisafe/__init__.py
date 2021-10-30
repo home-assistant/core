@@ -146,7 +146,7 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
             vol.In(VOLUME_MAP), VOLUME_MAP.get
         ),
         vol.Optional(ATTR_CHIME_VOLUME): vol.All(
-            cv.string, lambda value: VOLUME_MAP[value]
+            vol.In(VOLUME_MAP), VOLUME_MAP.get
         ),
         vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
             cv.time_period,
