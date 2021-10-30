@@ -1,5 +1,6 @@
 """Sensor platform for Advantage Air integration."""
 from __future__ import annotations
+import logging
 
 import voluptuous as vol
 
@@ -23,6 +24,8 @@ ADVANTAGE_AIR_SET_COUNTDOWN_UNIT = "min"
 ADVANTAGE_AIR_SERVICE_SET_TIME_TO = "set_time_to"
 
 PARALLEL_UPDATES = 0
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -86,6 +89,9 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
 
     async def set_time_to(self, **kwargs):
         """Set the timer value."""
+        _LOGGER.warning(
+            "This service has been depreciated and will be removed in a future version, please use number.set_value"
+        )
         value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
         await self.async_change({self.ac_key: {"info": {self._time_key: value}}})
 
