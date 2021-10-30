@@ -8,12 +8,12 @@
             "discovery_error": "No s'ha pogut descobrir cap dispositiu DLNA coincident",
             "incomplete_config": "Falta una variable obligat\u00f2ria a la configuraci\u00f3",
             "non_unique_id": "S'han trobat diversos dispositius amb el mateix identificador \u00fanic",
-            "not_dmr": "El dispositiu no \u00e9s un renderitzador de mitjans digitals"
+            "not_dmr": "El dispositiu no \u00e9s un renderitzador de mitjans digitals compatible"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "could_not_connect": "No s'ha pogut connectar amb el dispositiu DLNA",
-            "not_dmr": "El dispositiu no \u00e9s un renderitzador de mitjans digitals"
+            "not_dmr": "El dispositiu no \u00e9s un renderitzador de mitjans digitals compatible"
         },
         "flow_title": "{name}",
         "step": {

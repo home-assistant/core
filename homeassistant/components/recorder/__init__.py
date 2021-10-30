@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 import concurrent.futures
 from datetime import datetime, timedelta
 import logging
@@ -366,6 +366,13 @@ class StatisticsTask(NamedTuple):
     start: datetime
 
 
+class ExternalStatisticsTask(NamedTuple):
+    """An object to insert into the recorder queue to run an external statistics task."""
+
+    metadata: dict
+    statistics: Iterable[dict]
+
+
 class WaitTask:
     """An object to insert into the recorder queue to tell it set the _queue_watch event."""
 
@@ -598,6 +605,11 @@ class Recorder(threading.Thread):
         self.queue.put(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
 
     @callback
+    def async_external_statistics(self, metadata, stats):
+        """Schedule external statistics."""
+        self.queue.put(ExternalStatisticsTask(metadata, stats))
+
+    @callback
     def _async_setup_periodic_tasks(self):
         """Prepare periodic tasks."""
         if self.hass.is_stopping or not self.get_session:
@@ -776,6 +788,13 @@ class Recorder(threading.Thread):
         # Schedule a new statistics task if this one didn't finish
         self.queue.put(StatisticsTask(start))
 
+    def _run_external_statistics(self, metadata, stats):
+        """Run statistics task."""
+        if statistics.add_external_statistics(self, metadata, stats):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        self.queue.put(StatisticsTask(metadata, stats))
+
     def _process_one_event(self, event):
         """Process one event."""
         if isinstance(event, PurgeTask):
@@ -797,6 +816,9 @@ class Recorder(threading.Thread):
             statistics.update_statistics_metadata(
                 self, event.statistic_id, event.unit_of_measurement
             )
+            return
+        if isinstance(event, ExternalStatisticsTask):
+            self._run_external_statistics(event.metadata, event.statistics)
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()

@@ -2,7 +2,11 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, STATE_CLASS_TOTAL
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -147,35 +151,45 @@ SENSOR_TYPES = [
         json_key="Purchased",
         name="Imported Power",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
         key="production_power",
         json_key="Production",
         name="Production Power",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
         key="consumption_power",
         json_key="Consumption",
         name="Consumption Power",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
         key="selfconsumption_power",
         json_key="SelfConsumption",
         name="SelfConsumption Power",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
         key="feedin_power",
         json_key="FeedIn",
         name="Exported Power",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
         key="storage_level",

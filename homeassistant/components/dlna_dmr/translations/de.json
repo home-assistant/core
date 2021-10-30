@@ -8,12 +8,12 @@
             "discovery_error": "Ein passendes DLNA-Ger\u00e4t konnte nicht gefunden werden",
             "incomplete_config": "In der Konfiguration fehlt eine erforderliche Variable",
             "non_unique_id": "Mehrere Ger\u00e4te mit derselben eindeutigen ID gefunden",
-            "not_dmr": "Ger\u00e4t ist kein Digital Media Renderer"
+            "not_dmr": "Ger\u00e4t ist kein unterst\u00fctzter Digital Media Renderer"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "could_not_connect": "Verbindung zum DLNA-Ger\u00e4t fehlgeschlagen",
-            "not_dmr": "Ger\u00e4t ist kein Digital Media Renderer"
+            "not_dmr": "Ger\u00e4t ist kein unterst\u00fctzter Digital Media Renderer"
         },
         "flow_title": "{name}",
         "step": {

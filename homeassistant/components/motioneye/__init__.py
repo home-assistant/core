@@ -31,6 +31,7 @@ from motioneye_client.const import (
 )
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.webhook import (
     async_generate_id,
@@ -82,7 +83,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = [CAMERA_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 
 def create_motioneye_client(
@@ -325,7 +326,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     current_cameras: set[tuple[str, str]] = set()
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     @callback
     def _async_process_motioneye_cameras() -> None:
@@ -478,3 +479,8 @@ class MotionEyeEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(identifiers={self._device_identifier})
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._camera is not None and super().available

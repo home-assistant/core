@@ -20,6 +20,7 @@ homeassistant.components.ampio.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bluetooth_tracker.*
+homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
 homeassistant.components.braviatv.*
 homeassistant.components.brother.*
@@ -31,6 +32,7 @@ homeassistant.components.crownstone.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
 homeassistant.components.devolo_home_control.*
+homeassistant.components.devolo_home_network.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
 homeassistant.components.dsmr.*
@@ -50,6 +52,7 @@ homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
 homeassistant.components.gios.*
 homeassistant.components.goalzero.*
+homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.history.*
@@ -58,6 +61,7 @@ homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
+homeassistant.components.input_select.*
 homeassistant.components.integration.*
 homeassistant.components.iqvia.*
 homeassistant.components.jewish_calendar.*
@@ -97,6 +101,7 @@ homeassistant.components.recorder.repack
 homeassistant.components.recorder.statistics
 homeassistant.components.remote.*
 homeassistant.components.renault.*
+homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.rpi_power.*
 homeassistant.components.samsungtv.*

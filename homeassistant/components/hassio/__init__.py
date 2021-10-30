@@ -46,6 +46,8 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_REPOSITORY,
     ATTR_SLUG,
+    ATTR_STARTED,
+    ATTR_STATE,
     ATTR_URL,
     ATTR_VERSION,
     DATA_KEY_ADDONS,
@@ -419,9 +421,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-    data = await store.async_load()
-
-    if data is None:
+    if (data := await store.async_load()) is None:
         data = {}
 
     refresh_token = None
@@ -539,12 +539,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hassio.get_os_info(),
             )
 
-            addon_slugs = [
-                addon[ATTR_SLUG]
+            addons = [
+                addon
                 for addon in hass.data[DATA_SUPERVISOR_INFO].get("addons", [])
+                if addon[ATTR_STATE] == ATTR_STARTED
             ]
             stats_data = await asyncio.gather(
-                *[update_addon_stats(slug) for slug in addon_slugs]
+                *[update_addon_stats(addon[ATTR_SLUG]) for addon in addons]
             )
             hass.data[DATA_ADDONS_STATS] = dict(stats_data)
 
@@ -661,6 +662,7 @@ def async_register_addons_in_dev_reg(
             sw_version=addon[ATTR_VERSION],
             name=addon[ATTR_NAME],
             entry_type=ATTR_SERVICE,
+            configuration_url=f"homeassistant://hassio/addon/{addon[ATTR_SLUG]}",
         )
         if manufacturer := addon.get(ATTR_REPOSITORY) or addon.get(ATTR_URL):
             params[ATTR_MANUFACTURER] = manufacturer

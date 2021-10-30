@@ -53,7 +53,7 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator)
         self._device_id = device_id
-        self._attr_name = f"Octoprint {sensor_type}"
+        self._attr_name = f"OctoPrint {sensor_type}"
         self._attr_unique_id = f"{sensor_type}-{device_id}"
 
     @property
@@ -61,15 +61,14 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
         """Device info."""
         return {
             "identifiers": {(COMPONENT_DOMAIN, self._device_id)},
-            "manufacturer": "Octoprint",
-            "name": "Octoprint",
+            "manufacturer": "OctoPrint",
+            "name": "OctoPrint",
         }
 
     @property
     def is_on(self):
         """Return true if binary sensor is on."""
-        printer = self.coordinator.data["printer"]
-        if not printer:
+        if not (printer := self.coordinator.data["printer"]):
             return None
 
         return bool(self._get_flag_state(printer))

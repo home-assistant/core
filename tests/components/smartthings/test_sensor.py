@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -94,6 +95,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     entry = entity_registry.async_get("sensor.sensor_1_battery")
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.battery}"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
     assert entry.name == device.label
@@ -120,6 +122,7 @@ async def test_energy_sensors_for_switch_device(hass, device_factory):
     entry = entity_registry.async_get("sensor.switch_1_energy_meter")
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.energy}"
+    assert entry.entity_category is None
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
     assert entry.name == device.label
@@ -132,6 +135,7 @@ async def test_energy_sensors_for_switch_device(hass, device_factory):
     entry = entity_registry.async_get("sensor.switch_1_power_meter")
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.power}"
+    assert entry.entity_category is None
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
     assert entry.name == device.label

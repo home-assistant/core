@@ -224,7 +224,9 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
                     datetimes[-1] - datetimes.popleft()
                 ).total_seconds()
                 if segment_duration:
-                    assert datetime_duration == segment_duration
+                    assert math.isclose(
+                        datetime_duration, segment_duration, rel_tol=1e-3
+                    )
                     tested[datetime_re] = True
             continue
         match = inf_re.match(line)
@@ -232,7 +234,7 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
             segment_duration = float(match.group("segment_duration"))
             # Check that segment durations are consistent with part durations
             if len(part_durations) > 1:
-                assert math.isclose(sum(part_durations), segment_duration)
+                assert math.isclose(sum(part_durations), segment_duration, rel_tol=1e-3)
                 tested[inf_re] = True
                 part_durations.clear()
     # make sure all playlist tests were performed

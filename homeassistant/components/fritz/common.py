@@ -17,15 +17,27 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.components.switch import DOMAIN as DEVICE_SWITCH_DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_entries_for_config_entry,
+    async_get,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity_registry import (
+    EntityRegistry,
+    RegistryEntry,
+    async_entries_for_device,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
@@ -35,6 +47,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
+    SERVICE_CLEANUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
     TRACKER_SCAN_INTERVAL,
@@ -68,6 +81,13 @@ def device_filter_out_from_trackers(
             "Skip adding device %s [%s], reason: %s", device.hostname, mac, reason
         )
     return bool(reason)
+
+
+def _cleanup_entity_filter(device: RegistryEntry) -> bool:
+    """Filter only relevant entities."""
+    return device.domain == DEVICE_TRACKER_DOMAIN or (
+        device.domain == DEVICE_SWITCH_DOMAIN and "_internet_access" in device.entity_id
+    )
 
 
 class ClassSetupMissing(Exception):
@@ -281,28 +301,82 @@ class FritzBoxTools:
         _LOGGER.debug("Checking host info for FRITZ!Box router %s", self.host)
         self._update_available, self._latest_firmware = self._update_device_info()
 
-    async def service_fritzbox(self, service: str) -> None:
+    async def service_fritzbox(
+        self, service_call: ServiceCall, config_entry: ConfigEntry
+    ) -> None:
         """Define FRITZ!Box services."""
-        _LOGGER.debug("FRITZ!Box router: %s", service)
+        _LOGGER.debug("FRITZ!Box router: %s", service_call.service)
 
         if not self.connection:
             raise HomeAssistantError("Unable to establish a connection")
 
         try:
-            if service == SERVICE_REBOOT:
+            if service_call.service == SERVICE_REBOOT:
                 await self.hass.async_add_executor_job(
                     self.connection.call_action, "DeviceConfig1", "Reboot"
                 )
-            elif service == SERVICE_RECONNECT:
+                return
+
+            if service_call.service == SERVICE_RECONNECT:
                 await self.hass.async_add_executor_job(
                     self.connection.call_action,
                     "WANIPConn1",
                     "ForceTermination",
                 )
+                return
+
+            if service_call.service == SERVICE_CLEANUP:
+                device_hosts_list: list = await self.hass.async_add_executor_job(
+                    self.fritz_hosts.get_hosts_info
+                )
+
         except (FritzServiceError, FritzActionError) as ex:
             raise HomeAssistantError("Service or parameter unknown") from ex
         except FritzConnectionException as ex:
             raise HomeAssistantError("Service not supported") from ex
+
+        entity_reg: EntityRegistry = (
+            await self.hass.helpers.entity_registry.async_get_registry()
+        )
+
+        ha_entity_reg_list: list[
+            RegistryEntry
+        ] = self.hass.helpers.entity_registry.async_entries_for_config_entry(
+            entity_reg, config_entry.entry_id
+        )
+        entities_removed: bool = False
+
+        device_hosts_macs = {device["mac"] for device in device_hosts_list}
+
+        for entry in ha_entity_reg_list:
+            if (
+                not _cleanup_entity_filter(entry)
+                or entry.unique_id.split("_")[0] in device_hosts_macs
+            ):
+                continue
+            _LOGGER.info("Removing entity: %s", entry.name or entry.original_name)
+            entity_reg.async_remove(entry.entity_id)
+            entities_removed = True
+
+        if entities_removed:
+            self._async_remove_empty_devices(entity_reg, config_entry)
+
+    @callback
+    def _async_remove_empty_devices(
+        self, entity_reg: EntityRegistry, config_entry: ConfigEntry
+    ) -> None:
+        """Remove devices with no entities."""
+
+        device_reg = async_get(self.hass)
+        device_list = async_entries_for_config_entry(device_reg, config_entry.entry_id)
+        for device_entry in device_list:
+            if async_entries_for_device(
+                entity_reg,
+                device_entry.id,
+                include_disabled_entities=True,
+            ):
+                _LOGGER.info("Removing device: %s", device_entry.name)
+                device_reg.async_remove_device(device_entry.id)
 
 
 @dataclass

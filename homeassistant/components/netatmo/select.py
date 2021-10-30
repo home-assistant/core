@@ -102,7 +102,7 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
         await super().async_added_to_hass()
 
         for event_type in (EVENT_TYPE_SCHEDULE,):
-            self._listeners.append(
+            self.data_handler.config_entry.async_on_unload(
                 async_dispatcher_connect(
                     self.hass,
                     f"signal-{DOMAIN}-webhook-{event_type}",

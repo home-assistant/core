@@ -116,6 +116,7 @@ class IcloudTrackerEntity(TrackerEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
+            configuration_url="https://icloud.com/",
             identifiers={(DOMAIN, self._device.unique_id)},
             manufacturer="Apple",
             model=self._device.device_model,

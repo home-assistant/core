@@ -18,10 +18,12 @@ from aiounifi.events import (
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
@@ -149,6 +151,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self.heartbeat_check = False
         self._is_connected = False
         self._controller_connection_state_changed = False
+        self._only_listen_to_event_source = False
 
         if client.last_seen:
             self._is_connected = (
@@ -191,11 +194,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
             if self.controller.available:
                 self.schedule_update = True
+                self._only_listen_to_event_source = False
 
             else:
                 self.controller.async_heartbeat(self.unique_id)
 
         elif self.client.last_updated == SOURCE_EVENT:
+            self._only_listen_to_event_source = True
             if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
                 not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
             ):
@@ -209,7 +214,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 self.schedule_update = True
 
         elif (
-            not self.client.event
+            not self._only_listen_to_event_source
             and self.client.last_updated == SOURCE_DATA
             and self.is_wired == self.client.is_wired
         ):
@@ -402,17 +407,17 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         return not self.device.disabled and self.controller.available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        info = {
-            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "manufacturer": ATTR_MANUFACTURER,
-            "model": self.device.model,
-            "sw_version": self.device.version,
-        }
+        info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=self.device.model,
+            sw_version=self.device.version,
+        )
 
         if self.device.name:
-            info["name"] = self.device.name
+            info[ATTR_NAME] = self.device.name
 
         return info
 

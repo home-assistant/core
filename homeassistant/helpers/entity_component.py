@@ -49,9 +49,7 @@ async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
         )
         return
 
-    entity_obj = entity_comp.get_entity(entity_id)
-
-    if entity_obj is None:
+    if (entity_obj := entity_comp.get_entity(entity_id)) is None:
         logging.getLogger(__name__).warning(
             "Forced update failed. Entity %s not found.", entity_id
         )

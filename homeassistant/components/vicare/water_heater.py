@@ -135,7 +135,7 @@ class ViCareWater(WaterHeaterEntity):
     @property
     def unique_id(self):
         """Return unique ID for this device."""
-        return f"{self._device_config.getConfig().serial}-water-{self._circuit.id}"
+        return f"{self._device_config.getConfig().serial}-{self._circuit.id}"
 
     @property
     def device_info(self):

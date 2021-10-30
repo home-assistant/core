@@ -1,8 +1,11 @@
 """Support for Eight smart mattress covers and mattresses."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from pyeight.eight import EightSleep
+from pyeight.user import EightUser
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -12,9 +15,11 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -99,12 +104,15 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Eight Sleep component."""
 
-    conf = config.get(DOMAIN)
-    user = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+    user = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
 
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant")
@@ -156,7 +164,7 @@ async def async_setup(hass, config):
         )
     )
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Handle eight sleep service calls."""
         params = service.data.copy()
 
@@ -167,7 +175,7 @@ async def async_setup(hass, config):
         for sens in sensor:
             side = sens.split("_")[1]
             userid = eight.fetch_userid(side)
-            usrobj = eight.users[userid]
+            usrobj: EightUser = eight.users[userid]
             await usrobj.set_heating_level(target, duration)
 
         await heat_coordinator.async_request_refresh()
@@ -183,7 +191,7 @@ async def async_setup(hass, config):
 class EightSleepHeatDataCoordinator(DataUpdateCoordinator):
     """Class to retrieve heat data from Eight Sleep."""
 
-    def __init__(self, hass, api):
+    def __init__(self, hass: HomeAssistant, api: EightSleep) -> None:
         """Initialize coordinator."""
         self.api = api
         super().__init__(
@@ -198,7 +206,7 @@ class EightSleepHeatDataCoordinator(DataUpdateCoordinator):
 class EightSleepUserDataCoordinator(DataUpdateCoordinator):
     """Class to retrieve user data from Eight Sleep."""
 
-    def __init__(self, hass, api):
+    def __init__(self, hass: HomeAssistant, api: EightSleep) -> None:
         """Initialize coordinator."""
         self.api = api
         super().__init__(
@@ -213,7 +221,7 @@ class EightSleepUserDataCoordinator(DataUpdateCoordinator):
 class EightSleepEntity(CoordinatorEntity):
     """The Eight Sleep device entity."""
 
-    def __init__(self, coordinator, eight):
+    def __init__(self, coordinator: DataUpdateCoordinator, eight: EightSleep) -> None:
         """Initialize the data object."""
         super().__init__(coordinator)
         self._eight = eight

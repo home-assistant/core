@@ -190,10 +190,8 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
                 },
             )
 
-        if self._optimistic:
-            last_state = await self.async_get_last_state()
-            if last_state:
-                self._current_number = last_state.state
+        if self._optimistic and (last_state := await self.async_get_last_state()):
+            self._current_number = last_state.state
 
     @property
     def min_value(self) -> float:
@@ -231,7 +229,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
             self._current_number = current_number
             self.async_write_ha_state()
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             current_number,

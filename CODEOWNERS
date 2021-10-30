@@ -73,12 +73,13 @@ homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blebox/* @bbx-a @bbx-jp
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/blueprint/* @home-assistant/core
+homeassistant/components/bluesound/* @thrawnarn
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
 homeassistant/components/bond/* @bdraco @prystupa @joshs85
 homeassistant/components/bosch_shc/* @tschamm
 homeassistant/components/braviatv/* @bieniu @Drafteed
-homeassistant/components/broadlink/* @danielhiversen @felipediel
+homeassistant/components/broadlink/* @danielhiversen @felipediel @L-I-Am
 homeassistant/components/brother/* @bieniu
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bsblan/* @liudger
@@ -118,6 +119,7 @@ homeassistant/components/denonavr/* @ol-iver @starkillerOG
 homeassistant/components/derivative/* @afaucogney
 homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/devolo_home_control/* @2Fake @Shutgun
+homeassistant/components/devolo_home_network/* @2Fake @Shutgun
 homeassistant/components/dexcom/* @gagebenne
 homeassistant/components/dhcp/* @bdraco
 homeassistant/components/dht/* @thegardenmonkey
@@ -227,7 +229,6 @@ homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/honeywell/* @rdfurman
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
-homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob @frenck
 homeassistant/components/huisbaasje/* @dennisschroer
 homeassistant/components/humidifier/* @home-assistant/core @Shulyaka
@@ -430,6 +431,7 @@ homeassistant/components/renault/* @epenet
 homeassistant/components/repetier/* @MTrab
 homeassistant/components/rflink/* @javicalle
 homeassistant/components/rfxtrx/* @danielhiversen @elupus @RobBie1221
+homeassistant/components/ridwell/* @bachya
 homeassistant/components/ring/* @balloob
 homeassistant/components/risco/* @OnFreund
 homeassistant/components/rituals_perfume_genie/* @milanmeu

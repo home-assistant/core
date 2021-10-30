@@ -157,10 +157,8 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                 },
             )
 
-        if self._optimistic:
-            last_state = await self.async_get_last_state()
-            if last_state:
-                self._attr_current_option = last_state.state
+        if self._optimistic and (last_state := await self.async_get_last_state()):
+            self._attr_current_option = last_state.state
 
     async def async_select_option(self, option: str) -> None:
         """Update the current value."""
@@ -168,7 +166,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             self._attr_current_option = option
             self.async_write_ha_state()
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             option,

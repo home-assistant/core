@@ -1,4 +1,5 @@
 """Support for mill wifi-enabled home heaters."""
+import mill
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -46,10 +47,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     mill_data_coordinator = hass.data[DOMAIN]
 
-    dev = []
-    for heater in mill_data_coordinator.data.values():
-        dev.append(MillHeater(mill_data_coordinator, heater))
-    async_add_entities(dev)
+    entities = [
+        MillHeater(mill_data_coordinator, mill_device)
+        for mill_device in mill_data_coordinator.data.values()
+        if isinstance(mill_device, mill.Heater)
+    ]
+    async_add_entities(entities)
 
     async def set_room_temp(service):
         """Set room temp."""
@@ -81,6 +84,8 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
 
         super().__init__(coordinator)
 
+        self._available = False
+
         self._id = heater.device_id
         self._attr_unique_id = heater.device_id
         self._attr_name = heater.name
@@ -90,7 +95,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             model=f"generation {1 if heater.is_gen1 else 2}",
             name=self.name,
         )
-        if heater.is_gen1:
+        if heater.is_gen1 or heater.is_gen3:
             self._attr_hvac_modes = [HVAC_MODE_HEAT]
         else:
             self._attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
@@ -128,6 +133,11 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             )
             await self.coordinator.async_request_refresh()
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._available
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -136,7 +146,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
 
     @callback
     def _update_attr(self, heater):
-        self._attr_available = heater.available
+        self._available = heater.available
         self._attr_extra_state_attributes = {
             "open_window": heater.open_window,
             "heating": heater.is_heating,

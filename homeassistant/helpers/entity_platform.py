@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from logging import Logger, getLogger
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Protocol
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -457,7 +458,9 @@ class EntityPlatform:
             device_id = None
 
             if config_entry_id is not None and device_info is not None:
-                processed_dev_info = {"config_entry_id": config_entry_id}
+                processed_dev_info: dict[str, str | None] = {
+                    "config_entry_id": config_entry_id
+                }
                 for key in (
                     "connections",
                     "default_manufacturer",
@@ -476,15 +479,21 @@ class EntityPlatform:
                         processed_dev_info[key] = device_info[key]  # type: ignore[misc]
 
                 if "configuration_url" in device_info:
-                    try:
-                        processed_dev_info["configuration_url"] = cv.url(
-                            device_info["configuration_url"]
-                        )
-                    except vol.Invalid:
-                        _LOGGER.warning(
-                            "Ignoring invalid device configuration_url '%s'",
-                            device_info["configuration_url"],
-                        )
+                    if device_info["configuration_url"] is None:
+                        processed_dev_info["configuration_url"] = None
+                    else:
+                        configuration_url = str(device_info["configuration_url"])
+                        if urlparse(configuration_url).scheme in [
+                            "http",
+                            "https",
+                            "homeassistant",
+                        ]:
+                            processed_dev_info["configuration_url"] = configuration_url
+                        else:
+                            _LOGGER.warning(
+                                "Ignoring invalid device configuration_url '%s'",
+                                configuration_url,
+                            )
 
                 try:
                     device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]

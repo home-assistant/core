@@ -125,8 +125,7 @@ class ArubaDeviceScanner(DeviceScanner):
 
         devices = {}
         for device in devices_result:
-            match = _DEVICES_REGEX.search(device.decode("utf-8"))
-            if match:
+            if match := _DEVICES_REGEX.search(device.decode("utf-8")):
                 devices[match.group("ip")] = {
                     "ip": match.group("ip"),
                     "mac": match.group("mac").upper(),

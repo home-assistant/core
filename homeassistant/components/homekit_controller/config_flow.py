@@ -75,8 +75,7 @@ def ensure_pin_format(pin, allow_insecure_setup_codes=None):
 
     If incorrect code is entered, an exception is raised.
     """
-    match = PIN_FORMAT.search(pin.strip())
-    if not match:
+    if not (match := PIN_FORMAT.search(pin.strip())):
         raise aiohomekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
     pin_without_dashes = "".join(match.groups())
     if not allow_insecure_setup_codes and pin_without_dashes in INSECURE_CODES:
