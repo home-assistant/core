@@ -1,5 +1,8 @@
 """Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
-from homeassistant.components.number import NumberEntity
+from dataclasses import dataclass
+
+from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.const import DEVICE_CLASS_CURRENT
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import InvalidAuth
@@ -8,9 +11,24 @@ from .const import (
     CONF_MAX_AVAILABLE_POWER_KEY,
     CONF_MAX_CHARGING_CURRENT_KEY,
     DOMAIN,
-    NUMBER_TYPES,
-    WallboxNumberEntityDescription,
 )
+
+
+@dataclass
+class WallboxNumberEntityDescription(NumberEntityDescription):
+    """Describes Wallbox sensor entity."""
+
+    min_value: float = 0
+
+
+NUMBER_TYPES: dict[str, NumberEntityDescription] = {
+    CONF_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
+        key=CONF_MAX_CHARGING_CURRENT_KEY,
+        name="Max. Charging Current",
+        device_class=DEVICE_CLASS_CURRENT,
+        min_value=6,
+    )
+}
 
 
 async def async_setup_entry(hass, config, async_add_entities):
