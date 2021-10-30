@@ -75,7 +75,9 @@ SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 
 BINARY_SENSOR_DEFAULT_NAME = "ADS binary sensor"
 COVER_DEFAULT_NAME = "ADS Cover"
+LIGHT_DEFAULT_NAME = "ADS Light"
 SENSOR_DEFAULT_NAME = "ADS sensor"
+SWITCH_DEFAULT_NAME = "ADS Switch"
 
 PLATFORMS = (
     (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS),
@@ -106,6 +108,14 @@ COVER_SCHEMA = vol.Schema(
     }
 )
 
+LIGHT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ADS_VAR): cv.string,
+        vol.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,
+        vol.Optional(CONF_NAME, default=LIGHT_DEFAULT_NAME): cv.string,
+    }
+)
+
 SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ADS_VAR): cv.string,
@@ -124,6 +134,13 @@ SENSOR_SCHEMA = vol.Schema(
     }
 )
 
+SWITCH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ADS_VAR): cv.string,
+        vol.Optional(CONF_NAME, default=SWITCH_DEFAULT_NAME): cv.string,
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -135,7 +152,9 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [BINARY_SENSOR_SCHEMA]
                 ),
                 vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVER_SCHEMA]),
+                vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
                 vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
+                vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
             }
         )
     },
