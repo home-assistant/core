@@ -21,32 +21,31 @@ async def test_get_triggers_module_device(hass, entry):
     expected_triggers = [
         {
             CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: DOMAIN,
             CONF_TYPE: "transmitter",
+            CONF_DEVICE_ID: device.id,
         },
         {
             CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: DOMAIN,
             CONF_TYPE: "transponder",
+            CONF_DEVICE_ID: device.id,
         },
         {
             CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: DOMAIN,
             CONF_TYPE: "fingerprint",
+            CONF_DEVICE_ID: device.id,
         },
         {
             CONF_PLATFORM: "device",
-            CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: DOMAIN,
             CONF_TYPE: "sendkeys",
+            CONF_DEVICE_ID: device.id,
         },
     ]
 
     triggers = await async_get_device_automations(hass, "trigger", device.id)
-
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -66,8 +65,8 @@ async def test_get_triggers_non_module_device(hass, entry):
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_transponder_event_triggers_module_device(hass, calls, entry):
-    """Test we get the expected triggers from a LCN non-module device."""
+async def test_if_fires_on_transponder_event(hass, calls, entry):
+    """Test for transponder event triggers firing."""
     await init_integration(hass, entry)
     device = get_device(hass, entry, (0, 7, False))
 
@@ -100,13 +99,15 @@ async def test_transponder_event_triggers_module_device(hass, calls, entry):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].data["test"] == "test_trigger_transponder"
-    assert calls[0].data["code"] == "aabbcc"
+    assert calls[0].data == {
+        "test": "test_trigger_transponder",
+        "code": "aabbcc",
+    }
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_fingerprint_event_triggers_module_device(hass, calls, entry):
-    """Test we get the expected triggers from a LCN non-module device."""
+async def test_if_fires_on_fingerprint_event(hass, calls, entry):
+    """Test for fingerprint event triggers firing."""
     await init_integration(hass, entry)
     device = get_device(hass, entry, (0, 7, False))
 
@@ -139,13 +140,15 @@ async def test_fingerprint_event_triggers_module_device(hass, calls, entry):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].data["test"] == "test_trigger_fingerprint"
-    assert calls[0].data["code"] == "aabbcc"
+    assert calls[0].data == {
+        "test": "test_trigger_fingerprint",
+        "code": "aabbcc",
+    }
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_transmitter_event_triggers_module_device(hass, calls, entry):
-    """Test we get the expected triggers from a LCN non-module device."""
+async def test_if_fires_on_transmitter_event(hass, calls, entry):
+    """Test for transmitter event triggers firing."""
     await init_integration(hass, entry)
     device = get_device(hass, entry, (0, 7, False))
 
@@ -188,16 +191,18 @@ async def test_transmitter_event_triggers_module_device(hass, calls, entry):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].data["test"] == "test_trigger_transmitter"
-    assert calls[0].data["code"] == "aabbcc"
-    assert calls[0].data["level"] == 0
-    assert calls[0].data["key"] == 0
-    assert calls[0].data["action"] == "hit"
+    assert calls[0].data == {
+        "test": "test_trigger_transmitter",
+        "code": "aabbcc",
+        "level": 0,
+        "key": 0,
+        "action": "hit",
+    }
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_sendkeys_event_triggers_module_device(hass, calls, entry):
-    """Test we get the expected triggers from a LCN non-module device."""
+async def test_if_fires_on_sendkeys_event(hass, calls, entry):
+    """Test for sendkeys event triggers firing."""
     await init_integration(hass, entry)
     device = get_device(hass, entry, (0, 7, False))
 
@@ -236,6 +241,8 @@ async def test_sendkeys_event_triggers_module_device(hass, calls, entry):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].data["test"] == "test_trigger_sendkeys"
-    assert calls[0].data["key"] == "a1"
-    assert calls[0].data["action"] == "hit"
+    assert calls[0].data == {
+        "test": "test_trigger_sendkeys",
+        "key": "a1",
+        "action": "hit",
+    }

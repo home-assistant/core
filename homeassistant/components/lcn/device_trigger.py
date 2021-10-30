@@ -1,6 +1,8 @@
 """Provides device triggers for LCN."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -43,7 +45,9 @@ TRIGGER_SCHEMA = vol.Any(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for LCN devices."""
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
@@ -93,16 +97,3 @@ async def async_attach_trigger(
     return await event.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
-
-
-async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
-    """List trigger capabilities."""
-    if config[CONF_TYPE] == "transmitter":
-        return {"extra_fields": vol.Schema(TRANSMITTER_SCHEMA)}
-    elif config[CONF_TYPE] == "transponder":
-        return {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)}
-    elif config[CONF_TYPE] == "fingerprint":
-        return {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)}
-    elif config[CONF_TYPE] == "sendkeys":
-        return {"extra_fields": vol.Schema(SENDKEYS_SCHEMA)}
-    return {}

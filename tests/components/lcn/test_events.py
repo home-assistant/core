@@ -1,7 +1,7 @@
 """Tests for LCN events."""
 from unittest.mock import patch
 
-from pypck.inputs import ModSendKeysHost, ModStatusAccessControl
+from pypck.inputs import Input, ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
 
@@ -115,3 +115,18 @@ async def test_fire_sendkeys_event(hass, entry):
     assert events[3].event_type == "lcn_sendkeys"
     assert events[3].data["key"] == "b2"
     assert events[3].data["action"] == "make"
+
+
+@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
+async def test_dont_fire_on_non_module_input(hass, entry):
+    """Test for no event is fired if a non-module input is received."""
+    await init_integration(hass, entry)
+    device_registry = dr.async_get(hass)
+
+    inp = Input()
+
+    with patch.object(hass.bus, "async_fire") as async_fire:
+        host_input_received(hass, entry, device_registry, inp)
+        await hass.async_block_till_done()
+
+    assert async_fire.called is False
