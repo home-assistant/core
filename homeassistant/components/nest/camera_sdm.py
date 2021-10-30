@@ -80,6 +80,7 @@ class NestCamera(Camera):
         self._event_image_bytes: bytes | None = None
         self._event_image_cleanup_unsub: Callable[[], None] | None = None
         self.is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
+        self._placeholder_image: bytes | None = None
 
     @property
     def should_poll(self) -> bool:
@@ -219,7 +220,11 @@ class NestCamera(Camera):
                 return None
             # Nest Web RTC cams only have image previews for events, and not
             # for "now" by design to save batter, and need a placeholder.
-            return await self.hass.async_add_executor_job(PLACEHOLDER.read_bytes)
+            if not self._placeholder_image:
+                self._placeholder_image = await self.hass.async_add_executor_job(
+                    PLACEHOLDER.read_bytes
+                )
+            return self._placeholder_image
         return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
 
     async def _async_active_event_image(self) -> bytes | None:
