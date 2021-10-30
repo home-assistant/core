@@ -178,17 +178,16 @@ def host_input_received(
     identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
     device = device_registry.async_get_device(identifiers, set())
 
-    if not device:
-        return
-
     # fire event: lcn_transmitter, lcn_transponder or lcn_fingerprint
     if isinstance(inp, pypck.inputs.ModStatusAccessControl):
         event_data = {
-            CONF_DEVICE_ID: device.id,
             "segment_id": address[0],
             "module_id": address[1],
             "code": inp.code,
         }
+
+        if device is not None:
+            event_data.update({CONF_DEVICE_ID: device.id})
 
         if inp.periphery == pypck.lcn_defs.AccessControlPeriphery.TRANSMITTER:
             event_data.update(
@@ -208,12 +207,15 @@ def host_input_received(
                 if not selected:
                     continue
                 event_data = {
-                    CONF_DEVICE_ID: device.id,
                     "segment_id": address[0],
                     "module_id": address[1],
                     "key": pypck.lcn_defs.Key(table * 8 + key).name.lower(),
                     "action": action.name.lower(),
                 }
+
+                if device is not None:
+                    event_data.update({CONF_DEVICE_ID: device.id})
+
                 hass.bus.async_fire("lcn_sendkeys", event_data)
 
 
