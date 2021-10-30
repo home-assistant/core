@@ -131,7 +131,7 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
             self._last_run_success = bool(
                 await self.hass.async_add_executor_job(self._device.turn_on)
             )
-            if not self.data["data"]["switchMode"] and self._last_run_success:
+            if self._last_run_success:
                 self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -142,7 +142,7 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
             self._last_run_success = bool(
                 await self.hass.async_add_executor_job(self._device.turn_off)
             )
-            if not self.data["data"]["switchMode"] and self._last_run_success:
+            if self._last_run_success:
                 self._attr_is_on = False
 
     @property
