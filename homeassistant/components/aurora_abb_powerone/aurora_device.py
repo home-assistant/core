@@ -1,4 +1,6 @@
 """Top level class for AuroraABBPowerOneSolarPV inverters and sensors."""
+from __future__ import annotations
+
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -31,9 +33,11 @@ class AuroraEntity(Entity):
         self._available = True
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self) -> str | None:
         """Return the unique id for this device."""
-        serial = self._data[ATTR_SERIAL_NUMBER]
+        serial = self._data.get(ATTR_SERIAL_NUMBER)
+        if serial is None:
+            return None
         return f"{serial}_{self.entity_description.key}"
 
     @property

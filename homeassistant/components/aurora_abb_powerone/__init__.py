@@ -17,7 +17,8 @@ from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .config_flow import validate_and_connect
+from .const import ATTR_SERIAL_NUMBER, DOMAIN
 
 PLATFORMS = ["sensor"]
 
@@ -34,11 +35,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # unique_id not yet assigned.
     if entry.unique_id is None:
         try:
-            ser_client.connect()
+            res = await hass.async_add_executor_job(
+                validate_and_connect, hass, entry.data
+            )
+            entry.unique_id = res[ATTR_SERIAL_NUMBER]
         except AuroraError as error:
             if "No response after" in str(error):
                 raise ConfigEntryNotReady("No response (could be dark)") from error
-        entry.unique_id = ser_client.serial_number()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ser_client
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -53,6 +56,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # It should not be necessary to close the serial port because we close
     # it after every use in sensor.py, i.e. no need to do entry["client"].close()
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.unique_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

@@ -18,6 +18,15 @@ from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from tests.common import MockConfigEntry
 
 
+def _simulated_returns(index, global_measure=None):
+    returns = {
+        3: 45.678,  # power
+        21: 9.876,  # temperature
+        5: 12345,  # energy
+    }
+    return returns[index]
+
+
 async def test_form(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -224,9 +233,17 @@ async def test_import_night(hass):
     ), patch(
         "homeassistant.components.aurora_abb_powerone.config_flow._LOGGER.getEffectiveLevel",
         return_value=INFO,
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.measure",
+        side_effect=_simulated_returns,
     ):
         result = await entry.async_setup(hass)
-    assert entry.state == ConfigEntryState.LOADED
+        assert entry.state == ConfigEntryState.LOADED
+        assert entry.unique_id
+
+        assert len(mock_setup_entry.mock_calls) == 1
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.power_output").state == "45.7"
 
 
 async def test_import_already_existing(hass):
