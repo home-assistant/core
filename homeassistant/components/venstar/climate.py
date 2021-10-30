@@ -1,4 +1,6 @@
 """Support for Venstar WiFi Thermostats."""
+from functools import partial
+
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
@@ -84,7 +86,6 @@ async def async_setup_entry(
                 config_entry,
             )
         ],
-        True,
     )
 
 
@@ -275,7 +276,12 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             _LOGGER.error("Failed to change the operation mode")
         return success
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
+        """Set a new target temperature."""
+        await self.hass.async_add_executor_job(partial(self._set_temperature, **kwargs))
+        self.async_write_ha_state()
+
+    def _set_temperature(self, **kwargs):
         """Set a new target temperature."""
         set_temp = True
         operation_mode = kwargs.get(ATTR_HVAC_MODE)
@@ -313,7 +319,12 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             if not success:
                 _LOGGER.error("Failed to change the temperature")
 
-    def set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set a new target fan mode."""
+        await self.hass.async_add_executor_job(partial(self._set_fan_mode, fan_mode))
+        self.async_write_ha_state()
+
+    def _set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         if fan_mode == STATE_ON:
             success = self._client.set_fan(self._client.FAN_ON)
@@ -323,18 +334,35 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         if not success:
             _LOGGER.error("Failed to change the fan mode")
 
-    def set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set a new target operation mode."""
+        await self.hass.async_add_executor_job(partial(self._set_hvac_mode, hvac_mode))
+        self.async_write_ha_state()
+
+    def _set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         self._set_operation_mode(hvac_mode)
 
-    def set_humidity(self, humidity):
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set a new target humidity."""
+        await self.hass.async_add_executor_job(partial(self._set_humidity, humidity))
+        self.async_write_ha_state()
+
+    def _set_humidity(self, humidity):
         """Set new target humidity."""
         success = self._client.set_hum_setpoint(humidity)
 
         if not success:
             _LOGGER.error("Failed to change the target humidity level")
 
-    def set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the hold mode."""
+        await self.hass.async_add_executor_job(
+            partial(self._set_preset_mode, preset_mode)
+        )
+        self.async_write_ha_state()
+
+    def _set_preset_mode(self, preset_mode):
         """Set the hold mode."""
         if preset_mode == PRESET_AWAY:
             success = self._client.set_away(self._client.AWAY_AWAY)

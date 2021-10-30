@@ -70,7 +70,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         venstar_connection: VenstarColorTouch,
     ) -> None:
         """Initialize global Venstar data updater."""
-        self._client = venstar_connection
+        self.client = venstar_connection
 
         super().__init__(
             hass,
@@ -79,14 +79,10 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             update_interval=timedelta(seconds=60),
         )
 
-    def _get_client(self):
-        """Return the client."""
-        return self._client
-
     async def _async_update_data(self) -> None:
         """Update the state."""
         try:
-            await self.hass.async_add_executor_job(self._client.update_info)
+            await self.hass.async_add_executor_job(self.client.update_info)
         except (OSError, RequestException) as ex:
             raise update_coordinator.UpdateFailed(
                 f"Exception during Venstar info update: {ex}"
@@ -96,7 +92,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         await asyncio.sleep(3)
 
         try:
-            await self.hass.async_add_executor_job(self._client.update_sensors)
+            await self.hass.async_add_executor_job(self.client.update_sensors)
         except (OSError, RequestException) as ex:
             raise update_coordinator.UpdateFailed(
                 f"Exception during Venstar sensor update: {ex}"
@@ -116,7 +112,12 @@ class VenstarEntity(CoordinatorEntity):
         super().__init__(venstar_data_coordinator)
         self._config = config
         self._update_attr()
-        self._client = venstar_data_coordinator._get_client()
+        self.coordinator = venstar_data_coordinator
+
+    @property
+    def _client(self):
+        """Return the venstar client."""
+        return self.coordinator.client
 
     @callback
     def _update_attr(self) -> None:
