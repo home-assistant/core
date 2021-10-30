@@ -180,20 +180,20 @@ SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
 SERVICE_SCHEMA_SET_COLOR_SCENE = {
     vol.Required(ATTR_RGB_COLOR): vol.All(
-        vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
     ),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_HSV_SCENE = {
     vol.Required(ATTR_HS_COLOR): vol.All(
+        vol.Coerce(tuple),
         vol.ExactSequence(
             (
                 vol.All(vol.Coerce(float), vol.Range(min=0, max=359)),
                 vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
             )
         ),
-        vol.Coerce(tuple),
     ),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }

@@ -242,6 +242,9 @@ aiopylgtv==0.4.0
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
 
+# homeassistant.components.ridwell
+aioridwell==0.2.0
+
 # homeassistant.components.shelly
 aioshelly==1.0.2
 
@@ -1038,7 +1041,7 @@ mychevy==2.1.1
 mycroftapi==2.0
 
 # homeassistant.components.nad
-nad_receiver==0.2.0
+nad_receiver==0.3.0
 
 # homeassistant.components.keenetic_ndms2
 ndms2_client==0.1.1
@@ -2468,7 +2471,7 @@ youtube_dl==2021.06.06
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.9
+zeroconf==0.36.11
 
 # homeassistant.components.zha
 zha-quirks==0.0.63
