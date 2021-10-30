@@ -1,8 +1,6 @@
 """Support for Spider Powerplugs (energy & power)."""
 from __future__ import annotations
 
-from typing import Any
-
 from spiderpy.devices.powerplug import SpiderPowerPlug
 from spiderpy.spiderapi import SpiderApi
 
@@ -72,13 +70,15 @@ class SpiderPowerPlugEnergy(SensorEntity):
         return f"{self.power_plug.name} Total Energy Today"
 
     @property
-    def native_value(self) -> float | Any:
+    def native_value(self) -> float:
         """Return todays energy usage in Kwh."""
         return round(self.power_plug.today_energy_consumption / 1000, 2)
 
     def update(self) -> None:
         """Get the latest data."""
-        self.power_plug = self.api.get_power_plug(self.power_plug.id)
+        power_plug = self.api.get_power_plug(self.power_plug.id)
+        if power_plug is not None:
+            self.power_plug = power_plug
 
 
 class SpiderPowerPlugPower(SensorEntity):
@@ -120,4 +120,6 @@ class SpiderPowerPlugPower(SensorEntity):
 
     def update(self) -> None:
         """Get the latest data."""
-        self.power_plug = self.api.get_power_plug(self.power_plug.id)
+        power_plug = self.api.get_power_plug(self.power_plug.id)
+        if power_plug is not None:
+            self.power_plug = power_plug

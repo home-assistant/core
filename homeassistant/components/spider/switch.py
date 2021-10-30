@@ -7,7 +7,6 @@ from spiderpy.devices.powerplug import SpiderPowerPlug
 from spiderpy.spiderapi import SpiderApi
 
 from homeassistant.components.switch import SwitchEntity
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -48,33 +47,35 @@ class PowerPlug(SwitchEntity):
         )
 
     @property
-    def unique_id(self) -> str | Any:
+    def unique_id(self) -> str:
         """Return the ID of this switch."""
         return self.power_plug.id
 
     @property
-    def name(self) -> str | Any:
+    def name(self) -> str:
         """Return the name of the switch if any."""
         return self.power_plug.name
 
     @property
-    def is_on(self) -> bool | Any:
+    def is_on(self) -> bool:
         """Return true if switch is on. Standby is on."""
         return self.power_plug.is_on
 
     @property
-    def available(self) -> bool | Any:
+    def available(self) -> bool:
         """Return true if switch is available."""
         return self.power_plug.is_available
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        self.power_plug.turn_on()
+        self.api.turn_power_plug_on(self.power_plug)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
-        self.power_plug.turn_off()
+        self.api.turn_power_plug_off(self.power_plug)
 
     def update(self) -> None:
         """Get the latest data."""
-        self.power_plug = self.api.get_power_plug(self.power_plug.id)
+        power_plug = self.api.get_power_plug(self.power_plug.id)
+        if power_plug is not None:
+            self.power_plug = power_plug

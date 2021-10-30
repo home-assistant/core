@@ -52,11 +52,11 @@ class Thermostat(ClimateEntity):
         """Initialize the thermostat."""
         self.api: SpiderApi = api
         self.thermostat: SpiderThermostat = thermostat
-        self.support_fan = thermostat.fan_speed_values
-        self.support_hvac = []
-        for operation_value in thermostat.operation_values:
-            if operation_value in SPIDER_STATE_TO_HA:
-                self.support_hvac.append(SPIDER_STATE_TO_HA[operation_value])
+        self.support_fan: list[str] = thermostat.available_fan_speed_modes
+        self.support_hvac: list[str] = []
+        for operation_mode in thermostat.available_operation_modes:
+            if operation_mode in SPIDER_STATE_TO_HA:
+                self.support_hvac.append(SPIDER_STATE_TO_HA[operation_mode])
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -71,17 +71,17 @@ class Thermostat(ClimateEntity):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        if self.thermostat.has_fan_mode:
+        if self.thermostat.has_fan_speed_mode:
             return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
         return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def unique_id(self) -> str | Any:
+    def unique_id(self) -> str:
         """Return the id of the thermostat, if any."""
         return self.thermostat.id
 
     @property
-    def name(self) -> str | Any:
+    def name(self) -> str:
         """Return the name of the thermostat, if any."""
         return self.thermostat.name
 
@@ -91,34 +91,34 @@ class Thermostat(ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def current_temperature(self) -> float | None | Any:
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self.thermostat.current_temperature
 
     @property
-    def target_temperature(self) -> float | None | Any:
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.thermostat.target_temperature
 
     @property
-    def target_temperature_step(self) -> float | None | Any:
+    def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         return self.thermostat.temperature_steps
 
     @property
-    def min_temp(self) -> float | Any:
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self.thermostat.minimum_temperature
 
     @property
-    def max_temp(self) -> float | Any:
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self.thermostat.maximum_temperature
 
     @property
     def hvac_mode(self) -> str:
         """Return current operation ie. heat, cool, idle."""
-        return SPIDER_STATE_TO_HA[self.thermostat.operation_mode]
+        return SPIDER_STATE_TO_HA[self.thermostat.current_operation_mode]
 
     @property
     def hvac_modes(self) -> list[str]:
@@ -130,20 +130,22 @@ class Thermostat(ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
-        self.thermostat.set_temperature(temperature)
+        self.api.set_temperature(self.thermostat, temperature)
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode."""
-        self.thermostat.set_operation_mode(HA_STATE_TO_SPIDER.get(hvac_mode))
+        self.api.set_operation_mode(
+            self.thermostat, str(HA_STATE_TO_SPIDER.get(hvac_mode))
+        )
 
     @property
-    def fan_mode(self) -> str | None | Any:
+    def fan_mode(self) -> str:
         """Return the fan setting."""
-        return self.thermostat.current_fan_speed
+        return self.thermostat.current_fan_speed_mode
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        self.thermostat.set_fan_speed(fan_mode)
+        self.api.set_fan_speed(self.thermostat, fan_mode)
 
     @property
     def fan_modes(self) -> list[str] | None:
@@ -152,4 +154,6 @@ class Thermostat(ClimateEntity):
 
     def update(self) -> None:
         """Get the latest data."""
-        self.thermostat = self.api.get_thermostat(self.unique_id)
+        thermostat = self.api.get_thermostat(self.unique_id)
+        if thermostat is not None:
+            self.thermostat = thermostat

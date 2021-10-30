@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Spider via config entry."""
     try:
-        api = await hass.async_add_executor_job(
+        api: SpiderApi = await hass.async_add_executor_job(
             SpiderApi,
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
