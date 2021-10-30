@@ -106,9 +106,7 @@ class UnifiWirelessClients:
 
     async def async_load(self):
         """Load data from file."""
-        data = await self._store.async_load()
-
-        if data is not None:
+        if (data := await self._store.async_load()) is not None:
             self.data = data
 
     @callback
