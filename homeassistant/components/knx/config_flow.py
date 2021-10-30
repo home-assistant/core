@@ -270,5 +270,5 @@ def gateway_descriptor_to_string(descriptor: GatewayDescriptor) -> str:
 async def scan_for_gateways() -> list:
     """Scan for gateways within the network."""
     xknx = XKNX()
-    gatewayscanner = GatewayScanner(xknx, timeout_in_seconds=4)
+    gatewayscanner = GatewayScanner(xknx, stop_on_found=0, timeout_in_seconds=2)
     return await gatewayscanner.scan()
