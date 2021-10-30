@@ -21,11 +21,16 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform
 )
+from homeassistant.helpers.entity_component import EntityComponent
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
 
+
+# Set up the console logger for debugging
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel("DEBUG")
+_LOGGER.debug("cvera DEBUG logging is ON")
 
 ATTR_LAST_USER_NAME = "changed_by_name"
 ATTR_LOW_BATTERY = "low_battery"
@@ -43,6 +48,7 @@ CLEAR_PIN_SCHEMA = vol.Schema(
     }
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -50,27 +56,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        name = "setpin",
+        schema = SET_PIN_SCHEMA,
+        func = CVeraLock.set_new_pin.__name__
+    )
+    platform.async_register_entity_service(
+        name = "clearpin",
+        schema = CLEAR_PIN_SCHEMA,
+        func = CVeraLock.clear_slot_pin.__name__
+    )
+
     async_add_entities(
         [
-            VeraLock(device, controller_data)
+            CVeraLock(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
         ],
         True,
     )
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        "setpin",
-        SET_PIN_SCHEMA,
-        "_setpin"
-    )
-    platform.async_register_entity_service(
-        "clearpin",
-        CLEAR_PIN_SCHEMA,
-        "_clearpin"
-    )
+    
+    _LOGGER.debug("cvera setup entry")
+    _LOGGER.debug(platform)
 
-
-class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
+class CVeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
     """Representation of a Vera lock."""
 
     def __init__(
@@ -91,10 +100,10 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
         """Unlock the device."""
         self.vera_device.unlock()
         self._state = STATE_UNLOCKED
-    
-    def _setpin(self, **kwargs: Any) -> None:
+        
+    async def set_new_pin(self, **kwargs: Any) -> None:
         """Set pin on the device."""
-        _LOGGER.warning("calling veralock.setpin to add %s with pin %s", kwargs[CONF_NAME], kwargs[CONF_PIN])
+        _LOGGER.debug("calling veralock.setpin to add with pin")
         result = self.vera_device.set_new_pin(name = kwargs[CONF_NAME], pin = kwargs[CONF_PIN])
         if result.status_code == HTTP_OK:
             self._cmd_status = "Removed"
@@ -102,10 +111,10 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
             self._cmd_status = result.text
             _LOGGER.error("Failed to call %s: %s", "veralock.setpin", result.text)
             raise ValueError(result.text)
-    
-    def _clearpin(self, **kwargs: Any) -> None:
+
+    async def clear_slot_pin(self, **kwargs: Any) -> None:
         """Clear pin on the device."""
-        _LOGGER.warning("calling veralock.clearpin to clear slot %s", kwargs["slot"])
+        _LOGGER.debug("calling veralock.celarpin")
         result = self.vera_device.clear_slot_pin(slot = kwargs["slot"])
         if result.status_code == HTTP_OK:
             self._cmd_status = "Removed"
