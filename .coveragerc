@@ -1066,14 +1066,6 @@ omit =
     homeassistant/components/terncy/const.py
     homeassistant/components/terncy/hub_monitor.py
     homeassistant/components/terncy/light.py
-    homeassistant/components/tesla/__init__.py
-    homeassistant/components/tesla/binary_sensor.py
-    homeassistant/components/tesla/climate.py
-    homeassistant/components/tesla/const.py
-    homeassistant/components/tesla/device_tracker.py
-    homeassistant/components/tesla/lock.py
-    homeassistant/components/tesla/sensor.py
-    homeassistant/components/tesla/switch.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
     homeassistant/components/thethingsnetwork/*
