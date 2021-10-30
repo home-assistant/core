@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
+    CONF_ICON,
     CONF_HEADERS,
     CONF_NAME,
     CONF_PASSWORD,
@@ -53,6 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_ICON): cv.string,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -74,6 +76,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     index = config.get(CONF_INDEX)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     device_class = config.get(CONF_DEVICE_CLASS)
+    icon = config.get(CONF_ICON)
     state_class = config.get(CONF_STATE_CLASS)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -105,6 +108,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 value_template,
                 unit,
                 device_class,
+                icon,
                 state_class,
             )
         ],
@@ -125,6 +129,7 @@ class ScrapeSensor(SensorEntity):
         value_template,
         unit,
         device_class,
+        icon,
         state_class,
     ):
         """Initialize a web scrape sensor."""
@@ -137,6 +142,7 @@ class ScrapeSensor(SensorEntity):
         self._attr_name = name
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
+        self._attr_icon = icon
         self._attr_state_class = state_class
 
     @property
