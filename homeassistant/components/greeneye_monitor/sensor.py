@@ -6,6 +6,7 @@ from typing import Any, Union
 import greeneye
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
@@ -18,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_CHANNELS,
@@ -43,17 +43,13 @@ UNIT_WATTS = POWER_WATT
 COUNTER_ICON = "mdi:counter"
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up a single GEM temperature sensor."""
-    if not discovery_info:
-        return
-
-    monitor_configs = discovery_info[CONF_MONITORS]
+    """Set up GEM sensors from the config entry."""
+    monitor_configs = config_entry.options[CONF_MONITORS]
 
     def on_new_monitor(monitor: greeneye.monitor.Monitor) -> None:
         monitor_config = next(

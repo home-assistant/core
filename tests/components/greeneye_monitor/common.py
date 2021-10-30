@@ -46,7 +46,6 @@ def make_single_monitor_config_with_sensors(sensors: dict[str, Any]) -> dict[str
     }
 
 
-SINGLE_MONITOR_CONFIG_NO_SENSORS = make_single_monitor_config_with_sensors({})
 SINGLE_MONITOR_CONFIG_PULSE_COUNTERS = make_single_monitor_config_with_sensors(
     {
         CONF_PULSE_COUNTERS: [

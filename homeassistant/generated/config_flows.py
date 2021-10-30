@@ -127,6 +127,7 @@ FLOWS = [
     "google_travel_time",
     "gpslogger",
     "gree",
+    "greeneye_monitor",
     "growatt_server",
     "guardian",
     "habitica",

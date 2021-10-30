@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.greeneye_monitor import DOMAIN
+from homeassistant.components.greeneye_monitor import (
+    CONF_MONITORS,
+    CONFIG_SCHEMA,
+    DOMAIN,
+)
+from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import (
     MULTI_MONITOR_CONFIG,
-    SINGLE_MONITOR_CONFIG_NO_SENSORS,
     SINGLE_MONITOR_CONFIG_POWER_SENSORS,
     SINGLE_MONITOR_CONFIG_PULSE_COUNTERS,
     SINGLE_MONITOR_CONFIG_TEMPERATURE_SENSORS,
@@ -28,23 +32,90 @@ from .conftest import (
     assert_voltage_sensor_registered,
 )
 
-
-async def test_setup_fails_if_no_sensors_defined(
-    hass: HomeAssistant, monitors: AsyncMock
-) -> None:
-    """Test that component setup fails if there are no sensors defined in the YAML."""
-    success = await setup_greeneye_monitor_component_with_config(
-        hass, SINGLE_MONITOR_CONFIG_NO_SENSORS
-    )
-    assert not success
+from tests.common import MockConfigEntry
 
 
-@pytest.mark.xfail(reason="Currently failing. Will fix in subsequent PR.")
 async def test_setup_succeeds_no_config(
     hass: HomeAssistant, monitors: AsyncMock
 ) -> None:
     """Test that component setup succeeds if there is no config present in the YAML."""
     assert await async_setup_component(hass, DOMAIN, {})
+
+
+async def test_setup_creates_config_entry(
+    hass: HomeAssistant,
+    monitors: AsyncMock,
+) -> None:
+    """Test that component setup copies the YAML configuration into a config entry."""
+    assert await setup_greeneye_monitor_component_with_config(
+        hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
+    )
+
+    normalized_schema = CONFIG_SCHEMA(SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.data == {CONF_PORT: normalized_schema[DOMAIN][CONF_PORT]}
+    assert entry.options == {CONF_MONITORS: normalized_schema[DOMAIN][CONF_MONITORS]}
+
+
+async def test_setup_from_config_entry(
+    hass: HomeAssistant, monitors: AsyncMock
+) -> None:
+    """Test that setting up from a config entry works."""
+    normalized_schema = CONFIG_SCHEMA(SINGLE_MONITOR_CONFIG_PULSE_COUNTERS)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_PORT: normalized_schema[DOMAIN][CONF_PORT]},
+        options={CONF_MONITORS: normalized_schema[DOMAIN][CONF_MONITORS]},
+    )
+
+    await hass.config_entries.async_add(config_entry)
+    await hass.async_block_till_done()
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+
+    assert_pulse_counter_registered(
+        hass,
+        SINGLE_MONITOR_SERIAL_NUMBER,
+        3,
+        "pulse_3",
+        "gal",
+        "h",
+    )
+
+
+async def test_setup_gets_updates_from_yaml(
+    hass: HomeAssistant, monitors: AsyncMock
+) -> None:
+    """Test that component setup updates the existing config entry when YAML changes."""
+    normalized_schema = CONFIG_SCHEMA(SINGLE_MONITOR_CONFIG_TEMPERATURE_SENSORS)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data={CONF_PORT: normalized_schema[DOMAIN][CONF_PORT]},
+        options={CONF_MONITORS: normalized_schema[DOMAIN][CONF_MONITORS]},
+    )
+
+    # Patch async_setup so that async_add just adds the config entry
+    # This is to simulate the config entry already being present when
+    # the component setup is run
+    with patch("homeassistant.config_entries.ConfigEntries.async_setup"):
+        await hass.config_entries.async_add(config_entry)
+
+    assert await setup_greeneye_monitor_component_with_config(
+        hass, SINGLE_MONITOR_CONFIG_PULSE_COUNTERS
+    )
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+
+    assert_pulse_counter_registered(
+        hass,
+        SINGLE_MONITOR_SERIAL_NUMBER,
+        3,
+        "pulse_3",
+        "gal",
+        "h",
+    )
 
 
 async def test_setup_creates_temperature_entities(
