@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.netatmo import sensor
-from homeassistant.components.netatmo.sensor import MODULE_TYPE_WIND
 from homeassistant.helpers import entity_registry as er
 
 from .common import TEST_TIME, selected_platforms
@@ -100,21 +99,6 @@ async def test_process_rf(strength, expected):
 async def test_process_health(health, expected):
     """Test health index translation."""
     assert sensor.process_health(health) == expected
-
-
-@pytest.mark.parametrize(
-    "model, data, expected",
-    [
-        (MODULE_TYPE_WIND, 5591, "Full"),
-        (MODULE_TYPE_WIND, 5181, "High"),
-        (MODULE_TYPE_WIND, 4771, "Medium"),
-        (MODULE_TYPE_WIND, 4361, "Low"),
-        (MODULE_TYPE_WIND, 4300, "Very Low"),
-    ],
-)
-async def test_process_battery(model, data, expected):
-    """Test battery level translation."""
-    assert sensor.process_battery(data, model) == expected
 
 
 @pytest.mark.parametrize(

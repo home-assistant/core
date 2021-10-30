@@ -27,6 +27,13 @@ NETATMO_SCOPES = [
     "write_thermostat",
 ]
 
+MODULE_TYPE_THERM = "NATherm1"
+MODULE_TYPE_VALVE = "NRV"
+MODULE_TYPE_OUTDOOR = "NAModule1"
+MODULE_TYPE_WIND = "NAModule2"
+MODULE_TYPE_RAIN = "NAModule3"
+MODULE_TYPE_INDOOR = "NAModule4"
+
 MODEL_NAPLUG = "Relay"
 MODEL_NATHERM1 = "Smart Thermostat"
 MODEL_NRV = "Smart Radiator Valves"
@@ -69,6 +76,7 @@ CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
 DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
+NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_WEATHER_AREAS = "weather_areas"
