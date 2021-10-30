@@ -3,7 +3,11 @@ import logging
 
 from tesla_powerwall import MeterType
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
@@ -12,7 +16,6 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_KILO_WATT,
 )
-import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_FREQUENCY,
@@ -50,7 +53,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     powerwalls_serial_numbers = powerwall_data[POWERWALL_API_SERIAL_NUMBERS]
 
     entities = []
-    for meter in MeterType:
+    # coordinator.data[POWERWALL_API_METERS].meters holds all meters that are available
+    for meter in coordinator.data[POWERWALL_API_METERS].meters:
         entities.append(
             PowerWallEnergySensor(
                 meter,
@@ -87,7 +91,7 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall charge sensor."""
 
     _attr_name = "Powerwall Charge"
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = DEVICE_CLASS_BATTERY
 
     @property
@@ -96,7 +100,7 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
         return f"{self.base_unique_id}_charge"
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the current value in percentage."""
         return round(self.coordinator.data[POWERWALL_API_CHARGE])
 
@@ -105,7 +109,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Energy sensor."""
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = POWER_KILO_WATT
+    _attr_native_unit_of_measurement = POWER_KILO_WATT
     _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(
@@ -128,7 +132,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the current value in kW."""
         return (
             self.coordinator.data[POWERWALL_API_METERS]
@@ -151,10 +155,9 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
 class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_last_reset = dt_util.utc_from_timestamp(0)
 
     def __init__(
         self,
@@ -180,7 +183,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the current value in kWh."""
         meter = self.coordinator.data[POWERWALL_API_METERS].get_meter(self._meter)
         if self._meter_direction == _METER_DIRECTION_EXPORT:

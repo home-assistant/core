@@ -81,6 +81,29 @@ def has_date_or_time(conf):
     raise vol.Invalid("Entity needs at least a date or a time")
 
 
+def valid_initial(conf):
+    """Check the initial value is valid."""
+    if not (initial := conf.get(CONF_INITIAL)):
+        return conf
+
+    if conf[CONF_HAS_DATE] and conf[CONF_HAS_TIME]:
+        parsed_value = dt_util.parse_datetime(initial)
+        if parsed_value is not None:
+            return conf
+        raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a datetime")
+
+    if conf[CONF_HAS_DATE]:
+        parsed_value = dt_util.parse_date(initial)
+        if parsed_value is not None:
+            return conf
+        raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
+
+    parsed_value = dt_util.parse_time(initial)
+    if parsed_value is not None:
+        return conf
+    raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
@@ -93,6 +116,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_INITIAL): cv.string,
                 },
                 has_date_or_time,
+                valid_initial,
             )
         )
     },
@@ -201,8 +225,7 @@ class InputDatetime(RestoreEntity):
         self.editable = True
         self._current_datetime = None
 
-        initial = config.get(CONF_INITIAL)
-        if not initial:
+        if not (initial := config.get(CONF_INITIAL)):
             return
 
         if self.has_date and self.has_time:
@@ -319,12 +342,18 @@ class InputDatetime(RestoreEntity):
         return self._current_datetime.strftime(FMT_TIME)
 
     @property
+    def capability_attributes(self) -> dict:
+        """Return the capability attributes."""
+        return {
+            CONF_HAS_DATE: self.has_date,
+            CONF_HAS_TIME: self.has_time,
+        }
+
+    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_EDITABLE: self.editable,
-            CONF_HAS_DATE: self.has_date,
-            CONF_HAS_TIME: self.has_time,
         }
 
         if self._current_datetime is None:

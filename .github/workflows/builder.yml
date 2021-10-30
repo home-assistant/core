@@ -23,7 +23,7 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
         with:
           fetch-depth: 0
 
@@ -67,7 +67,7 @@ jobs:
     if: needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v2.2.2
@@ -97,7 +97,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
@@ -133,7 +133,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.07.0
+        uses: home-assistant/builder@2021.09.0
         with:
           args: |
             $BUILD_ARGS \
@@ -170,7 +170,7 @@ jobs:
           - tinker
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Login to DockerHub
         uses: docker/login-action@v1.10.0
@@ -186,7 +186,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.07.0
+        uses: home-assistant/builder@2021.09.0
         with:
           args: |
             $BUILD_ARGS \
@@ -201,7 +201,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Initialize git
         uses: home-assistant/actions/helpers/git-init@master
@@ -233,7 +233,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Login to DockerHub
         uses: docker/login-action@v1.10.0
@@ -248,11 +248,12 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install VCN tools
+        uses: home-assistant/actions/helpers/vcn@master
+
       - name: Build Meta Image
         shell: bash
         run: |
-          bash <(curl https://getvcn.codenotary.com -L)
-
           export DOCKER_CLI_EXPERIMENTAL=enabled
 
           function create_manifest() {

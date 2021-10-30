@@ -5,11 +5,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -28,7 +27,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util import dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -62,18 +60,21 @@ ICON = "mdi:chart-histogram"
 
 DEFAULT_ROUND = 3
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
-        vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
-        vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-        vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_METHOD, default=TRAPEZOIDAL_METHOD): vol.In(
-            INTEGRATION_METHOD
-        ),
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_UNIT_OF_MEASUREMENT),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
+            vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
+            vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
+            vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_METHOD, default=TRAPEZOIDAL_METHOD): vol.In(
+                INTEGRATION_METHOD
+            ),
+        }
+    ),
 )
 
 
@@ -108,58 +109,39 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         """Initialize the integration sensor."""
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state = 0
+        self._state = None
         self._method = integration_method
 
         self._name = name if name is not None else f"{source_entity} integral"
-
-        if unit_of_measurement is None:
-            self._unit_template = (
-                f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
-            )
-            # we postpone the definition of unit_of_measurement to later
-            self._unit_of_measurement = None
-        else:
-            self._unit_of_measurement = unit_of_measurement
-
+        self._unit_template = (
+            f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
+        )
+        self._unit_of_measurement = unit_of_measurement
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_state_class = STATE_CLASS_TOTAL
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
-        self._attr_last_reset = dt_util.utcnow()
         if state:
             try:
                 self._state = Decimal(state.state)
             except (DecimalException, ValueError) as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
             else:
-                last_reset = dt_util.parse_datetime(
-                    state.attributes.get(ATTR_LAST_RESET, "")
-                )
-                self._attr_last_reset = (
-                    last_reset if last_reset else dt_util.utc_from_timestamp(0)
-                )
                 self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-
-                self._unit_of_measurement = state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
+                if self._unit_of_measurement is None:
+                    self._unit_of_measurement = state.attributes.get(
+                        ATTR_UNIT_OF_MEASUREMENT
+                    )
 
         @callback
         def calc_integration(event):
             """Handle the sensor state changes."""
             old_state = event.data.get("old_state")
             new_state = event.data.get("new_state")
-            if (
-                old_state is None
-                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            ):
-                return
 
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -171,6 +153,14 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                 and new_state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
             ):
                 self._attr_device_class = DEVICE_CLASS_ENERGY
+
+            if (
+                old_state is None
+                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            ):
+                return
+
             try:
                 # integration as the Riemann integral of previous measures.
                 area = 0
@@ -200,7 +190,10 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             except AssertionError as err:
                 _LOGGER.error("Could not calculate integral: %s", err)
             else:
-                self._state += integral
+                if isinstance(self._state, Decimal):
+                    self._state += integral
+                else:
+                    self._state = integral
                 self.async_write_ha_state()
 
         async_track_state_change_event(
@@ -213,12 +206,14 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
-        return round(self._state, self._round_digits)
+        if isinstance(self._state, Decimal):
+            return round(self._state, self._round_digits)
+        return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 

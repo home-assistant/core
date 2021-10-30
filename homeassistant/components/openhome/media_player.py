@@ -263,8 +263,7 @@ class OpenhomeDevice(MediaPlayerEntity):
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        artists = self._track_information.get("artist")
-        if artists:
+        if artists := self._track_information.get("artist"):
             return artists[0]
 
     @property

@@ -1,9 +1,9 @@
 """Constants for the ClimaCell integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Callable
 
 from pyclimacell.const import (
     DAILY,
@@ -66,7 +66,7 @@ DEFAULT_FORECAST_TYPE = DAILY
 DOMAIN = "climacell"
 ATTRIBUTION = "Powered by ClimaCell"
 
-MAX_REQUESTS_PER_DAY = 500
+MAX_REQUESTS_PER_DAY = 100
 
 CLEAR_CONDITIONS = {"night": ATTR_CONDITION_CLEAR_NIGHT, "day": ATTR_CONDITION_SUNNY}
 

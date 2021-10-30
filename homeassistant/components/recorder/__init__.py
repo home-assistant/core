@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Iterable
 import concurrent.futures
 from datetime import datetime, timedelta
 import logging
@@ -9,11 +10,12 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, Callable, NamedTuple
+from typing import Any, NamedTuple
 
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm.session import Session
 from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
@@ -48,9 +50,16 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from . import history, migration, purge, statistics
+from . import history, migration, purge, statistics, websocket_api
 from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
-from .models import Base, Events, RecorderRuns, States
+from .models import (
+    Base,
+    Events,
+    RecorderRuns,
+    States,
+    StatisticsRuns,
+    process_timestamp,
+)
 from .pool import RecorderPool
 from .util import (
     dburl_to_path,
@@ -174,6 +183,17 @@ async def async_migration_in_progress(hass: HomeAssistant) -> bool:
     return hass.data[DATA_INSTANCE].migration_in_progress
 
 
+@bind_hass
+def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
+    """Check if an entity is being recorded.
+
+    Async friendly.
+    """
+    if DATA_INSTANCE not in hass.data:
+        return False
+    return hass.data[DATA_INSTANCE].entity_filter(entity_id)
+
+
 def run_information(hass, point_in_time: datetime | None = None):
     """Return information about current run.
 
@@ -229,6 +249,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     exclude = conf[CONF_EXCLUDE]
     exclude_t = exclude.get(CONF_EVENT_TYPES, [])
+    if EVENT_STATE_CHANGED in exclude_t:
+        _LOGGER.warning(
+            "State change events are excluded, recorder will not record state changes."
+            "This will become an error in Home Assistant Core 2022.2"
+        )
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
@@ -245,6 +270,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     _async_register_services(hass, instance)
     history.async_setup(hass)
     statistics.async_setup(hass)
+    websocket_api.async_setup(hass)
     await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
 
     return await instance.async_db_ready
@@ -303,6 +329,19 @@ def _async_register_services(hass, instance):
     )
 
 
+class ClearStatisticsTask(NamedTuple):
+    """Object to store statistics_ids which for which to remove statistics."""
+
+    statistic_ids: list[str]
+
+
+class UpdateStatisticsMetadataTask(NamedTuple):
+    """Object to store statistics_id and unit for update of statistics metadata."""
+
+    statistic_id: str
+    unit_of_measurement: str | None
+
+
 class PurgeTask(NamedTuple):
     """Object to store information about purge task."""
 
@@ -325,6 +364,13 @@ class StatisticsTask(NamedTuple):
     """An object to insert into the recorder queue to run a statistics task."""
 
     start: datetime
+
+
+class ExternalStatisticsTask(NamedTuple):
+    """An object to insert into the recorder queue to run an external statistics task."""
+
+    metadata: dict
+    statistics: Iterable[dict]
 
 
 class WaitTask:
@@ -379,6 +425,7 @@ class Recorder(threading.Thread):
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
         self._queue_watcher = None
+        self._db_supports_row_number = True
 
         self.enabled = True
 
@@ -428,9 +475,7 @@ class Recorder(threading.Thread):
         if event.event_type in self.exclude_t:
             return False
 
-        entity_id = event.data.get(ATTR_ENTITY_ID)
-
-        if entity_id is None:
+        if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
             return True
 
         if isinstance(entity_id, str):
@@ -461,8 +506,7 @@ class Recorder(threading.Thread):
 
     def do_adhoc_statistics(self, **kwargs):
         """Trigger an adhoc statistics run."""
-        start = kwargs.get("start")
-        if not start:
+        if not (start := kwargs.get("start")):
             start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 
@@ -545,20 +589,41 @@ class Recorder(threading.Thread):
             self.queue.put(PerodicCleanupTask())
 
     @callback
-    def async_hourly_statistics(self, now):
+    def async_periodic_statistics(self, now):
         """Trigger the hourly statistics run."""
         start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 
+    @callback
+    def async_clear_statistics(self, statistic_ids):
+        """Clear statistics for a list of statistic_ids."""
+        self.queue.put(ClearStatisticsTask(statistic_ids))
+
+    @callback
+    def async_update_statistics_metadata(self, statistic_id, unit_of_measurement):
+        """Update statistics metadata for a statistic_id."""
+        self.queue.put(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
+
+    @callback
+    def async_external_statistics(self, metadata, stats):
+        """Schedule external statistics."""
+        self.queue.put(ExternalStatisticsTask(metadata, stats))
+
+    @callback
     def _async_setup_periodic_tasks(self):
         """Prepare periodic tasks."""
+        if self.hass.is_stopping or not self.get_session:
+            # Home Assistant is shutting down
+            return
+
         # Run nightly tasks at 4:12am
         async_track_time_change(
             self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
         )
-        # Compile hourly statistics every hour at *:12
+
+        # Compile short term statistics every 5 minutes
         async_track_time_change(
-            self.hass, self.async_hourly_statistics, minute=12, second=0
+            self.hass, self.async_periodic_statistics, minute=range(0, 60, 5), second=10
         )
 
     def run(self):
@@ -595,7 +660,7 @@ class Recorder(threading.Thread):
         if not schema_is_current:
             if self._migrate_schema_and_setup_run(current_version):
                 if not self._event_listener:
-                    # If the schema migration takes so longer that the end
+                    # If the schema migration takes so long that the end
                     # queue watcher safety kicks in because MAX_QUEUE_BACKLOG
                     # is reached, we need to reinitialize the listener.
                     self.hass.add_job(self.async_initialize)
@@ -723,6 +788,13 @@ class Recorder(threading.Thread):
         # Schedule a new statistics task if this one didn't finish
         self.queue.put(StatisticsTask(start))
 
+    def _run_external_statistics(self, metadata, stats):
+        """Run statistics task."""
+        if statistics.add_external_statistics(self, metadata, stats):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        self.queue.put(StatisticsTask(metadata, stats))
+
     def _process_one_event(self, event):
         """Process one event."""
         if isinstance(event, PurgeTask):
@@ -736,6 +808,17 @@ class Recorder(threading.Thread):
             return
         if isinstance(event, StatisticsTask):
             self._run_statistics(event.start)
+            return
+        if isinstance(event, ClearStatisticsTask):
+            statistics.clear_statistics(self, event.statistic_ids)
+            return
+        if isinstance(event, UpdateStatisticsMetadataTask):
+            statistics.update_statistics_metadata(
+                self, event.statistic_id, event.unit_of_measurement
+            )
+            return
+        if isinstance(event, ExternalStatisticsTask):
+            self._run_external_statistics(event.metadata, event.statistics)
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()
@@ -914,6 +997,7 @@ class Recorder(threading.Thread):
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
             setup_connection_for_dialect(
+                self,
                 self.engine.dialect.name,
                 dbapi_connection,
                 not self._completed_first_database_setup,
@@ -954,7 +1038,7 @@ class Recorder(threading.Thread):
         self.get_session = None
 
     def _setup_run(self):
-        """Log the start of the current run."""
+        """Log the start of the current run and schedule any needed jobs."""
         with session_scope(session=self.get_session()) as session:
             start = self.recording_start
             end_incomplete_runs(session, start)
@@ -962,8 +1046,28 @@ class Recorder(threading.Thread):
             session.add(self.run_info)
             session.flush()
             session.expunge(self.run_info)
+            self._schedule_compile_missing_statistics(session)
 
         self._open_event_session()
+
+    def _schedule_compile_missing_statistics(self, session: Session) -> None:
+        """Add tasks for missing statistics runs."""
+        now = dt_util.utcnow()
+        last_period_minutes = now.minute - now.minute % 5
+        last_period = now.replace(minute=last_period_minutes, second=0, microsecond=0)
+        start = now - timedelta(days=self.keep_days)
+        start = start.replace(minute=0, second=0, microsecond=0)
+
+        # Find the newest statistics run, if any
+        if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
+            start = max(start, process_timestamp(last_run) + timedelta(minutes=5))
+
+        # Add tasks
+        while start < last_period:
+            end = start + timedelta(minutes=5)
+            _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
+            self.queue.put(StatisticsTask(start))
+            start = end
 
     def _end_session(self):
         """End the recorder session."""

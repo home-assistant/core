@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "\u8a8d\u8a3c\u30b3\u30fc\u30c9"
+                },
+                "title": "\u627f\u8a8d\u7d42\u4e86"
+            }
+        }
+    }
+}

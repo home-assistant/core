@@ -1,4 +1,6 @@
 """Sensor platform for mobile_app."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import callback
@@ -12,6 +14,7 @@ from .const import (
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_NAME,
     ATTR_SENSOR_STATE,
+    ATTR_SENSOR_STATE_CLASS,
     ATTR_SENSOR_TYPE,
     ATTR_SENSOR_TYPE_SENSOR as ENTITY_TYPE,
     ATTR_SENSOR_UNIQUE_ID,
@@ -28,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     for entry in entries:
         if entry.domain != ENTITY_TYPE or entry.disabled_by:
@@ -74,11 +77,16 @@ class MobileAppSensor(MobileAppEntity, SensorEntity):
     """Representation of an mobile app sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._config[ATTR_SENSOR_STATE]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._config.get(ATTR_SENSOR_UOM)
+
+    @property
+    def state_class(self) -> str | None:
+        """Return state class."""
+        return self._config.get(ATTR_SENSOR_STATE_CLASS)

@@ -1,5 +1,5 @@
 """Support for Iperf3 sensors."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -18,42 +18,26 @@ ATTR_REMOTE_PORT = "Remote Port"
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info):
     """Set up the Iperf3 sensor."""
-    sensors = []
-    for iperf3_host in hass.data[IPERF3_DOMAIN].values():
-        sensors.extend([Iperf3Sensor(iperf3_host, sensor) for sensor in discovery_info])
-    async_add_entities(sensors, True)
+    entities = [
+        Iperf3Sensor(iperf3_host, description)
+        for iperf3_host in hass.data[IPERF3_DOMAIN].values()
+        for description in SENSOR_TYPES
+        if description.key in discovery_info
+    ]
+    async_add_entities(entities, True)
 
 
 class Iperf3Sensor(RestoreEntity, SensorEntity):
     """A Iperf3 sensor implementation."""
 
-    def __init__(self, iperf3_data, sensor_type):
+    _attr_icon = ICON
+    _attr_should_poll = False
+
+    def __init__(self, iperf3_data, description: SensorEntityDescription):
         """Initialize the sensor."""
-        self._name = f"{SENSOR_TYPES[sensor_type][0]} {iperf3_data.host}"
-        self._state = None
-        self._sensor_type = sensor_type
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self.entity_description = description
         self._iperf3_data = iperf3_data
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
+        self._attr_name = f"{description.name} {iperf3_data.host}"
 
     @property
     def extra_state_attributes(self):
@@ -65,11 +49,6 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
             ATTR_REMOTE_PORT: self._iperf3_data.port,
             ATTR_VERSION: self._iperf3_data.data[ATTR_VERSION],
         }
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement for this sensor."""
-        return False
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -84,13 +63,13 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
         state = await self.async_get_last_state()
         if not state:
             return
-        self._state = state.state
+        self._attr_native_value = state.state
 
     def update(self):
         """Get the latest data and update the states."""
-        data = self._iperf3_data.data.get(self._sensor_type)
+        data = self._iperf3_data.data.get(self.entity_description.key)
         if data is not None:
-            self._state = round(data, 2)
+            self._attr_native_value = round(data, 2)
 
     @callback
     def _schedule_immediate_update(self, host):

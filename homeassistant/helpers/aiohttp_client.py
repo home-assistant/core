@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import aiohttp
 from aiohttp import web
@@ -192,8 +192,7 @@ def _async_register_clientsession_shutdown(
         EVENT_HOMEASSISTANT_CLOSE, _async_close_websession
     )
 
-    config_entry = config_entries.current_entry.get()
-    if not config_entry:
+    if not (config_entry := config_entries.current_entry.get()):
         return
 
     config_entry.async_on_unload(unsub)

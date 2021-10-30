@@ -9,11 +9,11 @@ from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 import logging
 import secrets
 import time
-from typing import Any, Callable, Dict, cast
+from typing import Any, Dict, cast
 
 from aiohttp import client, web
 import async_timeout
@@ -129,14 +129,10 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        req = http.current_request.get()
-
-        if req is None:
+        if (req := http.current_request.get()) is None:
             raise RuntimeError("No current request in context")
 
-        ha_host = req.headers.get(HEADER_FRONTEND_BASE)
-
-        if ha_host is None:
+        if (ha_host := req.headers.get(HEADER_FRONTEND_BASE)) is None:
             raise RuntimeError("No header in request")
 
         return f"{ha_host}{AUTH_CALLBACK_PATH}"
@@ -406,6 +402,7 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Receive authorization code."""
+        # pylint: disable=no-self-use
         if "code" not in request.query or "state" not in request.query:
             return web.Response(
                 text=f"Missing code or state parameter in {request.url}"
@@ -500,12 +497,10 @@ async def async_oauth2_request(
 @callback
 def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
     """JWT encode data."""
-    secret = hass.data.get(DATA_JWT_SECRET)
-
-    if secret is None:
+    if (secret := hass.data.get(DATA_JWT_SECRET)) is None:
         secret = hass.data[DATA_JWT_SECRET] = secrets.token_hex()
 
-    return jwt.encode(data, secret, algorithm="HS256").decode()
+    return jwt.encode(data, secret, algorithm="HS256")
 
 
 @callback

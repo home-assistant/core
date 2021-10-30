@@ -1,5 +1,6 @@
 """Integration tests for the auth component."""
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant.auth import InvalidAuthError
@@ -43,7 +44,7 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
             "redirect_uri": CLIENT_REDIRECT_URI,
         },
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     step = await resp.json()
 
     resp = await client.post(
@@ -51,7 +52,7 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
         json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     step = await resp.json()
     code = step["result"]
 
@@ -61,7 +62,7 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
         data={"client_id": CLIENT_ID, "grant_type": "authorization_code", "code": code},
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
 
     assert (
@@ -78,7 +79,7 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
     assert "refresh_token" not in tokens
     assert (
@@ -87,12 +88,12 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
 
     # Test using access token to hit API.
     resp = await client.get("/api/")
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
     resp = await client.get(
         "/api/", headers={"authorization": f"Bearer {tokens['access_token']}"}
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 def test_auth_code_store_expiration():
@@ -179,7 +180,7 @@ async def test_refresh_token_system_generated(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
     assert result["error"] == "invalid_request"
 
@@ -188,7 +189,7 @@ async def test_refresh_token_system_generated(hass, aiohttp_client):
         data={"grant_type": "refresh_token", "refresh_token": refresh_token.token},
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
@@ -206,7 +207,7 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
         data={"grant_type": "refresh_token", "refresh_token": refresh_token.token},
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
     assert result["error"] == "invalid_request"
 
@@ -220,7 +221,7 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
     assert result["error"] == "invalid_request"
 
@@ -234,7 +235,7 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
@@ -262,7 +263,7 @@ async def test_refresh_token_provider_rejected(
             },
         )
 
-    assert resp.status == 403
+    assert resp.status == HTTPStatus.FORBIDDEN
     result = await resp.json()
     assert result["error"] == "access_denied"
     assert result["error_description"] == "Invalid access"
@@ -283,7 +284,7 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
@@ -293,7 +294,7 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
     resp = await client.post(
         "/auth/token", data={"token": refresh_token.token, "action": "revoke"}
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     # Old access token should be no longer valid
     assert await hass.auth.async_validate_access_token(tokens["access_token"]) is None
@@ -308,7 +309,7 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_ws_long_lived_access_token(hass, hass_ws_client, hass_access_token):
@@ -363,11 +364,15 @@ async def test_ws_refresh_tokens(hass, hass_ws_client, hass_access_token):
     assert token["last_used_ip"] == refresh_token.last_used_ip
 
 
-async def test_ws_delete_refresh_token(hass, hass_ws_client, hass_access_token):
+async def test_ws_delete_refresh_token(
+    hass, hass_admin_user, hass_admin_credential, hass_ws_client, hass_access_token
+):
     """Test deleting a refresh token."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
+    )
 
     ws_client = await hass_ws_client(hass, hass_access_token)
 
@@ -382,7 +387,7 @@ async def test_ws_delete_refresh_token(hass, hass_ws_client, hass_access_token):
 
     result = await ws_client.receive_json()
     assert result["success"], result
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = await hass.auth.async_get_refresh_token(refresh_token.id)
     assert refresh_token is None
 
 

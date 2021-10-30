@@ -1,7 +1,7 @@
 """Helpers for config validation using voluptuous."""
 from __future__ import annotations
 
-from collections.abc import Hashable
+from collections.abc import Callable, Hashable
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -15,7 +15,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Callable, Dict, TypeVar, cast
+from typing import Any, Dict, TypeVar, cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -120,7 +120,7 @@ def path(value: Any) -> str:
 
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(*keys: str) -> Callable:
+def has_at_least_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that at least one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -131,12 +131,13 @@ def has_at_least_one_key(*keys: str) -> Callable:
         for k in obj:
             if k in keys:
                 return obj
-        raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
+        expected = ", ".join(str(k) for k in keys)
+        raise vol.Invalid(f"must contain at least one of {expected}.")
 
     return validate
 
 
-def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
+def has_at_most_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that zero keys exist or one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -145,7 +146,8 @@ def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
             raise vol.Invalid("expected dictionary")
 
         if len(set(keys) & set(obj)) > 1:
-            raise vol.Invalid("must contain at most one of {}.".format(", ".join(keys)))
+            expected = ", ".join(str(k) for k in keys)
+            raise vol.Invalid(f"must contain at most one of {expected}.")
         return obj
 
     return validate
@@ -927,8 +929,10 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
                 service, dynamic_template
             ),
-            vol.Optional("data"): vol.All(dict, template_complex),
-            vol.Optional("data_template"): vol.All(dict, template_complex),
+            vol.Optional("data"): vol.Any(template, vol.All(dict, template_complex)),
+            vol.Optional("data_template"): vol.Any(
+                template, vol.All(dict, template_complex)
+            ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(ENTITY_SERVICE_FIELDS, dynamic_template),
         }
@@ -1025,13 +1029,13 @@ TIME_CONDITION_SCHEMA = vol.All(
         {
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "time",
-            "before": vol.Any(
+            vol.Optional("before"): vol.Any(
                 time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
             ),
-            "after": vol.Any(
+            vol.Optional("after"): vol.Any(
                 time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
             ),
-            "weekday": weekdays,
+            vol.Optional("weekday"): weekdays,
         }
     ),
     has_at_least_one_key("before", "after", "weekday"),
@@ -1050,7 +1054,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "zone",
         vol.Required(CONF_ENTITY_ID): entity_ids,
-        "zone": entity_ids,
+        vol.Required("zone"): entity_ids,
         # To support use_trigger_value in automation
         # Deprecated 2016/04/25
         vol.Optional("event"): vol.Any("enter", "leave"),
@@ -1307,6 +1311,7 @@ currency = vol.In(
         "BSD",
         "BTN",
         "BWP",
+        "BYN",
         "BYR",
         "BZD",
         "CAD",

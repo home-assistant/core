@@ -147,13 +147,8 @@ class StatisticsSensor(SensorEntity):
         @callback
         def async_stats_sensor_state_listener(event):
             """Handle the sensor state changes."""
-            new_state = event.data.get("new_state")
-            if new_state is None:
+            if (new_state := event.data.get("new_state")) is None:
                 return
-
-            self._unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
-            )
 
             self._add_state_to_queue(new_state)
 
@@ -172,7 +167,7 @@ class StatisticsSensor(SensorEntity):
 
             if "recorder" in self.hass.config.components:
                 # Only use the database if it's configured
-                self.hass.async_create_task(self._async_initialize_from_database())
+                self.hass.async_create_task(self._initialize_from_database())
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, async_stats_sensor_startup
@@ -196,6 +191,9 @@ class StatisticsSensor(SensorEntity):
                 self.entity_id,
                 new_state.state,
             )
+            return
+
+        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     @property
     def name(self):
@@ -203,12 +201,12 @@ class StatisticsSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.mean if not self.is_binary else self.count
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement if not self.is_binary else None
 
@@ -356,7 +354,7 @@ class StatisticsSensor(SensorEntity):
                 self.hass, _scheduled_update, next_to_purge_timestamp
             )
 
-    async def _async_initialize_from_database(self):
+    async def _initialize_from_database(self):
         """Initialize the list of states from the database.
 
         The query will get the list of states in DESCENDING order so that we

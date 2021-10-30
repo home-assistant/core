@@ -10,9 +10,9 @@ timer.
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 import logging
-from typing import TYPE_CHECKING, Any, Callable, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import attr
 
@@ -106,6 +106,7 @@ class RegistryEntry:
     # As set by integration
     original_name: str | None = attr.ib(default=None)
     original_icon: str | None = attr.ib(default=None)
+    entity_category: str | None = attr.ib(default=None)
     domain: str = attr.ib(init=False, repr=False)
 
     @domain.default
@@ -256,6 +257,7 @@ class EntityRegistry:
         unit_of_measurement: str | None = None,
         original_name: str | None = None,
         original_icon: str | None = None,
+        entity_category: str | None = None,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
         config_entry_id = None
@@ -276,6 +278,7 @@ class EntityRegistry:
                 unit_of_measurement=unit_of_measurement or UNDEFINED,
                 original_name=original_name or UNDEFINED,
                 original_icon=original_icon or UNDEFINED,
+                entity_category=entity_category or UNDEFINED,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
                 # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
@@ -310,6 +313,7 @@ class EntityRegistry:
             unit_of_measurement=unit_of_measurement,
             original_name=original_name,
             original_icon=original_icon,
+            entity_category=entity_category,
         )
         self._register_entry(entity)
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
@@ -381,6 +385,7 @@ class EntityRegistry:
         *,
         name: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
+        config_entry_id: str | None | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
@@ -391,6 +396,7 @@ class EntityRegistry:
             entity_id,
             name=name,
             icon=icon,
+            config_entry_id=config_entry_id,
             area_id=area_id,
             new_entity_id=new_entity_id,
             new_unique_id=new_unique_id,
@@ -416,6 +422,7 @@ class EntityRegistry:
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
+        entity_category: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -436,6 +443,7 @@ class EntityRegistry:
             ("unit_of_measurement", unit_of_measurement),
             ("original_name", original_name),
             ("original_icon", original_icon),
+            ("entity_category", entity_category),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 new_values[attr_name] = value
@@ -521,6 +529,7 @@ class EntityRegistry:
                     unit_of_measurement=entity.get("unit_of_measurement"),
                     original_name=entity.get("original_name"),
                     original_icon=entity.get("original_icon"),
+                    entity_category=entity.get("entity_category"),
                 )
 
         self.entities = entities
@@ -553,6 +562,7 @@ class EntityRegistry:
                 "unit_of_measurement": entry.unit_of_measurement,
                 "original_name": entry.original_name,
                 "original_icon": entry.original_icon,
+                "entity_category": entry.entity_category,
             }
             for entry in self.entities.values()
         ]

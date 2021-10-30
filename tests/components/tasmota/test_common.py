@@ -130,7 +130,7 @@ async def help_test_availability_when_connection_lost(
         get_topic_tele_will(config),
         config_get_state_online(config),
     )
-
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
@@ -158,6 +158,7 @@ async def help_test_availability_when_connection_lost(
         get_topic_tele_will(config),
         config_get_state_online(config),
     )
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
@@ -196,7 +197,7 @@ async def help_test_availability(
         get_topic_tele_will(config),
         config_get_state_online(config),
     )
-
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
@@ -205,7 +206,7 @@ async def help_test_availability(
         get_topic_tele_will(config),
         config_get_state_offline(config),
     )
-
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
@@ -258,10 +259,12 @@ async def help_test_availability_discovery_update(
     assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, availability_topic1, online1)
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, availability_topic1, offline1)
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
@@ -273,11 +276,13 @@ async def help_test_availability_discovery_update(
     async_fire_mqtt_message(hass, availability_topic1, online1)
     async_fire_mqtt_message(hass, availability_topic1, online2)
     async_fire_mqtt_message(hass, availability_topic2, online1)
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, availability_topic2, online2)
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
@@ -575,10 +580,12 @@ async def help_test_entity_id_update_discovery_update(
         await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, topic, config_get_state_online(config))
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, topic, config_get_state_offline(config))
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
@@ -597,5 +604,6 @@ async def help_test_entity_id_update_discovery_update(
 
     topic = get_topic_tele_will(config)
     async_fire_mqtt_message(hass, topic, config_get_state_online(config))
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.milk")
     assert state.state != STATE_UNAVAILABLE

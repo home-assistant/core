@@ -66,7 +66,9 @@ class NeatoCleaningMap(Camera):
         self._image_url: str | None = None
         self._image: bytes | None = None
 
-    def camera_image(self) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         self.update()
         return self._image
@@ -87,11 +89,9 @@ class NeatoCleaningMap(Camera):
             self._available = False
             return
 
-        image_url = None
         if self._mapdata:
             map_data: dict[str, Any] = self._mapdata[self._robot_serial]["maps"][0]
-        image_url = map_data["url"]
-        if image_url == self._image_url:
+        if (image_url := map_data["url"]) == self._image_url:
             _LOGGER.debug(
                 "The map image_url for '%s' is the same as old", self.entity_id
             )
@@ -132,7 +132,7 @@ class NeatoCleaningMap(Camera):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
+        return DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

@@ -6,13 +6,12 @@ from .const import DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up Velbus binary sensor based on config_entry."""
+    """Set up Velbus switch based on config_entry."""
+    await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    modules_data = hass.data[DOMAIN][entry.entry_id]["binary_sensor"]
     entities = []
-    for address, channel in modules_data:
-        module = cntrl.get_module(address)
-        entities.append(VelbusBinarySensor(module, channel))
+    for channel in cntrl.get_all("binary_sensor"):
+        entities.append(VelbusBinarySensor(channel))
     async_add_entities(entities)
 
 
@@ -20,6 +19,6 @@ class VelbusBinarySensor(VelbusEntity, BinarySensorEntity):
     """Representation of a Velbus Binary Sensor."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the sensor is on."""
-        return self._module.is_closed(self._channel)
+        return self._channel.is_closed()

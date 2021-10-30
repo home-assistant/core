@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Secondi di attesa per contrassegnare un localizzatore di dispositivi come non in casa dopo non essere stato visto.",
                     "exclude": "Indirizzi di rete (separati da virgole) da escludere dalla scansione",
                     "home_interval": "Numero minimo di minuti tra le scansioni dei dispositivi attivi (preserva la batteria)",
                     "hosts": "Indirizzi di rete (separati da virgole) da scansionare",

@@ -7,6 +7,9 @@
         "data": { "path": "Serial Device Path" },
         "description": "Select serial port for Zigbee radio"
       },
+      "confirm": {
+        "description": "Do you want to setup {name}?"
+      },
       "pick_radio": {
         "data": { "radio_type": "Radio Type" },
         "title": "Radio Type",
@@ -26,7 +29,9 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "not_zha_device": "This device is not a zha device",
+      "usb_probe_failed": "Failed to probe the usb device"
     }
   },
   "config_panel": {

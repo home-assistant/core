@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import CONF_ENDPOINT, DOMAIN, SET_SOUND_SETTING
 
@@ -205,16 +206,16 @@ class SongpalEntity(MediaPlayerEntity):
         return self._sysinfo.macAddr
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr)},
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "manufacturer": "Sony Corporation",
-            "name": self.name,
-            "sw_version": self._sysinfo.version,
-            "model": self._model,
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr)},
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Sony Corporation",
+            model=self._model,
+            name=self.name,
+            sw_version=self._sysinfo.version,
+        )
 
     @property
     def available(self):

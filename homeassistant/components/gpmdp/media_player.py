@@ -1,8 +1,11 @@
 """Support for Google Play Music Desktop Player."""
+from __future__ import annotations
+
 import json
 import logging
 import socket
 import time
+from typing import Any
 
 import voluptuous as vol
 from websocket import _exceptions, create_connection
@@ -28,7 +31,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-_CONFIGURING = {}
+_CONFIGURING: dict[str, Any] = {}
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "localhost"
@@ -106,8 +109,7 @@ def request_configuration(hass, config, url, add_entities_callback):
                     "the desktop player and try again"
                 )
                 break
-            code = tmpmsg["payload"]
-            if code == "CODE_REQUIRED":
+            if (code := tmpmsg["payload"]) == "CODE_REQUIRED":
                 continue
             setup_gpmdp(hass, config, code, add_entities_callback)
             save_json(hass.config.path(GPMDP_CONFIG_FILE), {"CODE": code})

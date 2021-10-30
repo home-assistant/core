@@ -1,682 +1,34 @@
 """Read status of growatt inverters."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import datetime
 import json
 import logging
-import re
 
 import growattServer
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_URL,
-    CONF_USERNAME,
-    CURRENCY_EURO,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    DEVICE_CLASS_VOLTAGE,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
-    PERCENTAGE,
-    POWER_KILO_WATT,
-    POWER_WATT,
-    TEMP_CELSIUS,
-)
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle, dt
 
-from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DEFAULT_URL
+from .const import (
+    CONF_PLANT_ID,
+    DEFAULT_PLANT_ID,
+    DEFAULT_URL,
+    DOMAIN,
+    LOGIN_INVALID_AUTH_CODE,
+)
+from .sensor_types.inverter import INVERTER_SENSOR_TYPES
+from .sensor_types.mix import MIX_SENSOR_TYPES
+from .sensor_types.sensor_entity_description import GrowattSensorEntityDescription
+from .sensor_types.storage import STORAGE_SENSOR_TYPES
+from .sensor_types.tlx import TLX_SENSOR_TYPES
+from .sensor_types.total import TOTAL_SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(minutes=1)
-
-
-@dataclass
-class GrowattRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    api_key: str
-
-
-@dataclass
-class GrowattSensorEntityDescription(SensorEntityDescription, GrowattRequiredKeysMixin):
-    """Describes Growatt sensor entity."""
-
-    precision: int | None = None
-
-
-TOTAL_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
-    GrowattSensorEntityDescription(
-        key="total_money_today",
-        name="Total money today",
-        api_key="plantMoneyText",
-        unit_of_measurement=CURRENCY_EURO,
-    ),
-    GrowattSensorEntityDescription(
-        key="total_money_total",
-        name="Money lifetime",
-        api_key="totalMoneyText",
-        unit_of_measurement=CURRENCY_EURO,
-    ),
-    GrowattSensorEntityDescription(
-        key="total_energy_today",
-        name="Energy Today",
-        api_key="todayEnergy",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="total_output_power",
-        name="Output Power",
-        api_key="invTodayPpv",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="total_energy_output",
-        name="Lifetime energy output",
-        api_key="totalEnergy",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="total_maximum_output",
-        name="Maximum power",
-        api_key="nominalPower",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-)
-
-INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
-    GrowattSensorEntityDescription(
-        key="inverter_energy_today",
-        name="Energy today",
-        api_key="powerToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_energy_total",
-        name="Lifetime energy output",
-        api_key="powerTotal",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_voltage_input_1",
-        name="Input 1 voltage",
-        api_key="vpv1",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        precision=2,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_amperage_input_1",
-        name="Input 1 Amperage",
-        api_key="ipv1",
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_wattage_input_1",
-        name="Input 1 Wattage",
-        api_key="ppv1",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_voltage_input_2",
-        name="Input 2 voltage",
-        api_key="vpv2",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_amperage_input_2",
-        name="Input 2 Amperage",
-        api_key="ipv2",
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_wattage_input_2",
-        name="Input 2 Wattage",
-        api_key="ppv2",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_voltage_input_3",
-        name="Input 3 voltage",
-        api_key="vpv3",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_amperage_input_3",
-        name="Input 3 Amperage",
-        api_key="ipv3",
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_wattage_input_3",
-        name="Input 3 Wattage",
-        api_key="ppv3",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_internal_wattage",
-        name="Internal wattage",
-        api_key="ppv",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_reactive_voltage",
-        name="Reactive voltage",
-        api_key="vacr",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_inverter_reactive_amperage",
-        name="Reactive amperage",
-        api_key="iacr",
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_frequency",
-        name="AC frequency",
-        api_key="fac",
-        unit_of_measurement=FREQUENCY_HERTZ,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_current_wattage",
-        name="Output power",
-        api_key="pac",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_current_reactive_wattage",
-        name="Reactive wattage",
-        api_key="pacr",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_ipm_temperature",
-        name="Intelligent Power Management temperature",
-        api_key="ipmTemperature",
-        unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        precision=1,
-    ),
-    GrowattSensorEntityDescription(
-        key="inverter_temperature",
-        name="Temperature",
-        api_key="temperature",
-        unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        precision=1,
-    ),
-)
-
-STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
-    GrowattSensorEntityDescription(
-        key="storage_storage_production_today",
-        name="Storage production today",
-        api_key="eBatDisChargeToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_storage_production_lifetime",
-        name="Lifetime Storage production",
-        api_key="eBatDisChargeTotal",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_grid_discharge_today",
-        name="Grid discharged today",
-        api_key="eacDisChargeToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_load_consumption_today",
-        name="Load consumption today",
-        api_key="eopDischrToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_load_consumption_lifetime",
-        name="Lifetime load consumption",
-        api_key="eopDischrTotal",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_grid_charged_today",
-        name="Grid charged today",
-        api_key="eacChargeToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_charge_storage_lifetime",
-        name="Lifetime storaged charged",
-        api_key="eChargeTotal",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_solar_production",
-        name="Solar power production",
-        api_key="ppv",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_battery_percentage",
-        name="Battery percentage",
-        api_key="capacity",
-        unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_power_flow",
-        name="Storage charging/ discharging(-ve)",
-        api_key="pCharge",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_load_consumption_solar_storage",
-        name="Load consumption(Solar + Storage)",
-        api_key="rateVA",
-        unit_of_measurement="VA",
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_charge_today",
-        name="Charge today",
-        api_key="eChargeToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_import_from_grid",
-        name="Import from grid",
-        api_key="pAcInPut",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_import_from_grid_today",
-        name="Import from grid today",
-        api_key="eToUserToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_import_from_grid_total",
-        name="Import from grid total",
-        api_key="eToUserTotal",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_load_consumption",
-        name="Load consumption",
-        api_key="outPutPower",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_grid_voltage",
-        name="AC input voltage",
-        api_key="vGrid",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        precision=2,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_pv_charging_voltage",
-        name="PV charging voltage",
-        api_key="vpv",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        precision=2,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_ac_input_frequency_out",
-        name="AC input frequency",
-        api_key="freqOutPut",
-        unit_of_measurement=FREQUENCY_HERTZ,
-        precision=2,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_output_voltage",
-        name="Output voltage",
-        api_key="outPutVolt",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        precision=2,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_ac_output_frequency",
-        name="Ac output frequency",
-        api_key="freqGrid",
-        unit_of_measurement=FREQUENCY_HERTZ,
-        precision=2,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_current_PV",
-        name="Solar charge current",
-        api_key="iAcCharge",
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        precision=2,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_current_1",
-        name="Solar current to storage",
-        api_key="iChargePV1",
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        precision=2,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_grid_amperage_input",
-        name="Grid charge current",
-        api_key="chgCurr",
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        precision=2,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_grid_out_current",
-        name="Grid out current",
-        api_key="outPutCurrent",
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
-        precision=2,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_battery_voltage",
-        name="Battery voltage",
-        api_key="vBat",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-        precision=2,
-    ),
-    GrowattSensorEntityDescription(
-        key="storage_load_percentage",
-        name="Load percentage",
-        api_key="loadPercent",
-        unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
-        precision=2,
-    ),
-)
-
-MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
-    # Values from 'mix_info' API call
-    GrowattSensorEntityDescription(
-        key="mix_statement_of_charge",
-        name="Statement of charge",
-        api_key="capacity",
-        unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_battery_charge_today",
-        name="Battery charged today",
-        api_key="eBatChargeToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_battery_charge_lifetime",
-        name="Lifetime battery charged",
-        api_key="eBatChargeTotal",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_battery_discharge_today",
-        name="Battery discharged today",
-        api_key="eBatDisChargeToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_battery_discharge_lifetime",
-        name="Lifetime battery discharged",
-        api_key="eBatDisChargeTotal",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_solar_generation_today",
-        name="Solar energy today",
-        api_key="epvToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_solar_generation_lifetime",
-        name="Lifetime solar energy",
-        api_key="epvTotal",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_battery_discharge_w",
-        name="Battery discharging W",
-        api_key="pDischarge1",
-        unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_battery_voltage",
-        name="Battery voltage",
-        api_key="vbat",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_pv1_voltage",
-        name="PV1 voltage",
-        api_key="vpv1",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_pv2_voltage",
-        name="PV2 voltage",
-        api_key="vpv2",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-    ),
-    # Values from 'mix_totals' API call
-    GrowattSensorEntityDescription(
-        key="mix_load_consumption_today",
-        name="Load consumption today",
-        api_key="elocalLoadToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_load_consumption_lifetime",
-        name="Lifetime load consumption",
-        api_key="elocalLoadTotal",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_export_to_grid_today",
-        name="Export to grid today",
-        api_key="etoGridToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_export_to_grid_lifetime",
-        name="Lifetime export to grid",
-        api_key="etogridTotal",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    # Values from 'mix_system_status' API call
-    GrowattSensorEntityDescription(
-        key="mix_battery_charge",
-        name="Battery charging",
-        api_key="chargePower",
-        unit_of_measurement=POWER_KILO_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_load_consumption",
-        name="Load consumption",
-        api_key="pLocalLoad",
-        unit_of_measurement=POWER_KILO_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_wattage_pv_1",
-        name="PV1 Wattage",
-        api_key="pPv1",
-        unit_of_measurement=POWER_KILO_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_wattage_pv_2",
-        name="PV2 Wattage",
-        api_key="pPv2",
-        unit_of_measurement=POWER_KILO_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_wattage_pv_all",
-        name="All PV Wattage",
-        api_key="ppv",
-        unit_of_measurement=POWER_KILO_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_export_to_grid",
-        name="Export to grid",
-        api_key="pactogrid",
-        unit_of_measurement=POWER_KILO_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_import_from_grid",
-        name="Import from grid",
-        api_key="pactouser",
-        unit_of_measurement=POWER_KILO_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_battery_discharge_kw",
-        name="Battery discharging kW",
-        api_key="pdisCharge1",
-        unit_of_measurement=POWER_KILO_WATT,
-        device_class=DEVICE_CLASS_POWER,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_grid_voltage",
-        name="Grid voltage",
-        api_key="vAc1",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
-    ),
-    # Values from 'mix_detail' API call
-    GrowattSensorEntityDescription(
-        key="mix_system_production_today",
-        name="System production today (self-consumption + export)",
-        api_key="eCharge",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_load_consumption_solar_today",
-        name="Load consumption today (solar)",
-        api_key="eChargeToday",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_self_consumption_today",
-        name="Self consumption today (solar + battery)",
-        api_key="eChargeToday1",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_load_consumption_battery_today",
-        name="Load consumption today (battery)",
-        api_key="echarge1",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    GrowattSensorEntityDescription(
-        key="mix_import_from_grid_today",
-        name="Import from grid today (load)",
-        api_key="etouser",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    # This sensor is manually created using the most recent X-Axis value from the chartData
-    GrowattSensorEntityDescription(
-        key="mix_last_update",
-        name="Last Data Update",
-        api_key="lastdataupdate",
-        unit_of_measurement=None,
-        device_class=DEVICE_CLASS_TIMESTAMP,
-    ),
-    # Values from 'dashboard_data' API call
-    GrowattSensorEntityDescription(
-        key="mix_import_from_grid_today_combined",
-        name="Import from grid today (load + charging)",
-        api_key="etouser_combined",  # This id is not present in the raw API data, it is added by the sensor
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-)
 
 
 def get_device_list(api, config):
@@ -685,10 +37,13 @@ def get_device_list(api, config):
 
     # Log in to api and fetch first plant if no plant id is defined.
     login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    if not login_response["success"] and login_response["errCode"] == "102":
+    if (
+        not login_response["success"]
+        and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
+    ):
         _LOGGER.error("Username, Password or URL may be incorrect!")
         return
-    user_id = login_response["userId"]
+    user_id = login_response["user"]["id"]
     if plant_id == DEFAULT_PLANT_ID:
         plant_info = api.plant_list(user_id)
         plant_id = plant_info["data"][0]["plantId"]
@@ -730,6 +85,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensor_descriptions = ()
         if device["deviceType"] == "inverter":
             sensor_descriptions = INVERTER_SENSOR_TYPES
+        elif device["deviceType"] == "tlx":
+            probe.plant_id = plant_id
+            sensor_descriptions = TLX_SENSOR_TYPES
         elif device["deviceType"] == "storage":
             probe.plant_id = plant_id
             sensor_descriptions = STORAGE_SENSOR_TYPES
@@ -773,13 +131,26 @@ class GrowattInverter(SensorEntity):
         self._attr_unique_id = unique_id
         self._attr_icon = "mdi:solar-power"
 
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, probe.device_id)},
+            manufacturer="Growatt",
+            name=name,
+        )
+
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         result = self.probe.get_data(self.entity_description.api_key)
         if self.entity_description.precision is not None:
             result = round(result, self.entity_description.precision)
         return result
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+        if self.entity_description.currency:
+            return self.probe.get_data("currency")
+        return super().native_unit_of_measurement
 
     def update(self):
         """Get the latest data from the Growat API and updates the state."""
@@ -804,19 +175,22 @@ class GrowattData:
     def update(self):
         """Update probe data."""
         self.api.login(self.username, self.password)
-        _LOGGER.debug("Updating data for %s", self.device_id)
+        _LOGGER.debug("Updating data for %s (%s)", self.device_id, self.growatt_type)
         try:
             if self.growatt_type == "total":
                 total_info = self.api.plant_info(self.device_id)
                 del total_info["deviceList"]
-                # PlantMoneyText comes in as "3.1/€" remove anything that isn't part of the number
-                total_info["plantMoneyText"] = re.sub(
-                    r"[^\d.,]", "", total_info["plantMoneyText"]
-                )
+                # PlantMoneyText comes in as "3.1/€" split between value and currency
+                plant_money_text, currency = total_info["plantMoneyText"].split("/")
+                total_info["plantMoneyText"] = plant_money_text
+                total_info["currency"] = currency
                 self.data = total_info
             elif self.growatt_type == "inverter":
                 inverter_info = self.api.inverter_detail(self.device_id)
                 self.data = inverter_info
+            elif self.growatt_type == "tlx":
+                tlx_info = self.api.tlx_detail(self.device_id)
+                self.data = tlx_info["data"]
             elif self.growatt_type == "storage":
                 storage_info_detail = self.api.storage_params(self.device_id)[
                     "storageDetailBean"
@@ -853,7 +227,9 @@ class GrowattData:
                 # Dashboard values have units e.g. "kWh" as part of their returned string, so we remove it
                 dashboard_values_for_mix = {
                     # etouser is already used by the results from 'mix_detail' so we rebrand it as 'etouser_combined'
-                    "etouser_combined": dashboard_data["etouser"].replace("kWh", "")
+                    "etouser_combined": float(
+                        dashboard_data["etouser"].replace("kWh", "")
+                    )
                 }
                 self.data = {
                     **mix_info,

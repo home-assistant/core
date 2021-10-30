@@ -14,7 +14,7 @@
                     "flow_impl": "Udbyder"
                 },
                 "description": "V\u00e6lg hvilken godkendelsesudbyder du vil godkende med Nest.",
-                "title": "Godkendelsesudbyder"
+                "title": "Identitetsudbyder"
             },
             "link": {
                 "data": {

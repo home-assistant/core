@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from pyuptimerobot import UptimeRobotMonitor
 
-from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -16,25 +15,28 @@ from .const import ATTR_TARGET, ATTRIBUTION, DOMAIN
 class UptimeRobotEntity(CoordinatorEntity):
     """Base UptimeRobot entity."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
         description: EntityDescription,
-        target: str,
+        monitor: UptimeRobotMonitor,
     ) -> None:
-        """Initialize Uptime Robot entities."""
+        """Initialize UptimeRobot entities."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(self.monitor.id))},
-            "name": "Uptime Robot",
-            "manufacturer": "Uptime Robot Team",
-            "entry_type": "service",
-            "model": self.monitor.type.name,
-        }
+        self._monitor = monitor
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(self.monitor.id))},
+            name=self.monitor.friendly_name,
+            manufacturer="UptimeRobot Team",
+            entry_type="service",
+            model=self.monitor.type.name,
+            configuration_url=f"https://uptimerobot.com/dashboard#{self.monitor.id}",
+        )
         self._attr_extra_state_attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_TARGET: target,
+            ATTR_TARGET: self.monitor.url,
         }
         self._attr_unique_id = str(self.monitor.id)
 
@@ -47,9 +49,12 @@ class UptimeRobotEntity(CoordinatorEntity):
     def monitor(self) -> UptimeRobotMonitor:
         """Return the monitor for this entity."""
         return next(
-            monitor
-            for monitor in self._monitors
-            if str(monitor.id) == self.entity_description.key
+            (
+                monitor
+                for monitor in self._monitors
+                if str(monitor.id) == self.entity_description.key
+            ),
+            self._monitor,
         )
 
     @property

@@ -57,7 +57,7 @@ class QSSensor(QSEntity, SensorEntity):
             self.async_write_ha_state()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the value of the sensor."""
         return str(self._val)
 
@@ -67,6 +67,6 @@ class QSSensor(QSEntity, SensorEntity):
         return f"qs{self.qsid}:{self.channel}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self.unit

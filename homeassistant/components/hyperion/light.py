@@ -1,11 +1,11 @@
 """Support for Hyperion-NG remotes."""
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable
+from typing import Any
 
 from hyperion import client, const
 
@@ -240,12 +240,12 @@ class HyperionBaseLight(LightEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._instance_name,
-            "manufacturer": HYPERION_MANUFACTURER_NAME,
-            "model": HYPERION_MODEL_NAME,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=HYPERION_MANUFACTURER_NAME,
+            model=HYPERION_MODEL_NAME,
+            name=self._instance_name,
+        )
 
     def _get_option(self, key: str) -> Any:
         """Get a value from the provided options."""

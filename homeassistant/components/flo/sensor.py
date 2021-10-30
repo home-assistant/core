@@ -61,7 +61,7 @@ class FloDailyUsageSensor(FloEntity, SensorEntity):
     """Monitors the daily water usage."""
 
     _attr_icon = WATER_ICON
-    _attr_unit_of_measurement = VOLUME_GALLONS
+    _attr_native_unit_of_measurement = VOLUME_GALLONS
 
     def __init__(self, device):
         """Initialize the daily water usage sensor."""
@@ -69,7 +69,7 @@ class FloDailyUsageSensor(FloEntity, SensorEntity):
         self._state: float = None
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current daily usage."""
         if self._device.consumption_today is None:
             return None
@@ -85,7 +85,7 @@ class FloSystemModeSensor(FloEntity, SensorEntity):
         self._state: str = None
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the current system mode."""
         if not self._device.current_system_mode:
             return None
@@ -96,7 +96,7 @@ class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
     """Monitors the current water flow rate."""
 
     _attr_icon = GAUGE_ICON
-    _attr_unit_of_measurement = "gpm"
+    _attr_native_unit_of_measurement = "gpm"
 
     def __init__(self, device):
         """Initialize the flow rate sensor."""
@@ -104,7 +104,7 @@ class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
         self._state: float = None
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current flow rate."""
         if self._device.current_flow_rate is None:
             return None
@@ -115,7 +115,7 @@ class FloTemperatureSensor(FloEntity, SensorEntity):
     """Monitors the temperature."""
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_unit_of_measurement = TEMP_FAHRENHEIT
+    _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
 
     def __init__(self, name, device):
         """Initialize the temperature sensor."""
@@ -123,7 +123,7 @@ class FloTemperatureSensor(FloEntity, SensorEntity):
         self._state: float = None
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current temperature."""
         if self._device.temperature is None:
             return None
@@ -134,7 +134,7 @@ class FloHumiditySensor(FloEntity, SensorEntity):
     """Monitors the humidity."""
 
     _attr_device_class = DEVICE_CLASS_HUMIDITY
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, device):
         """Initialize the humidity sensor."""
@@ -142,7 +142,7 @@ class FloHumiditySensor(FloEntity, SensorEntity):
         self._state: float = None
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current humidity."""
         if self._device.humidity is None:
             return None
@@ -153,7 +153,7 @@ class FloPressureSensor(FloEntity, SensorEntity):
     """Monitors the water pressure."""
 
     _attr_device_class = DEVICE_CLASS_PRESSURE
-    _attr_unit_of_measurement = PRESSURE_PSI
+    _attr_native_unit_of_measurement = PRESSURE_PSI
 
     def __init__(self, device):
         """Initialize the pressure sensor."""
@@ -161,7 +161,7 @@ class FloPressureSensor(FloEntity, SensorEntity):
         self._state: float = None
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current water pressure."""
         if self._device.current_psi is None:
             return None
@@ -172,7 +172,7 @@ class FloBatterySensor(FloEntity, SensorEntity):
     """Monitors the battery level for battery-powered leak detectors."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, device):
         """Initialize the battery sensor."""
@@ -180,6 +180,6 @@ class FloBatterySensor(FloEntity, SensorEntity):
         self._state: float = None
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current battery level."""
         return self._device.battery_level

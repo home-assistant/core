@@ -4,9 +4,9 @@
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
-            "cannot_connect": "Impossible de se connecter \u00e0 UPB PIM, veuillez r\u00e9essayer.",
+            "cannot_connect": "\u00c9chec de connexion",
             "invalid_upb_file": "Fichier d'exportation UPB UPStart manquant ou invalide, v\u00e9rifiez le nom et le chemin du fichier.",
-            "unknown": "Erreur inattendue."
+            "unknown": "Erreur inattendue"
         },
         "step": {
             "user": {

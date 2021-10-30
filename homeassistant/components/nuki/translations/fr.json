@@ -4,8 +4,8 @@
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "cannot_connect": "\u00c9chec de la connexion ",
-            "invalid_auth": "Authentification invalide ",
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
         },
         "step": {
@@ -14,13 +14,13 @@
                     "token": "Jeton d'acc\u00e8s"
                 },
                 "description": "L'int\u00e9gration Nuki doit s'authentifier de nouveau avec votre pont.",
-                "title": "R\u00e9authentifier l'int\u00e9gration"
+                "title": "R\u00e9-authentifier l'int\u00e9gration"
             },
             "user": {
                 "data": {
-                    "host": "Hote",
+                    "host": "H\u00f4te",
                     "port": "Port",
-                    "token": "jeton d'acc\u00e8s"
+                    "token": "Jeton d'acc\u00e8s"
                 }
             }
         }

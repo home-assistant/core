@@ -1,7 +1,6 @@
 """Config flow for MySensors."""
 from __future__ import annotations
 
-import logging
 import os
 from typing import Any
 
@@ -45,8 +44,6 @@ from .const import (
     ConfGatewayType,
 )
 from .gateway import MQTT_COMPONENT, is_serial_port, is_socket_address, try_connect
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _get_schema_common(user_input: dict[str, str]) -> dict:

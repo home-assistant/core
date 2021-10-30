@@ -1,5 +1,6 @@
 """Support for Washington State Department of Transportation (WSDOT) data."""
 from datetime import datetime, timedelta, timezone
+from http import HTTPStatus
 import logging
 import re
 
@@ -13,7 +14,6 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
     CONF_NAME,
-    HTTP_OK,
     TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
@@ -88,7 +88,7 @@ class WashingtonStateTransportSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -96,7 +96,7 @@ class WashingtonStateTransportSensor(SensorEntity):
 class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     """Travel time sensor from WSDOT."""
 
-    _attr_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = TIME_MINUTES
 
     def __init__(self, name, access_code, travel_time_id):
         """Construct a travel time sensor."""
@@ -111,7 +111,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         }
 
         response = requests.get(RESOURCE, params, timeout=10)
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.warning("Invalid response from WSDOT API")
         else:
             self._data = response.json()

@@ -42,7 +42,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         self._sign = sign
 
     @property
-    def state(self):
+    def native_value(self):
         """Return true if the binary sensor is on."""
         return self._state
 
@@ -83,7 +83,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         _LOGGER.debug("Updated, new state: %s", self._state)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 

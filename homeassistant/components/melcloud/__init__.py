@@ -17,6 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -44,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigEntry):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Establish connection with MELCloud."""
     if DOMAIN not in config:
         return True
@@ -125,20 +127,19 @@ class MelCloudDevice:
         return self.device.building_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        _device_info = {
-            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "identifiers": {(DOMAIN, f"{self.device.mac}-{self.device.serial}")},
-            "manufacturer": "Mitsubishi Electric",
-            "name": self.name,
-        }
+        model = None
         unit_infos = self.device.units
         if unit_infos is not None:
-            _device_info["model"] = ", ".join(
-                [x["model"] for x in unit_infos if x["model"]]
-            )
-        return _device_info
+            model = ", ".join([x["model"] for x in unit_infos if x["model"]])
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            identifiers={(DOMAIN, f"{self.device.mac}-{self.device.serial}")},
+            manufacturer="Mitsubishi Electric",
+            model=model,
+            name=self.name,
+        )
 
 
 async def mel_devices_setup(hass, token) -> list[MelCloudDevice]:

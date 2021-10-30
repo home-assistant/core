@@ -187,16 +187,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_bosch_shc")
 
         try:
-            self.info = info = await self._get_info(discovery_info["host"])
+            hosts = (
+                discovery_info["host"]
+                if isinstance(discovery_info["host"], list)
+                else [discovery_info["host"]]
+            )
+            for host in hosts:
+                if host.startswith("169."):  # skip link local address
+                    continue
+                self.info = await self._get_info(host)
+                self.host = host
+            if self.host is None:
+                return self.async_abort(reason="cannot_connect")
         except SHCConnectionError:
             return self.async_abort(reason="cannot_connect")
 
         local_name = discovery_info["hostname"][:-1]
         node_name = local_name[: -len(".local")]
 
-        await self.async_set_unique_id(info["unique_id"])
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
-        self.host = discovery_info["host"]
+        await self.async_set_unique_id(self.info["unique_id"])
+        self._abort_if_unique_id_configured({CONF_HOST: self.host})
         self.context["title_placeholders"] = {"name": node_name}
         return await self.async_step_confirm_discovery()
 
