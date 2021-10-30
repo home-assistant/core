@@ -118,7 +118,12 @@ PLATFORMS = (
     "sensor",
 )
 
-VOLUMES = [VOLUME_OFF, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_HIGH]
+VOLUME_MAP = {
+    "high": VOLUME_HIGH,
+    "low": VOLUME_LOW,
+    "medium": VOLUME_MEDIUM,
+    "off": VOLUME_OFF,
+}
 
 SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
 
@@ -137,8 +142,8 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
             lambda value: value.total_seconds(),
             vol.Range(min=30, max=480),
         ),
-        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
-        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
+        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
+        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
         vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
@@ -157,7 +162,7 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         ),
         vol.Optional(ATTR_LIGHT): cv.boolean,
         vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-            vol.Coerce(int), vol.In(VOLUMES)
+            vol.In(VOLUME_MAP), VOLUME_MAP.get
         ),
     }
 )
