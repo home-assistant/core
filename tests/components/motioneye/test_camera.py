@@ -28,8 +28,8 @@ import voluptuous as vol
 from homeassistant.components.camera import async_get_image, async_get_mjpeg_stream
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import (
-    CONF_STREAM_URL_TEMPLATE,
     CONF_ACTION,
+    CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_USERNAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
