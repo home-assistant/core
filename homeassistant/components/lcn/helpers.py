@@ -385,8 +385,7 @@ def is_address(value: str) -> tuple[AddressType, str]:
         myhome.0.g11
         myhome.s0.g11
     """
-    matcher = PATTERN_ADDRESS.match(value)
-    if matcher:
+    if matcher := PATTERN_ADDRESS.match(value):
         is_group = matcher.group("type") == "g"
         addr = (int(matcher.group("seg_id")), int(matcher.group("id")), is_group)
         conn_id = matcher.group("conn_id")
