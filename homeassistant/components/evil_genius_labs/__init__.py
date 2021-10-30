@@ -54,7 +54,7 @@ class EvilGeniusUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
 
     def __init__(
         self, hass: HomeAssistant, name: str, client: pyevilgenius.EvilGeniusDevice
-    ):
+    ) -> None:
         """Initialize the data update coordinator."""
         self.client = client
         super().__init__(
@@ -65,11 +65,11 @@ class EvilGeniusUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         )
 
     @property
-    def device_name(self):
+    def device_name(self) -> str:
         """Return the device name."""
         return self.data["name"]["value"]
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict:
         """Update Evil Genius data."""
         if not hasattr(self, "info"):
             async with timeout(5):

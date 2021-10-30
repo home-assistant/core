@@ -80,21 +80,19 @@ class EvilGeniusLight(EvilGeniusEntity, light.LightEntity):
     @update_when_done
     async def async_turn_on(
         self,
-        brightness: int = None,
-        effect: str = None,
-        rgb_color: tuple[int, int, int] = None,
         **kwargs: Any,
     ) -> None:
         """Turn light on."""
-        if brightness is not None:
+        if (brightness := kwargs.get(light.ATTR_BRIGHTNESS)) is not None:
             async with timeout(5):
                 await self.coordinator.client.set_path_value("brightness", brightness)
 
         # Setting a color will change the effect to "Solid Color" so skip setting effect
-        if rgb_color is not None:
+        if (rgb_color := kwargs.get(light.ATTR_RGB_COLOR)) is not None:
             async with timeout(5):
                 await self.coordinator.client.set_rgb_color(*rgb_color)
-        elif effect is not None:
+
+        elif (effect := kwargs.get(light.ATTR_EFFECT)) is not None:
             if effect == HA_NO_EFFECT:
                 effect = FIB_NO_EFFECT
             async with timeout(5):
