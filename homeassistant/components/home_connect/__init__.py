@@ -22,7 +22,6 @@ from homeassistant.util import Throttle
 from . import api, config_flow
 from .const import (
     ATTR_KEY,
-    ATTR_OPTIONS,
     ATTR_PROGRAM,
     ATTR_UNIT,
     ATTR_VALUE,
@@ -74,18 +73,18 @@ SERVICE_OPTION_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_PROGRAM_SCHEMA = vol.Schema(
+SERVICE_PROGRAM_SCHEMA = vol.Any(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_PROGRAM): str,
-        vol.Optional(ATTR_OPTIONS): [
-            {
-                vol.Required(ATTR_KEY): str,
-                vol.Required(ATTR_VALUE): vol.Any(int, str),
-                vol.Optional(ATTR_UNIT): str,
-            }
-        ],
-    }
+        vol.Required(ATTR_KEY): str,
+        vol.Required(ATTR_VALUE): vol.Any(int, str),
+        vol.Optional(ATTR_UNIT): str,
+    },
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_PROGRAM): str,
+    },
 )
 
 SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
@@ -131,7 +130,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Execute calls to services taking a program."""
         program = call.data[ATTR_PROGRAM]
         entity_id = call.data[ATTR_ENTITY_ID]
-        options = call.data.get(ATTR_OPTIONS)
+        options = {
+            ATTR_KEY: call.data.get(ATTR_KEY),
+            ATTR_VALUE: call.data.get(ATTR_VALUE),
+            ATTR_UNIT: call.data.get(ATTR_UNIT),
+        }
         appliance = _get_appliance_by_entity_id(hass, entity_id)
         if appliance is not None:
             await hass.async_add_executor_job(
