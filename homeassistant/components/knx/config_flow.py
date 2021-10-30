@@ -45,6 +45,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle connection type configuration."""
         errors: dict = {}
         supported_connection_types = [CONF_KNX_TUNNELING, CONF_KNX_ROUTING]
+        fields = {}
 
         if user_input is None:
             gateways = await scan_for_gateways()
@@ -54,6 +55,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._tunnels = [
                     gateway for gateway in gateways if gateway.supports_tunnelling
                 ]
+
+            fields = {
+                vol.Required(CONF_KNX_CONNECTION_TYPE): vol.In(
+                    supported_connection_types
+                )
+            }
 
         if user_input is not None:
             connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
@@ -69,10 +76,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_tunnel()
 
             return await self.async_step_manual_tunnel(user_input)
-
-        fields = {
-            vol.Required(CONF_KNX_CONNECTION_TYPE): vol.In(supported_connection_types)
-        }
 
         return self.async_show_form(
             step_id="type", data_schema=vol.Schema(fields), errors=errors
