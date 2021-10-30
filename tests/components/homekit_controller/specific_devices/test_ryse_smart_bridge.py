@@ -19,7 +19,7 @@ async def test_ryse_smart_bridge_setup(hass):
     # Check that the cover.master_bath_south is correctly found and set up
     cover_id = "cover.master_bath_south"
     cover = entity_registry.async_get(cover_id)
-    assert cover.unique_id == "homekit-1.0.0-48"
+    assert cover.unique_id == "homekit-00:00:00:00:00:00-2-48"
 
     cover_helper = Helper(
         hass,
