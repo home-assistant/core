@@ -59,7 +59,7 @@ class MotionEyeMediaSource(MediaSource):
     name: str = "motionEye Media"
 
     def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize Xbox source."""
+        """Initialize MotionEyeMediaSource."""
         super().__init__(DOMAIN)
         self.hass = hass
 
