@@ -20,8 +20,6 @@ DOMAIN = "onewire"
 DEVICE_KEYS_0_7 = range(8)
 DEVICE_KEYS_A_B = ("A", "B")
 
-PRESSURE_CBAR = "cbar"
-
 READ_MODE_BOOL = "bool"
 READ_MODE_FLOAT = "float"
 READ_MODE_INT = "int"

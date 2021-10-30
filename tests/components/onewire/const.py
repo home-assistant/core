@@ -3,7 +3,7 @@ from pi1wire import InvalidCRCException, UnsupportResponseException
 from pyownet.protocol import Error as ProtocolError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.onewire.const import DOMAIN, PRESSURE_CBAR
+from homeassistant.components.onewire.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -31,6 +31,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
+    PRESSURE_CBAR,
     PRESSURE_MBAR,
     STATE_OFF,
     STATE_ON,
