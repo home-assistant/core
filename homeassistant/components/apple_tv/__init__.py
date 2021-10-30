@@ -234,6 +234,7 @@ class AppleTVManager:
                     "Authentication failed for %s, try reconfiguring device",
                     self.config_entry.data[CONF_NAME],
                 )
+                break
             except asyncio.CancelledError:
                 pass
             except Exception:  # pylint: disable=broad-except
