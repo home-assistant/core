@@ -244,7 +244,13 @@ async def test_import_night(hass):
         assert entry.unique_id
 
         assert len(mock_connect.mock_calls) == 1
-        assert hass.states.get("sensor.power_output").state == "45.7"
+        print(hass.states)
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            print(entry.unique_id)
+
+        power = hass.states.get("sensor.power_output")
+        assert power
+        assert power.state == "45.7"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 

@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     comport = entry.data[CONF_PORT]
     address = entry.data[CONF_ADDRESS]
-    serclient = AuroraSerialClient(address, comport, parity="N", timeout=1)
+    ser_client = AuroraSerialClient(address, comport, parity="N", timeout=1)
     # To handle yaml import attempts in darkeness, (re)try connecting only if
     # unique_id not yet assigned.
     if entry.unique_id is None:
@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     return False
             hass.config_entries.async_update_entry(entry, unique_id=new_id)
 
-    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = serclient
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ser_client
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -80,6 +80,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # It should not be necessary to close the serial port because we close
     # it after every use in sensor.py, i.e. no need to do entry["client"].close()
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.unique_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
