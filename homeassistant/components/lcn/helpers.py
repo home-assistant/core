@@ -336,8 +336,9 @@ async def async_update_config_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Fill missing values in config_entry with infos from LCN bus."""
+    new_data = config_entry.data.copy()
     coros = []
-    for device_config in config_entry.data[CONF_DEVICES]:
+    for device_config in new_data[CONF_DEVICES]:
         device_connection = get_device_connection(
             hass, device_config[CONF_ADDRESS], config_entry
         )
@@ -346,7 +347,7 @@ async def async_update_config_entry(
     await asyncio.gather(*coros)
 
     # schedule config_entry for save
-    hass.config_entries.async_update_entry(config_entry)
+    hass.config_entries.async_update_entry(config_entry, data=new_data)
 
 
 def has_unique_host_names(hosts: list[ConfigType]) -> list[ConfigType]:
