@@ -13,7 +13,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_MOVIE,
     MEDIA_CLASS_VIDEO,
 )
-from homeassistant.components.media_source.const import MEDIA_MIME_TYPES
 from homeassistant.components.media_source.error import MediaSourceError, Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -22,9 +21,8 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import get_media_url, split_motioneye_device_identifier
 from .const import CONF_CLIENT, DOMAIN
@@ -50,7 +48,7 @@ _LOGGER = logging.getLogger(__name__)
 #     -> path hierarchy as configured on motionEye
 
 
-async def async_get_media_source(hass: HomeAssistantType) -> MotionEyeMediaSource:
+async def async_get_media_source(hass: HomeAssistant) -> MotionEyeMediaSource:
     """Set up motionEye media source."""
     return MotionEyeMediaSource(hass)
 
@@ -60,10 +58,10 @@ class MotionEyeMediaSource(MediaSource):
 
     name: str = "motionEye Media"
 
-    def __init__(self, hass: HomeAssistantType) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize Xbox source."""
         super().__init__(DOMAIN)
-        self.hass: HomeAssistantType = hass
+        self.hass = hass
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
@@ -104,7 +102,6 @@ class MotionEyeMediaSource(MediaSource):
     async def async_browse_media(
         self,
         item: MediaSourceItem,
-        media_types: tuple[str, ...] = MEDIA_MIME_TYPES,
     ) -> BrowseMediaSource:
         """Return media."""
         if item.identifier:

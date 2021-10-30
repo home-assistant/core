@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+import contextlib
 from http import HTTPStatus
 import json
 import logging
@@ -36,8 +37,8 @@ from motioneye_client.const import (
 )
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.media_source.const import URI_SCHEME
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.webhook import (
     async_generate_id,
@@ -508,36 +509,35 @@ def _get_media_event_data(
     # The file_path in the event is the full local filesystem path to the
     # media. To convert that to the media path that motionEye will
     # understand, we need to strip the root directory from the path.
-    if os.path.commonprefix([root_directory, event_file_path]) == root_directory:
-        file_path = "/" + os.path.relpath(event_file_path, root_directory)
-        output = {
-            EVENT_MEDIA_CONTENT_ID: (
-                f"{URI_SCHEME}{DOMAIN}/{config_entry_id}#{device.id}#{kind}#{file_path}"
-            ),
-        }
-        url = get_media_url(
-            client,
-            camera_id,
-            file_path,
-            kind == "images",
-        )
-        if url:
-            output[EVENT_FILE_URL] = url
-        return output
+    if os.path.commonprefix([root_directory, event_file_path]) != root_directory:
+        return {}
 
-    return {}
+    file_path = "/" + os.path.relpath(event_file_path, root_directory)
+    output = {
+        EVENT_MEDIA_CONTENT_ID: (
+            f"{URI_SCHEME}{DOMAIN}/{config_entry_id}#{device.id}#{kind}#{file_path}"
+        ),
+    }
+    url = get_media_url(
+        client,
+        camera_id,
+        file_path,
+        kind == "images",
+    )
+    if url:
+        output[EVENT_FILE_URL] = url
+    return output
 
 
 def get_media_url(
     client: MotionEyeClient, camera_id: int, path: str, image: bool
 ) -> str | None:
     """Get the URL for a motionEye media item."""
-    try:
+    with contextlib.suppress(MotionEyeClientPathError):
         if image:
             return client.get_image_url(camera_id, path)
         return client.get_movie_url(camera_id, path)
-    except MotionEyeClientPathError:
-        return None
+    return None
 
 
 class MotionEyeEntity(CoordinatorEntity):

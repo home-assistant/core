@@ -374,7 +374,7 @@ async def test_bad_query_cannot_decode(
     assert not storage_events
 
 
-async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> None:
+async def test_event_media_data(hass: HomeAssistant, hass_client_no_auth: Any) -> None:
     """Test an event with a file path generates media data."""
     await async_setup_component(hass, "http", {"http": {}})
 
@@ -387,7 +387,7 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
     )
 
-    aio_client = await aiohttp_client(hass.http.app)
+    hass_client = await hass_client_no_auth()
 
     events = async_capture_events(hass, f"{DOMAIN}.{EVENT_FILE_STORED}")
 
@@ -396,7 +396,7 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
 
     # Test: Movie storage.
     client.is_file_type_image = Mock(return_value=False)
-    resp = await aio_client.post(
+    resp = await hass_client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
         json={
             ATTR_DEVICE_ID: device.id,
@@ -405,7 +405,7 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
             "file_type": "8",
         },
     )
-    assert resp.status == HTTP_OK
+    assert resp.status == HTTPStatus.OK
     assert len(events) == 1
     assert events[-1].data["file_url"] == "http://movie-url"
     assert (
@@ -416,7 +416,7 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
 
     # Test: Image storage.
     client.is_file_type_image = Mock(return_value=True)
-    resp = await aio_client.post(
+    resp = await hass_client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
         json={
             ATTR_DEVICE_ID: device.id,
@@ -425,7 +425,7 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
             "file_type": "4",
         },
     )
-    assert resp.status == HTTP_OK
+    assert resp.status == HTTPStatus.OK
     assert len(events) == 2
     assert events[-1].data["file_url"] == "http://image-url"
     assert (
@@ -435,7 +435,7 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
     assert client.get_image_url.call_args == call(TEST_CAMERA_ID, "/dir/two")
 
     # Test: Invalid file type.
-    resp = await aio_client.post(
+    resp = await hass_client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
         json={
             ATTR_DEVICE_ID: device.id,
@@ -444,13 +444,13 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
             "file_type": "NOT_AN_INT",
         },
     )
-    assert resp.status == HTTP_OK
+    assert resp.status == HTTPStatus.OK
     assert len(events) == 3
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
     # Test: Different file path.
-    resp = await aio_client.post(
+    resp = await hass_client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
         json={
             ATTR_DEVICE_ID: device.id,
@@ -459,7 +459,7 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
             "file_type": "8",
         },
     )
-    assert resp.status == HTTP_OK
+    assert resp.status == HTTPStatus.OK
     assert len(events) == 4
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
@@ -468,7 +468,7 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
     wrong_device = device_registry.async_get_or_create(
         config_entry_id="wrong_config_id", identifiers={("motioneye", "a_1")}
     )
-    resp = await aio_client.post(
+    resp = await hass_client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
         json={
             ATTR_DEVICE_ID: wrong_device.id,
@@ -477,7 +477,7 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
             "file_type": "8",
         },
     )
-    assert resp.status == HTTP_OK
+    assert resp.status == HTTPStatus.OK
     assert len(events) == 5
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
@@ -489,7 +489,7 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
     async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    resp = await aio_client.post(
+    resp = await hass_client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
         json={
             ATTR_DEVICE_ID: device.id,
@@ -498,16 +498,16 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
             "file_type": "8",
         },
     )
-    assert resp.status == HTTP_OK
+    assert resp.status == HTTPStatus.OK
     assert len(events) == 6
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
 
     # Test: Device has incorrect device identifiers.
     device_registry.async_update_device(
-        device_id=device.id, new_identifiers={"not", "motioneye"}
+        device_id=device.id, new_identifiers={("not", "motioneye")}
     )
-    resp = await aio_client.post(
+    resp = await hass_client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
         json={
             ATTR_DEVICE_ID: device.id,
@@ -516,7 +516,7 @@ async def test_event_media_data(hass: HomeAssistant, aiohttp_client: Any) -> Non
             "file_type": "8",
         },
     )
-    assert resp.status == HTTP_OK
+    assert resp.status == HTTPStatus.OK
     assert len(events) == 7
     assert "file_url" not in events[-1].data
     assert "media_content_id" not in events[-1].data
