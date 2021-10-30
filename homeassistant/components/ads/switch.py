@@ -1,6 +1,6 @@
 """Support for ADS switch platform."""
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_NAME, CONF_SWITCHES
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SWITCHES
 
 from . import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsEntity
 
@@ -17,13 +17,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for entry in discovery_info[CONF_SWITCHES]:
         ads_var = entry.get(CONF_ADS_VAR)
         name = entry.get(CONF_NAME)
-        entities.append(AdsSwitch(ads_hub, name, ads_var))
+        device_class = entry.get(CONF_DEVICE_CLASS)
+        entities.append(AdsSwitch(ads_hub, name, ads_var, device_class))
 
     add_entities(entities)
 
 
 class AdsSwitch(AdsEntity, SwitchEntity):
     """Representation of an ADS switch device."""
+
+    def __init__(self, ads_hub, name, ads_var, device_class):
+        """Initialize ADS switch device."""
+        super().__init__(ads_hub, name, ads_var)
+        self._attr_device_class = device_class
 
     async def async_added_to_hass(self):
         """Register device notification."""
