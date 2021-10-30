@@ -118,7 +118,12 @@ PLATFORMS = (
     "sensor",
 )
 
-VOLUMES = [VOLUME_OFF, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_HIGH]
+VOLUME_MAP = {
+    "high": VOLUME_HIGH,
+    "low": VOLUME_LOW,
+    "medium": VOLUME_MEDIUM,
+    "off": VOLUME_OFF,
+}
 
 SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
 
@@ -137,8 +142,8 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
             lambda value: value.total_seconds(),
             vol.Range(min=30, max=480),
         ),
-        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
-        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
+        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
+        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
         vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
@@ -157,7 +162,7 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         ),
         vol.Optional(ATTR_LIGHT): cv.boolean,
         vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-            vol.Coerce(int), vol.In(VOLUMES)
+            vol.In(VOLUME_MAP), VOLUME_MAP.get
         ),
     }
 )
@@ -201,11 +206,12 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-async def async_register_base_station(
+@callback
+def _async_register_base_station(
     hass: HomeAssistant, entry: ConfigEntry, system: SystemV2 | SystemV3
 ) -> None:
     """Register a new bridge."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, system.system_id)},
@@ -473,9 +479,7 @@ class SimpliSafe:
         for system in self.systems.values():
             self._system_notifications[system.system_id] = set()
 
-            self._hass.async_create_task(
-                async_register_base_station(self._hass, self.entry, system)
-            )
+            _async_register_base_station(self._hass, self.entry, system)
 
             # Future events will come from the websocket, but since subscription to the
             # websocket doesn't provide the most recent event, we grab it from the REST

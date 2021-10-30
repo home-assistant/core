@@ -99,12 +99,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_doorbird_device")
         if is_link_local(ip_address(host)):
             return self.async_abort(reason="link_local_address")
-        if not await async_verify_supported_device(self.hass, host):
-            return self.async_abort(reason="not_doorbird_device")
 
         await self.async_set_unique_id(macaddress)
-
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        self._async_abort_entries_match({CONF_HOST: host})
+
+        if not await async_verify_supported_device(self.hass, host):
+            return self.async_abort(reason="not_doorbird_device")
 
         chop_ending = "._axis-video._tcp.local."
         friendly_hostname = discovery_info["name"]

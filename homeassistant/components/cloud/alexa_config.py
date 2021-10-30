@@ -16,11 +16,7 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     state_report as alexa_state_report,
 )
-from homeassistant.const import (
-    CLOUD_NEVER_EXPOSED_ENTITIES,
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-)
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import entity_registry as er, start
 from homeassistant.helpers.event import async_call_later
@@ -135,10 +131,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category in (
-                ENTITY_CATEGORY_CONFIG,
-                ENTITY_CATEGORY_DIAGNOSTIC,
-            )
+            auxiliary_entity = registry_entry.entity_category in ENTITY_CATEGORIES
         else:
             auxiliary_entity = False
 

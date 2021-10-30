@@ -22,6 +22,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    ENTITY_CATEGORY_SYSTEM,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import (
@@ -215,6 +216,7 @@ class EnergyCostSensor(SensorEntity):
     utility.
     """
 
+    _attr_entity_category = ENTITY_CATEGORY_SYSTEM
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
 

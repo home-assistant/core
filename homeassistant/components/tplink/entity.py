@@ -48,14 +48,14 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "name": self.device.alias,
-            "model": self.device.model,
-            "manufacturer": "TP-Link",
-            "identifiers": {(DOMAIN, str(self.device.device_id))},
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
-            "sw_version": self.device.hw_info["sw_ver"],
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
+            identifiers={(DOMAIN, str(self.device.device_id))},
+            manufacturer="TP-Link",
+            model=self.device.model,
+            name=self.device.alias,
+            sw_version=self.device.hw_info["sw_ver"],
+        )
 
     @property
     def is_on(self) -> bool:

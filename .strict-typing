@@ -32,6 +32,7 @@ homeassistant.components.crownstone.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
 homeassistant.components.devolo_home_control.*
+homeassistant.components.devolo_home_network.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
 homeassistant.components.dsmr.*
@@ -51,6 +52,7 @@ homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
 homeassistant.components.gios.*
 homeassistant.components.goalzero.*
+homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.history.*

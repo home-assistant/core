@@ -75,7 +75,7 @@ class WallboxCoordinator(DataUpdateCoordinator):
             filtered_data = {k: data[k] for k in CONF_SENSOR_TYPES if k in data}
 
             for key, value in filtered_data.items():
-                if sensor_round := CONF_SENSOR_TYPES[key][CONF_ROUND]:
+                if (sensor_round := CONF_SENSOR_TYPES[key][CONF_ROUND]) is not None:
                     try:
                         filtered_data[key] = round(value, sensor_round)
                     except TypeError:

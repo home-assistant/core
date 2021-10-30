@@ -10,6 +10,7 @@ import time
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -141,7 +142,9 @@ async def async_start(  # noqa: C901
                     if value[-1] == TOPIC_BASE and key.endswith("topic"):
                         payload[key] = f"{value[:-1]}{base}"
             if payload.get(CONF_AVAILABILITY):
-                for availability_conf in payload[CONF_AVAILABILITY]:
+                for availability_conf in cv.ensure_list(payload[CONF_AVAILABILITY]):
+                    if not isinstance(availability_conf, dict):
+                        continue
                     if topic := availability_conf.get(CONF_TOPIC):
                         if topic[0] == TOPIC_BASE:
                             availability_conf[CONF_TOPIC] = f"{base}{topic[1:]}"

@@ -8,11 +8,7 @@ from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOMAIN
 from homeassistant.components.google_assistant.helpers import AbstractConfig
-from homeassistant.const import (
-    CLOUD_NEVER_EXPOSED_ENTITIES,
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-)
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
 from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry as er, start
 from homeassistant.setup import async_setup_component
@@ -133,10 +129,7 @@ class CloudGoogleConfig(AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category in (
-                ENTITY_CATEGORY_CONFIG,
-                ENTITY_CATEGORY_DIAGNOSTIC,
-            )
+            auxiliary_entity = registry_entry.entity_category in ENTITY_CATEGORIES
         else:
             auxiliary_entity = False
 

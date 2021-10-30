@@ -223,18 +223,25 @@ async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
     entity_registry = mock_registry(hass)
 
     entity_entry1 = entity_registry.async_get_or_create(
-        "switch",
+        "light",
         "test",
-        "switch_config_id",
-        suggested_object_id="config_switch",
+        "light_config_id",
+        suggested_object_id="config_light",
         entity_category="config",
     )
     entity_entry2 = entity_registry.async_get_or_create(
-        "switch",
+        "light",
         "test",
-        "switch_diagnostic_id",
-        suggested_object_id="diagnostic_switch",
+        "light_diagnostic_id",
+        suggested_object_id="diagnostic_light",
         entity_category="diagnostic",
+    )
+    entity_entry3 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_system_id",
+        suggested_object_id="system_light",
+        entity_category="system",
     )
 
     entity_conf = {"should_expose": False}
@@ -246,22 +253,26 @@ async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
     state = State("light.kitchen", "on")
     state_config = State(entity_entry1.entity_id, "on")
     state_diagnostic = State(entity_entry2.entity_id, "on")
+    state_system = State(entity_entry3.entity_id, "on")
 
     assert not mock_conf.should_expose(state)
     assert not mock_conf.should_expose(state_config)
     assert not mock_conf.should_expose(state_diagnostic)
+    assert not mock_conf.should_expose(state_system)
 
     entity_conf["should_expose"] = True
     assert mock_conf.should_expose(state)
     # config and diagnostic entities should not be exposed
     assert not mock_conf.should_expose(state_config)
     assert not mock_conf.should_expose(state_diagnostic)
+    assert not mock_conf.should_expose(state_system)
 
     entity_conf["should_expose"] = None
     assert mock_conf.should_expose(state)
     # config and diagnostic entities should not be exposed
     assert not mock_conf.should_expose(state_config)
     assert not mock_conf.should_expose(state_diagnostic)
+    assert not mock_conf.should_expose(state_system)
 
     await cloud_prefs.async_update(
         google_default_expose=["sensor"],
