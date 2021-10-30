@@ -523,34 +523,23 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
             return
 
         if self._room_status.get("reachable"):
-            self._attr_native_value = self._build_room_status()
+            self._attr_native_value = self._process_battery_state()
         else:
             self._attr_native_value = None
 
-    def _build_room_status(self) -> int | None:
+    def _process_battery_state(self) -> int | None:
         """Construct room status."""
         try:
-            roomstatus = {
-                "module_id": None,
-            }
-
+            m_id = self._room_data["module_ids"][0]
             batterylevel = None
-            for module_id in self._room_data["module_ids"]:
-                if self._model == MODULE_TYPE_THERM or roomstatus["module_id"] is None:
-                    roomstatus["module_id"] = module_id
+
             if self._model == MODULE_TYPE_THERM:
-                batterylevel = self._home_status.thermostats[
-                    roomstatus["module_id"]
-                ].get("battery_state")
+                batterylevel = self._home_status.thermostats[m_id].get("battery_state")
             elif self._model == MODULE_TYPE_VALVE:
-                batterylevel = self._home_status.valves[roomstatus["module_id"]].get(
-                    "battery_state"
-                )
+                batterylevel = self._home_status.valves[m_id].get("battery_state")
 
             if batterylevel:
                 return process_battery_percent(batterylevel)
-
-            return None
 
         except KeyError as err:
             _LOGGER.error("Update of room %s failed. Error: %s", self._id, err)
