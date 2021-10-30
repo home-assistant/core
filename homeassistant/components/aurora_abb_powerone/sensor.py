@@ -84,23 +84,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
 
-<<<<<<< HEAD
     client = hass.data[DOMAIN][config_entry.unique_id]
     data = config_entry.data
 
     for sens in SENSOR_TYPES:
         entities.append(AuroraSensor(client, data, sens))
-=======
-    sensor_types = [
-        {"parameter": "instantaneouspower", "name": "Power Output"},
-        {"parameter": "temperature", "name": "Temperature"},
-    ]
-    client = hass.data[DOMAIN][config_entry.unique_id]
-    data = config_entry.data
-
-    for sens in sensor_types:
-        entities.append(AuroraSensor(client, data, sens["name"], sens["parameter"]))
->>>>>>> Convert variable names to snake case
 
     _LOGGER.debug("async_setup_entry adding %d entities", len(entities))
     async_add_entities(entities, True)
@@ -117,25 +105,9 @@ class AuroraSensor(AuroraEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(client, data)
-<<<<<<< HEAD
         self.entity_description = entity_description
-=======
-        self.type = type_name
-        if type_name == "instantaneouspower":
-            self._attr_native_unit_of_measurement = POWER_WATT
-            self._attr_device_class = DEVICE_CLASS_POWER
-        elif type_name == "temperature":
-            self._attr_native_unit_of_measurement = TEMP_CELSIUS
-            self._attr_device_class = DEVICE_CLASS_TEMPERATURE
-        else:
-            raise InvalidStateError(f"Unrecognised typename '{type_name}'")
-        self._attr_name = f"{name}"
-<<<<<<< HEAD
->>>>>>> Remove duplicated code.
-        self.availableprev = True
-=======
+
         self.available_prev = True
->>>>>>> Convert variable names to snake case
 
     def update(self):
         """Fetch new state data for the sensor.
