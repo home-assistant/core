@@ -1,6 +1,6 @@
 set_time_to:
   name: Set Time To
-  description: Control timers to turn the system on or off after a set number of minutes
+  description: Control timers to turn the system on or off after a set number of minutes (depreciated)
   target:
     entity:
       integration: advantage_air
@@ -18,7 +18,7 @@ set_time_to:
 
 set_myzone:
   name: Set MyZone
-  description: Change which zone is set as the reference for temperature control
+  description: Change which zone is set as the reference for temperature control (depreciated)
   target:
     entity:
       integration: advantage_air
