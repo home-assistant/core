@@ -101,6 +101,7 @@ homeassistant.components.recorder.repack
 homeassistant.components.recorder.statistics
 homeassistant.components.remote.*
 homeassistant.components.renault.*
+homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.rpi_power.*
 homeassistant.components.samsungtv.*

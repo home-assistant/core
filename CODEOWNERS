@@ -431,6 +431,7 @@ homeassistant/components/renault/* @epenet
 homeassistant/components/repetier/* @MTrab
 homeassistant/components/rflink/* @javicalle
 homeassistant/components/rfxtrx/* @danielhiversen @elupus @RobBie1221
+homeassistant/components/ridwell/* @bachya
 homeassistant/components/ring/* @balloob
 homeassistant/components/risco/* @OnFreund
 homeassistant/components/rituals_perfume_genie/* @milanmeu
