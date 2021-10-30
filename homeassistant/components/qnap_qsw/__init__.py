@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_reboot(call):
         """Handle reboot service call."""
-        await hass.async_add_executor_job(qsha.sync_reboot)
+        await hass.async_add_executor_job(qsha.reboot)
 
     hass.services.async_register(DOMAIN, SERVICE_REBOOT, async_reboot)
 
@@ -75,7 +75,32 @@ class QnapQswDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         with async_timeout.timeout(ASYNC_TIMEOUT):
             try:
-                await self.hass.async_add_executor_job(self.qsha.sync_update)
+                if await self.hass.async_add_executor_job(self.qsha.login):
+                    tasks = []
+                    tasks.append(
+                        self.hass.async_add_executor_job(
+                            self.qsha.update_firmware_condition
+                        )
+                    )
+                    tasks.append(
+                        self.hass.async_add_executor_job(self.qsha.update_firmware_info)
+                    )
+                    tasks.append(
+                        self.hass.async_add_executor_job(self.qsha.update_system_board)
+                    )
+                    tasks.append(
+                        self.hass.async_add_executor_job(self.qsha.update_system_sensor)
+                    )
+                    tasks.append(
+                        self.hass.async_add_executor_job(self.qsha.update_system_time)
+                    )
+                    tasks.append(
+                        self.hass.async_add_executor_job(
+                            self.qsha.update_firmware_update_check
+                        )
+                    )
+                    for task in tasks:
+                        await task
             except (ConnectionError, LoginError) as error:
                 raise UpdateFailed(error) from error
 

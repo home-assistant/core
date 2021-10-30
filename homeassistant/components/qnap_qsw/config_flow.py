@@ -45,7 +45,10 @@ class QnapQswConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 username = user_input[CONF_USERNAME]
                 password = user_input[CONF_PASSWORD]
                 self.qsha = QSHA(host=host, user=username, password=password)
-                await self.qsha.async_identify()
+                if await self.hass.async_add_executor_job(self.qsha.login):
+                    await self.hass.async_add_executor_job(
+                        self.qsha.update_system_board
+                    )
 
                 await self.async_set_unique_id(self.qsha.serial().lower())
                 self._abort_if_unique_id_configured()
