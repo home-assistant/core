@@ -60,7 +60,7 @@ async def device_scan(identifier, loop):
 class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Apple TV."""
 
-    VERSION = 3
+    VERSION = 1
 
     @staticmethod
     @callback
@@ -301,7 +301,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_pair_next_protocol()
         if service.pairing == PairingRequirement.Disabled:
             return await self.async_step_protocol_disabled()
-        elif service.pairing == PairingRequirement.NotNeeded:
+        if service.pairing == PairingRequirement.NotNeeded:
             _LOGGER.debug("%s does not require pairing", self.protocol)
             self.credentials[self.protocol.value] = None
             return await self.async_pair_next_protocol()

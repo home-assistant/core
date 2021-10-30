@@ -49,6 +49,9 @@ async def async_setup_entry(hass, entry):
     manager = AppleTVManager(hass, entry)
     hass.data.setdefault(DOMAIN, {})[entry.unique_id] = manager
 
+    if CONF_IDENTIFIERS not in entry.data:
+        entry.data[CONF_IDENTIFIERS] = [entry.unique_id]
+
     async def on_hass_stop(event):
         """Stop push updates when hass stops."""
         await manager.disconnect()
@@ -81,23 +84,6 @@ async def async_unload_entry(hass, entry):
         await manager.disconnect()
 
     return unload_ok
-
-
-async def async_migrate_entry(hass, config_entry):
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version in [1, 2]:
-        new = {**config_entry.data}
-
-        new.setdefault(CONF_IDENTIFIERS, []).append(config_entry.unique_id)
-
-        config_entry.data = {**new}
-        config_entry.version = 3
-
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
-
-    return True
 
 
 class AppleTVEntity(Entity):
@@ -239,7 +225,6 @@ class AppleTVManager:
         while self._is_on and self.atv is None:
             try:
                 conf = await self._scan()
-                raise exceptions.AuthenticationError()
                 if conf:
                     await self._connect(conf)
             except exceptions.AuthenticationError:
