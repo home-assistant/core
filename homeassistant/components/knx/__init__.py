@@ -196,6 +196,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await knx_module.start()
     except XKNXException as ex:
         raise ConfigEntryNotReady from ex
+    else:
+        hass.data[DOMAIN] = knx_module
 
     if CONF_KNX_EXPOSE in config:
         for expose_config in config[CONF_KNX_EXPOSE]:
@@ -402,7 +404,9 @@ class KNXModule:
 
     def register_callback(self) -> TelegramQueue.Callback:
         """Register callback within XKNX TelegramQueue."""
-        address_filters = list(map(AddressFilter, self.config[CONF_KNX_EVENT_FILTER]))
+        address_filters = [
+            AddressFilter(filter) for filter in self.config[CONF_KNX_EVENT_FILTER]
+        ]
         return self.xknx.telegram_queue.register_telegram_received_cb(
             self.telegram_received_cb,
             address_filters=address_filters,

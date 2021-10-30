@@ -31,7 +31,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _tunnels: list = []
+    _tunnels: list
 
     async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
         """Handle a flow initialized by the user."""
@@ -51,9 +51,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if gateways:
                 supported_connection_types.insert(0, CONF_KNX_AUTOMATIC)
-                for gateway in gateways:
-                    if gateway.supports_tunnelling:
-                        self._tunnels.append(gateway)
+                self._tunnels = [
+                    gateway for gateway in gateways
+                    if gateway.supports_tunnelling
+                ]
 
         if user_input is not None:
             connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
@@ -70,10 +71,11 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_manual_tunnel(user_input)
 
-        fields = OrderedDict()
-        fields[vol.Required(CONF_KNX_CONNECTION_TYPE)] = vol.In(
-            supported_connection_types
-        )
+        fields = {
+            vol.Required(CONF_KNX_CONNECTION_TYPE)] = vol.In(
+                supported_connection_types
+            )
+        }
 
         return self.async_show_form(
             step_id="type", data_schema=vol.Schema(fields), errors=errors
@@ -108,15 +110,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        fields = OrderedDict()
-        fields[vol.Required(CONF_HOST, default=_gateway_ip)] = str
-        fields[vol.Required(CONF_PORT, default=_gateway_port)] = vol.Coerce(int)
-        fields[
-            vol.Required(CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS)
-        ] = str
-        fields[
-            vol.Required(ConnectionSchema.CONF_KNX_ROUTE_BACK, default=False)
-        ] = vol.Coerce(bool)
+        fields = {
+            vol.Required(CONF_HOST, default=_gateway_ip): str
+            vol.Required(CONF_PORT, default=_gateway_port): vol.Coerce(int)
+            vol.Required(CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS): str
+            vol.Required(ConnectionSchema.CONF_KNX_ROUTE_BACK, default=False):  vol.Coerce(bool)
+        }
 
         return self.async_show_form(
             step_id="manual_tunnel", data_schema=vol.Schema(fields), errors=errors
@@ -162,9 +161,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
-        fields = OrderedDict()
-
-        fields[vol.Required(CONF_KNX_GATEWAY)] = vol.In(tunnel_repr)
+        fields = {
+            vol.Required(CONF_KNX_GATEWAY): vol.In(tunnel_repr)
+        }
 
         return self.async_show_form(
             step_id="tunnel", data_schema=vol.Schema(fields), errors=errors
