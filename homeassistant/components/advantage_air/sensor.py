@@ -51,6 +51,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
 
     _attr_native_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, instance, ac_key, action):
         """Initialize the Advantage Air timer control."""

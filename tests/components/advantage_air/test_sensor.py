@@ -42,6 +42,15 @@ async def test_sensor_platform(hass, aioclient_mock):
 
     # Test First TimeToOn Sensor
     entity_id = "sensor.ac_one_time_to_on"
+
+    registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass,
+        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 0
@@ -57,7 +66,6 @@ async def test_sensor_platform(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 3
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
@@ -67,6 +75,15 @@ async def test_sensor_platform(hass, aioclient_mock):
 
     # Test First TimeToOff Sensor
     entity_id = "sensor.ac_one_time_to_off"
+
+    registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass,
+        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 10
@@ -82,7 +99,6 @@ async def test_sensor_platform(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 5
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
