@@ -18,7 +18,7 @@ from . import (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the light platform for ADS."""
     entities = []
 

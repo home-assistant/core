@@ -19,12 +19,8 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.sensor import (  # CONF_STATE_CLASS,; DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,; STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
-    DOMAIN as SENSOR_DOMAIN,
-)
-from homeassistant.components.switch import (  # DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
-    DOMAIN as SWITCH_DOMAIN,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_COVERS,

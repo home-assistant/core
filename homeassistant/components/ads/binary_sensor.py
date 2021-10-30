@@ -8,7 +8,7 @@ from homeassistant.const import CONF_BINARY_SENSORS, CONF_DEVICE_CLASS, CONF_NAM
 from . import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsEntity
 
 
-def setup_platform(hass, config, add_entities, discovery_info):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform for ADS."""
     entities = []
 

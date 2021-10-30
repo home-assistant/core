@@ -7,7 +7,7 @@ from homeassistant.helpers.typing import StateType
 from . import CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR, STATE_KEY_STATE, AdsEntity
 
 
-def setup_platform(hass, config, add_entities, discovery_info):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an ADS sensor device."""
     entities = []
 

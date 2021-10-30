@@ -5,7 +5,7 @@ from homeassistant.const import CONF_NAME, CONF_SWITCHES
 from . import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsEntity
 
 
-def setup_platform(hass, config, add_entities, discovery_info):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switch platform for ADS."""
     entities = []
 
