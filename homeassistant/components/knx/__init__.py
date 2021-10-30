@@ -75,6 +75,12 @@ SERVICE_KNX_READ: Final = "read"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
+            # deprecated since 2021.12
+            cv.deprecated(CONF_KNX_ROUTING),
+            cv.deprecated(CONF_KNX_TUNNELING),
+            cv.deprecated(CONF_KNX_INDIVIDUAL_ADDRESS),
+            cv.deprecated(ConnectionSchema.CONF_KNX_MCAST_GRP),
+            cv.deprecated(ConnectionSchema.CONF_KNX_MCAST_PORT),
             # deprecated since 2021.4
             cv.deprecated("config_file"),
             # deprecated since 2021.2
