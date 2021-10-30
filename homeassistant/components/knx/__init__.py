@@ -23,6 +23,7 @@ from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -195,6 +196,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     conf = hass.data.get(DATA_KNX_CONFIG)
 
+    #  When reloading
+    if conf is None:
+        conf = await async_integration_yaml_config(hass, DOMAIN)
+        if not conf or DOMAIN not in conf:
+            return False
+
+        conf = conf[DOMAIN]
+        hass.data[DATA_KNX_CONFIG] = conf
+
     # If user didn't have configuration.yaml config, generate defaults
     if conf is None:
         conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
@@ -294,6 +304,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         await knx_module.stop()
         hass.data[DOMAIN] = None
+        hass.data[DATA_KNX_CONFIG] = None
 
     return unload_ok
 
