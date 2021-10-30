@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 from itertools import chain
 import re
 from typing import Tuple, Type, Union, cast
@@ -337,14 +338,17 @@ async def async_update_config_entry(
 ) -> None:
     """Fill missing values in config_entry with infos from LCN bus."""
     new_data = config_entry.data.copy()
+    device_configs = deepcopy(config_entry.data[CONF_DEVICES])
     coros = []
-    for device_config in new_data[CONF_DEVICES]:
+    for device_config in device_configs:
         device_connection = get_device_connection(
             hass, device_config[CONF_ADDRESS], config_entry
         )
         coros.append(async_update_device_config(device_connection, device_config))
 
     await asyncio.gather(*coros)
+
+    new_data.update({CONF_DEVICES: device_configs})
 
     # schedule config_entry for save
     hass.config_entries.async_update_entry(config_entry, data=new_data)
