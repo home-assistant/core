@@ -156,9 +156,7 @@ def entities_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    automation_entity = component.get_entity(entity_id)
-
-    if automation_entity is None:
+    if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(automation_entity.referenced_entities)
@@ -187,9 +185,7 @@ def devices_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    automation_entity = component.get_entity(entity_id)
-
-    if automation_entity is None:
+    if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(automation_entity.referenced_devices)
@@ -218,9 +214,7 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    automation_entity = component.get_entity(entity_id)
-
-    if automation_entity is None:
+    if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(automation_entity.referenced_areas)

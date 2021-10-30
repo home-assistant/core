@@ -469,9 +469,7 @@ def info_from_service(service: AsyncServiceInfo) -> HaServiceInfo | None:
             if isinstance(value, bytes):
                 properties[key] = value.decode("utf-8")
 
-    addresses = service.addresses
-
-    if not addresses:
+    if not (addresses := service.addresses):
         return None
     if (host := _first_non_link_local_or_v6_address(addresses)) is None:
         return None
