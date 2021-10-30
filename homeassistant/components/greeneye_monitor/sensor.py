@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_SENSOR_TYPE,
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_POTENTIAL_VOLT,
     POWER_WATT,
@@ -173,6 +174,7 @@ class CurrentSensor(GEMSensor[greeneye.monitor.Channel]):
 
     _attr_icon = CURRENT_SENSOR_ICON
     _attr_native_unit_of_measurement = UNIT_WATTS
+    _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(
         self, monitor_serial_number: int, number: int, name: str, net_metering: bool
