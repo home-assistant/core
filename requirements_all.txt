@@ -813,7 +813,7 @@ hole==0.5.1
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211026.0
+home-assistant-frontend==20211027.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -2465,7 +2465,7 @@ youtube_dl==2021.06.06
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.9
+zeroconf==0.36.11
 
 # homeassistant.components.zha
 zha-quirks==0.0.63
