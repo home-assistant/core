@@ -420,6 +420,7 @@ ATTR_TEMPERATURE: Final = "temperature"
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
 POWER_VOLT_AMPERE: Final = "VA"
+POWER_VOLT_AMPERE_REACTIVE: Final = "VAR"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
