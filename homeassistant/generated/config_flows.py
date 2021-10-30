@@ -238,6 +238,7 @@ FLOWS = [
     "recollect_waste",
     "renault",
     "rfxtrx",
+    "ridwell",
     "ring",
     "risco",
     "rituals_perfume_genie",
