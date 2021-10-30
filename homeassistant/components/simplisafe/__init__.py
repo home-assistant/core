@@ -142,12 +142,8 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
             lambda value: value.total_seconds(),
             vol.Range(min=30, max=480),
         ),
-        vol.Optional(ATTR_ALARM_VOLUME): vol.All(
-            vol.In(VOLUME_MAP), VOLUME_MAP.get
-        ),
-        vol.Optional(ATTR_CHIME_VOLUME): vol.All(
-            vol.In(VOLUME_MAP), VOLUME_MAP.get
-        ),
+        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
+        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
         vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
