@@ -198,8 +198,7 @@ async def async_setup(hass, config):
     _LOGGER.info("Start envisalink")
     controller.start()
 
-    result = await sync_connect
-    if not result:
+    if not await sync_connect:
         return False
 
     # Load sub-components for Envisalink
