@@ -56,7 +56,7 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_info(self):
         """Device info."""
-        self.coordinator.device_info
+        return self.coordinator.device_info
 
     @property
     def is_on(self):
