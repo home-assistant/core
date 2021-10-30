@@ -32,6 +32,15 @@ def _simulated_returns(index, global_measure=None):
 from tests.common import MockConfigEntry
 
 
+def _simulated_returns(index, global_measure=None):
+    returns = {
+        3: 45.678,  # power
+        21: 9.876,  # temperature
+        5: 12345,  # energy
+    }
+    return returns[index]
+
+
 async def test_form(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
