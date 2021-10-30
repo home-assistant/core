@@ -166,7 +166,7 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         ),
         vol.Optional(ATTR_LIGHT): cv.boolean,
         vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-            cv.string, lambda value: VOLUME_MAP[value]
+            vol.In(VOLUME_MAP), VOLUME_MAP.get
         ),
     }
 )
