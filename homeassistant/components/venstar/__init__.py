@@ -137,7 +137,7 @@ class VenstarEntity(CoordinatorEntity):
     @property
     def unique_id(self):
         """Set unique_id for this entity."""
-        return f"{self._config.entry_id}_{self._client.name}"
+        return f"{self._config.entry_id}"
 
     @property
     def device_info(self):
