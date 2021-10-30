@@ -214,14 +214,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # If user didn't have configuration.yaml config, generate defaults
     if conf is None:
         conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
-    elif any(key in conf for key in entry.data):
-        shared_keys = conf.keys() & entry.data.keys()
-        override = {k: entry.data[k] for k in shared_keys}
-        _LOGGER.info(
-            "Data in your configuration entry is going to override your "
-            "configuration.yaml: %s",
-            override,
-        )
 
     config = {**entry.data, **conf}
 
