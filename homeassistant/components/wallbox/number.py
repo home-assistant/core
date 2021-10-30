@@ -1,4 +1,6 @@
 """Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
@@ -27,7 +29,7 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
         name="Max. Charging Current",
         device_class=DEVICE_CLASS_CURRENT,
         min_value=6,
-    )
+    ),
 }
 
 
