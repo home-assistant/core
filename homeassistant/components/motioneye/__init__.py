@@ -485,11 +485,12 @@ def _get_media_event_data(
     event_file_type: int,
 ) -> dict[str, str]:
     config_entry_id = next(iter(device.config_entries), None)
-    client = hass.data[DOMAIN].get(config_entry_id, {}).get(CONF_CLIENT)
-    coordinator = hass.data[DOMAIN].get(config_entry_id, {}).get(CONF_COORDINATOR)
-
-    if not coordinator or not client:
+    if not config_entry_id or config_entry_id not in hass.data[DOMAIN]:
         return {}
+
+    config_entry_data = hass.data[DOMAIN][config_entry_id]
+    client = config_entry_data[CONF_CLIENT]
+    coordinator = config_entry_data[CONF_COORDINATOR]
 
     for identifier in device.identifiers:
         data = split_motioneye_device_identifier(identifier)
