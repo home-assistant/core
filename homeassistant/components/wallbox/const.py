@@ -1,9 +1,10 @@
 """Constants for the Wallbox integration."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_ICON,
-    CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -33,91 +34,86 @@ CONF_STATE_OF_CHARGE_KEY = "state_of_charge"
 CONF_STATUS_DESCRIPTION_KEY = "status_description"
 
 CONF_CONNECTIONS = "connections"
-CONF_ROUND = "round"
 
-CONF_SENSOR_TYPES = {
-    CONF_CHARGING_POWER_KEY: {
-        CONF_ICON: None,
-        CONF_NAME: "Charging Power",
-        CONF_ROUND: 2,
-        CONF_UNIT_OF_MEASUREMENT: POWER_KILO_WATT,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-    },
-    CONF_MAX_AVAILABLE_POWER_KEY: {
-        CONF_ICON: None,
-        CONF_NAME: "Max Available Power",
-        CONF_ROUND: 0,
-        CONF_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-    },
-    CONF_CHARGING_SPEED_KEY: {
-        CONF_ICON: "mdi:speedometer",
-        CONF_NAME: "Charging Speed",
-        CONF_ROUND: 0,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        CONF_DEVICE_CLASS: None,
-    },
-    CONF_ADDED_RANGE_KEY: {
-        CONF_ICON: "mdi:map-marker-distance",
-        CONF_NAME: "Added Range",
-        CONF_ROUND: 0,
-        CONF_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
-        CONF_DEVICE_CLASS: None,
-    },
-    CONF_ADDED_ENERGY_KEY: {
-        CONF_ICON: None,
-        CONF_NAME: "Added Energy",
-        CONF_ROUND: 2,
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-    },
-    CONF_CHARGING_TIME_KEY: {
-        CONF_ICON: "mdi:timer",
-        CONF_NAME: "Charging Time",
-        CONF_ROUND: None,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        CONF_DEVICE_CLASS: None,
-    },
-    CONF_COST_KEY: {
-        CONF_ICON: "mdi:ev-station",
-        CONF_NAME: "Cost",
-        CONF_ROUND: None,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        CONF_DEVICE_CLASS: None,
-    },
-    CONF_STATE_OF_CHARGE_KEY: {
-        CONF_ICON: None,
-        CONF_NAME: "State of Charge",
-        CONF_ROUND: None,
-        CONF_UNIT_OF_MEASUREMENT: PERCENTAGE,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
-    },
-    CONF_CURRENT_MODE_KEY: {
-        CONF_ICON: "mdi:ev-station",
-        CONF_NAME: "Current Mode",
-        CONF_ROUND: None,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        CONF_DEVICE_CLASS: None,
-    },
-    CONF_DEPOT_PRICE_KEY: {
-        CONF_ICON: "mdi:ev-station",
-        CONF_NAME: "Depot Price",
-        CONF_ROUND: 2,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        CONF_DEVICE_CLASS: None,
-    },
-    CONF_STATUS_DESCRIPTION_KEY: {
-        CONF_ICON: "mdi:ev-station",
-        CONF_NAME: "Status Description",
-        CONF_ROUND: None,
-        CONF_UNIT_OF_MEASUREMENT: None,
-        CONF_DEVICE_CLASS: None,
-    },
-    CONF_MAX_CHARGING_CURRENT_KEY: {
-        CONF_ICON: None,
-        CONF_NAME: "Max. Charging Current",
-        CONF_ROUND: None,
-        CONF_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-    },
+
+@dataclass
+class WallboxSensorEntityDescription(SensorEntityDescription):
+    """Describes Wallbox sensor entity."""
+
+    precision: int | None = None
+
+
+SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
+    CONF_CHARGING_POWER_KEY: WallboxSensorEntityDescription(
+        key=CONF_CHARGING_POWER_KEY,
+        name="Charging Power",
+        precision=2,
+        native_unit_of_measurement=POWER_KILO_WATT,
+        device_class=DEVICE_CLASS_POWER,
+    ),
+    CONF_MAX_AVAILABLE_POWER_KEY: WallboxSensorEntityDescription(
+        key=CONF_MAX_AVAILABLE_POWER_KEY,
+        name="Max Available Power",
+        precision=0,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=DEVICE_CLASS_CURRENT,
+    ),
+    CONF_CHARGING_SPEED_KEY: WallboxSensorEntityDescription(
+        key=CONF_CHARGING_SPEED_KEY,
+        icon="mdi:speedometer",
+        name="Charging Speed",
+        precision=0,
+    ),
+    CONF_ADDED_RANGE_KEY: WallboxSensorEntityDescription(
+        key=CONF_ADDED_RANGE_KEY,
+        icon="mdi:map-marker-distance",
+        name="Added Range",
+        precision=0,
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+    ),
+    CONF_ADDED_ENERGY_KEY: WallboxSensorEntityDescription(
+        key=CONF_ADDED_ENERGY_KEY,
+        name="Added Energy",
+        precision=2,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+    ),
+    CONF_CHARGING_TIME_KEY: WallboxSensorEntityDescription(
+        key=CONF_CHARGING_TIME_KEY,
+        icon="mdi:timer",
+        name="Charging Time",
+    ),
+    CONF_COST_KEY: WallboxSensorEntityDescription(
+        key=CONF_COST_KEY,
+        icon="mdi:ev-station",
+        name="Cost",
+    ),
+    CONF_STATE_OF_CHARGE_KEY: WallboxSensorEntityDescription(
+        key=CONF_STATE_OF_CHARGE_KEY,
+        name="State of Charge",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
+    ),
+    CONF_CURRENT_MODE_KEY: WallboxSensorEntityDescription(
+        key=CONF_CURRENT_MODE_KEY,
+        icon="mdi:ev-station",
+        name="Current Mode",
+    ),
+    CONF_DEPOT_PRICE_KEY: WallboxSensorEntityDescription(
+        key=CONF_DEPOT_PRICE_KEY,
+        icon="mdi:ev-station",
+        name="Depot Price",
+        precision=2,
+    ),
+    CONF_STATUS_DESCRIPTION_KEY: WallboxSensorEntityDescription(
+        key=CONF_STATUS_DESCRIPTION_KEY,
+        icon="mdi:ev-station",
+        name="Status Description",
+    ),
+    CONF_MAX_CHARGING_CURRENT_KEY: WallboxSensorEntityDescription(
+        key=CONF_MAX_CHARGING_CURRENT_KEY,
+        name="Max. Charging Current",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=DEVICE_CLASS_CURRENT,
+    ),
 }
