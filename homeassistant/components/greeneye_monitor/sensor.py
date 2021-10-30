@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
     POWER_WATT,
     TIME_HOURS,
@@ -317,6 +318,7 @@ class VoltageSensor(GEMSensor[greeneye.monitor.Monitor]):
 
     _attr_icon = VOLTAGE_ICON
     _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+    _attr_device_class = DEVICE_CLASS_VOLTAGE
 
     def __init__(self, monitor_serial_number: int, number: int, name: str) -> None:
         """Construct the entity."""
