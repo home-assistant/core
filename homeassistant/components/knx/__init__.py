@@ -167,6 +167,30 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
 )
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Start the KNX integration."""
+    conf: ConfigType | None = config.get(DOMAIN)
+
+    if conf is None:
+        # If we have a config entry, setup is done by that config entry.
+        # If there is no config entry, this should fail.
+        return bool(hass.config_entries.async_entries(DOMAIN))
+
+    conf = dict(conf)
+
+    hass.data[DATA_KNX_CONFIG] = conf
+
+    # Only import if we haven't before.
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+            )
+        )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     conf = hass.data.get(DATA_KNX_CONFIG)
@@ -272,30 +296,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN] = None
 
     return unload_ok
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Start the KNX integration."""
-    conf: ConfigType | None = config.get(DOMAIN)
-
-    if conf is None:
-        # If we have a config entry, setup is done by that config entry.
-        # If there is no config entry, this should fail.
-        return bool(hass.config_entries.async_entries(DOMAIN))
-
-    conf = dict(conf)
-
-    hass.data[DATA_KNX_CONFIG] = conf
-
-    # Only import if we haven't before.
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
-            )
-        )
-
-    return True
 
 
 class KNXModule:
