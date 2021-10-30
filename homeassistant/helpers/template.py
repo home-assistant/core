@@ -53,7 +53,12 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util import convert, dt as dt_util, location as loc_util
+from homeassistant.util import (
+    convert,
+    dt as dt_util,
+    location as loc_util,
+    slugify as slugify_util,
+)
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
@@ -1753,6 +1758,11 @@ def urlencode(value):
     return urllib_urlencode(value).encode("utf-8")
 
 
+def slugify(value, separator="_"):
+    """Convert a string into a slug, such as what is used for entity ids."""
+    return slugify_util(value, separator=separator)
+
+
 @contextmanager
 def set_template(template_str: str, action: str) -> Generator:
     """Store template being parsed or rendered in a Contextvar to aid error handling."""
@@ -1866,6 +1876,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
         self.filters["relative_time"] = relative_time
+        self.filters["slugify"] = slugify
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1894,6 +1905,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
+        self.globals["slugify"] = slugify
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 
