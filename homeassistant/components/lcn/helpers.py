@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 from itertools import chain
 import re
 from typing import Tuple, Type, Union, cast
@@ -336,8 +337,9 @@ async def async_update_config_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Fill missing values in config_entry with infos from LCN bus."""
+    device_configs = deepcopy(config_entry.data[CONF_DEVICES])
     coros = []
-    for device_config in config_entry.data[CONF_DEVICES]:
+    for device_config in device_configs:
         device_connection = get_device_connection(
             hass, device_config[CONF_ADDRESS], config_entry
         )
@@ -345,8 +347,10 @@ async def async_update_config_entry(
 
     await asyncio.gather(*coros)
 
+    new_data = {**config_entry.data, CONF_DEVICES: device_configs}
+
     # schedule config_entry for save
-    hass.config_entries.async_update_entry(config_entry)
+    hass.config_entries.async_update_entry(config_entry, data=new_data)
 
 
 def has_unique_host_names(hosts: list[ConfigType]) -> list[ConfigType]:
