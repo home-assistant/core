@@ -464,7 +464,7 @@ async def webhook_register_sensor(hass, config_entry, data):
                 changes[ent_reg_key] = data[data_key]
 
         if changes:
-            er.async_get(hass).async_update_entity(existing_sensor, **changes)
+            entity_registry.async_update_entity(existing_sensor, **changes)
 
         async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, data)
     else:
