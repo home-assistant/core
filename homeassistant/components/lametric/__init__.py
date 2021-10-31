@@ -34,8 +34,7 @@ def setup(hass, config):
     hlmn = HassLaMetricManager(
         client_id=conf[CONF_CLIENT_ID], client_secret=conf[CONF_CLIENT_SECRET]
     )
-    devices = hlmn.manager.get_devices()
-    if not devices:
+    if not (devices := hlmn.manager.get_devices()):
         _LOGGER.error("No LaMetric devices found")
         return False
 

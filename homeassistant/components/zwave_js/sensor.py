@@ -335,8 +335,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
     @property
     def extra_state_attributes(self) -> Mapping[str, int | str] | None:
         """Return extra state attributes."""
-        meter_type = get_meter_type(self.info.primary_value)
-        if meter_type:
+        if meter_type := get_meter_type(self.info.primary_value):
             return {
                 ATTR_METER_TYPE: meter_type.value,
                 ATTR_METER_TYPE_NAME: meter_type.name,
