@@ -29,7 +29,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up OpenWeatherMap weather entity based on a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     name = domain_data[ENTRY_NAME]
