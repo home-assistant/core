@@ -572,7 +572,7 @@ async def test_zeroconf_add_existing_device(hass, dmap_device):
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DMAP_SERVICE
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured_device"
+    assert result["reason"] == "already_configured"
 
 
 async def test_zeroconf_unexpected_error(hass, mock_scan):
