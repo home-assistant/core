@@ -1,5 +1,9 @@
 """Support for RFXtrx covers."""
+from __future__ import annotations
+
 import logging
+
+import RFXtrx as rfxtrxmod
 
 from homeassistant.components.cover import (
     SUPPORT_CLOSE,
@@ -15,6 +19,7 @@ from homeassistant.core import callback
 
 from . import (
     DEFAULT_SIGNAL_REPETITIONS,
+    DeviceTuple,
     RfxtrxCommandEntity,
     connect_auto_add,
     get_device_id,
@@ -33,7 +38,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def supported(event):
+def supported(event: rfxtrxmod.RFXtrxEvent):
     """Return whether an event supports cover."""
     return event.device.known_to_be_rollershutter
 
@@ -45,7 +50,7 @@ async def async_setup_entry(
 ):
     """Set up config entry."""
     discovery_info = config_entry.data
-    device_ids = set()
+    device_ids: set[DeviceTuple] = set()
 
     entities = []
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
@@ -73,7 +78,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     @callback
-    def cover_update(event, device_id):
+    def cover_update(event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple) -> None:
         """Handle cover updates from the RFXtrx gateway."""
         if not supported(event):
             return
@@ -81,12 +86,13 @@ async def async_setup_entry(
         if device_id in device_ids:
             return
         device_ids.add(device_id)
+        device: rfxtrxmod.RFXtrxDevice = event.device
 
         _LOGGER.info(
             "Added cover (Device ID: %s Class: %s Sub: %s, Event: %s)",
-            event.device.id_string.lower(),
-            event.device.__class__.__name__,
-            event.device.subtype,
+            device.id_string.lower(),
+            device.__class__.__name__,
+            device.subtype,
             "".join(f"{x:02x}" for x in event.data),
         )
 
@@ -102,14 +108,16 @@ async def async_setup_entry(
 class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
     """Representation of a RFXtrx cover."""
 
+    _device: rfxtrxmod.RollerTrolDevice | rfxtrxmod.RfyDevice | rfxtrxmod.LightingDevice
+
     def __init__(
         self,
-        device,
-        device_id,
-        signal_repetitions,
-        event=None,
-        venetian_blind_mode=None,
-    ):
+        device: rfxtrxmod.RFXtrxDevice,
+        device_id: DeviceTuple,
+        signal_repetitions: int,
+        event: rfxtrxmod.RFXtrxEvent = None,
+        venetian_blind_mode: bool | None = None,
+    ) -> None:
         """Initialize the RFXtrx cover device."""
         super().__init__(device, device_id, signal_repetitions, event)
         self._venetian_blind_mode = venetian_blind_mode
@@ -191,8 +199,9 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         self._state = True
         self.async_write_ha_state()
 
-    def _apply_event(self, event):
+    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent):
         """Apply command from rfxtrx."""
+        assert isinstance(event, rfxtrxmod.ControlEvent)
         super()._apply_event(event)
         if event.values["Command"] in COMMAND_ON_LIST:
             self._state = True
@@ -200,7 +209,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
             self._state = False
 
     @callback
-    def _handle_event(self, event, device_id):
+    def _handle_event(self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
         """Check if event applies to me and update."""
         if device_id != self._device_id:
             return
