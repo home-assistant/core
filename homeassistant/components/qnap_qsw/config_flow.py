@@ -24,15 +24,6 @@ DATA_SCHEMA = vol.Schema(
 class QnapQswConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for QNAP QSW switch."""
 
-    VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize."""
-        self.qsha: QSHA = None
-        self.host: str | None = None
-        self.username: str | None = None
-        self.password: str | None = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -41,19 +32,18 @@ class QnapQswConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                host = user_input[CONF_HOST]
-                username = user_input[CONF_USERNAME]
-                password = user_input[CONF_PASSWORD]
-                self.qsha = QSHA(host=host, user=username, password=password)
-                if await self.hass.async_add_executor_job(self.qsha.login):
-                    await self.hass.async_add_executor_job(
-                        self.qsha.update_system_board
-                    )
+                qsha = QSHA(
+                    host=user_input[CONF_HOST],
+                    user=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                )
+                if await self.hass.async_add_executor_job(qsha.login):
+                    await self.hass.async_add_executor_job(qsha.update_system_board)
 
-                await self.async_set_unique_id(self.qsha.serial().lower())
+                await self.async_set_unique_id(qsha.serial().lower())
                 self._abort_if_unique_id_configured()
 
-                title = f"{self.qsha.product()} {self.qsha.serial()}"
+                title = f"{qsha.product()} {qsha.serial()}"
                 return self.async_create_entry(title=title, data=user_input)
             except LoginError:
                 errors["base"] = "invalid_auth"
