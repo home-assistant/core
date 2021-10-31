@@ -7,11 +7,7 @@ from pyatv.const import PairingRequirement, Protocol
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.apple_tv.const import (
-    CONF_RECONFIGURE,
-    CONF_START_OFF,
-    DOMAIN,
-)
+from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
 
 from .common import airplay_service, create_conf, mrp_service
 
@@ -576,7 +572,7 @@ async def test_zeroconf_add_existing_device(hass, dmap_device):
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DMAP_SERVICE
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured_device"
+    assert result["reason"] == "already_configured"
 
 
 async def test_zeroconf_unexpected_error(hass, mock_scan):
@@ -829,21 +825,3 @@ async def test_option_start_off(hass):
     assert result2["type"] == "create_entry"
 
     assert config_entry.options[CONF_START_OFF]
-
-
-async def test_option_reconfigure(hass):
-    """Test force of reconfigure flag."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="dmapid", options={CONF_RECONFIGURE: False}
-    )
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_RECONFIGURE: True}
-    )
-    assert result2["type"] == "create_entry"
-
-    assert config_entry.options[CONF_RECONFIGURE]

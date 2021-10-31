@@ -59,7 +59,7 @@ async def device_scan(identifier, loop):
 class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Apple TV."""
 
-    VERSION = 3
+    VERSION = 1
 
     @staticmethod
     @callback
@@ -95,7 +95,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         for entry in self._async_current_entries():
             for identifier in self.atv.all_identifiers:
-                if identifier in entry.data[CONF_IDENTIFIERS]:
+                if identifier in entry.data.get(CONF_IDENTIFIERS, [entry.unique_id]):
                     return entry.unique_id
         return self.atv.identifier
 
@@ -214,7 +214,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except DeviceNotFound:
             return self.async_abort(reason="no_devices_found")
         except DeviceAlreadyConfigured:
-            return self.async_abort(reason="already_configured_device")
+            return self.async_abort(reason="already_configured")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
@@ -247,7 +247,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not allow_exist:
             for identifier in self.atv.all_identifiers:
                 for entry in self._async_current_entries():
-                    if identifier in entry.data[CONF_IDENTIFIERS]:
+                    if identifier in entry.data.get(
+                        CONF_IDENTIFIERS, [entry.unique_id]
+                    ):
                         raise DeviceAlreadyConfigured()
 
     async def async_step_confirm(self, user_input=None):
@@ -298,7 +300,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_pair_next_protocol()
         if service.pairing == PairingRequirement.Disabled:
             return await self.async_step_protocol_disabled()
-        elif service.pairing == PairingRequirement.NotNeeded:
+        if service.pairing == PairingRequirement.NotNeeded:
             _LOGGER.debug("%s does not require pairing", self.protocol)
             self.credentials[self.protocol.value] = None
             return await self.async_pair_next_protocol()

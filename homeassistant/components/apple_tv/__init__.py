@@ -83,23 +83,6 @@ async def async_unload_entry(hass, entry):
     return unload_ok
 
 
-async def async_migrate_entry(hass, config_entry):
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version in [1, 2]:
-        new = {**config_entry.data}
-
-        new.setdefault(CONF_IDENTIFIERS, []).append(config_entry.unique_id)
-
-        config_entry.data = {**new}
-        config_entry.version = 3
-
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
-
-    return True
-
-
 class AppleTVEntity(Entity):
     """Device that sends commands to an Apple TV."""
 
@@ -239,7 +222,6 @@ class AppleTVManager:
         while self._is_on and self.atv is None:
             try:
                 conf = await self._scan()
-                raise exceptions.AuthenticationError()
                 if conf:
                     await self._connect(conf)
             except exceptions.AuthenticationError:
@@ -249,6 +231,7 @@ class AppleTVManager:
                     "Authentication failed for %s, try reconfiguring device",
                     self.config_entry.data[CONF_NAME],
                 )
+                break
             except asyncio.CancelledError:
                 pass
             except Exception:  # pylint: disable=broad-except
@@ -269,7 +252,9 @@ class AppleTVManager:
 
     async def _scan(self):
         """Try to find device by scanning for it."""
-        identifiers = set(self.config_entry.data[CONF_IDENTIFIERS])
+        identifiers = set(
+            self.config_entry.data.get(CONF_IDENTIFIERS, [self.config_entry.unique_id])
+        )
         address = self.config_entry.data[CONF_ADDRESS]
 
         # Only scan for and set up protocols that was successfully paired
