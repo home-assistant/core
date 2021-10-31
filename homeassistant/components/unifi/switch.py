@@ -387,7 +387,7 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the client."""
+        """Return the name of the DPI group."""
         return self._item.name
 
     @property
@@ -407,11 +407,11 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
 
     @property
     def is_on(self):
-        """Return true if DPI group blocking is enabled."""
+        """Return true if DPI group app restriction is enabled."""
         return self._is_enabled
 
     async def async_turn_on(self, **kwargs):
-        """Turn on connectivity for client."""
+        """Restrict access of apps related to DPI group."""
         return await asyncio.gather(
             *[
                 self.controller.api.dpi_apps.async_enable(app_id)
@@ -420,7 +420,7 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
         )
 
     async def async_turn_off(self, **kwargs):
-        """Turn off connectivity for client."""
+        """Remove restriction of apps related to DPI group."""
         return await asyncio.gather(
             *[
                 self.controller.api.dpi_apps.async_disable(app_id)
