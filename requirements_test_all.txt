@@ -1111,9 +1111,6 @@ pysqueezebox==0.5.5
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
 
-# homeassistant.components.tautulli
-pytautulli==21.10.0
-
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.11
 
