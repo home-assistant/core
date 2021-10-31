@@ -905,8 +905,7 @@ class MediaPlayerEntity(Entity):
             return state_attr
 
         for attr in ATTR_TO_PROPERTY:
-            value = getattr(self, attr)
-            if value is not None:
+            if (value := getattr(self, attr)) is not None:
                 state_attr[attr] = value
 
         if self.media_image_remotely_accessible:
