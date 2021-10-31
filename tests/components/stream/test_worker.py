@@ -707,9 +707,6 @@ async def test_durations(hass, record_worker_sync):
     running_metadata_duration = 0
     for segment in complete_segments:
         av_segment = av.open(io.BytesIO(segment.init + segment.get_data()))
-        print(
-            f"segment start time {av_segment.start_time} duration {av_segment.duration}"
-        )
         av_segment.close()
         for part_num, part in enumerate(segment.parts):
             av_part = av.open(io.BytesIO(segment.init + part.data))
