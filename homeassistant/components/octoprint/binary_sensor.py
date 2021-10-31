@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import logging
 
 from pyoctoprintapi import OctoprintPrinterInfo
 
@@ -10,14 +9,10 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN as COMPONENT_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from . import OctoprintDataUpdateCoordinator
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -26,7 +21,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the available OctoPrint binary sensors."""
-    coordinator: DataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
+    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]["coordinator"]
     device_id = config_entry.unique_id
@@ -44,9 +39,11 @@ async def async_setup_entry(
 class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
     """Representation an OctoPrint binary sensor."""
 
+    coordinator: OctoprintDataUpdateCoordinator
+
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: OctoprintDataUpdateCoordinator,
         sensor_type: str,
         device_id: str,
     ) -> None:
@@ -59,11 +56,7 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_info(self):
         """Device info."""
-        return {
-            "identifiers": {(COMPONENT_DOMAIN, self._device_id)},
-            "manufacturer": "OctoPrint",
-            "name": "OctoPrint",
-        }
+        return self.coordinator.device_info
 
     @property
     def is_on(self):
@@ -87,7 +80,9 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
 class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
     """Representation an OctoPrint binary sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
+    def __init__(
+        self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
+    ) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, "Printing", device_id)
 
@@ -98,7 +93,9 @@ class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
 class OctoPrintPrintingErrorBinarySensor(OctoPrintBinarySensorBase):
     """Representation an OctoPrint binary sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
+    def __init__(
+        self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
+    ) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, "Printing Error", device_id)
 

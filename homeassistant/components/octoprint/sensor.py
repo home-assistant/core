@@ -16,12 +16,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN as COMPONENT_DOMAIN
+from . import OctoprintDataUpdateCoordinator
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the available OctoPrint binary sensors."""
-    coordinator: DataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
+    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]["coordinator"]
     device_id = config_entry.unique_id
@@ -67,9 +65,11 @@ async def async_setup_entry(
 class OctoPrintSensorBase(CoordinatorEntity, SensorEntity):
     """Representation of an OctoPrint sensor."""
 
+    coordinator: OctoprintDataUpdateCoordinator
+
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: OctoprintDataUpdateCoordinator,
         sensor_type: str,
         device_id: str,
     ) -> None:
@@ -82,11 +82,7 @@ class OctoPrintSensorBase(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self):
         """Device info."""
-        return {
-            "identifiers": {(COMPONENT_DOMAIN, self._device_id)},
-            "manufacturer": "OctoPrint",
-            "name": "OctoPrint",
-        }
+        return self.coordinator.device_info
 
 
 class OctoPrintStatusSensor(OctoPrintSensorBase):
@@ -94,7 +90,9 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
 
     _attr_icon = "mdi:printer-3d"
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
+    def __init__(
+        self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
+    ) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, "Current State", device_id)
 
@@ -119,7 +117,9 @@ class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_icon = "mdi:file-percent"
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
+    def __init__(
+        self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
+    ) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, "Job Percentage", device_id)
 
@@ -142,7 +142,9 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
 
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
+    def __init__(
+        self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
+    ) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, "Estimated Finish Time", device_id)
 
@@ -163,7 +165,9 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
 
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
-    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str) -> None:
+    def __init__(
+        self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
+    ) -> None:
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, "Start Time", device_id)
 
@@ -189,7 +193,7 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: OctoprintDataUpdateCoordinator,
         tool: str,
         temp_type: str,
         device_id: str,
