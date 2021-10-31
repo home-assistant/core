@@ -1,6 +1,8 @@
 """Support for Jewish Calendar binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import datetime as dt
 from datetime import datetime
 from typing import cast
@@ -20,19 +22,37 @@ import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
 
-BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
+
+@dataclass
+class JewishCalendarBinarySensorMixIns(BinarySensorEntityDescription):
+    """Binary Sensor description mixin class for Jewish Calendar."""
+
+    is_on: Callable = lambda _: False
+
+
+@dataclass
+class JewishCalendarBinarySensorEntityDescription(
+    JewishCalendarBinarySensorMixIns, BinarySensorEntityDescription
+):
+    """Binary Sensor Entity description for Jewish Calendar."""
+
+
+BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
+    JewishCalendarBinarySensorEntityDescription(
         key="issur_melacha_in_effect",
         name="Issur Melacha in Effect",
         icon="mdi:power-plug-off",
+        is_on=lambda state: state.issur_melacha_in_effect,
     ),
-    BinarySensorEntityDescription(
+    JewishCalendarBinarySensorEntityDescription(
         key="erev_shabbat_hag",
         name="Erev Shabbat/Hag",
+        is_on=lambda state: state.erev_shabbat_hag,
     ),
-    BinarySensorEntityDescription(
+    JewishCalendarBinarySensorEntityDescription(
         key="motzei_shabbat_hag",
         name="Motzei Shabbat/Hag",
+        is_on=lambda state: state.motzei_shabbat_hag,
     ),
 )
 
@@ -59,11 +79,12 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     """Representation of an Jewish Calendar binary sensor."""
 
     _attr_should_poll = False
+    entity_description: JewishCalendarBinarySensorEntityDescription
 
     def __init__(
         self,
         data: dict[str, str | bool | int | float],
-        description: BinarySensorEntityDescription,
+        description: JewishCalendarBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
@@ -79,14 +100,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         zmanim = self._get_zmanim()
-        if self.entity_description.key == "issur_melacha_in_effect":
-            return cast(bool, zmanim.issur_melacha_in_effect)
-        if self.entity_description.key == "erev_shabbat_hag":
-            return cast(bool, zmanim.erev_shabbat_hag)
-        if self.entity_description.key == "motzei_shabbat_hag":
-            return cast(bool, zmanim.motzei_shabbat_hag)
-
-        return False
+        return cast(bool, self.entity_description.is_on(zmanim))
 
     def _get_zmanim(self) -> Zmanim:
         """Return the Zmanim object for now()."""
