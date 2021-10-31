@@ -112,7 +112,7 @@ class VenstarEntity(CoordinatorEntity):
         """Initialize the data object."""
         super().__init__(venstar_data_coordinator)
         self._config = config
-        self._client = self.coordinator.client
+        self._client = venstar_data_coordinator.client
 
     @callback
     def _handle_coordinator_update(self) -> None:
