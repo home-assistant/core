@@ -433,9 +433,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        value = getattr(self.block, self.attribute)
-
-        if value is None:
+        if (value := getattr(self.block, self.attribute)) is None:
             return None
 
         return cast(StateType, self.description.value(value))
