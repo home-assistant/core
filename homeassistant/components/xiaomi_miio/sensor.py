@@ -548,7 +548,7 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
             )
             continue
         entities.append(
-            XiaomiVacuumSensor(
+            XiaomiGenericSensor(
                 f"{config_entry.title} {description.name}",
                 device,
                 config_entry,
@@ -663,6 +663,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
         self._attr_unique_id = unique_id
+        self._attr_native_value = self._determine_native_value()
         self.entity_description: XiaomiMiioSensorDescription = description
 
     @property
@@ -677,40 +678,24 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        native_value = self._extract_value_from_attribute(
+        native_value = self._determine_native_value()
+        # Sometimes (quite rarely) the device returns None as the sensor value so we
+        # check that the value is not None before updating the state.
+        if native_value is not None:
+            self._attr_native_value = native_value
+            self.async_write_ha_state()
+
+    def _determine_native_value(self):
+        """Determine native value."""
+        if self.entity_description.parent_key is not None:
+            return self._extract_value_from_attribute(
+                getattr(self.coordinator.data, self.entity_description.parent_key),
+                self.entity_description.key,
+            )
+
+        return self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
         )
-        # Sometimes (quite rarely) the device returns None as the sensor value so we
-        # check that the value is not None before updating the state.
-        if native_value:
-            self._attr_native_value = native_value
-            self.async_write_ha_state()
-
-
-class XiaomiVacuumSensor(XiaomiGenericSensor):
-    """Representation of a Xiaomi Vacuum sensor."""
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            attr: self._extract_value_from_attribute(self.coordinator.data, attr)
-            for attr in self.entity_description.attributes
-            if hasattr(self.coordinator.data, attr)
-        }
-
-    @callback
-    def _handle_coordinator_update(self):
-        """Fetch state from the device."""
-        native_value = self._extract_value_from_attribute(
-            getattr(self.coordinator.data, self.entity_description.parent_key),
-            self.entity_description.key,
-        )
-        # Sometimes (quite rarely) the device returns None as the sensor value so we
-        # check that the value is not None before updating the state.
-        if native_value:
-            self._attr_native_value = native_value
-            self.async_write_ha_state()
 
 
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):

@@ -176,10 +176,15 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
         self._attr_entity_registry_enabled_default = (
             description.entity_registry_enabled_default
         )
+        self._attr_is_on = self._determine_native_value()
 
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
+    def _handle_coordinator_update(self) -> None:
+        self._attr_is_on = self._determine_native_value()
+
+        super()._handle_coordinator_update()
+
+    def _determine_native_value(self):
+        """Determine native value."""
         if self.entity_description.parent_key is not None:
             return self._extract_value_from_attribute(
                 getattr(self.coordinator.data, self.entity_description.parent_key),
