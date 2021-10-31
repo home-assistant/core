@@ -631,6 +631,22 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "alternative_integration"
 
+    for manufacturer, model in [
+        ("XBMC Foundation", "Kodi"),
+        ("Samsung", "Smart TV"),
+        ("LG Electronics.", "LG TV"),
+    ]:
+        discovery = dict(MOCK_DISCOVERY)
+        discovery[ssdp.ATTR_UPNP_MANUFACTURER] = manufacturer
+        discovery[ssdp.ATTR_UPNP_MODEL_NAME] = model
+        result = await hass.config_entries.flow.async_init(
+            DLNA_DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=discovery,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "alternative_integration"
+
 
 async def test_unignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
     """Test a config flow started by unignoring a device."""
