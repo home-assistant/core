@@ -34,6 +34,7 @@ from homeassistant.const import (
     MASS_KILOGRAMS,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
+    POWER_VOLT_AMPERE_REACTIVE,
     POWER_WATT,
     SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
@@ -184,7 +185,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_VAR": SensorEntityDescription(
         key="V_VAR",
-        native_unit_of_measurement="var",
+        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
     ),
     "V_VA": SensorEntityDescription(
         key="V_VA",
