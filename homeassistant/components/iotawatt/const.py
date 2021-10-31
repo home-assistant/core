@@ -6,7 +6,6 @@ import json
 import httpx
 
 DOMAIN = "iotawatt"
-VOLT_AMPERE_REACTIVE = "VAR"
 VOLT_AMPERE_REACTIVE_HOURS = "VARh"
 
 ATTR_LAST_UPDATE = "last_update"

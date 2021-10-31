@@ -25,6 +25,7 @@ from homeassistant.const import (
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
+    POWER_VOLT_AMPERE_REACTIVE,
     POWER_WATT,
 )
 from homeassistant.core import callback
@@ -36,7 +37,6 @@ from homeassistant.util import dt
 from .const import (
     ATTR_LAST_UPDATE,
     DOMAIN,
-    VOLT_AMPERE_REACTIVE,
     VOLT_AMPERE_REACTIVE_HOURS,
 )
 from .coordinator import IotawattUpdater
@@ -95,7 +95,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     ),
     "VAR": IotaWattSensorEntityDescription(
         "VAR",
-        native_unit_of_measurement=VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash",
         entity_registry_enabled_default=False,
