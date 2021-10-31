@@ -23,6 +23,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+    SUPPORT_BROWSE_MEDIA,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -36,6 +37,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
+
+from .browse_media import build_item_response, library_payload
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +57,7 @@ SUPPORT_FRONTIER_SILICON = (
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
+    | SUPPORT_BROWSE_MEDIA
 )
 
 DEFAULT_PORT = 80
@@ -321,7 +326,24 @@ class AFSAPIDevice(MediaPlayerEntity):
             and not isinstance(media_id, int)
             and not media_id.isnumeric()
         ):
-            _LOGGER.error("Media id for %s needs to be a number", MEDIA_TYPE_CHANNEL)
+            _LOGGER.error("Media id for %s must be a number", MEDIA_TYPE_CHANNEL)
             return
 
         await self.fs_device.set_preset(media_id)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Browse media library and preset stations."""
+        if media_content_type in [None, "library"]:
+            return await library_payload()
+
+        payload = {
+            "search_type": media_content_type,
+            "search_id": media_content_id,
+        }
+
+        response = await build_item_response(self.fs_device, payload, None)
+        if response is None:
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+        return response
