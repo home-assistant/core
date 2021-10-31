@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 import homeassistant.util.dt as dt_util
 
@@ -66,15 +67,15 @@ class KeeneticRouter:
         return self.config_entry.data[CONF_HOST]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the host of this hub."""
-        return {
-            "identifiers": {(DOMAIN, f"router-{self.config_entry.entry_id}")},
-            "manufacturer": self.manufacturer,
-            "model": self.model,
-            "name": self.name,
-            "sw_version": self.firmware,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"router-{self.config_entry.entry_id}")},
+            manufacturer=self.manufacturer,
+            model=self.model,
+            name=self.name,
+            sw_version=self.firmware,
+        )
 
     @property
     def name(self):

@@ -133,7 +133,7 @@ async def test_select_charge_mode(hass: HomeAssistant, config_entry: ConfigEntry
     await hass.async_block_till_done()
 
     data = {
-        ATTR_ENTITY_ID: "select.charge_mode",
+        ATTR_ENTITY_ID: "select.reg_number_charge_mode",
         ATTR_OPTION: "always",
     }
 

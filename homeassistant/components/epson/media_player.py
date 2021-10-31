@@ -1,4 +1,6 @@
 """Support for Epson projector."""
+from __future__ import annotations
+
 import logging
 
 from epson_projector.const import (
@@ -39,6 +41,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from .const import ATTR_CMODE, DOMAIN, SERVICE_SELECT_CMODE
@@ -137,17 +140,17 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             self._state = STATE_OFF
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Get attributes about the device."""
         if not self._unique_id:
             return None
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "manufacturer": "Epson",
-            "name": "Epson projector",
-            "model": "Epson",
-            "via_hub": (DOMAIN, self._unique_id),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer="Epson",
+            model="Epson",
+            name="Epson projector",
+            via_device=(DOMAIN, self._unique_id),
+        )
 
     @property
     def name(self):

@@ -264,9 +264,7 @@ async def webhook_fire_event(hass, config_entry, data):
 @validate_schema({vol.Required(ATTR_CAMERA_ENTITY_ID): cv.string})
 async def webhook_stream_camera(hass, config_entry, data):
     """Handle a request to HLS-stream a camera."""
-    camera = hass.states.get(data[ATTR_CAMERA_ENTITY_ID])
-
-    if camera is None:
+    if (camera := hass.states.get(data[ATTR_CAMERA_ENTITY_ID])) is None:
         return webhook_response(
             {"success": False},
             registration=config_entry.data,
@@ -346,7 +344,7 @@ async def webhook_update_registration(hass, config_entry, data):
     """Handle an update registration webhook."""
     new_registration = {**config_entry.data, **data}
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -435,7 +433,7 @@ async def webhook_register_sensor(hass, config_entry, data):
     device_name = config_entry.data[ATTR_DEVICE_NAME]
 
     unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     existing_sensor = entity_registry.async_get_entity_id(
         entity_type, DOMAIN, unique_store_key
     )
@@ -500,7 +498,7 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
         unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
 
-        entity_registry = await er.async_get_registry(hass)
+        entity_registry = er.async_get(hass)
         if not entity_registry.async_get_entity_id(
             entity_type, DOMAIN, unique_store_key
         ):

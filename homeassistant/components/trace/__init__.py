@@ -132,8 +132,7 @@ async def async_list_traces(hass, wanted_domain, wanted_key):
 
 def async_store_trace(hass, trace, stored_traces):
     """Store a trace if its key is valid."""
-    key = trace.key
-    if key:
+    if key := trace.key:
         traces = hass.data[DATA_TRACE]
         if key not in traces:
             traces[key] = LimitedSizeDict(size_limit=stored_traces)

@@ -33,8 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Digital Ocean droplet switch."""
-    digital = hass.data.get(DATA_DIGITAL_OCEAN)
-    if not digital:
+    if not (digital := hass.data.get(DATA_DIGITAL_OCEAN)):
         return False
 
     droplets = config[CONF_DROPLETS]

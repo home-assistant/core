@@ -1,5 +1,6 @@
 """Test the motionEye camera web hooks."""
 import copy
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -22,13 +23,7 @@ from homeassistant.components.motioneye.const import (
     EVENT_MOTION_DETECTED,
 )
 from homeassistant.components.webhook import URL_WEBHOOK_PATH
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONF_URL,
-    CONF_WEBHOOK_ID,
-    HTTP_BAD_REQUEST,
-    HTTP_OK,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.network import NoURLAvailableError
@@ -308,7 +303,7 @@ async def test_good_query(hass: HomeAssistant, hass_client_no_auth: Any) -> None
                 ATTR_EVENT_TYPE: event,
             },
         )
-        assert resp.status == HTTP_OK
+        assert resp.status == HTTPStatus.OK
 
         assert len(events) == 1
         assert events[0].data == {
@@ -332,7 +327,7 @@ async def test_bad_query_missing_parameters(
     resp = await client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]), json={}
     )
-    assert resp.status == HTTP_BAD_REQUEST
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_bad_query_no_such_device(
@@ -351,7 +346,7 @@ async def test_bad_query_no_such_device(
             ATTR_DEVICE_ID: "not-a-real-device",
         },
     )
-    assert resp.status == HTTP_BAD_REQUEST
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_bad_query_cannot_decode(
@@ -370,6 +365,6 @@ async def test_bad_query_cannot_decode(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),
         data=b"this is not json",
     )
-    assert resp.status == HTTP_BAD_REQUEST
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert not motion_events
     assert not storage_events

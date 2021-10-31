@@ -15,6 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
@@ -93,6 +94,14 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         entry = get_config_entry(self.hass, data)
         if entry:
             entry.source = config_entries.SOURCE_IMPORT
+
+            # Cleanup entity and device registry, if we imported from configuration.yaml to
+            # remove orphans when entities were removed from configuration
+            entity_registry = er.async_get(self.hass)
+            entity_registry.async_clear_config_entry(entry.entry_id)
+            device_registry = dr.async_get(self.hass)
+            device_registry.async_clear_config_entry(entry.entry_id)
+
             self.hass.config_entries.async_update_entry(entry, data=data)
             return self.async_abort(reason="existing_configuration_updated")
 

@@ -579,6 +579,10 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
                         sum=last_statistic.sum,
                     )
                 )
+    elif new_version == 23:
+        # Add name column to StatisticsMeta
+        _add_columns(session, "statistics_meta", ["name VARCHAR(255)"])
+
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

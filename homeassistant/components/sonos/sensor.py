@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    PERCENTAGE,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SONOS_CREATE_BATTERY
@@ -25,6 +29,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SonosBatteryEntity(SonosEntity, SensorEntity):
     """Representation of a Sonos Battery entity."""
 
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the sensor."""
@@ -45,7 +51,7 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
         """Get the unit of measurement."""
         return PERCENTAGE
 
-    async def async_update(self) -> None:
+    async def _async_poll(self) -> None:
         """Poll the device for the current state."""
         await self.speaker.async_poll_battery()
 

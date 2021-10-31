@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -255,6 +256,12 @@ async def async_get_triggers(
     return triggers
 
 
+def _device_model_to_type(model: str) -> str:
+    """Convert a lutron_caseta device registry entry model to type."""
+    _, device_type = model.split(" ")
+    return device_type.replace("(", "").replace(")", "")
+
+
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
@@ -262,15 +269,18 @@ async def async_attach_trigger(
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
-    schema = DEVICE_TYPE_SCHEMA_MAP.get(device["type"])
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device["type"])
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    device_type = _device_model_to_type(device.model)
+    _, serial = list(device.identifiers)[0]
+    schema = DEVICE_TYPE_SCHEMA_MAP.get(device_type)
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device_type)
     config = schema(config)
     event_config = {
         event_trigger.CONF_PLATFORM: CONF_EVENT,
         event_trigger.CONF_EVENT_TYPE: LUTRON_CASETA_BUTTON_EVENT,
         event_trigger.CONF_EVENT_DATA: {
-            ATTR_SERIAL: device["serial"],
+            ATTR_SERIAL: serial,
             ATTR_BUTTON_NUMBER: valid_buttons[config[CONF_SUBTYPE]],
             ATTR_ACTION: config[CONF_TYPE],
         },

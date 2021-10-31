@@ -22,7 +22,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -169,6 +169,7 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
 
     TYPE = DOMAIN
 
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
     _attr_device_class = DEVICE_CLASS_TAMPER
 
     def __init__(self, device, gateway):

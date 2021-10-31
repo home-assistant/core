@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from yarl import URL
 
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PresenceData, XboxUpdateCoordinator
@@ -66,12 +67,12 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         return self.attribute == "online"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return {
-            "identifiers": {(DOMAIN, "xbox_live")},
-            "name": "Xbox Live",
-            "manufacturer": "Microsoft",
-            "model": "Xbox Live",
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, "xbox_live")},
+            manufacturer="Microsoft",
+            model="Xbox Live",
+            name="Xbox Live",
+        )

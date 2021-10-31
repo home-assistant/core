@@ -172,6 +172,7 @@ class AxisNetworkDevice:
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
+            configuration_url=self.api.config.url,
             connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
             identifiers={(AXIS_DOMAIN, self.unique_id)},
             manufacturer=ATTR_MANUFACTURER,

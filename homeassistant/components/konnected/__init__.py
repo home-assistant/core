@@ -221,8 +221,7 @@ PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Konnected platform."""
-    cfg = config.get(DOMAIN)
-    if cfg is None:
+    if (cfg := config.get(DOMAIN)) is None:
         cfg = {}
 
     if DOMAIN not in hass.data:
@@ -336,14 +335,12 @@ class KonnectedView(HomeAssistantView):
                 "updating instructions"
             )
 
-        device = data[CONF_DEVICES].get(device_id)
-        if device is None:
+        if (device := data[CONF_DEVICES].get(device_id)) is None:
             return self.json_message(
                 "unregistered device", status_code=HTTPStatus.BAD_REQUEST
             )
 
-        panel = device.get("panel")
-        if panel is not None:
+        if (panel := device.get("panel")) is not None:
             # connect if we haven't already
             hass.async_create_task(panel.async_connect())
 
@@ -382,14 +379,12 @@ class KonnectedView(HomeAssistantView):
         hass = request.app["hass"]
         data = hass.data[DOMAIN]
 
-        device = data[CONF_DEVICES].get(device_id)
-        if not device:
+        if not (device := data[CONF_DEVICES].get(device_id)):
             return self.json_message(
                 f"Device {device_id} not configured", status_code=HTTPStatus.NOT_FOUND
             )
 
-        panel = device.get("panel")
-        if panel is not None:
+        if (panel := device.get("panel")) is not None:
             # connect if we haven't already
             hass.async_create_task(panel.async_connect())
 
@@ -427,8 +422,7 @@ class KonnectedView(HomeAssistantView):
             resp[CONF_PIN] = ZONE_TO_PIN[zone_num]
 
         # Make sure entity is setup
-        zone_entity_id = zone.get(ATTR_ENTITY_ID)
-        if zone_entity_id:
+        if zone_entity_id := zone.get(ATTR_ENTITY_ID):
             resp["state"] = self.binary_value(
                 hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION]
             )

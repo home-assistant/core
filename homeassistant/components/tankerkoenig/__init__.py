@@ -132,8 +132,7 @@ class TankerkoenigData:
             return False
 
         # Add stations found via location + radius
-        nearby_stations = data["stations"]
-        if not nearby_stations:
+        if not (nearby_stations := data["stations"]):
             if not additional_stations:
                 _LOGGER.error(
                     "Could not find any station in range."
@@ -144,7 +143,7 @@ class TankerkoenigData:
                 "Could not find any station in range. Will only use manually specified stations"
             )
         else:
-            for station in data["stations"]:
+            for station in nearby_stations:
                 self.add_station(station)
 
         # Add manually specified additional stations

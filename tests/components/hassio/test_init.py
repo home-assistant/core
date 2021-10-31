@@ -91,6 +91,54 @@ def mock_all(aioclient_mock, request):
         },
     )
     aioclient_mock.get(
+        "http://127.0.0.1/addons/test/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test2/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.8,
+                "memory_usage": 51941376,
+                "memory_limit": 3977146368,
+                "memory_percent": 1.31,
+                "network_rx": 31338284,
+                "network_tx": 15692900,
+                "blk_read": 740077568,
+                "blk_write": 6004736,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test3/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.8,
+                "memory_usage": 51941376,
+                "memory_limit": 3977146368,
+                "memory_percent": 1.31,
+                "network_rx": 31338284,
+                "network_tx": 15692900,
+                "blk_read": 740077568,
+                "blk_write": 6004736,
+            },
+        },
+    )
+    aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
 
@@ -445,6 +493,7 @@ async def test_device_registry_calls(hass):
         "addons": [
             {
                 "name": "test",
+                "state": "started",
                 "slug": "test",
                 "installed": True,
                 "update_available": False,
@@ -455,6 +504,7 @@ async def test_device_registry_calls(hass):
             },
             {
                 "name": "test2",
+                "state": "started",
                 "slug": "test2",
                 "installed": True,
                 "update_available": False,
@@ -489,6 +539,7 @@ async def test_device_registry_calls(hass):
         "addons": [
             {
                 "name": "test2",
+                "state": "started",
                 "slug": "test2",
                 "installed": True,
                 "update_available": False,
@@ -520,6 +571,7 @@ async def test_device_registry_calls(hass):
             {
                 "name": "test2",
                 "slug": "test2",
+                "state": "started",
                 "installed": True,
                 "update_available": False,
                 "version": "1.0.0",
@@ -529,6 +581,7 @@ async def test_device_registry_calls(hass):
             {
                 "name": "test3",
                 "slug": "test3",
+                "state": "stopped",
                 "installed": True,
                 "update_available": False,
                 "version": "1.0.0",

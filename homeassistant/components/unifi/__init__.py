@@ -61,6 +61,7 @@ async def async_setup_entry(hass, config_entry):
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
+        configuration_url=controller.api.url,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
         default_manufacturer=ATTR_MANUFACTURER,
         default_model="UniFi Controller",
@@ -105,9 +106,7 @@ class UnifiWirelessClients:
 
     async def async_load(self):
         """Load data from file."""
-        data = await self._store.async_load()
-
-        if data is not None:
+        if (data := await self._store.async_load()) is not None:
             self.data = data
 
     @callback
