@@ -1,8 +1,7 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
 import logging
 
-# use local override until https://github.com/zhelev/python-afsapi/pull/4 is accepted
-from .afsapi import AFSAPI
+from afsapi import AFSAPI
 import requests
 import voluptuous as vol
 
@@ -314,14 +313,21 @@ class AFSAPIDevice(MediaPlayerEntity):
         supported_media_types = [MEDIA_TYPE_CHANNEL]
 
         if media_type not in supported_media_types:
-            _LOGGER.error("Supported media types: %s", supported_media_types)
+            _LOGGER.error('Supported media types: %s', supported_media_types)
             return
         if (
             media_type == MEDIA_TYPE_CHANNEL
             and not isinstance(media_id, int)
             and not media_id.isnumeric()
         ):
-            _LOGGER.error("Media id for %s needs to be a number", MEDIA_TYPE_CHANNEL)
+            _LOGGER.error('Media id for %s must be a number', MEDIA_TYPE_CHANNEL)
             return
 
-        await self.fs_device.set_preset(media_id)
+        fs_device = self.fs_device
+        nav = await fs_device.handle_set('netremote.nav.state', 1)
+        if not nav:
+            _LOGGER.error('Failed to enter nav state')
+            return False
+        ok = await fs_device.handle_set('netremote.nav.action.selectPreset', media_id)
+        await fs_device.handle_set('netremote.nav.state', 1)
+        return ok
