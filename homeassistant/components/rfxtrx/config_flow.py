@@ -424,16 +424,13 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Get event code based on device identifier."""
         event_code: str
         entry = self._device_registry.async_get(entry_id)
-        if entry is None:
-            raise Exception("Could not find entry")
+        assert entry
         device_id = cast(DeviceTuple, next(iter(entry.identifiers))[1:])
         for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
             if tuple(entity_info.get(CONF_DEVICE_ID)) == device_id:
                 event_code = cast(str, packet_id)
                 break
-        else:
-            raise Exception("Could not find device data")
-
+        assert event_code
         return DeviceData(event_code=event_code, device_id=device_id)
 
     @callback

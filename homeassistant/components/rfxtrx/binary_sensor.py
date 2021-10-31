@@ -229,8 +229,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         """Apply event for a lighting 4 device."""
         if self._data_bits is not None:
             cmdstr = get_pt2262_cmd(event.device.id_string, self._data_bits)
-            if cmdstr is None:
-                return
+            assert cmdstr
             cmd = int(cmdstr, 16)
             if cmd == self._cmd_on:
                 self._state = True
