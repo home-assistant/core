@@ -1,8 +1,7 @@
 """Support for the sensors in a GreenEye Monitor."""
 from __future__ import annotations
 
-import typing
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, Optional, TypeVar, cast
 
 import greeneye
 from greeneye import Monitors
@@ -193,7 +192,7 @@ class CurrentSensor(GEMSensor[greeneye.monitor.Channel]):
         if not self._sensor:
             return None
 
-        return typing.cast(Optional[float], self._sensor.watts)
+        return cast(Optional[float], self._sensor.watts)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -245,7 +244,7 @@ class PulseCounter(GEMSensor[greeneye.monitor.PulseCounter]):
             * self._counted_quantity_per_pulse
             * self._seconds_per_time_unit
         )
-        return typing.cast(float, result)
+        return cast(float, result)
 
     @property
     def _seconds_per_time_unit(self) -> int:
@@ -300,7 +299,7 @@ class TemperatureSensor(GEMSensor[greeneye.monitor.TemperatureSensor]):
         if not self._sensor:
             return None
 
-        return typing.cast(Optional[float], self._sensor.temperature)
+        return cast(Optional[float], self._sensor.temperature)
 
     @property
     def native_unit_of_measurement(self) -> str:
@@ -330,4 +329,4 @@ class VoltageSensor(GEMSensor[greeneye.monitor.Monitor]):
         if not self._sensor:
             return None
 
-        return typing.cast(Optional[float], self._sensor.voltage)
+        return cast(Optional[float], self._sensor.voltage)
