@@ -88,5 +88,3 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(exception) from exception
         except ValueError as exception:
             raise UpdateFailed("Unknown state from TotalConnect") from exception
-
-        return True
