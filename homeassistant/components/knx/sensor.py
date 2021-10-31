@@ -16,15 +16,8 @@ from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.util import dt
 
-from .const import (
-    ATTR_LAST_KNX_UPDATE,
-    ATTR_SOURCE,
-    DATA_KNX_CONFIG,
-    DOMAIN,
-    SupportedPlatforms,
-)
+from .const import ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN, SupportedPlatforms
 from .knx_entity import KnxEntity
 from .schema import SensorSchema
 
@@ -86,7 +79,4 @@ class KNXSensor(KnxEntity, SensorEntity):
 
         if self._device.last_telegram is not None:
             attr[ATTR_SOURCE] = str(self._device.last_telegram.source_address)
-            attr[ATTR_LAST_KNX_UPDATE] = str(
-                dt.as_utc(self._device.last_telegram.timestamp)
-            )
         return attr

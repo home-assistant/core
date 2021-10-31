@@ -41,7 +41,6 @@ CONF_SYNC_STATE: Final = "sync_state"
 DATA_KNX_CONFIG: Final = "knx_config"
 
 ATTR_COUNTER: Final = "counter"
-ATTR_LAST_KNX_UPDATE: Final = "last_knx_update"
 ATTR_SOURCE: Final = "source"
 
 

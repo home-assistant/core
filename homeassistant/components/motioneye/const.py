@@ -28,6 +28,7 @@ DOMAIN: Final = "motioneye"
 ATTR_EVENT_TYPE: Final = "event_type"
 ATTR_WEBHOOK_ID: Final = "webhook_id"
 
+CONF_ACTION: Final = "action"
 CONF_CLIENT: Final = "client"
 CONF_COORDINATOR: Final = "coordinator"
 CONF_ADMIN_PASSWORD: Final = "admin_password"
@@ -80,6 +81,10 @@ EVENT_FILE_STORED_KEYS: Final = [
 ]
 
 MOTIONEYE_MANUFACTURER: Final = "motionEye"
+
+SERVICE_SET_TEXT_OVERLAY: Final = "set_text_overlay"
+SERVICE_ACTION: Final = "action"
+SERVICE_SNAPSHOT: Final = "snapshot"
 
 SIGNAL_CAMERA_ADD: Final = f"{DOMAIN}_camera_add_signal." "{}"
 SIGNAL_CAMERA_REMOVE: Final = f"{DOMAIN}_camera_remove_signal." "{}"
