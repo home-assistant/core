@@ -46,8 +46,6 @@ UNIT_WATTS = POWER_WATT
 
 COUNTER_ICON = "mdi:counter"
 CURRENT_SENSOR_ICON = "mdi:flash"
-TEMPERATURE_ICON = "mdi:thermometer"
-VOLTAGE_ICON = "mdi:current-ac"
 
 
 async def async_setup_platform(
@@ -283,7 +281,6 @@ class TemperatureSensor(GEMSensor[greeneye.monitor.TemperatureSensor]):
     """Entity showing temperature from one temperature sensor."""
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_icon = TEMPERATURE_ICON
 
     def __init__(
         self, monitor_serial_number: int, number: int, name: str, unit: str
