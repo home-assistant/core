@@ -71,3 +71,71 @@ async def test_ryse_smart_bridge_setup(hass):
     assert device.name == "RYSE SmartShade"
     assert device.model == "RYSE Shade"
     assert device.sw_version == ""
+
+
+async def test_ryse_smart_bridge_four_shades_setup(hass):
+    """Test that a Ryse smart bridge with four shades can be correctly setup in HA."""
+    accessories = await setup_accessories_from_file(
+        hass, "ryse_smart_bridge_four_shades.json"
+    )
+    config_entry, pairing = await setup_test_accessories(hass, accessories)
+
+    entity_registry = er.async_get(hass)
+
+    cover_id = "cover.lr_left"
+    cover = entity_registry.async_get(cover_id)
+    assert cover.unique_id == "homekit-00:00:00:00:00:00-2-48"
+
+    cover_id = "cover.lr_right"
+    cover = entity_registry.async_get(cover_id)
+    assert cover.unique_id == "homekit-00:00:00:00:00:00-3-48"
+
+    cover_id = "cover.br_left"
+    cover = entity_registry.async_get(cover_id)
+    assert cover.unique_id == "homekit-00:00:00:00:00:00-4-48"
+
+    cover_id = "cover.rzss"
+    cover = entity_registry.async_get(cover_id)
+    assert cover.unique_id == "homekit-00:00:00:00:00:00-5-48"
+
+    sensor_id = "sensor.lr_left_battery"
+    sensor = entity_registry.async_get(sensor_id)
+    assert sensor.unique_id == "homekit-00:00:00:00:00:00-2-64"
+
+    sensor_id = "sensor.lr_right_battery"
+    sensor = entity_registry.async_get(sensor_id)
+    assert sensor.unique_id == "homekit-00:00:00:00:00:00-3-64"
+
+    sensor_id = "sensor.br_left_battery"
+    sensor = entity_registry.async_get(sensor_id)
+    assert sensor.unique_id == "homekit-00:00:00:00:00:00-4-64"
+
+    sensor_id = "sensor.rzss_battery"
+    sensor = entity_registry.async_get(sensor_id)
+    assert sensor.unique_id == "homekit-00:00:00:00:00:00-5-64"
+
+    cover_helper = Helper(
+        hass,
+        cover_id,
+        pairing,
+        accessories[0],
+        config_entry,
+    )
+
+    cover_state = await cover_helper.poll_and_get_state()
+    assert cover_state.attributes["friendly_name"] == "RZSS"
+    assert cover_state.state == "open"
+
+    device_registry = dr.async_get(hass)
+
+    device = device_registry.async_get(cover.device_id)
+    assert device.manufacturer == "RYSE Inc."
+    assert device.name == "RZSS"
+    assert device.model == "RYSE Shade"
+    assert device.sw_version == "3.0.8"
+
+    bridge = device_registry.async_get(device.via_device_id)
+    assert bridge.manufacturer == "RYSE Inc."
+    assert bridge.name == "RYSE SmartBridge"
+    assert bridge.model == "RYSE SmartBridge"
+    assert bridge.sw_version == "1.3.0"

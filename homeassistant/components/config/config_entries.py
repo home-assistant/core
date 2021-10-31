@@ -249,8 +249,7 @@ def get_entry(
     msg_id: int,
 ) -> config_entries.ConfigEntry | None:
     """Get entry, send error message if it doesn't exist."""
-    entry = hass.config_entries.async_get_entry(entry_id)
-    if entry is None:
+    if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
         send_entry_not_found(connection, msg_id)
     return entry
 
