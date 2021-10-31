@@ -30,9 +30,7 @@ class KNXTestKit:
         # telegrams to an InternalGroupAddress won't be queued here
         self._outgoing_telegrams: asyncio.Queue = asyncio.Queue()
 
-    def assert_state(
-        self, entity_id: str, state: str, attributes: dict[str, str | float] = {}
-    ) -> None:
+    def assert_state(self, entity_id: str, state: str, **attributes) -> None:
         """Assert the state of an entity."""
         test_state = self.hass.states.get(entity_id)
         assert test_state.state == state
