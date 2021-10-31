@@ -1,6 +1,4 @@
 """Alarm sensors for the Venstar Thermostat."""
-from typing import List
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
@@ -16,10 +14,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
 
     if coordinator.client.alerts is None:
         return
-        sensors: List[VenstarBinarySensor] = [
-            VenstarBinarySensor(coordinator, config_entry, alert["name"])
-            for alert in coordinator.client.alerts
-        ]
+    sensors = [
+        VenstarBinarySensor(coordinator, config_entry, alert["name"])
+        for alert in coordinator.client.alerts
+    ]
 
     async_add_entities(sensors, True)
 
