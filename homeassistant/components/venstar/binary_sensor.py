@@ -10,14 +10,11 @@ from .const import DOMAIN
 
 async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     """Set up Vensar device binary_sensors based on a config entry."""
-    sensors = []
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    if coordinator.client.alerts is not None:
-        for alert in coordinator.client.alerts:
-            sensors.append(
-                VenstarBinarySensor(coordinator, config_entry, alert["name"])
-            )
+    if coordinator.client.alerts is None:
+        return
+        sensors = [VenstarBinarySensor(coordinator, config_entry, alert["name"]) for alert in coordinator.client.alerts]
 
     async_add_entities(sensors, True)
 
@@ -51,4 +48,3 @@ class VenstarBinarySensor(VenstarEntity, BinarySensorEntity):
         for alert in self._client.alerts:
             if alert["name"] == self.alert:
                 return alert["active"]
-        return None
