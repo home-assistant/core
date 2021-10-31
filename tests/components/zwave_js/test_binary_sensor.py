@@ -1,7 +1,10 @@
 """Test the Z-Wave JS binary sensor platform."""
 from zwave_js_server.event import Event
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_MOTION
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_MOTION,
+)
 from homeassistant.const import DEVICE_CLASS_BATTERY, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
 
@@ -93,8 +96,9 @@ async def test_property_sensor_door_status(hass, lock_august_pro, integration):
     node = lock_august_pro
 
     state = hass.states.get(PROPERTY_DOOR_STATUS_BINARY_SENSOR)
-    assert state is not None
+    assert state
     assert state.state == STATE_OFF
+    assert state.attributes["device_class"] == DEVICE_CLASS_DOOR
 
     # open door
     event = Event(
@@ -116,6 +120,7 @@ async def test_property_sensor_door_status(hass, lock_august_pro, integration):
     )
     node.receive_event(event)
     state = hass.states.get(PROPERTY_DOOR_STATUS_BINARY_SENSOR)
+    assert state
     assert state.state == STATE_ON
 
     # close door
@@ -138,4 +143,5 @@ async def test_property_sensor_door_status(hass, lock_august_pro, integration):
     )
     node.receive_event(event)
     state = hass.states.get(PROPERTY_DOOR_STATUS_BINARY_SENSOR)
+    assert state
     assert state.state == STATE_OFF

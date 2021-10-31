@@ -55,6 +55,14 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
+UPDATE_INTERVALS = {
+    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
+    DATA_PROGRAMS: timedelta(seconds=30),
+    DATA_RESTRICTIONS_CURRENT: timedelta(minutes=1),
+    DATA_RESTRICTIONS_UNIVERSAL: timedelta(minutes=1),
+    DATA_ZONES: timedelta(seconds=15),
+}
+
 # Constants expected by the RainMachine API for Service Data
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
@@ -127,9 +135,11 @@ def async_get_controller_for_service_call(
     device_registry = dr.async_get(hass)
 
     if device_entry := device_registry.async_get(device_id):
-        for entry_id in device_entry.config_entries:
-            if controller := hass.data[DOMAIN][entry_id][DATA_CONTROLLER]:
-                return cast(Controller, controller)
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.entry_id in device_entry.config_entries:
+                return cast(
+                    Controller, hass.data[DOMAIN][entry.entry_id][DATA_CONTROLLER]
+                )
 
     raise ValueError(f"No controller for device ID: {device_id}")
 
@@ -228,7 +238,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             LOGGER,
             name=f'{controller.name} ("{api_category}")',
-            update_interval=DEFAULT_UPDATE_INTERVAL,
+            update_interval=UPDATE_INTERVALS[api_category],
             update_method=partial(async_update, api_category),
         )
         controller_init_tasks.append(coordinator.async_refresh())

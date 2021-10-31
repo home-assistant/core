@@ -431,6 +431,7 @@ async def async_setup_entry(  # noqa: C901
     # Set up device registry
     if router.device_identifiers or router.device_connections:
         device_info = DeviceInfo(
+            configuration_url=router.url,
             connections=router.device_connections,
             identifiers=router.device_identifiers,
             name=router.device_name,
@@ -447,7 +448,7 @@ async def async_setup_entry(  # noqa: C901
             )
         if sw_version:
             device_info[ATTR_SW_VERSION] = sw_version
-        device_registry = await dr.async_get_registry(hass)
+        device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             **device_info,

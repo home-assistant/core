@@ -32,7 +32,7 @@ class AuroraDevice(Entity):
     def unique_id(self) -> str:
         """Return the unique id for this device."""
         serial = self._data[ATTR_SERIAL_NUMBER]
-        return f"{serial}_{self.type}"
+        return f"{serial}_{self.entity_description.key}"
 
     @property
     def available(self) -> bool:

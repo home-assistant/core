@@ -145,10 +145,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                 },
             )
 
-        if self._optimistic:
-            last_state = await self.async_get_last_state()
-            if last_state:
-                self._state = last_state.state == STATE_ON
+        if self._optimistic and (last_state := await self.async_get_last_state()):
+            self._state = last_state.state == STATE_ON
 
     @property
     def is_on(self):
@@ -165,7 +163,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_ON],
@@ -182,7 +180,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_OFF],

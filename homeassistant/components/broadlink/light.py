@@ -28,9 +28,10 @@ BROADLINK_COLOR_MODE_SCENES = 2
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Broadlink light."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    lights = []
 
     if device.api.type == "LB1":
-        lights = [BroadlinkLight(device)]
+        lights.append(BroadlinkLight(device))
 
     async_add_entities(lights)
 
@@ -129,8 +130,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
             )
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to set state: %s", err)
-            return False
+            return
 
         self._update_state(state)
         self.async_write_ha_state()
-        return True

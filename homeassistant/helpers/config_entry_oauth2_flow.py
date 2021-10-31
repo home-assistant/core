@@ -356,8 +356,7 @@ async def async_get_implementations(
     registered = dict(registered)
 
     for provider_domain, get_impl in hass.data[DATA_PROVIDERS].items():
-        implementation = await get_impl(hass, domain)
-        if implementation is not None:
+        if (implementation := await get_impl(hass, domain)) is not None:
             registered[provider_domain] = implementation
 
     return registered

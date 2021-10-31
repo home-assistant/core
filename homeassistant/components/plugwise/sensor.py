@@ -361,9 +361,7 @@ class PwThermostatSensor(SmileSensor):
     @callback
     def _async_process_data(self):
         """Update the entity."""
-        data = self._api.get_device_data(self._dev_id)
-
-        if not data:
+        if not (data := self._api.get_device_data(self._dev_id)):
             _LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
@@ -388,9 +386,7 @@ class PwAuxDeviceSensor(SmileSensor):
     @callback
     def _async_process_data(self):
         """Update the entity."""
-        data = self._api.get_device_data(self._dev_id)
-
-        if not data:
+        if not (data := self._api.get_device_data(self._dev_id)):
             _LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return
@@ -434,9 +430,7 @@ class PwPowerSensor(SmileSensor):
     @callback
     def _async_process_data(self):
         """Update the entity."""
-        data = self._api.get_device_data(self._dev_id)
-
-        if not data:
+        if not (data := self._api.get_device_data(self._dev_id)):
             _LOGGER.error("Received no data for device %s", self._entity_name)
             self.async_write_ha_state()
             return

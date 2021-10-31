@@ -136,6 +136,7 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
         self._attr_icon = FEATURE_ICONS.get(feature_type)
 
         if feature_type in POLL_REQUIRED:
+            self._attr_entity_registry_enabled_default = False
             self._attr_should_poll = True
 
     async def _async_poll(self) -> None:

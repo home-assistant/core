@@ -335,9 +335,8 @@ class SourceManager:
                 heos_const.EVENT_USER_CHANGED,
                 heos_const.EVENT_CONNECTED,
             ):
-                sources = await get_sources()
                 # If throttled, it will return None
-                if sources:
+                if sources := await get_sources():
                     self.favorites, self.inputs = sources
                     self.source_list = self._build_source_list()
                     _LOGGER.debug("Sources updated due to changed event")

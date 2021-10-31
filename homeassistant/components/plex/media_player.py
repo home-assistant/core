@@ -481,9 +481,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if isinstance(src, int):
             src = {"plex_key": src}
 
-        playqueue_id = src.pop("playqueue_id", None)
-
-        if playqueue_id:
+        if playqueue_id := src.pop("playqueue_id", None):
             try:
                 playqueue = self.plex_server.get_playqueue(playqueue_id)
             except plexapi.exceptions.NotFound as err:
@@ -518,8 +516,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             "media_summary",
             "username",
         ):
-            value = getattr(self, attr, None)
-            if value:
+            if value := getattr(self, attr, None):
                 attributes[attr] = value
 
         return attributes

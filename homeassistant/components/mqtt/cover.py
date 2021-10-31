@@ -528,7 +528,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config.get(CONF_COMMAND_TOPIC),
             self._config[CONF_PAYLOAD_OPEN],
@@ -549,7 +549,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config.get(CONF_COMMAND_TOPIC),
             self._config[CONF_PAYLOAD_CLOSE],
@@ -570,7 +570,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config.get(CONF_COMMAND_TOPIC),
             self._config[CONF_PAYLOAD_STOP],
@@ -580,7 +580,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs):
         """Tilt the cover open."""
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config.get(CONF_TILT_COMMAND_TOPIC),
             self._config[CONF_TILT_OPEN_POSITION],
@@ -595,7 +595,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
     async def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover closed."""
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config.get(CONF_TILT_COMMAND_TOPIC),
             self._config[CONF_TILT_CLOSED_POSITION],
@@ -626,7 +626,7 @@ class MqttCover(MqttEntity, CoverEntity):
             }
             tilt = template.async_render(parse_result=False, variables=variables)
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config.get(CONF_TILT_COMMAND_TOPIC),
             tilt,
@@ -655,7 +655,7 @@ class MqttCover(MqttEntity, CoverEntity):
             }
             position = template.async_render(parse_result=False, variables=variables)
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config.get(CONF_SET_POSITION_TOPIC),
             position,

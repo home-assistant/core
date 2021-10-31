@@ -7,6 +7,7 @@ import math
 
 import aiolifx as aiolifx_module
 import aiolifx_effects as aiolifx_effects_module
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant import util
@@ -66,6 +67,8 @@ MESSAGE_TIMEOUT = 1.0
 MESSAGE_RETRIES = 8
 UNAVAILABLE_GRACE = 90
 
+FIX_MAC_FW = AwesomeVersion("3.70")
+
 SERVICE_LIFX_SET_STATE = "set_state"
 
 ATTR_INFRARED = "infrared"
@@ -116,19 +119,19 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
         vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
         vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
-            vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+            vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
         ),
         vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
-            vol.ExactSequence((cv.small_float, cv.small_float)), vol.Coerce(tuple)
+            vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
         ),
         vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
+            vol.Coerce(tuple),
             vol.ExactSequence(
                 (
                     vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
                     vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
                 )
             ),
-            vol.Coerce(tuple),
         ),
         vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
             vol.Coerce(int), vol.Range(min=1)
@@ -455,20 +458,34 @@ class LIFXLight(LightEntity):
         self.postponed_update = None
         self.lock = asyncio.Lock()
 
+    def get_mac_addr(self):
+        """Increment the last byte of the mac address by one for FW>3.70."""
+        if (
+            self.bulb.host_firmware_version
+            and AwesomeVersion(self.bulb.host_firmware_version) >= FIX_MAC_FW
+        ):
+            octets = [int(octet, 16) for octet in self.bulb.mac_addr.split(":")]
+            octets[5] = (octets[5] + 1) % 256
+            return ":".join(f"{octet:02x}" for octet in octets)
+        return self.bulb.mac_addr
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         _map = aiolifx().products.product_map
+
         info = DeviceInfo(
             identifiers={(LIFX_DOMAIN, self.unique_id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.get_mac_addr())},
             manufacturer="LIFX",
             name=self.name,
         )
-        if model := (_map.get(self.bulb.product) or self.bulb.product) is not None:
+
+        if (model := (_map.get(self.bulb.product) or self.bulb.product)) is not None:
             info[ATTR_MODEL] = str(model)
         if (version := self.bulb.host_firmware_version) is not None:
             info[ATTR_SW_VERSION] = version
+
         return info
 
     @property

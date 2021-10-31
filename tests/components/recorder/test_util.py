@@ -287,11 +287,11 @@ def test_supported_mysql(caplog, mysql_version):
     "pgsql_version,message",
     [
         (
-            "110013",
-            "Version 11.13 of PostgreSQL is not supported; minimum supported version is 12.0.",
+            "11.12 (Debian 11.12-1.pgdg100+1)",
+            "Version 11.12 of PostgreSQL is not supported; minimum supported version is 12.0.",
         ),
         (
-            "90210",
+            "9.2.10",
             "Version 9.2.10 of PostgreSQL is not supported; minimum supported version is 12.0.",
         ),
         (
@@ -312,7 +312,7 @@ def test_warn_outdated_pgsql(caplog, pgsql_version, message):
 
     def fetchall_mock():
         nonlocal execute_args
-        if execute_args[-1] == "SHOW server_version_num":
+        if execute_args[-1] == "SHOW server_version":
             return [[pgsql_version]]
         return None
 
@@ -330,9 +330,7 @@ def test_warn_outdated_pgsql(caplog, pgsql_version, message):
 
 @pytest.mark.parametrize(
     "pgsql_version",
-    [
-        (130000),
-    ],
+    ["14.0 (Debian 14.0-1.pgdg110+1)"],
 )
 def test_supported_pgsql(caplog, pgsql_version):
     """Test setting up the connection for a supported PostgreSQL version."""
@@ -346,7 +344,7 @@ def test_supported_pgsql(caplog, pgsql_version):
 
     def fetchall_mock():
         nonlocal execute_args
-        if execute_args[-1] == "SHOW server_version_num":
+        if execute_args[-1] == "SHOW server_version":
             return [[pgsql_version]]
         return None
 

@@ -47,6 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -334,8 +335,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
     @property
     def extra_state_attributes(self) -> Mapping[str, int | str] | None:
         """Return extra state attributes."""
-        meter_type = get_meter_type(self.info.primary_value)
-        if meter_type:
+        if meter_type := get_meter_type(self.info.primary_value):
             return {
                 ATTR_METER_TYPE: meter_type.value,
                 ATTR_METER_TYPE_NAME: meter_type.name,
@@ -476,9 +476,9 @@ class ZWaveNodeStatusSensor(SensorEntity):
             f"{self.client.driver.controller.home_id}.{node.node_id}.node_status"
         )
         # device is precreated in main handler
-        self._attr_device_info = {
-            "identifiers": {get_device_id(self.client, self.node)},
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={get_device_id(self.client, self.node)},
+        )
         self._attr_native_value: str = node.status.name.lower()
 
     async def async_poll_value(self, _: bool) -> None:

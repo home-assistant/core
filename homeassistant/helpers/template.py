@@ -832,12 +832,7 @@ def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | 
 
 
 def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
-    state_obj = _get_template_state_from_state(
-        hass, entity_id, hass.states.get(entity_id)
-    )
-    if state_obj is None:
-        _LOGGER.warning("Template warning: entity '%s' doesn't exist", entity_id)
-    return state_obj
+    return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
 
 
 def _get_template_state_from_state(
@@ -862,7 +857,7 @@ def _resolve_state(
     return None
 
 
-def result_as_boolean(template_result: str | None) -> bool:
+def result_as_boolean(template_result: Any | None) -> bool:
     """Convert the template result to a boolean.
 
     True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
@@ -891,8 +886,7 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
         entity = search.pop()
         if isinstance(entity, str):
             entity_id = entity
-            entity = _get_state(hass, entity)
-            if entity is None:
+            if (entity := _get_state(hass, entity)) is None:
                 continue
         elif isinstance(entity, State):
             entity_id = entity.entity_id
@@ -1009,8 +1003,7 @@ def _get_area_name(area_reg: area_registry.AreaRegistry, valid_area_id: str) -> 
 def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the area name from an area id, device id, or entity id."""
     area_reg = area_registry.async_get(hass)
-    area = area_reg.async_get_area(lookup_value)
-    if area:
+    if area := area_reg.async_get_area(lookup_value):
         return area.name
 
     dev_reg = device_registry.async_get(hass)
@@ -1231,8 +1224,7 @@ def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) ->
 
 def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     """Get a specific attribute from a state."""
-    state_obj = _get_state(hass, entity_id)
-    if state_obj is not None:
+    if (state_obj := _get_state(hass, entity_id)) is not None:
         return state_obj.attributes.get(name)
     return None
 

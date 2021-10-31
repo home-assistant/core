@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for item in result:
                 if attr == "bridges" and item["id"] not in data["bridges"]:
                     # If a new bridge is discovered, register it:
-                    hass.async_create_task(async_register_new_bridge(hass, item, entry))
+                    _async_register_new_bridge(hass, item, entry)
                 data[attr][item["id"]] = item
 
         return data
@@ -115,11 +115,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_register_new_bridge(
+@callback
+def _async_register_new_bridge(
     hass: HomeAssistant, bridge: dict, entry: ConfigEntry
 ) -> None:
     """Register a new bridge."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, bridge["hardware_id"])},
@@ -175,7 +176,8 @@ class NotionEntity(CoordinatorEntity):
             and self._task_id in self.coordinator.data["tasks"]
         )
 
-    async def _async_update_bridge_id(self) -> None:
+    @callback
+    def _async_update_bridge_id(self) -> None:
         """Update the entity's bridge ID if it has changed.
 
         Sensors can move to other bridges based on signal strength, etc.
@@ -193,7 +195,7 @@ class NotionEntity(CoordinatorEntity):
 
         self._bridge_id = sensor["bridge"]["id"]
 
-        device_registry = await dr.async_get_registry(self.hass)
+        device_registry = dr.async_get(self.hass)
         this_device = device_registry.async_get_device(
             {(DOMAIN, sensor["hardware_id"])}
         )
@@ -218,7 +220,7 @@ class NotionEntity(CoordinatorEntity):
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         if self._task_id in self.coordinator.data["tasks"]:
-            self.hass.async_create_task(self._async_update_bridge_id())
+            self._async_update_bridge_id()
             self._async_update_from_latest_data()
 
         self.async_write_ha_state()

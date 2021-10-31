@@ -184,6 +184,7 @@ class FreeboxRouter:
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
+            configuration_url=f"https://{self._host}:{self._port}/",
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Freebox SAS",

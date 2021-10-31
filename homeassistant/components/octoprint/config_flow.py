@@ -1,9 +1,9 @@
 """Config flow for OctoPrint integration."""
 import logging
-from urllib.parse import urlsplit
 
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant import config_entries, data_entry_flow, exceptions
 from homeassistant.const import (
@@ -22,14 +22,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _schema_with_defaults(username="", host=None, port=80, path="/", ssl=False):
+def _schema_with_defaults(username="", host="", port=80, path="/", ssl=False):
     return vol.Schema(
         {
-            vol.Required(CONF_USERNAME, default=username): cv.string,
-            vol.Required(CONF_HOST, default=host): cv.string,
-            vol.Optional(CONF_PORT, default=port): cv.port,
-            vol.Optional(CONF_PATH, default=path): cv.string,
-            vol.Optional(CONF_SSL, default=ssl): cv.boolean,
+            vol.Required(CONF_USERNAME, default=username): str,
+            vol.Required(CONF_HOST, default=host): str,
+            vol.Required(CONF_PORT, default=port): cv.port,
+            vol.Required(CONF_PATH, default=path): str,
+            vol.Required(CONF_SSL, default=ssl): bool,
         },
         extra=vol.ALLOW_EXTRA,
     )
@@ -162,14 +162,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured()
 
-        url = urlsplit(discovery_info["presentationURL"])
+        url = URL(discovery_info["presentationURL"])
         self.context["title_placeholders"] = {
-            CONF_HOST: url.hostname,
+            CONF_HOST: url.host,
         }
 
         self.discovery_schema = _schema_with_defaults(
-            host=url.hostname,
+            host=url.host,
+            path=url.path,
             port=url.port,
+            ssl=url.scheme == "https",
         )
 
         return await self.async_step_user()

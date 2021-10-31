@@ -369,10 +369,10 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a service description for device registry."""
-        return {
-            "identifiers": {(DOMAIN, f"unifi_controller_{self._item.site_id}")},
-            "name": "UniFi Controller",
-            "manufacturer": ATTR_MANUFACTURER,
-            "model": "UniFi Controller",
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, f"unifi_controller_{self._item.site_id}")},
+            manufacturer=ATTR_MANUFACTURER,
+            model="UniFi Controller",
+            name="UniFi Controller",
+        )
