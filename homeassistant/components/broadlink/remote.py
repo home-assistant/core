@@ -34,10 +34,10 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import CONF_HOST, STATE_OFF
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.util.dt import utcnow
+from homeassistant.util import dt
 
 from .const import DOMAIN
 from .entity import BroadlinkEntity
@@ -332,8 +332,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         )
 
         try:
-            start_time = utcnow()
-            while (utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt.utcnow()
+            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
                 try:
                     code = await self._device.async_request(self._device.api.check_data)
@@ -367,8 +367,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         )
 
         try:
-            start_time = utcnow()
-            while (utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt.utcnow()
+            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
                 found = await self._device.async_request(
                     self._device.api.check_frequency
@@ -405,8 +405,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         )
 
         try:
-            start_time = utcnow()
-            while (utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt.utcnow()
+            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
                 try:
                     code = await self._device.async_request(self._device.api.check_data)
