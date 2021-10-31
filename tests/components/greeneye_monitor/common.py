@@ -168,3 +168,38 @@ def add_listeners(mock: MagicMock | AsyncMock) -> None:
             listener(*args)
 
     mock.notify_all_listeners = notify_all_listeners
+
+
+def mock_pulse_counter() -> MagicMock:
+    """Create a mock GreenEye Monitor pulse counter."""
+    pulse_counter = mock_with_listeners()
+    pulse_counter.pulses = 1000
+    pulse_counter.pulses_per_second = 10
+    return pulse_counter
+
+
+def mock_temperature_sensor() -> MagicMock:
+    """Create a mock GreenEye Monitor temperature sensor."""
+    temperature_sensor = mock_with_listeners()
+    temperature_sensor.temperature = 32.0
+    return temperature_sensor
+
+
+def mock_channel() -> MagicMock:
+    """Create a mock GreenEye Monitor CT channel."""
+    channel = mock_with_listeners()
+    channel.absolute_watt_seconds = 1000
+    channel.polarized_watt_seconds = -400
+    channel.watts = None
+    return channel
+
+
+def mock_monitor(serial_number: int) -> MagicMock:
+    """Create a mock GreenEye Monitor."""
+    monitor = mock_with_listeners()
+    monitor.serial_number = serial_number
+    monitor.voltage = 120.0
+    monitor.pulse_counters = [mock_pulse_counter() for i in range(0, 4)]
+    monitor.temperature_sensors = [mock_temperature_sensor() for i in range(0, 8)]
+    monitor.channels = [mock_channel() for i in range(0, 32)]
+    return monitor
