@@ -298,19 +298,7 @@ def get_rfx_object(packetid: str) -> rfxtrxmod.RFXtrxEvent | None:
         binarypacket = bytearray.fromhex(packetid)
     except ValueError:
         return None
-
-    pkt = rfxtrxmod.lowlevel.parse(binarypacket)
-    if pkt is None:
-        return None
-    if isinstance(pkt, rfxtrxmod.lowlevel.SensorPacket):
-        obj = rfxtrxmod.SensorEvent(pkt)
-    elif isinstance(pkt, rfxtrxmod.lowlevel.Status):
-        obj = rfxtrxmod.StatusEvent(pkt)
-    else:
-        obj = rfxtrxmod.ControlEvent(pkt)
-
-    obj.data = binarypacket
-    return obj
+    return rfxtrxmod.RFXtrxTransport.parse(binarypacket)
 
 
 def get_pt2262_deviceid(device_id: str, nb_data_bits: int | None) -> bytes | None:
