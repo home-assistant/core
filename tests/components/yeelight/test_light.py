@@ -751,7 +751,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
     mocked_bulb.last_properties = properties
 
     async def _async_setup(config_entry):
-        with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+        with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
             assert await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
             # We use asyncio.create_task now to avoid

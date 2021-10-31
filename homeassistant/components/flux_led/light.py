@@ -30,12 +30,14 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
+    ATTR_WHITE,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_ONOFF,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
+    COLOR_MODE_WHITE,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     PLATFORM_SCHEMA,
@@ -100,7 +102,6 @@ FLUX_COLOR_MODE_TO_HASS: Final = {
     FLUX_COLOR_MODE_RGBW: COLOR_MODE_RGBW,
     FLUX_COLOR_MODE_RGBWW: COLOR_MODE_RGBWW,
     FLUX_COLOR_MODE_CCT: COLOR_MODE_COLOR_TEMP,
-    FLUX_COLOR_MODE_DIM: COLOR_MODE_BRIGHTNESS,
 }
 
 EFFECT_SUPPORT_MODES = {COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
@@ -164,7 +165,7 @@ CUSTOM_EFFECT_DICT: Final = {
     vol.Required(CONF_COLORS): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=16),
-        [vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple))],
+        [vol.All(vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte)))],
     ),
     vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
         vol.Range(min=0, max=100), vol.Coerce(int)
@@ -195,6 +196,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+def _flux_color_mode_to_hass(flux_color_mode: str, flux_color_modes: set[str]) -> str:
+    """Map the flux color mode to Home Assistant color mode."""
+    if flux_color_mode == FLUX_COLOR_MODE_DIM:
+        if len(flux_color_modes) > 1:
+            return COLOR_MODE_WHITE
+        return COLOR_MODE_BRIGHTNESS
+    return FLUX_COLOR_MODE_TO_HASS.get(flux_color_mode, COLOR_MODE_ONOFF)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -214,6 +224,9 @@ async def async_setup_platform(
             host,
         )
         custom_effects = device_config.get(CONF_CUSTOM_EFFECT, {})
+        custom_effect_colors = None
+        if CONF_COLORS in custom_effects:
+            custom_effect_colors = str(custom_effects[CONF_COLORS])
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -224,7 +237,7 @@ async def async_setup_platform(
                     CONF_NAME: device_config[CONF_NAME],
                     CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
                     CONF_MODE: device_config.get(ATTR_MODE, MODE_AUTO),
-                    CONF_CUSTOM_EFFECT_COLORS: str(custom_effects.get(CONF_COLORS)),
+                    CONF_CUSTOM_EFFECT_COLORS: custom_effect_colors,
                     CONF_CUSTOM_EFFECT_SPEED_PCT: custom_effects.get(
                         CONF_SPEED_PCT, DEFAULT_EFFECT_SPEED
                     ),
@@ -297,7 +310,7 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
         )  # for rounding
         self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
         self._attr_supported_color_modes = {
-            FLUX_COLOR_MODE_TO_HASS.get(mode, COLOR_MODE_ONOFF)
+            _flux_color_mode_to_hass(mode, self._device.color_modes)
             for mode in self._device.color_modes
         }
         if self._attr_supported_color_modes.intersection(EFFECT_SUPPORT_MODES):
@@ -349,7 +362,9 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
     @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        return FLUX_COLOR_MODE_TO_HASS.get(self._device.color_mode, COLOR_MODE_ONOFF)
+        return _flux_color_mode_to_hass(
+            self._device.color_mode, self._device.color_modes
+        )
 
     @property
     def effect(self) -> str | None:
@@ -407,6 +422,9 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
                 rgbcw = kwargs[ATTR_RGBWW_COLOR]
             await self._device.async_set_levels(*rgbcw_to_rgbwc(rgbcw))
             return
+        if ATTR_WHITE in kwargs:
+            await self._device.async_set_levels(w=kwargs[ATTR_WHITE])
+            return
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
             # Random color effect
@@ -453,7 +471,7 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
             await self._device.async_set_levels(*rgbww_brightness(rgbwc, brightness))
             return
         # Handle Brightness Only Color Mode
-        if self.color_mode == COLOR_MODE_BRIGHTNESS:
+        if self.color_mode in {COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS}:
             await self._device.async_set_levels(w=brightness)
             return
         raise ValueError(f"Unsupported color mode {self.color_mode}")

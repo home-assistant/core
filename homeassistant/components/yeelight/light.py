@@ -180,20 +180,20 @@ SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
 SERVICE_SCHEMA_SET_COLOR_SCENE = {
     vol.Required(ATTR_RGB_COLOR): vol.All(
-        vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
     ),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_HSV_SCENE = {
     vol.Required(ATTR_HS_COLOR): vol.All(
+        vol.Coerce(tuple),
         vol.ExactSequence(
             (
                 vol.All(vol.Coerce(float), vol.Range(min=0, max=359)),
                 vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
             )
         ),
-        vol.Coerce(tuple),
     ),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
@@ -488,7 +488,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         brightness_property = (
             "bright" if self._bulb.music_mode else self._brightness_property
         )
-        brightness = self._get_property(brightness_property)
+        brightness = self._get_property(brightness_property) or 0
         return round(255 * (int(brightness) / 100))
 
     @property
@@ -1075,9 +1075,7 @@ class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
         return "bright"
 
     def _get_property(self, prop, default=None):
-        bg_prop = self.PROPERTIES_MAPPING.get(prop)
-
-        if not bg_prop:
+        if not (bg_prop := self.PROPERTIES_MAPPING.get(prop)):
             bg_prop = f"bg_{prop}"
 
         return super()._get_property(bg_prop, default)

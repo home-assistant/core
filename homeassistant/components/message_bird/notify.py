@@ -48,8 +48,7 @@ class MessageBirdNotificationService(BaseNotificationService):
 
     def send_message(self, message=None, **kwargs):
         """Send a message to a specified target."""
-        targets = kwargs.get(ATTR_TARGET)
-        if not targets:
+        if not (targets := kwargs.get(ATTR_TARGET)):
             _LOGGER.error("No target specified")
             return
 

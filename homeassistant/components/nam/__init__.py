@@ -115,10 +115,10 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, cast(str, self._unique_id))},
-            "name": DEFAULT_NAME,
-            "sw_version": self.nam.software_version,
-            "manufacturer": MANUFACTURER,
-            "configuration_url": f"http://{self.host}/",
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, cast(str, self._unique_id))},
+            name=DEFAULT_NAME,
+            sw_version=self.nam.software_version,
+            manufacturer=MANUFACTURER,
+            configuration_url=f"http://{self.host}/",
+        )

@@ -37,10 +37,8 @@ async def async_migrator(
 
     async def old_conf_migrate_func(old_data)
     """
-    store_data = await store.async_load()
-
     # If we already have store data we have already migrated in the past.
-    if store_data is not None:
+    if (store_data := await store.async_load()) is not None:
         return store_data
 
     def load_old_config():

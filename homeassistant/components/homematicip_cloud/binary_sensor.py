@@ -172,12 +172,12 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         # Adds a sensor to the existing HAP device
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers of Homematic IP device
                 (HMIPC_DOMAIN, self._home.id)
             }
-        }
+        )
 
     @property
     def icon(self) -> str:

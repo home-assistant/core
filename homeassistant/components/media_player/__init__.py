@@ -31,9 +31,6 @@ from homeassistant.components.websocket_api.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    HTTP_NOT_FOUND,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -899,10 +896,13 @@ class MediaPlayerEntity(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        if self.state == STATE_OFF:
-            return None
-
         state_attr = {}
+
+        if self.support_grouping:
+            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
+
+        if self.state == STATE_OFF:
+            return state_attr
 
         for attr in ATTR_TO_PROPERTY:
             value = getattr(self, attr)
@@ -911,9 +911,6 @@ class MediaPlayerEntity(Entity):
 
         if self.media_image_remotely_accessible:
             state_attr["entity_picture_local"] = self.media_image_local
-
-        if self.support_grouping:
-            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
 
         return state_attr
 
@@ -978,7 +975,7 @@ class MediaPlayerEntity(Entity):
         websession = async_get_clientsession(self.hass)
         with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
             response = await websession.get(url)
-            if response.status == HTTP_OK:
+            if response.status == HTTPStatus.OK:
                 content = await response.read()
                 if content_type := response.headers.get(CONTENT_TYPE):
                     content_type = content_type.split(";")[0]
@@ -1029,9 +1026,12 @@ class MediaPlayerImageView(HomeAssistantView):
         media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
-        player = self.component.get_entity(entity_id)
-        if player is None:
-            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else HTTP_UNAUTHORIZED
+        if (player := self.component.get_entity(entity_id)) is None:
+            status = (
+                HTTPStatus.NOT_FOUND
+                if request[KEY_AUTHENTICATED]
+                else HTTPStatus.UNAUTHORIZED
+            )
             return web.Response(status=status)
 
         authenticated = (
@@ -1070,9 +1070,8 @@ async def websocket_handle_thumbnail(hass, connection, msg):
     Async friendly.
     """
     component = hass.data[DOMAIN]
-    player = component.get_entity(msg["entity_id"])
 
-    if player is None:
+    if (player := component.get_entity(msg["entity_id"])) is None:
         connection.send_message(
             websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
         )

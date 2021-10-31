@@ -16,6 +16,7 @@ class TractiveEntity(Entity):
     ) -> None:
         """Initialize tracker entity."""
         self._attr_device_info = DeviceInfo(
+            configuration_url="https://my.tractive.com/",
             identifiers={(DOMAIN, tracker_details["_id"])},
             name=f"Tractive ({tracker_details['_id']})",
             manufacturer="Tractive GmbH",

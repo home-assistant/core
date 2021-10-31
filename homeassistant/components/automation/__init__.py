@@ -156,9 +156,7 @@ def entities_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    automation_entity = component.get_entity(entity_id)
-
-    if automation_entity is None:
+    if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(automation_entity.referenced_entities)
@@ -187,9 +185,7 @@ def devices_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    automation_entity = component.get_entity(entity_id)
-
-    if automation_entity is None:
+    if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(automation_entity.referenced_devices)
@@ -218,9 +214,7 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    automation_entity = component.get_entity(entity_id)
-
-    if automation_entity is None:
+    if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(automation_entity.referenced_areas)
@@ -228,7 +222,6 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup(hass, config):
     """Set up all automations."""
-    # Local import to avoid circular import
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 
     # To register the automation blueprints
@@ -263,8 +256,7 @@ async def async_setup(hass, config):
 
     async def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
-        conf = await component.async_prepare_reload()
-        if conf is None:
+        if (conf := await component.async_prepare_reload()) is None:
             return
         async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
@@ -393,8 +385,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         )
         self.action_script.update_logger(self._logger)
 
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             enable_automation = state.state == STATE_ON
             last_triggered = state.attributes.get("last_triggered")
             if last_triggered is not None:

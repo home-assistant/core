@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "internal_error": "\u30b3\u30fc\u30c9\u306e\u691c\u8a3c\u4e2d\u306b\u5185\u90e8\u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f",
+            "timeout": "\u30b3\u30fc\u30c9\u306e\u691c\u8a3c\u3092\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8\u3057\u307e\u3059"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "\u30d7\u30ed\u30d0\u30a4\u30c0\u30fc"
+                },
+                "title": "\u8a8d\u8a3c\u30d7\u30ed\u30d0\u30a4\u30c0\u30fc"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN\u30b3\u30fc\u30c9"
+                }
+            }
+        }
+    }
+}

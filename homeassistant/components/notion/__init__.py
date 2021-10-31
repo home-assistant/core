@@ -17,7 +17,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for item in result:
                 if attr == "bridges" and item["id"] not in data["bridges"]:
                     # If a new bridge is discovered, register it:
-                    hass.async_create_task(async_register_new_bridge(hass, item, entry))
+                    _async_register_new_bridge(hass, item, entry)
                 data[attr][item["id"]] = item
 
         return data
@@ -115,11 +115,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_register_new_bridge(
+@callback
+def _async_register_new_bridge(
     hass: HomeAssistant, bridge: dict, entry: ConfigEntry
 ) -> None:
     """Register a new bridge."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, bridge["hardware_id"])},
@@ -147,14 +148,14 @@ class NotionEntity(CoordinatorEntity):
 
         bridge = self.coordinator.data["bridges"].get(bridge_id, {})
         sensor = self.coordinator.data["sensors"][sensor_id]
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, sensor["hardware_id"])},
-            "manufacturer": "Silicon Labs",
-            "model": sensor["hardware_revision"],
-            "name": str(sensor["name"]),
-            "sw_version": sensor["firmware_version"],
-            "via_device": (DOMAIN, bridge.get("hardware_id")),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, sensor["hardware_id"])},
+            manufacturer="Silicon Labs",
+            model=sensor["hardware_revision"],
+            name=str(sensor["name"]),
+            sw_version=sensor["firmware_version"],
+            via_device=(DOMAIN, bridge.get("hardware_id")),
+        )
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_name = f'{sensor["name"]}: {description.name}'
@@ -175,7 +176,8 @@ class NotionEntity(CoordinatorEntity):
             and self._task_id in self.coordinator.data["tasks"]
         )
 
-    async def _async_update_bridge_id(self) -> None:
+    @callback
+    def _async_update_bridge_id(self) -> None:
         """Update the entity's bridge ID if it has changed.
 
         Sensors can move to other bridges based on signal strength, etc.
@@ -193,7 +195,7 @@ class NotionEntity(CoordinatorEntity):
 
         self._bridge_id = sensor["bridge"]["id"]
 
-        device_registry = await dr.async_get_registry(self.hass)
+        device_registry = dr.async_get(self.hass)
         this_device = device_registry.async_get_device(
             {(DOMAIN, sensor["hardware_id"])}
         )
@@ -218,7 +220,7 @@ class NotionEntity(CoordinatorEntity):
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         if self._task_id in self.coordinator.data["tasks"]:
-            self.hass.async_create_task(self._async_update_bridge_id())
+            self._async_update_bridge_id()
             self._async_update_from_latest_data()
 
         self.async_write_ha_state()

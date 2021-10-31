@@ -5,6 +5,7 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN as GF_DOMAIN, TRACKER_UPDATE
@@ -86,9 +87,9 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {"name": self._name, "identifiers": {(GF_DOMAIN, self._unique_id)}}
+        return DeviceInfo(identifiers={(GF_DOMAIN, self._unique_id)}, name=self._name)
 
     @property
     def source_type(self):
@@ -105,9 +106,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         if self._attributes:
             return
 
-        state = await self.async_get_last_state()
-
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             self._gps = (None, None)
             return
 

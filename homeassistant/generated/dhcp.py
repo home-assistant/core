@@ -98,31 +98,55 @@ DHCP = [
     },
     {
         "domain": "flux_led",
-        "hostname": "zengge_06_*"
+        "hostname": "zengge_0[6789b]_*"
     },
     {
         "domain": "flux_led",
-        "hostname": "zengge_07_*"
+        "hostname": "zengge_1[06789abc]_*"
     },
     {
         "domain": "flux_led",
-        "hostname": "zengge_33_*"
+        "hostname": "zengge_2[15]_*"
     },
     {
         "domain": "flux_led",
-        "hostname": "zengge_35_*"
+        "hostname": "zengge_3[35]_*"
     },
     {
         "domain": "flux_led",
-        "hostname": "zengge_41_*"
+        "hostname": "zengge_4[14]_*"
     },
     {
         "domain": "flux_led",
-        "hostname": "zengge_0e_*"
+        "hostname": "zengge_5[24]_*"
     },
     {
         "domain": "flux_led",
-        "hostname": "zengge_00_*"
+        "hostname": "zengge_62_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_81_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_0[0e]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_9[34567]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_a[123]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_d1_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_e[12]_*"
     },
     {
         "domain": "flux_led",
@@ -141,6 +165,11 @@ DHCP = [
         "domain": "guardian",
         "hostname": "gvc*",
         "macaddress": "30AEA4*"
+    },
+    {
+        "domain": "guardian",
+        "hostname": "gvc*",
+        "macaddress": "B4E62D*"
     },
     {
         "domain": "guardian",
@@ -279,6 +308,11 @@ DHCP = [
         "macaddress": "A4D578*"
     },
     {
+        "domain": "simplisafe",
+        "hostname": "simplisafe*",
+        "macaddress": "30AEA4*"
+    },
+    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*"
@@ -326,6 +360,11 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "005F67*"
     },
     {
         "domain": "tplink",

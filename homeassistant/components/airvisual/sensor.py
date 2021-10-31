@@ -27,6 +27,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PM25,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -103,6 +104,7 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
         key=SENSOR_KIND_BATTERY_LEVEL,
         name="Battery",
         device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
@@ -317,16 +319,16 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
-            "name": self.coordinator.data["settings"]["node_name"],
-            "manufacturer": "AirVisual",
-            "model": f'{self.coordinator.data["status"]["model"]}',
-            "sw_version": (
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.data["serial_number"])},
+            manufacturer="AirVisual",
+            model=f'{self.coordinator.data["status"]["model"]}',
+            name=self.coordinator.data["settings"]["node_name"],
+            sw_version=(
                 f'Version {self.coordinator.data["status"]["system_version"]}'
                 f'{self.coordinator.data["status"]["app_version"]}'
             ),
-        }
+        )
 
     @callback
     def update_from_latest_data(self) -> None:

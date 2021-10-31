@@ -19,7 +19,7 @@ from aiohttp.web_urldispatcher import AbstractRoute
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
@@ -144,7 +144,7 @@ def request_handler_factory(
             # The method handler returned a ready-made Response, how nice of it
             return result
 
-        status_code = HTTP_OK
+        status_code = HTTPStatus.OK
 
         if isinstance(result, tuple):
             result, status_code = result

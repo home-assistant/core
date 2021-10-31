@@ -305,12 +305,12 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
         """Restore device state."""
         await super().async_added_to_hass()
 
-        if self._event is None:
-            old_state = await self.async_get_last_state()
-            if old_state is not None:
-                event = old_state.attributes.get(ATTR_EVENT)
-                if event:
-                    self._apply_event(get_rfx_object(event))
+        if (
+            self._event is None
+            and (old_state := await self.async_get_last_state()) is not None
+            and (event := old_state.attributes.get(ATTR_EVENT))
+        ):
+            self._apply_event(get_rfx_object(event))
 
     @property
     def native_value(self):

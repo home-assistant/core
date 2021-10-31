@@ -1,5 +1,6 @@
 """Support for Spider switches."""
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 
@@ -24,14 +25,14 @@ class SpiderPowerPlug(SwitchEntity):
         self.power_plug = power_plug
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.power_plug.id)},
-            "name": self.power_plug.name,
-            "manufacturer": self.power_plug.manufacturer,
-            "model": self.power_plug.model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.power_plug.id)},
+            manufacturer=self.power_plug.manufacturer,
+            model=self.power_plug.model,
+            name=self.power_plug.name,
+        )
 
     @property
     def unique_id(self):

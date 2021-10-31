@@ -1,33 +1,18 @@
 """Support for the Environment Canada radar imagery."""
 from __future__ import annotations
 
-import datetime
-import logging
-
-from env_canada import get_station_coords
-from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import trigger_import
-from .const import CONF_ATTRIBUTION, CONF_STATION, DOMAIN
+from .const import ATTR_OBSERVATION_TIME, CONF_STATION, DOMAIN
 
 CONF_LOOP = "loop"
 CONF_PRECIP_TYPE = "precip_type"
-ATTR_UPDATED = "updated"
-
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -43,13 +28,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Environment Canada camera."""
-    if config.get(CONF_STATION):
-        lat, lon = await hass.async_add_executor_job(
-            get_station_coords, config[CONF_STATION]
-        )
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+    lat = config.get(CONF_LATITUDE, hass.config.latitude)
+    lon = config.get(CONF_LONGITUDE, hass.config.longitude)
 
     config[CONF_LATITUDE] = lat
     config[CONF_LONGITUDE] = lon
@@ -59,52 +39,35 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    radar_data = hass.data[DOMAIN][config_entry.entry_id]["radar_data"]
-
-    async_add_entities(
-        [
-            ECCamera(
-                radar_data,
-                f"{config_entry.title} Radar",
-                f"{config_entry.unique_id}-radar",
-            ),
-        ]
-    )
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["radar_coordinator"]
+    async_add_entities([ECCamera(coordinator)])
 
 
-class ECCamera(Camera):
+class ECCamera(CoordinatorEntity, Camera):
     """Implementation of an Environment Canada radar camera."""
 
-    def __init__(self, radar_object, camera_name, unique_id):
+    def __init__(self, coordinator):
         """Initialize the camera."""
-        super().__init__()
+        super().__init__(coordinator)
+        Camera.__init__(self)
 
-        self.radar_object = radar_object
-        self._attr_name = camera_name
-        self._attr_unique_id = unique_id
+        self.radar_object = coordinator.ec_data
+        self._attr_name = f"{coordinator.config_entry.title} Radar"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-radar"
+        self._attr_attribution = self.radar_object.metadata["attribution"]
+
         self.content_type = "image/gif"
         self.image = None
-        self.timestamp = None
+        self.observation_time = None
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        self.update()
-        return self.image
+        self.observation_time = self.radar_object.timestamp
+        return self.radar_object.image
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update radar image."""
-        try:
-            self.image = self.radar_object.get_loop()
-        except RequestsConnectionError:
-            _LOGGER.warning("Radar data update failed due to rate limiting")
-            return
-
-        self.timestamp = self.radar_object.timestamp
+        return {ATTR_OBSERVATION_TIME: self.observation_time}
