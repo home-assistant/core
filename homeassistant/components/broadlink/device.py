@@ -23,9 +23,9 @@ from .updater import get_update_manager
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_domains(dev_type):
+def get_domains(device_type):
     """Return the domains available for a device type."""
-    return {d for d, t in DOMAINS_AND_TYPES.items() if dev_type in t}
+    return {d for d, t in DOMAINS_AND_TYPES.items() if device_type in t}
 
 
 class BroadlinkDevice:
