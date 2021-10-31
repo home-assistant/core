@@ -1,7 +1,6 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
 from abc import abstractmethod
 import asyncio
-from enum import Enum
 import logging
 import math
 
@@ -362,14 +361,6 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
             return preset_mode if preset_mode in self._preset_modes else None
 
         return None
-
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
 
     @callback
     def _handle_coordinator_update(self):

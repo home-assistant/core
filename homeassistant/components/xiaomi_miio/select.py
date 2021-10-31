@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 
 from miio.airfresh import LedBrightness as AirfreshLedBrightness
 from miio.airhumidifier import LedBrightness as AirhumidifierLedBrightness
@@ -125,14 +124,6 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
         super().__init__(name, device, entry, unique_id, coordinator)
         self._attr_options = list(description.options)
         self.entity_description = description
-
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
 
 
 class XiaomiAirHumidifierSelector(XiaomiSelector):

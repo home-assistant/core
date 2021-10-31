@@ -48,6 +48,7 @@ from homeassistant.const import (
     TIME_SECONDS,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.core import callback
 
 from . import VacuumCoordinatorDataAttributes
 from .const import (
@@ -530,16 +531,29 @@ VACUUM_SENSORS = {
 
 def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
     device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     entities = []
 
     for sensor, description in VACUUM_SENSORS.items():
+        if (
+            getattr(
+                getattr(coordinator.data, description.parent_key), description.key, None
+            )
+            is None
+        ):
+            _LOGGER.info(
+                "The %s device does not support the %s sensor",
+                config_entry.data[CONF_MODEL],
+                description.key,
+            )
+            continue
         entities.append(
-            XiaomiGenericSensor(
+            XiaomiVacuumSensor(
                 f"{config_entry.title} {description.name}",
                 device,
                 config_entry,
                 f"{sensor}_{config_entry.unique_id}",
-                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                coordinator,
                 description,
             )
         )
@@ -652,17 +666,29 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self.entity_description: XiaomiMiioSensorDescription = description
 
     @property
-    def native_value(self):
-        """Return the state of the device."""
-        if self.entity_description.parent_key is not None:
-            return self._extract_value_from_attribute(
-                getattr(self.coordinator.data, self.entity_description.parent_key),
-                self.entity_description.key,
-            )
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            attr: self._extract_value_from_attribute(self.coordinator.data, attr)
+            for attr in self.entity_description.attributes
+            if hasattr(self.coordinator.data, attr)
+        }
 
-        return self._extract_value_from_attribute(
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        native_value = self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
         )
+        # Sometimes (quite rarely) the device returns None as the sensor value so we
+        # check that the value is not None before updating the state.
+        if native_value:
+            self._attr_native_value = native_value
+            self.async_write_ha_state()
+
+
+class XiaomiVacuumSensor(XiaomiGenericSensor):
+    """Representation of a Xiaomi Vacuum sensor."""
 
     @property
     def extra_state_attributes(self):
@@ -672,6 +698,19 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             for attr in self.entity_description.attributes
             if hasattr(self.coordinator.data, attr)
         }
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        native_value = self._extract_value_from_attribute(
+            getattr(self.coordinator.data, self.entity_description.parent_key),
+            self.entity_description.key,
+        )
+        # Sometimes (quite rarely) the device returns None as the sensor value so we
+        # check that the value is not None before updating the state.
+        if native_value:
+            self._attr_native_value = native_value
+            self.async_write_ha_state()
 
 
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
