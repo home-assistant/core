@@ -89,8 +89,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self._async_set_info_from_discovery(discovery)
             return self._create_entry()
 
-        discoveries = await self._async_get_discoveries()
-        if not discoveries:
+        if not (discoveries := await self._async_get_discoveries()):
             # Nothing found, maybe the user knows an URL to try
             return await self.async_step_manual()
 
