@@ -71,34 +71,25 @@ class QnapQswDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
 
+    def qsha_update(self):
+        """Gather QSHA update tasks."""
+        tasks = [
+            self.hass.async_add_executor_job(self.qsha.update_firmware_condition),
+            self.hass.async_add_executor_job(self.qsha.update_firmware_info),
+            self.hass.async_add_executor_job(self.qsha.update_system_board),
+            self.hass.async_add_executor_job(self.qsha.update_system_sensor),
+            self.hass.async_add_executor_job(self.qsha.update_system_time),
+            self.hass.async_add_executor_job(self.qsha.update_firmware_update_check),
+        ]
+
+        return tasks
+
     async def _async_update_data(self):
         """Update data via library."""
         with async_timeout.timeout(ASYNC_TIMEOUT):
             try:
                 if await self.hass.async_add_executor_job(self.qsha.login):
-                    tasks = []
-                    tasks.append(
-                        self.hass.async_add_executor_job(
-                            self.qsha.update_firmware_condition
-                        )
-                    )
-                    tasks.append(
-                        self.hass.async_add_executor_job(self.qsha.update_firmware_info)
-                    )
-                    tasks.append(
-                        self.hass.async_add_executor_job(self.qsha.update_system_board)
-                    )
-                    tasks.append(
-                        self.hass.async_add_executor_job(self.qsha.update_system_sensor)
-                    )
-                    tasks.append(
-                        self.hass.async_add_executor_job(self.qsha.update_system_time)
-                    )
-                    tasks.append(
-                        self.hass.async_add_executor_job(
-                            self.qsha.update_firmware_update_check
-                        )
-                    )
+                    tasks = self.qsha_update()
                     for task in tasks:
                         await task
             except (ConnectionError, LoginError) as error:
