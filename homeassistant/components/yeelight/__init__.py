@@ -35,6 +35,20 @@ _LOGGER = logging.getLogger(__name__)
 STATE_CHANGE_TIME = 0.40  # seconds
 POWER_STATE_CHANGE_TIME = 1  # seconds
 
+#
+# These models do not transition correctly when turning on, and
+# yeelight is no longer updating the firmware on older devices
+#
+# https://github.com/home-assistant/core/issues/58315
+#
+# The problem can be worked around by always setting the brightness
+# even when the bulb is reporting the brightness is already at the
+# desired level.
+#
+MODELS_WITH_DELAYED_ON_TRANSITION = {
+    "color",  # YLDP02YL
+}
+
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN
 DATA_UPDATED = "yeelight_{}_data_updated"
