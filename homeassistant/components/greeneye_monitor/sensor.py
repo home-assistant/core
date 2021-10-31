@@ -173,7 +173,6 @@ class GEMSensor(Generic[T], SensorEntity):
 class CurrentSensor(GEMSensor[greeneye.monitor.Channel]):
     """Entity showing power usage on one channel of the monitor."""
 
-    _attr_icon = CURRENT_SENSOR_ICON
     _attr_native_unit_of_measurement = UNIT_WATTS
     _attr_device_class = DEVICE_CLASS_POWER
 
@@ -316,7 +315,6 @@ class TemperatureSensor(GEMSensor[greeneye.monitor.TemperatureSensor]):
 class VoltageSensor(GEMSensor[greeneye.monitor.Monitor]):
     """Entity showing voltage."""
 
-    _attr_icon = VOLTAGE_ICON
     _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
     _attr_device_class = DEVICE_CLASS_VOLTAGE
 
