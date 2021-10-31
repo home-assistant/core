@@ -334,7 +334,7 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
         super().__init__(dpi_group, controller)
 
         self._is_enabled = self.calculate_enabled()
-        self._known_apps = dpi_group.dpiapp_ids
+        self._known_app_ids = dpi_group.dpiapp_ids
 
     @property
     def key(self) -> Any:
@@ -369,15 +369,14 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
             self.hass.loop.create_task(self.remove_item({self.key}))
             return
 
-        if self._known_apps != self._item.dpiapp_ids:
-            self._known_apps = self._item.dpiapp_ids
+        if self._known_app_ids != self._item.dpiapp_ids:
+            self._known_app_ids = self._item.dpiapp_ids
 
             apps = self.controller.api.dpi_apps
             for app_id in self._item.dpiapp_ids:
                 apps[app_id].register_callback(self.async_update_callback)
 
-        enabled = self.calculate_enabled()
-        if enabled != self._is_enabled:
+        if (enabled := self.calculate_enabled()) != self._is_enabled:
             self._is_enabled = enabled
             super().async_update_callback()
 
