@@ -1,7 +1,10 @@
 """Support for the OpenWeatherMap (OWM) service."""
 from homeassistant.components.weather import WeatherEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.pressure import convert as pressure_convert
 
 from .const import (
@@ -22,7 +25,11 @@ from .const import (
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Set up OpenWeatherMap weather entity based on a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     name = domain_data[ENTRY_NAME]
