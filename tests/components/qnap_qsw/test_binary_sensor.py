@@ -10,11 +10,11 @@ async def test_qnap_qsw_create_binary_sensors(hass):
 
     await async_init_integration(hass)
 
-    state = hass.states.get("binary_sensor.qsw_m408_4c_condition_anomaly")
+    state = hass.states.get("binary_sensor.qsw_m408_4c_anomaly")
     assert state.state == STATE_OFF
-    assert state.attributes["condition_message"] is None
+    assert state.attributes["message"] is None
 
-    state = hass.states.get("binary_sensor.qsw_m408_4c_firmware_update")
+    state = hass.states.get("binary_sensor.qsw_m408_4c_update")
     assert state.state == STATE_OFF
     assert state.attributes["current_version"] == "1.0.12.17336"
-    assert state.attributes["newest_version"] is None
+    assert state.attributes["latest_version"] is None

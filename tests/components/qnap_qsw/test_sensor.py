@@ -16,10 +16,8 @@ async def test_qnap_qsw_create_sensors(hass):
 
     state = hass.states.get("sensor.qsw_m408_4c_temperature")
     assert state.state == "39"
-
-    state = hass.states.get("sensor.qsw_m408_4c_maximum_temperature")
-    assert state.state == "85"
+    assert state.attributes["maximum"] == 85
 
     state = hass.states.get("sensor.qsw_m408_4c_uptime")
     assert state is not None
-    assert state.attributes["uptime_seconds"] == 60
+    assert state.attributes["seconds"] == 60

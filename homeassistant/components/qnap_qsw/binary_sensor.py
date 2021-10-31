@@ -76,12 +76,12 @@ class QnapQswBinarySensor(CoordinatorEntity, BinarySensorEntity):
         _state_attr = None
         if self.entity_description.key == DATA_CONDITION_ANOMALY:
             _state_attr = {
-                "condition_message": self.coordinator.data[DATA_CONDITION_MESSAGE],
+                "message": self.coordinator.data[DATA_CONDITION_MESSAGE],
             }
         elif self.entity_description.key == DATA_UPDATE:
             _state_attr = {
                 "current_version": self.coordinator.data[DATA_FIRMWARE],
-                "newest_version": self.coordinator.data[DATA_UPDATE_VERSION],
+                "latest_version": self.coordinator.data[DATA_UPDATE_VERSION],
             }
         return _state_attr
 

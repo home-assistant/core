@@ -9,7 +9,6 @@ from qnap_qsw.const import (
     DATA_FAN2_SPEED,
     DATA_MAC_ADDR,
     DATA_TEMP,
-    DATA_TEMP_MAX,
     DATA_UPDATE,
     DATA_UPTIME,
 )
@@ -41,13 +40,13 @@ BINARY_SENSOR_TYPES: Final[tuple[BinarySensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_PROBLEM,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         key=DATA_CONDITION_ANOMALY,
-        name="Condition anomaly",
+        name="Anomaly",
     ),
     BinarySensorEntityDescription(
         device_class=DEVICE_CLASS_UPDATE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         key=DATA_UPDATE,
-        name="Firmware update",
+        name="Update",
     ),
 )
 
@@ -76,14 +75,6 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         key=DATA_TEMP,
         name="Temperature",
-        state_class=STATE_CLASS_MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
-    ),
-    SensorEntityDescription(
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        key=DATA_TEMP_MAX,
-        name="Maximum temperature",
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),

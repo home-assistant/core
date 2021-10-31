@@ -6,6 +6,8 @@ from qnap_qsw.const import (
     DATA_FIRMWARE,
     DATA_PRODUCT,
     DATA_SERIAL,
+    DATA_TEMP,
+    DATA_TEMP_MAX,
     DATA_UPTIME,
     DATA_UPTIME_SECONDS,
 )
@@ -69,7 +71,11 @@ class QnapQswSensor(CoordinatorEntity, SensorEntity):
         _state_attr = None
         if self.entity_description.key == DATA_UPTIME:
             _state_attr = {
-                "uptime_seconds": self.coordinator.data[DATA_UPTIME_SECONDS],
+                "seconds": self.coordinator.data[DATA_UPTIME_SECONDS],
+            }
+        elif self.entity_description.key == DATA_TEMP:
+            _state_attr = {
+                "maximum": self.coordinator.data[DATA_TEMP_MAX],
             }
         return _state_attr
 
