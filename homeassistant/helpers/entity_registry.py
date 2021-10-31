@@ -399,18 +399,18 @@ class EntityRegistry:
         """Update properties of an entity."""
         return self._async_update_entity(
             entity_id,
-            name=name,
-            icon=icon,
-            config_entry_id=config_entry_id,
             area_id=area_id,
-            new_entity_id=new_entity_id,
-            new_unique_id=new_unique_id,
+            config_entry_id=config_entry_id,
+            device_class=device_class,
             disabled_by=disabled_by,
             entity_category=entity_category,
-            original_name=original_name,
+            icon=icon,
+            name=name,
+            new_entity_id=new_entity_id,
+            new_unique_id=new_unique_id,
             original_icon=original_icon,
+            original_name=original_name,
             unit_of_measurement=unit_of_measurement,
-            device_class=device_class,
         )
 
     @callback
