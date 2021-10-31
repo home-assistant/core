@@ -1,7 +1,7 @@
 """Support for the sensors in a GreenEye Monitor."""
 from __future__ import annotations
 
-from typing import Any, Generic, Optional, TypeVar, Union, cast
+from typing import Any, Optional, Union, cast
 
 import greeneye
 
