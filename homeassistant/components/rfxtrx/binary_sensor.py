@@ -240,9 +240,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
             self._state = True
 
     def _apply_event_standard(self, event: rfxtrxmod.RFXtrxEvent):
-        assert isinstance(event, rfxtrxmod.SensorEvent) or isinstance(
-            event, rfxtrxmod.ControlEvent
-        )
+        assert isinstance(event, (rfxtrxmod.SensorEvent, rfxtrxmod.ControlEvent))
         if event.values.get("Command") in COMMAND_ON_LIST:
             self._state = True
         elif event.values.get("Command") in COMMAND_OFF_LIST:
