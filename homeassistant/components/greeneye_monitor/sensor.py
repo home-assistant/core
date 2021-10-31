@@ -45,7 +45,6 @@ DATA_WATT_SECONDS = "watt_seconds"
 UNIT_WATTS = POWER_WATT
 
 COUNTER_ICON = "mdi:counter"
-CURRENT_SENSOR_ICON = "mdi:flash"
 
 
 async def async_setup_platform(
