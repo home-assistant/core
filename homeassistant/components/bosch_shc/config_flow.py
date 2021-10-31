@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
-from homeassistant.components.zeroconf import async_get_instance
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
 
 from .const import (
@@ -124,14 +123,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the credentials step."""
         errors = {}
         if user_input is not None:
-            zeroconf = await async_get_instance(self.hass)
+            zeroconf_instance = await zeroconf.async_get_instance(self.hass)
             try:
                 result = await self.hass.async_add_executor_job(
                     create_credentials_and_validate,
                     self.hass,
                     self.host,
                     user_input,
-                    zeroconf,
+                    zeroconf_instance,
                 )
             except SHCAuthenticationError:
                 errors["base"] = "invalid_auth"
@@ -228,11 +227,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _get_info(self, host):
         """Get additional information."""
-        zeroconf = await async_get_instance(self.hass)
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
 
         return await self.hass.async_add_executor_job(
             get_info_from_host,
             self.hass,
             host,
-            zeroconf,
+            zeroconf_instance,
         )
