@@ -5,6 +5,7 @@ from unittest.mock import patch
 from brother import SnmpError, UnsupportedModel
 
 from homeassistant import data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_TYPE
@@ -143,7 +144,9 @@ async def test_zeroconf_snmp_error(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={"hostname": "example.local.", "name": "Brother Printer"},
+            data=zeroconf.HaServiceInfo(
+                hostname="example.local.", name="Brother Printer"
+            ),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -156,11 +159,11 @@ async def test_zeroconf_unsupported_model(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={
-                "hostname": "example.local.",
-                "name": "Brother Printer",
-                "properties": {"product": "MFC-8660DN"},
-            },
+            data=zeroconf.HaServiceInfo(
+                hostname="example.local.",
+                name="Brother Printer",
+                properties={"product": "MFC-8660DN"},
+            ),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -181,7 +184,9 @@ async def test_zeroconf_device_exists_abort(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={"hostname": "example.local.", "name": "Brother Printer"},
+            data=zeroconf.HaServiceInfo(
+                hostname="example.local.", name="Brother Printer"
+            ),
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -196,7 +201,7 @@ async def test_zeroconf_no_probe_existing_device(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={"hostname": "localhost", "name": "Brother Printer"},
+            data=zeroconf.HaServiceInfo(hostname="localhost", name="Brother Printer"),
         )
         await hass.async_block_till_done()
 
@@ -215,7 +220,9 @@ async def test_zeroconf_confirm_create_entry(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data={"hostname": "example.local.", "name": "Brother Printer"},
+            data=zeroconf.HaServiceInfo(
+                hostname="example.local.", name="Brother Printer"
+            ),
         )
 
         assert result["step_id"] == "zeroconf_confirm"
