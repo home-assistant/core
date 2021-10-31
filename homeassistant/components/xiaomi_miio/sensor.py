@@ -646,6 +646,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         "Sensor %s has not been created due to its initial value being None/Unknown.",
                         sensor.name,
                     )
+                    _LOGGER.info(
+                        "The device '%s' does not support sensor '%s'",
+                        config_entry.data[CONF_MODEL],
+                        description.key,
+                    )
 
     async_add_entities(entities)
 
