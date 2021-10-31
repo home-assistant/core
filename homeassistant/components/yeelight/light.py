@@ -63,6 +63,7 @@ from . import (
     DATA_DEVICE,
     DATA_UPDATED,
     DOMAIN,
+    MODELS_WITH_DELAYED_ON_TRANSITION,
     POWER_STATE_CHANGE_TIME,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
     YeelightEntity,
@@ -614,7 +615,10 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Set bulb brightness."""
         if not brightness:
             return
-        if math.floor(self.brightness) == math.floor(brightness):
+        if (
+            math.floor(self.brightness) == math.floor(brightness)
+            and self._bulb.model not in MODELS_WITH_DELAYED_ON_TRANSITION
+        ):
             _LOGGER.debug("brightness already set to: %s", brightness)
             # Already set, and since we get pushed updates
             # we avoid setting it again to ensure we do not
