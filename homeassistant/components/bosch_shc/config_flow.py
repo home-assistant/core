@@ -12,6 +12,7 @@ from boschshcpy.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries, core
+from homeassistant.components import zeroconf
 from homeassistant.components.zeroconf import async_get_instance
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
 
@@ -183,14 +184,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle zeroconf discovery."""
-        if not discovery_info.get("name", "").startswith("Bosch SHC"):
+        if not discovery_info.get(zeroconf.ATTR_NAME, "").startswith("Bosch SHC"):
             return self.async_abort(reason="not_bosch_shc")
 
         try:
             hosts = (
-                discovery_info["host"]
-                if isinstance(discovery_info["host"], list)
-                else [discovery_info["host"]]
+                discovery_info[zeroconf.ATTR_HOST]
+                if isinstance(discovery_info[zeroconf.ATTR_HOST], list)
+                else [discovery_info[zeroconf.ATTR_HOST]]
             )
             for host in hosts:
                 if host.startswith("169."):  # skip link local address
@@ -202,7 +203,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except SHCConnectionError:
             return self.async_abort(reason="cannot_connect")
 
-        local_name = discovery_info["hostname"][:-1]
+        local_name = discovery_info[zeroconf.ATTR_HOSTNAME][:-1]
         node_name = local_name[: -len(".local")]
 
         await self.async_set_unique_id(self.info["unique_id"])
