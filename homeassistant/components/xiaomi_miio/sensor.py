@@ -546,6 +546,11 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
         # Initial update is done in at coordinator creation
         if sensor.native_value is not None:
             entities.append(sensor)
+        else:
+            _LOGGER.debug(
+                "Sensor %s has not been created due to its initial value being None/Unknown.",
+                sensor.name,
+            )
 
     async_add_entities(entities)
 
@@ -620,19 +625,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             elif model in MODELS_VACUUM:
                 return _setup_vacuum_sensors(hass, config_entry, async_add_entities)
 
-            for sensor, description in SENSOR_TYPES.items():
-                if sensor not in sensors:
+            for sensor_name, description in SENSOR_TYPES.items():
+                if sensor_name not in sensors:
                     continue
-                entities.append(
-                    XiaomiGenericSensor(
-                        f"{config_entry.title} {description.name}",
-                        device,
-                        config_entry,
-                        f"{sensor}_{config_entry.unique_id}",
-                        hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
-                        description,
-                    )
+                sensor = XiaomiGenericSensor(
+                    f"{config_entry.title} {description.name}",
+                    device,
+                    config_entry,
+                    f"{sensor_name}_{config_entry.unique_id}",
+                    hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                    description,
                 )
+
+                # Don't create the sensor if its initial state is None.
+                # Initial update is done in at coordinator creation
+                if sensor.native_value is not None:
+                    entities.append(sensor)
+                else:
+                    _LOGGER.debug(
+                        "Sensor %s has not been created due to its initial value being None/Unknown.",
+                        sensor.name,
+                    )
 
     async_add_entities(entities)
 

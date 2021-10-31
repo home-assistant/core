@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Callable
 
 from homeassistant.components.binary_sensor import (
@@ -36,6 +37,9 @@ ATTR_WATER_TANK_DETACHED = "water_tank_detached"
 ATTR_MOP_ATTACHED = "is_water_box_carriage_attached"
 ATTR_WATER_BOX_ATTACHED = "is_water_box_attached"
 ATTR_WATER_SHORTAGE = "is_water_shortage"
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -129,6 +133,11 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
         # Initial update is done in at coordinator creation
         if sensor.is_on is not None:
             entities.append(sensor)
+        else:
+            _LOGGER.debug(
+                "Sensor %s has not been created due to its initial value being None/Unknown.",
+                sensor.name,
+            )
 
     async_add_entities(entities)
 
@@ -154,16 +163,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for description in BINARY_SENSOR_TYPES:
             if description.key not in sensors:
                 continue
-            entities.append(
-                XiaomiGenericBinarySensor(
-                    f"{config_entry.title} {description.name}",
-                    hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE],
-                    config_entry,
-                    f"{description.key}_{config_entry.unique_id}",
-                    hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
-                    description,
-                )
+            sensor = XiaomiGenericBinarySensor(
+                f"{config_entry.title} {description.name}",
+                hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE],
+                config_entry,
+                f"{description.key}_{config_entry.unique_id}",
+                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                description,
             )
+
+            # Don't create the sensor if its initial state is None.
+            # Initial update is done in at coordinator creation
+            if sensor.is_on is not None:
+                entities.append(sensor)
+            else:
+                _LOGGER.debug(
+                    "Sensor %s has not been created due to its initial value being None/Unknown.",
+                    sensor.name,
+                )
 
     async_add_entities(entities)
 
