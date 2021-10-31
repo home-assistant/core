@@ -313,21 +313,21 @@ class AFSAPIDevice(MediaPlayerEntity):
         supported_media_types = [MEDIA_TYPE_CHANNEL]
 
         if media_type not in supported_media_types:
-            _LOGGER.error('Supported media types: %s', supported_media_types)
+            _LOGGER.error("Supported media types: %s", supported_media_types)
             return
         if (
             media_type == MEDIA_TYPE_CHANNEL
             and not isinstance(media_id, int)
             and not media_id.isnumeric()
         ):
-            _LOGGER.error('Media id for %s must be a number', MEDIA_TYPE_CHANNEL)
+            _LOGGER.error("Media id for %s must be a number", MEDIA_TYPE_CHANNEL)
             return
 
         fs_device = self.fs_device
-        nav = await fs_device.handle_set('netremote.nav.state', 1)
+        nav = await fs_device.handle_set("netremote.nav.state", 1)
         if not nav:
-            _LOGGER.error('Failed to enter nav state')
+            _LOGGER.error("Failed to enter nav state")
             return False
-        ok = await fs_device.handle_set('netremote.nav.action.selectPreset', media_id)
-        await fs_device.handle_set('netremote.nav.state', 1)
+        ok = await fs_device.handle_set("netremote.nav.action.selectPreset", media_id)
+        await fs_device.handle_set("netremote.nav.state", 0)
         return ok
