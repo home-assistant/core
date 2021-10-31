@@ -663,8 +663,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 media_content_id,
                 MEDIA_TYPES_TO_SONOS[media_content_type],
             )
-            image_url = getattr(item, "album_art_uri", None)
-            if image_url:
+            if image_url := getattr(item, "album_art_uri", None):
                 result = await self._async_fetch_image(image_url)  # type: ignore[no-untyped-call]
                 return result  # type: ignore
 
