@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Callable
 
 from homeassistant.components.binary_sensor import (
@@ -30,6 +31,8 @@ from .const import (
     MODELS_VACUUM_WITH_MOP,
 )
 from .device import XiaomiCoordinatedMiioEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_NO_WATER = "no_water"
 ATTR_POWERSUPPLY_ATTACHED = "powersupply_attached"
@@ -109,14 +112,22 @@ HUMIDIFIER_MJJSQ_BINARY_SENSORS = (ATTR_NO_WATER, ATTR_WATER_TANK_DETACHED)
 
 def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
     """Only vacuums with mop should have binary sensor registered."""
-
     if config_entry.data[CONF_MODEL] not in MODELS_VACUUM_WITH_MOP:
         return
 
     device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     entities = []
 
     for sensor, description in VACUUM_SENSORS.items():
+        parent_key_data = getattr(coordinator.data, description.parent_key)
+        if getattr(parent_key_data, description.key, None) is None:
+            _LOGGER.info(
+                "The %s device does not support the %s sensor",
+                config_entry.data[CONF_MODEL],
+                description.key,
+            )
+            continue
         entities.append(
             XiaomiGenericBinarySensor(
                 f"{config_entry.title} {description.name}",

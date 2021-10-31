@@ -530,17 +530,14 @@ VACUUM_SENSORS = {
 
 
 def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
+    """Set up the Xiaomi vacuum sensors."""
     device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     entities = []
 
     for sensor, description in VACUUM_SENSORS.items():
-        if (
-            getattr(
-                getattr(coordinator.data, description.parent_key), description.key, None
-            )
-            is None
-        ):
+        parent_key_data = getattr(coordinator.data, description.parent_key)
+        if getattr(parent_key_data, description.key, None) is None:
             _LOGGER.info(
                 "The %s device does not support the %s sensor",
                 config_entry.data[CONF_MODEL],
