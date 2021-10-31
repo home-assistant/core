@@ -169,6 +169,8 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
             return cls._parse_datetime_datetime(value)
         if isinstance(value, datetime.timedelta):
             return cls._parse_time_delta(value)
+        if value is None:
+            _LOGGER.debug("Attribute %s is None, this is unexpected", attribute)
 
         return value
 
