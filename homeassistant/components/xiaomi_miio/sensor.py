@@ -651,20 +651,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     """Representation of a Xiaomi generic sensor."""
 
-    def __init__(
-        self,
-        name,
-        device,
-        entry,
-        unique_id,
-        coordinator,
-        description: XiaomiMiioSensorDescription,
-    ):
+    entity_description: XiaomiMiioSensorDescription
+
+    def __init__(self, name, device, entry, unique_id, coordinator, description):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
+        self.entity_description = description
         self._attr_unique_id = unique_id
         self._attr_native_value = self._determine_native_value()
-        self.entity_description: XiaomiMiioSensorDescription = description
 
     @property
     def extra_state_attributes(self):

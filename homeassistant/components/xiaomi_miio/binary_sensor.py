@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.core import callback
 
 from . import VacuumCoordinatorDataAttributes
 from .const import (
@@ -168,16 +169,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity):
     """Representation of a Xiaomi Humidifier binary sensor."""
 
+    entity_description: XiaomiMiioBinarySensorDescription
+
     def __init__(self, name, device, entry, unique_id, coordinator, description):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
-        self.entity_description: XiaomiMiioBinarySensorDescription = description
+        self.entity_description = description
         self._attr_entity_registry_enabled_default = (
             description.entity_registry_enabled_default
         )
         self._attr_is_on = self._determine_native_value()
 
+    @callback
     def _handle_coordinator_update(self) -> None:
         self._attr_is_on = self._determine_native_value()
 
