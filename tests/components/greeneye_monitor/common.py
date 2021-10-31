@@ -163,8 +163,8 @@ def add_listeners(mock: MagicMock | AsyncMock) -> None:
     mock.add_listener = mock.listeners.append
     mock.remove_listener = mock.listeners.remove
 
-    def notify_all_listeners():
+    def notify_all_listeners(*args):
         for listener in list(mock.listeners):
-            listener()
+            listener(*args)
 
     mock.notify_all_listeners = notify_all_listeners

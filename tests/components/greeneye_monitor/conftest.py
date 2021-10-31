@@ -111,7 +111,8 @@ def monitors() -> AsyncMock:
         def add_monitor(serial_number: int, monitor: MagicMock) -> None:
             """Add the given mock monitor as a monitor with the given serial number, notifying any listeners on the Monitors object."""
             mock_monitors.monitors[serial_number] = monitor
-            mock_monitors.notify_all_listeners()
+            monitor.serial_number = serial_number
+            mock_monitors.notify_all_listeners(monitor)
 
         mock_monitors.add_monitor = add_monitor
         yield mock_monitors
