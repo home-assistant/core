@@ -116,16 +116,19 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
     entities = []
 
     for sensor, description in VACUUM_SENSORS.items():
-        entities.append(
-            XiaomiGenericBinarySensor(
-                f"{config_entry.title} {description.name}",
-                device,
-                config_entry,
-                f"{sensor}_{config_entry.unique_id}",
-                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
-                description,
-            )
+        sensor = XiaomiGenericBinarySensor(
+            f"{config_entry.title} {description.name}",
+            device,
+            config_entry,
+            f"{sensor}_{config_entry.unique_id}",
+            hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+            description,
         )
+
+        # Don't create the sensor if its initial state is None.
+        # Initial update is done in at coordinator creation
+        if sensor.is_on is not None:
+            entities.append(sensor)
 
     async_add_entities(entities)
 

@@ -137,7 +137,6 @@ class XiaomiMiioSensorDescription(SensorEntityDescription):
 
     attributes: tuple = ()
     parent_key: str | None = None
-    allow_none_as_return_value: bool = False
 
 
 SENSOR_TYPES = {
@@ -235,9 +234,6 @@ SENSOR_TYPES = {
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=DEVICE_CLASS_PM25,
         state_class=STATE_CLASS_MEASUREMENT,
-        # This attribute sometimes returns None as return value.
-        # See https://github.com/home-assistant/core/issues/57474#issuecomment-940986005
-        allow_none_as_return_value=True,
     ),
     ATTR_FILTER_LIFE_REMAINING: XiaomiMiioSensorDescription(
         key=ATTR_FILTER_LIFE_REMAINING,
@@ -247,9 +243,6 @@ SENSOR_TYPES = {
         state_class=STATE_CLASS_MEASUREMENT,
         attributes=("filter_type",),
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        # This attribute sometimes returns None as return value.
-        # See https://github.com/home-assistant/core/issues/57474#issuecomment-940986005
-        allow_none_as_return_value=True,
     ),
     ATTR_FILTER_USE: XiaomiMiioSensorDescription(
         key=ATTR_FILTER_HOURS_USED,
@@ -540,16 +533,19 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
     entities = []
 
     for sensor, description in VACUUM_SENSORS.items():
-        entities.append(
-            XiaomiGenericSensor(
-                f"{config_entry.title} {description.name}",
-                device,
-                config_entry,
-                f"{sensor}_{config_entry.unique_id}",
-                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
-                description,
-            )
+        sensor = XiaomiGenericSensor(
+            f"{config_entry.title} {description.name}",
+            device,
+            config_entry,
+            f"{sensor}_{config_entry.unique_id}",
+            hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+            description,
         )
+
+        # Don't create the sensor if its initial state is None.
+        # Initial update is done in at coordinator creation
+        if sensor.native_value is not None:
+            entities.append(sensor)
 
     async_add_entities(entities)
 
@@ -657,16 +653,14 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         super().__init__(name, device, entry, unique_id, coordinator)
         self._attr_unique_id = unique_id
         self.entity_description: XiaomiMiioSensorDescription = description
+        self._attr_native_value = self._determine_native_value()
 
-        self._none_counter = 0
-
-    def _handle_coordinator_update(self) -> None:
+    def _determine_native_value(self):
         """
-        Handle coordinator update.
+        Determine the native value of this sensor.
 
-        if self.entity_description.allow_none_as_return_value is set to true, then its allowed to returned None
-        for 3 consecutive updates. If it exceeds 3 failed updates, the sensor is set to an Unknown state
-        (by setting the state to None). When this happens, a warning will be logged.
+        Nones that are returned after init are ignored, we assume that these None's are glitches in the matrix
+        and keep the sensor at its last known state. A debug entry is logged when None is returned.
         """
         if self.entity_description.parent_key is not None:
             data = getattr(self.coordinator.data, self.entity_description.parent_key)
@@ -677,25 +671,17 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             data, self.entity_description.key
         )
 
-        if (
-            self.entity_description.allow_none_as_return_value
-            and self._attr_native_value is not None
-            and updated_state is None
-        ):
-            self._none_counter += 1
-            if self._none_counter < 2:
-                # exit early and do not update the state to Unknown, in other words, ignore the update
-                return
+        if self._attr_native_value is not None and updated_state is None:
+            # exit early and do not update the sensor to Unknown state (None).
+            # so return the previous known state.
+            # the above comment assumes that this sensor has been created, in which case the previous state
+            # has been not None at some point.
+            return self._attr_native_value
 
-            _LOGGER.warning(
-                "Attribute %s on %s returned None for 3 consecutive updates",
-                self.entity_description.key,
-                type(data),
-            )
+        return updated_state
 
-        self._none_counter = 0
-        self._attr_native_value = updated_state
-
+    def _handle_coordinator_update(self) -> None:
+        self._attr_native_value = self._determine_native_value()
         super()._handle_coordinator_update()
 
     @property
@@ -709,17 +695,6 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             and self._extract_value_from_attribute(self.coordinator.data, attr)
             is not None
         }
-
-    def _parse_none(self, state, attribute) -> None:
-        if self.entity_description.allow_none_as_return_value:
-            _LOGGER.debug(
-                "Allowed None value for state %s and attribute %s",
-                type(state),
-                attribute,
-            )
-            return None
-
-        return super()._parse_none(state, attribute)
 
 
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):

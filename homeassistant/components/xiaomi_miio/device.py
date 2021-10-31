@@ -156,24 +156,25 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
 
             return False
 
-    def _extract_value_from_attribute(self, state, attribute):
+    @classmethod
+    def _extract_value_from_attribute(cls, state, attribute):
         value = getattr(state, attribute)
         if isinstance(value, Enum):
             return value.value
         if isinstance(value, datetime.timedelta):
-            return self._parse_time_delta(value)
+            return cls._parse_time_delta(value)
         if isinstance(value, datetime.time):
-            return self._parse_datetime_time(value)
+            return cls._parse_datetime_time(value)
         if isinstance(value, datetime.datetime):
-            return self._parse_datetime_datetime(value)
+            return cls._parse_datetime_datetime(value)
         if isinstance(value, datetime.timedelta):
-            return self._parse_time_delta(value)
+            return cls._parse_time_delta(value)
         if isinstance(value, float):
             return value
         if isinstance(value, int):
             return value
         if value is None:
-            return self._parse_none(state, attribute)
+            return cls._parse_none(state, attribute)
 
         _LOGGER.warning(
             "Could not determine how to parse state value of type %s for state %s and attribute %s",
@@ -207,17 +208,16 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
     def _parse_datetime_timedelta(time: datetime.timedelta) -> int:
         return time.seconds
 
-    def _parse_none(self, state, attribute) -> None:  # pylint: disable=useless-return
+    @staticmethod
+    def _parse_none(state, attribute) -> None:  # pylint: disable=useless-return
         """
         Handle None for attribute values.
 
-        Self is (and can be) used in the overriding method.
         None is returned explicitly instead of implicit, to demonstrate
         that the returned None is expected.
         """
-        # pylint: disable=no-self-use
 
-        _LOGGER.warning(
+        _LOGGER.debug(
             "Attribute %s returned None for state of type %s, this was unexpected",
             type(state),
             attribute,
