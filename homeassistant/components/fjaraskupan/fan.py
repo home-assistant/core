@@ -17,6 +17,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -50,7 +51,7 @@ PRESET_TO_COMMAND = {
 }
 
 
-class UnsupportedPreset(Exception):
+class UnsupportedPreset(HomeAssistantError):
     """The preset is unsupported."""
 
 
