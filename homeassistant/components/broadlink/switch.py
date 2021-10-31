@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 import logging
 
-from broadlink.exceptions import BroadlinkException
+from broadlink import exceptions as e
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -184,7 +184,7 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
 
         try:
             await self._device.async_request(self._device.api.send_data, packet)
-        except (BroadlinkException, OSError) as err:
+        except (e.BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
         return True
@@ -202,7 +202,7 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
         """Send a packet to the device."""
         try:
             await self._device.async_request(self._device.api.set_power, packet)
-        except (BroadlinkException, OSError) as err:
+        except (e.BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
         return True
@@ -246,7 +246,7 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
             await self._device.async_request(
                 self._device.api.set_power, self._slot, packet
             )
-        except (BroadlinkException, OSError) as err:
+        except (e.BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
         return True
@@ -276,7 +276,7 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         state = {f"pwr{self._slot}": packet}
         try:
             await self._device.async_request(self._device.api.set_state, **state)
-        except (BroadlinkException, OSError) as err:
+        except (e.BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
         return True

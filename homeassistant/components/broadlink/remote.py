@@ -6,13 +6,7 @@ from datetime import timedelta
 from itertools import product
 import logging
 
-from broadlink.exceptions import (
-    AuthorizationError,
-    BroadlinkException,
-    NetworkTimeoutError,
-    ReadError,
-    StorageError,
-)
+from broadlink import exceptions as e
 import voluptuous as vol
 
 from homeassistant.components.remote import (
@@ -253,7 +247,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
             try:
                 await self._device.async_request(self._device.api.send_data, code)
-            except (BroadlinkException, OSError) as err:
+            except (e.BroadlinkException, OSError) as err:
                 _LOGGER.error("Error during %s: %s", service, err)
                 break
 
@@ -302,11 +296,11 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     if toggle:
                         code = [code, await learn_command(command)]
 
-                except (AuthorizationError, NetworkTimeoutError, OSError) as err:
+                except (e.AuthorizationError, e.NetworkTimeoutError, OSError) as err:
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
                     break
 
-                except BroadlinkException as err:
+                except e.BroadlinkException as err:
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
                     continue
 
@@ -321,7 +315,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             await self._device.async_request(self._device.api.enter_learning)
 
-        except (BroadlinkException, OSError) as err:
+        except (e.BroadlinkException, OSError) as err:
             _LOGGER.debug("Failed to enter learning mode: %s", err)
             raise
 
@@ -337,7 +331,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 await asyncio.sleep(1)
                 try:
                     code = await self._device.async_request(self._device.api.check_data)
-                except (ReadError, StorageError):
+                except (e.ReadError, e.StorageError):
                     continue
                 return b64encode(code).decode("utf8")
 
@@ -356,7 +350,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             await self._device.async_request(self._device.api.sweep_frequency)
 
-        except (BroadlinkException, OSError) as err:
+        except (e.BroadlinkException, OSError) as err:
             _LOGGER.debug("Failed to sweep frequency: %s", err)
             raise
 
@@ -394,7 +388,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             await self._device.async_request(self._device.api.find_rf_packet)
 
-        except (BroadlinkException, OSError) as err:
+        except (e.BroadlinkException, OSError) as err:
             _LOGGER.debug("Failed to enter learning mode: %s", err)
             raise
 
@@ -410,7 +404,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 await asyncio.sleep(1)
                 try:
                     code = await self._device.async_request(self._device.api.check_data)
-                except (ReadError, StorageError):
+                except (e.ReadError, e.StorageError):
                     continue
                 return b64encode(code).decode("utf8")
 

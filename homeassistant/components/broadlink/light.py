@@ -1,7 +1,7 @@
 """Support for Broadlink lights."""
 import logging
 
-from broadlink.exceptions import BroadlinkException
+from broadlink import exceptions as e
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -128,7 +128,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
             state = await self._device.async_request(
                 self._device.api.set_state, **state
             )
-        except (BroadlinkException, OSError) as err:
+        except (e.BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to set state: %s", err)
             return
 

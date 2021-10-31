@@ -3,7 +3,7 @@ import errno
 import socket
 from unittest.mock import call, patch
 
-import broadlink.exceptions as blke
+from broadlink import exceptions as e
 import pytest
 
 from homeassistant import config_entries
@@ -165,7 +165,7 @@ async def test_flow_user_device_not_found(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(DEVICE_HELLO, side_effect=blke.NetworkTimeoutError()):
+    with patch(DEVICE_HELLO, side_effect=e.NetworkTimeoutError()):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": device.host},
@@ -233,7 +233,7 @@ async def test_flow_auth_authentication_error(hass):
     """Test we handle an authentication error in the auth step."""
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.AuthenticationError()
+    mock_api.auth.side_effect = e.AuthenticationError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -254,7 +254,7 @@ async def test_flow_auth_network_timeout(hass):
     """Test we handle a network timeout in the auth step."""
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.NetworkTimeoutError()
+    mock_api.auth.side_effect = e.NetworkTimeoutError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -275,7 +275,7 @@ async def test_flow_auth_firmware_error(hass):
     """Test we handle a firmware error in the auth step."""
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.BroadlinkException()
+    mock_api.auth.side_effect = e.BroadlinkException()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -338,7 +338,7 @@ async def test_flow_reset_works(hass):
     """Test we finish a config flow after a manual unlock."""
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.AuthenticationError()
+    mock_api.auth.side_effect = e.AuthenticationError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -409,7 +409,7 @@ async def test_flow_unlock_network_timeout(hass):
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.is_locked = True
-    mock_api.set_lock.side_effect = blke.NetworkTimeoutError()
+    mock_api.set_lock.side_effect = e.NetworkTimeoutError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -436,7 +436,7 @@ async def test_flow_unlock_firmware_error(hass):
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.is_locked = True
-    mock_api.set_lock.side_effect = blke.BroadlinkException
+    mock_api.set_lock.side_effect = e.BroadlinkException
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -643,7 +643,7 @@ async def test_flow_import_mac_already_configured(hass):
 
 async def test_flow_import_device_not_found(hass):
     """Test we handle a device not found in the import step."""
-    with patch(DEVICE_HELLO, side_effect=blke.NetworkTimeoutError()):
+    with patch(DEVICE_HELLO, side_effect=e.NetworkTimeoutError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -728,7 +728,7 @@ async def test_flow_reauth_works(hass):
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.AuthenticationError()
+    mock_api.auth.side_effect = e.AuthenticationError()
     data = {"name": device.name, **device.get_entry_data()}
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
@@ -764,7 +764,7 @@ async def test_flow_reauth_invalid_host(hass):
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.AuthenticationError()
+    mock_api.auth.side_effect = e.AuthenticationError()
     data = {"name": device.name, **device.get_entry_data()}
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
@@ -798,7 +798,7 @@ async def test_flow_reauth_valid_host(hass):
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.AuthenticationError()
+    mock_api.auth.side_effect = e.AuthenticationError()
     data = {"name": device.name, **device.get_entry_data()}
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
@@ -864,7 +864,7 @@ async def test_dhcp_can_finish(hass):
 async def test_dhcp_fails_to_connect(hass):
     """Test DHCP discovery flow that fails to connect."""
 
-    with patch(DEVICE_HELLO, side_effect=blke.NetworkTimeoutError()):
+    with patch(DEVICE_HELLO, side_effect=e.NetworkTimeoutError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},

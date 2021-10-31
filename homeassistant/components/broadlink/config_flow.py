@@ -5,11 +5,7 @@ import logging
 import socket
 
 import broadlink as blk
-from broadlink.exceptions import (
-    AuthenticationError,
-    BroadlinkException,
-    NetworkTimeoutError,
-)
+from broadlink import exceptions as e
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -65,7 +61,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             device = await self.hass.async_add_executor_job(blk.hello, host)
 
-        except NetworkTimeoutError:
+        except e.NetworkTimeoutError:
             return self.async_abort(reason="cannot_connect")
 
         except OSError as err:
@@ -92,7 +88,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 hello = partial(blk.hello, host, timeout=timeout)
                 device = await self.hass.async_add_executor_job(hello)
 
-            except NetworkTimeoutError:
+            except e.NetworkTimeoutError:
                 errors["base"] = "cannot_connect"
                 err_msg = "Device not found"
 
@@ -150,16 +146,16 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(device.auth)
 
-        except AuthenticationError:
+        except e.AuthenticationError:
             errors["base"] = "invalid_auth"
             await self.async_set_unique_id(device.mac.hex())
             return await self.async_step_reset(errors=errors)
 
-        except NetworkTimeoutError as err:
+        except e.NetworkTimeoutError as err:
             errors["base"] = "cannot_connect"
             err_msg = str(err)
 
-        except BroadlinkException as err:
+        except e.BroadlinkException as err:
             errors["base"] = "unknown"
             err_msg = str(err)
 
@@ -232,11 +228,11 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self.hass.async_add_executor_job(device.set_lock, False)
 
-            except NetworkTimeoutError as err:
+            except e.NetworkTimeoutError as err:
                 errors["base"] = "cannot_connect"
                 err_msg = str(err)
 
-            except BroadlinkException as err:
+            except e.BroadlinkException as err:
                 errors["base"] = "unknown"
                 err_msg = str(err)
 

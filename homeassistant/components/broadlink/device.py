@@ -4,13 +4,7 @@ from functools import partial
 import logging
 
 import broadlink as blk
-from broadlink.exceptions import (
-    AuthenticationError,
-    AuthorizationError,
-    BroadlinkException,
-    ConnectionClosedError,
-    NetworkTimeoutError,
-)
+from broadlink import exceptions as e
 
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
@@ -70,7 +64,7 @@ class BroadlinkDevice:
     def _auth_fetch_firmware(self):
         """Auth and fetch firmware."""
         self.api.auth()
-        with suppress(BroadlinkException, OSError):
+        with suppress(e.BroadlinkException, OSError):
             return self.api.get_fwversion()
         return None
 
@@ -92,14 +86,14 @@ class BroadlinkDevice:
                 self._auth_fetch_firmware
             )
 
-        except AuthenticationError:
+        except e.AuthenticationError:
             await self._async_handle_auth_error()
             return False
 
-        except (NetworkTimeoutError, OSError) as err:
+        except (e.NetworkTimeoutError, OSError) as err:
             raise ConfigEntryNotReady from err
 
-        except BroadlinkException as err:
+        except e.BroadlinkException as err:
             _LOGGER.error(
                 "Failed to authenticate to the device at %s: %s", api.host[0], err
             )
@@ -138,11 +132,11 @@ class BroadlinkDevice:
         """Authenticate to the device."""
         try:
             await self.hass.async_add_executor_job(self.api.auth)
-        except (BroadlinkException, OSError) as err:
+        except (e.BroadlinkException, OSError) as err:
             _LOGGER.debug(
                 "Failed to authenticate to the device at %s: %s", self.api.host[0], err
             )
-            if isinstance(err, AuthenticationError):
+            if isinstance(err, e.AuthenticationError):
                 await self._async_handle_auth_error()
             return False
         return True
@@ -152,7 +146,7 @@ class BroadlinkDevice:
         request = partial(function, *args, **kwargs)
         try:
             return await self.hass.async_add_executor_job(request)
-        except (AuthorizationError, ConnectionClosedError):
+        except (e.AuthorizationError, e.ConnectionClosedError):
             if not await self.async_auth():
                 raise
             return await self.hass.async_add_executor_job(request)

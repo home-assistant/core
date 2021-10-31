@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 import logging
 
-from broadlink.exceptions import AuthorizationError, BroadlinkException
+from broadlink import exceptions as e
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
@@ -61,10 +61,10 @@ class BroadlinkUpdateManager(ABC):
         try:
             data = await self.async_fetch_data()
 
-        except (BroadlinkException, OSError) as err:
+        except (e.BroadlinkException, OSError) as err:
             if self.available and (
                 dt.utcnow() - self.last_update > self.SCAN_INTERVAL * 3
-                or isinstance(err, (AuthorizationError, OSError))
+                or isinstance(err, (e.AuthorizationError, OSError))
             ):
                 self.available = False
                 _LOGGER.warning(

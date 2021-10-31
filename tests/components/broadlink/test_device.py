@@ -1,7 +1,7 @@
 """Tests for Broadlink devices."""
 from unittest.mock import patch
 
-import broadlink.exceptions as blke
+from broadlink import exceptions as e
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.device import get_domains
@@ -42,7 +42,7 @@ async def test_device_setup_authentication_error(hass):
     """Test we handle an authentication error."""
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.AuthenticationError()
+    mock_api.auth.side_effect = e.AuthenticationError()
 
     with patch.object(
         hass.config_entries, "async_forward_entry_setup"
@@ -66,7 +66,7 @@ async def test_device_setup_network_timeout(hass):
     """Test we handle a network timeout."""
     device = get_device("Office")
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.NetworkTimeoutError()
+    mock_api.auth.side_effect = e.NetworkTimeoutError()
 
     with patch.object(
         hass.config_entries, "async_forward_entry_setup"
@@ -104,7 +104,7 @@ async def test_device_setup_broadlink_exception(hass):
     """Test we handle a Broadlink exception."""
     device = get_device("Office")
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.BroadlinkException()
+    mock_api.auth.side_effect = e.BroadlinkException()
 
     with patch.object(
         hass.config_entries, "async_forward_entry_setup"
@@ -123,7 +123,7 @@ async def test_device_setup_update_network_timeout(hass):
     """Test we handle a network timeout in the update step."""
     device = get_device("Office")
     mock_api = device.get_mock_api()
-    mock_api.check_sensors.side_effect = blke.NetworkTimeoutError()
+    mock_api.check_sensors.side_effect = e.NetworkTimeoutError()
 
     with patch.object(
         hass.config_entries, "async_forward_entry_setup"
@@ -144,7 +144,7 @@ async def test_device_setup_update_authorization_error(hass):
     device = get_device("Office")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.side_effect = (
-        blke.AuthorizationError(),
+        e.AuthorizationError(),
         {"temperature": 30},
     )
 
@@ -170,8 +170,8 @@ async def test_device_setup_update_authentication_error(hass):
     """Test we handle an authentication error in the update step."""
     device = get_device("Garage")
     mock_api = device.get_mock_api()
-    mock_api.check_sensors.side_effect = blke.AuthorizationError()
-    mock_api.auth.side_effect = (None, blke.AuthenticationError())
+    mock_api.check_sensors.side_effect = e.AuthorizationError()
+    mock_api.auth.side_effect = (None, e.AuthenticationError())
 
     with patch.object(
         hass.config_entries, "async_forward_entry_setup"
@@ -196,7 +196,7 @@ async def test_device_setup_update_broadlink_exception(hass):
     """Test we handle a Broadlink exception in the update step."""
     device = get_device("Garage")
     mock_api = device.get_mock_api()
-    mock_api.check_sensors.side_effect = blke.BroadlinkException()
+    mock_api.check_sensors.side_effect = e.BroadlinkException()
 
     with patch.object(
         hass.config_entries, "async_forward_entry_setup"
@@ -216,7 +216,7 @@ async def test_device_setup_get_fwversion_broadlink_exception(hass):
     """Test we load the device even if we cannot read the firmware version."""
     device = get_device("Office")
     mock_api = device.get_mock_api()
-    mock_api.get_fwversion.side_effect = blke.BroadlinkException()
+    mock_api.get_fwversion.side_effect = e.BroadlinkException()
 
     with patch.object(hass.config_entries, "async_forward_entry_setup") as mock_forward:
         mock_setup = await device.setup_entry(hass, mock_api=mock_api)
@@ -292,7 +292,7 @@ async def test_device_unload_authentication_error(hass):
     """Test we unload a device that failed the authentication step."""
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.AuthenticationError()
+    mock_api.auth.side_effect = e.AuthenticationError()
 
     with patch.object(hass.config_entries, "async_forward_entry_setup"), patch.object(
         hass.config_entries.flow, "async_init"
@@ -312,7 +312,7 @@ async def test_device_unload_update_failed(hass):
     """Test we unload a device that failed the update step."""
     device = get_device("Office")
     mock_api = device.get_mock_api()
-    mock_api.check_sensors.side_effect = blke.NetworkTimeoutError()
+    mock_api.check_sensors.side_effect = e.NetworkTimeoutError()
 
     with patch.object(hass.config_entries, "async_forward_entry_setup"):
         mock_setup = await device.setup_entry(hass, mock_api=mock_api)
