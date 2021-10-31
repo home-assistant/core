@@ -18,7 +18,7 @@ from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN, DOMAINS_AND_TYPES
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DEVICE_TYPES, DOMAIN
 from .helpers import format_mac
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +35,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_set_device(self, device, raise_on_progress=True):
         """Define a device for the config flow."""
-        supported_types = set.union(*DOMAINS_AND_TYPES.values())
-        if device.type not in supported_types:
+        if device.type not in DEVICE_TYPES:
             _LOGGER.error(
                 "Unsupported device: %s. If it worked before, please open "
                 "an issue at https://github.com/home-assistant/core/issues",
@@ -73,8 +72,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             return self.async_abort(reason="unknown")
 
-        supported_types = set.union(*DOMAINS_AND_TYPES.values())
-        if device.type not in supported_types:
+        if device.type not in DEVICE_TYPES:
             return self.async_abort(reason="not_supported")
 
         await self.async_set_device(device)
