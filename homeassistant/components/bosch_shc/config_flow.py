@@ -40,7 +40,7 @@ def write_tls_asset(hass: core.HomeAssistant, filename: str, asset: bytes) -> No
         file_handle.write(asset.decode("utf-8"))
 
 
-def create_credentials_and_validate(hass, host, user_input, zeroconf):
+def create_credentials_and_validate(hass, host, user_input, zeroconf_instance):
     """Create and store credentials and validate session."""
     helper = SHCRegisterClient(host, user_input[CONF_PASSWORD])
     result = helper.register(host, "HomeAssistant")
@@ -54,21 +54,21 @@ def create_credentials_and_validate(hass, host, user_input, zeroconf):
             hass.config.path(DOMAIN, CONF_SHC_CERT),
             hass.config.path(DOMAIN, CONF_SHC_KEY),
             True,
-            zeroconf,
+            zeroconf_instance,
         )
         session.authenticate()
 
     return result
 
 
-def get_info_from_host(hass, host, zeroconf):
+def get_info_from_host(hass, host, zeroconf_instance):
     """Get information from host."""
     session = SHCSession(
         host,
         "",
         "",
         True,
-        zeroconf,
+        zeroconf_instance,
     )
     information = session.mdns_info()
     return {"title": information.name, "unique_id": information.unique_id}
