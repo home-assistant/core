@@ -78,7 +78,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     sources = _get_sources(config_entry)
 
-    # Build the entities that control each of the zone. Currently only 1-6
+    # Build the entities that control each of the zone.
     entities = []
     for i in range(1, 4):
         for j in range(1, 7):

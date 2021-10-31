@@ -526,3 +526,16 @@ async def test_not_first_run_cant_connect(hass):
 
     with patch.object(MockWs66i, "open", side_effect=ConnectionError):
         await _setup_ws66i_not_first_run(hass, ws66i)
+
+
+async def test_unload_config_entry(hass):
+    """Test unloading config entry."""
+    with patch(
+        "homeassistant.components.ws66i.get_ws66i",
+        new=lambda *a: MockWs66i(),
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        await config_entry.async_unload(hass)

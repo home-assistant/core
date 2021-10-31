@@ -58,7 +58,7 @@ async def test_form(hass):
 
 
 async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
+    """Test cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -75,7 +75,7 @@ async def test_form_cannot_connect(hass):
 
 
 async def test_generic_exception(hass):
-    """Test we handle cannot generic exception."""
+    """Test generic exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
