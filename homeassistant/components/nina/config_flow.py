@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from .const import _LOGGER, CONF_FILTER_CORONA, CONF_MESSAGE_SLOTS, CONF_REGIONS, DOMAIN
@@ -52,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if value not in allRegionCodesSwaped:
                         allRegionCodesSwaped[value] = key
                     else:
-                        for i in range(100):
+                        for i in range(len(allRegionCodes)):
                             tmpValue: str = value + "_" + str(i)
                             if tmpValue not in allRegionCodesSwaped:
                                 allRegionCodesSwaped[tmpValue] = key
@@ -108,7 +107,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""

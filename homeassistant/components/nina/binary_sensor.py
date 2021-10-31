@@ -3,7 +3,10 @@ from typing import Any, Dict, List
 
 from pynina import ApiError, Nina, Warning
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SAFETY,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
@@ -164,4 +167,4 @@ class Message(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_class(self) -> str:
         """Return the device class of this entity."""
-        return "safety"
+        return DEVICE_CLASS_SAFETY
