@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from greeneye import Monitors
 import voluptuous as vol
@@ -18,7 +17,7 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
@@ -130,7 +129,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     server_config = config[DOMAIN]
     server = await monitors.start_server(server_config[CONF_PORT])
 
-    async def close_server(*args: list[Any]) -> None:
+    async def close_server(event: Event) -> None:
         """Close the monitoring server."""
         await server.close()
 
