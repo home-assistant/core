@@ -134,7 +134,7 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
                 device,
                 config_entry,
                 f"{sensor}_{config_entry.unique_id}",
-                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                coordinator,
                 description,
             )
         )
