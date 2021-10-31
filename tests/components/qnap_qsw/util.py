@@ -3,6 +3,7 @@
 import requests_mock
 
 from homeassistant.components.qnap_qsw import DOMAIN
+from homeassistant.components.qnap_qsw.const import SENSOR_TYPES
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -68,9 +69,11 @@ def qnap_qsw_requests_mock(mock):
 
 async def async_init_integration(
     hass: HomeAssistant,
-    skip_setup: bool = False,
 ):
     """Set up the QNAP QSW integration in Home Assistant."""
+
+    for description in SENSOR_TYPES:
+        description.entity_registry_enabled_default = True
 
     with requests_mock.mock() as _m:
         qnap_qsw_requests_mock(_m)
@@ -78,6 +81,5 @@ async def async_init_integration(
         entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
         entry.add_to_hass(hass)
 
-        if not skip_setup:
-            await hass.config_entries.async_setup(entry.entry_id)
-            await hass.async_block_till_done()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()

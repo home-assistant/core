@@ -1,7 +1,16 @@
 """Support for the QNAP QSW service."""
 from __future__ import annotations
 
-from qnap_qsw.const import DATA_CONFIG_URL, DATA_FIRMWARE, DATA_PRODUCT, DATA_SERIAL
+from qnap_qsw.const import (
+    DATA_CONDITION_ANOMALY,
+    DATA_CONDITION_MESSAGE,
+    DATA_CONFIG_URL,
+    DATA_FIRMWARE,
+    DATA_PRODUCT,
+    DATA_SERIAL,
+    DATA_UPDATE,
+    DATA_UPDATE_VERSION,
+)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -60,6 +69,21 @@ class QnapQswBinarySensor(CoordinatorEntity, BinarySensorEntity):
             f"{coordinator.data[DATA_SERIAL].lower()}_{description.key}"
         )
         self.entity_description = description
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        _state_attr = None
+        if self.entity_description.key == DATA_CONDITION_ANOMALY:
+            _state_attr = {
+                "condition_message": self.coordinator.data[DATA_CONDITION_MESSAGE],
+            }
+        elif self.entity_description.key == DATA_UPDATE:
+            _state_attr = {
+                "current_version": self.coordinator.data[DATA_FIRMWARE],
+                "newest_version": self.coordinator.data[DATA_UPDATE_VERSION],
+            }
+        return _state_attr
 
     @property
     def is_on(self):

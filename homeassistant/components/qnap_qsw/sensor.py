@@ -2,15 +2,12 @@
 from __future__ import annotations
 
 from qnap_qsw.const import (
-    DATA_CONDITION_ANOMALY,
-    DATA_CONDITION_MESSAGE,
     DATA_CONFIG_URL,
     DATA_FIRMWARE,
     DATA_PRODUCT,
     DATA_SERIAL,
-    DATA_UPDATE,
-    DATA_UPDATE_VERSION,
     DATA_UPTIME,
+    DATA_UPTIME_SECONDS,
 )
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -67,13 +64,14 @@ class QnapQswSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        if self.entity_description.key == DATA_CONDITION_MESSAGE:
-            return self.coordinator.data[DATA_CONDITION_ANOMALY]
-        if self.entity_description.key == DATA_UPDATE_VERSION:
-            return self.coordinator.data[DATA_UPDATE]
-        return self._attr_available
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        _state_attr = None
+        if self.entity_description.key == DATA_UPTIME:
+            _state_attr = {
+                "uptime_seconds": self.coordinator.data[DATA_UPTIME_SECONDS],
+            }
+        return _state_attr
 
     @property
     def native_value(self):
