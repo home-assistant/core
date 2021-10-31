@@ -11,11 +11,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.dt import utcnow
 
 from .const import ASYNC_TIMEOUT, DOMAIN, SERVICE_REBOOT
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
+FIRMWARE_SCAN_INTERVAL = timedelta(hours=1)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,6 +65,7 @@ class QnapQswDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, qsha: QSHA) -> None:
         """Initialize."""
         self.qsha = qsha
+        self.update_checked = None
 
         super().__init__(
             hass,
@@ -79,8 +82,17 @@ class QnapQswDataUpdateCoordinator(DataUpdateCoordinator):
             self.hass.async_add_executor_job(self.qsha.update_system_board),
             self.hass.async_add_executor_job(self.qsha.update_system_sensor),
             self.hass.async_add_executor_job(self.qsha.update_system_time),
-            self.hass.async_add_executor_job(self.qsha.update_firmware_update_check),
         ]
+
+        now = utcnow().replace(microsecond=0)
+        if (
+            not self.update_checked
+            or (now - self.update_checked) >= FIRMWARE_SCAN_INTERVAL
+        ):
+            self.update_checked = now
+            tasks.append(
+                self.hass.async_add_executor_job(self.qsha.update_firmware_update_check)
+            )
 
         return tasks
 
