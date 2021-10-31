@@ -332,6 +332,9 @@ debugpy==1.5.0
 # homeassistant.components.ohmconnect
 defusedxml==0.7.1
 
+# homeassistant.components.deluge
+deluge-client==1.7.1
+
 # homeassistant.components.denonavr
 denonavr==0.10.9
 
@@ -1107,6 +1110,9 @@ pysqueezebox==0.5.5
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
+
+# homeassistant.components.tautulli
+pytautulli==21.10.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.11
