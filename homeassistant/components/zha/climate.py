@@ -405,8 +405,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
             # occupancy attribute is an unreportable attribute, but if we get
             # an attribute update for an "occupied" setpoint, there's a chance
             # occupancy has changed
-            occupancy = await self._thrm.get_occupancy()
-            if occupancy is True:
+            if await self._thrm.get_occupancy() is True:
                 self._preset = PRESET_NONE
 
         self.debug("Attribute '%s' = %s update", record.attr_name, record.value)
