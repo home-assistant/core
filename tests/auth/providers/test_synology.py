@@ -63,7 +63,7 @@ async def test_match_existing_credentials(store, provider):
     assert credentials is existing
 
 
-async def test_login_flow(manager, provider):
+async def test_login_flow(provider):
     """Test the login flow UI."""
 
     flow = await provider.async_login_flow(None)
