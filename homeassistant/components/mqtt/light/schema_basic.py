@@ -29,6 +29,7 @@ from homeassistant.components.light import (
     COLOR_MODE_UNKNOWN,
     COLOR_MODE_WHITE,
     COLOR_MODE_XY,
+    ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
@@ -239,6 +240,7 @@ async def async_setup_entity_basic(
 class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT light."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):

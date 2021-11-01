@@ -278,6 +278,48 @@ async def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
             "Hello World 12",
             "switch",
         ),
+        (
+            "homeassistant/light/object/bla/config",
+            '{ "name": "Hello World 12", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
+            "light.hello_id",
+            "Hello World 12",
+            "light",
+        ),
+        (
+            "homeassistant/light/object/bla/config",
+            '{ "name": "Hello World 13", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
+            "light.hello_id",
+            "Hello World 13",
+            "light",
+        ),
+        (
+            "homeassistant/light/object/bla/config",
+            '{ "name": "Hello World 14", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic", "schema": "json" }',
+            "light.hello_id",
+            "Hello World 14",
+            "light",
+        ),
+        (
+            "homeassistant/light/object/bla/config",
+            '{ "name": "Hello World 15", "obj_id": "hello_id", "state_topic": "test-topic", "command_off_template": "template", "command_on_template": "template", "command_topic": "test-topic", "schema": "template" }',
+            "light.hello_id",
+            "Hello World 15",
+            "light",
+        ),
+        (
+            "homeassistant/vacuum/object/bla/config",
+            '{ "name": "Hello World 16", "obj_id": "hello_id", "state_topic": "test-topic", "schema": "state" }',
+            "vacuum.hello_id",
+            "Hello World 16",
+            "vacuum",
+        ),
+        (
+            "homeassistant/vacuum/object/bla/config",
+            '{ "name": "Hello World 16", "obj_id": "hello_id", "state_topic": "test-topic", "schema": "legacy" }',
+            "vacuum.hello_id",
+            "Hello World 16",
+            "vacuum",
+        ),
     ],
 )
 async def test_discovery_with_object_id(
