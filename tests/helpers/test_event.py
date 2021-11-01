@@ -3531,7 +3531,7 @@ async def test_periodic_task_leaving_dst(hass):
 
     # The task should fire again the next day
     async_fire_time_changed(
-        hass, datetime(yy, mm, dd+1, 2, 55, 0, 999999, tzinfo=timezone, fold=1)
+        hass, datetime(yy, mm, dd + 1, 2, 55, 0, 999999, tzinfo=timezone, fold=1)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
