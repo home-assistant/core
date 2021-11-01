@@ -94,9 +94,6 @@ class CommandSwitch(SwitchEntity):
         timeout,
     ):
         """Initialize the switch."""
-        super().__init__(
-            icon_template=icon_template,
-        )
         self._hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = friendly_name
@@ -104,6 +101,7 @@ class CommandSwitch(SwitchEntity):
         self._command_on = command_on
         self._command_off = command_off
         self._command_state = command_state
+        self._icon_template = icon_template
         self._value_template = value_template
         self._timeout = timeout
 
