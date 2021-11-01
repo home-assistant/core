@@ -201,7 +201,7 @@ async def test_import_night(hass):
     with patch(
         "aurorapy.client.AuroraSerialClient.connect",
         side_effect=AuroraError("No response after"),
-    ) as mock_setup_entry:  # , pytest.raises(ConfigEntryNotReady):
+    ) as mock_connect:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TEST_DATA
         )
@@ -212,7 +212,7 @@ async def test_import_night(hass):
     assert not entry.unique_id
     assert entry.state == ConfigEntryState.SETUP_RETRY
 
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_connect.mock_calls) == 1
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_PORT] == "/dev/ttyUSB7"
     assert result["data"][CONF_ADDRESS] == 3
