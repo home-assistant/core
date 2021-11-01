@@ -42,6 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except AuroraError as error:
             if "No response after" in str(error):
                 raise ConfigEntryNotReady("No response (could be dark)") from error
+            else:
+                raise error
         else:
             # If we got here, the device is now communicating (maybe after
             # being in darkness). But there's a small risk that the user has
