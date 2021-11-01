@@ -3,9 +3,17 @@ from http import HTTPStatus
 import json
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.config import DATA_CUSTOMIZE
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass):
+    """Set up homeassistant integration."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 async def test_get_entity(hass, hass_client):
