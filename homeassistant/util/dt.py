@@ -316,7 +316,7 @@ def find_next_time_expression_time(
         # clocks are rolled back. In this case, we want to trigger
         # on both the DST and non-DST time. So when "now" is in the DST
         # use the DST-on time, and if not, use the DST-off time.
-        fold = 1 if now.dst() else 0
+        fold = 0 if now.dst() else 1
         if result.fold != fold:
             result = result.replace(fold=fold)
 
@@ -337,12 +337,21 @@ def find_next_time_expression_time(
     # For example: if triggering on 2:30 and now is 28.10.2018 2:30 (in DST)
     # we should trigger next on 28.10.2018 2:30 (out of DST), but our
     # algorithm above would produce 29.10.2018 2:30 (out of DST)
+
+    # Step 1: Check if now is ambiguous
     if _datetime_ambiguous(now):
         check_result = find_next_time_expression_time(
             now + _dst_offset_diff(now), seconds, minutes, hours
         )
+
+        # Step 2: Check if result of (now - DST) is ambiguous.
         if _datetime_ambiguous(check_result):
-            return check_result
+            # Override the DST to DST-off
+            check_result = check_result.replace(fold=1)
+
+            # Step 3: Check if check_result is in the future and earlier than result
+            if as_utc(check_result) > as_utc(now) and check_result < result:
+                return check_result
 
     return result
 

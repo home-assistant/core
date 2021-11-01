@@ -3448,10 +3448,12 @@ async def test_periodic_task_leaving_dst(hass):
     dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
-    now = dt_util.utcnow()
+    yy = 2022
+    mm = 10
+    dd = 30
 
     time_that_will_not_match_right_away = datetime(
-        now.year + 1, 10, 28, 2, 28, 0, tzinfo=timezone, fold=1
+        yy, mm, dd, 2, 28, 0, tzinfo=timezone, fold=0
     )
 
     with patch(
@@ -3466,33 +3468,110 @@ async def test_periodic_task_leaving_dst(hass):
         )
 
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 10, 28, 2, 5, 0, 999999, tzinfo=timezone, fold=0)
+        hass, datetime(yy, mm, dd, 2, 28, 0, 999999, tzinfo=timezone, fold=0)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=0)
+        hass, datetime(yy, mm, dd, 2, 30, 0, 0, tzinfo=timezone, fold=0)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=0)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     async_fire_time_changed(
         hass,
-        datetime(now.year + 2, 10, 28, 2, 45, 0, 999999, tzinfo=timezone, fold=1),
+        datetime(yy, mm, dd, 2, 15, 0, 999999, tzinfo=timezone, fold=1),
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    async_fire_time_changed(
+        hass,
+        datetime(yy, mm, dd, 2, 45, 0, 999999, tzinfo=timezone, fold=1),
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     async_fire_time_changed(
         hass,
-        datetime(now.year + 2, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=1),
+        datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=1),
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     async_fire_time_changed(
-        hass, datetime(now.year + 2, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=1)
+        hass, datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=1)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    unsub()
+
+
+async def test_periodic_task_leaving_dst_2(hass):
+    """Test periodic task behavior when leaving dst."""
+    timezone = dt_util.get_time_zone("Europe/Vienna")
+    dt_util.set_default_time_zone(timezone)
+    specific_runs = []
+
+    yy = 2022
+    mm = 10
+    dd = 30
+
+    time_that_will_not_match_right_away = datetime(
+        yy, mm, dd, 2, 28, 0, tzinfo=timezone, fold=0
+    )
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_time_change(
+            hass,
+            callback(lambda x: specific_runs.append(x)),
+            minute=30,
+            second=0,
+        )
+
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 2, 28, 0, 999999, tzinfo=timezone, fold=0)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=0)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 2, 15, 0, 999999, tzinfo=timezone, fold=1)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 2, 45, 0, 999999, tzinfo=timezone, fold=1)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    async_fire_time_changed(
+        hass,
+        datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=1),
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=1)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
