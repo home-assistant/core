@@ -224,55 +224,169 @@ def test_find_next_time_expression_time_dst():
     tz = dt_util.get_time_zone("Europe/Vienna")
     dt_util.set_default_time_zone(tz)
 
-    def find(dt, hour, minute, second):
+    def find(dt, hour, minute, second) -> datetime:
         """Call test_find_next_time_expression_time."""
         seconds = dt_util.parse_time_expression(second, 0, 59)
         minutes = dt_util.parse_time_expression(minute, 0, 59)
         hours = dt_util.parse_time_expression(hour, 0, 23)
 
-        return dt_util.find_next_time_expression_time(dt, seconds, minutes, hours)
+        local = dt_util.find_next_time_expression_time(dt, seconds, minutes, hours)
+        return dt_util.as_utc(local)
 
     # Entering DST, clocks are rolled forward
-    assert datetime(2018, 3, 26, 2, 30, 0, tzinfo=tz) == find(
+    assert dt_util.as_utc(datetime(2018, 3, 26, 2, 30, 0, tzinfo=tz)) == find(
         datetime(2018, 3, 25, 1, 50, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2018, 3, 26, 2, 30, 0, tzinfo=tz) == find(
+    assert dt_util.as_utc(datetime(2018, 3, 26, 2, 30, 0, tzinfo=tz)) == find(
         datetime(2018, 3, 25, 3, 50, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2018, 3, 26, 2, 30, 0, tzinfo=tz) == find(
+    assert dt_util.as_utc(datetime(2018, 3, 26, 2, 30, 0, tzinfo=tz)) == find(
         datetime(2018, 3, 26, 1, 50, 0, tzinfo=tz), 2, 30, 0
     )
 
     # Leaving DST, clocks are rolled back
-    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=0) == find(
+    assert dt_util.as_utc(datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=0)) == find(
         datetime(2018, 10, 28, 2, 5, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
 
-    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=0) == find(
+    assert dt_util.as_utc(datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=0)) == find(
         datetime(2018, 10, 28, 2, 5, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1) == find(
+    assert dt_util.as_utc(datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1)) == find(
         datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1) == find(
+    assert dt_util.as_utc(datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1)) == find(
         datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
 
-    assert datetime(2018, 10, 28, 4, 30, 0, tzinfo=tz, fold=0) == find(
+    assert dt_util.as_utc(datetime(2018, 10, 28, 4, 30, 0, tzinfo=tz, fold=0)) == find(
         datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, fold=1), 4, 30, 0
     )
 
-    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1) == find(
+    assert dt_util.as_utc(datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1)) == find(
         datetime(2018, 10, 28, 2, 5, 0, tzinfo=tz, fold=1), 2, 30, 0
     )
 
-    assert datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1) == find(
+    assert dt_util.as_utc(datetime(2018, 10, 28, 2, 30, 0, tzinfo=tz, fold=1)) == find(
         datetime(2018, 10, 28, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
+
+
+# DST begins on 2021.03.28 2:00, clocks were turned forward 1h; 2:00-3:00 time does not exist
+@pytest.mark.parametrize(
+    "now_dt, expected_dt",
+    [
+        # 00:00 -> 2:30
+        (
+            datetime(2021, 3, 28, 0, 0, 0),
+            datetime(2021, 3, 29, 2, 30, 0),
+        ),
+    ],
+)
+def test_find_next_time_expression_entering_dst(now_dt, expected_dt):
+    """Test entering daylight saving time for find_next_time_expression_time."""
+    tz = dt_util.get_time_zone("Europe/Vienna")
+    dt_util.set_default_time_zone(tz)
+    # match on 02:30:00 every day
+    pattern_seconds = dt_util.parse_time_expression(0, 0, 59)
+    pattern_minutes = dt_util.parse_time_expression(30, 0, 59)
+    pattern_hours = dt_util.parse_time_expression(2, 0, 59)
+
+    now_dt = now_dt.replace(tzinfo=tz)
+    expected_dt = expected_dt.replace(tzinfo=tz)
+
+    res_dt = dt_util.find_next_time_expression_time(
+        now_dt, pattern_seconds, pattern_minutes, pattern_hours
+    )
+    assert dt_util.as_utc(res_dt) == dt_util.as_utc(expected_dt)
+
+
+# DST ends on 2021.10.31 2:00, clocks were turned backward 1h; 2:00-3:00 time is ambiguous
+@pytest.mark.parametrize(
+    "now_dt, expected_dt",
+    [
+        # 00:00 -> 2:30
+        (
+            datetime(2021, 10, 31, 0, 0, 0),
+            datetime(2021, 10, 31, 2, 30, 0, fold=0),
+        ),
+        # 02:00(0) -> 2:30(0)
+        (
+            datetime(2021, 10, 31, 2, 0, 0, fold=0),
+            datetime(2021, 10, 31, 2, 30, 0, fold=0),
+        ),
+        # 02:15(0) -> 2:30(0)
+        (
+            datetime(2021, 10, 31, 2, 15, 0, fold=0),
+            datetime(2021, 10, 31, 2, 30, 0, fold=0),
+        ),
+        # 02:30:00(0) -> 2:30(1)
+        (
+            datetime(2021, 10, 31, 2, 30, 0, fold=0),
+            datetime(2021, 10, 31, 2, 30, 0, fold=0),
+        ),
+        # 02:30:01(0) -> 2:30(1)
+        (
+            datetime(2021, 10, 31, 2, 30, 1, fold=0),
+            datetime(2021, 10, 31, 2, 30, 0, fold=1),
+        ),
+        # 02:45(0) -> 2:30(1)
+        (
+            datetime(2021, 10, 31, 2, 45, 0, fold=0),
+            datetime(2021, 10, 31, 2, 30, 0, fold=1),
+        ),
+        # 02:00(1) -> 2:30(1)
+        (
+            datetime(2021, 10, 31, 2, 0, 0, fold=1),
+            datetime(2021, 10, 31, 2, 30, 0, fold=1),
+        ),
+        # 02:15(1) -> 2:30(1)
+        (
+            datetime(2021, 10, 31, 2, 15, 0, fold=1),
+            datetime(2021, 10, 31, 2, 30, 0, fold=1),
+        ),
+        # 02:30:00(1) -> 2:30(1)
+        (
+            datetime(2021, 10, 31, 2, 30, 0, fold=1),
+            datetime(2021, 10, 31, 2, 30, 0, fold=1),
+        ),
+        # 02:30:01(1) -> 2:30 next day
+        (
+            datetime(2021, 10, 31, 2, 30, 1, fold=1),
+            datetime(2021, 11, 1, 2, 30, 0),
+        ),
+        # 02:45(1) -> 2:30 next day
+        (
+            datetime(2021, 10, 31, 2, 45, 0, fold=1),
+            datetime(2021, 11, 1, 2, 30, 0),
+        ),
+        # 08:00(1) -> 2:30 next day
+        (
+            datetime(2021, 10, 31, 8, 0, 1),
+            datetime(2021, 11, 1, 2, 30, 0),
+        ),
+    ],
+)
+def test_find_next_time_expression_exiting_dst(now_dt, expected_dt):
+    """Test exiting daylight saving time for find_next_time_expression_time."""
+    tz = dt_util.get_time_zone("Europe/Vienna")
+    dt_util.set_default_time_zone(tz)
+    # match on 02:30:00 every day
+    pattern_seconds = dt_util.parse_time_expression(0, 0, 59)
+    pattern_minutes = dt_util.parse_time_expression(30, 0, 59)
+    pattern_hours = dt_util.parse_time_expression(2, 0, 59)
+
+    now_dt = now_dt.replace(tzinfo=tz)
+    expected_dt = expected_dt.replace(tzinfo=tz)
+
+    res_dt = dt_util.find_next_time_expression_time(
+        now_dt, pattern_seconds, pattern_minutes, pattern_hours
+    )
+    assert dt_util.as_utc(res_dt) == dt_util.as_utc(expected_dt)
 
 
 def test_find_next_time_expression_time_dst_chicago():
@@ -280,64 +394,65 @@ def test_find_next_time_expression_time_dst_chicago():
     tz = dt_util.get_time_zone("America/Chicago")
     dt_util.set_default_time_zone(tz)
 
-    def find(dt, hour, minute, second):
+    def find(dt, hour, minute, second) -> datetime:
         """Call test_find_next_time_expression_time."""
         seconds = dt_util.parse_time_expression(second, 0, 59)
         minutes = dt_util.parse_time_expression(minute, 0, 59)
         hours = dt_util.parse_time_expression(hour, 0, 23)
 
-        return dt_util.find_next_time_expression_time(dt, seconds, minutes, hours)
+        local = dt_util.find_next_time_expression_time(dt, seconds, minutes, hours)
+        return dt_util.as_utc(local)
 
     # Entering DST, clocks are rolled forward
-    assert datetime(2021, 3, 15, 2, 30, 0, tzinfo=tz) == find(
+    assert dt_util.as_utc(datetime(2021, 3, 15, 2, 30, 0, tzinfo=tz)) == find(
         datetime(2021, 3, 14, 1, 50, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2021, 3, 15, 2, 30, 0, tzinfo=tz) == find(
+    assert dt_util.as_utc(datetime(2021, 3, 15, 2, 30, 0, tzinfo=tz)) == find(
         datetime(2021, 3, 14, 3, 50, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2021, 3, 15, 2, 30, 0, tzinfo=tz) == find(
+    assert dt_util.as_utc(datetime(2021, 3, 15, 2, 30, 0, tzinfo=tz)) == find(
         datetime(2021, 3, 14, 1, 50, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2021, 3, 14, 3, 30, 0, tzinfo=tz) == find(
+    assert dt_util.as_utc(datetime(2021, 3, 14, 3, 30, 0, tzinfo=tz)) == find(
         datetime(2021, 3, 14, 1, 50, 0, tzinfo=tz), 3, 30, 0
     )
 
     # Leaving DST, clocks are rolled back
-    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=0) == find(
+    assert dt_util.as_utc(datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=0)) == find(
         datetime(2021, 11, 7, 2, 5, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
 
-    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz) == find(
+    assert dt_util.as_utc(datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz)) == find(
         datetime(2021, 11, 7, 2, 5, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=0) == find(
+    assert dt_util.as_utc(datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=0)) == find(
         datetime(2021, 11, 7, 2, 5, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=1) == find(
+    assert dt_util.as_utc(datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=1)) == find(
         datetime(2021, 11, 7, 2, 10, 0, tzinfo=tz), 2, 30, 0
     )
 
-    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=1) == find(
+    assert dt_util.as_utc(datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=1)) == find(
         datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
 
-    assert datetime(2021, 11, 8, 2, 30, 0, tzinfo=tz, fold=1) == find(
+    assert dt_util.as_utc(datetime(2021, 11, 8, 2, 30, 0, tzinfo=tz, fold=1)) == find(
         datetime(2021, 11, 7, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
 
-    assert datetime(2021, 11, 7, 4, 30, 0, tzinfo=tz, fold=0) == find(
+    assert dt_util.as_utc(datetime(2021, 11, 7, 4, 30, 0, tzinfo=tz, fold=0)) == find(
         datetime(2021, 11, 7, 2, 55, 0, tzinfo=tz, fold=1), 4, 30, 0
     )
 
-    assert datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=1) == find(
+    assert dt_util.as_utc(datetime(2021, 11, 7, 2, 30, 0, tzinfo=tz, fold=1)) == find(
         datetime(2021, 11, 7, 2, 5, 0, tzinfo=tz, fold=1), 2, 30, 0
     )
 
-    assert datetime(2021, 11, 8, 2, 30, 0, tzinfo=tz) == find(
+    assert dt_util.as_utc(datetime(2021, 11, 8, 2, 30, 0, tzinfo=tz)) == find(
         datetime(2021, 11, 7, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
