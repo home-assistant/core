@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 from functools import partial
-from typing import Any, Dict, cast
+from typing import Any
 
 from pyflunearyou import Client
 from pyflunearyou.errors import FluNearYouError
@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except FluNearYouError as err:
             raise UpdateFailed(err) from err
 
-        return cast(Dict[str, Any], data)
+        return data
 
     coordinators = {}
     data_init_tasks = []
