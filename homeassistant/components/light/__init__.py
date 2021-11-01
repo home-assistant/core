@@ -352,7 +352,7 @@ async def async_setup(hass, config):  # noqa: C901
             brightness = light.brightness if light.is_on else 0
 
             if ATTR_BRIGHTNESS_STEP in params:
-                brightness += params.pop(ATTR_BRIGHTNESS_STEP)
+                brightness += params[ATTR_BRIGHTNESS_STEP]
 
             else:
                 brightness += round(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)

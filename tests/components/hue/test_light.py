@@ -583,6 +583,7 @@ async def test_light_turn_on_service(hass, mock_bridge):
     updated_light_response["2"] = LIGHT_2_ON
 
     mock_bridge.mock_light_responses.append(updated_light_response)
+    mock_bridge.mock_light_responses.append(updated_light_response)
 
     await hass.services.async_call(
         "light",
@@ -619,6 +620,22 @@ async def test_light_turn_on_service(hass, mock_bridge):
     assert mock_bridge.mock_requests[4]["json"] == {
         "on": True,
         "xy": (0.138, 0.08),
+        "alert": "none",
+    }
+
+    # test bri_inc
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.hue_lamp_2", "brightness_step": 20},
+        blocking=True,
+    )
+
+    assert len(mock_bridge.mock_requests) == 8
+
+    assert mock_bridge.mock_requests[4]["json"] == {
+        "on": True,
+        "bri_inc": 20,
         "alert": "none",
     }
 

@@ -11,6 +11,7 @@ import async_timeout
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_STEP,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_FLASH,
@@ -491,7 +492,9 @@ class HueLight(CoordinatorEntity, LightEntity):
             temp = kwargs[ATTR_COLOR_TEMP]
             command["ct"] = max(self.min_mireds, min(temp, self.max_mireds))
 
-        if ATTR_BRIGHTNESS in kwargs:
+        if ATTR_BRIGHTNESS_STEP in kwargs:
+            command["bri_inc"] = kwargs[ATTR_BRIGHTNESS_STEP]
+        elif ATTR_BRIGHTNESS in kwargs:
             command["bri"] = hass_to_hue_brightness(kwargs[ATTR_BRIGHTNESS])
 
         flash = kwargs.get(ATTR_FLASH)
