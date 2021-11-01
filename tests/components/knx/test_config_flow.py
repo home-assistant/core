@@ -7,10 +7,7 @@ from xknx.io.gateway_scanner import GatewayDescriptor
 
 from homeassistant import config_entries
 from homeassistant.components.knx import ConnectionSchema
-from homeassistant.components.knx.config_flow import (
-    CONF_KNX_GATEWAY,
-    gateway_descriptor_to_string,
-)
+from homeassistant.components.knx.config_flow import CONF_KNX_GATEWAY
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
@@ -160,7 +157,7 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
 
     manual_tunnel = await hass.config_entries.flow.async_configure(
         tunnel_flow["flow_id"],
-        {CONF_KNX_GATEWAY: gateway_descriptor_to_string(gateway)},
+        {CONF_KNX_GATEWAY: str(gateway)},
     )
     await hass.async_block_till_done()
     assert manual_tunnel["type"] == RESULT_TYPE_FORM

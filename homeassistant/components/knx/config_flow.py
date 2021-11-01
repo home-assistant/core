@@ -132,7 +132,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             gateway: GatewayDescriptor = next(
                 filter(
-                    lambda _gateway: gateway_descriptor_to_string(_gateway)
+                    lambda _gateway: str(_gateway)
                     == user_input[CONF_KNX_GATEWAY],  # type: ignore
                     self._tunnels,
                 )
@@ -146,12 +146,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
-        # GatewayScanner returns a gateway for each physical interface, we only need to show it once,
-        # thus set() is called.
         tunnel_repr = {
-            gateway_descriptor_to_string(tunnel)
-            for tunnel in self._tunnels
-            if tunnel.supports_tunnelling
+            str(tunnel) for tunnel in self._tunnels if tunnel.supports_tunnelling
         }
 
         #  skip this step if the user has only one unique gateway.
@@ -260,11 +256,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ],
             },
         )
-
-
-def gateway_descriptor_to_string(descriptor: GatewayDescriptor) -> str:
-    """Return the string representation of the gateway descriptor."""
-    return f"{descriptor.name} - {descriptor.ip_addr}:{descriptor.port}"
 
 
 async def scan_for_gateways() -> list:
