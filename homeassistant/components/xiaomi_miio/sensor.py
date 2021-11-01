@@ -664,7 +664,8 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         return {
             attr: value
             for attr in self.entity_description.attributes
-            if (value := self._extract_value_from_attribute(data, attr)) is not None
+            if hasattr(data, attr)
+            and (value := self._extract_value_from_attribute(data, attr)) is not None
         }
 
     @callback
