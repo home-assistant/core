@@ -315,9 +315,9 @@ async def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
         ),
         (
             "homeassistant/vacuum/object/bla/config",
-            '{ "name": "Hello World 16", "obj_id": "hello_id", "state_topic": "test-topic", "schema": "legacy" }',
+            '{ "name": "Hello World 17", "obj_id": "hello_id", "state_topic": "test-topic", "schema": "legacy" }',
             "vacuum.hello_id",
-            "Hello World 16",
+            "Hello World 17",
             "vacuum",
         ),
     ],
