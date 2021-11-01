@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_COMMAND_STATE,
+    CONF_ICON_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_SWITCHES,
     CONF_VALUE_TEMPLATE,
@@ -31,6 +32,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_STATE): cv.string,
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
@@ -49,6 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = []
 
     for object_id, device_config in devices.items():
+        icon_template = device_config.get(CONF_ICON_TEMPLATE)
         value_template = device_config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
@@ -62,6 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_config[CONF_COMMAND_ON],
                 device_config[CONF_COMMAND_OFF],
                 device_config.get(CONF_COMMAND_STATE),
+                icon_template,
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
             )
@@ -85,10 +89,14 @@ class CommandSwitch(SwitchEntity):
         command_on,
         command_off,
         command_state,
+        icon_template,
         value_template,
         timeout,
     ):
         """Initialize the switch."""
+        super().__init__(
+            icon_template=icon_template,
+        )
         self._hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = friendly_name
