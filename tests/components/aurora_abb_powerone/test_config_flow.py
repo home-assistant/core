@@ -180,9 +180,6 @@ async def test_import_day(hass):
     ), patch(
         "aurorapy.client.AuroraSerialClient.firmware",
         return_value="1.234",
-    ), patch(
-        "homeassistant.components.aurora_abb_powerone.async_setup_entry",
-        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TEST_DATA
@@ -236,8 +233,8 @@ async def test_import_night(hass):
         "aurorapy.client.AuroraSerialClient.measure",
         side_effect=_simulated_returns,
     ):
-        # Wait >5mins for the config to auto retry.
-        async_fire_time_changed(hass, utcnow() + timedelta(minutes=6))
+        # Wait >5seconds for the config to auto retry.
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=6))
         await hass.async_block_till_done()
         assert entry.state == ConfigEntryState.LOADED
         assert entry.unique_id
