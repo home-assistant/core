@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_config[CONF_COMMAND_ON],
                 device_config[CONF_COMMAND_OFF],
                 device_config.get(CONF_COMMAND_STATE),
-                icon_template,
+                device_config.get(CONF_ICON_TEMPLATE),
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
             )
