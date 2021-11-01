@@ -320,6 +320,13 @@ async def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
             "Hello World 17",
             "vacuum",
         ),
+        (
+            "homeassistant/lock/object/bla/config",
+            '{ "name": "Hello World 18", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
+            "lock.hello_id",
+            "Hello World 18",
+            "lock",
+        ),
     ],
 )
 async def test_discovery_with_object_id(
