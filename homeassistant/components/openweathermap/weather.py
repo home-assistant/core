@@ -51,7 +51,7 @@ class OpenWeatherMapWeather(WeatherEntity):
         name: str,
         unique_id: str,
         weather_coordinator: WeatherUpdateCoordinator,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self._name = name
         self._unique_id = unique_id

@@ -136,7 +136,7 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
         unique_id: str,
         description: SensorEntityDescription,
         weather_coordinator: WeatherUpdateCoordinator,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(name, unique_id, description, weather_coordinator)
         self._weather_coordinator = weather_coordinator
