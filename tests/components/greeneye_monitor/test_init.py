@@ -128,9 +128,6 @@ async def test_setup_creates_pulse_counter_entities(
     )
 
 
-@pytest.mark.xfail(
-    reason="Currently failing (not setting device class). Will fix in subsequent PR."
-)
 async def test_setup_creates_power_sensor_entities(
     hass: HomeAssistant, monitors: AsyncMock
 ) -> None:
@@ -143,9 +140,6 @@ async def test_setup_creates_power_sensor_entities(
     assert_power_sensor_registered(hass, SINGLE_MONITOR_SERIAL_NUMBER, 2, "channel two")
 
 
-@pytest.mark.xfail(
-    reason="Currently failing (not setting device class). Will fix in subsequent PR."
-)
 async def test_setup_creates_voltage_sensor_entities(
     hass: HomeAssistant, monitors: AsyncMock
 ) -> None:
