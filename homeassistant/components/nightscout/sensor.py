@@ -95,19 +95,17 @@ class NightscoutSensor(SensorEntity):
             self._attributes = {
                 ATTR_DEVICE: value.device,
                 ATTR_DATE: value.date,
-                ATTR_DELTA: self._get_bgl(value.delta),
+                ATTR_DELTA: value.delta,
                 ATTR_DIRECTION: value.direction,
             }
-            self._state = value.sgv
+            if self._unit_of_measurement == MMOL_L:
+                self._state = value.sgv_mmol
+            else:
+                self._state = value.sgv
             self._icon = self._parse_icon()
         else:
             self._available = False
             _LOGGER.warning("Empty reply found when expecting JSON data")
-
-    def _get_bgl(self, value) -> float:
-        if self._unit_of_measurement == MMOL_L:
-            return round((value / MMOL_CONVERSION_FACTOR), 1)
-        return value
 
     def _parse_icon(self) -> str:
         """Update the icon based on the direction attribute."""

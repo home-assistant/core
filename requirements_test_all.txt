@@ -774,7 +774,7 @@ py-canary==0.5.1
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nightscout
-py-nightscout==1.2.2
+py-nightscout==1.3.0
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==1.0.4
