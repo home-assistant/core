@@ -7,7 +7,6 @@ import logging
 from typing import final
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -79,12 +78,6 @@ class ButtonEntity(RestoreEntity):
         if self.__last_pressed is None:
             return None
         return self.__last_pressed.isoformat()
-
-    @property
-    @final
-    def device_class(self) -> str | None:
-        """Return the class of this device, which is always a timestamp ."""
-        return DEVICE_CLASS_TIMESTAMP
 
     @final
     async def _async_press_action(self) -> None:
