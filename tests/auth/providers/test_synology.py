@@ -68,7 +68,7 @@ async def test_match_existing_credentials(provider: SynologyAuthProvider):
     assert credentials is existing
 
 
-async def test_login_flow(provider: SynologyAuthProvider):
+async def test_login_flow_without_input(provider: SynologyAuthProvider):
     """Test the login flow UI."""
 
     flow = await provider.async_login_flow(None)
@@ -78,3 +78,38 @@ async def test_login_flow(provider: SynologyAuthProvider):
     assert len(step["errors"]) == 0
     schema_keys = list(step["data_schema"].schema)
     assert schema_keys == ["username", "password", "otp_code"]
+
+
+async def test_login_flow_empty_password(provider: SynologyAuthProvider):
+    """Test the login flow with an empty password."""
+
+    flow = await provider.async_login_flow(None)
+    step = await flow.async_step_init({"username": "test-user", "password": " "})
+    assert step["type"] == "form"
+    assert step["step_id"] == "init"
+    assert len(step["errors"]) == 1
+    assert step["errors"]["password"] == "empty_password"
+
+
+async def test_login_flow_empty_username(provider: SynologyAuthProvider):
+    """Test the login flow with an empty username."""
+
+    flow = await provider.async_login_flow(None)
+    step = await flow.async_step_init({"username": " ", "password": "password"})
+    assert step["type"] == "form"
+    assert step["step_id"] == "init"
+    assert len(step["errors"]) == 1
+    assert step["errors"]["username"] == "empty_username"
+
+
+async def test_login_flow_empty_otp(provider: SynologyAuthProvider):
+    """Test the login flow with an empty otp code."""
+
+    flow = await provider.async_login_flow(None)
+    step = await flow.async_step_init(
+        {"username": "test-user", "password": "password", "otp_code": " "}
+    )
+    assert step["type"] == "form"
+    assert step["step_id"] == "init"
+    assert len(step["errors"]) == 0
+    # OTP is optional, so no error should be raised
