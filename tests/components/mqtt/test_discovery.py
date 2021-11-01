@@ -327,6 +327,13 @@ async def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
             "Hello World 18",
             "lock",
         ),
+        (
+            "homeassistant/device_tracker/object/bla/config",
+            '{ "name": "Hello World 19", "obj_id": "hello_id", "state_topic": "test-topic" }',
+            "device_tracker.hello_id",
+            "Hello World 19",
+            "device_tracker",
+        ),
     ],
 )
 async def test_discovery_with_object_id(
