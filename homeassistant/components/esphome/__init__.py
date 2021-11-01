@@ -266,6 +266,7 @@ async def async_setup_entry(  # noqa: C901
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
+            cli.expected_name = entry_data.device_info.name or None
             device_id = await _async_setup_device_registry(
                 hass, entry, entry_data.device_info
             )
