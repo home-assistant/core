@@ -4,6 +4,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_WINDOW,
     BinarySensorEntity,
 )
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 
 from . import DATA_KEY
 
@@ -28,7 +29,7 @@ class MaxCubeBinarySensorBase(BinarySensorEntity):
         self._cubehandle = handler
         self._device = device
         self._room = handler.cube.room_by_id(device.room_id)
-        self._attr_entity_category = "diagnostic"
+        self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def update(self):
         """Get latest data from MAX! Cube."""
