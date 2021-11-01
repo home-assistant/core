@@ -61,9 +61,6 @@ def async_hydrate_station_data(data: dict[str, Any]) -> dict[str, Any]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Ambient PWS as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_APP_KEY]
@@ -76,10 +73,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Websocket(entry.data[CONF_APP_KEY], entry.data[CONF_API_KEY]),
         )
         hass.loop.create_task(ambient.ws_connect())
-        hass.data[DOMAIN][entry.entry_id] = ambient
     except WebsocketError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = ambient
 
     async def _async_disconnect_websocket(_: Event) -> None:
         await ambient.websocket.disconnect()
