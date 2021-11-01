@@ -24,6 +24,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class MaxCubeBinarySensorBase(BinarySensorEntity):
+    """Base class for maxcube binary sensors"""
+
     def __init__(self, handler, device):
         """Initialize MAX! Cube BinarySensorEntity."""
         self._cubehandle = handler
