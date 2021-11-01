@@ -11,7 +11,6 @@ from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -43,9 +42,6 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IQVIA as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
         hass.config_entries.async_update_entry(
@@ -94,7 +90,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # API calls fail:
         raise ConfigEntryNotReady()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinators
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -121,7 +119,7 @@ class IQVIAEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
         self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{description.key}"
         self._entry = entry
         self.entity_description = description
