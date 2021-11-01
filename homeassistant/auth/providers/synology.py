@@ -20,7 +20,6 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
         vol.Required("port"): int,
         vol.Required("secure", default=False): bool,
         vol.Optional("verify_cert", default=False): bool,
-        vol.Required("dsm_version"): int,
     }
 )
 
