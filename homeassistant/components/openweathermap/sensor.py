@@ -7,6 +7,7 @@ from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -66,11 +67,11 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
 
     def __init__(
         self,
-        name,
-        unique_id,
+        name: str,
+        unique_id: str,
         description: SensorEntityDescription,
         coordinator: DataUpdateCoordinator,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._coordinator = coordinator
@@ -86,22 +87,22 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         )
 
     @property
-    def attribution(self):
+    def attribution(self) -> str:
         """Return the attribution."""
         return ATTRIBUTION
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._coordinator.last_update_success
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from OWM and updates the states."""
         await self._coordinator.async_request_refresh()
 
@@ -111,17 +112,17 @@ class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
 
     def __init__(
         self,
-        name,
-        unique_id,
+        name: str,
+        unique_id: str,
         description: SensorEntityDescription,
         weather_coordinator: WeatherUpdateCoordinator,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(name, unique_id, description, weather_coordinator)
         self._weather_coordinator = weather_coordinator
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the device."""
         return self._weather_coordinator.data.get(self.entity_description.key, None)
 
@@ -131,8 +132,8 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
 
     def __init__(
         self,
-        name,
-        unique_id,
+        name: str,
+        unique_id: str,
         description: SensorEntityDescription,
         weather_coordinator: WeatherUpdateCoordinator,
     ):
@@ -141,7 +142,7 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
         self._weather_coordinator = weather_coordinator
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the device."""
         forecasts = self._weather_coordinator.data.get(ATTR_API_FORECAST)
         if forecasts is not None and len(forecasts) > 0:
