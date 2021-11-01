@@ -523,7 +523,7 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
                 batterylevel = self._home_status.valves[m_id].get("battery_state")
 
             if batterylevel:
-                return process_battery_percent(batterylevel)
+                return process_battery_percentage(batterylevel)
 
         except KeyError as err:
             _LOGGER.error("Update of room %s failed. Error: %s", self._id, err)
@@ -665,7 +665,7 @@ def process_angle(angle: int) -> str:
     return "N"
 
 
-def process_battery_percent(data: str) -> int:
+def process_battery_percentage(data: str) -> int:
     """Process battery data and return percent (int) for display."""
     mapping = {
         "max": 100,

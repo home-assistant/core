@@ -121,6 +121,22 @@ async def test_process_angle(angle, expected):
 
 
 @pytest.mark.parametrize(
+    "status, expected",
+    [
+        ("max", 100),
+        ("full", 90),
+        ("high", 75),
+        ("medium", 50),
+        ("low", 25),
+        ("very low", 10),
+    ],
+)
+async def test_process_battery_percentage(status, expected):
+    """Test battery percentage translation."""
+    assert sensor.process_battery_percentage(status) == expected
+
+
+@pytest.mark.parametrize(
     "angle, expected",
     [(-1, 359), (-40, 320)],
 )
