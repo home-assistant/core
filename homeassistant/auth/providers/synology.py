@@ -100,7 +100,7 @@ class SynologyAuthProvider(AuthProvider):
 
         login_response_json = await login_response.json()
         if not login_response_json["success"]:
-            _LOGGER.warn(
+            _LOGGER.warning(
                 "Authentication failed with Synology error code %s",
                 login_response_json["error"]["code"],
             )
@@ -116,7 +116,8 @@ class SynologyAuthProvider(AuthProvider):
                 f"Authentication failed with code {login_response_json['error']['code']}"
             )
         _LOGGER.info(
-            f"User {login_response_json['data']['account']} successfully authenticated to Synology DSM"
+            "User %s successfully authenticated to Synology DSM",
+            login_response_json["data"]["account"],
         )
         return {
             k: login_response_json["data"][k]
