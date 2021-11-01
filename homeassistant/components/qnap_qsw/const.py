@@ -8,6 +8,7 @@ from qnap_qsw.const import (
     DATA_FAN1_SPEED,
     DATA_FAN2_SPEED,
     DATA_FIRMWARE_UPDATE,
+    DATA_PORTS_ACTIVE,
     DATA_SYSTEM_MAC_ADDR,
     DATA_TEMPERATURE_CURRENT,
     DATA_UPTIME_DATETIME_ISOFORMAT,
@@ -69,6 +70,12 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         key=DATA_SYSTEM_MAC_ADDR,
         name="Mac address",
+    ),
+    SensorEntityDescription(
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        key=DATA_PORTS_ACTIVE,
+        name="Ports",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         device_class=DEVICE_CLASS_TEMPERATURE,

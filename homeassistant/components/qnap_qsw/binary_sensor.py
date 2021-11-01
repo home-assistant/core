@@ -6,6 +6,8 @@ from qnap_qsw.const import (
     DATA_CONDITION_MESSAGE,
     DATA_CONFIG_URL,
     DATA_FIRMWARE_CURRENT_VERSION,
+    DATA_FIRMWARE_DATETIME_ISOFORMAT,
+    DATA_FIRMWARE_DOWNLOAD_URL,
     DATA_FIRMWARE_LATEST_VERSION,
     DATA_FIRMWARE_UPDATE,
     DATA_SYSTEM_PRODUCT,
@@ -80,7 +82,11 @@ class QnapQswBinarySensor(CoordinatorEntity, BinarySensorEntity):
             }
         elif self.entity_description.key == DATA_FIRMWARE_UPDATE:
             _state_attr = {
+                "current_timestamp": self.coordinator.data[
+                    DATA_FIRMWARE_DATETIME_ISOFORMAT
+                ],
                 "current_version": self.coordinator.data[DATA_FIRMWARE_CURRENT_VERSION],
+                "download_url": self.coordinator.data[DATA_FIRMWARE_DOWNLOAD_URL],
                 "latest_version": self.coordinator.data[DATA_FIRMWARE_LATEST_VERSION],
             }
         return _state_attr

@@ -4,6 +4,8 @@ from __future__ import annotations
 from qnap_qsw.const import (
     DATA_CONFIG_URL,
     DATA_FIRMWARE_CURRENT_VERSION,
+    DATA_PORTS_ACTIVE,
+    DATA_PORTS_COUNT,
     DATA_SYSTEM_PRODUCT,
     DATA_SYSTEM_SERIAL,
     DATA_TEMPERATURE_CURRENT,
@@ -69,13 +71,17 @@ class QnapQswSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         _state_attr = None
-        if self.entity_description.key == DATA_UPTIME_DATETIME_ISOFORMAT:
+        if self.entity_description.key == DATA_PORTS_ACTIVE:
             _state_attr = {
-                "seconds": self.coordinator.data[DATA_UPTIME_SECONDS],
+                "total": self.coordinator.data[DATA_PORTS_COUNT],
             }
         elif self.entity_description.key == DATA_TEMPERATURE_CURRENT:
             _state_attr = {
                 "maximum": self.coordinator.data[DATA_TEMPERATURE_MAXIMUM],
+            }
+        elif self.entity_description.key == DATA_UPTIME_DATETIME_ISOFORMAT:
+            _state_attr = {
+                "seconds": self.coordinator.data[DATA_UPTIME_SECONDS],
             }
         return _state_attr
 

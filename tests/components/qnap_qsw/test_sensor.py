@@ -14,6 +14,10 @@ async def test_qnap_qsw_create_sensors(hass):
     state = hass.states.get("sensor.qsw_m408_4c_mac_address")
     assert state.state == "24:5E:BE:00:00:00"
 
+    state = hass.states.get("sensor.qsw_m408_4c_ports")
+    assert state.state == "2"
+    assert state.attributes["total"] == 12
+
     state = hass.states.get("sensor.qsw_m408_4c_temperature")
     assert state.state == "39"
     assert state.attributes["maximum"] == 85

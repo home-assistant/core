@@ -104,6 +104,9 @@ class QnapQswDataUpdateCoordinator(DataUpdateCoordinator):
                     tasks = self.qsha_update()
                     for task in tasks:
                         await task
+                    await self.hass.async_add_executor_job(
+                        self.qsha.update_ports_status
+                    )
             except (ConnectionError, LoginError) as error:
                 raise UpdateFailed(error) from error
 
