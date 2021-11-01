@@ -137,8 +137,7 @@ class NX584Watcher(threading.Thread):
         """Throw away any existing events so we don't replay history."""
         self._client.get_events()
         while True:
-            events = self._client.get_events()
-            if events:
+            if events := self._client.get_events():
                 self._process_events(events)
 
     def run(self):

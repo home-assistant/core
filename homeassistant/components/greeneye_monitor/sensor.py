@@ -1,7 +1,7 @@
 """Support for the sensors in a GreenEye Monitor."""
 from __future__ import annotations
 
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Optional, TypeVar, cast
 
 import greeneye
 from greeneye import Monitors
@@ -12,7 +12,9 @@ from homeassistant.const import (
     CONF_SENSOR_TYPE,
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
     POWER_WATT,
     TIME_HOURS,
@@ -43,9 +45,6 @@ DATA_WATT_SECONDS = "watt_seconds"
 UNIT_WATTS = POWER_WATT
 
 COUNTER_ICON = "mdi:counter"
-CURRENT_SENSOR_ICON = "mdi:flash"
-TEMPERATURE_ICON = "mdi:thermometer"
-VOLTAGE_ICON = "mdi:current-ac"
 
 
 async def async_setup_platform(
@@ -118,20 +117,13 @@ class GEMSensor(Generic[T], SensorEntity):
     ) -> None:
         """Construct the entity."""
         self._monitor_serial_number = monitor_serial_number
-        self._name = name
+        self._attr_name = name
         self._sensor: T | None = None
         self._sensor_type = sensor_type
         self._number = number
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this sensor."""
-        return f"{self._monitor_serial_number}-{self._sensor_type}-{self._number}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the channel."""
-        return self._name
+        self._attr_unique_id = (
+            f"{self._monitor_serial_number}-{self._sensor_type}-{self._number}"
+        )
 
     async def async_added_to_hass(self) -> None:
         """Wait for and connect to the sensor."""
@@ -140,7 +132,7 @@ class GEMSensor(Generic[T], SensorEntity):
         if not self._try_connect_to_monitor(monitors):
             monitors.add_listener(self._on_new_monitor)
 
-    def _on_new_monitor(self, *args: list[Any]) -> None:
+    def _on_new_monitor(self, monitor: greeneye.monitor.Monitor) -> None:
         monitors = self.hass.data[DATA_GREENEYE_MONITOR]
         if self._try_connect_to_monitor(monitors):
             monitors.remove_listener(self._on_new_monitor)
@@ -171,8 +163,8 @@ class GEMSensor(Generic[T], SensorEntity):
 class CurrentSensor(GEMSensor[greeneye.monitor.Channel]):
     """Entity showing power usage on one channel of the monitor."""
 
-    _attr_icon = CURRENT_SENSOR_ICON
     _attr_native_unit_of_measurement = UNIT_WATTS
+    _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(
         self, monitor_serial_number: int, number: int, name: str, net_metering: bool
@@ -192,8 +184,7 @@ class CurrentSensor(GEMSensor[greeneye.monitor.Channel]):
         if not self._sensor:
             return None
 
-        assert isinstance(self._sensor.watts, float)
-        return self._sensor.watts
+        return cast(Optional[float], self._sensor.watts)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -225,9 +216,9 @@ class PulseCounter(GEMSensor[greeneye.monitor.PulseCounter]):
     ) -> None:
         """Construct the entity."""
         super().__init__(monitor_serial_number, name, "pulse", number)
-        self._counted_quantity = counted_quantity
         self._counted_quantity_per_pulse = counted_quantity_per_pulse
         self._time_unit = time_unit
+        self._attr_native_unit_of_measurement = f"{counted_quantity}/{self._time_unit}"
 
     def _get_sensor(
         self, monitor: greeneye.monitor.Monitor
@@ -245,8 +236,7 @@ class PulseCounter(GEMSensor[greeneye.monitor.PulseCounter]):
             * self._counted_quantity_per_pulse
             * self._seconds_per_time_unit
         )
-        assert isinstance(result, float)
-        return result
+        return cast(float, result)
 
     @property
     def _seconds_per_time_unit(self) -> int:
@@ -264,11 +254,6 @@ class PulseCounter(GEMSensor[greeneye.monitor.PulseCounter]):
         )
 
     @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement for this pulse counter."""
-        return f"{self._counted_quantity}/{self._time_unit}"
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return total pulses in the data dictionary."""
         if not self._sensor:
@@ -281,14 +266,13 @@ class TemperatureSensor(GEMSensor[greeneye.monitor.TemperatureSensor]):
     """Entity showing temperature from one temperature sensor."""
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_icon = TEMPERATURE_ICON
 
     def __init__(
         self, monitor_serial_number: int, number: int, name: str, unit: str
     ) -> None:
         """Construct the entity."""
         super().__init__(monitor_serial_number, name, "temp", number)
-        self._unit = unit
+        self._attr_native_unit_of_measurement = unit
 
     def _get_sensor(
         self, monitor: greeneye.monitor.Monitor
@@ -301,20 +285,14 @@ class TemperatureSensor(GEMSensor[greeneye.monitor.TemperatureSensor]):
         if not self._sensor:
             return None
 
-        assert isinstance(self._sensor.temperature, float)
-        return self._sensor.temperature
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement for this sensor (user specified)."""
-        return self._unit
+        return cast(Optional[float], self._sensor.temperature)
 
 
 class VoltageSensor(GEMSensor[greeneye.monitor.Monitor]):
     """Entity showing voltage."""
 
-    _attr_icon = VOLTAGE_ICON
     _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+    _attr_device_class = DEVICE_CLASS_VOLTAGE
 
     def __init__(self, monitor_serial_number: int, number: int, name: str) -> None:
         """Construct the entity."""
@@ -332,5 +310,4 @@ class VoltageSensor(GEMSensor[greeneye.monitor.Monitor]):
         if not self._sensor:
             return None
 
-        assert isinstance(self._sensor.voltage, float)
-        return self._sensor.voltage
+        return cast(Optional[float], self._sensor.voltage)

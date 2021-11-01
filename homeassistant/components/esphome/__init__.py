@@ -456,8 +456,7 @@ async def _setup_services(
     for service in services:
         if service.key in old_services:
             # Already exists
-            matching = old_services.pop(service.key)
-            if matching != service:
+            if (matching := old_services.pop(service.key)) != service:
                 # Need to re-register
                 to_unregister.append(matching)
                 to_register.append(service)

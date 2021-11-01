@@ -659,8 +659,7 @@ class HomeKit:
 
     async def async_remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""
-        acc = self.bridge.accessories.pop(aid, None)
-        if acc:
+        if acc := self.bridge.accessories.pop(aid, None):
             await acc.stop()
         return acc
 

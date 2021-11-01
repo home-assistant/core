@@ -293,8 +293,7 @@ class FlowManager(abc.ABC):
     @callback
     def _async_remove_flow_progress(self, flow_id: str) -> None:
         """Remove a flow from in progress."""
-        flow = self._progress.pop(flow_id, None)
-        if flow is None:
+        if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
         handler = flow.handler
         self._handler_progress_index[handler].remove(flow.flow_id)
