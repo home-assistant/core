@@ -538,8 +538,8 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
     for sensor, description in VACUUM_SENSORS.items():
         parent_key_data = getattr(coordinator.data, description.parent_key)
         if getattr(parent_key_data, description.key, None) is None:
-            _LOGGER.info(
-                "The %s device does not support the %s sensor",
+            _LOGGER.debug(
+                "It seems the %s does not support the %s as the initial value is None",
                 config_entry.data[CONF_MODEL],
                 description.key,
             )
