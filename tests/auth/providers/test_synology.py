@@ -1,7 +1,10 @@
 """Unit tests for Synology DSM authentication provider."""
+from unittest.mock import AsyncMock
+import uuid
+
 import pytest
 
-from homeassistant.auth import AuthManager, auth_store
+from homeassistant.auth import AuthManager, auth_store, models as auth_models
 from homeassistant.auth.providers import synology
 
 
@@ -42,3 +45,19 @@ async def test_create_new_credential(manager, provider):
     )
     assert credentials.is_new is True
     assert credentials.data["account"] == "test-user"
+
+
+async def test_match_existing_credentials(store, provider):
+    """See if we match existing users."""
+    existing = auth_models.Credentials(
+        id=uuid.uuid4(),
+        auth_provider_type="synology",
+        auth_provider_id=None,
+        data={"account": "user-test"},
+        is_new=False,
+    )
+    provider.async_credentials = AsyncMock(return_value=[existing])
+    credentials = await provider.async_get_or_create_credentials(
+        {"account": "user-test"}
+    )
+    assert credentials is existing
