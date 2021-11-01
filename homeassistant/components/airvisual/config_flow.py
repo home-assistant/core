@@ -120,7 +120,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 except InvalidKeyError:
                     errors[CONF_API_KEY] = "invalid_api_key"
                 except NotFoundError:
-                    errors[CONF_API_KEY] = "location_not_found"
+                    errors[CONF_CITY] = "location_not_found"
                 except AirVisualError as err:
                     LOGGER.error(err)
                     errors["base"] = "unknown"
