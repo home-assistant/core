@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, Dict, cast
 
 from pyflunearyou import Client
 from pyflunearyou.errors import FluNearYouError
@@ -26,8 +26,6 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flu Near You as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
 
@@ -48,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except FluNearYouError as err:
             raise UpdateFailed(err) from err
 
-        return data
+        return cast(Dict[str, Any], data)
 
     coordinators = {}
     data_init_tasks = []
@@ -64,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data_init_tasks.append(coordinator.async_refresh())
 
     await asyncio.gather(*data_init_tasks)
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinators
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
