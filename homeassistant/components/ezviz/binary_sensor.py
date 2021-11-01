@@ -47,7 +47,6 @@ async def async_setup_entry(
             for camera in coordinator.data
             for binary_sensor, value in coordinator.data[camera].items()
             if binary_sensor in BINARY_SENSOR_TYPES
-            if value is not None
         ]
     )
 
