@@ -3452,6 +3452,72 @@ async def test_periodic_task_entering_dst(hass):
     unsub()
 
 
+async def test_periodic_task_entering_dst_2(hass):
+    """Test periodic task behavior when entering dst.
+
+    This tests a task firing every second in the range 0..58 (not *:*:59)
+    """
+    timezone = dt_util.get_time_zone("Europe/Vienna")
+    dt_util.set_default_time_zone(timezone)
+    specific_runs = []
+
+    # DST starts early morning March 27th 2022
+    yy = 2022
+    mm = 3
+    dd = 27
+
+    # There's no 2022-03-27 02:00:00, the event should not fire until 2022-03-28 03:00:00
+    time_that_will_not_match_right_away = datetime(
+        yy, mm, dd, 1, 59, 59, tzinfo=timezone, fold=0
+    )
+    # Make sure we enter DST during the test
+    assert (
+        time_that_will_not_match_right_away.utcoffset()
+        != (time_that_will_not_match_right_away + timedelta(hours=2)).utcoffset()
+    )
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_time_change(
+            hass,
+            callback(lambda x: specific_runs.append(x)),
+            second=list(range(59)),
+        )
+
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 1, 59, 59, 999999, tzinfo=timezone)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 3, 0, 0, 999999, tzinfo=timezone)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 3, 0, 1, 999999, tzinfo=timezone)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd + 1, 1, 59, 59, 999999, tzinfo=timezone)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 3
+
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd + 1, 2, 0, 0, 999999, tzinfo=timezone)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 4
+
+    unsub()
+
+
 async def test_periodic_task_leaving_dst(hass):
     """Test periodic task behavior when leaving dst."""
     timezone = dt_util.get_time_zone("Europe/Vienna")
