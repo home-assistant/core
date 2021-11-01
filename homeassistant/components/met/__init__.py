@@ -133,6 +133,7 @@ class MetWeatherData:
         self.hass = hass
         self._config = config
         self._is_metric = is_metric
+        self._weather_data: metno.MetWeatherData
         self.current_weather_data: dict = {}
         self.daily_forecast = None
         self.hourly_forecast = None
