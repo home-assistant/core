@@ -12,6 +12,7 @@ import logging
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -42,6 +43,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             if "No response after" in str(error):
                 raise ConfigEntryNotReady("No response (could be dark)") from error
         else:
+            # If we got here, the device is now communicating (maybe after
+            # being in darkness). But there's a small risk that the user has
+            # configured via the UI since we last attempted the yaml setup,
+            # which means we'd get a duplicate unique ID.
+            new_id = res[ATTR_SERIAL_NUMBER]
+            # Check if this unique_id has already been used
+            for existing_entry in hass.config_entries.async_entries(DOMAIN):
+                if existing_entry.unique_id == new_id:
+                    raise data_entry_flow.AbortFlow("already_configured")
+            entry.unique_id = new_id
             hass.config_entries.async_update_entry(
                 entry, unique_id=res[ATTR_SERIAL_NUMBER]
             )
