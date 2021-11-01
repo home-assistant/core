@@ -18,6 +18,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
