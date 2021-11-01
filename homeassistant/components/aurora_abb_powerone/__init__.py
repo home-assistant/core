@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     return False
             hass.config_entries.async_update_entry(entry, unique_id=new_id)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = serclient
+    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = serclient
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -74,6 +74,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     # It should not be necessary to close the serial port because we close
     # it after every use in sensor.py, i.e. no need to do entry["client"].close()
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.unique_id)
 
     return unload_ok
