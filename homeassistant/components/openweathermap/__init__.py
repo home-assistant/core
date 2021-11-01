@@ -102,10 +102,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def _filter_domain_configs(elements, domain):
-    return list(filter(lambda elem: elem["platform"] == domain, elements))
-
-
 def _get_config_value(config_entry: ConfigEntry, key: str) -> Any:
     if config_entry.options:
         return config_entry.options[key]
