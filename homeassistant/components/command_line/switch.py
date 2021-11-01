@@ -51,7 +51,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = []
 
     for object_id, device_config in devices.items():
-        icon_template = device_config.get(CONF_ICON_TEMPLATE)
         value_template = device_config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
