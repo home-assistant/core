@@ -3,7 +3,7 @@ from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import AqualinkEntity, refresh_system
+from . import AqualinkEntity, refresh_system, safe_exec
 from .const import DOMAIN as AQUALINK_DOMAIN
 
 PARALLEL_UPDATES = 0
@@ -47,9 +47,9 @@ class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
     @refresh_system
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on the switch."""
-        await self.safe_exec(self.dev.turn_on())
+        await safe_exec(self.dev.turn_on())
 
     @refresh_system
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the switch."""
-        await self.safe_exec(self.dev.turn_off())
+        await safe_exec(self.dev.turn_off())

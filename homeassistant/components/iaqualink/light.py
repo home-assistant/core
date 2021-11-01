@@ -12,7 +12,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import AqualinkEntity, refresh_system
+from . import AqualinkEntity, refresh_system, safe_exec
 from .const import DOMAIN as AQUALINK_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,18 +52,18 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
         """
         # For now I'm assuming lights support either effects or brightness.
         if effect_name := kwargs.get(ATTR_EFFECT):
-            await self.safe_exec(self.dev.set_effect_by_name(effect_name))
+            await safe_exec(self.dev.set_effect_by_name(effect_name))
         elif brightness := kwargs.get(ATTR_BRIGHTNESS):
             # Aqualink supports percentages in 25% increments.
             pct = int(round(brightness * 4.0 / 255)) * 25
-            await self.safe_exec(self.dev.set_brightness(pct))
+            await safe_exec(self.dev.set_brightness(pct))
         else:
-            await self.safe_exec(self.dev.turn_on())
+            await safe_exec(self.dev.turn_on())
 
     @refresh_system
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the light."""
-        await self.safe_exec(self.dev.turn_off())
+        await safe_exec(self.dev.turn_off())
 
     @property
     def brightness(self) -> int:

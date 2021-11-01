@@ -212,6 +212,14 @@ def refresh_system(func):
     return wrapper
 
 
+async def safe_exec(awaitable: Awaitable) -> None:
+    """Execute API call while catching service exceptions."""
+    try:
+        await awaitable
+    except AqualinkServiceException as svc_exception:
+        _LOGGER.warning("Aqualink Service Exception raised: %s", svc_exception)
+
+
 class AqualinkEntity(Entity):
     """Abstract class for all Aqualink platforms.
 
@@ -255,13 +263,6 @@ class AqualinkEntity(Entity):
     def available(self) -> bool:
         """Return whether the device is available or not."""
         return self.dev.system.online is True
-
-    async def safe_exec(self, awaitable: Awaitable) -> None:
-        """Execute API call while catching service exceptions."""
-        try:
-            await awaitable
-        except AqualinkServiceException as svc_exception:
-            _LOGGER.warning("Aqualink Service Exception raised: %s", svc_exception)
 
     @property
     def device_info(self) -> DeviceInfo:
