@@ -60,7 +60,6 @@ from .const import (
     ATTR_EXIT_DELAY_HOME,
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
-    DATA_CLIENT,
     DOMAIN,
     LOGGER,
 )
@@ -123,7 +122,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a SimpliSafe alarm control panel based on a config entry."""
-    simplisafe = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    simplisafe = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [SimpliSafeAlarm(simplisafe, system) for system in simplisafe.systems.values()],
         True,
