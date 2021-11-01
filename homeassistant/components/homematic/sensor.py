@@ -250,6 +250,11 @@ class HMSensor(HMDevice, SensorEntity):
         super().__init__(conf)
         self.entity_description = SENSOR_DESCRIPTIONS.get(self._state)
         if self.entity_description is None:
+            _LOGGER.warning(
+                "Sensor (%s) entity description is missing. Sensor state (%s) needs to be maintained",
+                self._name,
+                self._state,
+            )
             self.entity_description = copy(DEFAULT_SENSOR_DESCRIPTION)
 
     @property
