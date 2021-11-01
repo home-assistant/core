@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "home_control": "L'unit\u00e0 centrale devolo Home Control non funziona con questa integrazione."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "{product} ({name})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Indirizzo IP"
+                },
+                "description": "Vuoi iniziare la configurazione?"
+            },
+            "zeroconf_confirm": {
+                "description": "Vuoi aggiungere il dispositivo di rete domestica devolo con il nome host `{host_name}` a Home Assistant?",
+                "title": "Rilevato dispositivo di rete domestica devolo"
+            }
+        }
+    }
+}
