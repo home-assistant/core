@@ -7,10 +7,10 @@ from qnap_qsw.const import (
     DATA_CONDITION_ANOMALY,
     DATA_FAN1_SPEED,
     DATA_FAN2_SPEED,
-    DATA_MAC_ADDR,
-    DATA_TEMP,
-    DATA_UPDATE,
-    DATA_UPTIME,
+    DATA_FIRMWARE_UPDATE,
+    DATA_SYSTEM_MAC_ADDR,
+    DATA_TEMPERATURE_CURRENT,
+    DATA_UPTIME_DATETIME_ISOFORMAT,
 )
 
 from homeassistant.components.binary_sensor import (
@@ -45,7 +45,7 @@ BINARY_SENSOR_TYPES: Final[tuple[BinarySensorEntityDescription, ...]] = (
     BinarySensorEntityDescription(
         device_class=DEVICE_CLASS_UPDATE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        key=DATA_UPDATE,
+        key=DATA_FIRMWARE_UPDATE,
         name="Update",
     ),
 )
@@ -67,13 +67,13 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     ),
     SensorEntityDescription(
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        key=DATA_MAC_ADDR,
+        key=DATA_SYSTEM_MAC_ADDR,
         name="Mac address",
     ),
     SensorEntityDescription(
         device_class=DEVICE_CLASS_TEMPERATURE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        key=DATA_TEMP,
+        key=DATA_TEMPERATURE_CURRENT,
         name="Temperature",
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -82,7 +82,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        key=DATA_UPTIME,
+        key=DATA_UPTIME_DATETIME_ISOFORMAT,
         name="Uptime",
     ),
 )

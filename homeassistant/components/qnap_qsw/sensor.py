@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from qnap_qsw.const import (
     DATA_CONFIG_URL,
-    DATA_FIRMWARE,
-    DATA_PRODUCT,
-    DATA_SERIAL,
-    DATA_TEMP,
-    DATA_TEMP_MAX,
-    DATA_UPTIME,
+    DATA_FIRMWARE_CURRENT_VERSION,
+    DATA_SYSTEM_PRODUCT,
+    DATA_SYSTEM_SERIAL,
+    DATA_TEMPERATURE_CURRENT,
+    DATA_TEMPERATURE_MAXIMUM,
+    DATA_UPTIME_DATETIME_ISOFORMAT,
     DATA_UPTIME_SECONDS,
 )
 
@@ -33,11 +33,11 @@ async def async_setup_entry(
 
     device_info: DeviceInfo = {
         "configuration_url": coordinator.data[DATA_CONFIG_URL],
-        "identifiers": {(DOMAIN, coordinator.data[DATA_SERIAL])},
+        "identifiers": {(DOMAIN, coordinator.data[DATA_SYSTEM_SERIAL])},
         "manufacturer": MANUFACTURER,
-        "model": coordinator.data[DATA_PRODUCT],
-        "name": coordinator.data[DATA_PRODUCT],
-        "sw_version": coordinator.data[DATA_FIRMWARE],
+        "model": coordinator.data[DATA_SYSTEM_PRODUCT],
+        "name": coordinator.data[DATA_SYSTEM_PRODUCT],
+        "sw_version": coordinator.data[DATA_FIRMWARE_CURRENT_VERSION],
     }
 
     for description in SENSOR_TYPES:
@@ -59,9 +59,9 @@ class QnapQswSensor(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._attr_device_info = device_info
-        self._attr_name = f"{coordinator.data[DATA_PRODUCT]} {description.name}"
+        self._attr_name = f"{coordinator.data[DATA_SYSTEM_PRODUCT]} {description.name}"
         self._attr_unique_id = (
-            f"{coordinator.data[DATA_SERIAL].lower()}_{description.key}"
+            f"{coordinator.data[DATA_SYSTEM_SERIAL].lower()}_{description.key}"
         )
         self.entity_description = description
 
@@ -69,19 +69,17 @@ class QnapQswSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         _state_attr = None
-        if self.entity_description.key == DATA_UPTIME:
+        if self.entity_description.key == DATA_UPTIME_DATETIME_ISOFORMAT:
             _state_attr = {
                 "seconds": self.coordinator.data[DATA_UPTIME_SECONDS],
             }
-        elif self.entity_description.key == DATA_TEMP:
+        elif self.entity_description.key == DATA_TEMPERATURE_CURRENT:
             _state_attr = {
-                "maximum": self.coordinator.data[DATA_TEMP_MAX],
+                "maximum": self.coordinator.data[DATA_TEMPERATURE_MAXIMUM],
             }
         return _state_attr
 
     @property
     def native_value(self):
         """Return the state."""
-        if self.entity_description.key == DATA_UPTIME:
-            return self.coordinator.data[self.entity_description.key].isoformat()
         return self.coordinator.data[self.entity_description.key]

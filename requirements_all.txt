@@ -2060,7 +2060,7 @@ pyzbar==0.1.7
 pyzerproc==0.4.8
 
 # homeassistant.components.qnap_qsw
-qnap-qsw==0.1.0
+qnap-qsw==0.1.2
 
 # homeassistant.components.qnap
 qnapstats==0.4.0

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from qnap_qsw.const import DATA_SYSTEM_PRODUCT, DATA_SYSTEM_SERIAL
 from qnap_qsw.homeassistant import QSHA, LoginError
 import voluptuous as vol
 
@@ -40,10 +41,11 @@ class QnapQswConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if await self.hass.async_add_executor_job(qsha.login):
                     await self.hass.async_add_executor_job(qsha.update_system_board)
 
-                await self.async_set_unique_id(qsha.serial().lower())
+                data = qsha.data()
+                await self.async_set_unique_id(data[DATA_SYSTEM_SERIAL].lower())
                 self._abort_if_unique_id_configured()
 
-                title = f"{qsha.product()} {qsha.serial()}"
+                title = f"{data[DATA_SYSTEM_PRODUCT]} {data[DATA_SYSTEM_SERIAL]}"
                 return self.async_create_entry(title=title, data=user_input)
             except LoginError:
                 errors["base"] = "invalid_auth"

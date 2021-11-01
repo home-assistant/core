@@ -5,11 +5,11 @@ from qnap_qsw.const import (
     DATA_CONDITION_ANOMALY,
     DATA_CONDITION_MESSAGE,
     DATA_CONFIG_URL,
-    DATA_FIRMWARE,
-    DATA_PRODUCT,
-    DATA_SERIAL,
-    DATA_UPDATE,
-    DATA_UPDATE_VERSION,
+    DATA_FIRMWARE_CURRENT_VERSION,
+    DATA_FIRMWARE_LATEST_VERSION,
+    DATA_FIRMWARE_UPDATE,
+    DATA_SYSTEM_PRODUCT,
+    DATA_SYSTEM_SERIAL,
 )
 
 from homeassistant.components.binary_sensor import (
@@ -36,11 +36,11 @@ async def async_setup_entry(
 
     device_info: DeviceInfo = {
         "configuration_url": coordinator.data[DATA_CONFIG_URL],
-        "identifiers": {(DOMAIN, coordinator.data[DATA_SERIAL])},
+        "identifiers": {(DOMAIN, coordinator.data[DATA_SYSTEM_SERIAL])},
         "manufacturer": MANUFACTURER,
-        "model": coordinator.data[DATA_PRODUCT],
-        "name": coordinator.data[DATA_PRODUCT],
-        "sw_version": coordinator.data[DATA_FIRMWARE],
+        "model": coordinator.data[DATA_SYSTEM_PRODUCT],
+        "name": coordinator.data[DATA_SYSTEM_PRODUCT],
+        "sw_version": coordinator.data[DATA_FIRMWARE_CURRENT_VERSION],
     }
 
     for description in BINARY_SENSOR_TYPES:
@@ -64,9 +64,9 @@ class QnapQswBinarySensor(CoordinatorEntity, BinarySensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._attr_device_info = device_info
-        self._attr_name = f"{coordinator.data[DATA_PRODUCT]} {description.name}"
+        self._attr_name = f"{coordinator.data[DATA_SYSTEM_PRODUCT]} {description.name}"
         self._attr_unique_id = (
-            f"{coordinator.data[DATA_SERIAL].lower()}_{description.key}"
+            f"{coordinator.data[DATA_SYSTEM_SERIAL].lower()}_{description.key}"
         )
         self.entity_description = description
 
@@ -78,10 +78,10 @@ class QnapQswBinarySensor(CoordinatorEntity, BinarySensorEntity):
             _state_attr = {
                 "message": self.coordinator.data[DATA_CONDITION_MESSAGE],
             }
-        elif self.entity_description.key == DATA_UPDATE:
+        elif self.entity_description.key == DATA_FIRMWARE_UPDATE:
             _state_attr = {
-                "current_version": self.coordinator.data[DATA_FIRMWARE],
-                "latest_version": self.coordinator.data[DATA_UPDATE_VERSION],
+                "current_version": self.coordinator.data[DATA_FIRMWARE_CURRENT_VERSION],
+                "latest_version": self.coordinator.data[DATA_FIRMWARE_LATEST_VERSION],
             }
         return _state_attr
 
