@@ -61,3 +61,15 @@ async def test_match_existing_credentials(store, provider):
         {"account": "user-test"}
     )
     assert credentials is existing
+
+
+async def test_login_flow(manager, provider):
+    """Test the login flow UI."""
+
+    flow = await provider.async_login_flow(None)
+    step = await flow.async_step_init()
+    assert step["type"] == "form"
+    assert step["step_id"] == "init"
+    assert len(step["errors"]) == 0
+    schema_keys = list(step["data_schema"].schema)
+    assert schema_keys == ["username", "password", "otp_code"]
