@@ -124,10 +124,10 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
 
     async def _async_set_state(self, state):
         """Set the state of the light."""
+        device = self._device
+
         try:
-            state = await self._device.async_request(
-                self._device.api.set_state, **state
-            )
+            state = await device.async_request(device.api.set_state, **state)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to set state: %s", err)
             return
