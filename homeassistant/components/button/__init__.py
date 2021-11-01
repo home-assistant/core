@@ -67,6 +67,7 @@ class ButtonEntity(RestoreEntity):
     """Representation of a Button entity."""
 
     entity_description: ButtonEntityDescription
+    _attr_should_poll = False
     _attr_device_class: None = None
     _attr_state: None = None
     __last_pressed: datetime | None = None
