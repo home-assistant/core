@@ -5,17 +5,20 @@ import uuid
 import pytest
 
 from homeassistant.auth import AuthManager, auth_store, models as auth_models
+from homeassistant.auth.auth_store import AuthStore
 from homeassistant.auth.providers import synology
+from homeassistant.auth.providers.synology import SynologyAuthProvider
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
-def store(hass):
+def store(hass: HomeAssistant) -> AuthStore:
     """Mock store."""
     return auth_store.AuthStore(hass)
 
 
 @pytest.fixture
-def provider(hass, store):
+def provider(hass: HomeAssistant, store: AuthStore) -> SynologyAuthProvider:
     """Mock provider."""
     return synology.SynologyAuthProvider(
         hass,
@@ -31,12 +34,14 @@ def provider(hass, store):
 
 
 @pytest.fixture
-def manager(hass, store, provider):
+def manager(
+    hass: HomeAssistant, store: AuthStore, provider: SynologyAuthProvider
+) -> AuthManager:
     """Mock manager."""
     return AuthManager(hass, store, {(provider.type, provider.id): provider}, {})
 
 
-async def test_create_new_credential(manager, provider):
+async def test_create_new_credential(provider: SynologyAuthProvider):
     """Test that we create a new credential."""
     credentials = await provider.async_get_or_create_credentials(
         {
@@ -47,7 +52,7 @@ async def test_create_new_credential(manager, provider):
     assert credentials.data["account"] == "test-user"
 
 
-async def test_match_existing_credentials(store, provider):
+async def test_match_existing_credentials(provider: SynologyAuthProvider):
     """See if we match existing users."""
     existing = auth_models.Credentials(
         id=uuid.uuid4(),
@@ -63,7 +68,7 @@ async def test_match_existing_credentials(store, provider):
     assert credentials is existing
 
 
-async def test_login_flow(provider):
+async def test_login_flow(provider: SynologyAuthProvider):
     """Test the login flow UI."""
 
     flow = await provider.async_login_flow(None)

@@ -52,7 +52,7 @@ class SynologyAuthProvider(AuthProvider):
     DEFAULT_TITLE = "Synology DSM authentication"
 
     @property
-    def api_url(self) -> str:
+    def _api_url(self) -> str:
         """Return the API URL for the configured Synology DSM."""
         protocol = "http"
         if self.config["secure"]:
@@ -83,7 +83,7 @@ class SynologyAuthProvider(AuthProvider):
             if otp_code != "":
                 query_params["otp_code"] = otp_code
 
-            login_response = await session.get(self.api_url, params=query_params)
+            login_response = await session.get(self._api_url, params=query_params)
         except Exception as ex:
             _LOGGER.error("Error connecting to Synology DSM: %s", ex)
             raise SynologyConnectionError(ex) from ex
@@ -151,7 +151,7 @@ class SynologyAuthProvider(AuthProvider):
             "_sid": credentials.data["sid"],
         }
         try:
-            apis_response = await session.get(self.api_url, params=query_params)
+            apis_response = await session.get(self._api_url, params=query_params)
             apis_response_json = await apis_response.json()
             full_name = apis_response_json["data"]["fullname"]
             username = apis_response_json["data"]["username"]
