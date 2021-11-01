@@ -1,7 +1,5 @@
 """Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
-
 from homeassistant.components.number import NumberEntity
-from homeassistant.const import CONF_DEVICE_CLASS
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import InvalidAuth
@@ -9,9 +7,8 @@ from .const import (
     CONF_CONNECTIONS,
     CONF_MAX_AVAILABLE_POWER_KEY,
     CONF_MAX_CHARGING_CURRENT_KEY,
-    CONF_NAME,
-    CONF_SENSOR_TYPES,
     DOMAIN,
+    SENSOR_TYPES,
 )
 
 
@@ -35,11 +32,11 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
     def __init__(self, coordinator, config):
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
-        _properties = CONF_SENSOR_TYPES[CONF_MAX_CHARGING_CURRENT_KEY]
+        sensor_description = SENSOR_TYPES[CONF_MAX_CHARGING_CURRENT_KEY]
         self._coordinator = coordinator
-        self._attr_name = f"{config.title} {_properties[CONF_NAME]}"
+        self._attr_name = f"{config.title} {sensor_description.name}"
         self._attr_min_value = 6
-        self._attr_device_class = _properties[CONF_DEVICE_CLASS]
+        self._attr_device_class = sensor_description.device_class
 
     @property
     def max_value(self):
