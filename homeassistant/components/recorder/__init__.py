@@ -41,6 +41,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
+    async_track_utc_time_change,
 )
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -622,7 +623,7 @@ class Recorder(threading.Thread):
         )
 
         # Compile short term statistics every 5 minutes
-        async_track_time_change(
+        async_track_utc_time_change(
             self.hass, self.async_periodic_statistics, minute=range(0, 60, 5), second=10
         )
 
