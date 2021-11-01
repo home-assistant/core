@@ -88,7 +88,7 @@ class SynologyAuthProvider(AuthProvider):
             _LOGGER.error("Error connecting to Synology DSM: %s", ex)
             raise SynologyConnectionError(ex) from ex
 
-        if not login_response.ok:
+        if login_response.status != 200:
             _LOGGER.error(
                 "Status code %s in authentication response not successful: %s",
                 login_response.status,
