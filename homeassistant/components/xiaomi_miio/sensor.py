@@ -656,14 +656,15 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = unique_id
         self._attr_native_value = self._determine_native_value()
+        self._attr_extra_state_attributes = self._extract_attributes(coordinator.data)
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
+    @callback
+    def _extract_attributes(self, data):
+        """Return state attributes with valid values."""
         return {
-            attr: self._extract_value_from_attribute(self.coordinator.data, attr)
+            attr: value
             for attr in self.entity_description.attributes
-            if hasattr(self.coordinator.data, attr)
+            if (value := self._extract_value_from_attribute(data, attr)) is not None
         }
 
     @callback
@@ -674,6 +675,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         # check that the value is not None before updating the state.
         if native_value is not None:
             self._attr_native_value = native_value
+            self._attr_extra_state_attributes = self._extract_attributes()
             self.async_write_ha_state()
 
     def _determine_native_value(self):
