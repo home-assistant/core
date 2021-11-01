@@ -6,7 +6,6 @@ import logging
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
@@ -101,19 +100,19 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key="AVERAGE_ILLUMINATION",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=DEVICE_CLASS_ILLUMINANCE,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "LOWEST_ILLUMINATION": SensorEntityDescription(
         key="LOWEST_ILLUMINATION",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=DEVICE_CLASS_ILLUMINANCE,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "HIGHEST_ILLUMINATION": SensorEntityDescription(
         key="HIGHEST_ILLUMINATION",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=DEVICE_CLASS_ILLUMINANCE,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "POWER": SensorEntityDescription(
         key="POWER",
