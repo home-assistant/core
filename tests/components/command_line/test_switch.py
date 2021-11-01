@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import assert_setup_component, async_fire_time_changed
 
 
 async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
@@ -35,6 +35,7 @@ async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) ->
         },
     )
     await hass.async_block_till_done()
+
 
 async def test_icon_template(hass):
     """Test icon template."""
@@ -71,6 +72,7 @@ async def test_icon_template(hass):
 
     state = hass.states.get("switch.test_command_line_switch")
     assert state.attributes["icon"] == "mdi:check"
+
 
 async def test_state_none(hass: HomeAssistant) -> None:
     """Test with none state."""
