@@ -59,7 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                         hass.config_entries.async_remove(entry.entry_id)
                     )
                     return False
-            entry.unique_id = new_id
             hass.config_entries.async_update_entry(entry, unique_id=new_id)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = serclient
