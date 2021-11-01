@@ -49,7 +49,6 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
         self._coordinator = coordinator
         self._attr_name = f"{config.title} {description.name}"
         self._attr_min_value = description.min_value
-        self._attr_device_class = description.device_class
 
     @property
     def max_value(self):
