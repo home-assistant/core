@@ -1,4 +1,5 @@
 """Test the Aurora ABB PowerOne Solar PV config flow."""
+from datetime import timedelta
 from logging import INFO
 from unittest.mock import patch
 
@@ -14,6 +15,9 @@ from homeassistant.components.aurora_abb_powerone.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.util.dt import utcnow
+
+from tests.common import async_fire_time_changed
 
 
 def _simulated_returns(index, global_measure=None):
@@ -229,16 +233,14 @@ async def test_import_night(hass):
         "aurorapy.client.AuroraSerialClient.firmware",
         return_value="1.234",
     ), patch(
-        "homeassistant.components.aurora_abb_powerone.config_flow._LOGGER.getEffectiveLevel",
-        return_value=INFO,
-    ), patch(
         "aurorapy.client.AuroraSerialClient.measure",
         side_effect=_simulated_returns,
     ):
-        result = await entry.async_setup(hass)
+        # Wait >5mins for the config to auto retry.
+        async_fire_time_changed(hass, utcnow() + timedelta(minutes=6))
+        await hass.async_block_till_done()
         assert entry.state == ConfigEntryState.LOADED
         assert entry.unique_id
 
         assert len(mock_connect.mock_calls) == 1
-        await hass.async_block_till_done()
         assert hass.states.get("sensor.power_output").state == "45.7"
