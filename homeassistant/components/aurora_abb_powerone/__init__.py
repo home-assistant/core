@@ -38,10 +38,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             res = await hass.async_add_executor_job(
                 validate_and_connect, hass, entry.data
             )
-            entry.unique_id = res[ATTR_SERIAL_NUMBER]
         except AuroraError as error:
             if "No response after" in str(error):
                 raise ConfigEntryNotReady("No response (could be dark)") from error
+        else:
+            hass.config_entries.async_update_entry(
+                entry, unique_id=res[ATTR_SERIAL_NUMBER]
+            )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = serclient
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
