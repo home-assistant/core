@@ -270,7 +270,7 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
                 ha_item[ATTR_FORECAST_CONDITION] = format_condition(
                     ha_item[ATTR_FORECAST_CONDITION]
                 )
-            ha_forecast.append(ha_item)  # type: ignore
+            ha_forecast.append(ha_item)  # type: ignore[arg-type]
         return ha_forecast
 
     @property
@@ -279,7 +279,7 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
         return DeviceInfo(
             default_name="Forecast",
             entry_type="service",
-            identifiers={(DOMAIN, "")},
+            identifiers={(DOMAIN,)},  # type: ignore[arg-type]
             manufacturer="Met.no",
             model="Forecast",
         )
