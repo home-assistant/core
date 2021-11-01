@@ -1,5 +1,4 @@
 """Common fixtures for testing greeneye_monitor."""
-import logging
 from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -20,8 +19,6 @@ from homeassistant.helpers.entity_registry import (
 )
 
 from .common import add_listeners
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def assert_sensor_state(
@@ -114,7 +111,6 @@ def monitors() -> AsyncMock:
         def add_monitor(monitor: MagicMock) -> None:
             """Add the given mock monitor as a monitor with the given serial number, notifying any listeners on the Monitors object."""
             serial_number = monitor.serial_number
-            _LOGGER.warn(serial_number)
             mock_monitors.monitors[serial_number] = monitor
             mock_monitors.notify_all_listeners(monitor)
 
