@@ -35,6 +35,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
+    ATTR_CONNECTIONS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -346,11 +347,11 @@ class ADBDevice(MediaPlayerEntity):
             name=name,
         )
         if manufacturer := info.get(ATTR_MANUFACTURER):
-            self._attr_device_info["manufacturer"] = manufacturer
+            self._attr_device_info[ATTR_MANUFACTURER] = manufacturer
         if sw_version := info.get(ATTR_SW_VERSION):
-            self._attr_device_info["sw_version"] = sw_version
+            self._attr_device_info[ATTR_SW_VERSION] = sw_version
         if mac := format_mac(info.get(PROP_ETHMAC) or info.get(PROP_WIFIMAC, "")):
-            self._attr_device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
+            self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}
 
         self._app_id_to_name = {}
         self._app_name_to_id = {}

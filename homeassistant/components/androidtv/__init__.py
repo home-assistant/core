@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -121,12 +122,12 @@ async def async_connect_androidtv(
     return aftv
 
 
-async def _async_migrate_aftv_entity(hass, aftv, entry_unique_id):
+def _migrate_aftv_entity(hass, aftv, entry_unique_id):
     """Migrate a entity to new unique id."""
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     entity_unique_id = entry_unique_id
-    if entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, entity_unique_id):
+    if entity_reg.async_get_entity_id(MP_DOMAIN, DOMAIN, entity_unique_id):
         # entity already exist, nothing to do
         return
 
@@ -135,13 +136,13 @@ async def _async_migrate_aftv_entity(hass, aftv, entry_unique_id):
         # serial no not found, exit
         return
 
-    migr_entity = entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, old_unique_id)
+    migr_entity = entity_reg.async_get_entity_id(MP_DOMAIN, DOMAIN, old_unique_id)
     if not migr_entity:
         # old entity not found, exit
         return
 
     try:
-        entity_registry.async_update_entity(migr_entity, new_unique_id=entity_unique_id)
+        entity_reg.async_update_entity(migr_entity, new_unique_id=entity_unique_id)
     except ValueError as exp:
         _LOGGER.warning("Migration of old entity failed: %s", exp)
 
@@ -172,7 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # migrate existing entity to new unique ID
     if entry.source == SOURCE_IMPORT:
-        await _async_migrate_aftv_entity(hass, aftv, entry.unique_id)
+        _migrate_aftv_entity(hass, aftv, entry.unique_id)
 
     async def async_close_connection(event):
         """Close Android TV connection on HA Stop."""
