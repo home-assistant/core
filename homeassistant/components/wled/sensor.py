@@ -44,7 +44,7 @@ class WLEDSensorEntityDescriptionMixin:
 class WLEDSensorEntityDescription(
     SensorEntityDescription, WLEDSensorEntityDescriptionMixin
 ):
-    """Describes August binary_sensor entity."""
+    """Describes WLED sensor entity."""
 
 
 SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
