@@ -50,6 +50,15 @@
                     "rf_strength": 59,
                     "bridge": "12:34:56:00:fa:d0",
                     "battery_state": "full"
+                },
+                {
+                    "id": "12:34:56:03:a0:ee",
+                    "reachable": false,
+                    "type": "NRV",
+                    "firmware_revision": 79,
+                    "rf_strength": 53,
+                    "bridge": "12:34:56:00:fa:d0",
+                    "battery_state": "low"
                 }
             ],
             "rooms": [
@@ -85,6 +94,12 @@
                     "therm_setpoint_end_time": 0,
                     "anticipating": false,
                     "open_window": false
+                },
+                {
+                    "id": "2833524038",
+                    "reachable": false,
+                    "therm_setpoint_temperature": 12,
+                    "therm_setpoint_mode": "away"
                 }
             ],
             "id": "91763b24c43d3e344f424e8b",
