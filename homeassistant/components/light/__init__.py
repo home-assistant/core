@@ -252,16 +252,14 @@ def preprocess_turn_on_alternatives(hass, params):
     if ATTR_PROFILE in params:
         hass.data[DATA_PROFILES].apply_profile(params.pop(ATTR_PROFILE), params)
 
-    color_name = params.pop(ATTR_COLOR_NAME, None)
-    if color_name is not None:
+    if (color_name := params.pop(ATTR_COLOR_NAME, None)) is not None:
         try:
             params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
         except ValueError:
             _LOGGER.warning("Got unknown color %s, falling back to white", color_name)
             params[ATTR_RGB_COLOR] = (255, 255, 255)
 
-    kelvin = params.pop(ATTR_KELVIN, None)
-    if kelvin is not None:
+    if (kelvin := params.pop(ATTR_KELVIN, None)) is not None:
         mired = color_util.color_temperature_kelvin_to_mired(kelvin)
         params[ATTR_COLOR_TEMP] = int(mired)
 

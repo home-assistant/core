@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "\u5229\u7528\u3067\u304d\u308b\u901a\u77e5\u30b5\u30fc\u30d3\u30b9\u304c\u3042\u308a\u307e\u305b\u3093\u3002"
+            },
+            "error": {
+                "invalid_code": "\u7121\u52b9\u306a\u30b3\u30fc\u30c9\u3067\u3059\u3002\u3082\u3046\u4e00\u5ea6\u304a\u8a66\u3057\u304f\u3060\u3055\u3044\u3002"
+            },
+            "step": {
+                "init": {
+                    "description": "\u3069\u308c\u304b1\u3064\u3001\u901a\u77e5\u30b5\u30fc\u30d3\u30b9\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044:",
+                    "title": "\u901a\u77e5\u30b3\u30f3\u30dd\u30fc\u30cd\u30f3\u30c8\u306b\u3088\u3063\u3066\u914d\u4fe1\u3055\u308c\u308b\u30ef\u30f3\u30bf\u30a4\u30e0\u30d1\u30b9\u30ef\u30fc\u30c9\u306e\u8a2d\u5b9a"
+                },
+                "setup": {
+                    "description": "\u30ef\u30f3\u30bf\u30a4\u30e0\u30d1\u30b9\u30ef\u30fc\u30c9\u304c **notify.{notify_service}** \u3092\u4ecb\u3057\u3066\u9001\u4fe1\u3055\u308c\u307e\u3057\u305f\u3002\u4ee5\u4e0b\u306b\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044:",
+                    "title": "\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u306e\u78ba\u8a8d"
+                }
+            },
+            "title": "\u30ef\u30f3\u30bf\u30a4\u30e0\u30d1\u30b9\u30ef\u30fc\u30c9\u306e\u901a\u77e5"
+        },
         "totp": {
             "title": "TOTP"
         }

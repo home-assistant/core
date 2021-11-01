@@ -120,8 +120,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("Error connecting to the %s server", device_type)
         raise PlatformNotReady from ex
 
-    ih_devices = controller.get_devices()
-    if ih_devices:
+    if ih_devices := controller.get_devices():
         async_add_entities(
             [
                 IntesisAC(ih_device_id, device, controller)
@@ -194,8 +193,7 @@ class IntesisAC(ClimateEntity):
             self._support |= SUPPORT_PRESET_MODE
 
         # Setup HVAC modes
-        modes = controller.get_mode_list(ih_device_id)
-        if modes:
+        if modes := controller.get_mode_list(ih_device_id):
             mode_list = [MAP_IH_TO_HVAC_MODE[mode] for mode in modes]
             self._hvac_mode_list.extend(mode_list)
         self._hvac_mode_list.append(HVAC_MODE_OFF)

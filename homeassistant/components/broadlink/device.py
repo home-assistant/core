@@ -23,9 +23,9 @@ from .updater import get_update_manager
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_domains(dev_type):
+def get_domains(device_type):
     """Return the domains available for a device type."""
-    return {d for d, t in DOMAINS_AND_TYPES.items() if dev_type in t}
+    return {d for d, t in DOMAINS_AND_TYPES.items() if device_type in t}
 
 
 class BroadlinkDevice:
@@ -67,8 +67,8 @@ class BroadlinkDevice:
         device_registry.async_update_device(device_entry.id, name=entry.title)
         await hass.config_entries.async_reload(entry.entry_id)
 
-    def _auth_fetch_firmware(self):
-        """Auth and fetch firmware."""
+    def _get_firmware_version(self):
+        """Get firmware version."""
         self.api.auth()
         with suppress(BroadlinkException, OSError):
             return self.api.get_fwversion()
@@ -89,7 +89,7 @@ class BroadlinkDevice:
 
         try:
             self.fw_version = await self.hass.async_add_executor_job(
-                self._auth_fetch_firmware
+                self._get_firmware_version
             )
 
         except AuthenticationError:

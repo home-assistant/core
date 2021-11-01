@@ -8,7 +8,7 @@ from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 import socket
 import sys
-from typing import Any, TypedDict, cast
+from typing import Any, Final, TypedDict, cast
 
 import voluptuous as vol
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
@@ -60,6 +60,12 @@ MAX_PROPERTY_VALUE_LEN = 230
 
 # Dns label max length
 MAX_NAME_LEN = 63
+
+# Attributes for HaServiceInfo
+ATTR_HOST: Final = "host"
+ATTR_NAME: Final = "name"
+ATTR_PROPERTIES: Final = "properties"
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -349,7 +355,7 @@ class ZeroconfDiscovery:
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type in HOMEKIT_TYPES:
-            props = info["properties"]
+            props = info[ATTR_PROPERTIES]
             if domain := async_get_homekit_discovery_domain(self.homekit_models, props):
                 discovery_flow.async_create_flow(
                     self.hass, domain, {"source": config_entries.SOURCE_HOMEKIT}, info
@@ -371,18 +377,18 @@ class ZeroconfDiscovery:
                     # likely bad homekit data
                     return
 
-        if "name" in info:
-            lowercase_name: str | None = info["name"].lower()
+        if ATTR_NAME in info:
+            lowercase_name: str | None = info[ATTR_NAME].lower()
         else:
             lowercase_name = None
 
-        if "macaddress" in info["properties"]:
-            uppercase_mac: str | None = info["properties"]["macaddress"].upper()
+        if "macaddress" in info[ATTR_PROPERTIES]:
+            uppercase_mac: str | None = info[ATTR_PROPERTIES]["macaddress"].upper()
         else:
             uppercase_mac = None
 
-        if "manufacturer" in info["properties"]:
-            lowercase_manufacturer: str | None = info["properties"][
+        if "manufacturer" in info[ATTR_PROPERTIES]:
+            lowercase_manufacturer: str | None = info[ATTR_PROPERTIES][
                 "manufacturer"
             ].lower()
         else:
@@ -474,14 +480,14 @@ def info_from_service(service: AsyncServiceInfo) -> HaServiceInfo | None:
     if (host := _first_non_link_local_or_v6_address(addresses)) is None:
         return None
 
-    return {
-        "host": str(host),
-        "port": service.port,
-        "hostname": service.server,
-        "type": service.type,
-        "name": service.name,
-        "properties": properties,
-    }
+    return HaServiceInfo(
+        host=str(host),
+        port=service.port,
+        hostname=service.server,
+        type=service.type,
+        name=service.name,
+        properties=properties,
+    )
 
 
 def _first_non_link_local_or_v6_address(addresses: list[bytes]) -> str | None:
