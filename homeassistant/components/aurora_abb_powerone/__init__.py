@@ -53,9 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 if existing_entry.unique_id == new_id:
                     raise data_entry_flow.AbortFlow("already_configured")
             entry.unique_id = new_id
-            hass.config_entries.async_update_entry(
-                entry, unique_id=res[ATTR_SERIAL_NUMBER]
-            )
+            hass.config_entries.async_update_entry(entry, unique_id=new_id)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = serclient
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
