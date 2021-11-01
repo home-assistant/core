@@ -62,6 +62,7 @@ from .data_handler import (
     PUBLICDATA_DATA_CLASS_NAME,
     WEATHERSTATION_DATA_CLASS_NAME,
     NetatmoDataHandler,
+    NetatmoDevice,
 )
 from .helper import NetatmoArea
 from .netatmo_entity_base import NetatmoBase
@@ -429,17 +430,8 @@ async def async_setup_entry(
         add_public_entities,
     )
 
-    async def _async_create_entity(
-        data_handler: NetatmoDataHandler,
-        home_status_class: str,
-        home_id: str,
-        room_id: str,
-        device_name: str,
-        model: str,
-    ) -> None:
-        entity = NetatmoClimateBatterySensor(
-            data_handler, home_status_class, home_id, room_id, device_name, model
-        )
+    async def _async_create_entity(netatmo_device: NetatmoDevice) -> None:
+        entity = NetatmoClimateBatterySensor(netatmo_device)
         _LOGGER.debug("Adding climate battery sensor %s", entity)
         async_add_entities([entity])
 
@@ -458,25 +450,17 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
 
     entity_description: NetatmoSensorEntityDescription
 
-    def __init__(
-        self,
-        data_handler: NetatmoDataHandler,
-        home_status_class: str,
-        home_id: str,
-        room_id: str,
-        device_name: str,
-        model: str,
-    ) -> None:
+    def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize the sensor."""
-        super().__init__(data_handler)
+        super().__init__(netatmo_device.data_handler)
         self.entity_description = SENSOR_TYPES["battery_percent"]
 
-        self._id = room_id  # f"{home_id}-{room_id}"
-        self._device_name = device_name
-        self._home_status_class = home_status_class
-        self._home_id = home_id
-        self._room_id = room_id
-        self._model = model
+        self._id = netatmo_device.device_id
+        self._device_name = netatmo_device.device_name
+        self._state_class_name = netatmo_device.state_class_name
+        self._home_id = netatmo_device.home_id
+        self._room_id = netatmo_device.device_id
+        self._model = netatmo_device.model
 
         self._data_classes.extend(
             [
@@ -487,14 +471,14 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
                 {
                     "name": HOMESTATUS_DATA_CLASS_NAME,
                     "home_id": self._home_id,
-                    SIGNAL_NAME: self._home_status_class,
+                    SIGNAL_NAME: self._state_class_name,
                 },
             ]
         )
 
-        self._home_status = self.data_handler.data[self._home_status_class]
+        self._home_status = self.data_handler.data[self._state_class_name]
         self._room_status = self._home_status.rooms[self._room_id]
-        self._room_data: dict = self._data.rooms[home_id][room_id]
+        self._room_data: dict = self._data.rooms[self._home_id][self._room_id]
 
         self._attr_name = (
             f"{MANUFACTURER} {self._device_name} {self.entity_description.name}"
@@ -512,7 +496,7 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._home_status = self.data_handler.data[self._home_status_class]
+        self._home_status = self.data_handler.data[self._state_class_name]
         if self._home_status is None:
             return
 

@@ -67,6 +67,18 @@ class NetatmoDataClass:
     subscriptions: list[CALLBACK_TYPE]
 
 
+@dataclass
+class NetatmoDevice:
+    """Netatmo device class."""
+
+    data_handler: NetatmoDataHandler
+    home_id: str
+    device_id: str
+    device_name: str
+    model: str
+    state_class_name: str
+
+
 class NetatmoDataHandler:
     """Manages the Netatmo data handling."""
 

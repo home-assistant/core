@@ -65,6 +65,7 @@ from .data_handler import (
     HOMEDATA_DATA_CLASS_NAME,
     HOMESTATUS_DATA_CLASS_NAME,
     NetatmoDataHandler,
+    NetatmoDevice,
 )
 from .helper import get_all_home_ids, update_climate_schedules
 from .netatmo_entity_base import NetatmoBase
@@ -264,12 +265,14 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         async_dispatcher_send(
             self.hass,
             NETATMO_CREATE_BATTERY,
-            self.data_handler,
-            self._home_status_class,
-            self._home_id,
-            self._id,
-            self._device_name,
-            self._model,
+            NetatmoDevice(
+                self.data_handler,
+                self._home_id,
+                self._id,
+                self._device_name,
+                self._model,
+                self._home_status_class,
+            ),
         )
 
     @callback
