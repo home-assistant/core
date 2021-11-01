@@ -9,7 +9,7 @@ from aioridwell.client import RidwellAccount
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -25,8 +25,6 @@ ATTR_CATEGORY = "category"
 ATTR_PICKUP_STATE = "pickup_state"
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_QUANTITY = "quantity"
-
-DEFAULT_ATTRIBUTION = "Pickup data provided by Ridwell"
 
 
 @callback
@@ -49,7 +47,7 @@ async def async_setup_entry(
 class RidwellSensor(CoordinatorEntity, SensorEntity):
     """Define a Ridwell pickup sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = DEVICE_CLASS_DATE
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, account: RidwellAccount
@@ -67,7 +65,6 @@ class RidwellSensor(CoordinatorEntity, SensorEntity):
         event = self.coordinator.data[self._account.account_id]
 
         attrs: dict[str, Any] = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
             ATTR_PICKUP_TYPES: {},
             ATTR_PICKUP_STATE: event.state,
         }
@@ -82,7 +79,7 @@ class RidwellSensor(CoordinatorEntity, SensorEntity):
                 # Ridwell's API will return distinct objects, even if they have the
                 # same name (e.g. two pickups of Latex Paint will show up as two
                 # objects) – so, we sum the quantities:
-                attrs[ATTR_PICKUP_TYPES][pickup.name]["quantity"] += pickup.quantity
+                attrs[ATTR_PICKUP_TYPES][pickup.name][ATTR_QUANTITY] += pickup.quantity
 
         return attrs
 
