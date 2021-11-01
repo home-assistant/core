@@ -15,7 +15,12 @@ from iaqualink.exception import AqualinkServiceException
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.iaqualink import DOMAIN, UPDATE_INTERVAL, AqualinkEntity
+from homeassistant.components.iaqualink import (
+    DOMAIN,
+    UPDATE_INTERVAL,
+    AqualinkEntity,
+    safe_exec,
+)
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -319,17 +324,12 @@ async def test_entity_assumed_and_available(hass):
 
 async def test_safe_exec(hass):
     """Test assumed_state and_available properties for all values of online."""
-    client = get_aqualink_client()
-    system = get_aqualink_system(client)
-    light = get_aqualink_device(system, AqualinkLightToggle)
-    ha_light = AqualinkEntity(light)
-
     with patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
         async_noop = async_returns(None)
-        await ha_light.safe_exec(async_noop())
+        await safe_exec(async_noop())
         mock_warn.assert_not_called()
 
     with patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
         async_ex = async_raises(AqualinkServiceException)
-        await ha_light.safe_exec(async_ex())
+        await safe_exec(async_ex())
         mock_warn.assert_called_once()
