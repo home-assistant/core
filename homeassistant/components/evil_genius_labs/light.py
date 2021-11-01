@@ -37,7 +37,7 @@ class EvilGeniusLight(EvilGeniusEntity, light.LightEntity):
     _attr_supported_color_modes = {light.COLOR_MODE_RGB}
     _attr_color_mode = light.COLOR_MODE_RGB
 
-    def __init__(self, coordinator: EvilGeniusUpdateCoordinator):
+    def __init__(self, coordinator: EvilGeniusUpdateCoordinator) -> None:
         """Initialize the Evil Genius light."""
         super().__init__(coordinator)
         self._attr_unique_id = self.coordinator.info["wiFiChipId"]
