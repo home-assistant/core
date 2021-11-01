@@ -350,7 +350,9 @@ def find_next_time_expression_time(
             check_result = check_result.replace(fold=1)
 
             # Step 3: Check if check_result is in the future and earlier than result
-            if as_utc(check_result) > as_utc(now) and check_result < result:
+            if as_utc(check_result) > as_utc(now) and as_utc(check_result) < as_utc(
+                result
+            ):
                 return check_result
 
     return result
