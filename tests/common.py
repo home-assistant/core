@@ -397,19 +397,22 @@ def async_fire_time_changed(
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 
-def load_fixture(filename, integration=None):
-    """Load a fixture."""
-    if integration is None and "/" in filename:
+def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
+    """Get path of fixture."""
+    if integration is None and "/" in filename and not filename.startswith("helpers/"):
         integration, filename = filename.split("/", 1)
 
     if integration is None:
-        path = os.path.join(os.path.dirname(__file__), "fixtures", filename)
+        return pathlib.Path(__file__).parent.joinpath("fixtures", filename)
     else:
-        path = os.path.join(
-            os.path.dirname(__file__), "components", integration, "fixtures", filename
+        return pathlib.Path(__file__).parent.joinpath(
+            "components", integration, "fixtures", filename
         )
-    with open(path, encoding="utf-8") as fptr:
-        return fptr.read()
+
+
+def load_fixture(filename, integration=None):
+    """Load a fixture."""
+    return get_fixture_path(filename, integration).read_text()
 
 
 def mock_state_change_event(hass, new_state, old_state=None):

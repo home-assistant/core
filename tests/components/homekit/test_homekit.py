@@ -68,7 +68,7 @@ from homeassistant.util import json as json_util
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_fixture_path
 
 IP_ADDRESS = "127.0.0.1"
 
@@ -1536,11 +1536,7 @@ async def test_reload(hass, mock_zeroconf):
         entry.title,
         devices=[],
     )
-    yaml_path = os.path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "homekit/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "homekit")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
         f"{PATH_HOMEKIT}.HomeKit"
     ) as mock_homekit2, patch.object(homekit.bridge, "add_accessory"), patch(
@@ -1575,10 +1571,6 @@ async def test_reload(hass, mock_zeroconf):
         entry.title,
         devices=[],
     )
-
-
-def _get_fixtures_base_path():
-    return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 
 async def test_homekit_start_in_accessory_mode(
