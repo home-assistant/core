@@ -15,7 +15,7 @@ from tests.components.advantage_air import (
 
 
 async def test_number_platform(hass, aioclient_mock):
-    """Test sensor platform."""
+    """Test number platform."""
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,
