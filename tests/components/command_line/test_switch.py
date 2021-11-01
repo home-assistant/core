@@ -36,6 +36,41 @@ async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) ->
     )
     await hass.async_block_till_done()
 
+async def test_icon_template(hass):
+    """Test icon template."""
+    with assert_setup_component(1, "switch"):
+        assert await async_setup_component(
+            hass,
+            "switch",
+            {
+                "switch": {
+                    "platform": "command_line",
+                    "switches": {
+                        "test_command_line_switch": {
+                            "command_on": "echo 'on command'",
+                            "command_off": "echo 'off command'",
+                            "command_state": "cat {}",
+                            "icon_template": "{% if states.switch.test_state.state %}"
+                            "mdi:check"
+                            "{% endif %}",
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_command_line_switch")
+    assert state.attributes.get("icon") == ""
+
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_command_line_switch")
+    assert state.attributes["icon"] == "mdi:check"
 
 async def test_state_none(hass: HomeAssistant) -> None:
     """Test with none state."""
