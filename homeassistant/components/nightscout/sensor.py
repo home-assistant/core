@@ -71,7 +71,7 @@ class NightscoutSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
-        return self._get_bgl(self._state)
+        return self._state
 
     @property
     def icon(self):
@@ -95,13 +95,14 @@ class NightscoutSensor(SensorEntity):
             self._attributes = {
                 ATTR_DEVICE: value.device,
                 ATTR_DATE: value.date,
-                ATTR_DELTA: value.delta,
                 ATTR_DIRECTION: value.direction,
             }
             if self._unit_of_measurement == MMOL_L:
                 self._state = value.sgv_mmol
+                self._attributes[ATTR_DELTA] = value.delta_mmol
             else:
                 self._state = value.sgv
+                self._attributes[ATTR_DELTA] = value.delta
             self._icon = self._parse_icon()
         else:
             self._available = False

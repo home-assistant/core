@@ -1293,7 +1293,7 @@ py-cpuinfo==8.0.0
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nightscout
-py-nightscout==1.3.0
+py-nightscout==1.3.2
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
