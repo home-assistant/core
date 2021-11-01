@@ -1,16 +1,22 @@
-"""Config flow for Nina integration."""
+"""Config flow for Nina integration."""  # pylint: disable=R0801
 from __future__ import annotations
 
 from typing import Any
 
-from pynina import ApiError, Nina
 import voluptuous as vol
+from pynina import ApiError, Nina
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import _LOGGER, CONF_FILTER_CORONA, CONF_MESSAGE_SLOTS, CONF_REGIONS, DOMAIN
+from .const import (  # pylint: disable=W0611
+    _LOGGER,
+    CONF_FILTER_CORONA,
+    CONF_MESSAGE_SLOTS,
+    CONF_REGIONS,
+    DOMAIN,
+)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -21,67 +27,65 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         super().__init__()
-        self._allRegionCodesSorted: dict[str, str] = {}
+        self._all_region_codes_sorted: dict[str, str] = {}  # pylint: disable=E1136
 
-    async def async_step_user(
-        self: ConfigFlow, user_input: dict[str, Any] | None = None
+    async def async_step_user(  # pylint: disable=R0914,R0912
+        self: ConfigFlow,
+        user_input: dict[str, Any] | None = None,  # pylint: disable=E1136,C0326
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, Any] = {}  # pylint: disable=E1136
 
         config_entry: Any = await self.async_set_unique_id("NINA")
 
         if config_entry is not None:
             return self.async_abort(reason="already_configured")
 
-        hasError: bool = False
+        has_error: bool = False
 
-        if len(self._allRegionCodesSorted) == 0:
+        if len(self._all_region_codes_sorted) == 0:  # pylint: disable=R1702
             try:
                 nina: Nina = Nina()
 
-                allRegionCodes: dict[str, str] = {}
+                all_region_codes: dict[str, str] = {}  # pylint: disable=E1136
 
-                allRegionCodes = await nina.getAllRegionalCodes()
+                all_region_codes = await nina.getAllRegionalCodes()
 
                 # Swap Key/Values
-                allRegionCodesSwaped: dict[str, str] = {}
+                all_region_codes_swaped: dict[str, str] = {}  # pylint: disable=E1136
 
-                for key, value in allRegionCodes.items():
-                    if value not in allRegionCodesSwaped:
-                        allRegionCodesSwaped[value] = key
+                for key, value in all_region_codes.items():
+                    if value not in all_region_codes_swaped:
+                        all_region_codes_swaped[value] = key
                     else:
-                        for i in range(len(allRegionCodes)):
-                            tmpValue: str = value + "_" + str(i)
-                            if tmpValue not in allRegionCodesSwaped:
-                                allRegionCodesSwaped[tmpValue] = key
+                        for i in range(len(all_region_codes)):
+                            tmp_value: str = value + "_" + str(i)
+                            if tmp_value not in all_region_codes_swaped:
+                                all_region_codes_swaped[tmp_value] = key
                                 break
 
-                self._allRegionCodesSorted = {
-                    key: val
-                    for key, val in sorted(
-                        allRegionCodesSwaped.items(), key=lambda ele: ele[1]
-                    )
-                }
+                self._all_region_codes_sorted = dict(
+                    sorted(all_region_codes_swaped.items(), key=lambda ele: ele[1])
+                )
 
             except ApiError as err:
-                _LOGGER.warning(f"NINA setup error: {err}")
+                _LOGGER.warning("NINA setup error: %s", err)
                 errors["base"] = "cannot_connect"
-                hasError = True
+                has_error = True
             except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception(f"Unexpected exception: {err}")
+                _LOGGER.exception("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
-                hasError = True
+                has_error = True
 
-        if user_input is not None and not hasError:
-            config: dict[str, Any] = user_input
+        if user_input is not None and not has_error:
+            config: dict[str, Any] = user_input  # pylint: disable=E1136
 
-            tmp: dict[str, Any] = {}
+            tmp: dict[str, Any] = {}  # pylint: disable=E1136
 
             for reg in config[CONF_REGIONS]:
-                tmp[self._allRegionCodesSorted[reg]] = reg.split("_", 1)[0]
+                tmp[self._all_region_codes_sorted[reg]] = reg.split("_", 1)[0]
 
-            compact: dict[str, Any] = {}
+            compact: dict[str, Any] = {}  # pylint: disable=E1136
 
             for key, val in tmp.items():
                 if val in compact:
@@ -99,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_REGIONS): cv.multi_select(
-                        self._allRegionCodesSorted
+                        self._all_region_codes_sorted
                     ),
                     vol.Required(CONF_MESSAGE_SLOTS, default=5): cv.positive_int,
                     vol.Required(CONF_FILTER_CORONA, default=True): cv.boolean,

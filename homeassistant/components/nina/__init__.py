@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-PLATFORMS: list[str] = ["binary_sensor"]
+PLATFORMS: list[str] = ["binary_sensor"]  # pylint: disable=E1136
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
