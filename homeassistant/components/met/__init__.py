@@ -1,7 +1,11 @@
 """The met component."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from random import randrange
+from types import MappingProxyType
+from typing import Any, Callable
 
 import metno
 
@@ -79,9 +83,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class MetDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Met data."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize global Met data updater."""
-        self._unsub_track_home = None
+        self._unsub_track_home: Callable | None = None
         self.weather = MetWeatherData(
             hass, config_entry.data, hass.config.units.is_metric
         )
@@ -91,19 +95,19 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> MetWeatherData:
         """Fetch data from Met."""
         try:
             return await self.weather.fetch_data()
         except Exception as err:
             raise UpdateFailed(f"Update failed: {err}") from err
 
-    def track_home(self):
+    def track_home(self) -> None:
         """Start tracking changes to HA home setting."""
         if self._unsub_track_home:
             return
 
-        async def _async_update_weather_data(_event=None):
+        async def _async_update_weather_data(_event: str | None = None) -> None:
             """Update weather data."""
             if self.weather.set_coordinates():
                 await self.async_refresh()
@@ -112,7 +116,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
             EVENT_CORE_CONFIG_UPDATE, _async_update_weather_data
         )
 
-    def untrack_home(self):
+    def untrack_home(self) -> None:
         """Stop tracking changes to HA home setting."""
         if self._unsub_track_home:
             self._unsub_track_home()
@@ -122,18 +126,19 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
 class MetWeatherData:
     """Keep data for Met.no weather entities."""
 
-    def __init__(self, hass, config, is_metric):
+    def __init__(
+        self, hass: HomeAssistant, config: MappingProxyType[str, Any], is_metric: bool
+    ) -> None:
         """Initialise the weather entity data."""
         self.hass = hass
         self._config = config
         self._is_metric = is_metric
-        self._weather_data = None
-        self.current_weather_data = {}
+        self.current_weather_data: dict = {}
         self.daily_forecast = None
         self.hourly_forecast = None
-        self._coordinates = None
+        self._coordinates: dict[str, str] | None = None
 
-    def set_coordinates(self):
+    def set_coordinates(self) -> bool:
         """Weather data inialization - set the coordinates."""
         if self._config.get(CONF_TRACK_HOME, False):
             latitude = self.hass.config.latitude
@@ -163,7 +168,7 @@ class MetWeatherData:
         )
         return True
 
-    async def fetch_data(self):
+    async def fetch_data(self) -> MetWeatherData:
         """Fetch data from API - (current weather and forecast)."""
         await self._weather_data.fetching_data()
         self.current_weather_data = self._weather_data.get_current_weather()
