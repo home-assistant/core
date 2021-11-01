@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "site": "\u30b5\u30a4\u30c8ID"
+                },
+                "title": "UniFi\u30b3\u30f3\u30c8\u30ed\u30fc\u30e9\u30fc\u306e\u8a2d\u5b9a"
+            }
+        }
+    }
+}
