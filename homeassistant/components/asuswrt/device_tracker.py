@@ -88,7 +88,7 @@ class AsusWrtDevice(ScannerEntity):
     def icon(self) -> str:
         """Return device icon."""
         return "mdi:lan-connect" if self._device.is_connected else "mdi:lan-disconnect"
-    
+
     @property
     def ip_address(self) -> str:
         """Return the primary ip address of the device."""
