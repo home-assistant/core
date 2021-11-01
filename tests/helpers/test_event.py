@@ -2907,9 +2907,19 @@ async def test_periodic_task_entering_dst(hass):
     dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
-    now = dt_util.utcnow()
+    # DST starts early morning March 27th 2022
+    yy = 2022
+    mm = 3
+    dd = 27
+
+    # There's no 2022-03-27 02:30, the event should not fire until 2022-03-28 02:30
     time_that_will_not_match_right_away = datetime(
-        now.year + 1, 3, 25, 2, 31, 0, tzinfo=timezone
+        yy, mm, dd, 1, 28, 0, tzinfo=timezone, fold=0
+    )
+    # Make sure we enter DST during the test
+    assert (
+        time_that_will_not_match_right_away.utcoffset()
+        != (time_that_will_not_match_right_away + timedelta(hours=2)).utcoffset()
     )
 
     with patch(
@@ -2924,25 +2934,25 @@ async def test_periodic_task_entering_dst(hass):
         )
 
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 3, 25, 1, 50, 0, 999999, tzinfo=timezone)
+        hass, datetime(yy, mm, dd, 1, 50, 0, 999999, tzinfo=timezone)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 3, 25, 3, 50, 0, 999999, tzinfo=timezone)
+        hass, datetime(yy, mm, dd, 3, 50, 0, 999999, tzinfo=timezone)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 3, 26, 1, 50, 0, 999999, tzinfo=timezone)
+        hass, datetime(yy, mm, dd + 1, 1, 50, 0, 999999, tzinfo=timezone)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 3, 26, 2, 50, 0, 999999, tzinfo=timezone)
+        hass, datetime(yy, mm, dd + 1, 2, 50, 0, 999999, tzinfo=timezone)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
@@ -2956,10 +2966,19 @@ async def test_periodic_task_leaving_dst(hass):
     dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
-    now = dt_util.utcnow()
+    # DST ends early morning Ocotber 30th 2022
+    yy = 2022
+    mm = 10
+    dd = 30
 
     time_that_will_not_match_right_away = datetime(
-        now.year + 1, 10, 28, 2, 28, 0, tzinfo=timezone, fold=1
+        yy, mm, dd, 2, 28, 0, tzinfo=timezone, fold=0
+    )
+
+    # Make sure we leave DST during the test
+    assert (
+        time_that_will_not_match_right_away.utcoffset()
+        != time_that_will_not_match_right_away.replace(fold=1).utcoffset()
     )
 
     with patch(
@@ -2973,37 +2992,133 @@ async def test_periodic_task_leaving_dst(hass):
             second=0,
         )
 
+    # The task should not fire yet
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 10, 28, 2, 5, 0, 999999, tzinfo=timezone, fold=0)
+        hass, datetime(yy, mm, dd, 2, 28, 0, 999999, tzinfo=timezone, fold=0)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
+    # The task should fire
     async_fire_time_changed(
-        hass, datetime(now.year + 1, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=0)
+        hass, datetime(yy, mm, dd, 2, 30, 0, 999999, tzinfo=timezone, fold=0)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
+    # The task should not fire again
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=0)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    # DST has ended, the task should not fire yet
     async_fire_time_changed(
         hass,
-        datetime(now.year + 2, 10, 28, 2, 45, 0, 999999, tzinfo=timezone, fold=1),
+        datetime(yy, mm, dd, 2, 15, 0, 999999, tzinfo=timezone, fold=1),
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    # The task should fire
+    async_fire_time_changed(
+        hass,
+        datetime(yy, mm, dd, 2, 45, 0, 999999, tzinfo=timezone, fold=1),
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
+    # The task should not fire again
     async_fire_time_changed(
         hass,
-        datetime(now.year + 2, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=1),
+        datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=1),
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
+    # The task should fire again the next day
     async_fire_time_changed(
-        hass, datetime(now.year + 2, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=1)
+        hass, datetime(yy, mm, dd + 1, 2, 55, 0, 999999, tzinfo=timezone, fold=1)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 3
+
+    unsub()
+
+
+async def test_periodic_task_leaving_dst_2(hass):
+    """Test periodic task behavior when leaving dst."""
+    timezone = dt_util.get_time_zone("Europe/Vienna")
+    dt_util.set_default_time_zone(timezone)
+    specific_runs = []
+
+    # DST ends early morning Ocotber 30th 2022
+    yy = 2022
+    mm = 10
+    dd = 30
+
+    time_that_will_not_match_right_away = datetime(
+        yy, mm, dd, 2, 28, 0, tzinfo=timezone, fold=0
+    )
+    # Make sure we leave DST during the test
+    assert (
+        time_that_will_not_match_right_away.utcoffset()
+        != time_that_will_not_match_right_away.replace(fold=1).utcoffset()
+    )
+
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        unsub = async_track_time_change(
+            hass,
+            callback(lambda x: specific_runs.append(x)),
+            minute=30,
+            second=0,
+        )
+
+    # The task should not fire yet
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 2, 28, 0, 999999, tzinfo=timezone, fold=0)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    # The task should fire
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=0)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    # DST has ended, the task should not fire yet
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 2, 15, 0, 999999, tzinfo=timezone, fold=1)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
+
+    # The task should fire
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 2, 45, 0, 999999, tzinfo=timezone, fold=1)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
+
+    # The task should not fire again
+    async_fire_time_changed(
+        hass,
+        datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=1),
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 2
+
+    # The task should fire again the next hour
+    async_fire_time_changed(
+        hass, datetime(yy, mm, dd, 3, 55, 0, 999999, tzinfo=timezone, fold=0)
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 3
 
     unsub()
 
