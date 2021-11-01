@@ -25,6 +25,7 @@ from homeassistant.util import ssl as ssl_util
 
 from .auth import setup_auth
 from .ban import setup_bans
+from .healthcheck import setup_healthcheck
 from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
@@ -48,6 +49,8 @@ CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
+CONF_HEALTHCHECK_ENABLED: Final = "healthcheck_enabled"
+CONF_HEALTHCHECK_THRESHOLD: Final = "healthcheck_threshold"
 
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
@@ -92,6 +95,8 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
+            vol.Optional(CONF_HEALTHCHECK_ENABLED, default=False): cv.boolean,
+            vol.Optional(CONF_HEALTHCHECK_THRESHOLD, default=3): cv.positive_int,
         }
     ),
 )
@@ -114,6 +119,8 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
+    healthcheck_enabled: bool
+    healthcheck_interval: int
 
 
 @bind_hass
@@ -158,6 +165,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
+    is_healthcheck_enabled = conf[CONF_HEALTHCHECK_ENABLED]
+    healtcheck_threshold = conf[CONF_HEALTHCHECK_THRESHOLD]
 
     server = HomeAssistantHTTP(
         hass,
@@ -172,6 +181,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
         ssl_profile=ssl_profile,
+        is_healthcheck_enabled=is_healthcheck_enabled,
+        healthcheck_threshold=healtcheck_threshold,
     )
 
     async def stop_server(event: Event) -> None:
@@ -221,6 +232,8 @@ class HomeAssistantHTTP:
         login_threshold: int,
         is_ban_enabled: bool,
         ssl_profile: str,
+        is_healthcheck_enabled: bool,
+        healthcheck_threshold: int,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         app = self.app = web.Application(
@@ -239,6 +252,9 @@ class HomeAssistantHTTP:
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
 
+        if is_healthcheck_enabled:
+            setup_healthcheck(hass, app, healthcheck_threshold)
+
         setup_auth(hass, app)
 
         setup_cors(app, cors_origins)
@@ -252,6 +268,7 @@ class HomeAssistantHTTP:
         self.trusted_proxies = trusted_proxies
         self.is_ban_enabled = is_ban_enabled
         self.ssl_profile = ssl_profile
+        self.is_healthcheck_enabled = is_healthcheck_enabled
         self._handler = None
         self.runner: web.AppRunner | None = None
         self.site: HomeAssistantTCPSite | None = None
