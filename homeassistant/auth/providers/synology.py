@@ -119,7 +119,10 @@ class SynologyAuthProvider(AuthProvider):
         _LOGGER.info(
             f"User {login_response_json['data']['account']} successfully authenticated to Synology DSM"
         )
-        return cast(dict[str, Any], login_response_json["data"])
+        return {
+            k: login_response_json["data"][k]
+            for k in login_response_json["data"].keys()
+        }
 
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
