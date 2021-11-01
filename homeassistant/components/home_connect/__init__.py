@@ -9,13 +9,17 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
+    ATTR_DEVICE_ID,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_DEVICE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -58,7 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SETTING_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_KEY): str,
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
     }
@@ -66,7 +70,7 @@ SERVICE_SETTING_SCHEMA = vol.Schema(
 
 SERVICE_OPTION_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_KEY): str,
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
         vol.Optional(ATTR_UNIT): str,
@@ -75,35 +79,34 @@ SERVICE_OPTION_SCHEMA = vol.Schema(
 
 SERVICE_PROGRAM_SCHEMA = vol.Any(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_PROGRAM): str,
         vol.Required(ATTR_KEY): str,
         vol.Required(ATTR_VALUE): vol.Any(int, str),
         vol.Optional(ATTR_UNIT): str,
     },
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_PROGRAM): str,
     },
 )
 
-SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
+SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 
 
 PLATFORMS = ["binary_sensor", "light", "sensor", "switch"]
 
 
-def _get_appliance_by_entity_id(
-    hass: HomeAssistant, entity_id: str
+def _get_appliance_by_device_id(
+    hass: HomeAssistant, device_id: str
 ) -> Optional[api.HomeConnectDevice]:
-    """Return a Home Connect appliance instance given an entity_id."""
+    """Return a Home Connect appliance instance given an device_id."""
     for hc in hass.data[DOMAIN].values():
         for dev_dict in hc.devices:
             device = dev_dict[CONF_DEVICE]
-            for entity in device.entities:
-                if entity.entity_id == entity_id:
-                    return device.appliance
-    _LOGGER.error("Appliance for %s not found.", entity_id)
+            if device.device_id == device_id:
+                return device.appliance
+    _LOGGER.error("Appliance for device id %s not found.", device_id)
     return None
 
 
@@ -129,13 +132,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _async_service_program(call, method):
         """Execute calls to services taking a program."""
         program = call.data[ATTR_PROGRAM]
-        entity_id = call.data[ATTR_ENTITY_ID]
+        device_id = call.data[ATTR_DEVICE_ID]
         options = {
             ATTR_KEY: call.data.get(ATTR_KEY),
             ATTR_VALUE: call.data.get(ATTR_VALUE),
             ATTR_UNIT: call.data.get(ATTR_UNIT),
         }
-        appliance = _get_appliance_by_entity_id(hass, entity_id)
+
+        appliance = _get_appliance_by_device_id(hass, device_id)
         if appliance is not None:
             await hass.async_add_executor_job(
                 getattr(appliance, method), program, options
@@ -143,8 +147,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _async_service_command(call, command):
         """Execute calls to services executing a command."""
-        entity_id = call.data[ATTR_ENTITY_ID]
-        appliance = _get_appliance_by_entity_id(hass, entity_id)
+        device_id = call.data[ATTR_DEVICE_ID]
+
+        appliance = _get_appliance_by_device_id(hass, device_id)
         if appliance is not None:
             await hass.async_add_executor_job(appliance.execute_command, command)
 
@@ -153,8 +158,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         key = call.data[ATTR_KEY]
         value = call.data[ATTR_VALUE]
         unit = call.data.get(ATTR_UNIT)
-        entity_id = call.data[ATTR_ENTITY_ID]
-        appliance = _get_appliance_by_entity_id(hass, entity_id)
+        device_id = call.data[ATTR_DEVICE_ID]
+
+        appliance = _get_appliance_by_device_id(hass, device_id)
         if appliance is not None:
             if unit is not None:
                 await hass.async_add_executor_job(
@@ -274,9 +280,23 @@ async def update_all_devices(hass, entry):
     """Update all the devices."""
     data = hass.data[DOMAIN]
     hc_api = data[entry.entry_id]
+
+    device_registry = dr.async_get(hass)
     try:
         await hass.async_add_executor_job(hc_api.get_devices)
         for device_dict in hc_api.devices:
-            await hass.async_add_executor_job(device_dict["device"].initialize)
+            device = device_dict["device"]
+
+            device_entry = device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, device.appliance.haId)},
+                name=device.appliance.name,
+                manufacturer=device.appliance.brand,
+                model=device.appliance.vib,
+            )
+
+            device.device_id = device_entry.id
+
+            await hass.async_add_executor_job(device.initialize)
     except HTTPError as err:
         _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
