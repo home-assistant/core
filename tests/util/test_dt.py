@@ -456,3 +456,179 @@ def test_find_next_time_expression_time_dst_chicago():
     assert dt_util.as_utc(datetime(2021, 11, 8, 2, 30, 0, tzinfo=tz)) == find(
         datetime(2021, 11, 7, 2, 55, 0, tzinfo=tz, fold=0), 2, 30, 0
     )
+
+
+def _get_matches(hours, minutes, seconds):
+    matching_hours = dt_util.parse_time_expression(hours, 0, 23)
+    matching_minutes = dt_util.parse_time_expression(minutes, 0, 59)
+    matching_seconds = dt_util.parse_time_expression(seconds, 0, 59)
+    return matching_hours, matching_minutes, matching_seconds
+
+
+def test_find_next_time_expression_day_before_dst_change_the_same_time():
+    """Test the day before DST to establish behavior without DST."""
+    tz = dt_util.get_time_zone("America/Chicago")
+    dt_util.set_default_time_zone(tz)
+
+    # Not in DST yet
+    hour_minute_second = (12, 30, 1)
+    test_time = datetime(2021, 10, 7, *hour_minute_second, tzinfo=tz, fold=0)
+    matching_hours, matching_minutes, matching_seconds = _get_matches(
+        *hour_minute_second
+    )
+    next_time = dt_util.find_next_time_expression_time(
+        test_time, matching_seconds, matching_minutes, matching_hours
+    )
+    assert next_time == datetime(2021, 10, 7, *hour_minute_second, tzinfo=tz, fold=0)
+    assert next_time.fold == 0
+    assert dt_util.as_utc(next_time) == datetime(
+        2021, 10, 7, 17, 30, 1, tzinfo=dt_util.UTC
+    )
+
+
+def test_find_next_time_expression_time_leave_dst_chicago_before_the_fold_30_s():
+    """Test leaving daylight saving time for find_next_time_expression_time 30s into the future."""
+    tz = dt_util.get_time_zone("America/Chicago")
+    dt_util.set_default_time_zone(tz)
+
+    # Leaving DST, clocks are rolled back
+
+    # Move ahead 30 seconds not folded yet
+    hour_minute_second = (1, 30, 31)
+    test_time = datetime(2021, 11, 7, 1, 30, 1, tzinfo=tz, fold=0)
+    matching_hours, matching_minutes, matching_seconds = _get_matches(
+        *hour_minute_second
+    )
+    next_time = dt_util.find_next_time_expression_time(
+        test_time, matching_seconds, matching_minutes, matching_hours
+    )
+    assert next_time == datetime(2021, 11, 7, 1, 30, 31, tzinfo=tz, fold=0)
+    assert dt_util.as_utc(next_time) == datetime(
+        2021, 11, 7, 6, 30, 31, tzinfo=dt_util.UTC
+    )
+    assert next_time.fold == 0
+
+
+def test_find_next_time_expression_time_leave_dst_chicago_before_the_fold_same_time():
+    """Test leaving daylight saving time for find_next_time_expression_time with the same time."""
+    tz = dt_util.get_time_zone("America/Chicago")
+    dt_util.set_default_time_zone(tz)
+
+    # Leaving DST, clocks are rolled back
+
+    # Move to the same time not folded yet
+    hour_minute_second = (0, 30, 1)
+    test_time = datetime(2021, 11, 7, *hour_minute_second, tzinfo=tz, fold=0)
+    matching_hours, matching_minutes, matching_seconds = _get_matches(
+        *hour_minute_second
+    )
+    next_time = dt_util.find_next_time_expression_time(
+        test_time, matching_seconds, matching_minutes, matching_hours
+    )
+    assert next_time == datetime(2021, 11, 7, *hour_minute_second, tzinfo=tz, fold=0)
+    assert dt_util.as_utc(next_time) == datetime(
+        2021, 11, 7, 5, 30, 1, tzinfo=dt_util.UTC
+    )
+    assert next_time.fold == 0
+
+
+def test_find_next_time_expression_time_leave_dst_chicago_into_the_fold_same_time():
+    """Test leaving daylight saving time for find_next_time_expression_time."""
+    tz = dt_util.get_time_zone("America/Chicago")
+    dt_util.set_default_time_zone(tz)
+
+    # Leaving DST, clocks are rolled back
+
+    # Find the same time inside the fold
+    hour_minute_second = (1, 30, 1)
+    test_time = datetime(2021, 11, 7, *hour_minute_second, tzinfo=tz, fold=0)
+    matching_hours, matching_minutes, matching_seconds = _get_matches(
+        *hour_minute_second
+    )
+
+    next_time = dt_util.find_next_time_expression_time(
+        test_time, matching_seconds, matching_minutes, matching_hours
+    )
+    assert next_time == datetime(2021, 11, 7, *hour_minute_second, tzinfo=tz, fold=1)
+    assert next_time.fold == 0
+    assert dt_util.as_utc(next_time) == datetime(
+        2021, 11, 7, 6, 30, 1, tzinfo=dt_util.UTC
+    )
+
+
+def test_find_next_time_expression_time_leave_dst_chicago_into_the_fold_ahead_1_hour_10_min():
+    """Test leaving daylight saving time for find_next_time_expression_time."""
+    tz = dt_util.get_time_zone("America/Chicago")
+    dt_util.set_default_time_zone(tz)
+
+    # Leaving DST, clocks are rolled back
+
+    # Find 1h 10m after into the fold
+    # Start at 01:30:01 fold=0
+    # Reach to 01:20:01 fold=1
+    hour_minute_second = (1, 20, 1)
+    test_time = datetime(2021, 11, 7, 1, 30, 1, tzinfo=tz, fold=0)
+    matching_hours, matching_minutes, matching_seconds = _get_matches(
+        *hour_minute_second
+    )
+
+    next_time = dt_util.find_next_time_expression_time(
+        test_time, matching_seconds, matching_minutes, matching_hours
+    )
+    assert next_time == datetime(2021, 11, 7, *hour_minute_second, tzinfo=tz, fold=1)
+    assert next_time.fold == 1  # time is ambiguous
+    assert dt_util.as_utc(next_time) == datetime(
+        2021, 11, 7, 7, 20, 1, tzinfo=dt_util.UTC
+    )
+
+
+def test_find_next_time_expression_time_leave_dst_chicago_inside_the_fold_ahead_10_min():
+    """Test leaving daylight saving time for find_next_time_expression_time."""
+    tz = dt_util.get_time_zone("America/Chicago")
+    dt_util.set_default_time_zone(tz)
+
+    # Leaving DST, clocks are rolled back
+
+    # Find 10m later while we are in the fold
+    # Start at 01:30:01 fold=0
+    # Reach to 01:40:01 fold=1
+    hour_minute_second = (1, 40, 1)
+    test_time = datetime(2021, 11, 7, 1, 30, 1, tzinfo=tz, fold=1)
+    matching_hours, matching_minutes, matching_seconds = _get_matches(
+        *hour_minute_second
+    )
+
+    next_time = dt_util.find_next_time_expression_time(
+        test_time, matching_seconds, matching_minutes, matching_hours
+    )
+    assert next_time == datetime(2021, 11, 7, *hour_minute_second, tzinfo=tz, fold=1)
+    assert next_time.fold == 1  # time is ambiguous
+    assert dt_util.as_utc(next_time) == datetime(
+        2021, 11, 7, 7, 40, 1, tzinfo=dt_util.UTC
+    )
+
+
+def test_find_next_time_expression_time_leave_dst_chicago_past_the_fold_ahead_2_hour_10_min():
+    """Test leaving daylight saving time for find_next_time_expression_time."""
+    tz = dt_util.get_time_zone("America/Chicago")
+    dt_util.set_default_time_zone(tz)
+
+    # Leaving DST, clocks are rolled back
+
+    # Find 1h 10m after into the fold
+    # Start at 01:30:01 fold=0
+    # Reach to 02:20:01 past the fold
+    hour_minute_second = (2, 20, 1)
+    test_time = datetime(2021, 11, 7, 1, 30, 1, tzinfo=tz, fold=0)
+    matching_hours, matching_minutes, matching_seconds = _get_matches(
+        *hour_minute_second
+    )
+
+    next_time = dt_util.find_next_time_expression_time(
+        test_time, matching_seconds, matching_minutes, matching_hours
+    )
+    assert next_time == datetime(2021, 11, 7, *hour_minute_second, tzinfo=tz, fold=1)
+    assert next_time.fold == 0  # Time is no longer ambiguous
+    assert dt_util.as_utc(next_time) == datetime(
+        2021, 11, 7, 8, 20, 1, tzinfo=dt_util.UTC
+    )
