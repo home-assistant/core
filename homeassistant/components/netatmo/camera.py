@@ -187,6 +187,7 @@ class NetatmoCamera(NetatmoBase, Camera):
                 )
 
             self.async_write_ha_state()
+            return
 
     @property
     def _data(self) -> pyatmo.AsyncCameraData:
