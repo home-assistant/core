@@ -3454,7 +3454,7 @@ async def test_periodic_task_entering_dst(hass):
 
 async def test_periodic_task_entering_dst_2(hass):
     """Test periodic task behavior when entering dst.
-    
+
     This tests a task firing every second in the range 0..58 (not *:*:59)
     """
     timezone = dt_util.get_time_zone("Europe/Vienna")
