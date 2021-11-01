@@ -12,7 +12,17 @@ from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_SERIAL_NUMBER,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
+
+
+def _simulated_returns(index, global_measure=None):
+    returns = {
+        3: 45.678,  # power
+        21: 9.876,  # temperature
+        5: 12345,  # energy
+    }
+    return returns[index]
 
 
 async def test_form(hass):
@@ -150,16 +160,85 @@ async def test_form_invalid_com_ports(hass):
 
 
 # Tests below can be deleted after deprecation period is finished.
-async def test_import(hass):
-    """Test configuration.yaml import used during migration."""
-    TESTDATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        return_value=None,
-    ):
+async def test_import_day(hass):
+    """Test .yaml import when the inverter is able to communicate."""
+    TEST_DATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
+
+    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None,), patch(
+        "aurorapy.client.AuroraSerialClient.serial_number",
+        return_value="9876543",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.version",
+        return_value="9.8.7.6",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.pn",
+        return_value="A.B.C",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.firmware",
+        return_value="1.234",
+    ), patch(
+        "homeassistant.components.aurora_abb_powerone.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TEST_DATA
         )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_PORT] == "/dev/ttyUSB7"
     assert result["data"][CONF_ADDRESS] == 3
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_night(hass):
+    """Test .yaml import when the inverter is inaccessible (e.g. darkness)."""
+    TEST_DATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
+
+    # First time round, no response.
+    with patch(
+        "aurorapy.client.AuroraSerialClient.connect",
+        side_effect=AuroraError("No response after"),
+    ) as mock_connect:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TEST_DATA
+        )
+
+    configs = hass.config_entries.async_entries(DOMAIN)
+    assert len(configs) == 1
+    entry = configs[0]
+    assert not entry.unique_id
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+    assert len(mock_connect.mock_calls) == 1
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_PORT] == "/dev/ttyUSB7"
+    assert result["data"][CONF_ADDRESS] == 3
+
+    # Second time round, talking this time.
+    with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None,), patch(
+        "aurorapy.client.AuroraSerialClient.serial_number",
+        return_value="9876543",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.version",
+        return_value="9.8.7.6",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.pn",
+        return_value="A.B.C",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.firmware",
+        return_value="1.234",
+    ), patch(
+        "homeassistant.components.aurora_abb_powerone.config_flow._LOGGER.getEffectiveLevel",
+        return_value=INFO,
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.measure",
+        side_effect=_simulated_returns,
+    ):
+        result = await entry.async_setup(hass)
+        assert entry.state == ConfigEntryState.LOADED
+        assert entry.unique_id
+
+        assert len(mock_connect.mock_calls) == 1
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.power_output").state == "45.7"

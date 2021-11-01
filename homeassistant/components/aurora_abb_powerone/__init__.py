@@ -10,13 +10,15 @@
 
 import logging
 
-from aurorapy.client import AuroraSerialClient
+from aurorapy.client import AuroraError, AuroraSerialClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .config_flow import validate_and_connect
+from .const import ATTR_SERIAL_NUMBER, DOMAIN
 
 PLATFORMS = ["sensor"]
 
