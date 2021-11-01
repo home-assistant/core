@@ -251,9 +251,9 @@ class AsusWrtRouter:
             self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
 
         # Load tracked entities from registry
+        entity_reg = er.async_get(self.hass)
         track_entries = er.async_entries_for_config_entry(
-            er.async_get(self.hass),
-            self._entry.entry_id,
+            entity_reg, self._entry.entry_id
         )
         for entry in track_entries:
             if entry.domain == TRACKER_DOMAIN:
@@ -261,12 +261,12 @@ class AsusWrtRouter:
                 # migrate entity unique ID if wrong formatted
                 if device_mac != entry.unique_id:
                     try:
-                        entity_registry.async_update_entity(
+                        entity_reg.async_update_entity(
                             entry.entity_id, new_unique_id=device_mac
                         )
                     except ValueError:
                         # correct entity already exist
-                        entity_registry.async_remove(entry.entity_id)
+                        entity_reg.async_remove(entry.entity_id)
                         continue
                 self._devices[device_mac] = AsusWrtDevInfo(
                     device_mac, entry.original_name
