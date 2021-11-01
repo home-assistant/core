@@ -5,8 +5,8 @@ from maxcube.cube import MaxCube
 from maxcube.windowshutter import MaxWindowShutter
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_WINDOW,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_WINDOW,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
