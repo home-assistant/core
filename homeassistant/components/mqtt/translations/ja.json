@@ -4,14 +4,18 @@
             "broker": {
                 "data": {
                     "broker": "\u30d6\u30ed\u30fc\u30ab\u30fc",
+                    "discovery": "\u691c\u51fa\u3092\u6709\u52b9\u306b\u3059\u308b",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
-                    "port": "\u30dd\u30fc\u30c8"
+                    "port": "\u30dd\u30fc\u30c8",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 }
             },
             "hassio_confirm": {
                 "data": {
                     "discovery": "\u691c\u51fa\u3092\u6709\u52b9\u306b\u3059\u308b"
-                }
+                },
+                "description": "\u30a2\u30c9\u30aa\u30f3 {addon} \u304c\u63d0\u4f9b\u3059\u308bMQTT broker\u306b\u63a5\u7d9a\u3059\u308b\u3088\u3046\u306bHome Assistant\u3092\u8a2d\u5b9a\u3057\u307e\u3059\u304b\uff1f",
+                "title": "HomeAssistant\u30a2\u30c9\u30aa\u30f3\u3092\u4ecb\u3057\u305fMQTT Broker"
             }
         }
     }

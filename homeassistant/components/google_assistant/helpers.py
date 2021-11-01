@@ -521,8 +521,7 @@ class GoogleEntity:
             if area and area.name:
                 device["roomHint"] = area.name
 
-        device_info = await _get_device_info(device_entry)
-        if device_info:
+        if device_info := await _get_device_info(device_entry):
             device["deviceInfo"] = device_info
 
         return device
