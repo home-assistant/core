@@ -12,7 +12,6 @@ import logging
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 
-from homeassistant import data_entry_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -53,7 +52,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             # Check if this unique_id has already been used
             for existing_entry in hass.config_entries.async_entries(DOMAIN):
                 if existing_entry.unique_id == new_id:
-                    raise data_entry_flow.AbortFlow("already_configured")
+                    _LOGGER.debug(
+                        "Remove already configured config entry for id %s", new_id
+                    )
+                    hass.async_create_task(
+                        hass.config_entries.async_remove(entry.entry_id)
+                    )
+                    return False
             entry.unique_id = new_id
             hass.config_entries.async_update_entry(entry, unique_id=new_id)
 
