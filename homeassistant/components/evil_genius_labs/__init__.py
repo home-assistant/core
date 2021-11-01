@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import cast
 
 from async_timeout import timeout
 import pyevilgenius
@@ -47,7 +48,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class EvilGeniusUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
+class EvilGeniusUpdateCoordinator(update_coordinator.DataUpdateCoordinator[dict]):
     """Update coordinator for Evil Genius data."""
 
     info: dict
@@ -67,7 +68,7 @@ class EvilGeniusUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
     @property
     def device_name(self) -> str:
         """Return the device name."""
-        return self.data["name"]["value"]
+        return cast(str, self.data["name"]["value"])
 
     async def _async_update_data(self) -> dict:
         """Update Evil Genius data."""
@@ -76,7 +77,7 @@ class EvilGeniusUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
                 self.info = await self.client.get_info()
 
         async with timeout(5):
-            return await self.client.get_data()
+            return cast(dict, await self.client.get_data())
 
 
 class EvilGeniusEntity(update_coordinator.CoordinatorEntity):

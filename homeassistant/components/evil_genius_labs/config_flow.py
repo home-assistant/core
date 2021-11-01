@@ -30,10 +30,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         data = await hub.get_data()
+        info = await hub.get_info()
     except aiohttp.ClientError as err:
         raise CannotConnect from err
 
-    return {"title": data["name"]["value"]}
+    return {"title": data["name"]["value"], "unique_id": info["wiFiChipId"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -65,6 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(info["unique_id"])
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(

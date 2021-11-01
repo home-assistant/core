@@ -6,8 +6,11 @@ from typing import Any, cast
 from async_timeout import timeout
 
 from homeassistant.components import light
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EvilGeniusEntity
+from . import EvilGeniusEntity, EvilGeniusUpdateCoordinator
 from .const import DOMAIN
 from .util import update_when_done
 
@@ -15,9 +18,13 @@ HA_NO_EFFECT = "None"
 FIB_NO_EFFECT = "Solid Color"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Evil Genius light platform."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: EvilGeniusUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([EvilGeniusLight(coordinator)])
 
 
@@ -30,7 +37,7 @@ class EvilGeniusLight(EvilGeniusEntity, light.LightEntity):
     _attr_supported_color_modes = {light.COLOR_MODE_RGB}
     _attr_color_mode = light.COLOR_MODE_RGB
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: EvilGeniusUpdateCoordinator):
         """Initialize the Evil Genius light."""
         super().__init__(coordinator)
         self._attr_unique_id = self.coordinator.info["wiFiChipId"]
@@ -44,17 +51,17 @@ class EvilGeniusLight(EvilGeniusEntity, light.LightEntity):
     @property
     def name(self) -> str:
         """Return name."""
-        return self.coordinator.data["name"]["value"]
+        return cast(str, self.coordinator.data["name"]["value"])
 
     @property
     def is_on(self) -> bool:
         """Return if light is on."""
-        return self.coordinator.data["power"]["value"] == 1
+        return cast(int, self.coordinator.data["power"]["value"]) == 1
 
     @property
     def brightness(self) -> int:
         """Return brightness."""
-        return self.coordinator.data["brightness"]["value"]
+        return cast(int, self.coordinator.data["brightness"]["value"])
 
     @property
     def rgb_color(self) -> tuple[int, int, int]:
@@ -70,9 +77,12 @@ class EvilGeniusLight(EvilGeniusEntity, light.LightEntity):
     @property
     def effect(self) -> str:
         """Return current effect."""
-        value = self.coordinator.data["pattern"]["options"][
-            self.coordinator.data["pattern"]["value"]
-        ]
+        value = cast(
+            str,
+            self.coordinator.data["pattern"]["options"][
+                self.coordinator.data["pattern"]["value"]
+            ],
+        )
         if value == FIB_NO_EFFECT:
             return HA_NO_EFFECT
         return value

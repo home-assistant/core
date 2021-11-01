@@ -1,14 +1,15 @@
 """Test the Evil Genius Labs config flow."""
 from unittest.mock import patch
 
+import aiohttp
+
 from homeassistant import config_entries
-from homeassistant.components.evil_genius_labs.config_flow import CannotConnect
 from homeassistant.components.evil_genius_labs.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 
-async def test_form(hass: HomeAssistant, data_fixture) -> None:
+async def test_form(hass: HomeAssistant, data_fixture, info_fixture) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -19,6 +20,9 @@ async def test_form(hass: HomeAssistant, data_fixture) -> None:
     with patch(
         "pyevilgenius.EvilGeniusDevice.get_data",
         return_value=data_fixture,
+    ), patch(
+        "pyevilgenius.EvilGeniusDevice.get_info",
+        return_value=info_fixture,
     ), patch(
         "homeassistant.components.evil_genius_labs.async_setup_entry",
         return_value=True,
@@ -47,7 +51,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "pyevilgenius.EvilGeniusDevice.get_data",
-        side_effect=CannotConnect,
+        side_effect=aiohttp.ClientError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -58,3 +62,24 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_unknown(hass: HomeAssistant) -> None:
+    """Test we handle unknown error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "pyevilgenius.EvilGeniusDevice.get_data",
+        side_effect=ValueError("BOOM"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+            },
+        )
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
