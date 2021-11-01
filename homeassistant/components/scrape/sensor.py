@@ -16,8 +16,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
-    CONF_ICON,
     CONF_HEADERS,
+    CONF_ICON,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
