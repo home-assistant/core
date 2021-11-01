@@ -399,7 +399,11 @@ fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 def load_fixture(filename):
     """Load a fixture."""
-    path = os.path.join(os.path.dirname(__file__), "fixtures", filename)
+    if "/" in filename:
+        integration, name = filename.split("/", 1)
+        path = os.path.join(os.path.dirname(__file__), "components", integration, name)
+    else:
+        path = os.path.join(os.path.dirname(__file__), "fixtures", filename)
     with open(path, encoding="utf-8") as fptr:
         return fptr.read()
 
