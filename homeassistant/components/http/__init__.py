@@ -120,7 +120,7 @@ class ConfData(TypedDict, total=False):
     ip_ban_enabled: bool
     ssl_profile: str
     healthcheck_enabled: bool
-    healthcheck_interval: int
+    healtcheck_threshold: int
 
 
 @bind_hass
