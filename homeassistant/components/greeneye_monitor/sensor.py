@@ -12,7 +12,9 @@ from homeassistant.const import (
     CONF_SENSOR_TYPE,
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
     POWER_WATT,
     TIME_HOURS,
@@ -43,9 +45,6 @@ DATA_WATT_SECONDS = "watt_seconds"
 UNIT_WATTS = POWER_WATT
 
 COUNTER_ICON = "mdi:counter"
-CURRENT_SENSOR_ICON = "mdi:flash"
-TEMPERATURE_ICON = "mdi:thermometer"
-VOLTAGE_ICON = "mdi:current-ac"
 
 
 async def async_setup_platform(
@@ -171,8 +170,8 @@ class GEMSensor(Generic[T], SensorEntity):
 class CurrentSensor(GEMSensor[greeneye.monitor.Channel]):
     """Entity showing power usage on one channel of the monitor."""
 
-    _attr_icon = CURRENT_SENSOR_ICON
     _attr_native_unit_of_measurement = UNIT_WATTS
+    _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(
         self, monitor_serial_number: int, number: int, name: str, net_metering: bool
@@ -279,7 +278,6 @@ class TemperatureSensor(GEMSensor[greeneye.monitor.TemperatureSensor]):
     """Entity showing temperature from one temperature sensor."""
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_icon = TEMPERATURE_ICON
 
     def __init__(
         self, monitor_serial_number: int, number: int, name: str, unit: str
@@ -310,8 +308,8 @@ class TemperatureSensor(GEMSensor[greeneye.monitor.TemperatureSensor]):
 class VoltageSensor(GEMSensor[greeneye.monitor.Monitor]):
     """Entity showing voltage."""
 
-    _attr_icon = VOLTAGE_ICON
     _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+    _attr_device_class = DEVICE_CLASS_VOLTAGE
 
     def __init__(self, monitor_serial_number: int, number: int, name: str) -> None:
         """Construct the entity."""
