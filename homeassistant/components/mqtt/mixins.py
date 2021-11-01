@@ -189,8 +189,8 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_OBJECT_ID): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -220,12 +220,9 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
 def init_entity_id_from_config(hass, entity, config, entity_id_format):
     """Set entity_id from object_id if defined in config."""
     if CONF_OBJECT_ID in config:
-        if entity_id_format != "":
-            entity.entity_id = generate_entity_id(
-                entity_id_format, config[CONF_OBJECT_ID], None, hass
-            )
-        else:
-            _LOGGER.warning("Field '_entity_id_format' not configurate")
+        entity.entity_id = generate_entity_id(
+            entity_id_format, config[CONF_OBJECT_ID], None, hass
+        )
 
 
 class MqttAttributes(Entity):
@@ -606,7 +603,7 @@ class MqttEntity(
 ):
     """Representation of an MQTT entity."""
 
-    _entity_id_format = ""
+    _entity_id_format: str
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Init the MQTT Entity."""
