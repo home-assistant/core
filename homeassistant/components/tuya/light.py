@@ -178,6 +178,13 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
     "tgq": (
         TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name="Light",
+            brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
+            brightness_max=DPCode.BRIGHTNESS_MAX_1,
+            brightness_min=DPCode.BRIGHTNESS_MIN_1,
+        ),
+        TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_1,
             name="Light",
             brightness=DPCode.BRIGHT_VALUE_1,
