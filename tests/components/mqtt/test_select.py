@@ -171,6 +171,50 @@ async def test_run_select_service_optimistic(hass, mqtt_mock):
     assert state.state == "beer"
 
 
+async def test_run_select_service_optimistic_with_command_template(hass, mqtt_mock):
+    """Test that set_value service works in optimistic mode and with a command_template."""
+    topic = "test/select"
+
+    fake_state = ha.State("select.test", "milk")
+
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ):
+        assert await async_setup_component(
+            hass,
+            select.DOMAIN,
+            {
+                "select": {
+                    "platform": "mqtt",
+                    "command_topic": topic,
+                    "name": "Test Select",
+                    "options": ["milk", "beer"],
+                    "command_template": '{"option": "{{ value }}"}',
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_select")
+    assert state.state == "milk"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "beer"},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        topic, '{"option": "beer"}', 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("select.test_select")
+    assert state.state == "beer"
+
+
 async def test_run_select_service(hass, mqtt_mock):
     """Test that set_value service works in non optimistic mode."""
     cmd_topic = "test/select/set"
@@ -204,6 +248,42 @@ async def test_run_select_service(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with(cmd_topic, "milk", 0, False)
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
+
+
+async def test_run_select_service_with_command_template(hass, mqtt_mock):
+    """Test that set_value service works in non optimistic mode and with a command_template."""
+    cmd_topic = "test/select/set"
+    state_topic = "test/select"
+
+    assert await async_setup_component(
+        hass,
+        select.DOMAIN,
+        {
+            "select": {
+                "platform": "mqtt",
+                "command_topic": cmd_topic,
+                "state_topic": state_topic,
+                "name": "Test Select",
+                "options": ["milk", "beer"],
+                "command_template": '{"option": "{{ value }}"}',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, state_topic, "beer")
+    state = hass.states.get("select.test_select")
+    assert state.state == "beer"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "milk"},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        cmd_topic, '{"option": "milk"}', 0, False
+    )
 
 
 async def test_availability_when_connection_lost(hass, mqtt_mock):
