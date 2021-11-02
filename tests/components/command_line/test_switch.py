@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 
 async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:

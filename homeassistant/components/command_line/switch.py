@@ -165,8 +165,8 @@ class CommandSwitch(SwitchEntity):
                 payload = self._value_template.render_with_possible_json_value(payload)
             self._state = payload.lower() == "true"
             if self._icon_template:
-                 self._attr_icon = self._icon_template.render_with_possible_json_value(
-                     payload
+                self._attr_icon = self._icon_template.render_with_possible_json_value(
+                    payload
                  )
 
     def turn_on(self, **kwargs):
