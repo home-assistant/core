@@ -43,15 +43,15 @@ async def async_setup_entry(hass, config, async_add_entities):
             coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
         )
     except InvalidAuth:
-        pass
-    else:
-        async_add_entities(
-            [
-                WallboxNumber(coordinator, config, description)
-                for ent in coordinator.data
-                if (description := NUMBER_TYPES.get(ent))
-            ]
-        )
+        return
+
+    async_add_entities(
+        [
+            WallboxNumber(coordinator, config, description)
+            for ent in coordinator.data
+            if (description := NUMBER_TYPES.get(ent))
+        ]
+    )
 
 
 class WallboxNumber(CoordinatorEntity, NumberEntity):
