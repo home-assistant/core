@@ -19,7 +19,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "reauth_invalid": "Re-authentication failed, Serial Number was invalid"
+      "reauth_invalid": "Re-authentication failed; Serial Number does not match original"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
