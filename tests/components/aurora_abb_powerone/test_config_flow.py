@@ -188,6 +188,7 @@ async def test_import_day(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_PORT] == "/dev/ttyUSB7"
     assert result["data"][CONF_ADDRESS] == 3
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -241,6 +242,7 @@ async def test_import_night(hass):
 
         assert len(mock_connect.mock_calls) == 1
         assert hass.states.get("sensor.power_output").state == "45.7"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 async def test_import_night_then_user(hass):
@@ -299,6 +301,7 @@ async def test_import_night_then_user(hass):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
     # Now retry yaml - it should fail with duplicate
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None,), patch(
@@ -318,3 +321,4 @@ async def test_import_night_then_user(hass):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=6))
         await hass.async_block_till_done()
         assert entry.state == ConfigEntryState.NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
