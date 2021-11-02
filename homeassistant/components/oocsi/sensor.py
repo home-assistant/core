@@ -21,9 +21,10 @@ async def async_setup_entry(
 
 
 class BasicSensor(SensorEntity):
-    """Basic oocsi sensor"""
+    """Basic oocsi sensor."""
 
     def __init__(self, hass, entity_name, api, entityProperty, device):
+        """Set basic oocsi sensor parameters."""
         self._hass = hass
         self._oocsi = api
         self._name = entity_name
@@ -38,10 +39,17 @@ class BasicSensor(SensorEntity):
             "via_device_id": device,
         }
 
+        if "logo" in entityProperty:
+            self._icon = entityProperty["logo"]
+        else:
+            self._icon = "mdi:flask"
+
     async def async_added_to_hass(self) -> None:
+        """Add oocsi event listener."""
+
         @callback
         def channel_update_event(sender, recipient, event):
-            """execute Oocsi state change."""
+            """Execute Oocsi state change."""
             self._channel_value = event["value"]
             self.async_write_ha_state()
 
@@ -65,7 +73,7 @@ class BasicSensor(SensorEntity):
     @property
     def icon(self) -> str:
         """Return the icon."""
-        return "mdi:sensor"
+        return self._icon
 
     @property
     def state(self):
