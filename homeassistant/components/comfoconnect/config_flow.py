@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_SENSORS, CONF_TOKEN
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER
 import homeassistant.helpers.config_validation as cv
 
 from . import ComfoConnectBridge
@@ -86,9 +87,11 @@ class ComfoConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 user_input[CONF_TOKEN] = secrets.token_hex(16)
                 user_input[CONF_USER_AGENT] = DEFAULT_USER_AGENT
-                self.context["user"] = user_input
+                self.context[STEP_ID_USER] = user_input
                 return await self.async_step_sensor_selection()
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id=STEP_ID_USER, data_schema=schema, errors=errors
+        )
 
     async def async_step_sensor_selection(self, user_input=None):
         """Handle sensor selection step."""
@@ -105,7 +108,7 @@ class ComfoConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self.context["source"] == config_entries.SOURCE_IMPORT:
             user_input = {"sensors": self.context["import_sensors"] or []}
         if user_input is not None:
-            data = self.context["user"]
+            data = self.context[STEP_ID_USER]
             return self.async_create_entry(
                 title=f"ComfoAir {unique_id}",
                 data=data,
@@ -141,7 +144,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="init",
+            step_id=STEP_ID_INIT,
             data_schema=vol.Schema(
                 {
                     vol.Optional(
