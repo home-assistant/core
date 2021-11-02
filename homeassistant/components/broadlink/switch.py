@@ -179,11 +179,13 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        device = self._device
+
         if packet is None:
             return True
 
         try:
-            await self._device.async_request(self._device.api.send_data, packet)
+            await device.async_request(device.api.send_data, packet)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
@@ -200,8 +202,10 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        device = self._device
+
         try:
-            await self._device.async_request(self._device.api.set_power, packet)
+            await device.async_request(device.api.set_power, packet)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
@@ -242,10 +246,10 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        device = self._device
+
         try:
-            await self._device.async_request(
-                self._device.api.set_power, self._slot, packet
-            )
+            await device.async_request(device.api.set_power, self._slot, packet)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
@@ -273,9 +277,11 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        device = self._device
         state = {f"pwr{self._slot}": packet}
+
         try:
-            await self._device.async_request(self._device.api.set_state, **state)
+            await device.async_request(device.api.set_state, **state)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False

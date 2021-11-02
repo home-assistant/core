@@ -150,96 +150,6 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
     )
 
 
-@pytest.mark.parametrize(
-    "offset,delta",
-    [
-        ("00:00:10", timedelta(seconds=10)),
-        ("-00:00:10", timedelta(seconds=-10)),
-        ({"minutes": 5}, timedelta(minutes=5)),
-    ],
-)
-async def test_if_fires_using_at_input_datetime_with_offset(hass, calls, offset, delta):
-    """Test for firing at input_datetime."""
-    await async_setup_component(
-        hass,
-        "input_datetime",
-        {"input_datetime": {"trigger": {"has_date": True, "has_time": True}}},
-    )
-    now = dt_util.now()
-
-    set_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
-    trigger_dt = set_dt + delta
-
-    await hass.services.async_call(
-        "input_datetime",
-        "set_datetime",
-        {
-            ATTR_ENTITY_ID: "input_datetime.trigger",
-            "datetime": str(set_dt.replace(tzinfo=None)),
-        },
-        blocking=True,
-    )
-
-    time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
-
-    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{ trigger.now.minute }}-{{ trigger.now.second }}-{{trigger.entity_id}}"
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.as_utc(time_that_will_not_match_right_away),
-    ):
-        assert await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: {
-                    "trigger": {
-                        "platform": "time",
-                        "at": {
-                            "entity_id": "input_datetime.trigger",
-                            "offset": offset,
-                        },
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {"some": some_data},
-                    },
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
-    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
-    await hass.async_block_till_done()
-
-    assert len(calls) == 1
-    assert (
-        calls[0].data["some"]
-        == f"time-{trigger_dt.day}-{trigger_dt.hour}-{trigger_dt.minute}-{trigger_dt.second}-input_datetime.trigger"
-    )
-
-    set_dt += timedelta(days=1, hours=1)
-    trigger_dt += timedelta(days=1, hours=1)
-
-    await hass.services.async_call(
-        "input_datetime",
-        "set_datetime",
-        {
-            ATTR_ENTITY_ID: "input_datetime.trigger",
-            "datetime": str(set_dt.replace(tzinfo=None)),
-        },
-        blocking=True,
-    )
-
-    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
-    await hass.async_block_till_done()
-
-    assert len(calls) == 2
-    assert (
-        calls[1].data["some"]
-        == f"time-{trigger_dt.day}-{trigger_dt.hour}-{trigger_dt.minute}-{trigger_dt.second}-input_datetime.trigger"
-    )
-
-
 async def test_if_fires_using_multiple_at(hass, calls):
     """Test for firing at."""
 
@@ -589,102 +499,11 @@ async def test_if_fires_using_at_sensor(hass, calls):
 
 
 @pytest.mark.parametrize(
-    "offset,delta",
-    [
-        ("00:00:10", timedelta(seconds=10)),
-        ("-00:00:10", timedelta(seconds=-10)),
-        ({"minutes": 5}, timedelta(minutes=5)),
-    ],
-)
-async def test_if_fires_using_at_sensor_with_offset(hass, calls, offset, delta):
-    """Test for firing at sensor time."""
-    now = dt_util.now()
-
-    start_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
-    trigger_dt = start_dt + delta
-
-    hass.states.async_set(
-        "sensor.next_alarm",
-        start_dt.isoformat(),
-        {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
-    )
-
-    time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
-
-    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{ trigger.now.minute }}-{{ trigger.now.second }}-{{trigger.entity_id}}"
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.as_utc(time_that_will_not_match_right_away),
-    ):
-        assert await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: {
-                    "trigger": {
-                        "platform": "time",
-                        "at": {
-                            "entity_id": "sensor.next_alarm",
-                            "offset": offset,
-                        },
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {"some": some_data},
-                    },
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
-    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
-    await hass.async_block_till_done()
-
-    assert len(calls) == 1
-    assert (
-        calls[0].data["some"]
-        == f"time-{trigger_dt.day}-{trigger_dt.hour}-{trigger_dt.minute}-{trigger_dt.second}-sensor.next_alarm"
-    )
-
-    start_dt += timedelta(days=1, hours=1)
-    trigger_dt += timedelta(days=1, hours=1)
-
-    hass.states.async_set(
-        "sensor.next_alarm",
-        start_dt.isoformat(),
-        {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
-    )
-    await hass.async_block_till_done()
-
-    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
-    await hass.async_block_till_done()
-
-    assert len(calls) == 2
-    assert (
-        calls[1].data["some"]
-        == f"time-{trigger_dt.day}-{trigger_dt.hour}-{trigger_dt.minute}-{trigger_dt.second}-sensor.next_alarm"
-    )
-
-
-@pytest.mark.parametrize(
     "conf",
     [
         {"platform": "time", "at": "input_datetime.bla"},
         {"platform": "time", "at": "sensor.bla"},
         {"platform": "time", "at": "12:34"},
-        {
-            "platform": "time",
-            "at": {"entity_id": "input_datetime.bla", "offset": "00:01"},
-        },
-        {"platform": "time", "at": {"entity_id": "sensor.bla", "offset": "-00:01"}},
-        {
-            "platform": "time",
-            "at": [{"entity_id": "input_datetime.bla", "offset": "01:00:00"}],
-        },
-        {
-            "platform": "time",
-            "at": [{"entity_id": "sensor.bla", "offset": "-01:00:00"}],
-        },
     ],
 )
 def test_schema_valid(conf):
@@ -698,9 +517,6 @@ def test_schema_valid(conf):
         {"platform": "time", "at": "binary_sensor.bla"},
         {"platform": "time", "at": 745},
         {"platform": "time", "at": "25:00"},
-        {"platform": "time", "at": {"entity_id": "input_datetime.bla", "offset": "0:"}},
-        {"platform": "time", "at": {"entity_id": "input_datetime.bla", "offset": "a"}},
-        {"platform": "time", "at": {"entity_id": "13:00:00", "offset": "0:10"}},
     ],
 )
 def test_schema_invalid(conf):

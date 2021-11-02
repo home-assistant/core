@@ -3,11 +3,10 @@
 from unittest.mock import patch
 
 from pyatv import conf
-from pyatv.const import PairingRequirement, Protocol
-from pyatv.support import http
+from pyatv.support.http import create_session
 import pytest
 
-from .common import MockPairingHandler, airplay_service, create_conf, mrp_service
+from .common import MockPairingHandler, create_conf
 
 
 @pytest.fixture(autouse=True, name="mock_scan")
@@ -41,7 +40,7 @@ def pairing():
 
         async def _pair(config, protocol, loop, session=None, **kwargs):
             handler = MockPairingHandler(
-                await http.create_session(session), config.get_service(protocol)
+                await create_session(session), config.get_service(protocol)
             )
             handler.always_fail = mock_pair.always_fail
             return handler
@@ -79,15 +78,9 @@ def full_device(mock_scan, dmap_pin):
         create_conf(
             "127.0.0.1",
             "MRP Device",
-            mrp_service(),
-            conf.ManualService(
-                "dmapid",
-                Protocol.DMAP,
-                6666,
-                {},
-                pairing_requirement=PairingRequirement.Mandatory,
-            ),
-            airplay_service(),
+            conf.MrpService("mrpid", 5555),
+            conf.DmapService("dmapid", None, port=6666),
+            conf.AirPlayService("airplayid", port=7777),
         )
     )
     yield mock_scan
@@ -97,11 +90,7 @@ def full_device(mock_scan, dmap_pin):
 def mrp_device(mock_scan):
     """Mock pyatv.scan."""
     mock_scan.result.append(
-        create_conf(
-            "127.0.0.1",
-            "MRP Device",
-            mrp_service(),
-        )
+        create_conf("127.0.0.1", "MRP Device", conf.MrpService("mrpid", 5555))
     )
     yield mock_scan
 
@@ -113,14 +102,7 @@ def dmap_device(mock_scan):
         create_conf(
             "127.0.0.1",
             "DMAP Device",
-            conf.ManualService(
-                "dmapid",
-                Protocol.DMAP,
-                6666,
-                {},
-                credentials=None,
-                pairing_requirement=PairingRequirement.Mandatory,
-            ),
+            conf.DmapService("dmapid", None, port=6666),
         )
     )
     yield mock_scan
@@ -133,48 +115,14 @@ def dmap_device_with_credentials(mock_scan):
         create_conf(
             "127.0.0.1",
             "DMAP Device",
-            conf.ManualService(
-                "dmapid",
-                Protocol.DMAP,
-                6666,
-                {},
-                credentials="dummy_creds",
-                pairing_requirement=PairingRequirement.NotNeeded,
-            ),
+            conf.DmapService("dmapid", "dummy_creds", port=6666),
         )
     )
     yield mock_scan
 
 
 @pytest.fixture
-def airplay_device_with_password(mock_scan):
+def device_with_no_services(mock_scan):
     """Mock pyatv.scan."""
-    mock_scan.result.append(
-        create_conf(
-            "127.0.0.1",
-            "AirPlay Device",
-            conf.ManualService(
-                "airplayid", Protocol.AirPlay, 7777, {}, requires_password=True
-            ),
-        )
-    )
-    yield mock_scan
-
-
-@pytest.fixture
-def dmap_with_requirement(mock_scan, pairing_requirement):
-    """Mock pyatv.scan."""
-    mock_scan.result.append(
-        create_conf(
-            "127.0.0.1",
-            "DMAP Device",
-            conf.ManualService(
-                "dmapid",
-                Protocol.DMAP,
-                6666,
-                {},
-                pairing_requirement=pairing_requirement,
-            ),
-        )
-    )
+    mock_scan.result.append(create_conf("127.0.0.1", "Invalid Device"))
     yield mock_scan

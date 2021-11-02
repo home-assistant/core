@@ -117,20 +117,13 @@ class GEMSensor(Generic[T], SensorEntity):
     ) -> None:
         """Construct the entity."""
         self._monitor_serial_number = monitor_serial_number
-        self._name = name
+        self._attr_name = name
         self._sensor: T | None = None
         self._sensor_type = sensor_type
         self._number = number
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this sensor."""
-        return f"{self._monitor_serial_number}-{self._sensor_type}-{self._number}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the channel."""
-        return self._name
+        self._attr_unique_id = (
+            f"{self._monitor_serial_number}-{self._sensor_type}-{self._number}"
+        )
 
     async def async_added_to_hass(self) -> None:
         """Wait for and connect to the sensor."""
@@ -223,9 +216,9 @@ class PulseCounter(GEMSensor[greeneye.monitor.PulseCounter]):
     ) -> None:
         """Construct the entity."""
         super().__init__(monitor_serial_number, name, "pulse", number)
-        self._counted_quantity = counted_quantity
         self._counted_quantity_per_pulse = counted_quantity_per_pulse
         self._time_unit = time_unit
+        self._attr_native_unit_of_measurement = f"{counted_quantity}/{self._time_unit}"
 
     def _get_sensor(
         self, monitor: greeneye.monitor.Monitor
@@ -261,11 +254,6 @@ class PulseCounter(GEMSensor[greeneye.monitor.PulseCounter]):
         )
 
     @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement for this pulse counter."""
-        return f"{self._counted_quantity}/{self._time_unit}"
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return total pulses in the data dictionary."""
         if not self._sensor:
@@ -284,7 +272,7 @@ class TemperatureSensor(GEMSensor[greeneye.monitor.TemperatureSensor]):
     ) -> None:
         """Construct the entity."""
         super().__init__(monitor_serial_number, name, "temp", number)
-        self._unit = unit
+        self._attr_native_unit_of_measurement = unit
 
     def _get_sensor(
         self, monitor: greeneye.monitor.Monitor
@@ -298,11 +286,6 @@ class TemperatureSensor(GEMSensor[greeneye.monitor.TemperatureSensor]):
             return None
 
         return cast(Optional[float], self._sensor.temperature)
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement for this sensor (user specified)."""
-        return self._unit
 
 
 class VoltageSensor(GEMSensor[greeneye.monitor.Monitor]):

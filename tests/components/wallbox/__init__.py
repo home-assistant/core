@@ -18,14 +18,9 @@ from homeassistant.components.wallbox.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
+from .const import CONF_ERROR, CONF_JWT, CONF_STATUS, CONF_TTL, CONF_USER_ID
+
 from tests.common import MockConfigEntry
-from tests.components.wallbox.const import (
-    CONF_ERROR,
-    CONF_JWT,
-    CONF_STATUS,
-    CONF_TTL,
-    CONF_USER_ID,
-)
 
 test_response = json.loads(
     json.dumps(
@@ -33,8 +28,8 @@ test_response = json.loads(
             CONF_CHARGING_POWER_KEY: 0,
             CONF_MAX_AVAILABLE_POWER_KEY: 25.2,
             CONF_CHARGING_SPEED_KEY: 0,
-            CONF_ADDED_RANGE_KEY: "xx",
-            CONF_ADDED_ENERGY_KEY: "44.697",
+            CONF_ADDED_RANGE_KEY: 150,
+            CONF_ADDED_ENERGY_KEY: 44.697,
             CONF_DATA_KEY: {CONF_MAX_CHARGING_CURRENT_KEY: 24},
         }
     )

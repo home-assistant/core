@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, get_fixture_path
 
 
 async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
@@ -133,11 +133,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert entity_state
     assert entity_state.state == "unknown"
 
-    yaml_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "fixtures",
-        "command_line/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "command_line")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "command_line",
