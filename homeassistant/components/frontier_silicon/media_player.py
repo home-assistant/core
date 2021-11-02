@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -21,6 +22,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+    SUPPORT_BROWSE_MEDIA,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -34,6 +36,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
+
+from .browse_media import build_item_response, library_payload, get_media_info
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +56,7 @@ SUPPORT_FRONTIER_SILICON = (
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
+    | SUPPORT_BROWSE_MEDIA
 )
 
 DEFAULT_PORT = 80
@@ -306,3 +312,56 @@ class AFSAPIDevice(MediaPlayerEntity):
     async def async_select_source(self, source):
         """Select input source."""
         await self.fs_device.set_mode(source)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Browse media library and preset stations."""
+        if media_content_type in [None, "library"]:
+            return await library_payload()
+
+        payload = {
+            "search_type": media_content_type,
+            "search_id": media_content_id,
+        }
+
+        response = await build_item_response(self.fs_device, payload, None)
+        if response is None:
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+        return response
+
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play selected media or channel."""
+        supported_media_types = [MEDIA_TYPE_CHANNEL, "preset"]
+
+        if media_type not in supported_media_types:
+            _LOGGER.error("Supported media types: %s", supported_media_types)
+            return
+
+        fs_device = self.fs_device
+        if (
+            media_type in [MEDIA_TYPE_CHANNEL, "preset"]
+            and not isinstance(media_id, int)
+            and not media_id.isnumeric()
+        ):
+            _, _, media = await get_media_info(fs_device, media_id, media_type)
+            if media:
+                media_id = media[0]["band"]
+            else:
+                _LOGGER.error("No entry found for %s %s", media_type, media_id)
+                return
+
+        nav = await fs_device.handle_set("netRemote.nav.state", 1)
+        if not nav:
+            _LOGGER.error("Failed to enter nav state")
+            return False
+
+        if media_type == "preset":
+            ok = await fs_device.handle_set(
+                "netRemote.nav.action.selectPreset", media_id
+            )
+        if media_type == MEDIA_TYPE_CHANNEL:
+            ok = await fs_device.handle_set("netRemote.nav.action.selectItem", media_id)
+
+        await fs_device.handle_set("netRemote.nav.state", 0)
+        return ok
