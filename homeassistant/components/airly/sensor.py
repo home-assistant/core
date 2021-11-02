@@ -55,6 +55,7 @@ from .const import (
     MANUFACTURER,
     SUFFIX_LIMIT,
     SUFFIX_PERCENT,
+    URL,
 )
 
 PARALLEL_UPDATES = 1
@@ -157,6 +158,9 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, f"{coordinator.latitude}-{coordinator.longitude}")},
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
+            configuration_url=URL.format(
+                latitude=coordinator.latitude, longitude=coordinator.longitude
+            ),
         )
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = (
