@@ -57,8 +57,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             value_template.hass = hass
 
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
-         if icon_template is not None:
-             icon_template.hass = hass
+        if icon_template is not None:
+            icon_template.hass = hass
 
         switches.append(
             CommandSwitch(
