@@ -7,9 +7,10 @@ from homeassistant.const import (
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import SONOS_CREATE_BATTERY
+from .const import SONOS_CREATE_AUDIO_FORMAT_SENSOR, SONOS_CREATE_BATTERY
 from .entity import SonosEntity
 from .speaker import SonosSpeaker
 
@@ -17,12 +18,25 @@ from .speaker import SonosSpeaker
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
 
-    async def _async_create_entity(speaker: SonosSpeaker) -> None:
+    @callback
+    def _async_create_audio_format_entity(speaker: SonosSpeaker) -> None:
+        entity = SonosAudioInputFormatSensorEntity(speaker)
+        async_add_entities([entity])
+
+    @callback
+    def _async_create_battery_sensor(speaker: SonosSpeaker) -> None:
         entity = SonosBatteryEntity(speaker)
         async_add_entities([entity])
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, SONOS_CREATE_BATTERY, _async_create_entity)
+        async_dispatcher_connect(
+            hass, SONOS_CREATE_AUDIO_FORMAT_SENSOR, _async_create_audio_format_entity
+        )
+    )
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, SONOS_CREATE_BATTERY, _async_create_battery_sensor
+        )
     )
 
 
@@ -64,3 +78,33 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
     def available(self) -> bool:
         """Return whether this device is available."""
         return self.speaker.available and self.speaker.power_source
+
+
+class SonosAudioInputFormatSensorEntity(SonosEntity, SensorEntity):
+    """Representation of a Sonos audio import format sensor entity."""
+
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_icon = "mdi:import"
+    _attr_should_poll = True
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the sensor."""
+        return f"{self.soco.uid}-audio-format"
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return f"{self.speaker.zone_name} Audio Input Format"
+
+    @property
+    def state(self) -> str:
+        """Return the current state of the text sensor."""
+        return self.speaker.soundbar_audio_input_format
+
+    def update(self) -> None:
+        """Poll the device for the current state."""
+        self.speaker.soundbar_audio_input_format = self.soco.soundbar_audio_input_format
+
+    async def _async_poll(self) -> None:
+        """Provide a stub for required ABC method."""

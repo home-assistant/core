@@ -46,6 +46,7 @@ from .const import (
     SCAN_INTERVAL,
     SONOS_CHECK_ACTIVITY,
     SONOS_CREATE_ALARM,
+    SONOS_CREATE_AUDIO_FORMAT_SENSOR,
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_LEVELS,
     SONOS_CREATE_MEDIA_PLAYER,
@@ -198,6 +199,7 @@ class SonosSpeaker:
         self.treble: int | None = None
         self.sub_enabled: bool | None = None
         self.surround_enabled: bool | None = None
+        self.soundbar_audio_input_format: str | None = None
 
         # Misc features
         self.buttons_enabled: bool | None = None
@@ -239,6 +241,10 @@ class SonosSpeaker:
         future.result(timeout=10)
 
         dispatcher_send(self.hass, SONOS_CREATE_LEVELS, self)
+
+        if audio_format := self.soco.soundbar_audio_input_format:
+            self.soundbar_audio_input_format = audio_format
+            dispatcher_send(self.hass, SONOS_CREATE_AUDIO_FORMAT_SENSOR, self)
 
         if battery_info := fetch_battery_info_or_none(self.soco):
             self.battery_info = battery_info
