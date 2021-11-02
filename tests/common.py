@@ -371,9 +371,12 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 @ha.callback
 def async_fire_time_changed(
-    hass: HomeAssistant, datetime_: datetime, fire_all: bool = False
+    hass: HomeAssistant, datetime_: datetime = None, fire_all: bool = False
 ) -> None:
-    """Fire a time changes event."""
+    """Fire a time changed event."""
+    if datetime_ is None:
+        datetime_ = date_util.utcnow()
+
     hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
 
     for task in list(hass.loop._scheduled):
