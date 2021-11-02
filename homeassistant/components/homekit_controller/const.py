@@ -11,6 +11,10 @@ TRIGGERS = f"{DOMAIN}-triggers"
 HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"
 
+IDENTIFIER_SERIAL_NUMBER = "serial-number"
+IDENTIFIER_ACCESSORY_ID = "accessory-id"
+
+
 # Mapping from Homekit type to component.
 HOMEKIT_ACCESSORY_DISPATCH = {
     "lightbulb": "light",

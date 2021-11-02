@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
+from http import HTTPStatus
 import importlib
 import logging
 
@@ -12,13 +13,7 @@ from pysmartthings import Attribute, Capability, SmartThings
 from pysmartthings.device import DeviceEntity
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    HTTP_FORBIDDEN,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -164,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN][DATA_BROKERS][entry.entry_id] = broker
 
     except ClientResponseError as ex:
-        if ex.status in (HTTP_UNAUTHORIZED, HTTP_FORBIDDEN):
+        if ex.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
             _LOGGER.exception(
                 "Unable to setup configuration entry '%s' - please reconfigure the integration",
                 entry.title,
@@ -197,7 +192,7 @@ async def async_get_entry_scenes(entry: ConfigEntry, api):
     try:
         return await api.scenes(location_id=entry.data[CONF_LOCATION_ID])
     except ClientResponseError as ex:
-        if ex.status == HTTP_FORBIDDEN:
+        if ex.status == HTTPStatus.FORBIDDEN:
             _LOGGER.exception(
                 "Unable to load scenes for configuration entry '%s' because the access token does not have the required access",
                 entry.title,
@@ -220,12 +215,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Perform clean-up when entry is being removed."""
     api = SmartThings(async_get_clientsession(hass), entry.data[CONF_ACCESS_TOKEN])
 
-    # Remove the installed_app, which if already removed raises a HTTP_FORBIDDEN error.
+    # Remove the installed_app, which if already removed raises a HTTPStatus.FORBIDDEN error.
     installed_app_id = entry.data[CONF_INSTALLED_APP_ID]
     try:
         await api.delete_installed_app(installed_app_id)
     except ClientResponseError as ex:
-        if ex.status == HTTP_FORBIDDEN:
+        if ex.status == HTTPStatus.FORBIDDEN:
             _LOGGER.debug(
                 "Installed app %s has already been removed",
                 installed_app_id,
@@ -236,7 +231,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     _LOGGER.debug("Removed installed app %s", installed_app_id)
 
     # Remove the app if not referenced by other entries, which if already
-    # removed raises a HTTP_FORBIDDEN error.
+    # removed raises a HTTPStatus.FORBIDDEN error.
     all_entries = hass.config_entries.async_entries(DOMAIN)
     app_id = entry.data[CONF_APP_ID]
     app_count = sum(1 for entry in all_entries if entry.data[CONF_APP_ID] == app_id)
@@ -250,7 +245,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     try:
         await api.delete_app(app_id)
     except ClientResponseError as ex:
-        if ex.status == HTTP_FORBIDDEN:
+        if ex.status == HTTPStatus.FORBIDDEN:
             _LOGGER.debug("App %s has already been removed", app_id, exc_info=True)
         else:
             raise

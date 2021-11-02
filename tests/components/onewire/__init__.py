@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_STATE,
+    ATTR_VIA_DEVICE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -57,7 +58,7 @@ def check_device_registry(
         assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
         assert registry_entry.name == expected_device[ATTR_NAME]
         assert registry_entry.model == expected_device[ATTR_MODEL]
-        if expected_via_device := expected_device.get("via_device"):
+        if expected_via_device := expected_device.get(ATTR_VIA_DEVICE):
             assert registry_entry.via_device_id is not None
             parent_entry = device_registry.async_get_device({expected_via_device})
             assert parent_entry is not None

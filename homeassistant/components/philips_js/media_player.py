@@ -45,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
@@ -324,17 +325,17 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return {
-            "name": self._system["name"],
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (DOMAIN, self._unique_id),
             },
-            "model": self._system.get("model"),
-            "manufacturer": "Philips",
-            "sw_version": self._system.get("softwareversion"),
-        }
+            manufacturer="Philips",
+            model=self._system.get("model"),
+            sw_version=self._system.get("softwareversion"),
+            name=self._system["name"],
+        )
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""

@@ -71,6 +71,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
         ssdp.ATTR_UPNP_UDN: "uuid:mock-udn",
         ssdp.ATTR_SSDP_UDN: ANY,
         "_timestamp": ANY,
+        ssdp.ATTR_HA_MATCHING_DOMAINS: {"mock-domain"},
     }
     assert "Failed to fetch ssdp data" not in caplog.text
 
@@ -463,6 +464,7 @@ async def test_scan_with_registered_callback(
             "x-rincon-bootseq": "55",
             ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
+            ssdp.ATTR_HA_MATCHING_DOMAINS: set(),
         },
         ssdp.SsdpChange.ALIVE,
     )

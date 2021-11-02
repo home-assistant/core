@@ -69,7 +69,7 @@ async def test_show_form_one_hub(hass, mock_hub_discover, mock_hub_run):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == dummy_hub_1.id
     assert result["result"].data == {
-        "host": DUMMY_HOST1,
+        CONF_HOST: DUMMY_HOST1,
     }
 
     # Check we performed the discovery
@@ -92,7 +92,7 @@ async def test_show_form_two_hubs(hass, mock_hub_discover):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == data_entry_flow.STEP_ID_USER
 
     # Check we performed the discovery
     assert len(mock_hub_discover.mock_calls) == 1
@@ -120,7 +120,7 @@ async def test_create_second_entry(hass, mock_hub_run, mock_hub_discover):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == dummy_hub_2.id
     assert result["result"].data == {
-        "host": DUMMY_HOST2,
+        CONF_HOST: DUMMY_HOST2,
     }
 
 

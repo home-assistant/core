@@ -203,7 +203,7 @@ class GuardianEntity(CoordinatorEntity):
         self, entry: ConfigEntry, description: EntityDescription
     ) -> None:
         """Initialize."""
-        self._attr_device_info = {"manufacturer": "Elexa"}
+        self._attr_device_info = DeviceInfo(manufacturer="Elexa")
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
         self._entry = entry
         self.entity_description = description
@@ -258,11 +258,11 @@ class ValveControllerEntity(GuardianEntity):
         """Initialize."""
         super().__init__(entry, description)
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.data[CONF_UID])},
-            "name": f"Guardian Valve Controller {entry.data[CONF_UID]}",
-            "model": coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.data[CONF_UID])},
+            model=coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
+            name=f"Guardian Valve Controller {entry.data[CONF_UID]}",
+        )
         self._attr_name = f"Guardian {entry.data[CONF_UID]}: {description.name}"
         self._attr_unique_id = f"{entry.data[CONF_UID]}_{description.key}"
         self.coordinators = coordinators

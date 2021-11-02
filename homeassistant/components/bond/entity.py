@@ -10,7 +10,13 @@ from typing import Any
 from aiohttp import ClientError
 from bond_api import BPUPSubscriptions
 
-from homeassistant.const import ATTR_MODEL, ATTR_NAME, ATTR_SW_VERSION, ATTR_VIA_DEVICE
+from homeassistant.const import (
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_SW_VERSION,
+    ATTR_VIA_DEVICE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -65,7 +71,7 @@ class BondEntity(Entity):
         if self._hub.bond_id is not None:
             device_info[ATTR_VIA_DEVICE] = (DOMAIN, self._hub.bond_id)
         if self._device.location is not None:
-            device_info["suggested_area"] = self._device.location
+            device_info[ATTR_SUGGESTED_AREA] = self._device.location
         if not self._hub.is_bridge:
             if self._hub.model is not None:
                 device_info[ATTR_MODEL] = self._hub.model

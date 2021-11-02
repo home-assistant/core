@@ -13,6 +13,7 @@ from aioesphomeapi import (
     APIIntEnum,
     APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
+    EntityCategory,
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
@@ -32,6 +33,8 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PASSWORD,
     CONF_PORT,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
@@ -264,7 +267,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
-            device_id = await _async_setup_device_registry(
+            device_id = _async_setup_device_registry(
                 hass, entry, entry_data.device_info
             )
             entry_data.async_update_device_state(hass)
@@ -317,16 +320,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_setup_device_registry(
+@callback
+def _async_setup_device_registry(
     hass: HomeAssistant, entry: ConfigEntry, device_info: EsphomeDeviceInfo
 ) -> str:
     """Set up device registry feature for a particular config entry."""
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
-    device_registry = await dr.async_get_registry(hass)
+    configuration_url = None
+    if device_info.webserver_port > 0:
+        configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
+        configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
         name=device_info.name,
         manufacturer="espressif",
@@ -448,8 +456,7 @@ async def _setup_services(
     for service in services:
         if service.key in old_services:
             # Already exists
-            matching = old_services.pop(service.key)
-            if matching != service:
+            if (matching := old_services.pop(service.key)) != service:
                 # Need to re-register
                 to_unregister.append(matching)
                 to_register.append(service)
@@ -640,6 +647,15 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
 ICON_SCHEMA = vol.Schema(cv.icon)
 
 
+ENTITY_CATEGORIES: EsphomeEnumMapper[EntityCategory, str | None] = EsphomeEnumMapper(
+    {
+        EntityCategory.NONE: None,
+        EntityCategory.CONFIG: ENTITY_CATEGORY_CONFIG,
+        EntityCategory.DIAGNOSTIC: ENTITY_CATEGORY_DIAGNOSTIC,
+    }
+)
+
+
 class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
@@ -755,9 +771,9 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
+        )
 
     @property
     def name(self) -> str:
@@ -781,3 +797,10 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return not self._static_info.disabled_by_default
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return the category of the entity, if any."""
+        if not self._static_info.entity_category:
+            return None
+        return ENTITY_CATEGORIES.from_esphome(self._static_info.entity_category)

@@ -661,15 +661,13 @@ async def test_discovery_update_sensor_topic_template(hass, mqtt_mock, caplog):
         ([("sensor/state2", '{"state":100}')], "200", None),
     ]
 
-    data1 = json.dumps(config1)
-    data2 = json.dumps(config2)
     await help_test_discovery_update(
         hass,
         mqtt_mock,
         caplog,
         sensor.DOMAIN,
-        data1,
-        data2,
+        config1,
+        config2,
         state_data1=state_data1,
         state_data2=state_data2,
     )
@@ -694,15 +692,13 @@ async def test_discovery_update_sensor_template(hass, mqtt_mock, caplog):
         ([("sensor/state1", '{"state":100}')], "200", None),
     ]
 
-    data1 = json.dumps(config1)
-    data2 = json.dumps(config2)
     await help_test_discovery_update(
         hass,
         mqtt_mock,
         caplog,
         sensor.DOMAIN,
-        data1,
-        data2,
+        config1,
+        config2,
         state_data1=state_data1,
         state_data2=state_data2,
     )

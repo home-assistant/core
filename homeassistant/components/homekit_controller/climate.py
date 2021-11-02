@@ -13,11 +13,7 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 
-from homeassistant.components.climate import (
-    DEFAULT_MAX_HUMIDITY,
-    DEFAULT_MIN_HUMIDITY,
-    ClimateEntity,
-)
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -487,14 +483,22 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     @property
     def min_humidity(self):
         """Return the minimum humidity."""
-        char = self.service[CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET]
-        return char.minValue or DEFAULT_MIN_HUMIDITY
+        min_humidity = self.service[
+            CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
+        ].minValue
+        if min_humidity is not None:
+            return min_humidity
+        return super().min_humidity
 
     @property
     def max_humidity(self):
         """Return the maximum humidity."""
-        char = self.service[CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET]
-        return char.maxValue or DEFAULT_MAX_HUMIDITY
+        max_humidity = self.service[
+            CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
+        ].maxValue
+        if max_humidity is not None:
+            return max_humidity
+        return super().max_humidity
 
     @property
     def hvac_action(self):

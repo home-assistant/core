@@ -49,9 +49,9 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         """Return device specific attributes."""
         return DeviceInfo(
             identifiers={(HMIPC_DOMAIN, f"ACP {self._home.id}")},
-            name=self.name,
             manufacturer="eQ-3",
             model=CONST_ALARM_CONTROL_PANEL_NAME,
+            name=self.name,
             via_device=(HMIPC_DOMAIN, self._home.id),
         )
 

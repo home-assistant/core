@@ -1,4 +1,5 @@
 """Support for iOS push notifications."""
+from http import HTTPStatus
 import logging
 
 import requests
@@ -12,7 +13,6 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-from homeassistant.const import HTTP_CREATED, HTTP_TOO_MANY_REQUESTS
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,13 +91,13 @@ class iOSNotificationService(BaseNotificationService):
 
             req = requests.post(PUSH_URL, json=data, timeout=10)
 
-            if req.status_code != HTTP_CREATED:
+            if req.status_code != HTTPStatus.CREATED:
                 fallback_error = req.json().get("errorMessage", "Unknown error")
                 fallback_message = (
                     f"Internal server error, please try again later: {fallback_error}"
                 )
                 message = req.json().get("message", fallback_message)
-                if req.status_code == HTTP_TOO_MANY_REQUESTS:
+                if req.status_code == HTTPStatus.TOO_MANY_REQUESTS:
                     _LOGGER.warning(message)
                     log_rate_limits(self.hass, target, req.json(), 30)
                 else:

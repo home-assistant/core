@@ -32,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTR_MEDIA_IMAGE_URL,
@@ -92,7 +93,6 @@ class PS4Device(MediaPlayerEntity):
         self._source_list = []
         self._retry = 0
         self._disconnected = False
-        self._info = None
         self._unique_id = None
 
     @callback
@@ -150,7 +150,7 @@ class PS4Device(MediaPlayerEntity):
         if self._ps4.ddp_protocol is None:
             # Use socket.socket.
             await self.hass.async_add_executor_job(self._ps4.get_status)
-            if self._info is None:
+            if self._attr_device_info is None:
                 # Add entity to registry.
                 await self.async_get_device_info(self._ps4.status)
             self._ps4.ddp_protocol = self.hass.data[PS4_DATA].protocol
@@ -337,26 +337,26 @@ class PS4Device(MediaPlayerEntity):
                     break
             for device in d_registry.devices.values():
                 if self._entry_id in device.config_entries:
-                    self._info = {
-                        "name": device.name,
-                        "model": device.model,
-                        "identifiers": device.identifiers,
-                        "manufacturer": device.manufacturer,
-                        "sw_version": device.sw_version,
-                    }
+                    self._attr_device_info = DeviceInfo(
+                        identifiers=device.identifiers,
+                        manufacturer=device.manufacturer,
+                        model=device.model,
+                        name=device.name,
+                        sw_version=device.sw_version,
+                    )
                     break
 
         else:
             _sw_version = status["system-version"]
             _sw_version = _sw_version[1:4]
             sw_version = f"{_sw_version[0]}.{_sw_version[1:]}"
-            self._info = {
-                "name": status["host-name"],
-                "model": "PlayStation 4",
-                "identifiers": {(PS4_DOMAIN, status["host-id"])},
-                "manufacturer": "Sony Interactive Entertainment Inc.",
-                "sw_version": sw_version,
-            }
+            self._attr_device_info = DeviceInfo(
+                identifiers={(PS4_DOMAIN, status["host-id"])},
+                manufacturer="Sony Interactive Entertainment Inc.",
+                model="PlayStation 4",
+                name=status["host-name"],
+                sw_version=sw_version,
+            )
 
             self._unique_id = format_unique_id(self._creds, status["host-id"])
 
@@ -367,11 +367,6 @@ class PS4Device(MediaPlayerEntity):
             await self._ps4.close()
         self.unsubscribe_to_protocol()
         self.hass.data[PS4_DATA].devices.remove(self)
-
-    @property
-    def device_info(self):
-        """Return information about the device."""
-        return self._info
 
     @property
     def unique_id(self):

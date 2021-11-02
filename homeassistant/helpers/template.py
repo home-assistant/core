@@ -16,6 +16,7 @@ import math
 from operator import attrgetter
 import random
 import re
+import statistics
 import sys
 from typing import Any, cast
 from urllib.parse import urlencode as urllib_urlencode
@@ -831,12 +832,7 @@ def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | 
 
 
 def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
-    state_obj = _get_template_state_from_state(
-        hass, entity_id, hass.states.get(entity_id)
-    )
-    if state_obj is None:
-        _LOGGER.warning("Template warning: entity '%s' doesn't exist", entity_id)
-    return state_obj
+    return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
 
 
 def _get_template_state_from_state(
@@ -861,7 +857,7 @@ def _resolve_state(
     return None
 
 
-def result_as_boolean(template_result: str | None) -> bool:
+def result_as_boolean(template_result: Any | None) -> bool:
     """Convert the template result to a boolean.
 
     True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
@@ -890,8 +886,7 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
         entity = search.pop()
         if isinstance(entity, str):
             entity_id = entity
-            entity = _get_state(hass, entity)
-            if entity is None:
+            if (entity := _get_state(hass, entity)) is None:
                 continue
         elif isinstance(entity, State):
             entity_id = entity.entity_id
@@ -1008,8 +1003,7 @@ def _get_area_name(area_reg: area_registry.AreaRegistry, valid_area_id: str) -> 
 def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the area name from an area id, device id, or entity id."""
     area_reg = area_registry.async_get(hass)
-    area = area_reg.async_get_area(lookup_value)
-    if area:
+    if area := area_reg.async_get_area(lookup_value):
         return area.name
 
     dev_reg = device_registry.async_get(hass)
@@ -1230,8 +1224,7 @@ def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) ->
 
 def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     """Get a specific attribute from a state."""
-    state_obj = _get_state(hass, entity_id)
-    if state_obj is not None:
+    if (state_obj := _get_state(hass, entity_id)) is not None:
         return state_obj.attributes.get(name)
     return None
 
@@ -1487,6 +1480,24 @@ def fail_when_undefined(value):
     if isinstance(value, jinja2.Undefined):
         value()
     return value
+
+
+def average(*args: Any) -> float:
+    """
+    Filter and function to calculate the arithmetic mean of an iterable or of two or more arguments.
+
+    The parameters may be passed as an iterable or as separate arguments.
+    """
+    if len(args) == 0:
+        raise TypeError("average expected at least 1 argument, got 0")
+
+    if len(args) == 1:
+        if isinstance(args[0], Iterable):
+            return statistics.fmean(args[0])
+
+        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+
+    return statistics.fmean(args)
 
 
 def forgiving_float(value, default=_SENTINEL):
@@ -1758,6 +1769,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["to_json"] = to_json
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
+        self.filters["average"] = average
         self.filters["max"] = max
         self.filters["min"] = min
         self.filters["random"] = random_every_time
@@ -1796,6 +1808,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["timedelta"] = timedelta
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
+        self.globals["average"] = average
         self.globals["max"] = max
         self.globals["min"] = min
         self.globals["is_number"] = is_number

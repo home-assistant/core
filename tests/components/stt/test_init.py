@@ -1,7 +1,7 @@
 """Test STT component setup."""
+from http import HTTPStatus
 
 from homeassistant.components import stt
-from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 
@@ -17,7 +17,7 @@ async def test_demo_settings_not_exists(hass, hass_client):
 
     response = await client.get("/api/stt/beer")
 
-    assert response.status == HTTP_NOT_FOUND
+    assert response.status == HTTPStatus.NOT_FOUND
 
 
 async def test_demo_speech_not_exists(hass, hass_client):
@@ -27,4 +27,4 @@ async def test_demo_speech_not_exists(hass, hass_client):
 
     response = await client.post("/api/stt/beer", data=b"test")
 
-    assert response.status == HTTP_NOT_FOUND
+    assert response.status == HTTPStatus.NOT_FOUND

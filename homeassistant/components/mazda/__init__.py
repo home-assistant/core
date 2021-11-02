@@ -23,6 +23,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import aiohttp_client, device_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -229,14 +230,14 @@ class MazdaEntity(CoordinatorEntity):
         return self.coordinator.data[self.index]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for the Mazda entity."""
-        return {
-            "identifiers": {(DOMAIN, self.vin)},
-            "name": self.get_vehicle_name(),
-            "manufacturer": "Mazda",
-            "model": f"{self.data['modelYear']} {self.data['carlineName']}",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.vin)},
+            manufacturer="Mazda",
+            model=f"{self.data['modelYear']} {self.data['carlineName']}",
+            name=self.get_vehicle_name(),
+        )
 
     def get_vehicle_name(self):
         """Return the vehicle name, to be used as a prefix for names of other entities."""

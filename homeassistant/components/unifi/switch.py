@@ -15,6 +15,7 @@ from aiounifi.events import (
 )
 
 from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -183,6 +184,8 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
     DOMAIN = DOMAIN
     TYPE = POE_SWITCH
 
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+
     def __init__(self, client, controller):
         """Set up POE switch."""
         super().__init__(client, controller)
@@ -270,6 +273,8 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
     DOMAIN = DOMAIN
     TYPE = BLOCK_SWITCH
 
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+
     def __init__(self, client, controller):
         """Set up block switch."""
         super().__init__(client, controller)
@@ -319,6 +324,8 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
     DOMAIN = DOMAIN
     TYPE = DPI_SWITCH
 
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+
     @property
     def key(self) -> Any:
         """Return item key."""
@@ -362,10 +369,10 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a service description for device registry."""
-        return {
-            "identifiers": {(DOMAIN, f"unifi_controller_{self._item.site_id}")},
-            "name": "UniFi Controller",
-            "manufacturer": ATTR_MANUFACTURER,
-            "model": "UniFi Controller",
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, f"unifi_controller_{self._item.site_id}")},
+            manufacturer=ATTR_MANUFACTURER,
+            model="UniFi Controller",
+            name="UniFi Controller",
+        )

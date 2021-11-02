@@ -235,8 +235,7 @@ async def async_get_triggers(
     """List device triggers for lutron caseta devices."""
     triggers = []
 
-    device = get_button_device_by_dr_id(hass, device_id)
-    if not device:
+    if not (device := get_button_device_by_dr_id(hass, device_id)):
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device["type"], [])

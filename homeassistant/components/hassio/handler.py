@@ -1,5 +1,6 @@
 """Handler for Hass.io."""
 import asyncio
+from http import HTTPStatus
 import logging
 import os
 
@@ -10,7 +11,7 @@ from homeassistant.components.http import (
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
 )
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_OK, SERVER_PORT
+from homeassistant.const import SERVER_PORT
 
 from .const import X_HASSIO
 
@@ -225,7 +226,7 @@ class HassIO:
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
 
-            if request.status not in (HTTP_OK, HTTP_BAD_REQUEST):
+            if request.status not in (HTTPStatus.OK, HTTPStatus.BAD_REQUEST):
                 _LOGGER.error("%s return code %d", command, request.status)
                 raise HassioAPIError()
 

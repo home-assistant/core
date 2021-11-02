@@ -132,7 +132,7 @@ class NeatoCleaningMap(Camera):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
+        return DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
