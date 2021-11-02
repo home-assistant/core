@@ -32,7 +32,7 @@ from homeassistant.helpers.entity import (
     ENTITY_CATEGORIES_SCHEMA,
     DeviceInfo,
     Entity,
-    generate_entity_id,
+    async_generate_entity_id,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -220,7 +220,7 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
 def init_entity_id_from_config(hass, entity, config, entity_id_format):
     """Set entity_id from object_id if defined in config."""
     if CONF_OBJECT_ID in config:
-        entity.entity_id = generate_entity_id(
+        entity.entity_id = async_generate_entity_id(
             entity_id_format, config[CONF_OBJECT_ID], None, hass
         )
 
