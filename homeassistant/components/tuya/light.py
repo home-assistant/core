@@ -443,7 +443,29 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Turn on or control the light."""
         commands = [{"code": self.entity_description.key, "value": True}]
 
-        if self._color_data_type and (
+        if self._color_temp_type and ATTR_COLOR_TEMP in kwargs:
+            if color_mode_dpcode := self.entity_description.color_mode:
+                commands += [
+                    {
+                        "code": color_mode_dpcode,
+                        "value": WorkMode.WHITE,
+                    },
+                ]
+
+            commands += [
+                {
+                    "code": self._color_temp_dpcode,
+                    "value": round(
+                        self._color_temp_type.remap_value_from(
+                            kwargs[ATTR_COLOR_TEMP],
+                            self.min_mireds,
+                            self.max_mireds,
+                            reverse=True,
+                        )
+                    ),
+                },
+            ]
+        elif self._color_data_type and (
             ATTR_HS_COLOR in kwargs
             or (ATTR_BRIGHTNESS in kwargs and self.color_mode == COLOR_MODE_HS)
         ):
@@ -482,29 +504,6 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                                 )
                             ),
                         }
-                    ),
-                },
-            ]
-
-        elif ATTR_COLOR_TEMP in kwargs and self._color_temp_type:
-            if color_mode_dpcode := self.entity_description.color_mode:
-                commands += [
-                    {
-                        "code": color_mode_dpcode,
-                        "value": WorkMode.WHITE,
-                    },
-                ]
-
-            commands += [
-                {
-                    "code": self._color_temp_dpcode,
-                    "value": round(
-                        self._color_temp_type.remap_value_from(
-                            kwargs[ATTR_COLOR_TEMP],
-                            self.min_mireds,
-                            self.max_mireds,
-                            reverse=True,
-                        )
                     ),
                 },
             ]
