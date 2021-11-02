@@ -36,7 +36,6 @@ CONF_MAX_AVAILABLE_POWER_KEY = "max_available_power"
 CONF_MAX_CHARGING_CURRENT_KEY = "max_charging_current"
 CONF_STATE_OF_CHARGE_KEY = "state_of_charge"
 CONF_STATUS_DESCRIPTION_KEY = "status_description"
-
 CONF_CONNECTIONS = "connections"
 
 
