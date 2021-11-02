@@ -88,8 +88,8 @@ class FritzDeviceClimateMock(FritzDeviceBaseMock):
     window_open = "fake_window"
     nextchange_temperature = 22.0
     nextchange_endperiod = 0
-    nextchange_preset = "comfort"
-    scheduled_preset = "eco"
+    nextchange_preset = PRESET_COMFORT
+    scheduled_preset = PRESET_ECO
 
 
 class FritzDeviceSensorMock(FritzDeviceBaseMock):
