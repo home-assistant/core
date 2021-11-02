@@ -14,8 +14,6 @@ from .const import DATA_OOCSI, DOMAIN, OOCSI_ENTITY
 PLATFORMS = []
 _LOGGER = logging.getLogger(__name__)
 
-# Creates entities out of interviews
-
 
 # Homeassistant starting point
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -47,6 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+# Creates entities out of interviews
 @callback
 async def _async_interviewer(hass: HomeAssistant, entry: ConfigEntry, api):
     """Listen for interview replies."""
@@ -69,8 +68,6 @@ async def _async_interviewer(hass: HomeAssistant, entry: ConfigEntry, api):
                 for key in hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY][device][
                     "components"
                 ]:
-
-                    # for type in hass.data[OOCSI_ENTITY]["uniquePrototype"]["components"][key][]
 
                     if (
                         hass.data[DOMAIN][entry.entry_id][OOCSI_ENTITY][device][

@@ -1,8 +1,6 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 
@@ -23,9 +21,10 @@ async def async_setup_entry(
 
 
 class BasicSensor(BinarySensorEntity):
-    """Basic oocsi binary sensor"""
+    """Basic oocsi binary sensor."""
 
     def __init__(self, hass, entity_name, api, entityProperty, device):
+        """Set basic oocsi binary sensor parameters."""
         self._attr_device_info = {
             "name": entity_name,
             "manufacturer": entityProperty["creator"],
@@ -38,12 +37,18 @@ class BasicSensor(BinarySensorEntity):
         self._attr_unique_id = entityProperty["channelName"]
         self._oocsichannel = entityProperty["channelName"]
         self._channel_state = False
-        self._icon = entityProperty[]
+
+        if "logo" in entityProperty:
+            self._icon = entityProperty["logo"]
+        else:
+            self._icon = "mdi:electric-switch"
 
     async def async_added_to_hass(self) -> None:
+        """Add oocsi event listener."""
+
         @callback
         def channel_update_event(sender, recipient, event):
-            """executeOocsi state change."""
+            """Execute oocsi state change."""
             self._channel_state = event["state"]
             self.async_write_ha_state()
 
@@ -63,7 +68,7 @@ class BasicSensor(BinarySensorEntity):
     def icon(self) -> str:
         """Return the icon."""
         # return self._static_info.icon
-        return "mdi:toggle-switch"
+        return self._icon
 
     @property
     def assumed_state(self) -> bool:

@@ -21,9 +21,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class BasicSwitch(SwitchEntity):
-    """Basic oocsi switch"""
+    """Basic oocsi switch."""
 
     def __init__(self, hass, entity_name, api, entityProperty, device):
+        """Set basic oocsi switch parameters."""
         self._hass = hass
         self._oocsi = api
         self._name = entity_name
@@ -36,10 +37,17 @@ class BasicSwitch(SwitchEntity):
             "via_device_id": device,
         }
 
+        if "logo" in entityProperty:
+            self._icon = entityProperty["logo"]
+        else:
+            self._icon = "mdi:toggle-switch"
+
     async def async_added_to_hass(self) -> None:
+        """Add oocsi event listener."""
+
         @callback
         def channel_update_event(sender, recipient, event):
-            """Update state on oocsi update"""
+            """Update state on oocsi update."""
             self._channel_state = event["state"]
             self.async_write_ha_state()
 
@@ -47,13 +55,13 @@ class BasicSwitch(SwitchEntity):
 
     @property
     def device_info(self):
+        """Return important device info."""
         return {"name": self._name}
 
     @property
     def icon(self) -> str:
         """Return the icon."""
-        # return self._static_info.icon
-        return "mdi:toggle-switch"
+        return self._icon
 
     @property
     def assumed_state(self) -> bool:
