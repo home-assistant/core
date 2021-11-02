@@ -94,9 +94,9 @@ class DiscordNotificationService(BaseNotificationService):
             for channelid in kwargs[ATTR_TARGET]:
                 channelid = int(channelid)
                 try:
-                    channel = discord_bot.fetch_channel(
+                    channel = await discord_bot.fetch_channel(
                         channelid
-                    ) or discord_bot.fetch_user(channelid)
+                    ) or await discord_bot.fetch_user(channelid)
                 except discord.NotFound:
                     _LOGGER.warning("Channel not found for ID: %s", channelid)
                     continue

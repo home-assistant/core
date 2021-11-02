@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "invalid_interface": "\u7121\u52b9\u306a\u30cd\u30c3\u30c8\u30ef\u30fc\u30af \u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30a4\u30b9"
+        },
+        "step": {
+            "connect": {
+                "data": {
+                    "interface": "\u4f7f\u7528\u3059\u308b\u30cd\u30c3\u30c8\u30ef\u30fc\u30af \u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30a4\u30b9"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "\u66f4\u65b0\u6642\u306b\u30de\u30eb\u30c1\u30ad\u30e3\u30b9\u30c8 \u30d7\u30c3\u30b7\u30e5\u3092\u5f85\u6a5f\u3059\u308b"
+                },
+                "description": "\u30aa\u30d7\u30b7\u30e7\u30f3\u8a2d\u5b9a\u306e\u6307\u5b9a"
+            }
+        }
+    }
+}

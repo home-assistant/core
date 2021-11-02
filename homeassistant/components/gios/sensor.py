@@ -25,6 +25,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     SENSOR_TYPES,
+    URL,
 )
 from .model import GiosSensorEntityDescription
 
@@ -86,6 +87,7 @@ class GiosSensor(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, str(coordinator.gios.station_id))},
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
+            configuration_url=URL.format(station_id=coordinator.gios.station_id),
         )
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"

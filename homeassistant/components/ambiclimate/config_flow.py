@@ -86,9 +86,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Received code for authentication."""
         self._async_abort_entries_match()
 
-        token_info = await self._get_token_info(code)
-
-        if token_info is None:
+        if await self._get_token_info(code) is None:
             return self.async_abort(reason="access_token")
 
         config = self.hass.data[DATA_AMBICLIMATE_IMPL].copy()

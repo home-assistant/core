@@ -226,9 +226,7 @@ class EditIdBasedConfigView(BaseEditConfigView):
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
-        value = self._get_value(hass, data, config_key)
-
-        if value is None:
+        if (value := self._get_value(hass, data, config_key)) is None:
             value = {CONF_ID: config_key}
             data.append(value)
 
