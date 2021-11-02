@@ -1483,7 +1483,7 @@ def async_track_time_change(
     minute: Any | None = None,
     second: Any | None = None,
 ) -> CALLBACK_TYPE:
-    """Add a listener that will fire if UTC time matches a pattern."""
+    """Add a listener that will fire if local time matches a pattern."""
     return async_track_utc_time_change(hass, action, hour, minute, second, local=True)
 
 
