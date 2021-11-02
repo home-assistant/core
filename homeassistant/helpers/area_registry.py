@@ -73,8 +73,7 @@ class AreaRegistry:
     @callback
     def async_get_or_create(self, name: str) -> AreaEntry:
         """Get or create an area."""
-        area = self.async_get_area_by_name(name)
-        if area:
+        if area := self.async_get_area_by_name(name):
             return area
         return self.async_create(name)
 

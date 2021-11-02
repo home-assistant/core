@@ -86,9 +86,7 @@ class HomeAssistantView:
         routes: list[AbstractRoute] = []
 
         for method in ("get", "post", "delete", "put", "patch", "head", "options"):
-            handler = getattr(self, method, None)
-
-            if not handler:
+            if not (handler := getattr(self, method, None)):
                 continue
 
             handler = request_handler_factory(self, handler)

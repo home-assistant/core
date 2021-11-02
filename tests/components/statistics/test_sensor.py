@@ -1,6 +1,5 @@
 """The test for the statistics sensor platform."""
 from datetime import datetime, timedelta
-from os import path
 import statistics
 import unittest
 from unittest.mock import patch
@@ -21,6 +20,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import (
     fire_time_changed,
+    get_fixture_path,
     get_test_home_assistant,
     init_recorder_component,
 )
@@ -496,11 +496,7 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "statistics/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "statistics")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -514,7 +510,3 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.cputest")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

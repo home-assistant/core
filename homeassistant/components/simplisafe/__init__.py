@@ -80,7 +80,6 @@ from .const import (
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
     CONF_USER_ID,
-    DATA_CLIENT,
     DOMAIN,
     LOGGER,
 )
@@ -223,9 +222,6 @@ def _async_register_base_station(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     _async_standardize_config_entry(hass, entry)
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
@@ -248,7 +244,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = simplisafe
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = simplisafe
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @callback

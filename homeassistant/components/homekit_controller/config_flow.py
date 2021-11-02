@@ -471,8 +471,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # available. Otherwise request a fresh copy from the API.
         # This removes the 'accessories' key from pairing_data at
         # the same time.
-        accessories = pairing_data.pop("accessories", None)
-        if not accessories:
+        if not (accessories := pairing_data.pop("accessories", None)):
             accessories = await pairing.list_accessories_and_characteristics()
 
         bridge_info = get_bridge_information(accessories)

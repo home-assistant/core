@@ -74,8 +74,7 @@ class ArubaDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        data = self.get_aruba_data()
-        if not data:
+        if not (data := self.get_aruba_data()):
             return False
 
         self.last_results = data.values()
