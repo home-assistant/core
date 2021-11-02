@@ -280,13 +280,6 @@ async def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
         ),
         (
             "homeassistant/light/object/bla/config",
-            '{ "name": "Hello World 12", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
-            "light.hello_id",
-            "Hello World 12",
-            "light",
-        ),
-        (
-            "homeassistant/light/object/bla/config",
             '{ "name": "Hello World 13", "obj_id": "hello_id", "state_topic": "test-topic", "command_topic": "test-topic" }',
             "light.hello_id",
             "Hello World 13",
