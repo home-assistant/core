@@ -49,6 +49,13 @@ UNIT_PREFIXES = {
     "Ti": 2 ** 40,
 }
 
+BINARY_PREFIXES = {
+    UNIT_PREFIXES["Ki"],
+    UNIT_PREFIXES["Mi"],
+    UNIT_PREFIXES["Gi"],
+    UNIT_PREFIXES["Ti"],
+}
+
 # SI Time prefixes
 UNIT_TIME = {
     TIME_SECONDS: 1,
@@ -105,6 +112,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
     ):
         """Initialize the derivative sensor."""
         self._sensor_source_id = source_entity
+        self._overflowed = None
         self._round_digits = round_digits
         self._state = 0
         self._state_list = []  # List of tuples with (timestamp, sensor_value)
@@ -132,9 +140,14 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             except SyntaxError as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
 
+        def _has_overflowed(last_val, first_val):
+            """Check if value has overflowed."""
+            return last_val < first_val
+
         @callback
         def calc_derivative(event):
             """Handle the sensor state changes."""
+            self._overflowed = False
             old_state = event.data.get("old_state")
             new_state = event.data.get("new_state")
             if (
@@ -167,6 +180,9 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 # derivative of previous measures.
                 last_time, last_value = self._state_list[-1]
                 first_time, first_value = self._state_list[0]
+
+                if _has_overflowed(last_value, first_value):
+                    self._overflowed = True
 
                 elapsed_time = (last_time - first_time).total_seconds()
                 delta_value = Decimal(last_value) - Decimal(first_value)
@@ -201,6 +217,8 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
+        if self._unit_prefix in BINARY_PREFIXES and self._overflowed:
+            return None
         return round(self._state, self._round_digits)
 
     @property
