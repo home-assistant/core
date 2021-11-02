@@ -19,6 +19,8 @@ from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, 
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
+CONF_COMMAND_TEMPLATE = "command_template"
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_OPTIONS = "options"
@@ -43,6 +45,7 @@ def validate_config(config):
 
 _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     {
+        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Required(CONF_OPTIONS): cv.ensure_list,
@@ -110,9 +113,16 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         self._optimistic = config[CONF_OPTIMISTIC]
         self._attr_options = config[CONF_OPTIONS]
 
-        value_template = self._config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = self.hass
+        self._templates = {
+            CONF_COMMAND_TEMPLATE: config.get(CONF_COMMAND_TEMPLATE),
+            CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
+        }
+        for key, tpl in self._templates.items():
+            if tpl is None:
+                self._templates[key] = lambda value: value
+            else:
+                tpl.hass = self.hass
+                self._templates[key] = tpl.async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -121,10 +131,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-            payload = msg.payload
-            value_template = self._config.get(CONF_VALUE_TEMPLATE)
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(payload)
+            payload = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
 
             if payload.lower() == "none":
                 payload = None
@@ -162,6 +169,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the current value."""
+        payload = self._templates[CONF_COMMAND_TEMPLATE](option)
         if self._optimistic:
             self._attr_current_option = option
             self.async_write_ha_state()
@@ -169,7 +177,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
-            option,
+            payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
