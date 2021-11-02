@@ -161,13 +161,13 @@ class CommandSwitch(SwitchEntity):
         """Update device state."""
         if self._command_state:
             payload = str(self._query_state())
-            if self._value_template:
-                payload = self._value_template.render_with_possible_json_value(payload)
-            self._state = payload.lower() == "true"
             if self._icon_template:
                 self._attr_icon = self._icon_template.render_with_possible_json_value(
                     payload
                 )
+            if self._value_template:
+                payload = self._value_template.render_with_possible_json_value(payload)
+            self._state = payload.lower() == "true"
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
