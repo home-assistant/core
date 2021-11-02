@@ -39,23 +39,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
     def __init__(self):
         """Start the Wallbox config flow."""
         self._reauth_entry = None
-        self._reauth_schema = None
 
     async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-
-        self._reauth_schema = {
-            vol.Required(
-                CONF_STATION, default=self._reauth_entry.data[CONF_STATION]
-            ): str,
-            vol.Required(
-                CONF_USERNAME, default=self._reauth_entry.data[CONF_USERNAME]
-            ): str,
-            vol.Required(CONF_PASSWORD): str,
-        }
 
         return await self.async_step_user()
 
