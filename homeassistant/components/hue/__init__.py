@@ -3,6 +3,8 @@ import asyncio
 import logging
 
 from aiohue.util import normalize_bridge_id
+from aiohue.v1 import HueBridgeV1
+from aiohue.v2 import HueBridgeV2
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -30,7 +32,6 @@ async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up a bridge from a config entry."""
-
     # Migrate allow_unreachable from config entry data to config entry options
     if (
         CONF_ALLOW_UNREACHABLE not in entry.options
@@ -66,10 +67,10 @@ async def async_setup_entry(
 
     _register_services(hass)
 
-    config = bridge.api.config
+    api: HueBridgeV1 | HueBridgeV2 = bridge.api
 
     # For backwards compat
-    unique_id = normalize_bridge_id(config.bridgeid)
+    unique_id = normalize_bridge_id(api.config.bridge_id)
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
@@ -100,18 +101,23 @@ async def async_setup_entry(
             hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
             return False
 
+    # add bridge device to device registry
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, config.mac)},
-        identifiers={(DOMAIN, config.bridgeid)},
+        connections={(dr.CONNECTION_NETWORK_MAC, api.config.mac_address)},
+        identifiers={(DOMAIN, api.config.bridge_id)},
         manufacturer="Signify",
-        name=config.name,
-        model=config.modelid,
-        sw_version=config.swversion,
+        name=api.config.name,
+        model=api.config.model_id,
+        sw_version=api.config.software_version,
     )
 
-    if config.modelid == "BSB002" and config.swversion < "1935144040":
+    if (
+        not bridge.use_v2
+        and api.config.model_id == "BSB002"
+        and api.config.software_version < "1935144040"
+    ):
         persistent_notification.async_create(
             hass,
             "Your Hue hub has a known security vulnerability ([CVE-2020-6007](https://cve.circl.lu/cve/CVE-2020-6007)). Go to the Hue app and check for software updates.",
@@ -119,7 +125,8 @@ async def async_setup_entry(
             "hue_hub_firmware",
         )
 
-    elif config.swupdate2_bridge_state == "readytoinstall":
+    elif not bridge.use_v2 and api.config.swupdate2_bridge_state == "readytoinstall":
+        # NOTE: this property no longer exists in Hue api
         err = (
             "Please check for software updates of the bridge in the Philips Hue App.",
             "Signify Hue",

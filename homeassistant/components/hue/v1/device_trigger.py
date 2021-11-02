@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 
-from . import DOMAIN
+from .. import DOMAIN
 from .hue_event import CONF_HUE_EVENT
 
 CONF_SUBTYPE = "subtype"

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from aiohue import AiohueException, Unauthorized
-from aiohue.sensors import TYPE_ZLL_PRESENCE
+from aiohue.v1.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
@@ -14,7 +14,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import debounce, entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import REQUEST_REFRESH_DELAY
+from ..const import REQUEST_REFRESH_DELAY
 from .helpers import remove_devices
 from .hue_event import EVENT_CONFIG_MAP
 from .sensor_device import GenericHueDevice

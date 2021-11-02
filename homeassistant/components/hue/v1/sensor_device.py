@@ -1,7 +1,7 @@
 """Support for the Philips Hue sensor devices."""
 from homeassistant.helpers import entity
 
-from .const import DOMAIN as HUE_DOMAIN
+from ..const import DOMAIN as HUE_DOMAIN
 
 
 class GenericHueDevice(entity.Entity):

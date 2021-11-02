@@ -1,7 +1,7 @@
 """Representation of a Hue remote firing events for button presses."""
 import logging
 
-from aiohue.sensors import (
+from aiohue.v1.sensors import (
     EVENT_BUTTON,
     TYPE_ZGP_SWITCH,
     TYPE_ZLL_ROTARY,

@@ -3,7 +3,7 @@
   "name": "Philips Hue",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hue",
-  "requirements": ["aiohue==2.6.3"],
+  "requirements": ["git+https://github.com/marcelveldt/aiohue.git@refactor-full-v2-support#aiohue==2.6.5"],
   "ssdp": [
     {
       "manufacturer": "Royal Philips Electronics",

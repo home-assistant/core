@@ -5,22 +5,24 @@ import asyncio
 from typing import Any
 from urllib.parse import urlparse
 
-import aiohue
-from aiohue.discovery import discover_nupnp, normalize_bridge_id
+from aiohue import LinkButtonNotPressed, create_app_key
+from aiohue.discovery import DiscoveredHueBridge, discover_bridge, discover_nupnp
+from aiohue.util import normalize_bridge_id
 import async_timeout
+import slugify as unicode_slug
 import voluptuous as vol
 
-from homeassistant import config_entries, core
-from homeassistant.components import ssdp, zeroconf
-from homeassistant.const import CONF_HOST, CONF_USERNAME
+from homeassistant import config_entries
+from homeassistant.components import ssdp
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .bridge import authenticate_bridge
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
+    CONF_USE_V2,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_UNREACHABLE,
     DOMAIN,
@@ -46,25 +48,25 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the Hue flow."""
-        self.bridge: aiohue.Bridge | None = None
-        self.discovered_bridges: dict[str, aiohue.Bridge] | None = None
+        self.bridge: DiscoveredHueBridge | None = None
+        self.discovered_bridges: dict[str, DiscoveredHueBridge] | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         # This is for backwards compatibility.
         return await self.async_step_init(user_input)
 
-    @core.callback
-    def _async_get_bridge(self, host: str, bridge_id: str | None = None):
-        """Return a bridge object."""
+    async def _get_bridge(
+        self, host: str, bridge_id: str | None = None
+    ) -> DiscoveredHueBridge:
+        """Return a DiscoveredHueBridge object."""
+        bridge = await discover_bridge(
+            host, websession=aiohttp_client.async_get_clientsession(self.hass)
+        )
         if bridge_id is not None:
             bridge_id = normalize_bridge_id(bridge_id)
-
-        return aiohue.Bridge(
-            host,
-            websession=aiohttp_client.async_get_clientsession(self.hass),
-            bridge_id=bridge_id,
-        )
+            assert bridge_id == bridge.id
+        return bridge
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
@@ -126,7 +128,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._async_abort_entries_match({"host": user_input["host"]})
-        self.bridge = self._async_get_bridge(user_input[CONF_HOST])
+        self.bridge = await self._get_bridge(user_input[CONF_HOST])
         return await self.async_step_link()
 
     async def async_step_link(self, user_input=None):
@@ -141,10 +143,17 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         bridge = self.bridge
         assert bridge is not None
         errors = {}
+        device_name = unicode_slug.slugify(
+            self.hass.config.location_name, max_length=19
+        )
 
         try:
-            await authenticate_bridge(self.hass, bridge)
-        except AuthenticationRequired:
+            app_key = await create_app_key(
+                bridge.host,
+                f"home-assistant#{device_name}",
+                websession=aiohttp_client.async_get_clientsession(self.hass),
+            )
+        except LinkButtonNotPressed:
             errors["base"] = "register_failed"
         except CannotConnect:
             LOGGER.error("Error connecting to the Hue bridge at %s", bridge.host)
@@ -165,8 +174,12 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=bridge.config.name,
-            data={CONF_HOST: bridge.host, CONF_USERNAME: bridge.username},
+            title=f"HUE Bridge {bridge.id}",
+            data={
+                CONF_HOST: bridge.host,
+                CONF_API_TOKEN: app_key,
+                CONF_USE_V2: bridge.supports_v2,
+            },
         )
 
     async def async_step_ssdp(self, discovery_info):
@@ -196,8 +209,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_hue_bridge")
 
         host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-
-        bridge = self._async_get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
+        bridge = await self._get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
 
         await self.async_set_unique_id(bridge.id)
         self._abort_if_unique_id_configured(
@@ -215,9 +227,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Zeroconf component. It will check if the
         host is already configured and delegate to the import step if not.
         """
-        bridge = self._async_get_bridge(
-            discovery_info[zeroconf.ATTR_HOST],
-            discovery_info[zeroconf.ATTR_PROPERTIES]["bridgeid"],
+        bridge = await self._get_bridge(
+            discovery_info["host"], discovery_info["properties"]["bridgeid"]
         )
 
         await self.async_set_unique_id(bridge.id)
@@ -235,7 +246,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         as the unique identifier. Therefore, this method uses discovery without
         a unique ID.
         """
-        self.bridge = self._async_get_bridge(discovery_info[CONF_HOST])
+        self.bridge = await self._get_bridge(discovery_info[CONF_HOST])
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_link()
 
@@ -251,8 +262,28 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Check if host exists, abort if so.
         self._async_abort_entries_match({"host": import_info["host"]})
 
-        self.bridge = self._async_get_bridge(import_info["host"])
+        self.bridge = await self._get_bridge(import_info["host"])
         return await self.async_step_link()
+
+    async def async_migrate_entry(hass, config_entry: config_entries.ConfigEntry):
+        """Migrate old entry."""
+        # _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+        # TODO
+        # migrate CONF_USERNAME --> CONF_API_TOKEN
+        # store use_v2 in data
+        if config_entry.version == 1:
+
+            new = {**config_entry.data}
+            # TODO: modify Config Entry data
+
+            config_entry.data = {**new}
+
+            config_entry.version = 2
+
+        # _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+        return False
 
 
 class HueOptionsFlowHandler(config_entries.OptionsFlow):
