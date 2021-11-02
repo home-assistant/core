@@ -1,7 +1,7 @@
 """Test event helpers."""
 # pylint: disable=protected-access
 import asyncio
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from unittest.mock import patch
 
 from astral import LocationInfo
@@ -3393,66 +3393,56 @@ async def test_periodic_task_duplicate_time(hass):
     unsub()
 
 
-async def test_periodic_task_entering_dst(hass):
+# DST starts early morning March 28th 2021
+@pytest.mark.freeze_time("2021-03-28 01:28:00+01:00")
+async def test_periodic_task_entering_dst(hass, freezer):
     """Test periodic task behavior when entering dst."""
     timezone = dt_util.get_time_zone("Europe/Vienna")
     dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
-    # DST starts early morning March 27th 2022
-    yy = 2022
-    mm = 3
-    dd = 27
+    today = date.today().isoformat()
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
 
-    # There's no 2022-03-27 02:30, the event should not fire until 2022-03-28 02:30
-    time_that_will_not_match_right_away = datetime(
-        yy, mm, dd, 1, 28, 0, tzinfo=timezone, fold=0
-    )
     # Make sure we enter DST during the test
-    assert (
-        time_that_will_not_match_right_away.utcoffset()
-        != (time_that_will_not_match_right_away + timedelta(hours=2)).utcoffset()
+    now_local = dt_util.now()
+    assert now_local.utcoffset() != (now_local + timedelta(hours=2)).utcoffset()
+
+    unsub = async_track_time_change(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        hour=2,
+        minute=30,
+        second=0,
     )
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_time_change(
-            hass,
-            callback(lambda x: specific_runs.append(x)),
-            hour=2,
-            minute=30,
-            second=0,
-        )
-
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 1, 50, 0, 999999, tzinfo=timezone)
-    )
+    freezer.move_to(f"{today} 01:50:00.999999+01:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 3, 50, 0, 999999, tzinfo=timezone)
-    )
+    # There was no 02:30 today, the event should not fire until tomorrow
+    freezer.move_to(f"{today} 03:50:00.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd + 1, 1, 50, 0, 999999, tzinfo=timezone)
-    )
+    freezer.move_to(f"{tomorrow} 01:50:00.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd + 1, 2, 50, 0, 999999, tzinfo=timezone)
-    )
+    freezer.move_to(f"{tomorrow} 02:50:00.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     unsub()
 
 
-async def test_periodic_task_entering_dst_2(hass):
+# DST starts early morning March 28th 2021
+@pytest.mark.freeze_time("2021-03-28 01:59:59+01:00")
+async def test_periodic_task_entering_dst_2(hass, freezer):
     """Test periodic task behavior when entering dst.
 
     This tests a task firing every second in the range 0..58 (not *:*:59)
@@ -3461,220 +3451,182 @@ async def test_periodic_task_entering_dst_2(hass):
     dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
-    # DST starts early morning March 27th 2022
-    yy = 2022
-    mm = 3
-    dd = 27
+    today = date.today().isoformat()
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
 
-    # There's no 2022-03-27 02:00:00, the event should not fire until 2022-03-28 03:00:00
-    time_that_will_not_match_right_away = datetime(
-        yy, mm, dd, 1, 59, 59, tzinfo=timezone, fold=0
-    )
     # Make sure we enter DST during the test
-    assert (
-        time_that_will_not_match_right_away.utcoffset()
-        != (time_that_will_not_match_right_away + timedelta(hours=2)).utcoffset()
+    now_local = dt_util.now()
+    assert now_local.utcoffset() != (now_local + timedelta(hours=2)).utcoffset()
+
+    unsub = async_track_time_change(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        second=list(range(59)),
     )
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_time_change(
-            hass,
-            callback(lambda x: specific_runs.append(x)),
-            second=list(range(59)),
-        )
-
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 1, 59, 59, 999999, tzinfo=timezone)
-    )
+    freezer.move_to(f"{today} 01:59:59.999999+01:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 3, 0, 0, 999999, tzinfo=timezone)
-    )
+    freezer.move_to(f"{today} 03:00:00.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 3, 0, 1, 999999, tzinfo=timezone)
-    )
+    freezer.move_to(f"{today} 03:00:01.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd + 1, 1, 59, 59, 999999, tzinfo=timezone)
-    )
+    freezer.move_to(f"{tomorrow} 01:59:59.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd + 1, 2, 0, 0, 999999, tzinfo=timezone)
-    )
+    freezer.move_to(f"{tomorrow} 02:00:00.999999+02:00")
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
     unsub()
 
 
-async def test_periodic_task_leaving_dst(hass):
+# DST ends early morning October 31st 2021
+@pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
+async def test_periodic_task_leaving_dst(hass, freezer):
     """Test periodic task behavior when leaving dst."""
     timezone = dt_util.get_time_zone("Europe/Vienna")
     dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
-    # DST ends early morning Ocotber 30th 2022
-    yy = 2022
-    mm = 10
-    dd = 30
-
-    time_that_will_not_match_right_away = datetime(
-        yy, mm, dd, 2, 28, 0, tzinfo=timezone, fold=0
-    )
+    today = date.today().isoformat()
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
 
     # Make sure we leave DST during the test
-    assert (
-        time_that_will_not_match_right_away.utcoffset()
-        != time_that_will_not_match_right_away.replace(fold=1).utcoffset()
-    )
+    now_local = dt_util.now()
+    assert now_local.utcoffset() != (now_local + timedelta(hours=1)).utcoffset()
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_time_change(
-            hass,
-            callback(lambda x: specific_runs.append(x)),
-            hour=2,
-            minute=30,
-            second=0,
-        )
+    unsub = async_track_time_change(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        hour=2,
+        minute=30,
+        second=0,
+    )
 
     # The task should not fire yet
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 2, 28, 0, 999999, tzinfo=timezone, fold=0)
-    )
+    freezer.move_to(f"{today} 02:28:00.999999+02:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     # The task should fire
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 2, 30, 0, 999999, tzinfo=timezone, fold=0)
-    )
+    freezer.move_to(f"{today} 02:30:00.999999+02:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     # The task should not fire again
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=0)
-    )
+    freezer.move_to(f"{today} 02:55:00.999999+02:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     # DST has ended, the task should not fire yet
-    async_fire_time_changed(
-        hass,
-        datetime(yy, mm, dd, 2, 15, 0, 999999, tzinfo=timezone, fold=1),
-    )
+    freezer.move_to(f"{today} 02:15:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1  # DST has ended
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     # The task should fire
-    async_fire_time_changed(
-        hass,
-        datetime(yy, mm, dd, 2, 45, 0, 999999, tzinfo=timezone, fold=1),
-    )
+    freezer.move_to(f"{today} 02:45:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     # The task should not fire again
-    async_fire_time_changed(
-        hass,
-        datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=1),
-    )
+    freezer.move_to(f"{today} 02:55:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     # The task should fire again the next day
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd + 1, 2, 55, 0, 999999, tzinfo=timezone, fold=1)
-    )
+    freezer.move_to(f"{tomorrow} 02:55:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
     unsub()
 
 
-async def test_periodic_task_leaving_dst_2(hass):
+# DST ends early morning October 31st 2021
+@pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
+async def test_periodic_task_leaving_dst_2(hass, freezer):
     """Test periodic task behavior when leaving dst."""
     timezone = dt_util.get_time_zone("Europe/Vienna")
     dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
-    # DST ends early morning Ocotber 30th 2022
-    yy = 2022
-    mm = 10
-    dd = 30
+    today = date.today().isoformat()
 
-    time_that_will_not_match_right_away = datetime(
-        yy, mm, dd, 2, 28, 0, tzinfo=timezone, fold=0
-    )
     # Make sure we leave DST during the test
-    assert (
-        time_that_will_not_match_right_away.utcoffset()
-        != time_that_will_not_match_right_away.replace(fold=1).utcoffset()
-    )
+    now_local = dt_util.now()
+    assert now_local.utcoffset() != (now_local + timedelta(hours=1)).utcoffset()
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_time_change(
-            hass,
-            callback(lambda x: specific_runs.append(x)),
-            minute=30,
-            second=0,
-        )
+    unsub = async_track_time_change(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        minute=30,
+        second=0,
+    )
 
     # The task should not fire yet
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 2, 28, 0, 999999, tzinfo=timezone, fold=0)
-    )
+    freezer.move_to(f"{today} 02:28:00.999999+02:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     # The task should fire
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=0)
-    )
+    freezer.move_to(f"{today} 02:55:00.999999+02:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     # DST has ended, the task should not fire yet
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 2, 15, 0, 999999, tzinfo=timezone, fold=1)
-    )
+    freezer.move_to(f"{today} 02:15:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     # The task should fire
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 2, 45, 0, 999999, tzinfo=timezone, fold=1)
-    )
+    freezer.move_to(f"{today} 02:45:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     # The task should not fire again
-    async_fire_time_changed(
-        hass,
-        datetime(yy, mm, dd, 2, 55, 0, 999999, tzinfo=timezone, fold=1),
-    )
+    freezer.move_to(f"{today} 02:55:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 1
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     # The task should fire again the next hour
-    async_fire_time_changed(
-        hass, datetime(yy, mm, dd, 3, 55, 0, 999999, tzinfo=timezone, fold=0)
-    )
+    freezer.move_to(f"{today} 03:55:00.999999+01:00")
+    async_fire_time_changed(hass)
+    assert dt_util.now().fold == 0
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
