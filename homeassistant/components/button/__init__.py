@@ -83,7 +83,7 @@ class ButtonEntity(RestoreEntity):
     async def _async_press_action(self) -> None:
         """Press the button (from e.g., service call).
 
-        Should not be over ridden, handle setting last press timestamp.
+        Should not be overridden, handle setting last press timestamp.
         """
         self.__last_pressed = dt_util.utcnow()
         self.async_write_ha_state()
