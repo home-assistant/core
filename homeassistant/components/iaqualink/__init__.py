@@ -240,8 +240,8 @@ class AqualinkEntity(Entity):
         """Return the device info."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self.name,
-            model=self.dev.__class__.__name__.replace("Aqualink", ""),
             manufacturer="Jandy",
+            model=self.dev.__class__.__name__.replace("Aqualink", ""),
+            name=self.name,
             via_device=(DOMAIN, self.dev.system.serial),
         )

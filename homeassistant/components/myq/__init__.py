@@ -1,4 +1,6 @@
 """The MyQ integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -13,12 +15,7 @@ from pymyq.device import MyQDevice
 from pymyq.errors import InvalidCredentialsError, MyQError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_MODEL,
-    ATTR_VIA_DEVICE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -97,24 +94,24 @@ class MyQEntity(CoordinatorEntity):
         return self._device.name
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self):
         """Return the device_info of the device."""
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.device_id)},
-            name=self._device.name,
-            manufacturer=MANUFACTURER,
-            sw_version=self._device.firmware_version,
-        )
         model = (
             KNOWN_MODELS.get(self._device.device_id[2:4])
             if self._device.device_id is not None
             else None
         )
-        if model:
-            device_info[ATTR_MODEL] = model
+        via_device: tuple[str, str] | None = None
         if self._device.parent_device_id:
-            device_info[ATTR_VIA_DEVICE] = (DOMAIN, self._device.parent_device_id)
-        return device_info
+            via_device = (DOMAIN, self._device.parent_device_id)
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.device_id)},
+            manufacturer=MANUFACTURER,
+            model=model,
+            name=self._device.name,
+            sw_version=self._device.firmware_version,
+            via_device=via_device,
+        )
 
     @property
     def available(self):

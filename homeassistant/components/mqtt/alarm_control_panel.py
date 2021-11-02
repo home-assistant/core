@@ -97,6 +97,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+
 
 async def async_setup_platform(
     hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
@@ -111,7 +113,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
-    await async_setup_entry_helper(hass, alarm.DOMAIN, setup, PLATFORM_SCHEMA)
+    await async_setup_entry_helper(hass, alarm.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
@@ -135,7 +137,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA
+        return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
@@ -226,7 +228,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "disarming"):
             return
         payload = self._config[CONF_PAYLOAD_DISARM]
-        self._publish(code, payload)
+        await self._publish(code, payload)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command.
@@ -237,7 +239,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming home"):
             return
         action = self._config[CONF_PAYLOAD_ARM_HOME]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command.
@@ -248,7 +250,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming away"):
             return
         action = self._config[CONF_PAYLOAD_ARM_AWAY]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command.
@@ -259,7 +261,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming night"):
             return
         action = self._config[CONF_PAYLOAD_ARM_NIGHT]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_vacation(self, code=None):
         """Send arm vacation command.
@@ -270,7 +272,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming vacation"):
             return
         action = self._config[CONF_PAYLOAD_ARM_VACATION]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command.
@@ -281,14 +283,14 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming custom bypass"):
             return
         action = self._config[CONF_PAYLOAD_ARM_CUSTOM_BYPASS]
-        self._publish(code, action)
+        await self._publish(code, action)
 
-    def _publish(self, code, action):
+    async def _publish(self, code, action):
         """Publish via mqtt."""
         command_template = self._config[CONF_COMMAND_TEMPLATE]
         values = {"action": action, "code": code}
         payload = command_template.async_render(**values, parse_result=False)
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             payload,

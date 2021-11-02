@@ -1,0 +1,5 @@
+{
+    "config": {
+        "flow_title": "{device} ({ip_address})"
+    }
+}

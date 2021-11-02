@@ -20,7 +20,9 @@ from homeassistant.components.sensor.recorder import reset_detected
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    ENTITY_CATEGORY_SYSTEM,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import (
@@ -43,6 +45,8 @@ SUPPORTED_STATE_CLASSES = [
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 ]
+VALID_ENERGY_UNITS = [ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, ENERGY_MEGA_WATT_HOUR]
+VALID_ENERGY_UNITS_GAS = [VOLUME_CUBIC_METERS] + VALID_ENERGY_UNITS
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -193,8 +197,7 @@ class SensorManager:
         ):
             return
 
-        current_entity = to_remove.pop(key, None)
-        if current_entity:
+        if current_entity := to_remove.pop(key, None):
             current_entity.update_config(config)
             return
 
@@ -212,6 +215,7 @@ class EnergyCostSensor(SensorEntity):
     utility.
     """
 
+    _attr_entity_category = ENTITY_CATEGORY_SYSTEM
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
 
@@ -289,13 +293,15 @@ class EnergyCostSensor(SensorEntity):
             except ValueError:
                 return
 
-            if (
-                self._adapter.source_type == "grid"
-                and energy_price_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT, ""
-                ).endswith(f"/{ENERGY_WATT_HOUR}")
+            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
+                f"/{ENERGY_WATT_HOUR}"
             ):
                 energy_price *= 1000.0
+
+            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
+                f"/{ENERGY_MEGA_WATT_HOUR}"
+            ):
+                energy_price /= 1000.0
 
         else:
             energy_price_state = None
@@ -309,14 +315,17 @@ class EnergyCostSensor(SensorEntity):
         energy_unit = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if self._adapter.source_type == "grid":
-            if energy_unit == ENERGY_WATT_HOUR:
-                energy_price /= 1000
-            elif energy_unit != ENERGY_KILO_WATT_HOUR:
+            if energy_unit not in VALID_ENERGY_UNITS:
                 energy_unit = None
 
         elif self._adapter.source_type == "gas":
-            if energy_unit != VOLUME_CUBIC_METERS:
+            if energy_unit not in VALID_ENERGY_UNITS_GAS:
                 energy_unit = None
+
+        if energy_unit == ENERGY_WATT_HOUR:
+            energy_price /= 1000
+        elif energy_unit == ENERGY_MEGA_WATT_HOUR:
+            energy_price *= 1000
 
         if energy_unit is None:
             if not self._wrong_unit_reported:

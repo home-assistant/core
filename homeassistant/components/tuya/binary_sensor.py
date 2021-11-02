@@ -97,6 +97,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Methane Detector
+    # https://developer.tuya.com/en/docs/iot/categoryjwbj?id=Kaiuz40u98lkm
+    "jwbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CH4_SENSOR_STATE,
+            device_class=DEVICE_CLASS_GAS,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": (
@@ -124,6 +134,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=DPCode.PIR,
             device_class=DEVICE_CLASS_MOTION,
             on_value="pir",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # PM2.5 Sensor
+    # https://developer.tuya.com/en/docs/iot/categorypm25?id=Kaiuz3qof3yfu
+    "pm2.5": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PM25_STATE,
+            device_class=DEVICE_CLASS_SAFETY,
+            on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
     ),
@@ -161,6 +181,19 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Volatile Organic Compound Sensor
+    # Note: Undocumented in cloud API docs, based on test device
+    "voc": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.VOC_STATE,
+            device_class=DEVICE_CLASS_SAFETY,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Temperature and Humidity Sensor
+    # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
+    "wsdcg": (TAMPER_BINARY_SENSOR,),
     # Pressure Sensor
     # https://developer.tuya.com/en/docs/iot/categoryylcg?id=Kaiuz3kc2e4gm
     "ylcg": (

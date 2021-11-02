@@ -1,4 +1,5 @@
 """Test the Nightscout config flow."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -70,7 +71,7 @@ async def test_user_form_api_key_required(hass):
         return_value=SERVER_STATUS_STATUS_ONLY,
     ), patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
-        side_effect=ClientResponseError(None, None, status=401),
+        side_effect=ClientResponseError(None, None, status=HTTPStatus.UNAUTHORIZED),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

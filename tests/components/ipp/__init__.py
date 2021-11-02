@@ -1,6 +1,4 @@
 """Tests for the IPP integration."""
-import os
-
 import aiohttp
 from pyipp import IPPConnectionUpgradeRequired, IPPError
 
@@ -15,7 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_fixture_path
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 ATTR_HOSTNAME = "hostname"
@@ -63,9 +61,7 @@ MOCK_ZEROCONF_IPPS_SERVICE_INFO = {
 
 def load_fixture_binary(filename):
     """Load a binary fixture."""
-    path = os.path.join(os.path.dirname(__file__), "..", "..", "fixtures", filename)
-    with open(path, "rb") as fptr:
-        return fptr.read()
+    return get_fixture_path(filename, "ipp").read_bytes()
 
 
 def mock_connection(
@@ -97,11 +93,11 @@ def mock_connection(
         aioclient_mock.post(f"{ipp_url}{base_path}", exc=IPPConnectionUpgradeRequired)
         return
 
-    fixture = "ipp/get-printer-attributes.bin"
+    fixture = "get-printer-attributes.bin"
     if no_unique_id:
-        fixture = "ipp/get-printer-attributes-success-nodata.bin"
+        fixture = "get-printer-attributes-success-nodata.bin"
     elif version_not_supported:
-        fixture = "ipp/get-printer-attributes-error-0x0503.bin"
+        fixture = "get-printer-attributes-error-0x0503.bin"
 
     if parse_error:
         content = "BAD"

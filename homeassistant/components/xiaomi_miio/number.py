@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import DEGREE, ENTITY_CATEGORY_CONFIG, TIME_MINUTES
@@ -284,14 +283,6 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         ):
             return False
         return super().available
-
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
 
     async def async_set_value(self, value):
         """Set an option of the miio device."""

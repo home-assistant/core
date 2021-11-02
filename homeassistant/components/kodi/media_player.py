@@ -62,6 +62,7 @@ from homeassistant.helpers import (
     device_registry,
     entity_platform,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
 import homeassistant.util.dt as dt_util
@@ -345,13 +346,13 @@ class KodiEntity(MediaPlayerEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Kodi",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Kodi",
+            name=self.name,
+        )
 
     @property
     def state(self):

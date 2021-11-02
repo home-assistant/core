@@ -312,6 +312,8 @@ async def test_fan_speed(hass, hk_driver, events):
     assert acc.char_speed.value == 50
     assert acc.char_active.value == 0
 
+    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+
     hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
@@ -327,6 +329,9 @@ async def test_fan_speed(hass, hk_driver, events):
     await hass.async_block_till_done()
     assert acc.char_speed.value == 50
     assert acc.char_active.value == 1
+
+    assert call_turn_on[0]
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
 
 
 async def test_fan_set_all_one_shot(hass, hk_driver, events):

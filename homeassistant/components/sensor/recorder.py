@@ -490,10 +490,12 @@ def _compile_statistics(  # noqa: C901
 
         # Set meta data
         meta: StatisticMetaData = {
-            "statistic_id": entity_id,
-            "unit_of_measurement": unit,
             "has_mean": "mean" in wanted_statistics[entity_id],
             "has_sum": "sum" in wanted_statistics[entity_id],
+            "name": None,
+            "source": RECORDER_DOMAIN,
+            "statistic_id": entity_id,
+            "unit_of_measurement": unit,
         }
 
         # Make calculations
@@ -606,7 +608,7 @@ def _compile_statistics(  # noqa: C901
             stat["sum"] = _sum
             stat["state"] = new_state
 
-        result.append({"meta": meta, "stat": (stat,)})
+        result.append({"meta": meta, "stat": stat})
 
     return result
 
@@ -638,14 +640,20 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
             continue
 
         if device_class not in UNIT_CONVERSIONS:
-            statistic_ids[state.entity_id] = native_unit
+            statistic_ids[state.entity_id] = {
+                "source": RECORDER_DOMAIN,
+                "unit_of_measurement": native_unit,
+            }
             continue
 
         if native_unit not in UNIT_CONVERSIONS[device_class]:
             continue
 
         statistics_unit = DEVICE_CLASS_UNITS[device_class]
-        statistic_ids[state.entity_id] = statistics_unit
+        statistic_ids[state.entity_id] = {
+            "source": RECORDER_DOMAIN,
+            "unit_of_measurement": statistics_unit,
+        }
 
     return statistic_ids
 

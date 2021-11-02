@@ -68,8 +68,7 @@ class InsteonEntity(Entity):
         if (description := self._insteon_device.description) is None:
             description = "Unknown Device"
         # Get an extension label if there is one
-        extension = self._get_label()
-        if extension:
+        if extension := self._get_label():
             extension = f" {extension}"
         return f"{description} {self._insteon_device.address}{extension}"
 
@@ -83,10 +82,10 @@ class InsteonEntity(Entity):
         """Return device information."""
         return DeviceInfo(
             identifiers={(DOMAIN, str(self._insteon_device.address))},
-            name=f"{self._insteon_device.description} {self._insteon_device.address}",
-            model=f"{self._insteon_device.model} ({self._insteon_device.cat!r}, 0x{self._insteon_device.subcat:02x})",
-            sw_version=f"{self._insteon_device.firmware:02x} Engine Version: {self._insteon_device.engine_version}",
             manufacturer="Smart Home",
+            model=f"{self._insteon_device.model} ({self._insteon_device.cat!r}, 0x{self._insteon_device.subcat:02x})",
+            name=f"{self._insteon_device.description} {self._insteon_device.address}",
+            sw_version=f"{self._insteon_device.firmware:02x} Engine Version: {self._insteon_device.engine_version}",
             via_device=(DOMAIN, str(devices.modem.address)),
         )
 

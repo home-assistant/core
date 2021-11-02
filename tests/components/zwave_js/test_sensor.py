@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
@@ -30,6 +31,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     POWER_WATT,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
@@ -38,6 +40,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
+    BATTERY_SENSOR,
     CURRENT_SENSOR,
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
@@ -58,6 +61,18 @@ async def test_numeric_sensor(hass, multisensor_6, integration):
     assert state.state == "9.0"
     assert state.attributes["unit_of_measurement"] == TEMP_CELSIUS
     assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
+
+    state = hass.states.get(BATTERY_SENSOR)
+
+    assert state
+    assert state.state == "100.0"
+    assert state.attributes["unit_of_measurement"] == "%"
+    assert state.attributes["device_class"] == DEVICE_CLASS_BATTERY
+
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(BATTERY_SENSOR)
+    assert entity_entry
+    assert entity_entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
     state = hass.states.get(HUMIDITY_SENSOR)
 
@@ -151,16 +166,9 @@ async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integrati
     node = lock_id_lock_as_id150
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
-    )
 
-    await hass.config_entries.async_reload(integration.entry_id)
-    await hass.async_block_till_done()
-
-    assert not updated_entry.disabled
+    assert not entity_entry.disabled
+    assert entity_entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
 
     # Test transitions work
@@ -212,16 +220,8 @@ async def test_node_status_sensor_not_ready(
     assert not node.ready
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
-    )
 
-    await hass.config_entries.async_reload(integration.entry_id)
-    await hass.async_block_till_done()
-
-    assert not updated_entry.disabled
+    assert not entity_entry.disabled
     assert hass.states.get(NODE_STATUS_ENTITY)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
 

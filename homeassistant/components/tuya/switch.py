@@ -34,7 +34,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.WARM,
-            name="Heat preservation",
+            name="Heat Preservation",
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
@@ -62,6 +62,17 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Reset of water usage days",
             icon="mdi:water-sync",
             entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Light
+    # https://developer.tuya.com/en/docs/iot/f?id=K9i5ql3v98hn3
+    "dj": (
+        # There are sockets available with an RGB light
+        # that advertise as `dj`, but provide an additional
+        # switch to control the plug.
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Plug",
         ),
     ),
     # Cirquit Breaker
@@ -178,6 +189,22 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Air conditioner
+    # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
+    "kt": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            name="Ionizer",
+            icon="mdi:minus-circle-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Power Socket
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
     "pc": (
@@ -247,12 +274,108 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_OUTLET,
         ),
     ),
+    # Heater
+    # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
+    "qn": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            name="Ionizer",
+            icon="mdi:minus-circle-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
         SwitchEntityDescription(
             key=DPCode.MUFFLING,
             name="Mute",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Smart Camera
+    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
+    "sp": (
+        SwitchEntityDescription(
+            key=DPCode.WIRELESS_BATTERYLOCK,
+            name="Battery Lock",
+            icon="mdi:battery-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CRY_DETECTION_SWITCH,
+            icon="mdi:emoticon-cry",
+            name="Cry Detection",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.DECIBEL_SWITCH,
+            icon="mdi:microphone-outline",
+            name="Sound Detection",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.RECORD_SWITCH,
+            icon="mdi:record-rec",
+            name="Video Recording",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_RECORD,
+            icon="mdi:record-rec",
+            name="Motion Recording",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_PRIVATE,
+            icon="mdi:eye-off",
+            name="Privacy Mode",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_FLIP,
+            icon="mdi:flip-horizontal",
+            name="Flip",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_OSD,
+            icon="mdi:watermark",
+            name="Time Watermark",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_WDR,
+            icon="mdi:watermark",
+            name="Wide Dynamic Range",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_TRACKING,
+            icon="mdi:motion-sensor",
+            name="Motion Tracking",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_SWITCH,
+            icon="mdi:motion-sensor",
+            name="Motion Alarm",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Solar Light
+    # https://developer.tuya.com/en/docs/iot/tynd?id=Kaof8j02e1t98
+    "tyndj": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_SAVE_ENERGY,
+            name="Energy Saving",
+            icon="mdi:leaf",
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),

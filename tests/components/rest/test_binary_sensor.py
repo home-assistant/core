@@ -1,7 +1,7 @@
 """The tests for the REST binary sensor platform."""
 
 import asyncio
-from os import path
+from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -19,6 +19,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.setup import async_setup_component
+
+from tests.common import get_fixture_path
 
 
 async def test_setup_missing_basic_config(hass):
@@ -92,7 +94,7 @@ async def test_setup_timeout(hass):
 @respx.mock
 async def test_setup_minimum(hass):
     """Test setup with minimum configuration."""
-    respx.get("http://localhost") % 200
+    respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -111,7 +113,7 @@ async def test_setup_minimum(hass):
 @respx.mock
 async def test_setup_minimum_resource_template(hass):
     """Test setup with minimum configuration (resource_template)."""
-    respx.get("http://localhost") % 200
+    respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -129,7 +131,7 @@ async def test_setup_minimum_resource_template(hass):
 @respx.mock
 async def test_setup_duplicate_resource_template(hass):
     """Test setup with duplicate resources."""
-    respx.get("http://localhost") % 200
+    respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -148,7 +150,7 @@ async def test_setup_duplicate_resource_template(hass):
 @respx.mock
 async def test_setup_get(hass):
     """Test setup with valid configuration."""
-    respx.get("http://localhost").respond(status_code=200, json={})
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -179,9 +181,43 @@ async def test_setup_get(hass):
 
 
 @respx.mock
-async def test_setup_get_digest_auth(hass):
+async def test_setup_get_template_headers_params(hass):
     """Test setup with valid configuration."""
     respx.get("http://localhost").respond(status_code=200, json={})
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.key }}",
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+                "headers": {
+                    "Accept": CONTENT_TYPE_JSON,
+                    "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
+                },
+                "params": {
+                    "start": 0,
+                    "end": "{{ 3 + 2 }}",
+                },
+            }
+        },
+    )
+    await async_setup_component(hass, "homeassistant", {})
+
+    assert respx.calls.last.request.headers["Accept"] == CONTENT_TYPE_JSON
+    assert respx.calls.last.request.headers["User-Agent"] == "Mozilla/5.0"
+    assert respx.calls.last.request.url.query == b"start=0&end=5"
+
+
+@respx.mock
+async def test_setup_get_digest_auth(hass):
+    """Test setup with valid configuration."""
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -209,7 +245,7 @@ async def test_setup_get_digest_auth(hass):
 @respx.mock
 async def test_setup_post(hass):
     """Test setup with valid configuration."""
-    respx.post("http://localhost").respond(status_code=200, json={})
+    respx.post("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -238,7 +274,7 @@ async def test_setup_post(hass):
 async def test_setup_get_off(hass):
     """Test setup with valid off configuration."""
     respx.get("http://localhost").respond(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         headers={"content-type": "text/json"},
         json={"dog": False},
     )
@@ -268,7 +304,7 @@ async def test_setup_get_off(hass):
 async def test_setup_get_on(hass):
     """Test setup with valid on configuration."""
     respx.get("http://localhost").respond(
-        status_code=200,
+        status_code=HTTPStatus.OK,
         headers={"content-type": "text/json"},
         json={"dog": True},
     )
@@ -297,7 +333,7 @@ async def test_setup_get_on(hass):
 @respx.mock
 async def test_setup_with_exception(hass):
     """Test setup with exception."""
-    respx.get("http://localhost").respond(status_code=200, json={})
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, json={})
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -340,7 +376,7 @@ async def test_setup_with_exception(hass):
 async def test_reload(hass):
     """Verify we can reload reset sensors."""
 
-    respx.get("http://localhost") % 200
+    respx.get("http://localhost") % HTTPStatus.OK
 
     await async_setup_component(
         hass,
@@ -362,11 +398,7 @@ async def test_reload(hass):
 
     assert hass.states.get("binary_sensor.mockrest")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "rest/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "rest")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "rest",
@@ -383,7 +415,7 @@ async def test_reload(hass):
 @respx.mock
 async def test_setup_query_params(hass):
     """Test setup with query params."""
-    respx.get("http://localhost", params={"search": "something"}) % 200
+    respx.get("http://localhost", params={"search": "something"}) % HTTPStatus.OK
     assert await async_setup_component(
         hass,
         binary_sensor.DOMAIN,
@@ -398,7 +430,3 @@ async def test_setup_query_params(hass):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all("binary_sensor")) == 1
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

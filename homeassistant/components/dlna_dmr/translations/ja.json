@@ -1,7 +1,17 @@
 {
     "config": {
+        "abort": {
+            "alternative_integration": "\u30c7\u30d0\u30a4\u30b9\u306f\u5225\u306e\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u3067\u3001\u3088\u308a\u9069\u5207\u306b\u30b5\u30dd\u30fc\u30c8\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
         "flow_title": "{name}",
         "step": {
+            "import_turn_on": {
+                "description": "\u30c7\u30d0\u30a4\u30b9\u306e\u96fb\u6e90\u3092\u5165\u308c\u3001\u9001\u4fe1(submit)\u3092\u30af\u30ea\u30c3\u30af\u3057\u3066\u79fb\u884c\u3092\u7d9a\u3051\u3066\u304f\u3060\u3055\u3044"
+            },
+            "manual": {
+                "description": "\u30c7\u30d0\u30a4\u30b9\u8a18\u8ff0XML\u30d5\u30a1\u30a4\u30eb\u3078\u306eURL",
+                "title": "\u624b\u52d5\u3067DLNA DMR\u6a5f\u5668\u306b\u63a5\u7d9a"
+            },
             "user": {
                 "data": {
                     "url": "URL"

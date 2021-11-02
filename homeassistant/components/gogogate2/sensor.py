@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -50,6 +51,8 @@ async def async_setup_entry(
 
 class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
     """Battery sensor entity for gogogate2 door sensor."""
+
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(
         self,

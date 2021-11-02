@@ -6,6 +6,7 @@ pubsub subscriber.
 """
 
 import datetime
+from http import HTTPStatus
 from unittest.mock import patch
 
 import aiohttp
@@ -134,7 +135,7 @@ async def fire_alarm(hass, point_in_time):
         await hass.async_block_till_done()
 
 
-async def async_get_image(hass):
+async def async_get_image(hass, width=None, height=None):
     """Get image from the camera, a wrapper around camera.async_get_image."""
     # Note: this patches ImageFrame to simulate decoding an image from a live
     # stream, however the test may not use it. Tests assert on the image
@@ -144,7 +145,9 @@ async def async_get_image(hass):
         autopatch=True,
         return_value=IMAGE_BYTES_FROM_STREAM,
     ):
-        return await camera.async_get_image(hass, "camera.my_camera")
+        return await camera.async_get_image(
+            hass, "camera.my_camera", width=width, height=height
+        )
 
 
 async def test_no_devices(hass):
@@ -237,7 +240,7 @@ async def test_camera_ws_stream(hass, auth, hass_ws_client):
 
 async def test_camera_ws_stream_failure(hass, auth, hass_ws_client):
     """Test a basic camera that supports web rtc."""
-    auth.responses = [aiohttp.web.Response(status=400)]
+    auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
     await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
 
     assert len(hass.states.async_all()) == 1
@@ -438,7 +441,7 @@ async def test_refresh_expired_stream_failure(hass, auth):
     auth.responses = [
         make_stream_url_response(expiration=stream_1_expiration, token_num=1),
         # Extending the stream fails with arbitrary error
-        aiohttp.web.Response(status=500),
+        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
         # Next attempt to get a stream fetches a new url
         make_stream_url_response(expiration=stream_2_expiration, token_num=2),
     ]
@@ -544,7 +547,7 @@ async def test_generate_event_image_url_failure(hass, auth):
 
     auth.responses = [
         # Fail to generate the image url
-        aiohttp.web.Response(status=500),
+        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
         # Camera fetches a stream url as a fallback
         make_stream_url_response(),
     ]
@@ -566,7 +569,7 @@ async def test_fetch_event_image_failure(hass, auth):
         # Fake response from API that returns url image
         aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
         # Fail to download the image
-        aiohttp.web.Response(status=500),
+        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
         # Camera fetches a stream url as a fallback
         make_stream_url_response(),
     ]
@@ -720,9 +723,11 @@ async def test_camera_web_rtc(hass, auth, hass_ws_client):
     assert msg["success"]
     assert msg["result"]["answer"] == "v=0\r\ns=-\r\n"
 
-    # Nest WebRTC cameras do not support a still image
-    with pytest.raises(HomeAssistantError):
-        await async_get_image(hass)
+    # Nest WebRTC cameras return a placeholder
+    content = await async_get_image(hass)
+    assert content.content_type == "image/jpeg"
+    content = await async_get_image(hass, width=1024, height=768)
+    assert content.content_type == "image/jpeg"
 
 
 async def test_camera_web_rtc_unsupported(hass, auth, hass_ws_client):
@@ -756,7 +761,7 @@ async def test_camera_web_rtc_unsupported(hass, auth, hass_ws_client):
 async def test_camera_web_rtc_offer_failure(hass, auth, hass_ws_client):
     """Test a basic camera that supports web rtc."""
     auth.responses = [
-        aiohttp.web.Response(status=400),
+        aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST),
     ]
     device_traits = {
         "sdm.devices.traits.Info": {

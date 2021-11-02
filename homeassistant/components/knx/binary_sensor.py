@@ -9,6 +9,7 @@ from xknx.devices import BinarySensor as XknxBinarySensor
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -18,9 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt
 
-from .const import ATTR_COUNTER, ATTR_LAST_KNX_UPDATE, ATTR_SOURCE, DOMAIN
+from .const import ATTR_COUNTER, ATTR_SOURCE, DOMAIN
 from .knx_entity import KnxEntity
 from .schema import BinarySensorSchema
 
@@ -64,6 +64,7 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity, RestoreEntity):
                 reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
             )
         )
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = self._device.ignore_internal_state
         self._attr_unique_id = str(self._device.remote_value.group_address_state)
@@ -90,7 +91,4 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity, RestoreEntity):
             attr[ATTR_COUNTER] = self._device.counter
         if self._device.last_telegram is not None:
             attr[ATTR_SOURCE] = str(self._device.last_telegram.source_address)
-            attr[ATTR_LAST_KNX_UPDATE] = str(
-                dt.as_utc(self._device.last_telegram.timestamp)
-            )
         return attr

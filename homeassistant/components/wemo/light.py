@@ -17,6 +17,7 @@ from homeassistant.components.light import (
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN as WEMO_DOMAIN
@@ -99,15 +100,15 @@ class WemoLight(WemoEntity, LightEntity):
         return self.light.uniqueID
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self.name,
-            "connections": {(CONNECTION_ZIGBEE, self._unique_id)},
-            "identifiers": {(WEMO_DOMAIN, self._unique_id)},
-            "model": self._model_name,
-            "manufacturer": "Belkin",
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_ZIGBEE, self._unique_id)},
+            identifiers={(WEMO_DOMAIN, self._unique_id)},
+            manufacturer="Belkin",
+            model=self._model_name,
+            name=self.name,
+        )
 
     @property
     def brightness(self):

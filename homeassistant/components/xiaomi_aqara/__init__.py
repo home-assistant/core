@@ -172,7 +172,7 @@ async def async_setup_entry(
         entry.data[CONF_HOST],
     )
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
@@ -284,7 +284,7 @@ class XiaomiDevice(Entity):
                 model=self._model,
             )
         else:
-            DeviceInfo(
+            device_info = DeviceInfo(
                 connections={(dr.CONNECTION_ZIGBEE, self._device_id)},
                 identifiers={(DOMAIN, self._device_id)},
                 manufacturer="Xiaomi Aqara",

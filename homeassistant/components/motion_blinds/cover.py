@@ -142,8 +142,8 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, blind.mac)},
             manufacturer=MANUFACTURER,
-            name=f"{blind.blind_type}-{blind.mac[12:]}",
             model=blind.blind_type,
+            name=f"{blind.blind_type}-{blind.mac[12:]}",
             via_device=(DOMAIN, config_entry.unique_id),
         )
 
