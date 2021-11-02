@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
-import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
