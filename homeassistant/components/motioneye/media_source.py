@@ -278,7 +278,7 @@ class MotionEyeMediaSource(MediaSource):
 
         parsed_path = PurePath(path)
         if path != "/":
-            base.title += " " + str(PurePath(*parsed_path.parts[1:]))
+            base.title += f" {PurePath(*parsed_path.parts[1:])}"
 
         base.children = []
 
