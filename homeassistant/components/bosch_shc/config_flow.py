@@ -1,6 +1,7 @@
 """Config flow for Bosch Smart Home Controller integration."""
 import logging
 from os import makedirs
+from typing import TYPE_CHECKING
 
 from boschshcpy import SHCRegisterClient, SHCSession
 from boschshcpy.exceptions import (
@@ -14,6 +15,8 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_HOSTNAME,
@@ -181,7 +184,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=schema, errors=errors
         )
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
         if not discovery_info.get(zeroconf.ATTR_NAME, "").startswith("Bosch SHC"):
             return self.async_abort(reason="not_bosch_shc")
@@ -205,6 +210,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         local_name = discovery_info[zeroconf.ATTR_HOSTNAME][:-1]
         node_name = local_name[: -len(".local")]
 
+        if TYPE_CHECKING:
+            assert self.info
         await self.async_set_unique_id(self.info["unique_id"])
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
         self.context["title_placeholders"] = {"name": node_name}
