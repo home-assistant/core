@@ -198,16 +198,20 @@ MODELS_LIGHT = (
 
 # TODO: use const from pythonmiio once new release with the constant has been published. # pylint: disable=fixme
 ROCKROBO_S4 = "roborock.vacuum.s4"
+ROCKROBO_S4_MAX = "roborock.vacuum.a19"
 ROCKROBO_S5_MAX = "roborock.vacuum.s5e"
+ROCKROBO_S6_PURE = "roborock.vacuum.a08"
 ROCKROBO_E2 = "roborock.vacuum.e2"
 MODELS_VACUUM = [
     ROCKROBO_V1,
     ROCKROBO_E2,
     ROCKROBO_S4,
+    ROCKROBO_S4_MAX,
     ROCKROBO_S5,
     ROCKROBO_S5_MAX,
     ROCKROBO_S6,
     ROCKROBO_S6_MAXV,
+    ROCKROBO_S6_PURE,
     ROCKROBO_S7,
 ]
 MODELS_VACUUM_WITH_MOP = [
@@ -216,6 +220,7 @@ MODELS_VACUUM_WITH_MOP = [
     ROCKROBO_S5_MAX,
     ROCKROBO_S6,
     ROCKROBO_S6_MAXV,
+    ROCKROBO_S6_PURE,
     ROCKROBO_S7,
 ]
 

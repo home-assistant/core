@@ -1,0 +1,10 @@
+{
+    "config": {
+        "flow_title": "{name} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "{name} ({host}) \u3092\u8a2d\u5b9a\u3057\u307e\u3059\u304b\uff1f"
+            }
+        }
+    }
+}
