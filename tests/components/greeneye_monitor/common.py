@@ -239,3 +239,13 @@ def mock_monitor(serial_number: int) -> MagicMock:
     monitor.temperature_sensors = [mock_temperature_sensor() for i in range(0, 8)]
     monitor.channels = [mock_channel() for i in range(0, 32)]
     return monitor
+
+
+async def connect_monitor(
+    hass: HomeAssistant, monitors: AsyncMock, serial_number: int
+) -> MagicMock:
+    """Simulate a monitor connecting to Home Assistant. Returns the mock monitor API object."""
+    monitor = mock_monitor(serial_number)
+    monitors.add_monitor(monitor)
+    await hass.async_block_till_done()
+    return monitor
