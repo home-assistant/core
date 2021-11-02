@@ -186,6 +186,7 @@ MANIFEST_SCHEMA = vol.Schema(
                             str, verify_uppercase, verify_wildcard
                         ),
                         vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
+                        vol.Optional("model"): vol.All(str, verify_lowercase),
                         vol.Optional("name"): vol.All(str, verify_lowercase),
                     }
                 ),
