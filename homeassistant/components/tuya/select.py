@@ -177,6 +177,22 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Dimmer
+    # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
+    "tgq": (
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_1,
+            name="Light Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_2,
+            name="Light 2 Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
 }
 
 
