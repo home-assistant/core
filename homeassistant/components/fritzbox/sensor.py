@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final
 from datetime import datetime
+from typing import Final
 
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
-from homeassistant.components.climate.const import PRESET_COMFORT, PRESET_ECO
 
+from homeassistant.components.climate.const import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -41,7 +41,7 @@ from .model import FritzEntityDescriptionMixinBase
 class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
     """Sensor description mixin for Fritz!Smarthome entities."""
 
-    native_value: Callable[[FritzhomeDevice], float | int | None]
+    native_value: Callable[[FritzhomeDevice], float | int | str | None]
 
 
 @dataclass
@@ -134,21 +134,27 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_TIMESTAMP,
         suitable=lambda device: device.has_thermostat
         and device.nextchange_endperiod is not None,
-        native_value=lambda device: datetime.fromtimestamp(device.nextchange_endperiod).isoformat(),  # type: ignore[no-any-return]
+        native_value=lambda device: datetime.fromtimestamp(
+            device.nextchange_endperiod
+        ).isoformat(),
     ),
     FritzSensorEntityDescription(
         key="nextchange_preset",
         name="Next Scheduled Preset",
         suitable=lambda device: device.has_thermostat
         and device.nextchange_temperature is not None,
-        native_value=lambda device: PRESET_ECO if device.nextchange_temperature == device.eco_temperature else PRESET_COMFORT,  # type: ignore[no-any-return]
+        native_value=lambda device: PRESET_ECO
+        if device.nextchange_temperature == device.eco_temperature
+        else PRESET_COMFORT,
     ),
     FritzSensorEntityDescription(
         key="scheduled_preset",
         name="Current Scheduled Preset",
         suitable=lambda device: device.has_thermostat
         and device.nextchange_temperature is not None,
-        native_value=lambda device: PRESET_COMFORT if device.nextchange_temperature == device.eco_temperature else PRESET_ECO,  # type: ignore[no-any-return]
+        native_value=lambda device: PRESET_COMFORT
+        if device.nextchange_temperature == device.eco_temperature
+        else PRESET_ECO,
     ),
 )
 
@@ -175,6 +181,6 @@ class FritzBoxSensor(FritzBoxEntity, SensorEntity):
     entity_description: FritzSensorEntityDescription
 
     @property
-    def native_value(self) -> float | int | None:
+    def native_value(self) -> float | int | str | None:
         """Return the state of the sensor."""
         return self.entity_description.native_value(self.device)
