@@ -16,7 +16,6 @@ from aiohue.v2.models.motion import Motion
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_RUNNING,
-    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -24,10 +23,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ..bridge import HueBridge
-from ..const import DOMAIN, LOGGER
+from ..const import DOMAIN
 from .entity import HueBaseEntity
-
-LOGGER = LOGGER.getChild(BINARY_SENSOR_DOMAIN)
 
 SensorType = Union[Motion, EntertainmentConfiguration]
 ControllerType = Union[MotionController, EntertainmentConfigurationController]
@@ -51,7 +48,7 @@ async def async_setup_entry(
         @callback
         def async_add_sensor(event_type: EventType, resource: SensorType) -> None:
             """Add HUE Binary Sensor."""
-            async_add_entities([sensor_class(config_entry, controller, resource)])
+            async_add_entities([sensor_class(bridge, controller, resource)])
 
         # add all current items in controller
         for sensor in controller:
@@ -70,12 +67,12 @@ class HueBinarySensorBase(HueBaseEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        bridge: HueBridge,
         controller: ControllerType,
         resource: SensorType,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(config_entry, controller, resource)
+        super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
 

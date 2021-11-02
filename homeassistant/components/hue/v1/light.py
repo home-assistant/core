@@ -42,10 +42,12 @@ from homeassistant.util import color
 
 from ..const import (
     DOMAIN as HUE_DOMAIN,
+    GROUP_TYPE_ENTERTAINMENT,
     GROUP_TYPE_LIGHT_GROUP,
     GROUP_TYPE_LIGHT_SOURCE,
     GROUP_TYPE_LUMINAIRE,
     GROUP_TYPE_ROOM,
+    GROUP_TYPE_ZONE,
     REQUEST_REFRESH_DELAY,
 )
 from .helpers import remove_devices
@@ -182,7 +184,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         rooms.clear()
         for item_id in bridge.api.groups:
             group = bridge.api.groups[item_id]
-            if group.type != GROUP_TYPE_ROOM:
+            if group.type not in [GROUP_TYPE_ROOM, GROUP_TYPE_ZONE]:
                 continue
             for light_id in group.lights:
                 rooms[light_id] = group.name
@@ -315,8 +317,8 @@ class HueLight(CoordinatorEntity, LightEntity):
     def unique_id(self):
         """Return the unique ID of this Hue light."""
         unique_id = self.light.uniqueid
-        if not unique_id and self.is_group and self.light.room:
-            unique_id = self.light.room["id"]
+        if not unique_id and self.is_group:
+            unique_id = self.light.id
 
         return unique_id
 
@@ -438,15 +440,17 @@ class HueLight(CoordinatorEntity, LightEntity):
     def device_info(self) -> DeviceInfo | None:
         """Return the device info."""
         if self.light.type in (
+            GROUP_TYPE_ENTERTAINMENT,
             GROUP_TYPE_LIGHT_GROUP,
             GROUP_TYPE_ROOM,
             GROUP_TYPE_LUMINAIRE,
             GROUP_TYPE_LIGHT_SOURCE,
+            GROUP_TYPE_ZONE,
         ):
             return None
 
         suggested_area = None
-        if self.light.id in self._rooms:
+        if self._rooms and self.light.id in self._rooms:
             suggested_area = self._rooms[self.light.id]
 
         return DeviceInfo(
@@ -456,20 +460,10 @@ class HueLight(CoordinatorEntity, LightEntity):
             # (published 03/05/2018)
             model=self.light.productname or self.light.modelid,
             name=self.name,
-            # Not yet exposed as properties in aiohue
+            sw_version=self.light.swversion,
             suggested_area=suggested_area,
-            sw_version=self.light.raw["swversion"],
             via_device=(HUE_DOMAIN, self.bridge.api.config.bridgeid),
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity being added to Home Assistant."""
-        self.async_on_remove(
-            self.bridge.listen_updates(
-                self.light.ITEM_TYPE, self.light.id, self.async_write_ha_state
-            )
-        )
-        await super().async_added_to_hass()
 
     async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on."""

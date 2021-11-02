@@ -6,18 +6,18 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.scenes import ScenesController
+from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.scene import Scene as HueScene
 
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, Scene as SceneEntity
+from homeassistant.components.scene import Scene as SceneEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .bridge import HueBridge
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .v2.entity import HueBaseEntity
-
-LOGGER = LOGGER.getChild(SCENE_DOMAIN)
 
 
 async def async_setup_entry(
@@ -33,11 +33,14 @@ async def async_setup_entry(
         # should not happen, but just in case
         raise NotImplementedError("Scene support is only available for V2 bridges")
 
+    if not bridge.allow_scenes:
+        return
+
     # add entities for all scenes
     @callback
     def async_add_entity(event_type: EventType, resource: HueScene) -> None:
         """Add entity from Hue resource."""
-        async_add_entities([HueSceneEntity(config_entry, api.scenes, resource, api)])
+        async_add_entities([HueSceneEntity(bridge, api.scenes, resource)])
 
     # add all current items in controller
     for item in api.scenes:
@@ -54,17 +57,28 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        bridge: HueBridge,
         controller: ScenesController,
         resource: HueScene,
-        api: HueBridgeV2,
     ) -> None:
-        """Initialize the select entity."""
-        super().__init__(config_entry, controller, resource)
+        """Initialize the entity."""
+        super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
-        self.api = api
-        self._active_scene = None
+        api: HueBridgeV2 = bridge.api
+        # connect scene to all devices found in scene
+        identifiers = set()
+        light_ids = {
+            action.target.rid
+            for action in resource.actions
+            if action.target.rtype == ResourceTypes.LIGHT
+        }
+        for light_id in light_ids:
+            dev = api.lights.get_device(light_id)
+            identifiers.add((DOMAIN, dev.id))
+        self._attr_device_info = DeviceInfo(
+            identifiers=identifiers,
+        )
 
     @property
     def name(self) -> str:

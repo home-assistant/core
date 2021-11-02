@@ -6,7 +6,6 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import GroupedLightController
-from aiohue.v2.controllers.lights import LightsController
 from aiohue.v2.models.grouped_light import GroupedLight
 
 from homeassistant.components.group.light import LightGroup
@@ -24,10 +23,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ..bridge import HueBridge
-from ..const import DOMAIN, LOGGER
+from ..const import DOMAIN
 from .entity import HueBaseEntity
-
-LOGGER = LOGGER.getChild("group")
 
 
 async def async_setup_entry(
@@ -37,7 +34,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Hue groups on light platform."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
-    controller: GroupedLightController = bridge.api.groups.grouped_light
+    api: HueBridgeV2 = bridge.api
+    controller: GroupedLightController = api.groups.grouped_light
 
     @callback
     def async_add_grouped_light(event_type: EventType, resource: GroupedLight) -> None:
@@ -45,7 +43,7 @@ async def async_setup_entry(
         if controller.get_zone(resource.id) is None:
             # filter out special "all lights" group
             return
-        light = GroupedHueLight(config_entry, controller, resource, bridge.api)
+        light = GroupedHueLight(bridge, controller, resource)
         async_add_entities([light])
 
     for light in controller:
@@ -64,16 +62,15 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        bridge: HueBridge,
         controller: GroupedLightController,
         resource: GroupedLight,
-        api: HueBridgeV2,
     ) -> None:
         """Initialize the light."""
-        super().__init__(config_entry, controller, resource)
+        super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
-        self.api = api
+        self.api: HueBridgeV2 = bridge.api
         self._update_values()
 
     async def async_added_to_hass(self) -> None:
@@ -91,11 +88,11 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
             )
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return name of room/zone for this grouped light."""
         if zone := self.controller.get_zone(self.resource.id):
             return zone.metadata.name
-        return None
+        return ""
 
     @property
     def is_on(self) -> bool:

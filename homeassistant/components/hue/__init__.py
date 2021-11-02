@@ -1,71 +1,39 @@
 """Support for the Philips Hue system."""
-import asyncio
-import logging
 
 from aiohue.util import normalize_bridge_id
 from aiohue.v1 import HueBridgeV1
 from aiohue.v2 import HueBridgeV2
-import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components import persistent_notification
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.const import CONF_API_KEY, CONF_USERNAME
+from homeassistant.helpers import device_registry as dr
 
 from .bridge import HueBridge
-from .const import (
-    ATTR_GROUP_NAME,
-    ATTR_SCENE_NAME,
-    ATTR_TRANSITION,
-    CONF_ALLOW_HUE_GROUPS,
-    CONF_ALLOW_UNREACHABLE,
-    DEFAULT_ALLOW_HUE_GROUPS,
-    DEFAULT_ALLOW_UNREACHABLE,
-    DOMAIN,
-)
-
-_LOGGER = logging.getLogger(__name__)
-SERVICE_HUE_SCENE = "hue_activate_scene"
+from .const import CONF_USE_V2, DOMAIN, SERVICE_HUE_ACTIVATE_SCENE
+from .services import LOGGER, async_register_services
 
 
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+) -> bool:
     """Set up a bridge from a config entry."""
-    # Migrate allow_unreachable from config entry data to config entry options
-    if (
-        CONF_ALLOW_UNREACHABLE not in entry.options
-        and CONF_ALLOW_UNREACHABLE in entry.data
-        and entry.data[CONF_ALLOW_UNREACHABLE] != DEFAULT_ALLOW_UNREACHABLE
-    ):
-        options = {
-            **entry.options,
-            CONF_ALLOW_UNREACHABLE: entry.data[CONF_ALLOW_UNREACHABLE],
-        }
-        data = entry.data.copy()
-        data.pop(CONF_ALLOW_UNREACHABLE)
-        hass.config_entries.async_update_entry(entry, data=data, options=options)
+    # migrate CONF_USERNAME --> CONF_API_KEY
+    if CONF_USERNAME in entry.data:
+        data = dict(entry.data)
+        data[CONF_API_KEY] = data.pop(CONF_USERNAME)
+        hass.config_entries.async_update_entry(entry, data=data)
+    # migrate V1 -> V2
+    if CONF_USE_V2 not in entry.data:
+        LOGGER.info("V2 migration should be triggered!")
 
-    # Migrate allow_hue_groups from config entry data to config entry options
-    if (
-        CONF_ALLOW_HUE_GROUPS not in entry.options
-        and CONF_ALLOW_HUE_GROUPS in entry.data
-        and entry.data[CONF_ALLOW_HUE_GROUPS] != DEFAULT_ALLOW_HUE_GROUPS
-    ):
-        options = {
-            **entry.options,
-            CONF_ALLOW_HUE_GROUPS: entry.data[CONF_ALLOW_HUE_GROUPS],
-        }
-        data = entry.data.copy()
-        data.pop(CONF_ALLOW_HUE_GROUPS)
-        hass.config_entries.async_update_entry(entry, data=data, options=options)
-
+    # setup the bridge instance
     bridge = HueBridge(hass, entry)
-
     if not await bridge.async_setup():
         return False
 
-    _register_services(hass)
+    # register HUE services
+    await async_register_services(hass)
 
     api: HueBridgeV1 | HueBridgeV2 = bridge.api
 
@@ -125,70 +93,15 @@ async def async_setup_entry(
             "hue_hub_firmware",
         )
 
-    elif not bridge.use_v2 and api.config.swupdate2_bridge_state == "readytoinstall":
-        # NOTE: this property no longer exists in Hue api
-        err = (
-            "Please check for software updates of the bridge in the Philips Hue App.",
-            "Signify Hue",
-            "hue_hub_firmware",
-        )
-        _LOGGER.warning(err)
-
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+):
     """Unload a config entry."""
     unload_success = await hass.data[DOMAIN][entry.entry_id].async_reset()
     if len(hass.data[DOMAIN]) == 0:
         hass.data.pop(DOMAIN)
-        hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
+        hass.services.async_remove(DOMAIN, SERVICE_HUE_ACTIVATE_SCENE)
     return unload_success
-
-
-@core.callback
-def _register_services(hass):
-    """Register Hue services."""
-
-    async def hue_activate_scene(call, skip_reload=True):
-        """Handle activation of Hue scene."""
-        # Get parameters
-        group_name = call.data[ATTR_GROUP_NAME]
-        scene_name = call.data[ATTR_SCENE_NAME]
-
-        # Call the set scene function on each bridge
-        tasks = [
-            bridge.hue_activate_scene(
-                call.data, skip_reload=skip_reload, hide_warnings=skip_reload
-            )
-            for bridge in hass.data[DOMAIN].values()
-            if isinstance(bridge, HueBridge)
-        ]
-        results = await asyncio.gather(*tasks)
-
-        # Did *any* bridge succeed? If not, refresh / retry
-        # Note that we'll get a "None" value for a successful call
-        if None not in results:
-            if skip_reload:
-                await hue_activate_scene(call, skip_reload=False)
-                return
-            _LOGGER.warning(
-                "No bridge was able to activate " "scene %s in group %s",
-                scene_name,
-                group_name,
-            )
-
-    if not hass.services.has_service(DOMAIN, SERVICE_HUE_SCENE):
-        # Register a local handler for scene activation
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_HUE_SCENE,
-            verify_domain_control(hass, DOMAIN)(hue_activate_scene),
-            schema=vol.Schema(
-                {
-                    vol.Required(ATTR_GROUP_NAME): cv.string,
-                    vol.Required(ATTR_SCENE_NAME): cv.string,
-                    vol.Optional(ATTR_TRANSITION): cv.positive_int,
-                }
-            ),
-        )

@@ -2,7 +2,6 @@
 from typing import TYPE_CHECKING
 
 from aiohue.v2 import HueBridgeV2
-from aiohue.v2.controllers.devices import DevicesController
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.models.device import Device, DeviceArchetypes
 
@@ -19,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 
-from ..const import DOMAIN as HUE_DOMAIN
+from ..const import DOMAIN as DOMAIN
 
 if TYPE_CHECKING:
     from ..bridge import HueBridge
@@ -39,7 +38,7 @@ async def async_setup_devices(
         model = f"{hue_device.product_data.product_name} ({hue_device.product_data.model_id})"
 
         params = {
-            ATTR_IDENTIFIERS: {(HUE_DOMAIN, hue_device.id)},
+            ATTR_IDENTIFIERS: {(DOMAIN, hue_device.id)},
             ATTR_SW_VERSION: hue_device.product_data.software_version,
             ATTR_NAME: hue_device.metadata.name,
             ATTR_MODEL: model,
@@ -48,16 +47,16 @@ async def async_setup_devices(
         if room := dev_controller.get_room(hue_device.id):
             params[ATTR_SUGGESTED_AREA] = room.metadata.name
         if hue_device.metadata.archetype == DeviceArchetypes.BRIDGE_V2:
-            params[ATTR_IDENTIFIERS].add((HUE_DOMAIN, api.config.bridge_id))
+            params[ATTR_IDENTIFIERS].add((DOMAIN, api.config.bridge_id))
         else:
-            params[ATTR_VIA_DEVICE] = (HUE_DOMAIN, api.config.bridge_device.id)
+            params[ATTR_VIA_DEVICE] = (DOMAIN, api.config.bridge_device.id)
 
         return dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
 
     @callback
     def remove_device(hue_device_id: str) -> None:
         """Remove device from registry."""
-        if device := dev_reg.async_get_device({(HUE_DOMAIN, hue_device_id)}):
+        if device := dev_reg.async_get_device({(DOMAIN, hue_device_id)}):
             # note: removal of entity registry entry is handled by core
             dev_reg.async_remove_device(device.id)
 

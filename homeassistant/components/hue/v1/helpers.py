@@ -1,4 +1,5 @@
 """Helper functions for Philips Hue."""
+
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
 

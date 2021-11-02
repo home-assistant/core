@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiohue import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.lights import LightsController
 from aiohue.v2.models.light import Light
@@ -15,7 +16,6 @@ from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_XY,
-    DOMAIN as LIGHT_DOMAIN,
     SUPPORT_TRANSITION,
     LightEntity,
 )
@@ -24,10 +24,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ..bridge import HueBridge
-from ..const import DOMAIN, LOGGER
+from ..const import DOMAIN
 from .entity import HueBaseEntity
-
-LOGGER = LOGGER.getChild(LIGHT_DOMAIN)
 
 
 async def async_setup_entry(
@@ -37,17 +35,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up Hue Light from Config Entry."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
-    controller: LightsController = bridge.api.lights
+    api: HueBridgeV2 = bridge.api
+    controller: LightsController = api.lights
 
     @callback
-    def async_add_light(event_type: EventType, resource: Light) -> None:
+    def async_add_light(*, resource: Light) -> None:
         """Add HUE Light."""
-        light = HueLight(config_entry, controller, resource)
+        light = HueLight(bridge, controller, resource)
         async_add_entities([light])
 
     # add all current items in controller
     for light in controller:
-        async_add_light(EventType.RESOURCE_ADDED, light)
+        async_add_light(resource=light)
 
     # register listener for new lights
     config_entry.async_on_unload(
@@ -59,10 +58,10 @@ class HueLight(HueBaseEntity, LightEntity):
     """Representation of a Hue light."""
 
     def __init__(
-        self, config_entry: ConfigEntry, controller: LightsController, resource: Light
+        self, bridge: HueBridge, controller: LightsController, resource: Light
     ) -> None:
         """Initialize the light."""
-        super().__init__(config_entry, controller, resource)
+        super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
         self._supported_color_modes = set()
@@ -75,7 +74,7 @@ class HueLight(HueBaseEntity, LightEntity):
             self._attr_supported_features |= SUPPORT_TRANSITION
 
     @property
-    def brightness(self) -> int:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if dimming := self.resource.dimming:
             # Hue uses a range of [0, 100] to control brightness.
@@ -107,25 +106,25 @@ class HueLight(HueBaseEntity, LightEntity):
         return None
 
     @property
-    def color_temp(self) -> int | None:
+    def color_temp(self) -> int:
         """Return the color temperature."""
         if color_temp := self.resource.color_temperature:
             return color_temp.mirek
-        return None
+        return 0
 
     @property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
         if color_temp := self.resource.color_temperature:
             return color_temp.mirek_schema.mirek_minimum
-        return None
+        return 0
 
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         if color_temp := self.resource.color_temperature:
             return color_temp.mirek_schema.mirek_maximum
-        return None
+        return 0
 
     @property
     def supported_color_modes(self) -> set | None:

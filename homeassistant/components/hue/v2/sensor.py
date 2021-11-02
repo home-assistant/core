@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Union
 
+from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.sensors import (
     DevicePowerController,
@@ -14,16 +15,13 @@ from aiohue.v2.models.device_power import DevicePower
 from aiohue.v2.models.light_level import LightLevel
 from aiohue.v2.models.temperature import Temperature
 
-from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    SensorEntity,
-)
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -32,10 +30,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ..bridge import HueBridge
-from ..const import DOMAIN, LOGGER
+from ..const import DOMAIN
 from .entity import HueBaseEntity
-
-LOGGER = LOGGER.getChild(SENSOR_DOMAIN)
 
 SensorType = Union[DevicePower, LightLevel, Temperature]
 ControllerType = Union[
@@ -50,7 +46,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Hue Sensors from Config Entry."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
-    ctrl_base: SensorsController = bridge.api.sensors
+    api: HueBridgeV2 = bridge.api
+    ctrl_base: SensorsController = api.sensors
 
     # setup for each sensor-type hue resource
     for controller, sensor_class in (
@@ -62,7 +59,7 @@ async def async_setup_entry(
         @callback
         def async_add_sensor(event_type: EventType, resource: SensorType) -> None:
             """Add HUE Sensor."""
-            async_add_entities([sensor_class(config_entry, controller, resource)])
+            async_add_entities([sensor_class(bridge, controller, resource)])
 
         # add all current items in controller
         for sensor in controller:
@@ -83,19 +80,19 @@ class HueSensorBase(HueBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        bridge: HueBridge,
         controller: ControllerType,
         resource: SensorType,
     ) -> None:
         """Initialize the light."""
-        super().__init__(config_entry, controller, resource)
+        super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
 
     @property
     def name(self) -> str:
         """Return sensor name from device name and device class."""
-        return f"{self.device.metadata.name}: {self._attr_device_class.title()}"
+        return f"{self.device.metadata.name}: {self._attr_device_class}"
 
 
 class HueTemperatureSensor(HueSensorBase):
@@ -123,7 +120,7 @@ class HueLightLevelSensor(HueSensorBase):
         # scale used because the human eye adjusts to light levels and small
         # changes at low lux levels are more noticeable than at high lux
         # levels.
-        return round(float(10 ** ((self.resource.light.light_level - 1) / 10000)), 2)
+        return int(10 ** ((self.resource.light.light_level - 1) / 10000))
 
 
 class HueBatterySensor(HueSensorBase):
@@ -131,6 +128,7 @@ class HueBatterySensor(HueSensorBase):
 
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @property
     def native_value(self) -> int:

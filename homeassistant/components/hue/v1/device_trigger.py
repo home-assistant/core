@@ -1,4 +1,4 @@
-"""Provides device automations for Philips Hue events."""
+"""Provides device automations for Philips Hue events in V1 bridge/api."""
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA

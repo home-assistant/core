@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 from urllib.parse import urlparse
 
@@ -14,21 +15,24 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_API_TOKEN, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
+    CONF_ALLOW_HUE_SCENES,
     CONF_ALLOW_UNREACHABLE,
     CONF_USE_V2,
     DEFAULT_ALLOW_HUE_GROUPS,
+    DEFAULT_ALLOW_HUE_SCENES,
     DEFAULT_ALLOW_UNREACHABLE,
     DOMAIN,
-    LOGGER,
 )
-from .errors import AuthenticationRequired, CannotConnect
+from .errors import CannotConnect
+
+LOGGER = logging.getLogger(DOMAIN).getChild(__name__)
 
 HUE_MANUFACTURERURL = ("http://www.philips.com", "http://www.philips-hue.com")
 HUE_IGNORED_BRIDGE_NAMES = ["Home Assistant Bridge", "Espalexa"]
@@ -177,7 +181,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"HUE Bridge {bridge.id}",
             data={
                 CONF_HOST: bridge.host,
-                CONF_API_TOKEN: app_key,
+                CONF_API_KEY: app_key,
                 CONF_USE_V2: bridge.supports_v2,
             },
         )
@@ -265,26 +269,6 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge = await self._get_bridge(import_info["host"])
         return await self.async_step_link()
 
-    async def async_migrate_entry(hass, config_entry: config_entries.ConfigEntry):
-        """Migrate old entry."""
-        # _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-        # TODO
-        # migrate CONF_USERNAME --> CONF_API_TOKEN
-        # store use_v2 in data
-        if config_entry.version == 1:
-
-            new = {**config_entry.data}
-            # TODO: modify Config Entry data
-
-            config_entry.data = {**new}
-
-            config_entry.version = 2
-
-        # _LOGGER.info("Migration to version %s successful", config_entry.version)
-
-        return False
-
 
 class HueOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Hue options."""
@@ -308,6 +292,12 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_ALLOW_HUE_GROUPS,
                         default=self.config_entry.options.get(
                             CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_ALLOW_HUE_SCENES,
+                        default=self.config_entry.options.get(
+                            CONF_ALLOW_HUE_SCENES, DEFAULT_ALLOW_HUE_SCENES
                         ),
                     ): bool,
                     vol.Optional(
