@@ -8,6 +8,7 @@ from pyfronius import Fronius
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -599,6 +600,7 @@ class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
 
     coordinator: FroniusCoordinatorBase
     entity_descriptions: dict[str, SensorEntityDescription]
+    _entity_id_prefix: str
 
     def __init__(
         self,
@@ -609,6 +611,7 @@ class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
         """Set up an individual Fronius meter sensor."""
         super().__init__(coordinator)
         self.entity_description = self.entity_descriptions[key]
+        self.entity_id = f"{SENSOR_DOMAIN}.{DOMAIN}_{self._entity_id_prefix}_{self.entity_description.name}"
         self.solar_net_id = solar_net_id
         self._attr_native_value = self._get_entity_value()
 
@@ -636,88 +639,92 @@ class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
 class InverterSensor(_FroniusSensorEntity):
     """Defines a Fronius inverter device sensor entity."""
 
-    coordinator: FroniusInverterUpdateCoordinator
     entity_descriptions = INVERTER_ENTITY_DESCRIPTIONS
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        coordinator: FroniusInverterUpdateCoordinator,
+        key: str,
+        solar_net_id: str,
+    ) -> None:
         """Set up an individual Fronius inverter sensor."""
-        super().__init__(*args, **kwargs)
-        self._attr_name = (
-            f"Fronius Inverter {self.solar_net_id} - {self.entity_description.name}"
-        )
-        self._attr_unique_id = (
-            f"{self.coordinator.inverter_info.unique_id}-{self.entity_description.key}"
-        )
+        self._entity_id_prefix = f"inverter_{solar_net_id}"
+        super().__init__(coordinator, key, solar_net_id)
+
+        self._attr_unique_id = f"{coordinator.inverter_info.unique_id}-{key}"
 
 
 class LoggerSensor(_FroniusSensorEntity):
     """Defines a Fronius logger device sensor entity."""
 
-    coordinator: FroniusLoggerUpdateCoordinator
     entity_descriptions = LOGGER_ENTITY_DESCRIPTIONS
+    _entity_id_prefix = "logger"
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        coordinator: FroniusLoggerUpdateCoordinator,
+        key: str,
+        solar_net_id: str,
+    ) -> None:
         """Set up an individual Fronius meter sensor."""
-        super().__init__(*args, **kwargs)
+        super().__init__(coordinator, key, solar_net_id)
+
         logger_data = self._device_data()
-        self._attr_name = f"Fronius Logger - {self.entity_description.name}"
-        self._attr_native_unit_of_measurement = logger_data[
-            self.entity_description.key
-        ].get("unit")
-        self._attr_unique_id = (
-            f'{logger_data["unique_identifier"]["value"]}-{self.entity_description.key}'
-        )
+        self._attr_native_unit_of_measurement = logger_data[key].get("unit")
+        self._attr_unique_id = f'{logger_data["unique_identifier"]["value"]}-{key}'
 
 
 class MeterSensor(_FroniusSensorEntity):
     """Defines a Fronius meter device sensor entity."""
 
-    coordinator: FroniusMeterUpdateCoordinator
     entity_descriptions = METER_ENTITY_DESCRIPTIONS
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        coordinator: FroniusMeterUpdateCoordinator,
+        key: str,
+        solar_net_id: str,
+    ) -> None:
         """Set up an individual Fronius meter sensor."""
-        super().__init__(*args, **kwargs)
-        meter_data = self._device_data()
+        self._entity_id_prefix = f"meter_{solar_net_id}"
+        super().__init__(coordinator, key, solar_net_id)
 
-        self._attr_name = (
-            f"Fronius Meter {self.solar_net_id} - {self.entity_description.name}"
-        )
-        self._attr_unique_id = (
-            f'{meter_data["serial"]["value"]}-{self.entity_description.key}'
-        )
+        self._attr_unique_id = f'{self._device_data()["serial"]["value"]}-{key}'
 
 
 class PowerFlowSensor(_FroniusSensorEntity):
     """Defines a Fronius power flow sensor entity."""
 
-    coordinator: FroniusPowerFlowUpdateCoordinator
     entity_descriptions = POWER_FLOW_ENTITY_DESCRIPTIONS
+    _entity_id_prefix = "powerflow"
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        coordinator: FroniusPowerFlowUpdateCoordinator,
+        key: str,
+        solar_net_id: str,
+    ) -> None:
         """Set up an individual Fronius power flow sensor."""
-        super().__init__(*args, **kwargs)
-        self._attr_name = f"Fronius power flow - {self.entity_description.name}"
+        super().__init__(coordinator, key, solar_net_id)
+
         self._attr_unique_id = (
-            f"{self.coordinator.solar_net.solar_net_device_id}"
-            f"-power_flow-{self.entity_description.key}"
+            f"{coordinator.solar_net.solar_net_device_id}-power_flow-{key}"
         )
 
 
 class StorageSensor(_FroniusSensorEntity):
     """Defines a Fronius storage device sensor entity."""
 
-    coordinator: FroniusStorageUpdateCoordinator
     entity_descriptions = STORAGE_ENTITY_DESCRIPTIONS
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        coordinator: FroniusStorageUpdateCoordinator,
+        key: str,
+        solar_net_id: str,
+    ) -> None:
         """Set up an individual Fronius storage sensor."""
-        super().__init__(*args, **kwargs)
-        storage_data = self._device_data()
+        self._entity_id_prefix = f"storage_{solar_net_id}"
+        super().__init__(coordinator, key, solar_net_id)
 
-        self._attr_name = (
-            f"Fronius Storage {self.solar_net_id} - {self.entity_description.name}"
-        )
-        self._attr_unique_id = (
-            f'{storage_data["serial"]["value"]}-{self.entity_description.key}'
-        )
+        self._attr_unique_id = f'{self._device_data()["serial"]["value"]}-{key}'
