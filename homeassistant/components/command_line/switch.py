@@ -56,6 +56,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if value_template is not None:
             value_template.hass = hass
 
+        icon_template = device_config.get(CONF_ICON_TEMPLATE)
+         if icon_template is not None:
+             icon_template.hass = hass
+
         switches.append(
             CommandSwitch(
                 hass,
@@ -64,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_config[CONF_COMMAND_ON],
                 device_config[CONF_COMMAND_OFF],
                 device_config.get(CONF_COMMAND_STATE),
-                device_config.get(CONF_ICON_TEMPLATE),
+                icon_template,
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
             )
@@ -160,6 +164,10 @@ class CommandSwitch(SwitchEntity):
             if self._value_template:
                 payload = self._value_template.render_with_possible_json_value(payload)
             self._state = payload.lower() == "true"
+            if self._icon_template:
+                 self._attr_icon = self._icon_template.render_with_possible_json_value(
+                     payload
+                 )
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

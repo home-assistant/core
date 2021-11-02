@@ -18,7 +18,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
@@ -36,43 +35,6 @@ async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) ->
         },
     )
     await hass.async_block_till_done()
-
-
-async def test_icon_template(hass):
-    """Test icon template."""
-    with assert_setup_component(1, "switch"):
-        assert await async_setup_component(
-            hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "command_line",
-                    "switches": {
-                        "test_command_line_switch": {
-                            "command_on": "echo 'on command'",
-                            "command_off": "echo 'off command'",
-                            "command_state": "cat {}",
-                            "icon_template": "{% if states.switch.test_state.state %}"
-                            "mdi:check"
-                            "{% endif %}",
-                        }
-                    },
-                }
-            },
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_command_line_switch")
-    assert state.attributes.get("icon") == ""
-
-    hass.states.async_set("switch.test_state", STATE_ON)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_command_line_switch")
-    assert state.attributes["icon"] == "mdi:check"
 
 
 async def test_state_none(hass: HomeAssistant) -> None:
@@ -128,6 +90,7 @@ async def test_state_value(hass: HomeAssistant) -> None:
                     "command_on": f"echo 1 > {path}",
                     "command_off": f"echo 0 > {path}",
                     "value_template": '{{ value=="1" }}',
+                    "icon_template": '{% if value=="True" %} mdi:on {% else %} mdi:off {% endif %}',
                 }
             },
         )
@@ -146,6 +109,7 @@ async def test_state_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_ON
+        assert entity_state.attributes.get("icon") == "mdi:on"
 
         await hass.services.async_call(
             DOMAIN,
@@ -157,6 +121,7 @@ async def test_state_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_OFF
+        assert entity_state.attributes.get("icon") == "mdi:off"
 
 
 async def test_state_json_value(hass: HomeAssistant) -> None:
@@ -174,6 +139,7 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
                     "command_on": f"echo '{oncmd}' > {path}",
                     "command_off": f"echo '{offcmd}' > {path}",
                     "value_template": '{{ value_json.status=="ok" }}',
+                    "icon_template": '{% if value=="True" %} mdi:on {% else %} mdi:off {% endif %}',
                 }
             },
         )
@@ -192,6 +158,7 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_ON
+        assert entity_state.attributes.get("icon") == "mdi:on"
 
         await hass.services.async_call(
             DOMAIN,
@@ -203,6 +170,7 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_OFF
+        assert entity_state.attributes.get("icon") == "mdi:off"
 
 
 async def test_state_code(hass: HomeAssistant) -> None:
