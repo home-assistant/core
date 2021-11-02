@@ -167,7 +167,7 @@ class CommandSwitch(SwitchEntity):
             if self._icon_template:
                 self._attr_icon = self._icon_template.render_with_possible_json_value(
                     payload
-                 )
+                )
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
