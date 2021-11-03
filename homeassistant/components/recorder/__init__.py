@@ -177,18 +177,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @bind_hass
-async def async_migration_in_progress(hass: HomeAssistant) -> bool:
-    """Determine is a migration is in progress.
-
-    This is a thin wrapper that allows us to change
-    out the implementation later.
-    """
-    if DATA_INSTANCE not in hass.data:
-        return False
-    return hass.data[DATA_INSTANCE].migration_in_progress
-
-
-@bind_hass
 def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
     """Check if an entity is being recorded.
 
@@ -1093,3 +1081,8 @@ class Recorder(threading.Thread):
         self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
         self._end_session()
         self._close_connection()
+
+    @property
+    def recording(self):
+        """Return if the recorder is recording."""
+        return self._event_listener is not None

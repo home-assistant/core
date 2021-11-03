@@ -455,3 +455,14 @@ def perodic_db_cleanups(instance: Recorder):
         _LOGGER.debug("WAL checkpoint")
         with instance.engine.connect() as connection:
             connection.execute(text("PRAGMA wal_checkpoint(TRUNCATE);"))
+
+
+def async_migration_in_progress(hass: HomeAssistant) -> bool:
+    """Determine is a migration is in progress.
+
+    This is a thin wrapper that allows us to change
+    out the implementation later.
+    """
+    if DATA_INSTANCE not in hass.data:
+        return False
+    return hass.data[DATA_INSTANCE].migration_in_progress

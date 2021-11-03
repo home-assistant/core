@@ -1,6 +1,8 @@
 """The Energy websocket API."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -8,6 +10,10 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_INSTANCE, MAX_QUEUE_BACKLOG
 from .statistics import validate_statistics
+from .util import async_migration_in_progress
+
+if TYPE_CHECKING:
+    from . import Recorder
 
 
 @callback
@@ -85,12 +91,11 @@ def ws_status(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Return status of the recorder."""
-    instance = hass.data[DATA_INSTANCE]
+    instance: Recorder = hass.data[DATA_INSTANCE]
 
     backlog = instance.queue.qsize() if instance and instance.queue else None
-    migration_in_progress = instance.migration_in_progress if instance else False
-    # pylint: disable-next=protected-access
-    recording = instance._event_listener is not None if instance else False
+    migration_in_progress = async_migration_in_progress(hass)
+    recording = instance.recording if instance else False
     thread_alive = instance.is_alive() if instance else False
 
     recorder_info = {

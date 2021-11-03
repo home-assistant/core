@@ -565,7 +565,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         """Service handler for handling core services."""
         if (
             call.service in SHUTDOWN_SERVICES
-            and await recorder.async_migration_in_progress(hass)
+            and recorder.util.async_migration_in_progress(hass)
         ):
             _LOGGER.error(
                 "The system cannot %s while a database upgrade is in progress",

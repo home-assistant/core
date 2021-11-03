@@ -4,7 +4,7 @@
 from homeassistant.core import HomeAssistant
 
 
-async def async_migration_in_progress(hass: HomeAssistant) -> bool:
+def async_migration_in_progress(hass: HomeAssistant) -> bool:
     """Check to see if a recorder migration is in progress."""
     if "recorder" not in hass.config.components:
         return False
@@ -12,4 +12,4 @@ async def async_migration_in_progress(hass: HomeAssistant) -> bool:
         recorder,
     )
 
-    return await recorder.async_migration_in_progress(hass)
+    return recorder.util.async_migration_in_progress(hass)
