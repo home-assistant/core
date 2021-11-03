@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "auth_failed": "\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3API \u30ad\u30fc\u3092\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f"
+        },
+        "progress": {
+            "get_api_key": "OctoPrint UI\u3092\u958b\u304d\u3001Home Assistant\u306e\u30a2\u30af\u30bb\u30b9\u30ea\u30af\u30a8\u30b9\u30c8\u3067\u3092 '\u8a31\u53ef' \u3092\u30af\u30ea\u30c3\u30af\u3057\u307e\u3059\u3002"
+        },
         "step": {
             "user": {
                 "data": {
