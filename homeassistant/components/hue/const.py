@@ -1,6 +1,6 @@
 """Constants for the Hue component."""
-DOMAIN = "hue"
 
+DOMAIN = "hue"
 
 CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
 DEFAULT_ALLOW_HUE_GROUPS = False
@@ -11,7 +11,7 @@ DEFAULT_ALLOW_HUE_SCENES = False
 CONF_ALLOW_UNREACHABLE = "allow_unreachable"
 DEFAULT_ALLOW_UNREACHABLE = False
 
-CONF_USE_V2 = "use_v2"
+CONF_API_VERSION = "api_version"
 
 ATTR_HUE_EVENT = "hue_event"
 SERVICE_HUE_ACTIVATE_SCENE = "hue_activate_scene"

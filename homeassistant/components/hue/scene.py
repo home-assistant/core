@@ -27,7 +27,7 @@ async def async_setup_entry(
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
 
-    if not bridge.use_v2:
+    if bridge.api_version == 1:
         # should not happen, but just in case
         raise NotImplementedError("Scene support is only available for V2 bridges")
 

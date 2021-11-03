@@ -15,7 +15,6 @@ from homeassistant.const import (
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
     ATTR_VIA_DEVICE,
-    CONF_MAC
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
@@ -51,10 +50,10 @@ async def async_setup_devices(
             params[ATTR_IDENTIFIERS].add((DOMAIN, api.config.bridge_id))
         else:
             params[ATTR_VIA_DEVICE] = (DOMAIN, api.config.bridge_device.id)
-        # add mac address to identifier for compatability with V1 format
         if zigbee := dev_controller.get_zigbee_connectivity(hue_device.id):
-            params[ATTR_IDENTIFIERS].add((DOMAIN, zigbee.mac_address))
-            params[ATTR_CONNECTIONS] = {(CONF_MAC, zigbee.mac_address)}
+            params[ATTR_CONNECTIONS] = {
+                (device_registry.CONNECTION_NETWORK_MAC, zigbee.mac_address)
+            }
 
         return dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
 
@@ -66,7 +65,7 @@ async def async_setup_devices(
             dev_reg.async_remove_device(device.id)
 
     @callback
-    def handle_device_event(type: EventType, hue_device: Device):
+    def handle_device_event(type: EventType, hue_device: Device) -> None:
         """Handle event from Hue devices controller."""
         if type == EventType.RESOURCE_DELETED:
             remove_device(hue_device.id)

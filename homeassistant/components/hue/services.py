@@ -22,7 +22,7 @@ from .const import (
     SERVICE_HUE_ACTIVATE_SCENE,
 )
 
-LOGGER = logging.getLogger(DOMAIN).getChild("services")
+LOGGER = logging.getLogger(__name__)
 
 
 async def async_register_services(hass: HomeAssistant) -> None:
@@ -38,9 +38,11 @@ async def async_register_services(hass: HomeAssistant) -> None:
 
         # Call the set scene function on each bridge
         tasks = [
-            hue_activate_scene_v2(bridge, group_name, scene_name, transition, dynamic)
-            if bridge.use_v2
-            else hue_activate_scene_v1(bridge, group_name, scene_name, transition)
+            hue_activate_scene_v1(bridge, group_name, scene_name, transition)
+            if bridge.api_version == 1
+            else hue_activate_scene_v2(
+                bridge, group_name, scene_name, transition, dynamic
+            )
             for bridge in hass.data[DOMAIN].values()
             if isinstance(bridge, HueBridge)
         ]

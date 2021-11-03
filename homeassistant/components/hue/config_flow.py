@@ -24,7 +24,7 @@ from .const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_HUE_SCENES,
     CONF_ALLOW_UNREACHABLE,
-    CONF_USE_V2,
+    CONF_API_VERSION,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_HUE_SCENES,
     DEFAULT_ALLOW_UNREACHABLE,
@@ -32,7 +32,7 @@ from .const import (
 )
 from .errors import CannotConnect
 
-LOGGER = logging.getLogger(DOMAIN).getChild(__name__)
+LOGGER = logging.getLogger(__name__)
 
 HUE_MANUFACTURERURL = ("http://www.philips.com", "http://www.philips-hue.com")
 HUE_IGNORED_BRIDGE_NAMES = ["Home Assistant Bridge", "Espalexa"]
@@ -182,7 +182,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: bridge.host,
                 CONF_API_KEY: app_key,
-                CONF_USE_V2: bridge.supports_v2,
+                CONF_API_VERSION: bridge.supports_v2,
             },
         )
 
@@ -284,28 +284,32 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_ALLOW_HUE_GROUPS,
+                    default=self.config_entry.options.get(
+                        CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
+                    ),
+                ): bool,
+                vol.Optional(
+                    CONF_ALLOW_UNREACHABLE,
+                    default=self.config_entry.options.get(
+                        CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
+                    ),
+                ): bool,
+            }
+        )
+        if self.config_entry.data.get(CONF_API_VERSION) > 1:
+            schema = schema.extend(
                 {
-                    vol.Optional(
-                        CONF_ALLOW_HUE_GROUPS,
-                        default=self.config_entry.options.get(
-                            CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
-                        ),
-                    ): bool,
                     vol.Optional(
                         CONF_ALLOW_HUE_SCENES,
                         default=self.config_entry.options.get(
                             CONF_ALLOW_HUE_SCENES, DEFAULT_ALLOW_HUE_SCENES
                         ),
                     ): bool,
-                    vol.Optional(
-                        CONF_ALLOW_UNREACHABLE,
-                        default=self.config_entry.options.get(
-                            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
-                        ),
-                    ): bool,
                 }
-            ),
-        )
+            )
+
+        return self.async_show_form(step_id="init", data_schema=schema)

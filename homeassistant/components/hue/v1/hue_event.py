@@ -12,11 +12,10 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_EVENT, CONF_ID, CONF_UNIQUE
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util, slugify
 
+from ..const import ATTR_HUE_EVENT
 from .sensor_device import GenericHueDevice
 
-from ..const import ATTR_HUE_EVENT
-
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 CONF_LAST_UPDATED = "last_updated"
 
@@ -98,7 +97,7 @@ class HueEvent(GenericHueDevice):
             config_entry_id=self.bridge.config_entry.entry_id, **self.device_info
         )
         self.device_registry_id = entry.id
-        _LOGGER.debug(
+        LOGGER.debug(
             "Event registry with entry_id: %s and device_id: %s",
             self.device_registry_id,
             self.device_id,

@@ -6,7 +6,7 @@ import aiohue
 
 from homeassistant import config_entries
 from homeassistant.components import hue
-from homeassistant.components.hue import light as hue_light
+from homeassistant.components.hue.v1 import light as hue_light
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import color
 

@@ -54,7 +54,7 @@ from .helpers import remove_devices
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 SUPPORT_HUE_ON_OFF = SUPPORT_FLASH | SUPPORT_TRANSITION
 SUPPORT_HUE_DIMMABLE = SUPPORT_HUE_ON_OFF | SUPPORT_BRIGHTNESS
@@ -115,16 +115,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     allow_groups = bridge.allow_groups
     supports_groups = api_version >= GROUP_MIN_API_VERSION
     if allow_groups and not supports_groups:
-        _LOGGER.warning("Please update your Hue bridge to support groups")
+        LOGGER.warning("Please update your Hue bridge to support groups")
 
     light_coordinator = DataUpdateCoordinator(
         hass,
-        _LOGGER,
+        LOGGER,
         name="light",
         update_method=partial(async_safe_fetch, bridge, bridge.api.lights.update),
         update_interval=SCAN_INTERVAL,
         request_refresh_debouncer=Debouncer(
-            bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+            bridge.hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
         ),
     )
 
@@ -153,12 +153,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     group_coordinator = DataUpdateCoordinator(
         hass,
-        _LOGGER,
+        LOGGER,
         name="group",
         update_method=partial(async_safe_fetch, bridge, bridge.api.groups.update),
         update_interval=SCAN_INTERVAL,
         request_refresh_debouncer=Debouncer(
-            bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+            bridge.hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
         ),
     )
 
@@ -300,16 +300,16 @@ class HueLight(CoordinatorEntity, LightEntity):
             self.is_livarno = light.manufacturername.startswith("_TZ3000_")
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
-            _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
+            LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
             if self.light.swupdatestate == "readytoinstall":
                 err = (
                     "Please check for software updates of the %s "
                     "bulb in the Philips Hue App."
                 )
-                _LOGGER.warning(err, self.name)
+                LOGGER.warning(err, self.name)
             if self.gamut and not color.check_valid_gamut(self.gamut):
                 err = "Color gamut of %s: %s, not valid, setting gamut to None."
-                _LOGGER.debug(err, self.name, str(self.gamut))
+                LOGGER.debug(err, self.name, str(self.gamut))
                 self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
                 self.gamut = None
 

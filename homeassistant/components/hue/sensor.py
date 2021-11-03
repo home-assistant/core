@@ -18,6 +18,6 @@ async def async_setup_entry(
 ) -> None:
     """Redirect HUE Platform setup from Config Entry to correct version."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
-    if bridge.use_v2:
-        return await setup_entry_v2(hass, config_entry, async_add_entities)
-    return await setup_entry_v1(hass, config_entry, async_add_entities)
+    if bridge.api_version == 1:
+        return await setup_entry_v1(hass, config_entry, async_add_entities)
+    return await setup_entry_v2(hass, config_entry, async_add_entities)

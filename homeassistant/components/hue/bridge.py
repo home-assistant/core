@@ -20,7 +20,7 @@ from .const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_HUE_SCENES,
     CONF_ALLOW_UNREACHABLE,
-    CONF_USE_V2,
+    CONF_API_VERSION,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_HUE_SCENES,
     DEFAULT_ALLOW_UNREACHABLE,
@@ -43,14 +43,23 @@ class HueBridge:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
-        self.available = True
         self.authorized = False
-        self.api: HueBridgeV1 | HueBridgeV2 | None = None
-        self.parallel_updates_semaphore = asyncio.Semaphore(3)
+        self.parallel_updates_semaphore = asyncio.Semaphore(
+            3 if self.api_version == 1 else 10
+        )
         # Jobs to be executed when API is reset.
         self.reset_jobs: list[core.CALLBACK_TYPE] = []
         self.sensor_manager: SensorManager | None = None
-        self.logger = logging.getLogger(DOMAIN)
+        self.logger = logging.getLogger(__name__)
+        # store actual api connection to bridge as api
+        app_key: str = self.config_entry.data[CONF_API_KEY]
+        websession = aiohttp_client.async_get_clientsession(hass)
+        if self.api_version == 1:
+            self.api = HueBridgeV1(self.host, app_key, websession)
+        else:
+            self.api = HueBridgeV2(self.host, app_key, websession)
+        # store (this) bridge object in hass data
+        hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
 
     @property
     def host(self) -> str:
@@ -58,9 +67,9 @@ class HueBridge:
         return self.config_entry.data[CONF_HOST]
 
     @property
-    def use_v2(self) -> bool:
-        """Return bool if we're using the V2 version of the implementation."""
-        return self.config_entry.data.get(CONF_USE_V2, False)
+    def api_version(self) -> int:
+        """Return api version we're set-up for."""
+        return self.config_entry.data.get(CONF_API_VERSION, 1)
 
     @property
     def allow_unreachable(self) -> bool:
@@ -83,28 +92,18 @@ class HueBridge:
             CONF_ALLOW_HUE_SCENES, DEFAULT_ALLOW_HUE_SCENES
         )
 
-    async def async_setup(self, tries=0) -> bool:
-        """Set up a phue bridge based on host parameter."""
-        host = self.host
-        hass = self.hass
-        app_key: str = self.config_entry.data[CONF_API_KEY]
-        websession = aiohttp_client.async_get_clientsession(hass)
-
-        if self.use_v2:
-            bridge = HueBridgeV2(host, app_key, websession)
-        else:
-            bridge = HueBridgeV1(host, app_key, websession)
-
+    async def async_initialize_bridge(self) -> bool:
+        """Initialize Connection with the Hue API."""
         try:
             with async_timeout.timeout(10):
-                await bridge.initialize()
+                await self.api.initialize()
 
         except (LinkButtonNotPressed, Unauthorized):
             # Usernames can become invalid if hub is reset or user removed.
             # We are going to fail the config entry setup and initiate a new
             # linking procedure. When linking succeeds, it will remove the
             # old config entry.
-            create_config_flow(hass, host)
+            create_config_flow(self.hass, self.host)
             return False
         except (
             asyncio.TimeoutError,
@@ -113,28 +112,27 @@ class HueBridge:
             client_exceptions.ContentTypeError,
         ) as err:
             raise ConfigEntryNotReady(
-                f"Error connecting to the Hue bridge at {host}"
+                f"Error connecting to the Hue bridge at {self.host}"
             ) from err
 
         except Exception:  # pylint: disable=broad-except
             self.logger.exception("Unknown error connecting to Hue bridge")
             return False
 
-        # store actual aiohue bridge as api attribute
-        self.api = bridge
-        # store (this) bridge object in hass data
-        hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
+        # v1 specific initialization/setup code here
+        if self.api_version == 1:
+            if self.api.sensors is not None:
+                self.sensor_manager = SensorManager(self)
+            self.hass.config_entries.async_setup_platforms(
+                self.config_entry, PLATFORMS_v1
+            )
 
         # v2 specific initialization/setup code here
-        if self.use_v2:
-            self.parallel_updates_semaphore = asyncio.Semaphore(10)
-            await async_setup_devices(hass, self.config_entry, self)
-            hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS_v2)
-        # v1 specific initialization/setup code here
         else:
-            hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS_v1)
-            if bridge.sensors is not None:
-                self.sensor_manager = SensorManager(self)
+            await async_setup_devices(self.hass, self.config_entry, self)
+            self.hass.config_entries.async_setup_platforms(
+                self.config_entry, PLATFORMS_v2
+            )
 
         # add listener for config entry updates.
         self.reset_jobs.append(self.config_entry.add_update_listener(_update_listener))
@@ -191,10 +189,9 @@ class HueBridge:
         while self.reset_jobs:
             self.reset_jobs.pop()()
 
-        # If setup was successful, we set api variable, forwarded entry and
-        # register service
+        # Unload platforms
         unload_success = await self.hass.config_entries.async_unload_platforms(
-            self.config_entry, PLATFORMS_v2 if self.use_v2 else PLATFORMS_v1
+            self.config_entry, PLATFORMS_v1 if self.api_version == 1 else PLATFORMS_v2
         )
 
         if unload_success:

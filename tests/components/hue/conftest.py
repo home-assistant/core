@@ -3,10 +3,10 @@ from collections import deque
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohue.groups import Groups
-from aiohue.lights import Lights
-from aiohue.scenes import Scenes
-from aiohue.sensors import Sensors
+from aiohue.v1.groups import Groups
+from aiohue.v1.lights import Lights
+from aiohue.v1.scenes import Scenes
+from aiohue.v1.sensors import Sensors
 import pytest
 
 from homeassistant.components import hue

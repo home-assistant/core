@@ -6,8 +6,8 @@ import aiohue
 import pytest
 
 from homeassistant.components import hue
-from homeassistant.components.hue import sensor_base
-from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
+from homeassistant.components.hue.v1 import sensor_base
+from homeassistant.components.hue.v1.hue_event import CONF_HUE_EVENT
 from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
