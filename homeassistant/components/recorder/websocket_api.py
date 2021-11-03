@@ -89,6 +89,7 @@ def ws_status(
 
     backlog = instance.queue.qsize() if instance and instance.queue else None
     migration_in_progress = instance.migration_in_progress if instance else False
+    # pylint: disable-next=protected-access
     recording = instance._event_listener is not None if instance else False
     thread_alive = instance.is_alive() if instance else False
 
