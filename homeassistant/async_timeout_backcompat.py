@@ -1,4 +1,4 @@
-"""Provide backwards compat transitions."""
+"""Provide backwards compat for async_timeout."""
 from __future__ import annotations
 
 import asyncio
