@@ -713,12 +713,14 @@ def deprecated(
     key: str,
     replacement_key: str | None = None,
     default: Any | None = None,
+    fail: bool | None = False,
 ) -> Callable[[dict], dict]:
     """
     Log key as deprecated and provide a replacement (if exists).
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected
+        - Outputs the appropriate deprecation error if key is detected and removed from support (fail == True)
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -745,11 +747,20 @@ def deprecated(
             " please remove it from your configuration"
         )
 
+    if fail:
+        keyword_style_adapter = KeywordStyleAdapter(
+            logging.getLogger(module_name)
+        ).error
+    else:
+        keyword_style_adapter = KeywordStyleAdapter(
+            logging.getLogger(module_name)
+        ).warning
+
     def validator(config: dict) -> dict:
-        """Check if key is in config and log warning."""
+        """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
+                keyword_style_adapter(
                     warning.replace(
                         "'{key}' option",
                         f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
@@ -758,11 +769,13 @@ def deprecated(
                     replacement_key=replacement_key,
                 )
             except AttributeError:
-                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
+                keyword_style_adapter(
                     warning,
                     key=key,
                     replacement_key=replacement_key,
                 )
+            if fail:
+                raise vol.Invalid("Option {key} is deprecated and not allowed")
             value = config[key]
             if replacement_key:
                 config.pop(key)
