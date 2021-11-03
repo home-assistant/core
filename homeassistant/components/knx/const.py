@@ -51,6 +51,7 @@ class SupportedPlatforms(Enum):
     """Supported platforms."""
 
     BINARY_SENSOR = "binary_sensor"
+    BUTTON = "button"
     CLIMATE = "climate"
     COVER = "cover"
     FAN = "fan"

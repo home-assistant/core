@@ -261,6 +261,28 @@ class BinarySensorSchema(KNXPlatformSchema):
     )
 
 
+class ButtonSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX selects."""
+
+    PLATFORM_NAME = SupportedPlatforms.BUTTON.value
+
+    CONF_PAYLOAD = "payload"
+    CONF_PAYLOAD_LENGTH = "payload_length"
+    DEFAULT_NAME = "KNX Button"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Required(CONF_PAYLOAD): cv.positive_int,
+            vol.Required(CONF_PAYLOAD_LENGTH): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=14)
+            ),
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        }
+    )
+
+
 class ClimateSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX climate devices."""
 
