@@ -38,7 +38,7 @@ async def async_setup_entry(
     controller: GroupedLightController = api.groups.grouped_light
 
     @callback
-    def async_add_grouped_light(event_type: EventType, resource: GroupedLight) -> None:
+    def async_add_grouped_light(event_type:EventType, resource: GroupedLight) -> None:
         """Add HUE Grouped Light."""
         if controller.get_zone(resource.id) is None:
             # filter out special "all lights" group

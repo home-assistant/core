@@ -7,6 +7,7 @@ from aiohue.v2.models.device import Device, DeviceArchetypes
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -14,6 +15,7 @@ from homeassistant.const import (
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
     ATTR_VIA_DEVICE,
+    CONF_MAC
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
@@ -36,7 +38,6 @@ async def async_setup_devices(
     def add_device(hue_device: Device) -> device_registry.DeviceEntry:
         """Register a Hue device in device registry."""
         model = f"{hue_device.product_data.product_name} ({hue_device.product_data.model_id})"
-
         params = {
             ATTR_IDENTIFIERS: {(DOMAIN, hue_device.id)},
             ATTR_SW_VERSION: hue_device.product_data.software_version,
@@ -50,6 +51,10 @@ async def async_setup_devices(
             params[ATTR_IDENTIFIERS].add((DOMAIN, api.config.bridge_id))
         else:
             params[ATTR_VIA_DEVICE] = (DOMAIN, api.config.bridge_device.id)
+        # add mac address to identifier for compatability with V1 format
+        if zigbee := dev_controller.get_zigbee_connectivity(hue_device.id):
+            params[ATTR_IDENTIFIERS].add((DOMAIN, zigbee.mac_address))
+            params[ATTR_CONNECTIONS] = {(CONF_MAC, zigbee.mac_address)}
 
         return dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
 

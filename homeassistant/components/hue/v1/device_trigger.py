@@ -15,8 +15,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 
-from .. import DOMAIN
-from .hue_event import CONF_HUE_EVENT
+from ..const import DOMAIN, ATTR_HUE_EVENT
 
 CONF_SUBTYPE = "subtype"
 
@@ -151,7 +150,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     event_config = {
         event_trigger.CONF_PLATFORM: "event",
-        event_trigger.CONF_EVENT_TYPE: CONF_HUE_EVENT,
+        event_trigger.CONF_EVENT_TYPE: ATTR_HUE_EVENT,
         event_trigger.CONF_EVENT_DATA: {CONF_UNIQUE_ID: hue_event.unique_id, **trigger},
     }
 

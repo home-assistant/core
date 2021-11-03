@@ -13,6 +13,7 @@ DEFAULT_ALLOW_UNREACHABLE = False
 
 CONF_USE_V2 = "use_v2"
 
+ATTR_HUE_EVENT = "hue_event"
 SERVICE_HUE_ACTIVATE_SCENE = "hue_activate_scene"
 ATTR_GROUP_NAME = "group_name"
 ATTR_SCENE_NAME = "scene_name"

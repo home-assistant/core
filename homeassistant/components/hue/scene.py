@@ -6,13 +6,11 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.scenes import ScenesController
-from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.scene import Scene as HueScene
 
 from homeassistant.components.scene import Scene as SceneEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .bridge import HueBridge
@@ -65,20 +63,6 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
         super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
-        api: HueBridgeV2 = bridge.api
-        # connect scene to all devices found in scene
-        identifiers = set()
-        light_ids = {
-            action.target.rid
-            for action in resource.actions
-            if action.target.rtype == ResourceTypes.LIGHT
-        }
-        for light_id in light_ids:
-            dev = api.lights.get_device(light_id)
-            identifiers.add((DOMAIN, dev.id))
-        self._attr_device_info = DeviceInfo(
-            identifiers=identifiers,
-        )
 
     @property
     def name(self) -> str:

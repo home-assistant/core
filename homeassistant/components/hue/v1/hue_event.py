@@ -14,9 +14,10 @@ from homeassistant.util import dt as dt_util, slugify
 
 from .sensor_device import GenericHueDevice
 
+from ..const import ATTR_HUE_EVENT
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HUE_EVENT = "hue_event"
 CONF_LAST_UPDATED = "last_updated"
 
 EVENT_NAME_FORMAT = "{}"
@@ -85,7 +86,7 @@ class HueEvent(GenericHueDevice):
             CONF_EVENT: state,
             CONF_LAST_UPDATED: self.sensor.lastupdated,
         }
-        self.bridge.hass.bus.async_fire(CONF_HUE_EVENT, data)
+        self.bridge.hass.bus.async_fire(ATTR_HUE_EVENT, data)
 
     async def async_update_device_registry(self):
         """Update device registry."""
