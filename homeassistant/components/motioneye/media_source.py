@@ -10,8 +10,9 @@ from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_MOVIE,
     MEDIA_CLASS_VIDEO,
+    MEDIA_TYPE_IMAGE,
+    MEDIA_TYPE_VIDEO,
 )
 from homeassistant.components.media_source.error import MediaSourceError, Unresolvable
 from homeassistant.components.media_source.models import (
@@ -239,7 +240,9 @@ class MotionEyeMediaSource(MediaSource):
             domain=DOMAIN,
             identifier=f"{config.entry_id}#{device.id}#{kind}",
             media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_type=MEDIA_CLASS_DIRECTORY,
+            media_content_type=(
+                MEDIA_TYPE_VIDEO if kind == "movies" else MEDIA_TYPE_IMAGE
+            ),
             title=(
                 f"{config.title} {device.name} {kind.title()}"
                 if full_title
@@ -248,7 +251,7 @@ class MotionEyeMediaSource(MediaSource):
             can_play=False,
             can_expand=True,
             children_media_class=(
-                MEDIA_CLASS_MOVIE if kind == "movies" else MEDIA_CLASS_IMAGE
+                MEDIA_CLASS_VIDEO if kind == "movies" else MEDIA_CLASS_IMAGE
             ),
         )
 
@@ -274,7 +277,7 @@ class MotionEyeMediaSource(MediaSource):
 
         parsed_path = PurePath(path)
         if path != "/":
-            base.title += " " + str(PurePath(*parsed_path.parts[1:]))
+            base.title += f" {PurePath(*parsed_path.parts[1:])}"
 
         base.children = []
 
@@ -339,7 +342,11 @@ class MotionEyeMediaSource(MediaSource):
                                     f"#{kind}#{full_child_path}"
                                 ),
                                 media_class=MEDIA_CLASS_DIRECTORY,
-                                media_content_type=MEDIA_CLASS_DIRECTORY,
+                                media_content_type=(
+                                    MEDIA_TYPE_VIDEO
+                                    if kind == "movies"
+                                    else MEDIA_TYPE_IMAGE
+                                ),
                                 title=display_child_path,
                                 can_play=False,
                                 can_expand=True,
