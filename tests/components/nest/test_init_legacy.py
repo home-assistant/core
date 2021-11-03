@@ -3,6 +3,7 @@
 import time
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from homeassistant.components.nest import async_migrate_entry
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -85,3 +86,12 @@ async def test_thermostat(hass):
     fan = hass.states.get("binary_sensor.my_thermostat_fan")
     assert fan is not None
     assert fan.state == "on"
+
+
+async def test_migrate_entry_no_op(hass):
+    """Test config entries for legacy API are ignored."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA.copy())
+    config_entry.add_to_hass(hass)
+
+    await async_migrate_entry(hass, config_entry)
+    assert config_entry.data == CONFIG_ENTRY_DATA

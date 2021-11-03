@@ -1,6 +1,7 @@
 """Support for Nest devices."""
 
 import logging
+from typing import Any, Dict
 
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import (
@@ -30,7 +31,14 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
-from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import (
+    DATA_SDM,
+    DATA_SUBSCRIBER,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+    OOB_REDIRECT_URI,
+)
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
 
@@ -70,6 +78,49 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["sensor", "camera", "climate"]
 
 
+class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
+    """OAuth implementation using OAuth for web applications."""
+
+    name = "OAuth for Web"
+
+    def __init__(
+        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
+    ) -> None:
+        """Initialize WebAuth."""
+        super().__init__(
+            hass,
+            f"{DOMAIN}.web",
+            client_id,
+            client_secret,
+            OAUTH2_AUTHORIZE.format(project_id=project_id),
+            OAUTH2_TOKEN,
+        )
+
+
+class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
+    """OAuth implementation using OAuth for installed applications."""
+
+    name = "OAuth for Apps"
+
+    def __init__(
+        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
+    ) -> None:
+        """Initialize InstalledAppAuth."""
+        super().__init__(
+            hass,
+            f"{DOMAIN}.installed",
+            client_id,
+            client_secret,
+            OAUTH2_AUTHORIZE.format(project_id=project_id),
+            OAUTH2_TOKEN,
+        )
+
+    @property
+    def redirect_uri(self) -> str:
+        """Return the redirect uri."""
+        return OOB_REDIRECT_URI
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.data[DOMAIN] = {}
@@ -90,13 +141,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     config_flow.NestFlowHandler.register_sdm_api(hass)
     config_flow.NestFlowHandler.async_register_implementation(
         hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
+        InstalledAppAuth(
             hass,
-            DOMAIN,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
+            project_id,
+        ),
+    )
+    config_flow.NestFlowHandler.async_register_implementation(
+        hass,
+        WebAuth(
+            hass,
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
+            project_id,
         ),
     )
 
@@ -132,6 +190,22 @@ class SignalUpdateCallback:
                 "nest_event_id": image_event.event_id,
             }
             self._hass.bus.async_fire(NEST_EVENT, message)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if DATA_SDM not in config_entry.data:
+        # Legacy API
+        return True
+
+    if config_entry.version == 1:
+        _LOGGER.debug("Migrating from version %s", config_entry.version)
+        new: Dict[str, Any] = {**config_entry.data}
+        new["auth_implementation"] = f"{DOMAIN}.web"
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=new)
+        _LOGGER.info("Migration to version %s successful", config_entry.version)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

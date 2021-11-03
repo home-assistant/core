@@ -10,6 +10,7 @@ from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import SDM_SCOPES
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -32,13 +33,15 @@ FAKE_TOKEN = "some-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 
 
-def create_config_entry(hass, token_expiration_time=None):
+def create_config_entry(
+    hass, token_expiration_time=None, auth_implementation="nest.web", version=2
+) -> ConfigEntry:
     """Create a ConfigEntry and add it to Home Assistant."""
     if token_expiration_time is None:
         token_expiration_time = time.time() + 86400
     config_entry_data = {
         "sdm": {},  # Indicates new SDM API, not legacy API
-        "auth_implementation": "nest",
+        "auth_implementation": auth_implementation,
         "token": {
             "access_token": FAKE_TOKEN,
             "refresh_token": FAKE_REFRESH_TOKEN,
@@ -47,7 +50,21 @@ def create_config_entry(hass, token_expiration_time=None):
             "expires_at": token_expiration_time,
         },
     }
-    MockConfigEntry(domain=DOMAIN, data=config_entry_data).add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=config_entry_data, version=version
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+def create_v1_config_entry(hass, token_expiration_time=None) -> ConfigEntry:
+    """Create a ConfigEntry for exercising migration path."""
+    return create_config_entry(
+        hass,
+        token_expiration_time=token_expiration_time,
+        auth_implementation="nest",
+        version=1,
+    )
 
 
 class FakeDeviceManager(DeviceManager):
