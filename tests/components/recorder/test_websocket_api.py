@@ -237,3 +237,23 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
             "unit_of_measurement": new_unit,
         }
     ]
+
+
+async def test_recorder_info(hass, hass_ws_client):
+    """Test removing statistics."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+
+    await client.send_json({"id": 1, "type": "recorder/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "backlog": 0,
+        "max_backlog": 30000,
+        "migration_in_progress": False,
+        "recording": True,
+        "thread_running": True,
+    }

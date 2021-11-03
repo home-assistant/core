@@ -77,7 +77,7 @@ def ws_update_statistics_metadata(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/status",
+        vol.Required("type"): "recorder/info",
     }
 )
 @callback
@@ -92,11 +92,11 @@ def ws_status(
     recording = instance._event_listener is not None if instance else False
     thread_alive = instance.is_alive() if instance else False
 
-    recorder_status = {
+    recorder_info = {
         "backlog": backlog,
         "max_backlog": MAX_QUEUE_BACKLOG,
         "migration_in_progress": migration_in_progress,
         "recording": recording,
         "thread_running": thread_alive,
     }
-    connection.send_result(msg["id"], recorder_status)
+    connection.send_result(msg["id"], recorder_info)
