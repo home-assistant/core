@@ -131,7 +131,7 @@ class ComfoConnectFan(FanEntity):
             speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
             cmd = CMD_MAPPING[speed]
 
-        self._ccb.comfoconnect.cmd_rmi_request(cmd)
+        self._ccb.send_cmd(cmd)
 
         # Update current mode
         self.schedule_update_ha_state()

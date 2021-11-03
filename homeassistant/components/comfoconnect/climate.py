@@ -87,6 +87,7 @@ class ComfoConnectBypass(ClimateEntity):
         )
         self.sensor_temperature_supply_local = value
 
+        self._ccb.verify_connection()
         self._ccb.data[SENSOR_TEMPERATURE_SUPPLY] = self.sensor_temperature_supply_local
         self.async_write_ha_state()
 
@@ -96,10 +97,10 @@ class ComfoConnectBypass(ClimateEntity):
 
         if hvac_mode == HVAC_MODE_HEAT:
             _LOGGER.debug("Send command: CMD_BYPASS_OFF")
-            self._ccb.comfoconnect.cmd_rmi_request(CMD_BYPASS_OFF)
+            self._ccb.send_cmd(CMD_BYPASS_OFF)
         elif hvac_mode == HVAC_MODE_COOL:
             _LOGGER.debug("Send command: CMD_BYPASS_ON")
-            self._ccb.comfoconnect.cmd_rmi_request(CMD_BYPASS_ON)
+            self._ccb.send_cmd(CMD_BYPASS_ON)
         else:
             raise ValueError(f"Unsupported hvac_mode: {hvac_mode}")
 
