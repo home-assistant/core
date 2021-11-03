@@ -159,20 +159,20 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
             {
                 "title": "Movies",
                 "media_class": "directory",
-                "media_content_type": "directory",
+                "media_content_type": "video",
                 "media_content_id": (
                     "media-source://motioneye"
                     f"/74565ad414754616000674c87bdc876c#{device.id}#movies"
                 ),
                 "can_play": False,
                 "can_expand": True,
-                "children_media_class": "movie",
+                "children_media_class": "video",
                 "thumbnail": None,
             },
             {
                 "title": "Images",
                 "media_class": "directory",
-                "media_content_type": "directory",
+                "media_content_type": "image",
                 "media_content_id": (
                     "media-source://motioneye"
                     f"/74565ad414754616000674c87bdc876c#{device.id}#images"
@@ -193,20 +193,20 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
     assert media.as_dict() == {
         "title": "http://test:8766 Test Camera Movies",
         "media_class": "directory",
-        "media_content_type": "directory",
+        "media_content_type": "video",
         "media_content_id": (
             "media-source://motioneye"
             f"/74565ad414754616000674c87bdc876c#{device.id}#movies"
         ),
         "can_play": False,
         "can_expand": True,
-        "children_media_class": "movie",
+        "children_media_class": "video",
         "thumbnail": None,
         "children": [
             {
                 "title": "2021-04-25",
                 "media_class": "directory",
-                "media_content_type": "directory",
+                "media_content_type": "video",
                 "media_content_id": (
                     "media-source://motioneye"
                     f"/74565ad414754616000674c87bdc876c#{device.id}#movies#/2021-04-25"
@@ -227,14 +227,14 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
     assert media.as_dict() == {
         "title": "http://test:8766 Test Camera Movies 2021-04-25",
         "media_class": "directory",
-        "media_content_type": "directory",
+        "media_content_type": "video",
         "media_content_id": (
             "media-source://motioneye"
             f"/74565ad414754616000674c87bdc876c#{device.id}#movies"
         ),
         "can_play": False,
         "can_expand": True,
-        "children_media_class": "movie",
+        "children_media_class": "video",
         "thumbnail": None,
         "children": [
             {
@@ -305,7 +305,7 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
     assert media.as_dict() == {
         "title": "http://test:8766 Test Camera Images 2021-04-12",
         "media_class": "directory",
-        "media_content_type": "directory",
+        "media_content_type": "image",
         "media_content_id": (
             "media-source://motioneye"
             f"/74565ad414754616000674c87bdc876c#{device.id}#images"
@@ -469,14 +469,14 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
     assert media.as_dict() == {
         "title": "http://test:8766 Test Camera Movies 2021-04-25",
         "media_class": "directory",
-        "media_content_type": "directory",
+        "media_content_type": "video",
         "media_content_id": (
             f"media-source://motioneye"
             f"/74565ad414754616000674c87bdc876c#{device.id}#movies"
         ),
         "can_play": False,
         "can_expand": True,
-        "children_media_class": "movie",
+        "children_media_class": "video",
         "thumbnail": None,
         "children": [],
     }
