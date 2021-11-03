@@ -45,9 +45,7 @@ async def _process(hass, data, message):
             "payload": {"errorCode": ERR_PROTOCOL_ERROR},
         }
 
-    handler = HANDLERS.get(inputs[0].get("intent"))
-
-    if handler is None:
+    if (handler := HANDLERS.get(inputs[0].get("intent"))) is None:
         return {
             "requestId": data.request_id,
             "payload": {"errorCode": ERR_PROTOCOL_ERROR},
@@ -131,9 +129,8 @@ async def async_devices_query(hass, data, payload):
     devices = {}
     for device in payload_devices:
         devid = device["id"]
-        state = hass.states.get(devid)
 
-        if not state:
+        if not (state := hass.states.get(devid)):
             # If we can't find a state, the device is offline
             devices[devid] = {"online": False}
             continue
@@ -199,9 +196,7 @@ async def handle_devices_execute(hass, data, payload):
                 executions[entity_id].append(execution)
                 continue
 
-            state = hass.states.get(entity_id)
-
-            if state is None:
+            if (state := hass.states.get(entity_id)) is None:
                 results[entity_id] = {
                     "ids": [entity_id],
                     "status": "ERROR",

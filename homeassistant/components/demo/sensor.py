@@ -20,6 +20,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, StateType
 
@@ -125,10 +126,10 @@ class DemoSensor(SensorEntity):
         self._attr_state_class = state_class
         self._attr_unique_id = unique_id
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, unique_id)},
-            "name": name,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=name,
+        )
 
         if battery:
             self._attr_extra_state_attributes = {ATTR_BATTERY_LEVEL: battery}

@@ -1,6 +1,5 @@
 """The tests for the generic_thermostat."""
 import datetime
-from os import path
 from unittest.mock import patch
 
 import pytest
@@ -43,6 +42,7 @@ from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
+    get_fixture_path,
     mock_restore_cache,
 )
 from tests.components.climate import common
@@ -1486,11 +1486,7 @@ async def test_reload(hass):
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("climate.test") is not None
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "generic_thermostat/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "generic_thermostat")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             GENERIC_THERMOSTAT_DOMAIN,
@@ -1503,7 +1499,3 @@ async def test_reload(hass):
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("climate.test") is None
     assert hass.states.get("climate.reload")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

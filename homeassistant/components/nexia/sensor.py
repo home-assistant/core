@@ -11,7 +11,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 
-from .const import DOMAIN, NEXIA_DEVICE, UPDATE_COORDINATOR
+from .const import DOMAIN
+from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatEntity, NexiaThermostatZoneEntity
 from .util import percent_conv
 
@@ -19,9 +20,8 @@ from .util import percent_conv
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for a Nexia device."""
 
-    nexia_data = hass.data[DOMAIN][config_entry.entry_id]
-    nexia_home = nexia_data[NEXIA_DEVICE]
-    coordinator = nexia_data[UPDATE_COORDINATOR]
+    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    nexia_home = coordinator.nexia_home
     entities = []
 
     # Thermostat / System Sensors

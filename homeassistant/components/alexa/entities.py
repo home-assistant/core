@@ -60,11 +60,9 @@ from .capabilities import (
     AlexaLockController,
     AlexaModeController,
     AlexaMotionSensor,
-    AlexaPercentageController,
     AlexaPlaybackController,
     AlexaPlaybackStateReporter,
     AlexaPowerController,
-    AlexaPowerLevelController,
     AlexaRangeController,
     AlexaSceneController,
     AlexaSecurityPanelController,
@@ -530,22 +528,31 @@ class FanCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
-
+        force_range_controller = True
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & fan.SUPPORT_SET_SPEED:
-            yield AlexaPercentageController(self.entity)
-            yield AlexaPowerLevelController(self.entity)
         if supported & fan.SUPPORT_OSCILLATE:
             yield AlexaToggleController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}"
             )
+            force_range_controller = False
         if supported & fan.SUPPORT_PRESET_MODE:
             yield AlexaModeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}"
             )
+            force_range_controller = False
         if supported & fan.SUPPORT_DIRECTION:
             yield AlexaModeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}"
+            )
+            force_range_controller = False
+
+        # AlexaRangeController controls the Fan Speed Percentage.
+        # For fans which only support on/off, no controller is added. This makes the
+        # fan impossible to turn on or off through Alexa, most likely due to a bug in Alexa.
+        # As a workaround, we add a range controller which can only be set to 0% or 100%.
+        if force_range_controller or supported & fan.SUPPORT_SET_SPEED:
+            yield AlexaRangeController(
+                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}"
             )
 
         yield AlexaEndpointHealth(self.hass, self.entity)

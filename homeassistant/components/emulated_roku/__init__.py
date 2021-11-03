@@ -46,9 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the emulated roku component."""
-    conf = config.get(DOMAIN)
-
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         return True
 
     existing_servers = configured_servers(hass)

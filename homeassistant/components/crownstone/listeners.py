@@ -9,6 +9,7 @@ from __future__ import annotations
 from functools import partial
 from typing import TYPE_CHECKING, cast
 
+from crownstone_cloud.exceptions import CrownstoneNotFoundError
 from crownstone_core.packets.serviceDataParsers.containers.AdvExternalCrownstoneState import (
     AdvExternalCrownstoneState,
 )
@@ -25,8 +26,12 @@ from crownstone_sse.events import AbilityChangeEvent, SwitchStateUpdateEvent
 from crownstone_uart import UartEventBus, UartTopics
 from crownstone_uart.topics.SystemTopics import SystemTopics
 
-from homeassistant.core import Event, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+    dispatcher_send,
+)
 
 from .const import (
     DOMAIN,
@@ -42,13 +47,12 @@ if TYPE_CHECKING:
 
 @callback
 def async_update_crwn_state_sse(
-    manager: CrownstoneEntryManager, ha_event: Event
+    manager: CrownstoneEntryManager, switch_event: SwitchStateUpdateEvent
 ) -> None:
     """Update the state of a Crownstone when switched externally."""
-    switch_event = SwitchStateUpdateEvent(ha_event.data)
     try:
         updated_crownstone = manager.cloud.get_crownstone_by_id(switch_event.cloud_id)
-    except KeyError:
+    except CrownstoneNotFoundError:
         return
 
     # only update on change.
@@ -58,12 +62,13 @@ def async_update_crwn_state_sse(
 
 
 @callback
-def async_update_crwn_ability(manager: CrownstoneEntryManager, ha_event: Event) -> None:
+def async_update_crwn_ability(
+    manager: CrownstoneEntryManager, ability_event: AbilityChangeEvent
+) -> None:
     """Update the ability information of a Crownstone."""
-    ability_event = AbilityChangeEvent(ha_event.data)
     try:
         updated_crownstone = manager.cloud.get_crownstone_by_id(ability_event.cloud_id)
-    except KeyError:
+    except CrownstoneNotFoundError:
         return
 
     ability_type = ability_event.ability_type
@@ -100,7 +105,7 @@ def update_crwn_state_uart(
         updated_crownstone = manager.cloud.get_crownstone_by_uid(
             data.crownstoneId, manager.usb_sphere_id
         )
-    except KeyError:
+    except CrownstoneNotFoundError:
         return
 
     if data.switchState is None:
@@ -117,11 +122,13 @@ def setup_sse_listeners(manager: CrownstoneEntryManager) -> None:
     """Set up SSE listeners."""
     # save unsub function for when entry removed
     manager.listeners[SSE_LISTENERS] = [
-        manager.hass.bus.async_listen(
+        async_dispatcher_connect(
+            manager.hass,
             f"{DOMAIN}_{EVENT_SWITCH_STATE_UPDATE}",
             partial(async_update_crwn_state_sse, manager),
         ),
-        manager.hass.bus.async_listen(
+        async_dispatcher_connect(
+            manager.hass,
             f"{DOMAIN}_{EVENT_ABILITY_CHANGE}",
             partial(async_update_crwn_ability, manager),
         ),

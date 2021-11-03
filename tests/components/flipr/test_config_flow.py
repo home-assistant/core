@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 from requests.exceptions import HTTPError, Timeout
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
@@ -21,7 +21,7 @@ def mock_setups():
 
 async def test_show_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

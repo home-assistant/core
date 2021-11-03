@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 from homeassistant import config as conf_util
 from homeassistant.const import (

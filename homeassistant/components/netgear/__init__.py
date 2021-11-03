@@ -1,6 +1,4 @@
 """Support for Netgear routers."""
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -10,8 +8,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import DOMAIN, PLATFORMS
 from .errors import CannotLoginException
 from .router import NetgearRouter
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
@@ -27,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},

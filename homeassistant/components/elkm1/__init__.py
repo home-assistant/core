@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -236,8 +236,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     elk.connect()
 
     def _element_changed(element, changeset):
-        keypress = changeset.get("last_keypress")
-        if keypress is None:
+        if (keypress := changeset.get("last_keypress")) is None:
             return
 
         hass.bus.async_fire(
@@ -285,7 +284,7 @@ def _find_elk_by_prefix(hass, prefix):
             return hass.data[DOMAIN][entry_id]["elk"]
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -453,26 +452,26 @@ class ElkEntity(Entity):
         self._element_callback(self._element, {})
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info connecting via the ElkM1 system."""
-        return {
-            "via_device": (DOMAIN, f"{self._prefix}_system"),
-        }
+        return DeviceInfo(
+            via_device=(DOMAIN, f"{self._prefix}_system"),
+        )
 
 
 class ElkAttachedEntity(ElkEntity):
     """An elk entity that is attached to the elk system."""
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for the underlying ElkM1 system."""
         device_name = "ElkM1"
         if self._prefix:
             device_name += f" {self._prefix}"
-        return {
-            "name": device_name,
-            "identifiers": {(DOMAIN, f"{self._prefix}_system")},
-            "sw_version": self._elk.panel.elkm1_version,
-            "manufacturer": "ELK Products, Inc.",
-            "model": "M1",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self._prefix}_system")},
+            manufacturer="ELK Products, Inc.",
+            model="M1",
+            name=device_name,
+            sw_version=self._elk.panel.elkm1_version,
+        )

@@ -97,15 +97,12 @@ async def test_report_state_instance(hass, aioclient_mock):
             assert report["instance"] == "fan.preset_mode"
             assert report["namespace"] == "Alexa.ModeController"
             checks += 1
-        if report["name"] == "percentage":
+        if report["name"] == "rangeValue":
             assert report["value"] == 90
-            assert report["namespace"] == "Alexa.PercentageController"
+            assert report["instance"] == "fan.percentage"
+            assert report["namespace"] == "Alexa.RangeController"
             checks += 1
-        if report["name"] == "powerLevel":
-            assert report["value"] == 90
-            assert report["namespace"] == "Alexa.PowerLevelController"
-            checks += 1
-    assert checks == 4
+    assert checks == 3
 
     assert call_json["event"]["endpoint"]["endpointId"] == "fan#test_fan"
 

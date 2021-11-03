@@ -33,7 +33,7 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_method=mill_data_connection.fetch_heater_data,
+            update_method=mill_data_connection.fetch_heater_and_sensor_data,
             update_interval=timedelta(seconds=30),
         )
 

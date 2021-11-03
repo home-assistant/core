@@ -40,8 +40,7 @@ class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
     @property
     def hvac_action(self):
         """Return the actual current HVAC action."""
-        is_on = self._feature.is_on
-        if not is_on:
+        if not (is_on := self._feature.is_on):
             return None if is_on is None else CURRENT_HVAC_OFF
 
         # NOTE: In practice, there's no need to handle case when is_heating is None

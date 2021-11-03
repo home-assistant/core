@@ -11,11 +11,11 @@
         "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Be szeretn\u00e9 \u00e1ll\u00edtani a Nettigo Air Monitor-ot a {host} c\u00edmen?"
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani Nettigo Air Monitor-ot a {host} c\u00edmen?"
             },
             "user": {
                 "data": {
-                    "host": "Gazdag\u00e9p"
+                    "host": "C\u00edm"
                 },
                 "description": "\u00c1ll\u00edtsa be a Nettigo Air Monitor integr\u00e1ci\u00f3j\u00e1t."
             }

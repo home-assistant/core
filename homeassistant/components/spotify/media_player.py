@@ -207,6 +207,7 @@ def spotify_exception_handler(func):
     """
 
     def wrapper(self, *args, **kwargs):
+        # pylint: disable=protected-access
         try:
             result = func(self, *args, **kwargs)
             self._attr_available = True
@@ -261,13 +262,14 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             product = self._me["product"]
             model = f"Spotify {product}"
 
-        return {
-            "identifiers": {(DOMAIN, self._id)},
-            "manufacturer": "Spotify AB",
-            "model": model,
-            "name": self._name,
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._id)},
+            manufacturer="Spotify AB",
+            model=model,
+            name=self._name,
+            entry_type="service",
+            configuration_url="https://open.spotify.com",
+        )
 
     @property
     def state(self) -> str | None:

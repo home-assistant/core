@@ -17,6 +17,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -138,13 +139,13 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         self._attr_device_class = device_class
         self._attr_name = f"{blind.blind_type}-{blind.mac[12:]}"
         self._attr_unique_id = blind.mac
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, blind.mac)},
-            "manufacturer": MANUFACTURER,
-            "name": f"{blind.blind_type}-{blind.mac[12:]}",
-            "model": blind.blind_type,
-            "via_device": (DOMAIN, config_entry.unique_id),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, blind.mac)},
+            manufacturer=MANUFACTURER,
+            model=blind.blind_type,
+            name=f"{blind.blind_type}-{blind.mac[12:]}",
+            via_device=(DOMAIN, config_entry.unique_id),
+        )
 
     @property
     def available(self):
@@ -171,6 +172,8 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
+        if self._blind.position is None:
+            return None
         return self._blind.position == 100
 
     async def async_added_to_hass(self):

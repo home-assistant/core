@@ -297,7 +297,7 @@ async def test_fan_speed(hass, hk_driver, events):
     )
     await hass.async_add_executor_job(acc.char_speed.client_update_value, 42)
     await hass.async_block_till_done()
-    assert acc.char_speed.value == 42
+    assert acc.char_speed.value == 50
     assert acc.char_active.value == 1
 
     assert call_set_percentage[0]
@@ -309,8 +309,10 @@ async def test_fan_speed(hass, hk_driver, events):
     # Verify speed is preserved from off to on
     hass.states.async_set(entity_id, STATE_OFF, {ATTR_PERCENTAGE: 42})
     await hass.async_block_till_done()
-    assert acc.char_speed.value == 42
+    assert acc.char_speed.value == 50
     assert acc.char_active.value == 0
+
+    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
 
     hk_driver.set_characteristics(
         {
@@ -325,8 +327,11 @@ async def test_fan_speed(hass, hk_driver, events):
         "mock_addr",
     )
     await hass.async_block_till_done()
-    assert acc.char_speed.value == 42
+    assert acc.char_speed.value == 50
     assert acc.char_active.value == 1
+
+    assert call_turn_on[0]
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
 
 
 async def test_fan_set_all_one_shot(hass, hk_driver, events):

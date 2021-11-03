@@ -25,6 +25,12 @@ USB = [
     },
     {
         "domain": "zha",
+        "vid": "1A86",
+        "pid": "7523",
+        "description": "*tubeszb*"
+    },
+    {
+        "domain": "zha",
         "vid": "1CF1",
         "pid": "0030",
         "description": "*conbee*"
@@ -34,6 +40,12 @@ USB = [
         "vid": "10C4",
         "pid": "8A2A",
         "description": "*zigbee*"
+    },
+    {
+        "domain": "zha",
+        "vid": "10C4",
+        "pid": "8B34",
+        "description": "*bv 2010/10*"
     },
     {
         "domain": "zwave_js",

@@ -922,12 +922,14 @@ async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
     assert msg["success"]
     assert msg["result"] == {
         "test_domain.entity_1": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
         "test_domain.entity_2": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
     }
 
@@ -942,8 +944,9 @@ async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
     assert msg["success"]
     assert msg["result"] == {
         "test_domain.entity_2": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
     }
 
@@ -962,12 +965,14 @@ async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
     assert msg["success"]
     assert msg["result"] == {
         "test_domain.entity_1": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
         "test_domain.entity_2": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
     }
 
@@ -1001,8 +1006,9 @@ async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
     assert msg["success"]
     assert msg["result"] == {
         "test_domain.entity_2": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
     }
 

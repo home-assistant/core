@@ -62,7 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Establish connection with velbus."""
     hass.data.setdefault(DOMAIN, {})
 
-    controller = Velbus(entry.data[CONF_PORT])
+    controller = Velbus(
+        entry.data[CONF_PORT],
+        cache_dir=hass.config.path(".storage/velbuscache/"),
+    )
     hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[DOMAIN][entry.entry_id]["cntrl"] = controller
     hass.data[DOMAIN][entry.entry_id]["tsk"] = hass.async_create_task(
@@ -128,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove the velbus connection."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     await hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
