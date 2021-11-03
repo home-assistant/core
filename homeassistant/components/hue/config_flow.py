@@ -182,7 +182,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: bridge.host,
                 CONF_API_KEY: app_key,
-                CONF_API_VERSION: bridge.supports_v2,
+                CONF_API_VERSION: 2 if bridge.supports_v2 else 1,
             },
         )
 

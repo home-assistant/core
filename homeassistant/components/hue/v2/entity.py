@@ -6,10 +6,10 @@ from aiohue.v2.controllers.events import EventType
 from aiohue.v2.models.clip import CLIPResource
 from aiohue.v2.models.connectivity import ConnectivityServiceStatus
 
-from homeassistant.components.hue.bridge import HueBridge
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
+from ..bridge import HueBridge
 from ..const import DOMAIN as DOMAIN
 
 

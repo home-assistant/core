@@ -9,7 +9,6 @@ import random
 import aiohue
 import async_timeout
 
-from homeassistant.components.hue.bridge import HueBridge
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -40,6 +39,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import color
 
+from ..bridge import HueBridge
 from ..const import (
     DOMAIN as HUE_DOMAIN,
     GROUP_TYPE_ENTERTAINMENT,

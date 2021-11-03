@@ -47,7 +47,7 @@ async def check_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
         # we discover its capabilities at every startup
         websession = aiohttp_client.async_get_clientsession(hass)
         supported_api_version = 2 if await is_v2_bridge(host, websession) else 1
-        supported_api_version = 1
+
         # the call to is_v2_bridge returns (silently) False even on connection error
         # so if a migration is needed it will be done on next startup
 
