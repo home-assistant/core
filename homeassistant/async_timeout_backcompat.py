@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+from typing import Any
 
 import async_timeout
 
@@ -33,9 +34,18 @@ def timeout(
     return async_timeout.Timeout(deadline, loop)
 
 
+def current_task(loop: asyncio.AbstractEventLoop) -> asyncio.Task[Any] | None:
+    """Backwards compatible current_task."""
+    _report(
+        "called async_timeout.current_task. The current_task call is deprecated and calls will fail after Home Assistant 2022.2; use asyncio.current_task instead"
+    )
+    return asyncio.current_task()
+
+
 def enable() -> None:
     """Enable backwards compat transitions."""
     async_timeout.timeout = timeout
+    async_timeout.current_task = current_task  # type: ignore[attr-defined]
 
 
 def _report(what: str) -> None:
