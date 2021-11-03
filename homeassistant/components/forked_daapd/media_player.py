@@ -621,8 +621,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        url = self._track_info.get("artwork_url")
-        if url:
+        if url := self._track_info.get("artwork_url"):
             url = self._api.full_url(url)
         return url
 
@@ -769,11 +768,10 @@ class ForkedDaapdUpdater:
     async def async_init(self):
         """Perform async portion of class initialization."""
         server_config = await self._api.get_request("config")
-        websocket_port = server_config.get("websocket_port")
-        if websocket_port:
+        if websocket_port := server_config.get("websocket_port"):
             self.websocket_handler = asyncio.create_task(
                 self._api.start_websocket_handler(
-                    server_config["websocket_port"],
+                    websocket_port,
                     WS_NOTIFY_EVENT_TYPES,
                     self._update,
                     WEBSOCKET_RECONNECT_TIME,

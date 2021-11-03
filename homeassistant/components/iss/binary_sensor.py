@@ -1,9 +1,12 @@
-"""Support for International Space Station data sensor."""
+"""Support for International Space Station binary sensor."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import pyiss
 import requests
+from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
@@ -13,7 +16,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SHOW_ON_MAP,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,18 +40,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the ISS sensor."""
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the ISS binary sensor."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+        return
 
     try:
         iss_data = IssData(hass.config.latitude, hass.config.longitude)
         iss_data.update()
-    except requests.exceptions.HTTPError as error:
+    except HTTPError as error:
         _LOGGER.error(error)
-        return False
+        return
 
     name = config.get(CONF_NAME)
     show_on_map = config.get(CONF_SHOW_ON_MAP)
@@ -56,27 +67,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class IssBinarySensor(BinarySensorEntity):
     """Implementation of the ISS binary sensor."""
 
+    _attr_device_class = DEFAULT_DEVICE_CLASS
+
     def __init__(self, iss_data, name, show):
         """Initialize the sensor."""
         self.iss_data = iss_data
         self._state = None
-        self._name = name
+        self._attr_name = name
         self._show_on_map = show
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.iss_data.is_above if self.iss_data else False
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEFAULT_DEVICE_CLASS
 
     @property
     def extra_state_attributes(self):
@@ -92,6 +95,7 @@ class IssBinarySensor(BinarySensorEntity):
             else:
                 attrs["long"] = self.iss_data.position.get("longitude")
                 attrs["lat"] = self.iss_data.position.get("latitude")
+
             return attrs
 
     def update(self):
@@ -120,6 +124,6 @@ class IssData:
             self.next_rise = iss.next_rise(self.latitude, self.longitude)
             self.number_of_people_in_space = iss.number_of_people_in_space()
             self.position = iss.current_location()
-        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
+        except (HTTPError, requests.exceptions.ConnectionError):
             _LOGGER.error("Unable to retrieve data")
             return False

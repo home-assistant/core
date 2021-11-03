@@ -35,7 +35,7 @@ async def async_setup_entry(
     """Initialize the integration."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     device = entry.data[CONF_DEVICE]
-    if device is None:
+    if (device := entry.data[CONF_DEVICE]) is None:
         device = entry.entry_id
 
     async_add_entities(

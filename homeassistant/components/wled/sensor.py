@@ -11,6 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TIMESTAMP,
     ELECTRIC_CURRENT_MILLIAMPERE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
@@ -50,6 +51,7 @@ class WLEDEstimatedCurrentSensor(WLEDEntity, SensorEntity):
     _attr_icon = "mdi:power"
     _attr_native_unit_of_measurement = ELECTRIC_CURRENT_MILLIAMPERE
     _attr_device_class = DEVICE_CLASS_CURRENT
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED estimated current sensor."""
@@ -76,6 +78,7 @@ class WLEDUptimeSensor(WLEDEntity, SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
     _attr_entity_registry_enabled_default = False
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED uptime sensor."""
@@ -96,6 +99,7 @@ class WLEDFreeHeapSensor(WLEDEntity, SensorEntity):
     _attr_icon = "mdi:memory"
     _attr_entity_registry_enabled_default = False
     _attr_native_unit_of_measurement = DATA_BYTES
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED free heap sensor."""
@@ -115,6 +119,7 @@ class WLEDWifiSignalSensor(WLEDEntity, SensorEntity):
     _attr_icon = "mdi:wifi"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_entity_registry_enabled_default = False
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED Wi-Fi signal sensor."""
@@ -136,6 +141,7 @@ class WLEDWifiRSSISensor(WLEDEntity, SensorEntity):
     _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_entity_registry_enabled_default = False
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED Wi-Fi RSSI sensor."""
@@ -156,6 +162,7 @@ class WLEDWifiChannelSensor(WLEDEntity, SensorEntity):
 
     _attr_icon = "mdi:wifi"
     _attr_entity_registry_enabled_default = False
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED Wi-Fi Channel sensor."""
@@ -176,6 +183,7 @@ class WLEDWifiBSSIDSensor(WLEDEntity, SensorEntity):
 
     _attr_icon = "mdi:wifi"
     _attr_entity_registry_enabled_default = False
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED Wi-Fi BSSID sensor."""

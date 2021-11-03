@@ -1,7 +1,7 @@
 """Broadlink entities."""
 
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 
@@ -51,13 +51,13 @@ class BroadlinkEntity(Entity):
         return self._device.update_manager.available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._device.mac_address)},
-            "manufacturer": self._device.api.manufacturer,
-            "model": self._device.api.model,
-            "name": self._device.name,
-            "sw_version": self._device.fw_version,
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._device.mac_address)},
+            identifiers={(DOMAIN, self._device.unique_id)},
+            manufacturer=self._device.api.manufacturer,
+            model=self._device.api.model,
+            name=self._device.name,
+            sw_version=self._device.fw_version,
+        )

@@ -19,7 +19,7 @@ from aiohttp.web_urldispatcher import AbstractRoute
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK, HTTP_SERVICE_UNAVAILABLE
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
@@ -40,8 +40,7 @@ class HomeAssistantView:
     @staticmethod
     def context(request: web.Request) -> Context:
         """Generate a context from a request."""
-        user = request.get("hass_user")
-        if user is None:
+        if (user := request.get("hass_user")) is None:
             return Context()
 
         return Context(user_id=user.id)
@@ -115,7 +114,7 @@ def request_handler_factory(
     async def handle(request: web.Request) -> web.StreamResponse:
         """Handle incoming request."""
         if request.app[KEY_HASS].is_stopping:
-            return web.Response(status=HTTP_SERVICE_UNAVAILABLE)
+            return web.Response(status=HTTPStatus.SERVICE_UNAVAILABLE)
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
@@ -145,7 +144,7 @@ def request_handler_factory(
             # The method handler returned a ready-made Response, how nice of it
             return result
 
-        status_code = HTTP_OK
+        status_code = HTTPStatus.OK
 
         if isinstance(result, tuple):
             result, status_code = result

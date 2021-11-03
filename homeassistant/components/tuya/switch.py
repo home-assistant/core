@@ -1,176 +1,501 @@
 """Support for Tuya switches."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from homeassistant.components.switch import DOMAIN as DEVICE_DOMAIN, SwitchEntity
+from homeassistant.components.switch import (
+    DEVICE_CLASS_OUTLET,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base import TuyaHaEntity
-from .const import (
-    DOMAIN,
-    TUYA_DEVICE_MANAGER,
-    TUYA_DISCOVERY_NEW,
-    TUYA_HA_DEVICES,
-    TUYA_HA_TUYA_MAP,
-)
+from . import HomeAssistantTuyaData
+from .base import TuyaEntity
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
-_LOGGER = logging.getLogger(__name__)
-
-TUYA_SUPPORT_TYPE = {
-    "kg",  # Switch
-    "cz",  # Socket
-    "pc",  # Power Strip
-    "bh",  # Smart Kettle
-    "dlq",  # Breaker
-    "cwysj",  # Pet Water Feeder
-    "kj",  # Air Purifier
-    "xxj",  # Diffuser
+# All descriptions can be found here. Mostly the Boolean data types in the
+# default instruction set of each category end up being a Switch.
+# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
+SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
+    # Smart Kettle
+    # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
+    "bh": (
+        SwitchEntityDescription(
+            key=DPCode.START,
+            name="Start",
+            icon="mdi:kettle-steam",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.WARM,
+            name="Heat Preservation",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Pet Water Feeder
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
+    "cwysj": (
+        SwitchEntityDescription(
+            key=DPCode.FILTER_RESET,
+            name="Filter reset",
+            icon="mdi:filter",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PUMP_RESET,
+            name="Water pump reset",
+            icon="mdi:pump",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Power",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.WATER_RESET,
+            name="Reset of water usage days",
+            icon="mdi:water-sync",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Light
+    # https://developer.tuya.com/en/docs/iot/f?id=K9i5ql3v98hn3
+    "dj": (
+        # There are sockets available with an RGB light
+        # that advertise as `dj`, but provide an additional
+        # switch to control the plug.
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Plug",
+        ),
+    ),
+    # Cirquit Breaker
+    "dlq": (
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Switch",
+        ),
+    ),
+    # Switch
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+    "kg": (
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Switch 1",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Switch 2",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            name="Switch 3",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            name="Switch 4",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_5,
+            name="Switch 5",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_6,
+            name="Switch 6",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB1,
+            name="USB 1",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB2,
+            name="USB 2",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB3,
+            name="USB 3",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB4,
+            name="USB 4",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB5,
+            name="USB 5",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB6,
+            name="USB 6",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+    ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            name="Ionizer",
+            icon="mdi:minus-circle-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FILTER_RESET,
+            name="Filter cartridge reset",
+            icon="mdi:filter",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.LOCK,
+            name="Child lock",
+            icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Power",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.WET,
+            name="Humidification",
+            icon="mdi:water-percent",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Air conditioner
+    # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
+    "kt": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            name="Ionizer",
+            icon="mdi:minus-circle-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Power Socket
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+    "pc": (
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Socket 1",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Socket 2",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            name="Socket 3",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            name="Socket 4",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_5,
+            name="Socket 5",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_6,
+            name="Socket 6",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB1,
+            name="USB 1",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB2,
+            name="USB 2",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB3,
+            name="USB 3",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB4,
+            name="USB 4",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB5,
+            name="USB 5",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_USB6,
+            name="USB 6",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Socket",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+    ),
+    # Heater
+    # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
+    "qn": (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            name="Ionizer",
+            icon="mdi:minus-circle-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Siren Alarm
+    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    "sgbj": (
+        SwitchEntityDescription(
+            key=DPCode.MUFFLING,
+            name="Mute",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Smart Camera
+    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
+    "sp": (
+        SwitchEntityDescription(
+            key=DPCode.WIRELESS_BATTERYLOCK,
+            name="Battery Lock",
+            icon="mdi:battery-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CRY_DETECTION_SWITCH,
+            icon="mdi:emoticon-cry",
+            name="Cry Detection",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.DECIBEL_SWITCH,
+            icon="mdi:microphone-outline",
+            name="Sound Detection",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.RECORD_SWITCH,
+            icon="mdi:record-rec",
+            name="Video Recording",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_RECORD,
+            icon="mdi:record-rec",
+            name="Motion Recording",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_PRIVATE,
+            icon="mdi:eye-off",
+            name="Privacy Mode",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_FLIP,
+            icon="mdi:flip-horizontal",
+            name="Flip",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_OSD,
+            icon="mdi:watermark",
+            name="Time Watermark",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BASIC_WDR,
+            icon="mdi:watermark",
+            name="Wide Dynamic Range",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_TRACKING,
+            icon="mdi:motion-sensor",
+            name="Motion Tracking",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_SWITCH,
+            icon="mdi:motion-sensor",
+            name="Motion Alarm",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # IoT Switch?
+    # Note: Undocumented
+    "tdq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Switch 1",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Switch 2",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            name="Switch 3",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Solar Light
+    # https://developer.tuya.com/en/docs/iot/tynd?id=Kaof8j02e1t98
+    "tyndj": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_SAVE_ENERGY,
+            name="Energy Saving",
+            icon="mdi:leaf",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Ceiling Light
+    # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
+    "xdd": (
+        SwitchEntityDescription(
+            key=DPCode.DO_NOT_DISTURB,
+            name="Do not disturb",
+            icon="mdi:minus-circle-outline",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Diffuser
+    # https://developer.tuya.com/en/docs/iot/categoryxxj?id=Kaiuz1f9mo6bl
+    "xxj": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Power",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_SPRAY,
+            name="Spray",
+            icon="mdi:spray",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_VOICE,
+            name="Voice",
+            icon="mdi:account-voice",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
 }
 
-# Switch(kg), Socket(cz), Power Strip(pc)
-# https://developer.tuya.com/en/docs/iot/categorykgczpc?id=Kaiuz08zj1l4y
-DPCODE_SWITCH = "switch"
-
-# Air Purifier
-# https://developer.tuya.com/en/docs/iot/categorykj?id=Kaiuz1atqo5l7
-# Pet Water Feeder
-# https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
-DPCODE_ANION = "anion"  # Air Purifier - Ionizer unit
-# Air Purifier - Filter cartridge resetting; Pet Water Feeder - Filter cartridge resetting
-DPCODE_FRESET = "filter_reset"
-DPCODE_LIGHT = "light"  # Air Purifier - Light
-DPCODE_LOCK = "lock"  # Air Purifier - Child lock
-# Air Purifier - UV sterilization; Pet Water Feeder - UV sterilization
-DPCODE_UV = "uv"
-DPCODE_WET = "wet"  # Air Purifier - Humidification unit
-DPCODE_PRESET = "pump_reset"  # Pet Water Feeder - Water pump resetting
-DPCODE_WRESET = "water_reset"  # Pet Water Feeder - Resetting of water usage days
-
-
-DPCODE_START = "start"
+# Socket (duplicate of `pc`)
+# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
+SWITCHES["cz"] = SWITCHES["pc"]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
-    _LOGGER.debug("switch init")
+    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
 
-    hass.data[DOMAIN][entry.entry_id][TUYA_HA_TUYA_MAP][
-        DEVICE_DOMAIN
-    ] = TUYA_SUPPORT_TYPE
-
-    async def async_discover_device(dev_ids):
+    @callback
+    def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered tuya sensor."""
-        _LOGGER.debug("switch add-> %s", dev_ids)
-        if not dev_ids:
-            return
-        entities = _setup_entities(hass, entry, dev_ids)
+        entities: list[TuyaSwitchEntity] = []
+        for device_id in device_ids:
+            device = hass_data.device_manager.device_map[device_id]
+            if descriptions := SWITCHES.get(device.category):
+                for description in descriptions:
+                    if (
+                        description.key in device.function
+                        or description.key in device.status
+                    ):
+                        entities.append(
+                            TuyaSwitchEntity(
+                                device, hass_data.device_manager, description
+                            )
+                        )
+
         async_add_entities(entities)
 
+    async_discover_device([*hass_data.device_manager.device_map])
+
     entry.async_on_unload(
-        async_dispatcher_connect(
-            hass, TUYA_DISCOVERY_NEW.format(DEVICE_DOMAIN), async_discover_device
-        )
+        async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
     )
 
-    device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-    device_ids = []
-    for (device_id, device) in device_manager.device_map.items():
-        if device.category in TUYA_SUPPORT_TYPE:
-            device_ids.append(device_id)
-    await async_discover_device(device_ids)
 
-
-def _setup_entities(hass, entry: ConfigEntry, device_ids: list[str]) -> list[Entity]:
-    """Set up Tuya Switch device."""
-    device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-    entities: list[Entity] = []
-    for device_id in device_ids:
-        device = device_manager.device_map[device_id]
-        if device is None:
-            continue
-
-        for function in device.function:
-            tuya_ha_switch = None
-            if device.category == "kj":
-                if function in [
-                    DPCODE_ANION,
-                    DPCODE_FRESET,
-                    DPCODE_LIGHT,
-                    DPCODE_LOCK,
-                    DPCODE_UV,
-                    DPCODE_WET,
-                ]:
-                    tuya_ha_switch = TuyaHaSwitch(device, device_manager, function)
-                    # Main device switch is handled by the Fan object
-            elif device.category == "cwysj":
-                if function in [DPCODE_FRESET, DPCODE_UV, DPCODE_PRESET, DPCODE_WRESET]:
-                    tuya_ha_switch = TuyaHaSwitch(device, device_manager, function)
-
-                if function.startswith(DPCODE_SWITCH):
-                    # Main device switch
-                    tuya_ha_switch = TuyaHaSwitch(device, device_manager, function)
-            else:
-                if function.startswith(DPCODE_START):
-                    tuya_ha_switch = TuyaHaSwitch(device, device_manager, function)
-                if function.startswith(DPCODE_SWITCH):
-                    tuya_ha_switch = TuyaHaSwitch(device, device_manager, function)
-
-            if tuya_ha_switch is not None:
-                entities.append(tuya_ha_switch)
-                hass.data[DOMAIN][entry.entry_id][TUYA_HA_DEVICES].add(
-                    tuya_ha_switch.tuya_device.id
-                )
-    return entities
-
-
-class TuyaHaSwitch(TuyaHaEntity, SwitchEntity):
+class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
     """Tuya Switch Device."""
 
-    dp_code_switch = DPCODE_SWITCH
-    dp_code_start = DPCODE_START
-
     def __init__(
-        self, device: TuyaDevice, device_manager: TuyaDeviceManager, dp_code: str = ""
+        self,
+        device: TuyaDevice,
+        device_manager: TuyaDeviceManager,
+        description: SwitchEntityDescription,
     ) -> None:
         """Init TuyaHaSwitch."""
         super().__init__(device, device_manager)
-
-        self.dp_code = dp_code
-        self.channel = (
-            dp_code.replace(DPCODE_SWITCH, "")
-            if dp_code.startswith(DPCODE_SWITCH)
-            else dp_code
-        )
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"{super().unique_id}{self.channel}"
-
-    @property
-    def name(self) -> str | None:
-        """Return Tuya device name."""
-        return f"{self.tuya_device.name}{self.channel}"
+        self.entity_description = description
+        self._attr_unique_id = f"{super().unique_id}{description.key}"
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self.tuya_device.status.get(self.dp_code, False)
+        return self.device.status.get(self.entity_description.key, False)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self._send_command([{"code": self.dp_code, "value": True}])
+        self._send_command([{"code": self.entity_description.key, "value": True}])
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self._send_command([{"code": self.dp_code, "value": False}])
+        self._send_command([{"code": self.entity_description.key, "value": False}])

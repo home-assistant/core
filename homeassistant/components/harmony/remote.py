@@ -212,8 +212,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
             if self._last_activity:
                 activity = self._last_activity
             else:
-                all_activities = self._data.activity_names
-                if all_activities:
+                if all_activities := self._data.activity_names:
                     activity = all_activities[0]
 
         if activity:
@@ -228,8 +227,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
     async def async_send_command(self, command, **kwargs):
         """Send a list of commands to one device."""
         _LOGGER.debug("%s: Send Command", self.name)
-        device = kwargs.get(ATTR_DEVICE)
-        if device is None:
+        if (device := kwargs.get(ATTR_DEVICE)) is None:
             _LOGGER.error("%s: Missing required argument: device", self.name)
             return
 
@@ -257,8 +255,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
         _LOGGER.debug(
             "%s: Writing hub configuration to file: %s", self.name, self._config_path
         )
-        json_config = self._data.json_config
-        if json_config is None:
+        if (json_config := self._data.json_config) is None:
             _LOGGER.warning("%s: No configuration received from hub", self.name)
             return
 

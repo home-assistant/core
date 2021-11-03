@@ -14,7 +14,7 @@ import async_timeout
 from soco.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from soco.events_base import Event as SonosEvent, SubscriptionBase
-from soco.exceptions import SoCoException, SoCoUPnPException
+from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
 from soco.music_library import MusicLibrary
 from soco.plugins.sharelink import ShareLinkPlugin
 from soco.snapshot import Snapshot
@@ -46,6 +46,7 @@ from .const import (
     SONOS_CREATE_ALARM,
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_MEDIA_PLAYER,
+    SONOS_CREATE_SWITCHES,
     SONOS_ENTITY_CREATED,
     SONOS_POLL_UPDATE,
     SONOS_REBOOTED,
@@ -191,8 +192,13 @@ class SonosSpeaker:
         self.muted: bool | None = None
         self.night_mode: bool | None = None
         self.dialog_mode: bool | None = None
+        self.cross_fade: bool | None = None
         self.bass_level: int | None = None
         self.treble_level: int | None = None
+
+        # Misc features
+        self.buttons_enabled: bool | None = None
+        self.status_light: bool | None = None
 
         # Grouping
         self.coordinator: SonosSpeaker | None = None
@@ -239,6 +245,8 @@ class SonosSpeaker:
             dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
         else:
             self._platforms_ready.add(SWITCH_DOMAIN)
+
+        dispatcher_send(self.hass, SONOS_CREATE_SWITCHES, self)
 
         self._event_dispatchers = {
             "AlarmClock": self.async_dispatch_alarms,
@@ -458,6 +466,9 @@ class SonosSpeaker:
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
         """Update information about currently playing media from an event."""
+        if crossfade := event.variables.get("current_crossfade_mode"):
+            self.cross_fade = bool(int(crossfade))
+
         self.hass.async_add_executor_job(self.update_media, event)
 
     @callback
@@ -528,7 +539,7 @@ class SonosSpeaker:
     ) -> None:
         """Make this player unavailable when it was not seen recently."""
         data = self.hass.data[DATA_SONOS]
-        if callback_timestamp and (zcname := data.mdns_names.get(self.soco.uid)):
+        if (zcname := data.mdns_names.get(self.soco.uid)) and callback_timestamp:
             # Called by a _seen_timer timeout, check mDNS one more time
             # This should not be checked in an "active" unseen scenario
             aiozeroconf = await zeroconf.async_get_async_instance(self.hass)
@@ -981,6 +992,11 @@ class SonosSpeaker:
         self.dialog_mode = self.soco.dialog_mode
         self.bass_level = self.soco.bass
         self.treble_level = self.soco.treble
+
+        try:
+            self.cross_fade = self.soco.cross_fade
+        except SoCoSlaveException:
+            pass
 
     def update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""

@@ -1,7 +1,5 @@
 """Support for Samsung Printers with SyncThru web interface."""
 
-import logging
-
 from pysyncthru import SyncThru, SyncthruState
 
 from homeassistant.components.binary_sensor import (
@@ -17,8 +15,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import device_identifiers
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SYNCTHRU_STATE_PROBLEM = {
     SyncthruState.INVALID: True,

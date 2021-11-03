@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u041c\u0435\u0441\u0442\u043e\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0435\u0442\u043e \u0432\u0435\u0447\u0435 \u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0438\u0440\u0430\u043d\u043e"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "interval_seconds": "\u0418\u043d\u0442\u0435\u0440\u0432\u0430\u043b \u043d\u0430 \u0441\u043a\u0430\u043d\u0438\u0440\u0430\u043d\u0435"
+                }
+            }
+        }
+    },
+    "title": "Nmap Tracker"
+}

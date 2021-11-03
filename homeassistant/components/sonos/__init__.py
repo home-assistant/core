@@ -121,8 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hosts = config.get(CONF_HOSTS, [])
     _LOGGER.debug("Reached async_setup_entry, config=%s", config)
 
-    advertise_addr = config.get(CONF_ADVERTISE_ADDR)
-    if advertise_addr:
+    if advertise_addr := config.get(CONF_ADVERTISE_ADDR):
         soco_config.EVENT_ADVERTISE_IP = advertise_addr
 
     if deprecated_address := config.get(CONF_INTERFACE_ADDR):

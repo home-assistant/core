@@ -9,16 +9,7 @@ from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSO
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-    CONF_HOST,
-    CONF_NAME,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_MODEL, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -54,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except exceptions.ConnectError as ex:
         raise ConfigEntryNotReady(f"Failed to connect to device: {ex}") from ex
 
-    async def async_update_data():
+    async def async_update_data() -> None:
         """Fetch data from API endpoint."""
         try:
             await api.get_state()
@@ -68,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_data,
         update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
+    await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
@@ -108,10 +100,10 @@ class YetiEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
-            ATTR_MANUFACTURER: "Goal Zero",
-            ATTR_NAME: self._name,
-            ATTR_MODEL: self.api.sysdata.get(ATTR_MODEL),
-            ATTR_SW_VERSION: self.api.data.get("firmwareVersion"),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._server_unique_id)},
+            manufacturer="Goal Zero",
+            model=self.api.sysdata[ATTR_MODEL],
+            name=self._name,
+            sw_version=self.api.data["firmwareVersion"],
+        )

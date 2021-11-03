@@ -76,10 +76,11 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     @property
     def percentage(self):
         """Return the current speed."""
-        if self.smartfan.mode == "manual":
-            current_level = self.smartfan.fan_level
-            if current_level is not None:
-                return ranged_value_to_percentage(SPEED_RANGE, current_level)
+        if (
+            self.smartfan.mode == "manual"
+            and (current_level := self.smartfan.fan_level) is not None
+        ):
+            return ranged_value_to_percentage(SPEED_RANGE, current_level)
         return None
 
     @property

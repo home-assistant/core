@@ -94,8 +94,7 @@ class SlideCover(CoverEntity):
     @property
     def current_cover_position(self):
         """Return the current position of cover shutter."""
-        pos = self._slide["pos"]
-        if pos is not None:
+        if (pos := self._slide["pos"]) is not None:
             if (1 - pos) <= DEFAULT_OFFSET or pos <= DEFAULT_OFFSET:
                 pos = round(pos)
             if not self._invert:

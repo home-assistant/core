@@ -33,6 +33,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -288,6 +289,14 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         await self.coordinator.musiccast.set_volume_level(self._zone_id, volume)
         self.async_write_ha_state()
 
+    async def async_volume_up(self):
+        """Turn volume up for media player."""
+        await self.coordinator.musiccast.volume_up(self._zone_id)
+
+    async def async_volume_down(self):
+        """Turn volume down for media player."""
+        await self.coordinator.musiccast.volume_down(self._zone_id)
+
     async def async_media_play(self):
         """Send play command."""
         if self._is_netusb:
@@ -460,7 +469,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         if ZoneFeature.POWER in zone.features:
             supported_features |= SUPPORT_TURN_ON | SUPPORT_TURN_OFF
         if ZoneFeature.VOLUME in zone.features:
-            supported_features |= SUPPORT_VOLUME_SET
+            supported_features |= SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
         if ZoneFeature.MUTE in zone.features:
             supported_features |= SUPPORT_VOLUME_MUTE
 
@@ -664,8 +673,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         """Return all media players of the current group, if the media player is server."""
         if self.is_client:
             # If we are a client we can still share group information, but we will take them from the server.
-            server = self.group_server
-            if server != self:
+            if (server := self.group_server) != self:
                 return server.musiccast_group
 
             return [self]

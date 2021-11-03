@@ -25,12 +25,12 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     unique_id = config_entry.unique_id
     assert unique_id is not None
-    device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, unique_id)},
-        "name": DEFAULT_NAME,
-        "manufacturer": ATTR_MANUFACTURER,
-        "model": config_entry.title,
-    }
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, unique_id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=config_entry.title,
+        name=DEFAULT_NAME,
+    )
 
     async_add_entities(
         [BraviaTVRemote(coordinator, DEFAULT_NAME, unique_id, device_info)]

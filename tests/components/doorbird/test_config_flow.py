@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 import requests
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
@@ -38,7 +38,7 @@ def _get_mock_doorbirdapi_side_effects(ready=None, info=None):
 
 async def test_user_form(hass):
     """Test we get the user form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -77,7 +77,6 @@ async def test_user_form(hass):
 
 async def test_form_zeroconf_wrong_oui(hass):
     """Test we abort when we get the wrong OUI via zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -94,7 +93,6 @@ async def test_form_zeroconf_wrong_oui(hass):
 
 async def test_form_zeroconf_link_local_ignored(hass):
     """Test we abort when we get a link local address via zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -114,7 +112,6 @@ async def test_form_zeroconf_correct_oui(hass):
     doorbirdapi = _get_mock_doorbirdapi_return_values(
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}
     )
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",
@@ -174,7 +171,6 @@ async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}
     )
     type(doorbirdapi).doorbell_state = MagicMock(side_effect=doorbell_state_side_effect)
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.doorbird.config_flow.DoorBird",

@@ -111,8 +111,7 @@ class ZMSensorMonitors(SensorEntity):
 
     def update(self):
         """Update the sensor."""
-        state = self._monitor.function
-        if not state:
+        if not (state := self._monitor.function):
             self._state = None
         else:
             self._state = state.value

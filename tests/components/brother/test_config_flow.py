@@ -150,6 +150,24 @@ async def test_zeroconf_snmp_error(hass):
         assert result["reason"] == "cannot_connect"
 
 
+async def test_zeroconf_unsupported_model(hass):
+    """Test unsupported printer model error."""
+    with patch("brother.Brother._get_data") as mock_get_data:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={
+                "hostname": "example.local.",
+                "name": "Brother Printer",
+                "properties": {"product": "MFC-8660DN"},
+            },
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "unsupported_model"
+        assert len(mock_get_data.mock_calls) == 0
+
+
 async def test_zeroconf_device_exists_abort(hass):
     """Test we abort zeroconf flow if Brother printer already configured."""
     with patch(
@@ -168,6 +186,23 @@ async def test_zeroconf_device_exists_abort(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_no_probe_existing_device(hass):
+    """Test we do not probe the device is the host is already configured."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG)
+    entry.add_to_hass(hass)
+    with patch("brother.Brother._get_data") as mock_get_data:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={"hostname": "localhost", "name": "Brother Printer"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_get_data.mock_calls) == 0
 
 
 async def test_zeroconf_confirm_create_entry(hass):

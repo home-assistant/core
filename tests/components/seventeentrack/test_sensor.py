@@ -166,7 +166,7 @@ async def test_invalid_config(hass):
     """Ensure nothing is created when config is wrong."""
     assert await async_setup_component(hass, "sensor", INVALID_CONFIG)
 
-    assert not hass.states.async_entity_ids()
+    assert not hass.states.async_entity_ids("sensor")
 
 
 async def test_add_package(hass):

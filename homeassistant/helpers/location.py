@@ -51,9 +51,7 @@ def find_coordinates(
     hass: HomeAssistant, entity_id: str, recursion_history: list | None = None
 ) -> str | None:
     """Find the gps coordinates of the entity in the form of '90.000,180.000'."""
-    entity_state = hass.states.get(entity_id)
-
-    if entity_state is None:
+    if (entity_state := hass.states.get(entity_id)) is None:
         _LOGGER.error("Unable to find entity %s", entity_id)
         return None
 

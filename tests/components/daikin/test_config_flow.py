@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import PropertyMock, patch
 
 from aiohttp import ClientError, web_exceptions
+from pydaikin.exceptions import DaikinException
 import pytest
 
 from homeassistant.components.daikin.const import KEY_MAC
@@ -85,6 +86,7 @@ async def test_abort_if_already_setup(hass, mock_daikin):
         (asyncio.TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (web_exceptions.HTTPForbidden, "invalid_auth"),
+        (DaikinException, "unknown"),
         (Exception, "unknown"),
     ],
 )
