@@ -65,6 +65,18 @@ async def test_setup_platform_valid_config(hass):
         "aurorapy.client.AuroraSerialClient.measure",
         side_effect=_simulated_returns,
     ), patch(
+        "aurorapy.client.AuroraSerialClient.serial_number",
+        return_value="9876543",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.version",
+        return_value="9.8.7.6",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.pn",
+        return_value="A.B.C",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.firmware",
+        return_value="1.234",
+    ), patch(
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=_simulated_returns,
     ), assert_setup_component(
@@ -95,6 +107,18 @@ async def test_sensors(hass):
         "aurorapy.client.AuroraSerialClient.measure",
         side_effect=_simulated_returns,
     ), patch(
+        "aurorapy.client.AuroraSerialClient.serial_number",
+        return_value="9876543",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.version",
+        return_value="9.8.7.6",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.pn",
+        return_value="A.B.C",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.firmware",
+        return_value="1.234",
+    ), patch(
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
         side_effect=_simulated_returns,
     ):
@@ -123,6 +147,18 @@ async def test_sensor_dark(hass):
     # sun is up
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.serial_number",
+        return_value="9876543",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.version",
+        return_value="9.8.7.6",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.pn",
+        return_value="A.B.C",
+    ), patch(
+        "aurorapy.client.AuroraSerialClient.firmware",
+        return_value="1.234",
     ):
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)
