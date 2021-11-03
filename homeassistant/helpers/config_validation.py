@@ -1444,6 +1444,7 @@ currency = vol.In(
         "YER",
         "ZAR",
         "ZMK",
+        "ZMW",
         "ZWL",
     },
     msg="invalid ISO 4217 formatted currency",
