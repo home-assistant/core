@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_TYPE,
     STATE_HOME,
-    STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
@@ -43,24 +42,14 @@ async def async_get_conditions(
             continue
 
         # Add conditions for each entity that belongs to this integration
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_home",
-            }
-        )
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_not_home",
-            }
-        )
+        base_condition = {
+            CONF_CONDITION: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
+        conditions += [{**base_condition, CONF_TYPE: cond} for cond in CONDITION_TYPES]
 
     return conditions
 
@@ -72,14 +61,15 @@ def async_condition_from_config(
     """Create a function to test a device condition."""
     if config_validation:
         config = CONDITION_SCHEMA(config)
-    if config[CONF_TYPE] == "is_home":
-        state = STATE_HOME
-    else:
-        state = STATE_NOT_HOME
+
+    reverse = config[CONF_TYPE] == "is_not_home"
 
     @callback
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""
-        return condition.state(hass, config[ATTR_ENTITY_ID], state)
+        result = condition.state(hass, config[ATTR_ENTITY_ID], STATE_HOME)
+        if reverse:
+            result = not result
+        return result
 
     return test_is_state

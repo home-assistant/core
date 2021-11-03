@@ -6,7 +6,7 @@
             "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen."
         },
         "create_entry": {
-            "default": "Erfolgreiche Authentifizierung mit Ambiclimate"
+            "default": "Erfolgreich authentifiziert"
         },
         "error": {
             "follow_link": "Bitte folge dem Link und authentifizieren dich, bevor du auf Senden klickst",

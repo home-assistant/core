@@ -78,7 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         }
 
-    # pylint: disable=abstract-class-instantiated
     sentry_sdk.init(
         dsn=entry.data[CONF_DSN],
         environment=entry.options.get(CONF_ENVIRONMENT),
@@ -155,8 +154,7 @@ def process_before_send(
     ]
 
     # Add additional tags based on what caused the event.
-    platform = entity_platform.current_platform.get()
-    if platform is not None:
+    if (platform := entity_platform.current_platform.get()) is not None:
         # This event happened in a platform
         additional_tags["custom_component"] = "no"
         additional_tags["integration"] = platform.platform_name

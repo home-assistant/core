@@ -48,6 +48,12 @@
                 "description": "Configurare il tracciamento del dispositivo",
                 "title": "Opzioni UniFi 1/3"
             },
+            "init": {
+                "data": {
+                    "one": "Pi\u00f9",
+                    "other": "Altri"
+                }
+            },
             "simple_options": {
                 "data": {
                     "block_client": "Client controllati per l'accesso alla rete",

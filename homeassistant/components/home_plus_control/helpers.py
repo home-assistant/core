@@ -20,7 +20,7 @@ class HomePlusControlOAuth2Implementation(
         subscription_key (str): Subscription key obtained from the API provider.
         authorize_url (str): Authorization URL initiate authentication flow.
         token_url (str): URL to retrieve access/refresh tokens.
-        name (str): Name of the implementation (appears in the HomeAssitant GUI).
+        name (str): Name of the implementation (appears in the HomeAssistant GUI).
     """
 
     def __init__(

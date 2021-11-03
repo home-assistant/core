@@ -4,7 +4,7 @@
             "invalid_account_format": "The account is not a hex value, please use only 0-9 and A-F.",
             "invalid_account_length": "The account is not the right length, it has to be between 3 and 16 characters.",
             "invalid_key_format": "The key is not a hex value, please use only 0-9 and A-F.",
-            "invalid_key_length": "The key is not the right length, it has to be 16, 24 or 32 characters hex characters.",
+            "invalid_key_length": "The key is not the right length, it has to be 16, 24 or 32 hex characters.",
             "invalid_ping": "The ping interval needs to be between 1 and 1440 minutes.",
             "invalid_zones": "There needs to be at least 1 zone.",
             "unknown": "Unexpected error"

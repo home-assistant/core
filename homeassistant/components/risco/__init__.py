@@ -27,7 +27,7 @@ LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Risco from a config entry."""
     data = entry.data
     risco = RiscoAPI(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
@@ -57,10 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def start_platforms():
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         await events_coordinator.async_refresh()
 
@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

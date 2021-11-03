@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CLIMATE_DOMAIN, SWITCH_DOMAIN]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Gree Climate from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     gree_discovery = DiscoveryService(hass)
@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if hass.data[DOMAIN].get(DISPATCHERS) is not None:
         for cleanup in hass.data[DOMAIN][DISPATCHERS]:

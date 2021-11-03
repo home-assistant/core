@@ -28,7 +28,7 @@ async def test_unload_entry(hass):
         assert DOMAIN not in hass.data
 
 
-async def test_unkown_error(hass, caplog):
+async def test_unknown_error(hass, caplog):
     """Test unload for Kraken."""
     with patch(
         "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",

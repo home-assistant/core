@@ -23,6 +23,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
 from homeassistant.const import STATE_OFF
 from homeassistant.setup import async_setup_component
 
@@ -45,6 +46,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -923,6 +925,13 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     )
 
 
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG, MQTT_CLIMATE_ATTRIBUTES_BLOCKED
+    )
+
+
 async def test_setting_attribute_with_template(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
@@ -982,10 +991,10 @@ async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_climate(hass, mqtt_mock, caplog):
     """Test update of discovered climate."""
-    data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk" }'
+    config1 = {"name": "Beer"}
+    config2 = {"name": "Milk"}
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, config1, config2
     )
 
 

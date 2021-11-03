@@ -10,6 +10,13 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_SW_VERSION,
     CONF_ADDRESS,
     CONF_NAME,
     CONF_PROTOCOL,
@@ -22,7 +29,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF, DOMAIN
 
@@ -57,10 +64,10 @@ async def async_setup_entry(hass, entry):
     async def setup_platforms():
         """Set up platforms and initiate connection."""
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         await manager.init()
 
@@ -83,12 +90,15 @@ async def async_unload_entry(hass, entry):
 class AppleTVEntity(Entity):
     """Device that sends commands to an Apple TV."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, identifier, manager):
         """Initialize device."""
         self.atv = None
         self.manager = manager
-        self._name = name
-        self._identifier = identifier
+        self._attr_name = name
+        self._attr_unique_id = identifier
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, identifier)})
 
     async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
@@ -109,13 +119,13 @@ class AppleTVEntity(Entity):
 
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{SIGNAL_CONNECTED}_{self._identifier}", _async_connected
+                self.hass, f"{SIGNAL_CONNECTED}_{self.unique_id}", _async_connected
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_DISCONNECTED}_{self._identifier}",
+                f"{SIGNAL_DISCONNECTED}_{self.unique_id}",
                 _async_disconnected,
             )
         )
@@ -125,28 +135,6 @@ class AppleTVEntity(Entity):
 
     def async_device_disconnected(self):
         """Handle when connection was lost to device."""
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._identifier
-
-    @property
-    def should_poll(self):
-        """No polling needed for Apple TV."""
-        return False
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._identifier)},
-        }
 
 
 class AppleTVManager:
@@ -270,7 +258,7 @@ class AppleTVManager:
 
         self.hass.components.persistent_notification.create(
             "An irrecoverable connection problem occurred when connecting to "
-            f"`f{name}`. Please go to the Integrations page and reconfigure it",
+            f"`{name}`. Please go to the Integrations page and reconfigure it",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -329,7 +317,7 @@ class AppleTVManager:
         self._dispatch_send(SIGNAL_CONNECTED, self.atv)
         self._address_updated(str(conf.address))
 
-        await self._async_setup_device_registry()
+        self._async_setup_device_registry()
 
         self._connection_attempts = 0
         if self._connection_was_lost:
@@ -339,29 +327,32 @@ class AppleTVManager:
             )
             self._connection_was_lost = False
 
-    async def _async_setup_device_registry(self):
+    @callback
+    def _async_setup_device_registry(self):
         attrs = {
-            "identifiers": {(DOMAIN, self.config_entry.unique_id)},
-            "manufacturer": "Apple",
-            "name": self.config_entry.data[CONF_NAME],
+            ATTR_IDENTIFIERS: {(DOMAIN, self.config_entry.unique_id)},
+            ATTR_MANUFACTURER: "Apple",
+            ATTR_NAME: self.config_entry.data[CONF_NAME],
         }
 
-        area = attrs["name"]
+        area = attrs[ATTR_NAME]
         name_trailer = f" {DEFAULT_NAME}"
         if area.endswith(name_trailer):
             area = area[: -len(name_trailer)]
-        attrs["suggested_area"] = area
+        attrs[ATTR_SUGGESTED_AREA] = area
 
         if self.atv:
             dev_info = self.atv.device_info
 
-            attrs["model"] = DEFAULT_NAME + " " + dev_info.model.name.replace("Gen", "")
-            attrs["sw_version"] = dev_info.version
+            attrs[ATTR_MODEL] = (
+                DEFAULT_NAME + " " + dev_info.model.name.replace("Gen", "")
+            )
+            attrs[ATTR_SW_VERSION] = dev_info.version
 
             if dev_info.mac:
-                attrs["connections"] = {(dr.CONNECTION_NETWORK_MAC, dev_info.mac)}
+                attrs[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, dev_info.mac)}
 
-        device_registry = await dr.async_get_registry(self.hass)
+        device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id, **attrs
         )

@@ -59,7 +59,7 @@ PLATFORMS = ["cover", "scene", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hunter Douglas PowerView from a config entry."""
 
     config = entry.data
@@ -162,7 +162,7 @@ def _async_map_data_by_id(data):
     return {entry[ATTR_ID]: entry for entry in data}
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

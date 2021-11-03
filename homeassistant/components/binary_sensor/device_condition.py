@@ -4,9 +4,10 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.device_automation.const import CONF_IS_OFF, CONF_IS_ON
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
+from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
     async_get_registry,
@@ -33,13 +34,18 @@ from . import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_RUNNING,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
+    DEVICE_CLASS_TAMPER,
+    DEVICE_CLASS_UPDATE,
     DEVICE_CLASS_VIBRATION,
     DEVICE_CLASS_WINDOW,
     DOMAIN,
 )
+
+# mypy: disallow-any-generics
 
 DEVICE_CLASS_NONE = "none"
 
@@ -75,12 +81,18 @@ CONF_IS_PRESENT = "is_present"
 CONF_IS_NOT_PRESENT = "is_not_present"
 CONF_IS_PROBLEM = "is_problem"
 CONF_IS_NO_PROBLEM = "is_no_problem"
+CONF_IS_RUNNING = "is_running"
+CONF_IS_NOT_RUNNING = "is_not_running"
 CONF_IS_UNSAFE = "is_unsafe"
 CONF_IS_NOT_UNSAFE = "is_not_unsafe"
 CONF_IS_SMOKE = "is_smoke"
 CONF_IS_NO_SMOKE = "is_no_smoke"
 CONF_IS_SOUND = "is_sound"
 CONF_IS_NO_SOUND = "is_no_sound"
+CONF_IS_TAMPERED = "is_tampered"
+CONF_IS_NOT_TAMPERED = "is_not_tampered"
+CONF_IS_UPDATE = "is_update"
+CONF_IS_NO_UPDATE = "is_no_update"
 CONF_IS_VIBRATION = "is_vibration"
 CONF_IS_NO_VIBRATION = "is_no_vibration"
 CONF_IS_OPEN = "is_open"
@@ -104,8 +116,11 @@ IS_ON = [
     CONF_IS_POWERED,
     CONF_IS_PRESENT,
     CONF_IS_PROBLEM,
+    CONF_IS_RUNNING,
     CONF_IS_SMOKE,
     CONF_IS_SOUND,
+    CONF_IS_TAMPERED,
+    CONF_IS_UPDATE,
     CONF_IS_UNSAFE,
     CONF_IS_VIBRATION,
     CONF_IS_ON,
@@ -125,13 +140,16 @@ IS_OFF = [
     CONF_IS_NOT_PLUGGED_IN,
     CONF_IS_NOT_POWERED,
     CONF_IS_NOT_PRESENT,
+    CONF_IS_NOT_TAMPERED,
     CONF_IS_NOT_UNSAFE,
     CONF_IS_NO_GAS,
     CONF_IS_NO_LIGHT,
     CONF_IS_NO_MOTION,
     CONF_IS_NO_PROBLEM,
+    CONF_IS_NOT_RUNNING,
     CONF_IS_NO_SMOKE,
     CONF_IS_NO_SOUND,
+    CONF_IS_NO_UPDATE,
     CONF_IS_NO_VIBRATION,
     CONF_IS_OFF,
 ]
@@ -183,9 +201,18 @@ ENTITY_CONDITIONS = {
         {CONF_TYPE: CONF_IS_PROBLEM},
         {CONF_TYPE: CONF_IS_NO_PROBLEM},
     ],
+    DEVICE_CLASS_RUNNING: [
+        {CONF_TYPE: CONF_IS_RUNNING},
+        {CONF_TYPE: CONF_IS_NOT_RUNNING},
+    ],
     DEVICE_CLASS_SAFETY: [{CONF_TYPE: CONF_IS_UNSAFE}, {CONF_TYPE: CONF_IS_NOT_UNSAFE}],
     DEVICE_CLASS_SMOKE: [{CONF_TYPE: CONF_IS_SMOKE}, {CONF_TYPE: CONF_IS_NO_SMOKE}],
     DEVICE_CLASS_SOUND: [{CONF_TYPE: CONF_IS_SOUND}, {CONF_TYPE: CONF_IS_NO_SOUND}],
+    DEVICE_CLASS_TAMPER: [
+        {CONF_TYPE: CONF_IS_TAMPERED},
+        {CONF_TYPE: CONF_IS_NOT_TAMPERED},
+    ],
+    DEVICE_CLASS_UPDATE: [{CONF_TYPE: CONF_IS_UPDATE}, {CONF_TYPE: CONF_IS_NO_UPDATE}],
     DEVICE_CLASS_VIBRATION: [
         {CONF_TYPE: CONF_IS_VIBRATION},
         {CONF_TYPE: CONF_IS_NO_VIBRATION},
@@ -216,10 +243,7 @@ async def async_get_conditions(
     ]
 
     for entry in entries:
-        device_class = DEVICE_CLASS_NONE
-        state = hass.states.get(entry.entity_id)
-        if state and ATTR_DEVICE_CLASS in state.attributes:
-            device_class = state.attributes[ATTR_DEVICE_CLASS]
+        device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
 
         templates = ENTITY_CONDITIONS.get(
             device_class, ENTITY_CONDITIONS[DEVICE_CLASS_NONE]
@@ -262,7 +286,9 @@ def async_condition_from_config(
     return condition.state_from_config(state_config)
 
 
-async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     return {
         "extra_fields": vol.Schema(

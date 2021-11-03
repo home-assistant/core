@@ -34,9 +34,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     file_path = config.get(CONF_FILE_PATH)
     name = config.get(CONF_NAME)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
 
-    if value_template is not None:
+    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
         value_template.hass = hass
 
     if hass.config.is_allowed_path(file_path):
@@ -62,7 +61,7 @@ class FileSensor(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
@@ -72,7 +71,7 @@ class FileSensor(SensorEntity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

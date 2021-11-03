@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Google Hangouts ist bereits konfiguriert",
+            "already_configured": "Der Dienst ist bereits konfiguriert",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
@@ -20,7 +20,7 @@
             "user": {
                 "data": {
                     "authorization_code": "Autorisierungscode (f\u00fcr die manuelle Authentifizierung erforderlich)",
-                    "email": "E-Mail-Adresse",
+                    "email": "E-Mail",
                     "password": "Passwort"
                 },
                 "description": "Leer",

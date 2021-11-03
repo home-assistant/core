@@ -29,16 +29,13 @@ class LutronOccupancySensor(LutronDevice, BinarySensorEntity):
     reported as a single occupancy group.
     """
 
+    _attr_device_class = DEVICE_CLASS_OCCUPANCY
+
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         # Error cases will end up treated as unoccupied.
         return self._lutron_device.state == OccupancyGroup.State.OCCUPIED
-
-    @property
-    def device_class(self):
-        """Return that this is an occupancy sensor."""
-        return DEVICE_CLASS_OCCUPANCY
 
     @property
     def name(self):

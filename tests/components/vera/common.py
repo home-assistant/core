@@ -65,7 +65,7 @@ def new_simple_controller_config(
     setup_callback: SetupCallback = None,
     legacy_entity_unique_id=False,
 ) -> ControllerConfig:
-    """Create simple contorller config."""
+    """Create simple controller config."""
     return ControllerConfig(
         config=config or {CONF_CONTROLLER: "http://127.0.0.1:123"},
         options=options,

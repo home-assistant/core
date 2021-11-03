@@ -12,7 +12,7 @@ from boschshcpy.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.zeroconf import async_get_instance
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
 
 from .const import (
@@ -36,11 +36,11 @@ HOST_SCHEMA = vol.Schema(
 def write_tls_asset(hass: core.HomeAssistant, filename: str, asset: bytes) -> None:
     """Write the tls assets to disk."""
     makedirs(hass.config.path(DOMAIN), exist_ok=True)
-    with open(hass.config.path(DOMAIN, filename), "w") as file_handle:
+    with open(hass.config.path(DOMAIN, filename), "w", encoding="utf8") as file_handle:
         file_handle.write(asset.decode("utf-8"))
 
 
-def create_credentials_and_validate(hass, host, user_input, zeroconf):
+def create_credentials_and_validate(hass, host, user_input, zeroconf_instance):
     """Create and store credentials and validate session."""
     helper = SHCRegisterClient(host, user_input[CONF_PASSWORD])
     result = helper.register(host, "HomeAssistant")
@@ -54,21 +54,21 @@ def create_credentials_and_validate(hass, host, user_input, zeroconf):
             hass.config.path(DOMAIN, CONF_SHC_CERT),
             hass.config.path(DOMAIN, CONF_SHC_KEY),
             True,
-            zeroconf,
+            zeroconf_instance,
         )
         session.authenticate()
 
     return result
 
 
-def get_info_from_host(hass, host, zeroconf):
+def get_info_from_host(hass, host, zeroconf_instance):
     """Get information from host."""
     session = SHCSession(
         host,
         "",
         "",
         True,
-        zeroconf,
+        zeroconf_instance,
     )
     information = session.mdns_info()
     return {"title": information.name, "unique_id": information.unique_id}
@@ -123,14 +123,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the credentials step."""
         errors = {}
         if user_input is not None:
-            zeroconf = await async_get_instance(self.hass)
+            zeroconf_instance = await zeroconf.async_get_instance(self.hass)
             try:
                 result = await self.hass.async_add_executor_job(
                     create_credentials_and_validate,
                     self.hass,
                     self.host,
                     user_input,
-                    zeroconf,
+                    zeroconf_instance,
                 )
             except SHCAuthenticationError:
                 errors["base"] = "invalid_auth"
@@ -183,20 +183,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle zeroconf discovery."""
-        if not discovery_info.get("name", "").startswith("Bosch SHC"):
+        if not discovery_info.get(zeroconf.ATTR_NAME, "").startswith("Bosch SHC"):
             return self.async_abort(reason="not_bosch_shc")
 
         try:
-            self.info = info = await self._get_info(discovery_info["host"])
+            hosts = (
+                discovery_info[zeroconf.ATTR_HOST]
+                if isinstance(discovery_info[zeroconf.ATTR_HOST], list)
+                else [discovery_info[zeroconf.ATTR_HOST]]
+            )
+            for host in hosts:
+                if host.startswith("169."):  # skip link local address
+                    continue
+                self.info = await self._get_info(host)
+                self.host = host
+            if self.host is None:
+                return self.async_abort(reason="cannot_connect")
         except SHCConnectionError:
             return self.async_abort(reason="cannot_connect")
 
-        local_name = discovery_info["hostname"][:-1]
+        local_name = discovery_info[zeroconf.ATTR_HOSTNAME][:-1]
         node_name = local_name[: -len(".local")]
 
-        await self.async_set_unique_id(info["unique_id"])
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
-        self.host = discovery_info["host"]
+        await self.async_set_unique_id(self.info["unique_id"])
+        self._abort_if_unique_id_configured({CONF_HOST: self.host})
         self.context["title_placeholders"] = {"name": node_name}
         return await self.async_step_confirm_discovery()
 
@@ -217,11 +227,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _get_info(self, host):
         """Get additional information."""
-        zeroconf = await async_get_instance(self.hass)
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
 
         return await self.hass.async_add_executor_job(
             get_info_from_host,
             self.hass,
             host,
-            zeroconf,
+            zeroconf_instance,
         )

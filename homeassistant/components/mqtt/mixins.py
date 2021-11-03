@@ -2,27 +2,43 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable
 import json
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_ICON, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import (
+    ATTR_CONFIGURATION_URL,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_SW_VERSION,
+    ATTR_VIA_DEVICE,
+    CONF_DEVICE,
+    CONF_ENTITY_CATEGORY,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA, DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
-from . import CONF_TOPIC, DATA_MQTT, debug_info, publish, subscription
+from . import DATA_MQTT, debug_info, publish, subscription
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
+    CONF_AVAILABILITY,
     CONF_QOS,
+    CONF_TOPIC,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DOMAIN,
@@ -37,7 +53,7 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import Message
+from .models import ReceiveMessage
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
 from .util import valid_subscribe_topic
 
@@ -49,7 +65,6 @@ AVAILABILITY_LATEST = "latest"
 
 AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
 
-CONF_AVAILABILITY = "availability"
 CONF_AVAILABILITY_MODE = "availability_mode"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
 CONF_ENABLED_BY_DEFAULT = "enabled_by_default"
@@ -66,6 +81,27 @@ CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
+CONF_CONFIGURATION_URL = "configuration_url"
+
+MQTT_ATTRIBUTES_BLOCKED = {
+    "assumed_state",
+    "available",
+    "context_recent_time",
+    "device_class",
+    "device_info",
+    "entity_category",
+    "entity_picture",
+    "entity_registry_enabled_default",
+    "extra_state_attributes",
+    "force_update",
+    "icon",
+    "name",
+    "should_poll",
+    "state",
+    "supported_features",
+    "unique_id",
+    "unit_of_measurement",
+}
 
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
@@ -88,7 +124,7 @@ MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
             cv.ensure_list,
             [
                 {
-                    vol.Optional(CONF_TOPIC): valid_subscribe_topic,
+                    vol.Required(CONF_TOPIC): valid_subscribe_topic,
                     vol.Optional(
                         CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
                     ): cv.string,
@@ -133,6 +169,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
             vol.Optional(CONF_SUGGESTED_AREA): cv.string,
+            vol.Optional(CONF_CONFIGURATION_URL): cv.url,
         }
     ),
     validate_device_has_at_least_one_identifier,
@@ -142,6 +179,7 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
+        vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
@@ -175,9 +213,11 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
 class MqttAttributes(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
+    _attributes_extra_blocked: frozenset[str] = frozenset()
+
     def __init__(self, config: dict) -> None:
         """Initialize the JSON attributes mixin."""
-        self._attributes = None
+        self._attributes: dict | None = None
         self._attributes_sub_state = None
         self._attributes_config = config
 
@@ -199,14 +239,20 @@ class MqttAttributes(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def attributes_message_received(msg: Message) -> None:
+        def attributes_message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if attr_tpl is not None:
                     payload = attr_tpl.async_render_with_possible_json_value(payload)
-                json_dict = json.loads(payload)
+                json_dict = json.loads(payload) if isinstance(payload, str) else None
                 if isinstance(json_dict, dict):
-                    self._attributes = json_dict
+                    filtered_dict = {
+                        k: v
+                        for k, v in json_dict.items()
+                        if k not in MQTT_ATTRIBUTES_BLOCKED
+                        and k not in self._attributes_extra_blocked
+                    }
+                    self._attributes = filtered_dict
                     self.async_write_ha_state()
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
@@ -245,7 +291,7 @@ class MqttAvailability(Entity):
     def __init__(self, config: dict) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
-        self._available = {}
+        self._available: dict = {}
         self._available_latest = False
         self._availability_setup_from_config(config)
 
@@ -290,7 +336,7 @@ class MqttAvailability(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def availability_message_received(msg: Message) -> None:
+        def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
             if msg.payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
@@ -302,7 +348,10 @@ class MqttAvailability(Entity):
 
             self.async_write_ha_state()
 
-        self._available = {topic: False for topic in self._avail_topics}
+        self._available = {
+            topic: (self._available[topic] if topic in self._available else False)
+            for topic in self._avail_topics
+        }
         topics = {
             f"availability_{topic}": {
                 "topic": topic,
@@ -370,7 +419,7 @@ class MqttDiscoveryUpdate(Entity):
         """Initialize the discovery update mixin."""
         self._discovery_data = discovery_data
         self._discovery_update = discovery_update
-        self._remove_signal = None
+        self._remove_signal: Callable | None = None
         self._removed_from_hass = False
 
     async def async_added_to_hass(self) -> None:
@@ -471,33 +520,36 @@ class MqttDiscoveryUpdate(Entity):
             self._remove_signal = None
 
 
-def device_info_from_config(config):
+def device_info_from_config(config) -> DeviceInfo | None:
     """Return a device description for device registry."""
     if not config:
         return None
 
-    info = {
-        "identifiers": {(DOMAIN, id_) for id_ in config[CONF_IDENTIFIERS]},
-        "connections": {tuple(x) for x in config[CONF_CONNECTIONS]},
-    }
+    info = DeviceInfo(
+        identifiers={(DOMAIN, id_) for id_ in config[CONF_IDENTIFIERS]},
+        connections={(conn_[0], conn_[1]) for conn_ in config[CONF_CONNECTIONS]},
+    )
 
     if CONF_MANUFACTURER in config:
-        info["manufacturer"] = config[CONF_MANUFACTURER]
+        info[ATTR_MANUFACTURER] = config[CONF_MANUFACTURER]
 
     if CONF_MODEL in config:
-        info["model"] = config[CONF_MODEL]
+        info[ATTR_MODEL] = config[CONF_MODEL]
 
     if CONF_NAME in config:
-        info["name"] = config[CONF_NAME]
+        info[ATTR_NAME] = config[CONF_NAME]
 
     if CONF_SW_VERSION in config:
-        info["sw_version"] = config[CONF_SW_VERSION]
+        info[ATTR_SW_VERSION] = config[CONF_SW_VERSION]
 
     if CONF_VIA_DEVICE in config:
-        info["via_device"] = (DOMAIN, config[CONF_VIA_DEVICE])
+        info[ATTR_VIA_DEVICE] = (DOMAIN, config[CONF_VIA_DEVICE])
 
     if CONF_SUGGESTED_AREA in config:
-        info["suggested_area"] = config[CONF_SUGGESTED_AREA]
+        info[ATTR_SUGGESTED_AREA] = config[CONF_SUGGESTED_AREA]
+
+    if CONF_CONFIGURATION_URL in config:
+        info[ATTR_CONFIGURATION_URL] = config[CONF_CONFIGURATION_URL]
 
     return info
 
@@ -518,11 +570,12 @@ class MqttEntityDeviceInfo(Entity):
         device_info = self.device_info
 
         if config_entry_id is not None and device_info is not None:
-            device_info["config_entry_id"] = config_entry_id
-            device_registry.async_get_or_create(**device_info)
+            device_registry.async_get_or_create(
+                config_entry_id=config_entry_id, **device_info
+            )
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         return device_info_from_config(self._device_config)
 
@@ -592,6 +645,11 @@ class MqttEntity(
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._config[CONF_ENABLED_BY_DEFAULT]
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return the entity category if any."""
+        return self._config.get(CONF_ENTITY_CATEGORY)
 
     @property
     def icon(self):

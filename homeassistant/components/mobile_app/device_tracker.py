@@ -60,8 +60,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         """Return device specific attributes."""
         attrs = {}
         for key in ATTR_KEYS:
-            value = self._data.get(key)
-            if value is not None:
+            if (value := self._data.get(key)) is not None:
                 attrs[key] = value
 
         return attrs
@@ -74,9 +73,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def latitude(self):
         """Return latitude value of the device."""
-        gps = self._data.get(ATTR_GPS)
-
-        if gps is None:
+        if (gps := self._data.get(ATTR_GPS)) is None:
             return None
 
         return gps[0]
@@ -84,9 +81,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def longitude(self):
         """Return longitude value of the device."""
-        gps = self._data.get(ATTR_GPS)
-
-        if gps is None:
+        if (gps := self._data.get(ATTR_GPS)) is None:
             return None
 
         return gps[1]
@@ -94,7 +89,9 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def location_name(self):
         """Return a location name for the current location of the device."""
-        return self._data.get(ATTR_LOCATION_NAME)
+        if location_name := self._data.get(ATTR_LOCATION_NAME):
+            return location_name
+        return None
 
     @property
     def name(self):
@@ -122,9 +119,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         if self._data is not None:
             return
 
-        state = await self.async_get_last_state()
-
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             self._data = {}
             return
 

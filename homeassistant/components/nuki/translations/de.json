@@ -13,6 +13,7 @@
                 "data": {
                     "token": "Zugangstoken"
                 },
+                "description": "Die Nuki-Integration muss sich bei deiner Bridge neu authentifizieren.",
                 "title": "Integration erneut authentifizieren"
             },
             "user": {

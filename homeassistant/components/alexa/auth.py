@@ -1,13 +1,14 @@
 """Support for Alexa skill auth."""
 import asyncio
 from datetime import timedelta
+from http import HTTPStatus
 import json
 import logging
 
 import aiohttp
 import async_timeout
 
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, HTTP_OK
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util import dt
@@ -119,7 +120,7 @@ class Auth:
         _LOGGER.debug("LWA response header: %s", response.headers)
         _LOGGER.debug("LWA response status: %s", response.status)
 
-        if response.status != HTTP_OK:
+        if response.status != HTTPStatus.OK:
             _LOGGER.error("Error calling LWA to get auth token")
             return None
 

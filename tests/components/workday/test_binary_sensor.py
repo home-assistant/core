@@ -85,6 +85,16 @@ class TestWorkdaySetup:
             }
         }
 
+        self.config_remove_named_holidays = {
+            "binary_sensor": {
+                "platform": "workday",
+                "country": "US",
+                "workdays": ["mon", "tue", "wed", "thu", "fri"],
+                "excludes": ["sat", "sun", "holiday"],
+                "remove_holidays": ["Not a Holiday", "Christmas", "Thanksgiving"],
+            }
+        }
+
         self.config_tomorrow = {
             "binary_sensor": {"platform": "workday", "country": "DE", "days_offset": 1}
         }
@@ -315,6 +325,20 @@ class TestWorkdaySetup:
         """Test if removed holidays are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_remove_holidays)
+
+        self.hass.start()
+
+        entity = self.hass.states.get("binary_sensor.workday_sensor")
+        assert entity.state == "on"
+
+    # Freeze time to test Fri, but remove holiday by name - Christmas
+    @patch(FUNCTION_PATH, return_value=date(2020, 12, 25))
+    def test_config_remove_named_holidays_xmas(self, mock_date):
+        """Test if removed by name holidays are reported correctly."""
+        with assert_setup_component(1, "binary_sensor"):
+            setup_component(
+                self.hass, "binary_sensor", self.config_remove_named_holidays
+            )
 
         self.hass.start()
 

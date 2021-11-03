@@ -66,6 +66,8 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
         super().__init__(event, device)
         self.cancel_scheduled_update = None
 
+        self._attr_device_class = DEVICE_CLASS.get(self.event.CLASS)
+
     @callback
     def update_callback(self, no_delay=False):
         """Update the sensor's state, if needed.
@@ -126,9 +128,4 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
                 ):
                     return f"{self.device.name} {self.event.TYPE} {event_data[self.event.id].name}"
 
-        return super().name
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS.get(self.event.CLASS)
+        return self._attr_name

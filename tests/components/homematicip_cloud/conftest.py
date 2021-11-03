@@ -62,7 +62,6 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
         unique_id=HAPID,
         data=entry_data,
         source=SOURCE_IMPORT,
-        system_options={"disable_new_entities": False},
     )
 
     return config_entry

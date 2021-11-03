@@ -13,12 +13,9 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 
-from homeassistant.components.climate import (
-    DEFAULT_MAX_HUMIDITY,
-    DEFAULT_MIN_HUMIDITY,
-    ClimateEntity,
-)
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
@@ -36,7 +33,7 @@ from homeassistant.components.climate.const import (
     SWING_OFF,
     SWING_VERTICAL,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -92,8 +89,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     @callback
     def async_add_service(service):
-        entity_class = ENTITY_TYPES.get(service.short_type)
-        if not entity_class:
+        if not (entity_class := ENTITY_TYPES.get(service.short_type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
@@ -323,11 +319,6 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
-
 
 class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     """Representation of a Homekit climate device."""
@@ -347,16 +338,27 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
+        chars = {}
+
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        mode = MODE_HOMEKIT_TO_HASS.get(value)
+
+        if kwargs.get(ATTR_HVAC_MODE, mode) != mode:
+            mode = kwargs[ATTR_HVAC_MODE]
+            chars[CharacteristicsTypes.HEATING_COOLING_TARGET] = MODE_HASS_TO_HOMEKIT[
+                mode
+            ]
+
         temp = kwargs.get(ATTR_TEMPERATURE)
         heat_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         cool_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
-        if (MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}) and (
+
+        if (mode == HVAC_MODE_HEAT_COOL) and (
             SUPPORT_TARGET_TEMPERATURE_RANGE & self.supported_features
         ):
             if temp is None:
                 temp = (cool_temp + heat_temp) / 2
-            await self.async_put_characteristics(
+            chars.update(
                 {
                     CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: heat_temp,
                     CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: cool_temp,
@@ -364,9 +366,9 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
                 }
             )
         else:
-            await self.async_put_characteristics(
-                {CharacteristicsTypes.TEMPERATURE_TARGET: temp}
-            )
+            chars[CharacteristicsTypes.TEMPERATURE_TARGET] = temp
+
+        await self.async_put_characteristics(chars)
 
     async def async_set_humidity(self, humidity):
         """Set new target humidity."""
@@ -481,14 +483,22 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     @property
     def min_humidity(self):
         """Return the minimum humidity."""
-        char = self.service[CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET]
-        return char.minValue or DEFAULT_MIN_HUMIDITY
+        min_humidity = self.service[
+            CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
+        ].minValue
+        if min_humidity is not None:
+            return min_humidity
+        return super().min_humidity
 
     @property
     def max_humidity(self):
         """Return the maximum humidity."""
-        char = self.service[CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET]
-        return char.maxValue or DEFAULT_MAX_HUMIDITY
+        max_humidity = self.service[
+            CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
+        ].maxValue
+        if max_humidity is not None:
+            return max_humidity
+        return super().max_humidity
 
     @property
     def hvac_action(self):
@@ -540,11 +550,6 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
-
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
 
 
 ENTITY_TYPES = {

@@ -1,8 +1,9 @@
 """TemplateEntity utility class."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 
@@ -112,6 +113,11 @@ class _TemplateAttribute:
 class TemplateEntity(Entity):
     """Entity that uses templates to calculate attributes."""
 
+    _attr_available = True
+    _attr_entity_picture = None
+    _attr_icon = None
+    _attr_should_poll = False
+
     def __init__(
         self,
         *,
@@ -124,54 +130,26 @@ class TemplateEntity(Entity):
         self._template_attrs = {}
         self._async_update = None
         self._attribute_templates = attribute_templates
-        self._attributes = {}
+        self._attr_extra_state_attributes = {}
         self._availability_template = availability_template
-        self._available = True
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template
-        self._icon = None
-        self._entity_picture = None
         self._self_ref_update_count = 0
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @callback
     def _update_available(self, result):
         if isinstance(result, TemplateError):
-            self._available = True
+            self._attr_available = True
             return
 
-        self._available = result_as_boolean(result)
+        self._attr_available = result_as_boolean(result)
 
     @callback
     def _update_state(self, result):
         if self._availability_template:
             return
 
-        self._available = not isinstance(result, TemplateError)
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return self._available
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def entity_picture(self):
-        """Return the entity_picture to use in the frontend, if any."""
-        return self._entity_picture
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
+        self._attr_available = not isinstance(result, TemplateError)
 
     @callback
     def _add_attribute_template(self, attribute_key, attribute_template):
@@ -179,7 +157,7 @@ class TemplateEntity(Entity):
 
         def _update_attribute(result):
             attr_result = None if isinstance(result, TemplateError) else result
-            self._attributes[attribute_key] = attr_result
+            self._attr_extra_state_attributes[attribute_key] = attr_result
 
         self.add_template_attribute(
             attribute_key, attribute_template, None, _update_attribute
@@ -255,13 +233,27 @@ class TemplateEntity(Entity):
 
     async def _async_template_startup(self, *_) -> None:
         template_var_tups = []
+        has_availability_template = False
         for template, attributes in self._template_attrs.items():
-            template_var_tups.append(TrackTemplate(template, None))
+            template_var_tup = TrackTemplate(template, None)
+            is_availability_template = False
             for attribute in attributes:
+                # pylint: disable-next=protected-access
+                if attribute._attribute == "_attr_available":
+                    has_availability_template = True
+                    is_availability_template = True
                 attribute.async_setup()
+            # Insert the availability template first in the list
+            if is_availability_template:
+                template_var_tups.insert(0, template_var_tup)
+            else:
+                template_var_tups.append(template_var_tup)
 
         result_info = async_track_template_result(
-            self.hass, template_var_tups, self._handle_results
+            self.hass,
+            template_var_tups,
+            self._handle_results,
+            has_super_template=has_availability_template,
         )
         self.async_on_remove(result_info.async_remove)
         self._async_update = result_info.async_refresh
@@ -271,18 +263,21 @@ class TemplateEntity(Entity):
         """Run when entity about to be added to hass."""
         if self._availability_template is not None:
             self.add_template_attribute(
-                "_available", self._availability_template, None, self._update_available
+                "_attr_available",
+                self._availability_template,
+                None,
+                self._update_available,
             )
         if self._attribute_templates is not None:
             for key, value in self._attribute_templates.items():
                 self._add_attribute_template(key, value)
         if self._icon_template is not None:
             self.add_template_attribute(
-                "_icon", self._icon_template, vol.Or(cv.whitespace, cv.icon)
+                "_attr_icon", self._icon_template, vol.Or(cv.whitespace, cv.icon)
             )
         if self._entity_picture_template is not None:
             self.add_template_attribute(
-                "_entity_picture", self._entity_picture_template
+                "_attr_entity_picture", self._entity_picture_template
             )
         if self.hass.state == CoreState.running:
             await self._async_template_startup()

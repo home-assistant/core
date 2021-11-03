@@ -18,6 +18,16 @@
                 },
                 "title": "\u8a2d\u5b9a\u9a57\u8b49"
             },
+            "configure": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "name": "\u540d\u7a31",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "\u8a2d\u5b9a ONVIF \u88dd\u7f6e"
+            },
             "configure_profile": {
                 "data": {
                     "include": "\u65b0\u589e\u651d\u5f71\u6a5f\u5be6\u9ad4"
@@ -40,6 +50,9 @@
                 "title": "\u8a2d\u5b9a ONVIF \u88dd\u7f6e"
             },
             "user": {
+                "data": {
+                    "auto": "\u81ea\u52d5\u641c\u5c0b"
+                },
                 "description": "\u9ede\u4e0b\u50b3\u9001\u5f8c\u3001\u5c07\u6703\u641c\u5c0b\u7db2\u8def\u4e2d\u652f\u63f4 Profile S \u7684 ONVIF \u88dd\u7f6e\u3002\n\n\u67d0\u4e9b\u5ee0\u5546\u9810\u8a2d\u7684\u6a21\u5f0f\u70ba ONVIF \u95dc\u9589\u6a21\u5f0f\uff0c\u8acb\u518d\u6b21\u78ba\u8a8d\u651d\u5f71\u6a5f\u5df2\u7d93\u958b\u555f ONVIF\u3002",
                 "title": "ONVIF \u88dd\u7f6e\u8a2d\u5b9a"
             }

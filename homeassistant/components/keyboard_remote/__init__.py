@@ -23,6 +23,7 @@ ICON = "mdi:remote"
 
 KEY_CODE = "key_code"
 KEY_VALUE = {"key_up": 0, "key_down": 1, "key_hold": 2}
+KEY_VALUE_NAME = {value: key for key, value in KEY_VALUE.items()}
 KEYBOARD_REMOTE_COMMAND_RECEIVED = "keyboard_remote_command_received"
 KEYBOARD_REMOTE_CONNECTED = "keyboard_remote_connected"
 KEYBOARD_REMOTE_DISCONNECTED = "keyboard_remote_disconnected"
@@ -161,7 +162,7 @@ class KeyboardRemote:
         # devices are often added and then correct permissions set after
         try:
             dev = InputDevice(descriptor)
-        except (OSError, PermissionError):
+        except OSError:
             return (None, None)
 
         handler = None
@@ -236,7 +237,12 @@ class KeyboardRemote:
             while True:
                 self.hass.bus.async_fire(
                     KEYBOARD_REMOTE_COMMAND_RECEIVED,
-                    {KEY_CODE: code, DEVICE_DESCRIPTOR: path, DEVICE_NAME: name},
+                    {
+                        KEY_CODE: code,
+                        TYPE: "key_hold",
+                        DEVICE_DESCRIPTOR: path,
+                        DEVICE_NAME: name,
+                    },
                 )
                 await asyncio.sleep(repeat)
 
@@ -294,6 +300,7 @@ class KeyboardRemote:
                                 KEYBOARD_REMOTE_COMMAND_RECEIVED,
                                 {
                                     KEY_CODE: event.code,
+                                    TYPE: KEY_VALUE_NAME[event.value],
                                     DEVICE_DESCRIPTOR: dev.path,
                                     DEVICE_NAME: dev.name,
                                 },
@@ -318,7 +325,7 @@ class KeyboardRemote:
                         ):
                             repeat_tasks[event.code].cancel()
                             del repeat_tasks[event.code]
-            except (OSError, PermissionError, asyncio.CancelledError):
+            except (OSError, asyncio.CancelledError):
                 # cancel key repeat tasks
                 for task in repeat_tasks.values():
                     task.cancel()

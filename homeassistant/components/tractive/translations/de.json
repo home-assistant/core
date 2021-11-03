@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "reauth_failed_existing": "Der Konfigurationseintrag konnte nicht aktualisiert werden. Bitte entferne die Integration und richte sie erneut ein.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-Mail",
+                    "password": "Passwort"
+                }
+            }
+        }
+    }
+}

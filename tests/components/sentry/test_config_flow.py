@@ -22,14 +22,13 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -87,7 +86,7 @@ async def test_user_flow_bad_dsn(hass: HomeAssistant) -> None:
     assert result2.get("errors") == {"base": "bad_dsn"}
 
 
-async def test_user_flow_unkown_exception(hass: HomeAssistant) -> None:
+async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle any unknown exception error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

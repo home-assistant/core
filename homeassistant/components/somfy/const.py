@@ -2,4 +2,3 @@
 
 DOMAIN = "somfy"
 COORDINATOR = "coordinator"
-API = "api"

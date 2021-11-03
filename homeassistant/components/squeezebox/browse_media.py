@@ -97,8 +97,7 @@ async def build_item_response(entity, player, payload):
             item_id = str(item["id"])
             item_thumbnail = None
 
-            artwork_track_id = item.get("artwork_track_id")
-            if artwork_track_id:
+            if artwork_track_id := item.get("artwork_track_id"):
                 if internal_request:
                     item_thumbnail = player.generate_image_url_from_track_id(
                         artwork_track_id
@@ -137,7 +136,6 @@ async def build_item_response(entity, player, payload):
 
 async def library_payload(player):
     """Create response payload to describe contents of library."""
-
     library_info = {
         "title": "Music Library",
         "media_class": MEDIA_CLASS_DIRECTORY,

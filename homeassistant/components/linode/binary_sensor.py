@@ -38,8 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     dev = []
     for node in nodes:
-        node_id = linode.get_node_id(node)
-        if node_id is None:
+        if (node_id := linode.get_node_id(node)) is None:
             _LOGGER.error("Node %s is not available", node)
             return
         dev.append(LinodeBinarySensor(linode, node_id))
@@ -49,6 +48,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class LinodeBinarySensor(BinarySensorEntity):
     """Representation of a Linode droplet sensor."""
+
+    _attr_device_class = DEVICE_CLASS_MOVING
 
     def __init__(self, li, node_id):
         """Initialize a new Linode sensor."""
@@ -68,11 +69,6 @@ class LinodeBinarySensor(BinarySensorEntity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_MOVING
 
     @property
     def extra_state_attributes(self):

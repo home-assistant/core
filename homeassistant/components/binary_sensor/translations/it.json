@@ -17,6 +17,7 @@
             "is_no_problem": "{entity_name} non sta rilevando un problema",
             "is_no_smoke": "{entity_name} non sta rilevando il fumo",
             "is_no_sound": "{entity_name} non sta rilevando il suono",
+            "is_no_update": "{entity_name} \u00e8 aggiornato",
             "is_no_vibration": "{entity_name} non sta rilevando la vibrazione",
             "is_not_bat_low": "{entity_name} la batteria \u00e8 normale",
             "is_not_cold": "{entity_name} non \u00e8 freddo",
@@ -30,6 +31,8 @@
             "is_not_plugged_in": "{entity_name} \u00e8 collegato",
             "is_not_powered": "{entity_name} non \u00e8 alimentato",
             "is_not_present": "{entity_name} non \u00e8 presente",
+            "is_not_running": "{entity_name} non \u00e8 in funzionamento",
+            "is_not_tampered": "{entity_name} non rileva manomissioni",
             "is_not_unsafe": "{entity_name} \u00e8 sicuro",
             "is_occupied": "{entity_name} \u00e8 occupato",
             "is_off": "{entity_name} \u00e8 spento",
@@ -39,9 +42,12 @@
             "is_powered": "{entity_name} \u00e8 alimentato",
             "is_present": "{entity_name} \u00e8 presente",
             "is_problem": "{entity_name} sta rilevando un problema",
+            "is_running": "{entity_name} \u00e8 in funzionamento",
             "is_smoke": "{entity_name} sta rilevando il fumo",
             "is_sound": "{entity_name} sta rilevando il suono",
+            "is_tampered": "{entity_name} rileva manomissioni",
             "is_unsafe": "{entity_name} non \u00e8 sicuro",
+            "is_update": "{entity_name} ha un aggiornamento disponibile",
             "is_vibration": "{entity_name} sta rilevando la vibrazione"
         },
         "trigger_type": {
@@ -50,6 +56,8 @@
             "connected": "{entity_name} connesso",
             "gas": "{entity_name} ha iniziato a rilevare il gas",
             "hot": "{entity_name} \u00e8 diventato caldo",
+            "is_not_tampered": "{entity_name} ha smesso di rilevare manomissioni",
+            "is_tampered": "{entity_name} ha iniziato a rilevare manomissioni",
             "light": "{entity_name} ha iniziato a rilevare la luce",
             "locked": "{entity_name} bloccato",
             "moist": "{entity_name} diventato umido",
@@ -61,6 +69,7 @@
             "no_problem": "{entity_name} ha smesso di rilevare un problema",
             "no_smoke": "{entity_name} ha smesso la rilevazione di fumo",
             "no_sound": "{entity_name} ha smesso di rilevare il suono",
+            "no_update": "{entity_name} \u00e8 diventato aggiornato",
             "no_vibration": "{entity_name} ha smesso di rilevare le vibrazioni",
             "not_bat_low": "{entity_name} batteria normale",
             "not_cold": "{entity_name} non \u00e8 diventato freddo",
@@ -74,6 +83,7 @@
             "not_plugged_in": "{entity_name} \u00e8 scollegato",
             "not_powered": "{entity_name} non \u00e8 alimentato",
             "not_present": "{entity_name} non \u00e8 presente",
+            "not_running": "{entity_name} non \u00e8 pi\u00f9 in funzione",
             "not_unsafe": "{entity_name} \u00e8 diventato sicuro",
             "occupied": "{entity_name} \u00e8 diventato occupato",
             "opened": "{entity_name} \u00e8 aperto",
@@ -81,13 +91,28 @@
             "powered": "{entity_name} \u00e8 alimentato",
             "present": "{entity_name} \u00e8 presente",
             "problem": "{entity_name} ha iniziato a rilevare un problema",
+            "running": "{entity_name} ha iniziato a funzionare",
             "smoke": "{entity_name} ha iniziato la rilevazione di fumo",
             "sound": "{entity_name} ha iniziato il rilevamento del suono",
             "turned_off": "{entity_name} disattivato",
             "turned_on": "{entity_name} attivato",
             "unsafe": "{entity_name} diventato non sicuro",
+            "update": "{entity_name} ha ottenuto un aggiornamento disponibile",
             "vibration": "{entity_name} iniziato a rilevare le vibrazioni"
         }
+    },
+    "device_class": {
+        "cold": "freddo",
+        "gas": "gas",
+        "heat": "caldo",
+        "moisture": "umidit\u00e0",
+        "motion": "movimento",
+        "occupancy": "occupazione",
+        "power": "potenza",
+        "problem": "problema",
+        "smoke": "fumo",
+        "sound": "suono",
+        "vibration": "vibrazione"
     },
     "state": {
         "_": {
@@ -166,6 +191,10 @@
             "off": "OK",
             "on": "Problema"
         },
+        "running": {
+            "off": "Non in esecuzione",
+            "on": "In esecuzione"
+        },
         "safety": {
             "off": "Sicuro",
             "on": "Non Sicuro"
@@ -177,6 +206,10 @@
         "sound": {
             "off": "Assente",
             "on": "Rilevato"
+        },
+        "update": {
+            "off": "Aggiornato",
+            "on": "Aggiornamento disponibile"
         },
         "vibration": {
             "off": "Assente",

@@ -114,10 +114,10 @@ def _check_for_insteon_type(
                 return True
 
             # Thermostats, which has a "Heat" and "Cool" sub-node on address 2 and 3
-            if platform == CLIMATE and subnode_id in [
+            if platform == CLIMATE and subnode_id in (
                 SUBNODE_CLIMATE_COOL,
                 SUBNODE_CLIMATE_HEAT,
-            ]:
+            ):
                 hass_isy_data[ISY994_NODES][BINARY_SENSOR].append(node)
                 return True
 
@@ -184,7 +184,7 @@ def _check_for_uom_id(
     This is used for versions of the ISY firmware that report uoms as a single
     ID. We can often infer what type of device it is by that ID.
     """
-    if not hasattr(node, "uom") or node.uom in [None, ""]:
+    if not hasattr(node, "uom") or node.uom in (None, ""):
         # Node doesn't have a uom (Scenes for example)
         return False
 
@@ -220,7 +220,7 @@ def _check_for_states_in_uom(
     possible "human readable" states. This filter passes if all of the possible
     states fit inside the given filter.
     """
-    if not hasattr(node, "uom") or node.uom in [None, ""]:
+    if not hasattr(node, "uom") or node.uom in (None, ""):
         # Node doesn't have a uom (Scenes for example)
         return False
 
@@ -413,7 +413,7 @@ def convert_isy_value_to_hass(
     """
     if value is None or value == ISY_VALUE_UNKNOWN:
         return None
-    if uom in [UOM_DOUBLE_TEMP, UOM_ISYV4_DEGREES]:
+    if uom in (UOM_DOUBLE_TEMP, UOM_ISYV4_DEGREES):
         return round(float(value) / 2.0, 1)
     if precision not in ("0", 0):
         return round(float(value) / 10 ** int(precision), int(precision))

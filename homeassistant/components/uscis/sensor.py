@@ -54,7 +54,7 @@ class UscisSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._state
 

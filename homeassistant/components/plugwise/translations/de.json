@@ -1,20 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service ist bereits konfiguriert"
+            "already_configured": "Der Dienst ist bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "Smile: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
                     "flow_type": "Verbindungstyp"
                 },
-                "description": "Details",
+                "description": "Produkt:",
                 "title": "Plugwise Typ"
             },
             "user_gateway": {
@@ -25,7 +25,7 @@
                     "username": "Smile-Benutzername"
                 },
                 "description": "Bitte eingeben",
-                "title": "Stellen Sie eine Verbindung zu Smile her"
+                "title": "Stelle eine Verbindung zu Smile her"
             }
         }
     },

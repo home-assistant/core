@@ -1,4 +1,6 @@
 """Support for ComEd Hourly Pricing data."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import json
@@ -8,7 +10,11 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -25,12 +31,22 @@ CONF_FIVE_MINUTE = "five_minute"
 CONF_MONITORED_FEEDS = "monitored_feeds"
 CONF_SENSOR_TYPE = "type"
 
-SENSOR_TYPES = {
-    CONF_FIVE_MINUTE: ["ComEd 5 Minute Price", "c"],
-    CONF_CURRENT_HOUR_AVERAGE: ["ComEd Current Hour Average Price", "c"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=CONF_FIVE_MINUTE,
+        name="ComEd 5 Minute Price",
+        native_unit_of_measurement="c",
+    ),
+    SensorEntityDescription(
+        key=CONF_CURRENT_HOUR_AVERAGE,
+        name="ComEd Current Hour Average Price",
+        native_unit_of_measurement="c",
+    ),
+)
 
-TYPES_SCHEMA = vol.In(SENSOR_TYPES)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+
+TYPES_SCHEMA = vol.In(SENSOR_KEYS)
 
 SENSORS_SCHEMA = vol.Schema(
     {
@@ -48,64 +64,42 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the ComEd Hourly Pricing sensor."""
     websession = async_get_clientsession(hass)
-    dev = []
 
-    for variable in config[CONF_MONITORED_FEEDS]:
-        dev.append(
-            ComedHourlyPricingSensor(
-                hass.loop,
-                websession,
-                variable[CONF_SENSOR_TYPE],
-                variable[CONF_OFFSET],
-                variable.get(CONF_NAME),
-            )
+    entities = [
+        ComedHourlyPricingSensor(
+            websession,
+            variable[CONF_OFFSET],
+            variable.get(CONF_NAME),
+            description,
         )
+        for variable in config[CONF_MONITORED_FEEDS]
+        for description in SENSOR_TYPES
+        if description.key == variable[CONF_SENSOR_TYPE]
+    ]
 
-    async_add_entities(dev, True)
+    async_add_entities(entities, True)
 
 
 class ComedHourlyPricingSensor(SensorEntity):
     """Implementation of a ComEd Hourly Pricing sensor."""
 
-    def __init__(self, loop, websession, sensor_type, offset, name):
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    def __init__(self, websession, offset, name, description: SensorEntityDescription):
         """Initialize the sensor."""
-        self.loop = loop
+        self.entity_description = description
         self.websession = websession
         if name:
-            self._name = name
-        else:
-            self._name = SENSOR_TYPES[sensor_type][0]
-        self.type = sensor_type
+            self._attr_name = name
         self.offset = offset
-        self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     async def async_update(self):
         """Get the ComEd Hourly Pricing data from the web service."""
         try:
-            if self.type == CONF_FIVE_MINUTE or self.type == CONF_CURRENT_HOUR_AVERAGE:
+            sensor_type = self.entity_description.key
+            if sensor_type in (CONF_FIVE_MINUTE, CONF_CURRENT_HOUR_AVERAGE):
                 url_string = _RESOURCE
-                if self.type == CONF_FIVE_MINUTE:
+                if sensor_type == CONF_FIVE_MINUTE:
                     url_string += "?type=5minutefeed"
                 else:
                     url_string += "?type=currenthouraverage"
@@ -115,10 +109,12 @@ class ComedHourlyPricingSensor(SensorEntity):
                     # The API responds with MIME type 'text/html'
                     text = await response.text()
                     data = json.loads(text)
-                    self._state = round(float(data[0]["price"]) + self.offset, 2)
+                    self._attr_native_value = round(
+                        float(data[0]["price"]) + self.offset, 2
+                    )
 
             else:
-                self._state = None
+                self._attr_native_value = None
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Could not get data from ComEd API: %s", err)

@@ -5,6 +5,7 @@ import math
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import TARGET_VALUE_PROPERTY
 
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
@@ -21,7 +22,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -45,7 +46,7 @@ async def async_setup_entry(
         entities.append(ZwaveFan(config_entry, client, info))
         async_add_entities(entities)
 
-    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{FAN_DOMAIN}",
@@ -59,7 +60,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int | None) -> None:
         """Set the speed percentage of the fan."""
-        target_value = self.get_zwave_value("targetValue")
+        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
         if percentage is None:
             # Value 255 tells device to return to previous value
@@ -83,7 +84,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        target_value = self.get_zwave_value("targetValue")
+        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
         await self.info.node.async_set_value(target_value, 0)
 
     @property

@@ -1,0 +1,47 @@
+{
+    "config": {
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "s0_legacy_key": "S0\u30ad\u30fc (\u30ec\u30ac\u30b7\u30fc)",
+                    "s2_access_control_key": "S2\u30a2\u30af\u30bb\u30b9\u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30ad\u30fc",
+                    "s2_authenticated_key": "S2\u8a8d\u8a3c\u6e08\u307f\u306a\u30ad\u30fc",
+                    "s2_unauthenticated_key": "S2\u8a8d\u8a3c\u3055\u308c\u3066\u3044\u306a\u3044\u30ad\u30fc"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "{entity_name} \u30e6\u30fc\u30b6\u30fc\u30b3\u30fc\u30c9\u3092\u30af\u30ea\u30a2"
+        }
+    },
+    "options": {
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "log_level": "\u30ed\u30b0\u30ec\u30d9\u30eb",
+                    "network_key": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af",
+                    "s0_legacy_key": "S0\u30ad\u30fc (\u30ec\u30ac\u30b7\u30fc)",
+                    "s2_access_control_key": "S2\u30a2\u30af\u30bb\u30b9\u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30ad\u30fc",
+                    "s2_authenticated_key": "S2\u8a8d\u8a3c\u6e08\u307f\u306a\u30ad\u30fc",
+                    "s2_unauthenticated_key": "S2\u8a8d\u8a3c\u3055\u308c\u3066\u3044\u306a\u3044\u30ad\u30fc"
+                },
+                "title": "Z-Wave JS\u306e\u30a2\u30c9\u30aa\u30f3\u304c\u59cb\u307e\u308a\u307e\u3059\u3002"
+            },
+            "install_addon": {
+                "title": "Z-Wave JS\u30a2\u30c9\u30aa\u30f3\u306e\u30a4\u30f3\u30b9\u30c8\u30fc\u30eb\u304c\u958b\u59cb\u3055\u308c\u307e\u3057\u305f\u3002"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "\u30a2\u30c9\u30aa\u30f3\u300cZ-Wave JS Supervisor\u300d\u306e\u4f7f\u7528"
+                },
+                "description": "Z-Wave JS Supervisor\u30a2\u30c9\u30aa\u30f3\u3092\u4f7f\u7528\u3057\u307e\u3059\u304b\uff1f",
+                "title": "\u63a5\u7d9a\u65b9\u6cd5\u306e\u9078\u629e"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS \u30a2\u30c9\u30aa\u30f3\u304c\u8d77\u52d5\u3057\u3066\u3044\u307e\u3059\u3002"
+            }
+        }
+    }
+}

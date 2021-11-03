@@ -54,6 +54,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class VultrBinarySensor(BinarySensorEntity):
     """Representation of a Vultr subscription sensor."""
 
+    _attr_device_class = DEFAULT_DEVICE_CLASS
+
     def __init__(self, vultr, subscription, name):
         """Initialize a new Vultr binary sensor."""
         self._vultr = vultr
@@ -79,11 +81,6 @@ class VultrBinarySensor(BinarySensorEntity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self.data["power_status"] == "running"
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEFAULT_DEVICE_CLASS
 
     @property
     def extra_state_attributes(self):

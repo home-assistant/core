@@ -25,24 +25,24 @@ PLATFORMS = ["binary_sensor", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
     domain_data = hass.data.setdefault(DOMAIN, {})
 
     # Create and store server instance.
-    unique_id = config_entry.unique_id
+    unique_id = entry.unique_id
     _LOGGER.debug(
         "Creating server instance for '%s' (%s)",
-        config_entry.data[CONF_NAME],
-        config_entry.data[CONF_HOST],
+        entry.data[CONF_NAME],
+        entry.data[CONF_HOST],
     )
-    server = MinecraftServer(hass, unique_id, config_entry.data)
+    server = MinecraftServer(hass, unique_id, entry.data)
     domain_data[unique_id] = server
     await server.async_update()
     server.start_periodic_update()
 
     # Set up platforms.
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -224,13 +224,13 @@ class MinecraftServerEntity(Entity):
         self._name = f"{server.name} {type_name}"
         self._icon = icon
         self._unique_id = f"{self._server.unique_id}-{type_name}"
-        self._device_info = {
-            "identifiers": {(DOMAIN, self._server.unique_id)},
-            "name": self._server.name,
-            "manufacturer": MANUFACTURER,
-            "model": f"Minecraft Server ({self._server.version})",
-            "sw_version": self._server.protocol_version,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._server.unique_id)},
+            manufacturer=MANUFACTURER,
+            model=f"Minecraft Server ({self._server.version})",
+            name=self._server.name,
+            sw_version=self._server.protocol_version,
+        )
         self._device_class = device_class
         self._extra_state_attributes = None
         self._disconnect_dispatcher = None
@@ -244,11 +244,6 @@ class MinecraftServerEntity(Entity):
     def unique_id(self) -> str:
         """Return unique ID."""
         return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return self._device_info
 
     @property
     def device_class(self) -> str:

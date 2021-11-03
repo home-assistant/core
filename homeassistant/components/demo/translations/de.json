@@ -1,12 +1,6 @@
 {
     "options": {
         "step": {
-            "init": {
-                "data": {
-                    "one": "eins",
-                    "other": "andere"
-                }
-            },
             "options_1": {
                 "data": {
                     "bool": "Optionaler Boolescher Wert",
@@ -17,7 +11,7 @@
             "options_2": {
                 "data": {
                     "multi": "Mehrfachauswahl",
-                    "select": "W\u00e4hlen Sie eine Option",
+                    "select": "W\u00e4hle eine Option",
                     "string": "String-Wert"
                 }
             }

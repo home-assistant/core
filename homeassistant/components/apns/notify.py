@@ -184,7 +184,7 @@ class ApnsNotificationService(BaseNotificationService):
 
     def write_devices(self):
         """Write all known devices to file."""
-        with open(self.yaml_path, "w+") as out:
+        with open(self.yaml_path, "w+", encoding="utf8") as out:
             for device in self.devices.values():
                 _write_device(out, device)
 
@@ -202,7 +202,7 @@ class ApnsNotificationService(BaseNotificationService):
 
         if current_device is None:
             self.devices[push_id] = device
-            with open(self.yaml_path, "a") as out:
+            with open(self.yaml_path, "a", encoding="utf8") as out:
                 _write_device(out, device)
             return True
 
@@ -220,9 +220,7 @@ class ApnsNotificationService(BaseNotificationService):
         )
 
         device_state = kwargs.get(ATTR_TARGET)
-        message_data = kwargs.get(ATTR_DATA)
-
-        if message_data is None:
+        if (message_data := kwargs.get(ATTR_DATA)) is None:
             message_data = {}
 
         if isinstance(message, str):

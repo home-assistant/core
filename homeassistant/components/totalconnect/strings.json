@@ -10,9 +10,9 @@
       },
       "locations": {
         "title": "Location Usercodes",
-        "description": "Enter the usercode for this user at this location",
+        "description": "Enter the usercode for this user at location {location_id}",
         "data": {
-          "location": "[%key:common::config_flow::data::location%]"
+          "usercode": "Usercode"
         }
       },
       "reauth_confirm": {

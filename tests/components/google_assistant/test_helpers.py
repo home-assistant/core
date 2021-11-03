@@ -1,5 +1,6 @@
 """Test Google Assistant helpers."""
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -112,7 +113,7 @@ async def test_config_local_sdk(hass, hass_client):
             "requestId": "mock-req-id",
         },
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result["requestId"] == "mock-req-id"
 
@@ -126,7 +127,7 @@ async def test_config_local_sdk(hass, hass_client):
 
     # Webhook is no longer active
     resp = await client.post("/api/webhook/mock-webhook-id")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.read() == b""
 
 
@@ -148,7 +149,7 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
     resp = await client.post(
         "/api/webhook/mock-webhook-id", json={"requestId": "mock-req-id"}
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {
         "payload": {"errorCode": "deviceTurnedOff"},
@@ -159,7 +160,7 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
 
     # Webhook is no longer active
     resp = await client.post("/api/webhook/mock-webhook-id")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.read() == b""
 
 
@@ -223,9 +224,7 @@ async def test_report_state_all(agents):
     data = {}
     with patch.object(config, "async_report_state") as mock:
         await config.async_report_state_all(data)
-        assert sorted(mock.mock_calls) == sorted(
-            [call(data, agent) for agent in agents]
-        )
+        assert sorted(mock.mock_calls) == sorted(call(data, agent) for agent in agents)
 
 
 @pytest.mark.parametrize(
@@ -241,7 +240,7 @@ async def test_sync_entities_all(agents, result):
         side_effect=lambda agent_user_id: agents[agent_user_id],
     ) as mock:
         res = await config.async_sync_entities_all()
-        assert sorted(mock.mock_calls) == sorted([call(agent) for agent in agents])
+        assert sorted(mock.mock_calls) == sorted(call(agent) for agent in agents)
         assert res == result
 
 

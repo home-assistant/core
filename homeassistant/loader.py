@@ -26,6 +26,7 @@ from awesomeversion import (
 from homeassistant.generated.dhcp import DHCP
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.generated.ssdp import SSDP
+from homeassistant.generated.usb import USB
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 from homeassistant.util.async_ import gather_with_concurrency
 
@@ -47,7 +48,7 @@ DATA_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
 CUSTOM_WARNING = (
-    "You are using a custom integration %s which has not "
+    "We found a custom integration %s which has not "
     "been tested by Home Assistant. This component might "
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
@@ -81,6 +82,7 @@ class Manifest(TypedDict, total=False):
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
     dhcp: list[dict[str, str]]
+    usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
     is_built_in: bool
     version: str
@@ -144,9 +146,7 @@ async def async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
-    reg_or_evt = hass.data.get(DATA_CUSTOM_COMPONENTS)
-
-    if reg_or_evt is None:
+    if (reg_or_evt := hass.data.get(DATA_CUSTOM_COMPONENTS)) is None:
         evt = hass.data[DATA_CUSTOM_COMPONENTS] = asyncio.Event()
 
         reg = await _async_get_custom_components(hass)
@@ -217,6 +217,25 @@ async def async_get_dhcp(hass: HomeAssistant) -> list[dict[str, str]]:
             dhcp.append({"domain": integration.domain, **entry})
 
     return dhcp
+
+
+async def async_get_usb(hass: HomeAssistant) -> list[dict[str, str]]:
+    """Return cached list of usb types."""
+    usb: list[dict[str, str]] = USB.copy()
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.usb:
+            continue
+        for entry in integration.usb:
+            usb.append(
+                {
+                    "domain": integration.domain,
+                    **{k: v for k, v in entry.items() if k != "known_devices"},
+                }
+            )
+
+    return usb
 
 
 async def async_get_homekit(hass: HomeAssistant) -> dict[str, str]:
@@ -290,12 +309,46 @@ class Integration:
                 )
                 continue
 
-            return cls(
+            integration = cls(
                 hass,
                 f"{root_module.__name__}.{domain}",
                 manifest_path.parent,
                 manifest,
             )
+
+            if integration.is_built_in:
+                return integration
+
+            _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+            if integration.version is None:
+                _LOGGER.error(
+                    "The custom integration '%s' does not have a "
+                    "version key in the manifest file and was blocked from loading. "
+                    "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
+                    integration.domain,
+                )
+                return None
+            try:
+                AwesomeVersion(
+                    integration.version,
+                    [
+                        AwesomeVersionStrategy.CALVER,
+                        AwesomeVersionStrategy.SEMVER,
+                        AwesomeVersionStrategy.SIMPLEVER,
+                        AwesomeVersionStrategy.BUILDVER,
+                        AwesomeVersionStrategy.PEP440,
+                    ],
+                )
+            except AwesomeVersionException:
+                _LOGGER.error(
+                    "The custom integration '%s' does not have a "
+                    "valid version key (%s) in the manifest file and was blocked from loading. "
+                    "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
+                    integration.domain,
+                    integration.version,
+                )
+                return None
+            return integration
 
         return None
 
@@ -398,6 +451,11 @@ class Integration:
         return self.manifest.get("dhcp")
 
     @property
+    def usb(self) -> list[dict[str, str]] | None:
+        """Return Integration usb entries."""
+        return self.manifest.get("usb")
+
+    @property
     def homekit(self) -> dict[str, list[str]] | None:
         """Return Integration homekit entries."""
         return self.manifest.get("homekit")
@@ -483,8 +541,7 @@ class Integration:
 
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get an integration."""
-    cache = hass.data.get(DATA_INTEGRATIONS)
-    if cache is None:
+    if (cache := hass.data.get(DATA_INTEGRATIONS)) is None:
         if not _async_mount_config_dir(hass):
             raise IntegrationNotFound(domain)
         cache = hass.data[DATA_INTEGRATIONS] = {}
@@ -493,12 +550,11 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()
-        int_or_evt = cache.get(domain, _UNDEF)
 
         # When we have waited and it's _UNDEF, it doesn't exist
         # We don't cache that it doesn't exist, or else people can't fix it
         # and then restart, because their config will never be valid.
-        if int_or_evt is _UNDEF:
+        if (int_or_evt := cache.get(domain, _UNDEF)) is _UNDEF:
             raise IntegrationNotFound(domain)
 
     if int_or_evt is not _UNDEF:
@@ -508,7 +564,7 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
 
     try:
         integration = await _async_get_integration(hass, domain)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         # Remove event from cache.
         cache.pop(domain)
         event.set()
@@ -520,11 +576,12 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
 
 
 async def _async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
+    if "." in domain:
+        raise ValueError(f"Invalid domain {domain}")
+
     # Instead of using resolve_from_root we use the cache of custom
     # components to find the integration.
     if integration := (await async_get_custom_components(hass)).get(domain):
-        validate_custom_integration_version(integration)
-        _LOGGER.warning(CUSTOM_WARNING, integration.domain)
         return integration
 
     from homeassistant import components  # pylint: disable=import-outside-toplevel
@@ -572,8 +629,7 @@ def _load_file(
     with suppress(KeyError):
         return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore
 
-    cache = hass.data.get(DATA_COMPONENTS)
-    if cache is None:
+    if (cache := hass.data.get(DATA_COMPONENTS)) is None:
         if not _async_mount_config_dir(hass):
             return None
         cache = hass.data[DATA_COMPONENTS] = {}
@@ -744,31 +800,3 @@ def _lookup_path(hass: HomeAssistant) -> list[str]:
     if hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
-
-
-def validate_custom_integration_version(integration: Integration) -> None:
-    """
-    Validate the version of custom integrations.
-
-    Raises IntegrationNotFound when version is missing or not valid
-    """
-    try:
-        AwesomeVersion(
-            integration.version,
-            [
-                AwesomeVersionStrategy.CALVER,
-                AwesomeVersionStrategy.SEMVER,
-                AwesomeVersionStrategy.SIMPLEVER,
-                AwesomeVersionStrategy.BUILDVER,
-                AwesomeVersionStrategy.PEP440,
-            ],
-        )
-    except AwesomeVersionException:
-        _LOGGER.error(
-            "The custom integration '%s' does not have a "
-            "valid version key (%s) in the manifest file and was blocked from loading. "
-            "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
-            integration.domain,
-            integration.version,
-        )
-        raise IntegrationNotFound(integration.domain) from None

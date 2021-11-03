@@ -88,11 +88,11 @@ class ZwaveSensorBase(ZWaveDeviceEntity, SensorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         # We hide some of the more advanced sensors by default to not overwhelm users
-        if self.values.primary.command_class in [
+        if self.values.primary.command_class in (
             CommandClass.BASIC,
             CommandClass.INDICATOR,
             CommandClass.NOTIFICATION,
-        ]:
+        ):
             return False
         return True
 
@@ -106,12 +106,12 @@ class ZWaveStringSensor(ZwaveSensorBase):
     """Representation of a Z-Wave sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return state of the sensor."""
         return self.values.primary.value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return unit of measurement the value is expressed in."""
         return self.values.primary.units
 
@@ -125,12 +125,12 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return state of the sensor."""
         return round(self.values.primary.value, 2)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return unit of measurement the value is expressed in."""
         if self.values.primary.units == "C":
             return TEMP_CELSIUS
@@ -144,7 +144,7 @@ class ZWaveListSensor(ZwaveSensorBase):
     """Representation of a Z-Wave list sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         # We use the id as value for backwards compatibility
         return self.values.primary.value["Selected_id"]

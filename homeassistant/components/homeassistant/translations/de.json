@@ -10,6 +10,7 @@
             "os_version": "Betriebssystem-Version",
             "python_version": "Python-Version",
             "timezone": "Zeitzone",
+            "user": "Benutzer",
             "version": "Version",
             "virtualenv": "Virtuelle Umgebung"
         }

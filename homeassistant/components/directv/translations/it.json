@@ -10,6 +10,10 @@
         "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
+                "data": {
+                    "one": "Pi\u00f9",
+                    "other": "Altri"
+                },
                 "description": "Vuoi impostare {name} ?"
             },
             "user": {

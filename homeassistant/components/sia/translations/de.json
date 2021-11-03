@@ -1,0 +1,50 @@
+{
+    "config": {
+        "error": {
+            "invalid_account_format": "Das Konto ist kein Hex-Wert. Bitte verwende nur 0-9 und A-F.",
+            "invalid_account_length": "Das Konto hat nicht die richtige L\u00e4nge. Es muss zwischen 3 und 16 Zeichen lang sein.",
+            "invalid_key_format": "Der Schl\u00fcssel ist kein Hex-Wert, bitte verwende nur 0-9 und A-F.",
+            "invalid_key_length": "Der Schl\u00fcssel hat nicht die richtige L\u00e4nge. Er muss 16, 24 oder 32 Hex-Zeichen lang sein.",
+            "invalid_ping": "Das Ping-Intervall muss zwischen 1 und 1440 Minuten liegen.",
+            "invalid_zones": "Es muss mindestens eine Zone vorhanden sein.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "additional_account": {
+                "data": {
+                    "account": "Konto-ID",
+                    "additional_account": "Zus\u00e4tzliche Konten",
+                    "encryption_key": "Verschl\u00fcsselungscode",
+                    "ping_interval": "Ping-Intervall (min)",
+                    "zones": "Anzahl an Zonen f\u00fcr das Konto"
+                },
+                "title": "Dem aktuellen Port ein weiteres Konto hinzuf\u00fcgen."
+            },
+            "user": {
+                "data": {
+                    "account": "Konto-ID",
+                    "additional_account": "Zus\u00e4tzliche Konten",
+                    "encryption_key": "Verschl\u00fcsselungscode",
+                    "ping_interval": "Ping-Intervall (min)",
+                    "port": "Port",
+                    "protocol": "Protokoll",
+                    "zones": "Anzahl an Zonen f\u00fcr das Konto"
+                },
+                "title": "Erstellen einer Verbindung f\u00fcr SIA-basierte Alarmsysteme."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_timestamps": "Ignorieren der Zeitstempelpr\u00fcfung der SIA-Ereignisse",
+                    "zones": "Anzahl an Zonen f\u00fcr das Konto"
+                },
+                "description": "Stelle die Optionen f\u00fcr das Konto {account} ein:",
+                "title": "Optionen f\u00fcr das SIA-Setup."
+            }
+        }
+    },
+    "title": "SIA Alarmsysteme"
+}

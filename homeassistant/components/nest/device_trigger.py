@@ -1,16 +1,22 @@
 """Provides device automations for Nest."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_SUBSCRIBER, DOMAIN
@@ -20,20 +26,22 @@ DEVICE = "device"
 
 TRIGGER_TYPES = set(DEVICE_TRAIT_TRIGGER_MAP.values())
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
     }
 )
 
 
-async def async_get_nest_device_id(hass: HomeAssistant, device_id: str) -> str:
+async def async_get_nest_device_id(hass: HomeAssistant, device_id: str) -> str | None:
     """Get the nest API device_id from the HomeAssistant device_id."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(device_id)
-    for (domain, unique_id) in device.identifiers:
-        if domain == DOMAIN:
-            return unique_id
+    device_registry: DeviceRegistry = (
+        await hass.helpers.device_registry.async_get_registry()
+    )
+    if device := device_registry.async_get(device_id):
+        for (domain, unique_id) in device.identifiers:
+            if domain == DOMAIN:
+                return unique_id
     return None
 
 
@@ -45,20 +53,21 @@ async def async_get_device_trigger_types(
     # "shouldn't happen" cases
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     device_manager = await subscriber.async_get_device_manager()
-    nest_device = device_manager.devices.get(nest_device_id)
-    if not nest_device:
+    if not (nest_device := device_manager.devices.get(nest_device_id)):
         raise InvalidDeviceAutomationConfig(f"Nest device not found {nest_device_id}")
 
     # Determine the set of event types based on the supported device traits
-    trigger_types = []
-    for trait in nest_device.traits:
-        trigger_type = DEVICE_TRAIT_TRIGGER_MAP.get(trait)
-        if trigger_type:
-            trigger_types.append(trigger_type)
+    trigger_types = [
+        trigger_type
+        for trait in nest_device.traits
+        if (trigger_type := DEVICE_TRAIT_TRIGGER_MAP.get(trait))
+    ]
     return trigger_types
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for a Nest device."""
     nest_device_id = await async_get_nest_device_id(hass, device_id)
     if not nest_device_id:
@@ -79,7 +88,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     event_config = event_trigger.TRIGGER_SCHEMA(

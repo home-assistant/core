@@ -33,6 +33,13 @@ def mock_all(aioclient_mock, request):
         },
     )
     aioclient_mock.get(
+        "http://127.0.0.1/store",
+        json={
+            "result": "ok",
+            "data": {"addons": [], "repositories": []},
+        },
+    )
+    aioclient_mock.get(
         "http://127.0.0.1/host/info",
         json={
             "result": "ok",
@@ -67,6 +74,7 @@ def mock_all(aioclient_mock, request):
                     "update_available": False,
                     "version": "1.0.0",
                     "version_latest": "1.0.0",
+                    "repository": "core",
                     "url": "https://github.com/home-assistant/addons/test",
                 },
                 {
@@ -76,9 +84,58 @@ def mock_all(aioclient_mock, request):
                     "update_available": False,
                     "version": "1.0.0",
                     "version_latest": "1.0.0",
+                    "repository": "core",
                     "url": "https://github.com",
                 },
             ],
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test2/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.8,
+                "memory_usage": 51941376,
+                "memory_limit": 3977146368,
+                "memory_percent": 1.31,
+                "network_rx": 31338284,
+                "network_tx": 15692900,
+                "blk_read": 740077568,
+                "blk_write": 6004736,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test3/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.8,
+                "memory_usage": 51941376,
+                "memory_limit": 3977146368,
+                "memory_percent": 1.31,
+                "network_rx": 31338284,
+                "network_tx": 15692900,
+                "blk_read": 740077568,
+                "blk_write": 6004736,
+            },
         },
     )
     aioclient_mock.get(
@@ -92,7 +149,7 @@ async def test_setup_api_ping(hass, aioclient_mock):
         result = await async_setup_component(hass, "hassio", {})
         assert result
 
-    assert aioclient_mock.call_count == 9
+    assert aioclient_mock.call_count == 10
     assert hass.components.hassio.get_core_info()["version_latest"] == "1.0.0"
     assert hass.components.hassio.is_hassio()
 
@@ -131,7 +188,7 @@ async def test_setup_api_push_api_data(hass, aioclient_mock):
         )
         assert result
 
-    assert aioclient_mock.call_count == 9
+    assert aioclient_mock.call_count == 10
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
     assert aioclient_mock.mock_calls[1][2]["watchdog"]
@@ -147,7 +204,7 @@ async def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
         )
         assert result
 
-    assert aioclient_mock.call_count == 9
+    assert aioclient_mock.call_count == 10
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
     assert not aioclient_mock.mock_calls[1][2]["watchdog"]
@@ -159,7 +216,7 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock, hass_storag
         result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
         assert result
 
-    assert aioclient_mock.call_count == 9
+    assert aioclient_mock.call_count == 10
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 8123
     refresh_token = aioclient_mock.mock_calls[1][2]["refresh_token"]
@@ -170,6 +227,7 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock, hass_storag
     assert hassio_user.system_generated
     assert len(hassio_user.groups) == 1
     assert hassio_user.groups[0].id == GROUP_ID_ADMIN
+    assert hassio_user.name == "Supervisor"
     for token in hassio_user.refresh_tokens.values():
         if token.token == refresh_token:
             break
@@ -197,6 +255,25 @@ async def test_setup_adds_admin_group_to_user(hass, aioclient_mock, hass_storage
     assert user.is_admin
 
 
+async def test_setup_migrate_user_name(hass, aioclient_mock, hass_storage):
+    """Test setup with migrating the user name."""
+    # Create user with old name
+    user = await hass.auth.async_create_system_user("Hass.io")
+    await hass.auth.async_create_refresh_token(user)
+
+    hass_storage[STORAGE_KEY] = {
+        "data": {"hassio_user": user.id},
+        "key": STORAGE_KEY,
+        "version": 1,
+    }
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
+        assert result
+
+    assert user.name == "Supervisor"
+
+
 async def test_setup_api_existing_hassio_user(hass, aioclient_mock, hass_storage):
     """Test setup with API push default data."""
     user = await hass.auth.async_create_system_user("Hass.io test")
@@ -206,7 +283,7 @@ async def test_setup_api_existing_hassio_user(hass, aioclient_mock, hass_storage
         result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
         assert result
 
-    assert aioclient_mock.call_count == 9
+    assert aioclient_mock.call_count == 10
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 8123
     assert aioclient_mock.mock_calls[1][2]["refresh_token"] == token.token
@@ -220,7 +297,7 @@ async def test_setup_core_push_timezone(hass, aioclient_mock):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
         assert result
 
-    assert aioclient_mock.call_count == 9
+    assert aioclient_mock.call_count == 10
     assert aioclient_mock.mock_calls[2][2]["timezone"] == "testzone"
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
@@ -237,7 +314,7 @@ async def test_setup_hassio_no_additional_data(hass, aioclient_mock):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
         assert result
 
-    assert aioclient_mock.call_count == 9
+    assert aioclient_mock.call_count == 10
     assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
 
 
@@ -258,7 +335,7 @@ async def test_warn_when_cannot_connect(hass, caplog):
         assert result
 
     assert hass.components.hassio.is_hassio()
-    assert "Not connected with Hass.io / system too busy!" in caplog.text
+    assert "Not connected with the supervisor / system too busy!" in caplog.text
 
 
 async def test_service_register(hassio_env, hass):
@@ -272,13 +349,13 @@ async def test_service_register(hassio_env, hass):
     assert hass.services.has_service("hassio", "host_shutdown")
     assert hass.services.has_service("hassio", "host_reboot")
     assert hass.services.has_service("hassio", "host_reboot")
-    assert hass.services.has_service("hassio", "snapshot_full")
-    assert hass.services.has_service("hassio", "snapshot_partial")
+    assert hass.services.has_service("hassio", "backup_full")
+    assert hass.services.has_service("hassio", "backup_partial")
     assert hass.services.has_service("hassio", "restore_full")
     assert hass.services.has_service("hassio", "restore_partial")
 
 
-async def test_service_calls(hassio_env, hass, aioclient_mock):
+async def test_service_calls(hassio_env, hass, aioclient_mock, caplog):
     """Call service and check the API calls behind that."""
     assert await async_setup_component(hass, "hassio", {})
 
@@ -289,13 +366,13 @@ async def test_service_calls(hassio_env, hass, aioclient_mock):
     aioclient_mock.post("http://127.0.0.1/addons/test/stdin", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/host/shutdown", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/host/reboot", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/snapshots/new/full", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/snapshots/new/partial", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/backups/new/full", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/backups/new/partial", json={"result": "ok"})
     aioclient_mock.post(
-        "http://127.0.0.1/snapshots/test/restore/full", json={"result": "ok"}
+        "http://127.0.0.1/backups/test/restore/full", json={"result": "ok"}
     )
     aioclient_mock.post(
-        "http://127.0.0.1/snapshots/test/restore/partial", json={"result": "ok"}
+        "http://127.0.0.1/backups/test/restore/partial", json={"result": "ok"}
     )
 
     await hass.services.async_call("hassio", "addon_start", {"addon": "test"})
@@ -316,10 +393,10 @@ async def test_service_calls(hassio_env, hass, aioclient_mock):
 
     assert aioclient_mock.call_count == 10
 
-    await hass.services.async_call("hassio", "snapshot_full", {})
+    await hass.services.async_call("hassio", "backup_full", {})
     await hass.services.async_call(
         "hassio",
-        "snapshot_partial",
+        "backup_partial",
         {"addons": ["test"], "folders": ["ssl"], "password": "123456"},
     )
     await hass.async_block_till_done()
@@ -331,12 +408,14 @@ async def test_service_calls(hassio_env, hass, aioclient_mock):
         "password": "123456",
     }
 
-    await hass.services.async_call("hassio", "restore_full", {"snapshot": "test"})
+    await hass.services.async_call("hassio", "restore_full", {"slug": "test"})
+    await hass.async_block_till_done()
+
     await hass.services.async_call(
         "hassio",
         "restore_partial",
         {
-            "snapshot": "test",
+            "slug": "test",
             "homeassistant": False,
             "addons": ["test"],
             "folders": ["ssl"],
@@ -414,6 +493,7 @@ async def test_device_registry_calls(hass):
         "addons": [
             {
                 "name": "test",
+                "state": "started",
                 "slug": "test",
                 "installed": True,
                 "update_available": False,
@@ -424,6 +504,7 @@ async def test_device_registry_calls(hass):
             },
             {
                 "name": "test2",
+                "state": "started",
                 "slug": "test2",
                 "installed": True,
                 "update_available": False,
@@ -458,6 +539,7 @@ async def test_device_registry_calls(hass):
         "addons": [
             {
                 "name": "test2",
+                "state": "started",
                 "slug": "test2",
                 "installed": True,
                 "update_available": False,
@@ -489,6 +571,7 @@ async def test_device_registry_calls(hass):
             {
                 "name": "test2",
                 "slug": "test2",
+                "state": "started",
                 "installed": True,
                 "update_available": False,
                 "version": "1.0.0",
@@ -498,6 +581,7 @@ async def test_device_registry_calls(hass):
             {
                 "name": "test3",
                 "slug": "test3",
+                "state": "stopped",
                 "installed": True,
                 "update_available": False,
                 "version": "1.0.0",

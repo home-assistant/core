@@ -145,10 +145,10 @@ async def async_unload_entry(hass, config_entry):
 
     # our components don't have unload methods so no need to look at return values
     await asyncio.gather(
-        *[
+        *(
             hass.config_entries.async_forward_entry_unload(config_entry, platform)
             for platform in PLATFORMS
-        ]
+        )
     )
 
     hass.data[DATA_ZHA][DATA_ZHA_SHUTDOWN_TASK]()
@@ -184,6 +184,15 @@ async def async_migrate_entry(
             data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
 
         config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
+    if config_entry.version == 2:
+        data = {**config_entry.data}
+
+        if data[CONF_RADIO_TYPE] == "ti_cc":
+            data[CONF_RADIO_TYPE] = "znp"
+
+        config_entry.version = 3
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)

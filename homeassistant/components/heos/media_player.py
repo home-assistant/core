@@ -1,7 +1,6 @@
 """Denon HEOS Media Player."""
 from __future__ import annotations
 
-from collections.abc import Sequence
 from functools import reduce, wraps
 import logging
 from operator import ior
@@ -256,13 +255,13 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Get attributes about the device."""
-        return {
-            "identifiers": {(HEOS_DOMAIN, self._player.player_id)},
-            "name": self._player.name,
-            "model": self._player.model,
-            "manufacturer": "HEOS",
-            "sw_version": self._player.version,
-        }
+        return DeviceInfo(
+            identifiers={(HEOS_DOMAIN, self._player.player_id)},
+            manufacturer="HEOS",
+            model=self._player.model,
+            name=self._player.name,
+            sw_version=self._player.version,
+        )
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -362,7 +361,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._source_manager.get_current_source(self._player.now_playing_media)
 
     @property
-    def source_list(self) -> Sequence[str]:
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         return self._source_manager.source_list
 

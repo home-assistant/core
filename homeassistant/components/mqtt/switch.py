@@ -1,11 +1,14 @@
 """Support for MQTT switches."""
+from __future__ import annotations
+
 import functools
 
 import voluptuous as vol
 
 from homeassistant.components import switch
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import DEVICE_CLASSES_SCHEMA, SwitchEntity
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
@@ -19,18 +22,18 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import (
-    CONF_COMMAND_TOPIC,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    DOMAIN,
-    PLATFORMS,
-    subscription,
-)
+from . import PLATFORMS, subscription
 from .. import mqtt
+from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+
+MQTT_SWITCH_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        switch.ATTR_CURRENT_POWER_W,
+        switch.ATTR_TODAY_ENERGY_KWH,
+    }
+)
 
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -47,8 +50,12 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_STATE_OFF): cv.string,
         vol.Optional(CONF_STATE_ON): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_platform(
@@ -64,7 +71,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
-    await async_setup_entry_helper(hass, switch.DOMAIN, setup, PLATFORM_SCHEMA)
+    await async_setup_entry_helper(hass, switch.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
@@ -76,6 +83,8 @@ async def _async_setup_entity(
 
 class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     """Representation of a switch that can be toggled using MQTT."""
+
+    _attributes_extra_blocked = MQTT_SWITCH_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT switch."""
@@ -90,7 +99,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA
+        return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -140,10 +149,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                 },
             )
 
-        if self._optimistic:
-            last_state = await self.async_get_last_state()
-            if last_state:
-                self._state = last_state.state == STATE_ON
+        if self._optimistic and (last_state := await self.async_get_last_state()):
+            self._state = last_state.state == STATE_ON
 
     @property
     def is_on(self):
@@ -155,12 +162,17 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         """Return true if we do optimistic updates."""
         return self._optimistic
 
+    @property
+    def device_class(self) -> str | None:
+        """Return the device class of the sensor."""
+        return self._config.get(CONF_DEVICE_CLASS)
+
     async def async_turn_on(self, **kwargs):
         """Turn the device on.
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_ON],
@@ -177,7 +189,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_OFF],

@@ -1,11 +1,11 @@
 """Native Home Assistant iOS app component."""
 import datetime
+from http import HTTPStatus
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
@@ -212,20 +212,20 @@ CONFIGURATION_FILE = ".ios.conf"
 
 def devices_with_push(hass):
     """Return a dictionary of push enabled targets."""
-    targets = {}
-    for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items():
-        if device.get(ATTR_PUSH_ID) is not None:
-            targets[device_name] = device.get(ATTR_PUSH_ID)
-    return targets
+    return {
+        device_name: device.get(ATTR_PUSH_ID)
+        for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items()
+        if device.get(ATTR_PUSH_ID) is not None
+    }
 
 
 def enabled_push_ids(hass):
     """Return a list of push enabled target push IDs."""
-    push_ids = []
-    for device in hass.data[DOMAIN][ATTR_DEVICES].values():
-        if device.get(ATTR_PUSH_ID) is not None:
-            push_ids.append(device.get(ATTR_PUSH_ID))
-    return push_ids
+    return [
+        device.get(ATTR_PUSH_ID)
+        for device in hass.data[DOMAIN][ATTR_DEVICES].values()
+        if device.get(ATTR_PUSH_ID) is not None
+    ]
 
 
 def devices(hass):
@@ -333,17 +333,9 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
-
-        # Commented for now while iOS app is getting frequent updates
-        # try:
-        #     data = IDENTIFY_SCHEMA(req_data)
-        # except vol.Invalid as ex:
-        #     return self.json_message(
-        #         vol.humanize.humanize_error(request.json, ex),
-        #         HTTP_BAD_REQUEST)
 
         data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 
@@ -356,6 +348,8 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         try:
             save_json(self._config_path, hass.data[DOMAIN])
         except HomeAssistantError:
-            return self.json_message("Error saving device.", HTTP_INTERNAL_SERVER_ERROR)
+            return self.json_message(
+                "Error saving device.", HTTPStatus.INTERNAL_SERVER_ERROR
+            )
 
         return self.json({"status": "registered"})

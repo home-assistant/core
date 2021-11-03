@@ -9,5 +9,10 @@
                 "description": "Wilt u Wemo instellen?"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Wemo-knop werd 2 seconden ingedrukt"
+        }
     }
 }

@@ -1,5 +1,7 @@
 """Configure pytest for Litter-Robot tests."""
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pylitterbot import Account, Robot
@@ -15,7 +17,7 @@ from tests.common import MockConfigEntry
 
 
 def create_mock_robot(
-    robot_data: Optional[dict] = None, side_effect: Optional[Any] = None
+    robot_data: dict | None = None, side_effect: Any | None = None
 ) -> Robot:
     """Create a mock Litter-Robot device."""
     if not robot_data:
@@ -33,8 +35,8 @@ def create_mock_robot(
 
 
 def create_mock_account(
-    robot_data: Optional[dict] = None,
-    side_effect: Optional[Any] = None,
+    robot_data: dict | None = None,
+    side_effect: Any | None = None,
     skip_robots: bool = False,
 ) -> MagicMock:
     """Create a mock Litter-Robot account."""
@@ -58,6 +60,12 @@ def mock_account_with_no_robots() -> MagicMock:
 
 
 @pytest.fixture
+def mock_account_with_sleeping_robot() -> MagicMock:
+    """Mock a Litter-Robot account with a sleeping robot."""
+    return create_mock_account({"sleepModeActive": "102:00:00"})
+
+
+@pytest.fixture
 def mock_account_with_error() -> MagicMock:
     """Mock a Litter-Robot account with error."""
     return create_mock_account({"unitStatus": "BR"})
@@ -72,7 +80,7 @@ def mock_account_with_side_effects() -> MagicMock:
 
 
 async def setup_integration(
-    hass: HomeAssistant, mock_account: MagicMock, platform_domain: Optional[str] = None
+    hass: HomeAssistant, mock_account: MagicMock, platform_domain: str | None = None
 ) -> MockConfigEntry:
     """Load a Litter-Robot platform with the provided hub."""
     entry = MockConfigEntry(

@@ -87,6 +87,8 @@ def mock_spa(spa_state):
 
     mock_spa.get_reminders.return_value = [mock_filter_reminder]
 
+    mock_spa.get_errors.return_value = []
+
     return mock_spa
 
 

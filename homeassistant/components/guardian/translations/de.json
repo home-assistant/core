@@ -6,6 +6,9 @@
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "M\u00f6chtest du dieses Guardian-Ger\u00e4t einrichten?"
+            },
             "user": {
                 "data": {
                     "ip_address": "IP-Adresse",

@@ -16,8 +16,10 @@ from tests.common import async_fire_time_changed, mock_coro
 SERVICE = "yamaha"
 SERVICE_COMPONENT = "media_player"
 
-SERVICE_NO_PLATFORM = "netgear_router"
-SERVICE_NO_PLATFORM_COMPONENT = "device_tracker"
+# sabnzbd is the last no platform integration to be migrated
+# drop these tests once it is migrated
+SERVICE_NO_PLATFORM = "sabnzbd"
+SERVICE_NO_PLATFORM_COMPONENT = "sabnzbd"
 SERVICE_INFO = {"key": "value"}  # Can be anything
 
 UNKNOWN_SERVICE = "this_service_will_never_be_supported"
@@ -60,7 +62,7 @@ async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
 async def test_unknown_service(hass):
     """Test that unknown service is ignored."""
 
-    def discover(netdisco, zeroconf_instance):
+    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
         """Fake discovery."""
         return [("this_service_will_never_be_supported", {"info": "some"})]
 
@@ -73,7 +75,7 @@ async def test_unknown_service(hass):
 async def test_load_platform(hass):
     """Test load a platform."""
 
-    def discover(netdisco, zeroconf_instance):
+    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
         """Fake discovery."""
         return [(SERVICE, SERVICE_INFO)]
 
@@ -89,7 +91,7 @@ async def test_load_platform(hass):
 async def test_load_component(hass):
     """Test load a component."""
 
-    def discover(netdisco, zeroconf_instance):
+    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
         """Fake discovery."""
         return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
 
@@ -109,7 +111,7 @@ async def test_load_component(hass):
 async def test_ignore_service(hass):
     """Test ignore service."""
 
-    def discover(netdisco, zeroconf_instance):
+    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
         """Fake discovery."""
         return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
 
@@ -122,7 +124,7 @@ async def test_ignore_service(hass):
 async def test_discover_duplicates(hass):
     """Test load a component."""
 
-    def discover(netdisco, zeroconf_instance):
+    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
         """Fake discovery."""
         return [
             (SERVICE_NO_PLATFORM, SERVICE_INFO),
@@ -147,7 +149,7 @@ async def test_discover_config_flow(hass):
     """Test discovery triggering a config flow."""
     discovery_info = {"hello": "world"}
 
-    def discover(netdisco, zeroconf_instance):
+    def discover(netdisco, zeroconf_instance, suppress_mdns_types):
         """Fake discovery."""
         return [("mock-service", discovery_info)]
 

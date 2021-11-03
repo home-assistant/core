@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Compte d\u00e9j\u00e0 configur\u00e9",
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
@@ -11,7 +11,8 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Emplacement"
+                    "location": "Emplacement",
+                    "usercode": "Code d'utilisateur"
                 },
                 "description": "Saisissez le code d'utilisateur de cet utilisateur \u00e0 cet emplacement",
                 "title": "Codes d'utilisateur de l'emplacement"

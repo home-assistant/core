@@ -62,8 +62,7 @@ POSITION_ACTION = "set_cover_position"
 TILT_ACTION = "set_cover_tilt_position"
 CONF_TILT_OPTIMISTIC = "tilt_optimistic"
 
-CONF_VALUE_OR_POSITION_TEMPLATE = "value_or_position"
-CONF_OPEN_OR_CLOSE = "open_or_close"
+CONF_OPEN_AND_CLOSE = "open_or_close"
 
 TILT_FEATURES = (
     SUPPORT_OPEN_TILT
@@ -76,15 +75,10 @@ COVER_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
-            vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
-            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
+            vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
+            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Exclusive(
-                CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
-            ): cv.template,
-            vol.Exclusive(
-                CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
-            ): cv.template,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
             vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
             vol.Optional(CONF_TILT_TEMPLATE): cv.template,
@@ -258,10 +252,11 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         state = str(result).lower()
 
         if state in _VALID_STATES:
-            if state in ("true", STATE_OPEN):
-                self._position = 100
-            else:
-                self._position = 0
+            if not self._position_template:
+                if state in ("true", STATE_OPEN):
+                    self._position = 100
+                else:
+                    self._position = 0
 
             self._is_opening = state == STATE_OPENING
             self._is_closing = state == STATE_CLOSING
@@ -271,7 +266,8 @@ class CoverTemplate(TemplateEntity, CoverEntity):
                 state,
                 ", ".join(_VALID_STATES),
             )
-            self._position = None
+            if not self._position_template:
+                self._position = None
 
     @callback
     def _update_position(self, result):

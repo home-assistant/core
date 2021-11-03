@@ -33,10 +33,6 @@ class VeSyncFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors if errors else {},
         )
 
-    async def async_step_import(self, import_config):
-        """Handle external yaml configuration."""
-        return await self.async_step_user(import_config)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         if self._async_current_entries():

@@ -1,8 +1,8 @@
 """Support for Smart Meter Texas sensors."""
 from smart_meter_texas import Meter
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR
+from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
+from homeassistant.const import CONF_ADDRESS, DEVICE_CLASS_ENERGY, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import (
@@ -33,17 +33,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Representation of an Smart Meter Texas sensor."""
 
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+
     def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.meter = meter
         self._state = None
         self._available = False
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return ENERGY_KILO_WATT_HOUR
 
     @property
     def name(self):
@@ -61,7 +60,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the latest reading."""
         return self._state
 
@@ -93,7 +92,6 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         if self.coordinator.last_update_success:
             return
 
-        last_state = await self.async_get_last_state()
-        if last_state:
+        if last_state := await self.async_get_last_state():
             self._state = last_state.state
             self._available = True

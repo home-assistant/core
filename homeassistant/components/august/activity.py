@@ -61,9 +61,9 @@ class ActivityStream(AugustSubscriberMixin):
         """Cleanup any debounces."""
         for debouncer in self._update_debounce.values():
             debouncer.async_cancel()
-        for house_id in self._schedule_updates:
-            if self._schedule_updates[house_id] is not None:
-                self._schedule_updates[house_id]()
+        for house_id, updater in self._schedule_updates.items():
+            if updater is not None:
+                updater()
                 self._schedule_updates[house_id] = None
 
     def get_latest_device_activity(self, device_id, activity_types):
@@ -98,10 +98,10 @@ class ActivityStream(AugustSubscriberMixin):
     async def _async_update_device_activities(self, time):
         _LOGGER.debug("Start retrieving device activities")
         await asyncio.gather(
-            *[
+            *(
                 self._update_debounce[house_id].async_call()
                 for house_id in self._house_ids
-            ]
+            )
         )
         self._last_update_time = time
 

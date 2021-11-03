@@ -1,7 +1,11 @@
 """The Netatmo integration."""
+from __future__ import annotations
+
+from http import HTTPStatus
 import logging
 import secrets
 
+import aiohttp
 import pyatmo
 import voluptuous as vol
 
@@ -19,6 +23,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -29,6 +34,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
 from .const import (
@@ -42,6 +48,7 @@ from .const import (
     DATA_PERSONS,
     DATA_SCHEDULES,
     DOMAIN,
+    NETATMO_SCOPES,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
     PLATFORMS,
@@ -67,7 +74,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Netatmo component."""
     hass.data[DOMAIN] = {
         DATA_PERSONS: {},
@@ -96,7 +103,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Netatmo from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -109,6 +116,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientResponseError as ex:
+        _LOGGER.debug("API error: %s (%s)", ex.code, ex.message)
+        if ex.code in (
+            HTTPStatus.BAD_REQUEST,
+            HTTPStatus.UNAUTHORIZED,
+            HTTPStatus.FORBIDDEN,
+        ):
+            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
+        raise ConfigEntryNotReady from ex
+
+    if sorted(session.token["scope"]) != sorted(NETATMO_SCOPES):
+        _LOGGER.debug(
+            "Scope is invalid: %s != %s", session.token["scope"], NETATMO_SCOPES
+        )
+        raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
+
     hass.data[DOMAIN][entry.entry_id] = {
         AUTH: api.AsyncConfigEntryNetatmoAuth(
             aiohttp_client.async_get_clientsession(hass), session
@@ -121,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def unregister_webhook(_):
+    async def unregister_webhook(_: None) -> None:
         if CONF_WEBHOOK_ID not in entry.data:
             return
         _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
@@ -131,9 +156,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             {"type": "None", "data": {WEBHOOK_PUSH_TYPE: WEBHOOK_DEACTIVATION}},
         )
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
+        try:
+            await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
+        except pyatmo.ApiError:
+            _LOGGER.debug(
+                "No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID]
+            )
 
-    async def register_webhook(event):
+    async def register_webhook(_: None) -> None:
         if CONF_WEBHOOK_ID not in entry.data:
             data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
             hass.config_entries.async_update_entry(entry, data=data)
@@ -170,7 +200,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 async_handle_webhook,
             )
 
-            async def handle_event(event):
+            async def handle_event(event: dict) -> None:
                 """Handle webhook events."""
                 if event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_ACTIVATION:
                     if activation_listener is not None:
@@ -204,27 +234,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
     hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)
 
+    entry.add_update_listener(async_config_entry_updated)
+
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle signals of config entry being updated."""
+    async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    data = hass.data[DOMAIN]
+
     if CONF_WEBHOOK_ID in entry.data:
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
+        await data[entry.entry_id][AUTH].async_dropwebhook()
         _LOGGER.info("Unregister Netatmo webhook")
-
-    await hass.data[DOMAIN][entry.entry_id][DATA_HANDLER].async_cleanup()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+    if unload_ok and entry.entry_id in data:
+        data.pop(entry.entry_id)
 
     return unload_ok
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
     if (
         CONF_WEBHOOK_ID in entry.data

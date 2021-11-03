@@ -1,6 +1,5 @@
 """The test for the statistics sensor platform."""
 from datetime import datetime, timedelta
-from os import path
 import statistics
 import unittest
 from unittest.mock import patch
@@ -21,6 +20,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import (
     fire_time_changed,
+    get_fixture_path,
     get_test_home_assistant,
     init_recorder_component,
 )
@@ -48,6 +48,9 @@ class TestStatisticsSensor(unittest.TestCase):
         self.median = round(statistics.median(self.values), 2)
         self.deviation = round(statistics.stdev(self.values), 2)
         self.variance = round(statistics.variance(self.values), 2)
+        self.quantiles = [
+            round(quantile, 2) for quantile in statistics.quantiles(self.values)
+        ]
         self.change = round(self.values[-1] - self.values[0], 2)
         self.average_change = round(self.change / (len(self.values) - 1), 2)
         self.change_rate = round(self.change / (60 * (self.count - 1)), 2)
@@ -112,12 +115,25 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.variance == state.attributes.get("variance")
         assert self.median == state.attributes.get("median")
         assert self.deviation == state.attributes.get("standard_deviation")
+        assert self.quantiles == state.attributes.get("quantiles")
         assert self.mean == state.attributes.get("mean")
         assert self.count == state.attributes.get("count")
         assert self.total == state.attributes.get("total")
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
+
+        # Source sensor is unavailable, unit and state should not change
+        self.hass.states.set("sensor.test_monitored", "unavailable", {})
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert state == new_state
+
+        # Source sensor has a non float state, unit and state should not change
+        self.hass.states.set("sensor.test_monitored", "beer", {})
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert state == new_state
 
     def test_sampling_size(self):
         """Test rotation."""
@@ -188,6 +204,7 @@ class TestStatisticsSensor(unittest.TestCase):
         # require at least two data points
         assert state.attributes.get("variance") == STATE_UNKNOWN
         assert state.attributes.get("standard_deviation") == STATE_UNKNOWN
+        assert state.attributes.get("quantiles") == STATE_UNKNOWN
 
     def test_max_age(self):
         """Test value deprecation."""
@@ -375,6 +392,7 @@ class TestStatisticsSensor(unittest.TestCase):
         # check if the result is as in test_sensor_source()
         state = self.hass.states.get("sensor.test")
         assert str(self.mean) == state.state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     def test_initialize_from_database_with_maxage(self):
         """Test initializing the statistics from the database."""
@@ -478,11 +496,7 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "statistics/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "statistics")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -496,7 +510,3 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.cputest")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

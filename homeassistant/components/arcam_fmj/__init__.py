@@ -7,7 +7,7 @@ from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
 import async_timeout
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -36,14 +36,14 @@ async def _await_cancel(task):
         await task
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
     hass.data[DOMAIN_DATA_ENTRIES] = {}
     hass.data[DOMAIN_DATA_TASKS] = {}
 
     async def _stop(_):
         asyncio.gather(
-            *[_await_cancel(task) for task in hass.data[DOMAIN_DATA_TASKS].values()]
+            *(_await_cancel(task) for task in hass.data[DOMAIN_DATA_TASKS].values())
         )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
@@ -51,7 +51,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
     entries = hass.data[DOMAIN_DATA_ENTRIES]
     tasks = hass.data[DOMAIN_DATA_TASKS]

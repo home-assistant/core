@@ -1,8 +1,6 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "not_huawei_lte": "Not a Huawei LTE device"
     },
     "error": {
@@ -23,7 +21,7 @@
           "url": "[%key:common::config_flow::data::url%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
-        "description": "Enter device access details. Specifying username and password is optional, but enables support for more integration features. On the other hand, use of an authorized connection may cause problems accessing the device web interface from outside Home Assistant while the integration is active, and the other way around.",
+        "description": "Enter device access details.",
         "title": "Configure Huawei LTE"
       }
     }
@@ -34,7 +32,8 @@
         "data": {
           "name": "Notification service name (change requires restart)",
           "recipient": "SMS notification recipients",
-          "track_wired_clients": "Track wired network clients"
+          "track_wired_clients": "Track wired network clients",
+          "unauthenticated_mode": "Unauthenticated mode (change requires reload)"
         }
       }
     }

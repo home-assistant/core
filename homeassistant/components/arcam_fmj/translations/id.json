@@ -5,7 +5,7 @@
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "cannot_connect": "Gagal terhubung"
         },
-        "flow_title": "Arcam FMJ di {host}",
+        "flow_title": "{host}",
         "step": {
             "confirm": {
                 "description": "Ingin menambahkan Arcam FMJ `{host}` ke Home Assistant?"

@@ -58,6 +58,15 @@ ZEROCONF = {
     "_dvl-deviceapi._tcp.local.": [
         {
             "domain": "devolo_home_control"
+        },
+        {
+            "domain": "devolo_home_network"
+        }
+    ],
+    "_easylink._tcp.local.": [
+        {
+            "domain": "modern_forms",
+            "name": "wac*"
         }
     ],
     "_elg._tcp.local.": [
@@ -109,6 +118,10 @@ ZEROCONF = {
             "name": "nam-*"
         },
         {
+            "domain": "nam",
+            "manufacturer": "nettigo"
+        },
+        {
             "domain": "rachio",
             "name": "rachio*"
         },
@@ -119,6 +132,11 @@ ZEROCONF = {
         {
             "domain": "shelly",
             "name": "shelly*"
+        }
+    ],
+    "_hue._tcp.local.": [
+        {
+            "domain": "hue"
         }
     ],
     "_ipp._tcp.local.": [
@@ -142,6 +160,11 @@ ZEROCONF = {
             "domain": "lutron_caseta"
         }
     ],
+    "_lookin._tcp.local.": [
+        {
+            "domain": "lookin"
+        }
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv"
@@ -153,11 +176,35 @@ ZEROCONF = {
         },
         {
             "domain": "xiaomi_miio"
+        },
+        {
+            "domain": "yeelight",
+            "name": "yeelink-*"
+        }
+    ],
+    "_nanoleafapi._tcp.local.": [
+        {
+            "domain": "nanoleaf"
+        }
+    ],
+    "_nanoleafms._tcp.local.": [
+        {
+            "domain": "nanoleaf"
         }
     ],
     "_nut._tcp.local.": [
         {
             "domain": "nut"
+        }
+    ],
+    "_octoprint._tcp.local.": [
+        {
+            "domain": "octoprint"
+        }
+    ],
+    "_plexmediasvr._tcp.local.": [
+        {
+            "domain": "plex"
         }
     ],
     "_plugwise._tcp.local.": [
@@ -174,6 +221,11 @@ ZEROCONF = {
         {
             "domain": "brother",
             "name": "brother*"
+        }
+    ],
+    "_sonos._tcp.local.": [
+        {
+            "domain": "sonos"
         }
     ],
     "_spotify-connect._tcp.local.": [
@@ -236,6 +288,7 @@ HOMEKIT = {
     "Iota": "abode",
     "LIFX": "lifx",
     "MYQ": "myq",
+    "NL*": "nanoleaf",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
@@ -247,7 +300,7 @@ HOMEKIT = {
     "Touch HD": "rainmachine",
     "Welcome": "netatmo",
     "Wemo": "wemo",
-    "YLDP*": "yeelight",
+    "YL*": "yeelight",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"

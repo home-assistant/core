@@ -78,6 +78,41 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
     assert conditions == expected_conditions
 
 
+async def test_get_conditions_no_state(hass, device_reg, entity_reg):
+    """Test we get the expected conditions from a binary_sensor."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_ids = {}
+    for device_class in DEVICE_CLASSES:
+        entity_ids[device_class] = entity_reg.async_get_or_create(
+            DOMAIN,
+            "test",
+            f"5678_{device_class}",
+            device_id=device_entry.id,
+            device_class=device_class,
+        ).entity_id
+
+    await hass.async_block_till_done()
+
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": condition["type"],
+            "device_id": device_entry.id,
+            "entity_id": entity_ids[device_class],
+        }
+        for device_class in DEVICE_CLASSES
+        for condition in ENTITY_CONDITIONS[device_class]
+    ]
+    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    assert conditions == expected_conditions
+
+
 async def test_get_condition_capabilities(hass, device_reg, entity_reg):
     """Test we get the expected capabilities from a binary_sensor condition."""
     config_entry = MockConfigEntry(domain="test", data={})

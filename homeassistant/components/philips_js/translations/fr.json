@@ -29,5 +29,14 @@
         "trigger_type": {
             "turn_on": "Il a \u00e9t\u00e9 demand\u00e9 \u00e0 l'appareil de s'allumer"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Autoriser l'utilisation du service de notification de donn\u00e9es."
+                }
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -15,9 +16,9 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     state_report as alexa_state_report,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_BAD_REQUEST
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er, start
 from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -55,12 +56,6 @@ class AlexaConfig(alexa_config.AbstractConfig):
         self._cur_default_expose = prefs.alexa_default_expose
         self._alexa_sync_unsub = None
         self._endpoint = None
-
-        prefs.async_listen_updates(self._async_prefs_updated)
-        hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._handle_entity_registry_updated,
-        )
 
     @property
     def enabled(self):
@@ -107,8 +102,18 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
     async def async_initialize(self):
         """Initialize the Alexa config."""
-        if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
-            await async_setup_component(self.hass, ALEXA_DOMAIN, {})
+
+        async def hass_started(hass):
+            if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
+                await async_setup_component(self.hass, ALEXA_DOMAIN, {})
+
+        start.async_at_start(self.hass, hass_started)
+
+        self._prefs.async_listen_updates(self._async_prefs_updated)
+        self.hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._handle_entity_registry_updated,
+        )
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
@@ -124,13 +129,17 @@ class AlexaConfig(alexa_config.AbstractConfig):
         if entity_expose is not None:
             return entity_expose
 
-        default_expose = self._prefs.alexa_default_expose
+        entity_registry = er.async_get(self.hass)
+        if registry_entry := entity_registry.async_get(entity_id):
+            auxiliary_entity = registry_entry.entity_category in ENTITY_CATEGORIES
+        else:
+            auxiliary_entity = False
 
         # Backwards compat
-        if default_expose is None:
-            return True
+        if (default_expose := self._prefs.alexa_default_expose) is None:
+            return not auxiliary_entity
 
-        return split_entity_id(entity_id)[0] in default_expose
+        return not auxiliary_entity and split_entity_id(entity_id)[0] in default_expose
 
     @callback
     def async_invalidate_access_token(self):
@@ -145,7 +154,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
         resp = await cloud_api.async_alexa_access_token(self._cloud)
         body = await resp.json()
 
-        if resp.status == HTTP_BAD_REQUEST:
+        if resp.status == HTTPStatus.BAD_REQUEST:
             if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
                     await self._prefs.async_update(alexa_report_state=False)
@@ -167,6 +176,15 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
     async def _async_prefs_updated(self, prefs):
         """Handle updated preferences."""
+        if not self._cloud.is_logged_in:
+            if self.is_reporting_states:
+                await self.async_disable_proactive_mode()
+
+            if self._alexa_sync_unsub:
+                self._alexa_sync_unsub()
+                self._alexa_sync_unsub = None
+            return
+
         if ALEXA_DOMAIN not in self.hass.config.components and self.enabled:
             await async_setup_component(self.hass, ALEXA_DOMAIN, {})
 
@@ -327,7 +345,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
         elif action == "remove":
             to_remove.append(entity_id)
         elif action == "update" and bool(
-            set(event.data["changes"]) & entity_registry.ENTITY_DESCRIBING_ATTRIBUTES
+            set(event.data["changes"]) & er.ENTITY_DESCRIBING_ATTRIBUTES
         ):
             to_update.append(entity_id)
             if "old_entity_id" in event.data:

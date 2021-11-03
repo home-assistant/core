@@ -1,6 +1,6 @@
 """Base class for August entity."""
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from . import DOMAIN
 from .const import MANUFACTURER
@@ -11,16 +11,21 @@ DEVICE_TYPES = ["keypad", "lock", "camera", "doorbell", "door", "bell"]
 class AugustEntityMixin(Entity):
     """Base implementation for August device."""
 
+    _attr_should_poll = False
+
     def __init__(self, data, device):
         """Initialize an August device."""
         super().__init__()
         self._data = data
         self._device = device
-
-    @property
-    def should_poll(self):
-        """Return False, updates are controlled via the hub."""
-        return False
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=MANUFACTURER,
+            model=self._detail.model,
+            name=device.device_name,
+            sw_version=self._detail.firmware_version,
+            suggested_area=_remove_device_types(device.device_name, DEVICE_TYPES),
+        )
 
     @property
     def _device_id(self):
@@ -29,19 +34,6 @@ class AugustEntityMixin(Entity):
     @property
     def _detail(self):
         return self._data.get_device_detail(self._device.device_id)
-
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        name = self._device.device_name
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": name,
-            "manufacturer": MANUFACTURER,
-            "sw_version": self._detail.firmware_version,
-            "model": self._detail.model,
-            "suggested_area": _remove_device_types(name, DEVICE_TYPES),
-        }
 
     @callback
     def _update_from_data_and_write_state(self):

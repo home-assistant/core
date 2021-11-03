@@ -1,4 +1,5 @@
 """Test the Rituals Perfume Genie config flow."""
+from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError
@@ -16,7 +17,8 @@ WRONG_PASSWORD = "wrong-passw0rd"
 def _mock_account(*_):
     account = MagicMock()
     account.authenticate = AsyncMock()
-    account.data = {CONF_EMAIL: TEST_EMAIL, ACCOUNT_HASH: "any"}
+    account.account_hash = "any"
+    account.email = TEST_EMAIL
     return account
 
 
@@ -102,7 +104,9 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.rituals_perfume_genie.config_flow.Account.authenticate",
-        side_effect=ClientResponseError(None, None, status=500),
+        side_effect=ClientResponseError(
+            None, None, status=HTTPStatus.INTERNAL_SERVER_ERROR
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

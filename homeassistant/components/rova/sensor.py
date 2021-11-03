@@ -1,4 +1,5 @@
 """Support for Rova garbage calendar."""
+from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
@@ -7,7 +8,11 @@ from requests.exceptions import ConnectTimeout, HTTPError
 from rova.rova import Rova
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
@@ -24,13 +29,28 @@ CONF_HOUSE_NUMBER_SUFFIX = "house_number_suffix"
 UPDATE_DELAY = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
 
-# Supported sensor types:
-# Key: [json_key, name, icon]
-SENSOR_TYPES = {
-    "bio": ["gft", "Biowaste", "mdi:recycle"],
-    "paper": ["papier", "Paper", "mdi:recycle"],
-    "plastic": ["pmd", "PET", "mdi:recycle"],
-    "residual": ["restafval", "Residual", "mdi:recycle"],
+
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    "bio": SensorEntityDescription(
+        key="gft",
+        name="bio",
+        icon="mdi:recycle",
+    ),
+    "paper": SensorEntityDescription(
+        key="papier",
+        name="paper",
+        icon="mdi:recycle",
+    ),
+    "plastic": SensorEntityDescription(
+        key="pmd",
+        name="plastic",
+        icon="mdi:recycle",
+    ),
+    "residual": SensorEntityDescription(
+        key="restafval",
+        name="residual",
+        icon="mdi:recycle",
+    ),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -71,53 +91,32 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data_service = RovaData(api)
 
     # Create a new sensor for each garbage type.
-    entities = []
-    for sensor_key in config[CONF_MONITORED_CONDITIONS]:
-        sensor = RovaSensor(platform_name, sensor_key, data_service)
-        entities.append(sensor)
-
+    entities = [
+        RovaSensor(platform_name, SENSOR_TYPES[sensor_key], data_service)
+        for sensor_key in config[CONF_MONITORED_CONDITIONS]
+    ]
     add_entities(entities, True)
 
 
 class RovaSensor(SensorEntity):
     """Representation of a Rova sensor."""
 
-    def __init__(self, platform_name, sensor_key, data_service):
+    def __init__(
+        self, platform_name, description: SensorEntityDescription, data_service
+    ):
         """Initialize the sensor."""
-        self.sensor_key = sensor_key
-        self.platform_name = platform_name
+        self.entity_description = description
         self.data_service = data_service
 
-        self._state = None
-
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f"{self.platform_name}_{self.sensor_key}"
-
-    @property
-    def icon(self):
-        """Return the sensor icon."""
-        return SENSOR_TYPES[self.sensor_key][2]
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_TIMESTAMP
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
+        self._attr_name = f"{platform_name}_{description.name}"
+        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     def update(self):
         """Get the latest data from the sensor and update the state."""
         self.data_service.update()
-        pickup_date = self.data_service.data.get(self._json_key)
+        pickup_date = self.data_service.data.get(self.entity_description.key)
         if pickup_date is not None:
-            self._state = pickup_date.isoformat()
+            self._attr_native_value = pickup_date.isoformat()
 
 
 class RovaData:

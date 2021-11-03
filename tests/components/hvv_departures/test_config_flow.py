@@ -256,7 +256,6 @@ async def test_options_flow(hass):
         title="Wartenau",
         data=FIXTURE_CONFIG_ENTRY,
         source=SOURCE_USER,
-        system_options={"disable_new_entities": False},
         options=FIXTURE_OPTIONS,
         unique_id="1234",
     )
@@ -306,7 +305,6 @@ async def test_options_flow_invalid_auth(hass):
         title="Wartenau",
         data=FIXTURE_CONFIG_ENTRY,
         source=SOURCE_USER,
-        system_options={"disable_new_entities": False},
         options=FIXTURE_OPTIONS,
         unique_id="1234",
     )
@@ -346,7 +344,6 @@ async def test_options_flow_cannot_connect(hass):
         title="Wartenau",
         data=FIXTURE_CONFIG_ENTRY,
         source=SOURCE_USER,
-        system_options={"disable_new_entities": False},
         options=FIXTURE_OPTIONS,
         unique_id="1234",
     )

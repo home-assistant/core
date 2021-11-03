@@ -1,13 +1,10 @@
 """Provides device automations for Cover."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ABOVE,
     CONF_BELOW,
     CONF_CONDITION,
@@ -28,6 +25,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import (
@@ -37,6 +35,8 @@ from . import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
 )
+
+# mypy: disallow-any-generics
 
 POSITION_CONDITION_TYPES = {"is_position", "is_tilt_position"}
 STATE_CONDITION_TYPES = {"is_open", "is_closed", "is_opening", "is_closing"}
@@ -67,86 +67,44 @@ STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 CONDITION_SCHEMA = vol.Any(POSITION_CONDITION_SCHEMA, STATE_CONDITION_SCHEMA)
 
 
-async def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_conditions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device conditions for Cover devices."""
     registry = await entity_registry.async_get_registry(hass)
-    conditions: list[dict[str, Any]] = []
+    conditions: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
-        if not state or ATTR_SUPPORTED_FEATURES not in state.attributes:
-            continue
-
-        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = get_supported_features(hass, entry.entity_id)
         supports_open_close = supported_features & (SUPPORT_OPEN | SUPPORT_CLOSE)
 
         # Add conditions for each entity that belongs to this integration
+        base_condition = {
+            CONF_CONDITION: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
         if supports_open_close:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "is_open",
-                }
-            )
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "is_closed",
-                }
-            )
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "is_opening",
-                }
-            )
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "is_closing",
-                }
-            )
+            conditions += [
+                {**base_condition, CONF_TYPE: cond} for cond in STATE_CONDITION_TYPES
+            ]
         if supported_features & SUPPORT_SET_POSITION:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "is_position",
-                }
-            )
+            conditions.append({**base_condition, CONF_TYPE: "is_position"})
         if supported_features & SUPPORT_SET_TILT_POSITION:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "is_tilt_position",
-                }
-            )
+            conditions.append({**base_condition, CONF_TYPE: "is_tilt_position"})
 
     return conditions
 
 
-async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     if config[CONF_TYPE] not in ["is_position", "is_tilt_position"]:
         return {}

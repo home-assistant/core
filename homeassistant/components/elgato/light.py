@@ -16,13 +16,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -77,8 +70,8 @@ class ElgatoLight(LightEntity):
             min_mired = 153
             max_mired = 285
 
-        self._attr_max_mired = max_mired
-        self._attr_min_mired = min_mired
+        self._attr_max_mireds = max_mired
+        self._attr_min_mireds = min_mired
         self._attr_name = info.display_name or info.product_name
         self._attr_supported_color_modes = supported_color_modes
         self._attr_unique_id = info.serial_number
@@ -187,13 +180,13 @@ class ElgatoLight(LightEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Elgato Light."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._info.serial_number)},
-            ATTR_NAME: self._info.product_name,
-            ATTR_MANUFACTURER: "Elgato",
-            ATTR_MODEL: self._info.product_name,
-            ATTR_SW_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._info.serial_number)},
+            manufacturer="Elgato",
+            model=self._info.product_name,
+            name=self._info.product_name,
+            sw_version=f"{self._info.firmware_version} ({self._info.firmware_build_number})",
+        )
 
     async def async_identify(self) -> None:
         """Identify the light, will make it blink."""

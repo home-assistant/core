@@ -1,5 +1,8 @@
 """Config flow for the Velbus platform."""
-import velbus
+from __future__ import annotations
+
+import velbusaio
+from velbusaio.exceptions import VelbusConnectionFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -25,20 +28,21 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the velbus config flow."""
-        self._errors = {}
+        self._errors: dict[str, str] = {}
 
     def _create_device(self, name: str, prt: str):
         """Create an entry async."""
         return self.async_create_entry(title=name, data={CONF_PORT: prt})
 
-    def _test_connection(self, prt):
+    async def _test_connection(self, prt):
         """Try to connect to the velbus with the port specified."""
         try:
-            controller = velbus.Controller(prt)
-        except Exception:  # pylint: disable=broad-except
+            controller = velbusaio.controller.Velbus(prt)
+            await controller.connect(True)
+            await controller.stop()
+        except VelbusConnectionFailed:
             self._errors[CONF_PORT] = "cannot_connect"
             return False
-        controller.stop()
         return True
 
     def _prt_in_configuration_exists(self, prt: str) -> bool:
@@ -54,7 +58,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             name = slugify(user_input[CONF_NAME])
             prt = user_input[CONF_PORT]
             if not self._prt_in_configuration_exists(prt):
-                if self._test_connection(prt):
+                if await self._test_connection(prt):
                     return self._create_device(name, prt)
             else:
                 self._errors[CONF_PORT] = "already_configured"

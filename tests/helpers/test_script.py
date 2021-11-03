@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from types import MappingProxyType
 from unittest import mock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from async_timeout import timeout
 import pytest
@@ -15,7 +15,12 @@ import voluptuous as vol
 # Otherwise can't test just this file (import order issue)
 from homeassistant import exceptions
 import homeassistant.components.scene as scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    SERVICE_TURN_ON,
+)
 from homeassistant.core import SERVICE_CALL_LIMIT, Context, CoreState, callback
 from homeassistant.exceptions import ConditionError, ServiceNotFound
 from homeassistant.helpers import config_validation as cv, script, trace
@@ -477,7 +482,7 @@ async def test_stop_no_wait(hass, count):
 
     # Can't assert just yet because we haven't verified stopping works yet.
     # If assert fails we can hang test if async_stop doesn't work.
-    script_was_runing = script_obj.is_running
+    script_was_running = script_obj.is_running
     were_no_events = len(events) == 0
 
     # Begin the process of stopping the script (which should stop all runs), and then
@@ -487,7 +492,7 @@ async def test_stop_no_wait(hass, count):
 
     await hass.async_block_till_done()
 
-    assert script_was_runing
+    assert script_was_running
     assert were_no_events
     assert not script_obj.is_running
     assert len(events) == 0
@@ -1189,8 +1194,8 @@ async def test_wait_template_with_utcnow(hass):
     start_time = dt_util.utcnow().replace(minute=1) + timedelta(hours=48)
 
     try:
-        non_maching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+        non_matching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
@@ -1221,17 +1226,17 @@ async def test_wait_template_with_utcnow_no_match(hass):
     timed_out = False
 
     try:
-        non_maching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+        non_matching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
 
-        second_non_maching_time = start_time.replace(hour=4)
+        second_non_matching_time = start_time.replace(hour=4)
         with patch(
-            "homeassistant.util.dt.utcnow", return_value=second_non_maching_time
+            "homeassistant.util.dt.utcnow", return_value=second_non_matching_time
         ):
-            async_fire_time_changed(hass, second_non_maching_time)
+            async_fire_time_changed(hass, second_non_matching_time)
 
         with timeout(0.1):
             await hass.async_block_till_done()
@@ -2240,6 +2245,82 @@ async def test_propagate_error_service_exception(hass):
     assert_action_trace(expected_trace, expected_script_execution="error")
 
 
+async def test_referenced_areas(hass):
+    """Test referenced areas."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [
+                {
+                    "service": "test.script",
+                    "data": {"area_id": "area_service_not_list"},
+                },
+                {
+                    "service": "test.script",
+                    "data": {"area_id": ["area_service_list"]},
+                },
+                {
+                    "service": "test.script",
+                    "data": {"area_id": "{{ 'area_service_template' }}"},
+                },
+                {
+                    "service": "test.script",
+                    "target": {"area_id": "area_in_target"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"area_id": "area_in_data_template"},
+                },
+                {"service": "test.script", "data": {"without": "area_id"}},
+                {
+                    "choose": [
+                        {
+                            "conditions": "{{ true == false }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"area_id": "area_choice_1_seq"},
+                                }
+                            ],
+                        },
+                        {
+                            "conditions": "{{ true == false }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"area_id": "area_choice_2_seq"},
+                                }
+                            ],
+                        },
+                    ],
+                    "default": [
+                        {
+                            "service": "test.script",
+                            "data": {"area_id": "area_default_seq"},
+                        }
+                    ],
+                },
+                {"event": "test_event"},
+                {"delay": "{{ delay_period }}"},
+            ]
+        ),
+        "Test Name",
+        "test_domain",
+    )
+    assert script_obj.referenced_areas == {
+        "area_choice_1_seq",
+        "area_choice_2_seq",
+        "area_default_seq",
+        "area_in_data_template",
+        "area_in_target",
+        "area_service_list",
+        "area_service_not_list",
+        # 'area_service_template',  # no area extraction from template
+    }
+    # Test we cache results.
+    assert script_obj.referenced_areas is script_obj.referenced_areas
+
+
 async def test_referenced_entities(hass):
     """Test referenced entities."""
     script_obj = script.Script(
@@ -2277,6 +2358,38 @@ async def test_referenced_entities(hass):
                 },
                 {"service": "test.script", "data": {"without": "entity_id"}},
                 {"scene": "scene.hello"},
+                {
+                    "choose": [
+                        {
+                            "conditions": "{{ states.light.choice_1_cond == 'on' }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"entity_id": "light.choice_1_seq"},
+                                }
+                            ],
+                        },
+                        {
+                            "conditions": {
+                                "condition": "state",
+                                "entity_id": "light.choice_2_cond",
+                                "state": "on",
+                            },
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "data": {"entity_id": "light.choice_2_seq"},
+                                }
+                            ],
+                        },
+                    ],
+                    "default": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.default_seq"},
+                        }
+                    ],
+                },
                 {"event": "test_event"},
                 {"delay": "{{ delay_period }}"},
             ]
@@ -2285,13 +2398,19 @@ async def test_referenced_entities(hass):
         "test_domain",
     )
     assert script_obj.referenced_entities == {
-        "light.service_not_list",
-        "light.service_list",
-        "sensor.condition",
-        "scene.hello",
+        # "light.choice_1_cond",  # no entity extraction from template conditions
+        "light.choice_1_seq",
+        "light.choice_2_cond",
+        "light.choice_2_seq",
+        "light.default_seq",
         "light.direct_entity_referenced",
-        "light.entity_in_target",
         "light.entity_in_data_template",
+        "light.entity_in_target",
+        "light.service_list",
+        "light.service_not_list",
+        # "light.service_template",  # no entity extraction from template
+        "scene.hello",
+        "sensor.condition",
     }
     # Test we cache results.
     assert script_obj.referenced_entities is script_obj.referenced_entities
@@ -2325,19 +2444,60 @@ async def test_referenced_devices(hass):
                     "service": "test.script",
                     "target": {"device_id": ["target-list-id-1", "target-list-id-2"]},
                 },
+                {
+                    "choose": [
+                        {
+                            "conditions": "{{ is_device_attr('choice-2-cond-dev-id', 'model', 'blah') }}",
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "target": {
+                                        "device_id": "choice-1-seq-device-target"
+                                    },
+                                }
+                            ],
+                        },
+                        {
+                            "conditions": {
+                                "condition": "device",
+                                "device_id": "choice-2-cond-dev-id",
+                                "domain": "switch",
+                            },
+                            "sequence": [
+                                {
+                                    "service": "test.script",
+                                    "target": {
+                                        "device_id": "choice-2-seq-device-target"
+                                    },
+                                }
+                            ],
+                        },
+                    ],
+                    "default": [
+                        {
+                            "service": "test.script",
+                            "target": {"device_id": "default-device-target"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
         "test_domain",
     )
     assert script_obj.referenced_devices == {
-        "script-dev-id",
+        # 'choice-1-cond-dev-id',  # no device extraction from template conditions
+        "choice-1-seq-device-target",
+        "choice-2-cond-dev-id",
+        "choice-2-seq-device-target",
         "condition-dev-id",
         "data-string-id",
         "data-template-string-id",
-        "target-string-id",
+        "default-device-target",
+        "script-dev-id",
         "target-list-id-1",
         "target-list-id-2",
+        "target-string-id",
     }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices
@@ -3130,3 +3290,16 @@ async def test_breakpoints_2(hass):
     assert not script_obj.is_running
     assert script_obj.runs == 0
     assert len(events) == 1
+
+
+async def test_platform_async_validate_action_config(hass):
+    """Test platform.async_validate_action_config will be called if it exists."""
+    config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test"}
+    platform = AsyncMock()
+    with patch(
+        "homeassistant.helpers.script.device_automation.async_get_device_automation_platform",
+        return_value=platform,
+    ):
+        platform.async_validate_action_config.return_value = config
+        await script.async_validate_action_config(hass, config)
+        platform.async_validate_action_config.assert_awaited()

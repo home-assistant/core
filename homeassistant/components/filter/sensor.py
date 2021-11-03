@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.recorder import history
 from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
     DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
@@ -191,6 +192,7 @@ class SensorFilter(SensorEntity):
         self._filters = filters
         self._icon = None
         self._device_class = None
+        self._attr_state_class = None
 
     @callback
     def _update_filter_sensor_state_event(self, event):
@@ -209,7 +211,7 @@ class SensorFilter(SensorEntity):
             self.async_write_ha_state()
             return
 
-        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._state = new_state.state
             self.async_write_ha_state()
             return
@@ -247,6 +249,9 @@ class SensorFilter(SensorEntity):
             and new_state.attributes.get(ATTR_DEVICE_CLASS) in SENSOR_DEVICE_CLASSES
         ):
             self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+
+        if self._attr_state_class is None:
+            self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
 
         if self._unit_of_measurement is None:
             self._unit_of_measurement = new_state.attributes.get(
@@ -332,7 +337,7 @@ class SensorFilter(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -342,7 +347,7 @@ class SensorFilter(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
         return self._unit_of_measurement
 
@@ -405,7 +410,7 @@ class Filter:
         :param entity: used for debugging only
         """
         if isinstance(window_size, int):
-            self.states = deque(maxlen=window_size)
+            self.states: deque = deque(maxlen=window_size)
             self.window_unit = WINDOW_SIZE_UNIT_NUMBER_EVENTS
         else:
             self.states = deque(maxlen=0)
@@ -476,7 +481,7 @@ class RangeFilter(Filter, SensorEntity):
         super().__init__(FILTER_NAME_RANGE, precision=precision, entity=entity)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
-        self._stats_internal = Counter()
+        self._stats_internal: Counter = Counter()
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
@@ -522,7 +527,7 @@ class OutlierFilter(Filter, SensorEntity):
         """
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
-        self._stats_internal = Counter()
+        self._stats_internal: Counter = Counter()
         self._store_raw = True
 
     def _filter_state(self, new_state):

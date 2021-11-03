@@ -110,4 +110,4 @@ def get_device_platforms(device):
 
 def get_platform_groups(device, domain) -> dict:
     """Return the platforms that a device belongs in."""
-    return DEVICE_PLATFORM.get(type(device), {}).get(domain, {})
+    return DEVICE_PLATFORM.get(type(device), {}).get(domain, {})  # type: ignore

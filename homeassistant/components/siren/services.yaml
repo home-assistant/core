@@ -1,0 +1,41 @@
+# Describes the format for available siren services
+
+turn_on:
+  description: Turn siren on.
+  target:
+    entity:
+      domain: siren
+  fields:
+    tone:
+      description: The tone to emit when turning the siren on. When `available_tones` property is a map, either the key or the value can be used. Must be supported by the integration.
+      example: fire
+      required: false
+      selector:
+        text:
+    volume_level:
+      description: The volume level of the noise to emit when turning the siren on. Must be supported by the integration.
+      example: 0.5
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.05
+    duration:
+      description: The duration in seconds of the noise to emit when turning the siren on. Must be supported by the integration.
+      example: 15
+      required: false
+      selector:
+        text:
+
+turn_off:
+  description: Turn siren off.
+  target:
+    entity:
+      domain: siren
+
+toggle:
+  description: Toggles a siren.
+  target:
+    entity:
+      domain: siren

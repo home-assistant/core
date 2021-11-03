@@ -1,7 +1,7 @@
 """The Panasonic Viera integration."""
 from functools import partial
 import logging
-from urllib.request import URLError
+from urllib.error import HTTPError, URLError
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol
@@ -73,8 +73,7 @@ async def async_setup_entry(hass, config_entry):
     host = config[CONF_HOST]
     port = config[CONF_PORT]
 
-    on_action = config[CONF_ON_ACTION]
-    if on_action is not None:
+    if (on_action := config[CONF_ON_ACTION]) is not None:
         on_action = Script(hass, on_action, config[CONF_NAME], DOMAIN)
 
     params = {}
@@ -164,7 +163,7 @@ class Remote:
 
             if during_setup:
                 await self.async_update()
-        except (TimeoutError, URLError, SOAPError, OSError) as err:
+        except (URLError, SOAPError, OSError) as err:
             _LOGGER.debug("Could not establish remote connection: %s", err)
             self._control = None
             self.state = STATE_OFF
@@ -247,11 +246,13 @@ class Remote:
                 "The connection couldn't be encrypted. Please reconfigure your TV"
             )
             self.available = False
-        except (SOAPError):
+        except (SOAPError, HTTPError) as err:
+            _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
             self.available = True
             await self.async_create_remote_control()
-        except (TimeoutError, URLError, OSError):
+        except (URLError, OSError) as err:
+            _LOGGER.debug("An error occurred: %s", err)
             self.state = STATE_OFF
             self.available = self._on_action is not None
             await self.async_create_remote_control()

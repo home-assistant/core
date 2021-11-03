@@ -4,14 +4,15 @@ from meteoclimatic import Condition
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import ATTRIBUTION, CONDITION_CLASSES, DOMAIN
+from .const import ATTRIBUTION, CONDITION_CLASSES, DOMAIN, MANUFACTURER, MODEL
 
 
 def format_condition(condition):
@@ -25,7 +26,7 @@ def format_condition(condition):
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Meteoclimatic weather platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -51,6 +52,17 @@ class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
     def unique_id(self):
         """Return the unique id of the sensor."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            name=self.coordinator.name,
+        )
 
     @property
     def condition(self):

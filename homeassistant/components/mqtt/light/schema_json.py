@@ -56,12 +56,13 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
-from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subscription
+from .. import subscription
 from ... import mqtt
+from ..const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
-from .schema_basic import CONF_BRIGHTNESS_SCALE
+from .schema_basic import CONF_BRIGHTNESS_SCALE, MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ def valid_color_configuration(config):
     return config
 
 
-PLATFORM_SCHEMA_JSON = vol.All(
+_PLATFORM_SCHEMA_BASE = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
@@ -142,7 +143,16 @@ PLATFORM_SCHEMA_JSON = vol.All(
         },
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema),
+    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
+)
+
+PLATFORM_SCHEMA_JSON = vol.All(
+    _PLATFORM_SCHEMA_BASE,
+    valid_color_configuration,
+)
+
+DISCOVERY_SCHEMA_JSON = vol.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_color_configuration,
 )
 
@@ -151,13 +161,15 @@ async def async_setup_entity_json(
     hass, config: ConfigType, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT JSON Light."""
-    async_add_entities([MqttLightJson(config, config_entry, discovery_data)])
+    async_add_entities([MqttLightJson(hass, config, config_entry, discovery_data)])
 
 
 class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT JSON light."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
+
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize MQTT JSON light."""
         self._state = False
         self._supported_features = 0
@@ -176,12 +188,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._white_value = None
         self._xy = None
 
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA_JSON
+        return DISCOVERY_SCHEMA_JSON
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -609,7 +621,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
                 should_update = True
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topic[CONF_COMMAND_TOPIC],
             json.dumps(message),
@@ -634,7 +646,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topic[CONF_COMMAND_TOPIC],
             json.dumps(message),

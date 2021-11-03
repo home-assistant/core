@@ -73,7 +73,7 @@ class OASATelematicsSensor(SensorEntity):
         return DEVICE_CLASS_TIMESTAMP
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -176,8 +176,7 @@ class OASATelematicsData:
         current_time = dt_util.utcnow()
 
         for result in results:
-            btime2 = result.get("btime2")
-            if btime2 is not None:
+            if (btime2 := result.get("btime2")) is not None:
                 arrival_min = int(btime2)
                 timestamp = current_time + timedelta(minutes=arrival_min)
                 arrival_data = {

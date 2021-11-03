@@ -21,9 +21,8 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverEntity,
 )
-from homeassistant.core import callback
 
-from . import DATA_VELUX
+from . import DATA_VELUX, VeluxEntity
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -35,41 +34,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class VeluxCover(CoverEntity):
+class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
-
-    def __init__(self, node):
-        """Initialize the cover."""
-        self.node = node
-
-    @callback
-    def async_register_callbacks(self):
-        """Register callbacks to update hass after device was changed."""
-
-        async def after_update_callback(device):
-            """Call after device was updated."""
-            self.async_write_ha_state()
-
-        self.node.register_device_updated_cb(after_update_callback)
-
-    async def async_added_to_hass(self):
-        """Store register state change callback."""
-        self.async_register_callbacks()
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this cover."""
-        return self.node.serial_number
-
-    @property
-    def name(self):
-        """Return the name of the Velux device."""
-        return self.node.name
-
-    @property
-    def should_poll(self):
-        """No polling needed within Velux."""
-        return False
 
     @property
     def supported_features(self):

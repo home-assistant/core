@@ -16,11 +16,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
     ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT,
     PRECISION_HALVES,
     TEMP_CELSIUS,
 )
@@ -60,27 +56,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
-    entities: list[FritzboxThermostat] = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
-    for ain, device in coordinator.data.items():
-        if not device.has_thermostat:
-            continue
-
-        entities.append(
-            FritzboxThermostat(
-                {
-                    ATTR_NAME: f"{device.name}",
-                    ATTR_ENTITY_ID: f"{device.ain}",
-                    ATTR_UNIT_OF_MEASUREMENT: None,
-                    ATTR_DEVICE_CLASS: None,
-                },
-                coordinator,
-                ain,
-            )
-        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            FritzboxThermostat(coordinator, ain)
+            for ain, device in coordinator.data.items()
+            if device.has_thermostat
+        ]
+    )
 
 
 class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
@@ -90,11 +74,6 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_FLAGS
-
-    @property
-    def available(self) -> bool:
-        """Return if thermostat is available."""
-        return self.device.present  # type: ignore [no-any-return]
 
     @property
     def temperature_unit(self) -> str:
@@ -135,9 +114,9 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return the current operation mode."""
-        if (
-            self.device.target_temperature == OFF_REPORT_SET_TEMPERATURE
-            or self.device.target_temperature == OFF_API_TEMPERATURE
+        if self.device.target_temperature in (
+            OFF_REPORT_SET_TEMPERATURE,
+            OFF_API_TEMPERATURE,
         ):
             return HVAC_MODE_OFF
 

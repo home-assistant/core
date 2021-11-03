@@ -1,4 +1,6 @@
 """Weather data coordinator for the AEMET OpenData service."""
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
@@ -95,7 +97,7 @@ def format_condition(condition: str) -> str:
     return condition
 
 
-def format_float(value) -> float:
+def format_float(value) -> float | None:
     """Try converting string to float."""
     try:
         return float(value)
@@ -103,7 +105,7 @@ def format_float(value) -> float:
         return None
 
 
-def format_int(value) -> int:
+def format_int(value) -> int | None:
     """Try converting string to int."""
     try:
         return int(value)
@@ -396,8 +398,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         return None
 
     def _convert_forecast_day(self, date, day):
-        condition = self._get_condition_day(day)
-        if not condition:
+        if not (condition := self._get_condition_day(day)):
             return None
 
         return {
@@ -413,8 +414,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         }
 
     def _convert_forecast_hour(self, date, day, hour):
-        condition = self._get_condition(day, hour)
-        if not condition:
+        if not (condition := self._get_condition(day, hour)):
             return None
 
         forecast_dt = date.replace(hour=hour, minute=0, second=0)
@@ -433,13 +433,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _calc_precipitation(self, day, hour):
         """Calculate the precipitation."""
-        rain_value = self._get_rain(day, hour)
-        if not rain_value:
-            rain_value = 0
-
-        snow_value = self._get_snow(day, hour)
-        if not snow_value:
-            snow_value = 0
+        rain_value = self._get_rain(day, hour) or 0
+        snow_value = self._get_snow(day, hour) or 0
 
         if round(rain_value + snow_value, 1) == 0:
             return None
@@ -447,13 +442,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _calc_precipitation_prob(self, day, hour):
         """Calculate the precipitation probability (hour)."""
-        rain_value = self._get_rain_prob(day, hour)
-        if not rain_value:
-            rain_value = 0
-
-        snow_value = self._get_snow_prob(day, hour)
-        if not snow_value:
-            snow_value = 0
+        rain_value = self._get_rain_prob(day, hour) or 0
+        snow_value = self._get_snow_prob(day, hour) or 0
 
         if rain_value == 0 and snow_value == 0:
             return None

@@ -19,9 +19,9 @@ from .const import (
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the StarLine device from a config entry."""
-    account = StarlineAccount(hass, config_entry)
+    account = StarlineAccount(hass, entry)
     await account.update()
     await account.update_obd()
     if not account.api.available:
@@ -29,27 +29,27 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][config_entry.entry_id] = account
+    hass.data[DOMAIN][entry.entry_id] = account
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     for device in account.api.devices.values():
         device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id, **account.device_info(device)
+            config_entry_id=entry.entry_id, **account.device_info(device)
         )
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def async_set_scan_interval(call):
         """Set scan interval."""
-        options = dict(config_entry.options)
+        options = dict(entry.options)
         options[CONF_SCAN_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
-        hass.config_entries.async_update_entry(entry=config_entry, options=options)
+        hass.config_entries.async_update_entry(entry=entry, options=options)
 
     async def async_set_scan_obd_interval(call):
         """Set OBD info scan interval."""
-        options = dict(config_entry.options)
+        options = dict(entry.options)
         options[CONF_SCAN_OBD_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
-        hass.config_entries.async_update_entry(entry=config_entry, options=options)
+        hass.config_entries.async_update_entry(entry=entry, options=options)
 
     async def async_update(call=None):
         """Update all data."""
@@ -82,10 +82,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ),
     )
 
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(async_options_updated)
-    )
-    await async_options_updated(hass, config_entry)
+    entry.async_on_unload(entry.add_update_listener(async_options_updated))
+    await async_options_updated(hass, entry)
 
     return True
 

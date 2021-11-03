@@ -21,7 +21,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Get information
         id: info
@@ -45,13 +45,13 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: env_file
           path: ./.env_file
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -65,11 +65,10 @@ jobs:
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
         tag:
-          - "3.8-alpine3.12"
-          - "3.9-alpine3.13"
+          - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Download env_file
         uses: actions/download-artifact@v2
@@ -82,7 +81,7 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@2021.05.4
+        uses: home-assistant/wheels@2021.07.0
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
@@ -90,7 +89,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           wheels-user: wheels
           env-file: true
-          apk: "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev"
+          apk: "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;cargo"
           pip: "Cython;numpy"
           skip-binary: aiohttp
           constraints: "homeassistant/package_constraints.txt"
@@ -106,11 +105,10 @@ jobs:
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
         tag:
-          - "3.8-alpine3.12"
-          - "3.9-alpine3.13"
+          - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Download env_file
         uses: actions/download-artifact@v2
@@ -152,7 +150,7 @@ jobs:
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@2021.05.4
+        uses: home-assistant/wheels@2021.07.0
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
@@ -160,7 +158,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           wheels-user: wheels
           env-file: true
-          apk: "build-base;cmake;git;linux-headers;libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev"
+          apk: "build-base;cmake;git;linux-headers;libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;cargo"
           pip: "Cython;numpy;scikit-build"
           skip-binary: aiohttp
           constraints: "homeassistant/package_constraints.txt"

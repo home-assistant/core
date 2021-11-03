@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
             "unknown": "Uventet feil"
         },
@@ -11,6 +12,12 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API-token",
+                    "description": "Autentiser p\u00e5 nytt med Cloudflare-kontoen din."
+                }
+            },
             "records": {
                 "data": {
                     "records": "Poster"

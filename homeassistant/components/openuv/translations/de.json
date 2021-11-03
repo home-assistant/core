@@ -17,5 +17,16 @@
                 "title": "Gib deine Informationen ein"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Anfangs-UV-Index f\u00fcr das Schutzfenster",
+                    "to_window": "End-UV-Index f\u00fcr das Schutzfenster"
+                },
+                "title": "OpenUV konfigurieren"
+            }
+        }
     }
 }

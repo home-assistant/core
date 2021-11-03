@@ -362,7 +362,7 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             # This is legacy behavior
             self._state = STATE_UNKNOWN
             if not self._availability_template:
-                self._available = True
+                self._attr_available = True
             return
 
         # Validate state

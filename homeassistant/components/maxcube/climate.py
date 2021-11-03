@@ -119,7 +119,7 @@ class MaxCubeClimate(ClimateEntity):
     def hvac_mode(self):
         """Return current operation mode."""
         mode = self._device.mode
-        if mode in [MAX_DEVICE_MODE_AUTOMATIC, MAX_DEVICE_MODE_BOOST]:
+        if mode in (MAX_DEVICE_MODE_AUTOMATIC, MAX_DEVICE_MODE_BOOST):
             return HVAC_MODE_AUTO
         if (
             mode == MAX_DEVICE_MODE_MANUAL
@@ -200,8 +200,7 @@ class MaxCubeClimate(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             raise ValueError(
                 f"No {ATTR_TEMPERATURE} parameter passed to set_temperature method."
             )

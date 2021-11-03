@@ -252,7 +252,7 @@ class NiluSensor(AirQualityEntity):
 
         sensors = self._api.data.sensors.values()
         if sensors:
-            max_index = max([s.pollution_index for s in sensors])
+            max_index = max(s.pollution_index for s in sensors)
             self._max_aqi = max_index
             self._attrs[ATTR_POLLUTION_INDEX] = POLLUTION_INDEX[self._max_aqi]
 

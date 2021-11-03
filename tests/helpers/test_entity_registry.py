@@ -513,12 +513,12 @@ async def test_disabled_by(registry):
     assert entry2.disabled_by is None
 
 
-async def test_disabled_by_system_options(registry):
-    """Test system options setting disabled_by."""
+async def test_disabled_by_config_entry_pref(registry):
+    """Test config entry preference setting disabled_by."""
     mock_config = MockConfigEntry(
         domain="light",
         entry_id="mock-id-1",
-        system_options={"disable_new_entities": True},
+        pref_disable_new_entities=True,
     )
     entry = registry.async_get_or_create(
         "light", "hue", "AAAA", config_entry=mock_config

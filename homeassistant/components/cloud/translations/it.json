@@ -10,6 +10,7 @@
             "relayer_connected": "Relayer connesso",
             "remote_connected": "Connesso in remoto",
             "remote_enabled": "Remoto abilitato",
+            "remote_server": "Server remoto",
             "subscription_expiration": "Scadenza abbonamento"
         }
     }

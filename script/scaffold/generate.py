@@ -113,7 +113,6 @@ def _custom_tasks(template, info: Info) -> None:
     elif template == "config_flow":
         info.update_manifest(config_flow=True)
         info.update_strings(
-            title=info.name,
             config={
                 "step": {
                     "user": {
@@ -138,7 +137,6 @@ def _custom_tasks(template, info: Info) -> None:
     elif template == "config_flow_discovery":
         info.update_manifest(config_flow=True)
         info.update_strings(
-            title=info.name,
             config={
                 "step": {
                     "confirm": {
@@ -155,7 +153,6 @@ def _custom_tasks(template, info: Info) -> None:
     elif template == "config_flow_oauth2":
         info.update_manifest(config_flow=True, dependencies=["http"])
         info.update_strings(
-            title=info.name,
             config={
                 "step": {
                     "pick_implementation": {

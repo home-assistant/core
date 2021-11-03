@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from ipaddress import ip_address
 import logging
+from types import ModuleType
+from typing import Literal
 
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 from aiohttp.web import Application, HTTPBadRequest, Request, StreamResponse, middleware
@@ -14,7 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_forwarded(app: Application, trusted_proxies: list[str]) -> None:
+def async_setup_forwarded(
+    app: Application, use_x_forwarded_for: bool | None, trusted_proxies: list[str]
+) -> None:
     """Create forwarded middleware for the app.
 
     Process IP addresses, proto and host information in the forwarded for headers.
@@ -45,7 +49,8 @@ def async_setup_forwarded(app: Application, trusted_proxies: list[str]) -> None:
 
     Additionally:
       - If no X-Forwarded-For header is found, the processing of all headers is skipped.
-      - Log a warning when untrusted connected peer provides X-Forwarded-For headers.
+      - Throw HTTP 400 status when untrusted connected peer provides
+        X-Forwarded-For headers.
       - If multiple instances of X-Forwarded-For, X-Forwarded-Proto or
         X-Forwarded-Host are found, an HTTP 400 status code is thrown.
       - If malformed or invalid (IP) data in X-Forwarded-For header is found,
@@ -60,12 +65,31 @@ def async_setup_forwarded(app: Application, trusted_proxies: list[str]) -> None:
         an HTTP 400 status code is thrown.
     """
 
+    remote: Literal[False] | None | ModuleType = None
+
     @middleware
     async def forwarded_middleware(
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
     ) -> StreamResponse:
         """Process forwarded data by a reverse proxy."""
-        overrides: dict[str, str] = {}
+        nonlocal remote
+
+        if remote is None:
+            # Initialize remote method
+            try:
+                from hass_nabucasa import (  # pylint: disable=import-outside-toplevel
+                    remote,
+                )
+
+                # venv users might have an old version installed if they don't have cloud around anymore
+                if not hasattr(remote, "is_cloud_request"):
+                    remote = False
+            except ImportError:
+                remote = False
+
+        # Skip requests from Remote UI
+        if remote and remote.is_cloud_request.get():  # type: ignore
+            return await handler(request)
 
         # Handle X-Forwarded-For
         forwarded_for_headers: list[str] = request.headers.getall(X_FORWARDED_FOR, [])
@@ -73,16 +97,32 @@ def async_setup_forwarded(app: Application, trusted_proxies: list[str]) -> None:
             # No forwarding headers, continue as normal
             return await handler(request)
 
-        # Ensure the IP of the connected peer is trusted
-        assert request.transport is not None
+        # Get connected IP
+        if (
+            request.transport is None
+            or request.transport.get_extra_info("peername") is None
+        ):
+            # Connected IP isn't retrieveable from the request transport, continue
+            return await handler(request)
+
         connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
-        if not any(connected_ip in trusted_proxy for trusted_proxy in trusted_proxies):
-            _LOGGER.warning(
-                "Received X-Forwarded-For header from untrusted proxy %s, headers not processed",
+
+        # We have X-Forwarded-For, but config does not agree
+        if not use_x_forwarded_for:
+            _LOGGER.error(
+                "A request from a reverse proxy was received from %s, but your "
+                "HTTP integration is not set-up for reverse proxies",
                 connected_ip,
             )
-            # Not trusted, continue as normal
-            return await handler(request)
+            raise HTTPBadRequest
+
+        # Ensure the IP of the connected peer is trusted
+        if not any(connected_ip in trusted_proxy for trusted_proxy in trusted_proxies):
+            _LOGGER.error(
+                "Received X-Forwarded-For header from an untrusted proxy %s",
+                connected_ip,
+            )
+            raise HTTPBadRequest
 
         # Multiple X-Forwarded-For headers
         if len(forwarded_for_headers) > 1:
@@ -100,6 +140,8 @@ def async_setup_forwarded(app: Application, trusted_proxies: list[str]) -> None:
                 "Invalid IP address in X-Forwarded-For: %s", forwarded_for_headers[0]
             )
             raise HTTPBadRequest from err
+
+        overrides: dict[str, str] = {}
 
         # Find the last trusted index in the X-Forwarded-For list
         forwarded_for_index = 0

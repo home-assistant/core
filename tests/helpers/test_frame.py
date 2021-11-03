@@ -15,7 +15,7 @@ async def test_extract_frame_integration(caplog, mock_integration_frame):
     assert found_frame == mock_integration_frame
 
 
-async def test_extract_frame_integration_with_excluded_intergration(caplog):
+async def test_extract_frame_integration_with_excluded_integration(caplog):
     """Test extracting the current frame from integration context."""
     correct_frame = Mock(
         filename="/home/dev/homeassistant/components/mdns/light.py",

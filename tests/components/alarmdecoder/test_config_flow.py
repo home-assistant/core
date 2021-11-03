@@ -126,6 +126,16 @@ async def test_setup_connection_error(hass: HomeAssistant):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
+    with patch(
+        "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
+        side_effect=Exception,
+    ), patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], connection_settings
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "unknown"}
+
 
 async def test_options_arm_flow(hass: HomeAssistant):
     """Test arm options flow."""

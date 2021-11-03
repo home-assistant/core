@@ -1,5 +1,7 @@
 """Support for UK Met Office weather service."""
-from homeassistant.components.sensor import SensorEntity
+from __future__ import annotations
+
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_HUMIDITY,
@@ -10,16 +12,21 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     UV_INDEX,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
     DOMAIN,
-    METOFFICE_COORDINATOR,
-    METOFFICE_DATA,
+    METOFFICE_COORDINATES,
+    METOFFICE_DAILY_COORDINATOR,
+    METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
+    MODE_3HOURLY_LABEL,
+    MODE_DAILY,
+    MODE_DAILY_LABEL,
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
@@ -29,52 +36,105 @@ ATTR_SENSOR_ID = "sensor_id"
 ATTR_SITE_ID = "site_id"
 ATTR_SITE_NAME = "site_name"
 
-# Sensor types are defined as:
-#   variable -> [0]title, [1]device_class, [2]units, [3]icon, [4]enabled_by_default
-SENSOR_TYPES = {
-    "name": ["Station Name", None, None, "mdi:label-outline", False],
-    "weather": [
-        "Weather",
-        None,
-        None,
-        "mdi:weather-sunny",  # but will adapt to current conditions
-        True,
-    ],
-    "temperature": ["Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None, True],
-    "feels_like_temperature": [
-        "Feels Like Temperature",
-        DEVICE_CLASS_TEMPERATURE,
-        TEMP_CELSIUS,
-        None,
-        False,
-    ],
-    "wind_speed": [
-        "Wind Speed",
-        None,
-        SPEED_MILES_PER_HOUR,
-        "mdi:weather-windy",
-        True,
-    ],
-    "wind_direction": ["Wind Direction", None, None, "mdi:compass-outline", False],
-    "wind_gust": ["Wind Gust", None, SPEED_MILES_PER_HOUR, "mdi:weather-windy", False],
-    "visibility": ["Visibility", None, None, "mdi:eye", False],
-    "visibility_distance": [
-        "Visibility Distance",
-        None,
-        LENGTH_KILOMETERS,
-        "mdi:eye",
-        False,
-    ],
-    "uv": ["UV Index", None, UV_INDEX, "mdi:weather-sunny-alert", True],
-    "precipitation": [
-        "Probability of Precipitation",
-        None,
-        PERCENTAGE,
-        "mdi:weather-rainy",
-        True,
-    ],
-    "humidity": ["Humidity", DEVICE_CLASS_HUMIDITY, PERCENTAGE, None, False],
-}
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="name",
+        name="Station Name",
+        device_class=None,
+        native_unit_of_measurement=None,
+        icon="mdi:label-outline",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="weather",
+        name="Weather",
+        device_class=None,
+        native_unit_of_measurement=None,
+        icon="mdi:weather-sunny",  # but will adapt to current conditions
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        icon=None,
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="feels_like_temperature",
+        name="Feels Like Temperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        icon=None,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="wind_speed",
+        name="Wind Speed",
+        device_class=None,
+        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        icon="mdi:weather-windy",
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="wind_direction",
+        name="Wind Direction",
+        device_class=None,
+        native_unit_of_measurement=None,
+        icon="mdi:compass-outline",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="wind_gust",
+        name="Wind Gust",
+        device_class=None,
+        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        icon="mdi:weather-windy",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="visibility",
+        name="Visibility",
+        device_class=None,
+        native_unit_of_measurement=None,
+        icon="mdi:eye",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="visibility_distance",
+        name="Visibility Distance",
+        device_class=None,
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+        icon="mdi:eye",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="uv",
+        name="UV Index",
+        device_class=None,
+        native_unit_of_measurement=UV_INDEX,
+        icon="mdi:weather-sunny-alert",
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="precipitation",
+        name="Probability of Precipitation",
+        device_class=None,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:weather-rainy",
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        device_class=DEVICE_CLASS_HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        icon=None,
+        entity_registry_enabled_default=False,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -85,77 +145,88 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            MetOfficeCurrentSensor(entry.data, hass_data, sensor_type)
-            for sensor_type in SENSOR_TYPES
+            MetOfficeCurrentSensor(
+                hass_data[METOFFICE_HOURLY_COORDINATOR],
+                hass_data,
+                True,
+                description,
+            )
+            for description in SENSOR_TYPES
+        ]
+        + [
+            MetOfficeCurrentSensor(
+                hass_data[METOFFICE_DAILY_COORDINATOR],
+                hass_data,
+                False,
+                description,
+            )
+            for description in SENSOR_TYPES
         ],
         False,
     )
 
 
-class MetOfficeCurrentSensor(SensorEntity):
+class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Met Office current weather condition sensor."""
 
-    def __init__(self, entry_data, hass_data, sensor_type):
+    def __init__(
+        self,
+        coordinator,
+        hass_data,
+        use_3hourly,
+        description: SensorEntityDescription,
+    ):
         """Initialize the sensor."""
-        self._data = hass_data[METOFFICE_DATA]
-        self._coordinator = hass_data[METOFFICE_COORDINATOR]
+        super().__init__(coordinator)
 
-        self._type = sensor_type
-        self._name = f"{hass_data[METOFFICE_NAME]} {SENSOR_TYPES[self._type][0]}"
-        self._unique_id = f"{SENSOR_TYPES[self._type][0]}_{self._data.latitude}_{self._data.longitude}"
+        self.entity_description = description
+        mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
+        self._attr_name = f"{hass_data[METOFFICE_NAME]} {description.name} {mode_label}"
+        self._attr_unique_id = f"{description.name}_{hass_data[METOFFICE_COORDINATES]}"
+        if not use_3hourly:
+            self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
 
-        self.metoffice_site_id = None
-        self.metoffice_site_name = None
-        self.metoffice_now = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self.use_3hourly = use_3hourly
 
     @property
-    def unique_id(self):
-        """Return the unique of the sensor."""
-        return self._unique_id
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         value = None
 
-        if self._type == "visibility_distance" and hasattr(
-            self.metoffice_now, "visibility"
+        if self.entity_description.key == "visibility_distance" and hasattr(
+            self.coordinator.data.now, "visibility"
         ):
-            value = VISIBILITY_DISTANCE_CLASSES.get(self.metoffice_now.visibility.value)
+            value = VISIBILITY_DISTANCE_CLASSES.get(
+                self.coordinator.data.now.visibility.value
+            )
 
-        if self._type == "visibility" and hasattr(self.metoffice_now, "visibility"):
-            value = VISIBILITY_CLASSES.get(self.metoffice_now.visibility.value)
+        if self.entity_description.key == "visibility" and hasattr(
+            self.coordinator.data.now, "visibility"
+        ):
+            value = VISIBILITY_CLASSES.get(self.coordinator.data.now.visibility.value)
 
-        elif self._type == "weather" and hasattr(self.metoffice_now, self._type):
+        elif self.entity_description.key == "weather" and hasattr(
+            self.coordinator.data.now, self.entity_description.key
+        ):
             value = [
                 k
                 for k, v in CONDITION_CLASSES.items()
-                if self.metoffice_now.weather.value in v
+                if self.coordinator.data.now.weather.value in v
             ][0]
 
-        elif hasattr(self.metoffice_now, self._type):
-            value = getattr(self.metoffice_now, self._type)
+        elif hasattr(self.coordinator.data.now, self.entity_description.key):
+            value = getattr(self.coordinator.data.now, self.entity_description.key)
 
-            if not isinstance(value, int):
+            if hasattr(value, "value"):
                 value = value.value
 
         return value
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return SENSOR_TYPES[self._type][2]
-
-    @property
     def icon(self):
         """Return the icon for the entity card."""
-        value = SENSOR_TYPES[self._type][3]
-        if self._type == "weather":
+        value = self.entity_description.icon
+        if self.entity_description.key == "weather":
             value = self.state
             if value is None:
                 value = "sunny"
@@ -166,53 +237,19 @@ class MetOfficeCurrentSensor(SensorEntity):
         return value
 
     @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return SENSOR_TYPES[self._type][1]
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_LAST_UPDATE: self.metoffice_now.date if self.metoffice_now else None,
-            ATTR_SENSOR_ID: self._type,
-            ATTR_SITE_ID: self.metoffice_site_id if self.metoffice_site_id else None,
-            ATTR_SITE_NAME: self.metoffice_site_name
-            if self.metoffice_site_name
-            else None,
+            ATTR_LAST_UPDATE: self.coordinator.data.now.date,
+            ATTR_SENSOR_ID: self.entity_description.key,
+            ATTR_SITE_ID: self.coordinator.data.site.id,
+            ATTR_SITE_NAME: self.coordinator.data.site.name,
         }
-
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener and load data."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self._update_callback)
-        )
-        self._update_callback()
-
-    async def async_update(self):
-        """Schedule a custom update via the common entity update service."""
-        await self._coordinator.async_request_refresh()
-
-    @callback
-    def _update_callback(self) -> None:
-        """Load data from integration."""
-        self.metoffice_site_id = self._data.site_id
-        self.metoffice_site_name = self._data.site_name
-        self.metoffice_now = self._data.now
-        self.async_write_ha_state()
-
-    @property
-    def should_poll(self) -> bool:
-        """Entities do not individually poll."""
-        return False
 
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return SENSOR_TYPES[self._type][4]
-
-    @property
-    def available(self):
-        """Return if state is available."""
-        return self.metoffice_site_id is not None and self.metoffice_now is not None
+        return (
+            self.entity_description.entity_registry_enabled_default and self.use_3hourly
+        )

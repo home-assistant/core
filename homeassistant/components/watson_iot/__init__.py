@@ -177,9 +177,7 @@ class WatsonIOTThread(threading.Thread):
         events = []
 
         try:
-            item = self.queue.get()
-
-            if item is None:
+            if (item := self.queue.get()) is None:
                 self.shutdown = True
             else:
                 event_json = self.event_to_json(item[1])
@@ -219,8 +217,7 @@ class WatsonIOTThread(threading.Thread):
     def run(self):
         """Process incoming events."""
         while not self.shutdown:
-            event = self.get_events_json()
-            if event:
+            if event := self.get_events_json():
                 self.write_to_watson(event)
             self.queue.task_done()
 

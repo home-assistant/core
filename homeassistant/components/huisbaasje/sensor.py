@@ -1,5 +1,9 @@
 """Platform for sensor integration."""
-from homeassistant.components.sensor import SensorEntity
+from __future__ import annotations
+
+import logging
+
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, POWER_WATT
 from homeassistant.core import HomeAssistant
@@ -9,6 +13,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DATA_COORDINATOR, DOMAIN, SENSOR_TYPE_RATE, SENSORS_INFO
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -38,6 +44,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         unit_of_measurement: str = POWER_WATT,
         icon: str = "mdi:lightning-bolt",
         precision: int = 0,
+        state_class: str | None = STATE_CLASS_MEASUREMENT,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -49,6 +56,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         self._sensor_type = sensor_type
         self._icon = icon
         self._precision = precision
+        self._attr_state_class = state_class
 
     @property
     def unique_id(self) -> str:
@@ -61,7 +69,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         return self._name
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 
@@ -71,7 +79,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data[self._source_type][self._sensor_type] is not None:
             return round(
@@ -81,7 +89,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 

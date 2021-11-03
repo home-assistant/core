@@ -15,14 +15,14 @@
                     "password": "Passwort"
                 },
                 "description": "Das Passwort f\u00fcr {username} ist nicht mehr g\u00fcltig.",
-                "title": "Authentifizieren Sie Ihr MyQ-Konto erneut"
+                "title": "Authentifiziere dein MyQ-Konto erneut"
             },
             "user": {
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "title": "Stellen Sie eine Verbindung zum MyQ Gateway her"
+                "title": "Stelle eine Verbindung zum MyQ Gateway her"
             }
         }
     }

@@ -43,7 +43,7 @@ MIN_UPDATE_SOURCES = timedelta(seconds=1)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HEOS component."""
     if DOMAIN not in config:
         return True
@@ -67,7 +67,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Initialize config entry which represents the HEOS controller."""
     # For backwards compat
     if entry.unique_id is None:
@@ -130,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     controller_manager = hass.data[DOMAIN][DATA_CONTROLLER_MANAGER]
     await controller_manager.disconnect()
@@ -335,9 +335,8 @@ class SourceManager:
                 heos_const.EVENT_USER_CHANGED,
                 heos_const.EVENT_CONNECTED,
             ):
-                sources = await get_sources()
                 # If throttled, it will return None
-                if sources:
+                if sources := await get_sources():
                     self.favorites, self.inputs = sources
                     self.source_list = self._build_source_list()
                     _LOGGER.debug("Sources updated due to changed event")

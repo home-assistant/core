@@ -238,8 +238,7 @@ class Plant(Entity):
         result = []
         for sensor_name in self._sensormap.values():
             params = self.READINGS[sensor_name]
-            value = getattr(self, f"_{sensor_name}")
-            if value is not None:
+            if (value := getattr(self, f"_{sensor_name}")) is not None:
                 if value == STATE_UNAVAILABLE:
                     result.append(f"{sensor_name} unavailable")
                 else:
@@ -291,8 +290,7 @@ class Plant(Entity):
         )
 
         for entity_id in self._sensormap:
-            state = self.hass.states.get(entity_id)
-            if state is not None:
+            if (state := self.hass.states.get(entity_id)) is not None:
                 self.state_changed(entity_id, state)
 
     def _load_history_from_db(self):

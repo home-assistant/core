@@ -1,7 +1,10 @@
 """The tests for the NSW Fuel Station sensor platform."""
 from unittest.mock import patch
 
+from nsw_fuel import FuelCheckError
+
 from homeassistant.components import sensor
+from homeassistant.components.nsw_fuel_station import DOMAIN
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
@@ -11,6 +14,8 @@ VALID_CONFIG = {
     "station_id": 350,
     "fuel_types": ["E10", "P95"],
 }
+
+VALID_CONFIG_EXPECTED_ENTITY_IDS = ["my_fake_station_p95", "my_fake_station_e10"]
 
 
 class MockPrice:
@@ -34,48 +39,41 @@ class MockStation:
         self.code = code
 
 
-class MockGetReferenceDataResponse:
-    """Mock GetReferenceDataResponse implementation."""
+class MockGetFuelPricesResponse:
+    """Mock GetFuelPricesResponse implementation."""
 
-    def __init__(self, stations):
-        """Initialize a mock GetReferenceDataResponse instance."""
+    def __init__(self, prices, stations):
+        """Initialize a mock GetFuelPricesResponse instance."""
+        self.prices = prices
         self.stations = stations
 
 
-class FuelCheckClientMock:
-    """Mock FuelCheckClient implementation."""
-
-    def get_fuel_prices_for_station(self, station):
-        """Return a fake fuel prices response."""
-        return [
-            MockPrice(
-                price=150.0,
-                fuel_type="P95",
-                last_updated=None,
-                price_unit=None,
-                station_code=350,
-            ),
-            MockPrice(
-                price=140.0,
-                fuel_type="E10",
-                last_updated=None,
-                price_unit=None,
-                station_code=350,
-            ),
-        ]
-
-    def get_reference_data(self):
-        """Return a fake reference data response."""
-        return MockGetReferenceDataResponse(
-            stations=[MockStation(code=350, name="My Fake Station")]
-        )
+MOCK_FUEL_PRICES_RESPONSE = MockGetFuelPricesResponse(
+    prices=[
+        MockPrice(
+            price=150.0,
+            fuel_type="P95",
+            last_updated=None,
+            price_unit=None,
+            station_code=350,
+        ),
+        MockPrice(
+            price=140.0,
+            fuel_type="E10",
+            last_updated=None,
+            price_unit=None,
+            station_code=350,
+        ),
+    ],
+    stations=[MockStation(code=350, name="My Fake Station")],
+)
 
 
 @patch(
-    "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
-    new=FuelCheckClientMock,
+    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    return_value=MOCK_FUEL_PRICES_RESPONSE,
 )
-async def test_setup(hass):
+async def test_setup(get_fuel_prices, hass):
     """Test the setup with custom settings."""
     with assert_setup_component(1, sensor.DOMAIN):
         assert await async_setup_component(
@@ -83,19 +81,71 @@ async def test_setup(hass):
         )
         await hass.async_block_till_done()
 
-    fake_entities = ["my_fake_station_p95", "my_fake_station_e10"]
-
-    for entity_id in fake_entities:
+    for entity_id in VALID_CONFIG_EXPECTED_ENTITY_IDS:
         state = hass.states.get(f"sensor.{entity_id}")
         assert state is not None
 
 
+def raise_fuel_check_error():
+    """Raise fuel check error for testing error cases."""
+    raise FuelCheckError()
+
+
 @patch(
-    "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
-    new=FuelCheckClientMock,
+    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    side_effect=raise_fuel_check_error,
 )
-async def test_sensor_values(hass):
+async def test_setup_error(get_fuel_prices, hass):
+    """Test the setup with client throwing error."""
+    with assert_setup_component(1, sensor.DOMAIN):
+        assert await async_setup_component(
+            hass, sensor.DOMAIN, {"sensor": VALID_CONFIG}
+        )
+        await hass.async_block_till_done()
+
+    for entity_id in VALID_CONFIG_EXPECTED_ENTITY_IDS:
+        state = hass.states.get(f"sensor.{entity_id}")
+        assert state is None
+
+
+@patch(
+    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    return_value=MOCK_FUEL_PRICES_RESPONSE,
+)
+async def test_setup_error_no_station(get_fuel_prices, hass):
+    """Test the setup with specified station not existing."""
+    with assert_setup_component(2, sensor.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            sensor.DOMAIN,
+            {
+                "sensor": [
+                    {
+                        "platform": "nsw_fuel_station",
+                        "station_id": 350,
+                        "fuel_types": ["E10"],
+                    },
+                    {
+                        "platform": "nsw_fuel_station",
+                        "station_id": 351,
+                        "fuel_types": ["P95"],
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_fake_station_e10") is not None
+    assert hass.states.get("sensor.my_fake_station_p95") is None
+
+
+@patch(
+    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    return_value=MOCK_FUEL_PRICES_RESPONSE,
+)
+async def test_sensor_values(get_fuel_prices, hass):
     """Test retrieval of sensor values."""
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
     await hass.async_block_till_done()
 

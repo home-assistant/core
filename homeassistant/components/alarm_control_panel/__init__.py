@@ -1,7 +1,7 @@
 """Component to interface with an alarm control panel."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, Final, final
@@ -16,13 +16,14 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -31,6 +32,7 @@ from .const import (
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
 )
 
@@ -83,6 +85,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [SUPPORT_ALARM_ARM_NIGHT],
     )
     component.async_register_entity_service(
+        SERVICE_ALARM_ARM_VACATION,
+        ALARM_SERVICE_SCHEMA,
+        "async_alarm_arm_vacation",
+        [SUPPORT_ALARM_ARM_VACATION],
+    )
+    component.async_register_entity_service(
         SERVICE_ALARM_ARM_CUSTOM_BYPASS,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_custom_bypass",
@@ -110,23 +118,34 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
+@dataclass
+class AlarmControlPanelEntityDescription(EntityDescription):
+    """A class that describes alarm control panel entities."""
+
+
 class AlarmControlPanelEntity(Entity):
     """An abstract class for alarm control entities."""
+
+    entity_description: AlarmControlPanelEntityDescription
+    _attr_changed_by: str | None = None
+    _attr_code_arm_required: bool = True
+    _attr_code_format: str | None = None
+    _attr_supported_features: int
 
     @property
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
-        return None
+        return self._attr_code_format
 
     @property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
-        return None
+        return self._attr_changed_by
 
     @property
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        return True
+        return self._attr_code_arm_required
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -160,6 +179,14 @@ class AlarmControlPanelEntity(Entity):
         """Send arm night command."""
         await self.hass.async_add_executor_job(self.alarm_arm_night, code)
 
+    def alarm_arm_vacation(self, code: str | None = None) -> None:
+        """Send arm vacation command."""
+        raise NotImplementedError()
+
+    async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
+        """Send arm vacation command."""
+        await self.hass.async_add_executor_job(self.alarm_arm_vacation, code)
+
     def alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         raise NotImplementedError()
@@ -177,9 +204,9 @@ class AlarmControlPanelEntity(Entity):
         await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
     @property
-    @abstractmethod
     def supported_features(self) -> int:
         """Return the list of supported features."""
+        return self._attr_supported_features
 
     @final
     @property

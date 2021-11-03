@@ -4,6 +4,10 @@ from __future__ import annotations
 import logging
 
 from greeclimate.device import (
+    TEMP_MAX,
+    TEMP_MAX_F,
+    TEMP_MIN,
+    TEMP_MIN_F,
     FanSpeed,
     HorizontalSwing,
     Mode,
@@ -46,6 +50,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -55,8 +60,6 @@ from .const import (
     DOMAIN,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
-    MAX_TEMP,
-    MIN_TEMP,
     TARGET_TEMPERATURE_STEP,
 )
 
@@ -135,14 +138,14 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         return self._mac
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self._mac)},
-            "manufacturer": "Gree",
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            identifiers={(DOMAIN, self._mac)},
+            manufacturer="Gree",
+            name=self._name,
+        )
 
     @property
     def temperature_unit(self) -> str:
@@ -157,8 +160,8 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
 
     @property
     def current_temperature(self) -> float:
-        """Return the target temperature, gree devices don't provide internal temp."""
-        return self.target_temperature
+        """Return the reported current temperature for the device."""
+        return self.coordinator.device.current_temperature
 
     @property
     def target_temperature(self) -> float:
@@ -184,12 +187,12 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature supported by the device."""
-        return MIN_TEMP
+        return TEMP_MIN if self.temperature_unit == TEMP_CELSIUS else TEMP_MIN_F
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature supported by the device."""
-        return MAX_TEMP
+        return TEMP_MAX if self.temperature_unit == TEMP_CELSIUS else TEMP_MAX_F
 
     @property
     def target_temperature_step(self) -> float:

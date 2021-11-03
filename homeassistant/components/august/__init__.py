@@ -33,7 +33,7 @@ API_CACHED_ATTRS = (
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up August from a config entry."""
 
     august_gateway = AugustGateway(hass)
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady from err
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     hass.data[DOMAIN][entry.entry_id][DATA_AUGUST].async_stop()
@@ -173,10 +173,10 @@ class AugustData(AugustSubscriberMixin):
 
     async def _async_refresh_device_detail_by_ids(self, device_ids_list):
         await asyncio.gather(
-            *[
+            *(
                 self._async_refresh_device_detail_by_id(device_id)
                 for device_id in device_ids_list
-            ]
+            )
         )
 
     async def _async_refresh_device_detail_by_id(self, device_id):

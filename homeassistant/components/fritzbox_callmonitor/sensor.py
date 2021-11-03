@@ -19,6 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTR_PREFIXES,
@@ -42,7 +43,7 @@ from .const import (
     STATE_IDLE,
     STATE_RINGING,
     STATE_TALKING,
-    UNKOWN_NAME,
+    UNKNOWN_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -158,7 +159,7 @@ class FritzBoxCallSensor(SensorEntity):
         return self._fritzbox_phonebook is not None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
@@ -175,15 +176,15 @@ class FritzBoxCallSensor(SensorEntity):
         return self._attributes
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "name": self._fritzbox_phonebook.fph.modelname,
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "manufacturer": MANUFACTURER,
-            "model": self._fritzbox_phonebook.fph.modelname,
-            "sw_version": self._fritzbox_phonebook.fph.fc.system_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer=MANUFACTURER,
+            model=self._fritzbox_phonebook.fph.modelname,
+            name=self._fritzbox_phonebook.fph.modelname,
+            sw_version=self._fritzbox_phonebook.fph.fc.system_version,
+        )
 
     @property
     def unique_id(self):
@@ -193,7 +194,7 @@ class FritzBoxCallSensor(SensorEntity):
     def number_to_name(self, number):
         """Return a name for a given phone number."""
         if self._fritzbox_phonebook is None:
-            return UNKOWN_NAME
+            return UNKNOWN_NAME
         return self._fritzbox_phonebook.get_name(number)
 
     def update(self):

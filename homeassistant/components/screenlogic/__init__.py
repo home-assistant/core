@@ -5,7 +5,9 @@ import logging
 
 from screenlogicpy import ScreenLogicError, ScreenLogicGateway
 from screenlogicpy.const import (
+    DATA as SL_DATA,
     EQUIPMENT,
+    ON_OFF,
     SL_GATEWAY_IP,
     SL_GATEWAY_NAME,
     SL_GATEWAY_PORT,
@@ -16,6 +18,9 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -28,37 +33,23 @@ from .services import async_load_screenlogic_services, async_unload_screenlogic_
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["switch", "sensor", "binary_sensor", "climate"]
+
+REQUEST_REFRESH_DELAY = 1
+
+PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Screenlogic component."""
     domain_data = hass.data[DOMAIN] = {}
     domain_data[DISCOVERED_GATEWAYS] = await async_discover_gateways_by_unique_id(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Screenlogic from a config entry."""
-    mac = entry.unique_id
-    # Attempt to re-discover named gateway to follow IP changes
-    discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
-    if mac in discovered_gateways:
-        connect_info = discovered_gateways[mac]
-    else:
-        _LOGGER.warning("Gateway rediscovery failed")
-        # Static connection defined or fallback from discovery
-        connect_info = {
-            SL_GATEWAY_NAME: name_for_mac(mac),
-            SL_GATEWAY_IP: entry.data[CONF_IP_ADDRESS],
-            SL_GATEWAY_PORT: entry.data[CONF_PORT],
-        }
 
-    try:
-        gateway = ScreenLogicGateway(**connect_info)
-    except ScreenLogicError as ex:
-        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
-        raise ConfigEntryNotReady from ex
+    gateway = await hass.async_add_executor_job(get_new_gateway, hass, entry)
 
     # The api library uses a shared socket connection and does not handle concurrent
     # requests very well.
@@ -72,17 +63,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "coordinator": coordinator,
-        "listener": entry.add_update_listener(async_update_listener),
-    }
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN][entry.entry_id]["listener"]()
@@ -97,6 +87,39 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+def get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
+    """Construct connect_info from configuration entry and returns it to caller."""
+    mac = entry.unique_id
+    # Attempt to re-discover named gateway to follow IP changes
+    discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
+    if mac in discovered_gateways:
+        connect_info = discovered_gateways[mac]
+    else:
+        _LOGGER.warning("Gateway rediscovery failed")
+        # Static connection defined or fallback from discovery
+        connect_info = {
+            SL_GATEWAY_NAME: name_for_mac(mac),
+            SL_GATEWAY_IP: entry.data[CONF_IP_ADDRESS],
+            SL_GATEWAY_PORT: entry.data[CONF_PORT],
+        }
+
+    return connect_info
+
+
+def get_new_gateway(hass: HomeAssistant, entry: ConfigEntry):
+    """Instantiate a new ScreenLogicGateway, connect to it and return it to caller."""
+
+    connect_info = get_connect_info(hass, entry)
+
+    try:
+        gateway = ScreenLogicGateway(**connect_info)
+    except ScreenLogicError as ex:
+        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
+        raise ConfigEntryNotReady from ex
+
+    return gateway
 
 
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
@@ -117,7 +140,25 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=interval,
+            # We don't want an immediate refresh since the device
+            # takes a moment to reflect the state change
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
         )
+
+    def reconnect_gateway(self):
+        """Instantiate a new ScreenLogicGateway, connect to it and update. Return new gateway to caller."""
+
+        connect_info = get_connect_info(self.hass, self.config_entry)
+
+        try:
+            gateway = ScreenLogicGateway(**connect_info)
+            gateway.update()
+        except ScreenLogicError as error:
+            raise UpdateFailed(error) from error
+
+        return gateway
 
     async def _async_update_data(self):
         """Fetch data from the Screenlogic gateway."""
@@ -125,7 +166,13 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             async with self.api_lock:
                 await self.hass.async_add_executor_job(self.gateway.update)
         except ScreenLogicError as error:
-            raise UpdateFailed(error) from error
+            _LOGGER.warning("ScreenLogicError - attempting reconnect: %s", error)
+
+            async with self.api_lock:
+                self.gateway = await self.hass.async_add_executor_job(
+                    self.reconnect_gateway
+                )
+
         return self.gateway.get_data()
 
 
@@ -169,7 +216,7 @@ class ScreenlogicEntity(CoordinatorEntity):
         return self.gateway.name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information for the controller."""
         controller_type = self.config_data["controller_type"]
         hardware_type = self.config_data["hardware_type"]
@@ -179,9 +226,50 @@ class ScreenlogicEntity(CoordinatorEntity):
             ]
         except KeyError:
             equipment_model = f"Unknown Model C:{controller_type} H:{hardware_type}"
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
-            "name": self.gateway_name,
-            "manufacturer": "Pentair",
-            "model": equipment_model,
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
+            manufacturer="Pentair",
+            model=equipment_model,
+            name=self.gateway_name,
+        )
+
+
+class ScreenLogicCircuitEntity(ScreenlogicEntity):
+    """ScreenLogic circuit entity."""
+
+    @property
+    def name(self):
+        """Get the name of the switch."""
+        return f"{self.gateway_name} {self.circuit['name']}"
+
+    @property
+    def is_on(self) -> bool:
+        """Get whether the switch is in on state."""
+        return self.circuit["value"] == ON_OFF.ON
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Send the ON command."""
+        await self._async_set_circuit(ON_OFF.ON)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Send the OFF command."""
+        await self._async_set_circuit(ON_OFF.OFF)
+
+    async def _async_set_circuit(self, circuit_value) -> None:
+        async with self.coordinator.api_lock:
+            success = await self.hass.async_add_executor_job(
+                self.gateway.set_circuit, self._data_key, circuit_value
+            )
+
+        if success:
+            _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
+            await self.coordinator.async_request_refresh()
+        else:
+            _LOGGER.warning(
+                "Failed to set_circuit %s %s", self._data_key, circuit_value
+            )
+
+    @property
+    def circuit(self):
+        """Shortcut to access the circuit."""
+        return self.coordinator.data[SL_DATA.KEY_CIRCUITS][self._data_key]

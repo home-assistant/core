@@ -69,7 +69,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
 
             _LOGGER.debug("Updating sharkiq data")
             online_vacs = (self.shark_vacs[dsn] for dsn in self.online_dsns)
-            await asyncio.gather(*[self._async_update_vacuum(v) for v in online_vacs])
+            await asyncio.gather(*(self._async_update_vacuum(v) for v in online_vacs))
         except (
             SharkIqAuthError,
             SharkIqNotAuthedError,

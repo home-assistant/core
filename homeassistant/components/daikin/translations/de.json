@@ -5,6 +5,7 @@
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "error": {
+            "api_password": "Ung\u00fcltige Authentifizierung, verwende entweder den API-Schl\u00fcssel oder das Passwort.",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
@@ -16,7 +17,7 @@
                     "host": "Host",
                     "password": "Passwort"
                 },
-                "description": "Gib die IP-Adresse deiner Daikin AC ein.",
+                "description": "Gib die IP-Adresse deiner Daikin AC ein.\n\nBeachte, dass API-Schl\u00fcssel und Passwort nur von BRP072Cxx bzw. SKYFi-Ger\u00e4ten verwendet werden.",
                 "title": "Daikin AC konfigurieren"
             }
         }

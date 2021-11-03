@@ -1,4 +1,5 @@
 """Hass.io const variables."""
+from enum import Enum
 
 DOMAIN = "hassio"
 
@@ -14,7 +15,6 @@ ATTR_HOMEASSISTANT = "homeassistant"
 ATTR_INPUT = "input"
 ATTR_PANELS = "panels"
 ATTR_PASSWORD = "password"
-ATTR_SNAPSHOT = "snapshot"
 ATTR_TITLE = "title"
 ATTR_USERNAME = "username"
 ATTR_UUID = "uuid"
@@ -39,10 +39,24 @@ WS_TYPE_SUBSCRIBE = "supervisor/subscribe"
 
 EVENT_SUPERVISOR_EVENT = "supervisor_event"
 
-# Add-on keys
 ATTR_VERSION = "version"
 ATTR_VERSION_LATEST = "version_latest"
 ATTR_UPDATE_AVAILABLE = "update_available"
+ATTR_CPU_PERCENT = "cpu_percent"
+ATTR_MEMORY_PERCENT = "memory_percent"
 ATTR_SLUG = "slug"
+ATTR_STATE = "state"
+ATTR_STARTED = "started"
 ATTR_URL = "url"
 ATTR_REPOSITORY = "repository"
+
+
+DATA_KEY_ADDONS = "addons"
+DATA_KEY_OS = "os"
+
+
+class SupervisorEntityModel(str, Enum):
+    """Supervisor entity model."""
+
+    ADDON = "Home Assistant Add-on"
+    OS = "Home Assistant Operating System"

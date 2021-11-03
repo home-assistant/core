@@ -45,9 +45,9 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_service_data_not_a_dict(hass, calls):
+async def test_service_data_not_a_dict(hass, caplog, calls):
     """Test service data not dict."""
-    with assert_setup_component(0, automation.DOMAIN):
+    with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -58,6 +58,34 @@ async def test_service_data_not_a_dict(hass, calls):
                 }
             },
         )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    assert "Result is not a Dictionary" in caplog.text
+
+
+async def test_service_data_single_template(hass, calls):
+    """Test service data not dict."""
+    with assert_setup_component(1, automation.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": "{{ { 'foo': 'bar' } }}",
+                    },
+                }
+            },
+        )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["foo"] == "bar"
 
 
 async def test_service_specify_data(hass, calls):
@@ -1184,6 +1212,7 @@ async def test_automation_variables(hass, caplog):
                     "variables": {
                         "test_var": "defined_in_config",
                         "event_type": "{{ trigger.event.event_type }}",
+                        "this_variables": "{{this.entity_id}}",
                     },
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "action": {
@@ -1191,6 +1220,8 @@ async def test_automation_variables(hass, caplog):
                         "data": {
                             "value": "{{ test_var }}",
                             "event_type": "{{ event_type }}",
+                            "this_template": "{{this.entity_id}}",
+                            "this_variables": "{{this_variables}}",
                         },
                     },
                 },
@@ -1224,6 +1255,11 @@ async def test_automation_variables(hass, caplog):
     assert len(calls) == 1
     assert calls[0].data["value"] == "defined_in_config"
     assert calls[0].data["event_type"] == "test_event"
+    # Verify this available to all templates
+    assert calls[0].data.get("this_template") == "automation.automation_0"
+    # Verify this available during variables rendering
+    assert calls[0].data.get("this_variables") == "automation.automation_0"
+    assert "Error rendering variables" not in caplog.text
 
     hass.bus.async_fire("test_event_2")
     await hass.async_block_till_done()
@@ -1276,6 +1312,7 @@ async def test_automation_trigger_variables(hass, caplog):
                     },
                     "trigger_variables": {
                         "test_var": "defined_in_config",
+                        "this_trigger_variables": "{{this.entity_id}}",
                     },
                     "trigger": {"platform": "event", "event_type": "test_event_2"},
                     "action": {
@@ -1283,6 +1320,8 @@ async def test_automation_trigger_variables(hass, caplog):
                         "data": {
                             "value": "{{ test_var }}",
                             "event_type": "{{ event_type }}",
+                            "this_template": "{{this.entity_id}}",
+                            "this_trigger_variables": "{{this_trigger_variables}}",
                         },
                     },
                 },
@@ -1300,7 +1339,10 @@ async def test_automation_trigger_variables(hass, caplog):
     assert len(calls) == 2
     assert calls[1].data["value"] == "overridden_in_config"
     assert calls[1].data["event_type"] == "test_event_2"
-
+    # Verify this available to all templates
+    assert calls[1].data.get("this_template") == "automation.automation_1"
+    # Verify this available during trigger variables rendering
+    assert calls[1].data.get("this_trigger_variables") == "automation.automation_1"
     assert "Error rendering variables" not in caplog.text
 
 
@@ -1330,6 +1372,35 @@ async def test_automation_bad_trigger_variables(hass, caplog):
 
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+
+async def test_automation_this_var_always(hass, caplog):
+    """Test automation always has reference to this, even with no variable or trigger variables configured."""
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": {
+                            "this_template": "{{this.entity_id}}",
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    # Verify this available to all templates
+    assert calls[0].data.get("this_template") == "automation.automation_0"
+    assert "Error rendering variables" not in caplog.text
 
 
 async def test_blueprint_automation(hass, calls):
@@ -1405,3 +1476,97 @@ async def test_trigger_service(hass, calls):
     assert len(calls) == 1
     assert calls[0].data.get("trigger") == {"platform": None}
     assert calls[0].context.parent_id is context.id
+
+
+async def test_trigger_condition_implicit_id(hass, calls):
+    """Test triggers."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": [
+                    {"platform": "event", "event_type": "test_event1"},
+                    {"platform": "event", "event_type": "test_event2"},
+                    {"platform": "event", "event_type": "test_event3"},
+                ],
+                "action": {
+                    "choose": [
+                        {
+                            "conditions": {"condition": "trigger", "id": [0, "2"]},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "one"},
+                            },
+                        },
+                        {
+                            "conditions": {"condition": "trigger", "id": "1"},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "two"},
+                            },
+                        },
+                    ]
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[-1].data.get("param") == "one"
+
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[-1].data.get("param") == "two"
+
+    hass.bus.async_fire("test_event3")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    assert calls[-1].data.get("param") == "one"
+
+
+async def test_trigger_condition_explicit_id(hass, calls):
+    """Test triggers."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": [
+                    {"platform": "event", "event_type": "test_event1", "id": "one"},
+                    {"platform": "event", "event_type": "test_event2", "id": "two"},
+                ],
+                "action": {
+                    "choose": [
+                        {
+                            "conditions": {"condition": "trigger", "id": "one"},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "one"},
+                            },
+                        },
+                        {
+                            "conditions": {"condition": "trigger", "id": "two"},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "two"},
+                            },
+                        },
+                    ]
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[-1].data.get("param") == "one"
+
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[-1].data.get("param") == "two"

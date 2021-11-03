@@ -56,7 +56,9 @@ DATA_DEVICES = "zwave-mqtt-devices"
 DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C901
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up ozw from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     ozw_data = hass.data[DOMAIN][entry.entry_id] = {}
@@ -104,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C
                 _LOGGER.error("MQTT integration is not set up")
                 return
 
-            mqtt.async_publish(hass, topic, json.dumps(payload))
+            hass.async_create_task(mqtt.async_publish(hass, topic, json.dumps(payload)))
 
         manager_options["send_message"] = send_message
 
@@ -148,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C
         # The actual removal action of a Z-Wave node is reported as instance event
         # Only when this event is detected we cleanup the device and entities from hass
         # Note: Find a more elegant way of doing this, e.g. a notification of this event from OZW
-        if event in ["removenode", "removefailednode"] and "Node" in event_data:
+        if event in ("removenode", "removefailednode") and "Node" in event_data:
             removed_nodes.append(event_data["Node"])
 
     @callback
@@ -158,9 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C
         node_id = value.node.node_id
 
         # Filter out CommandClasses we're definitely not interested in.
-        if value.command_class in [
-            CommandClass.MANUFACTURER_SPECIFIC,
-        ]:
+        if value.command_class in (CommandClass.MANUFACTURER_SPECIFIC,):
             return
 
         _LOGGER.debug(
@@ -211,10 +211,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C
             value.command_class,
         )
         # Handle a scene activation message
-        if value.command_class in [
+        if value.command_class in (
             CommandClass.SCENE_ACTIVATION,
             CommandClass.CENTRAL_SCENE,
-        ]:
+        ):
             async_handle_scene_activated(hass, value)
             return
 
@@ -262,10 +262,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C
 
     async def start_platforms():
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         if entry.data.get(CONF_USE_ADDON):
             mqtt_client_task = asyncio.create_task(mqtt_client.start_client(manager))
@@ -298,7 +298,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     # cleanup platforms
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -370,7 +370,7 @@ async def async_handle_node_update(hass: HomeAssistant, node: OZWNode):
         return
     # update device in device registry with (updated) info
     for item in dev_registry.devices.values():
-        if item.id != device.id and item.via_device_id != device.id:
+        if device.id not in (item.id, item.via_device_id):
             continue
         dev_name = create_device_name(node)
         dev_registry.async_update_device(

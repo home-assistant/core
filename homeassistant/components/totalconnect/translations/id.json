@@ -13,7 +13,7 @@
                 "data": {
                     "location": "Lokasi"
                 },
-                "description": "Masukkan kode pengguna untuk pengguna ini di lokasi ini",
+                "description": "Masukkan kode pengguna untuk pengguna ini di lokasi {location_id}",
                 "title": "Lokasi Kode Pengguna"
             },
             "reauth_confirm": {

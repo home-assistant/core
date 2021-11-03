@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Final
+from typing import Any, Final
 
 from canary.api import Api
 from requests.exceptions import ConnectTimeout, HTTPError
@@ -24,7 +24,7 @@ from .const import (
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-def validate_input(hass: HomeAssistant, data: ConfigType) -> bool:
+def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -56,7 +56,9 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by configuration file."""
         return await self.async_step_user(user_input)
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -104,7 +106,9 @@ class CanaryOptionsFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage Canary options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

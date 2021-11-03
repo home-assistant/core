@@ -17,6 +17,7 @@
                 "data": {
                     "name": "Nimi",
                     "password": "Salas\u00f5na",
+                    "url": "URL",
                     "username": "Kasutajanimi"
                 },
                 "title": "Sisesta oma Growatti teave"

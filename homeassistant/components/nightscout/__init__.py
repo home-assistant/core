@@ -18,7 +18,7 @@ PLATFORMS = ["sensor"]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nightscout from a config entry."""
     server_url = entry.data[CONF_URL]
     api_key = entry.data.get(CONF_API_KEY)
@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = api
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, server_url)},

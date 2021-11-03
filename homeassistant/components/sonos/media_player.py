@@ -6,14 +6,13 @@ import logging
 from typing import Any
 import urllib.parse
 
-from pysonos import alarms
-from pysonos.core import (
+from soco import alarms
+from soco.core import (
     MUSIC_SRC_LINE_IN,
     MUSIC_SRC_RADIO,
     PLAY_MODE_BY_MEANING,
     PLAY_MODES,
 )
-from pysonos.exceptions import SoCoException, SoCoUPnPException
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -54,6 +53,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 
 from .const import (
+    DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
     MEDIA_TYPES_TO_SONOS,
     PLAYABLE_MEDIA_TYPES,
@@ -119,11 +119,9 @@ ATTR_ENABLED = "enabled"
 ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 ATTR_MASTER = "master"
 ATTR_WITH_GROUP = "with_group"
-ATTR_BUTTONS_ENABLED = "buttons_enabled"
-ATTR_NIGHT_SOUND = "night_sound"
-ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
-ATTR_STATUS_LIGHT = "status_light"
+ATTR_EQ_BASS = "bass_level"
+ATTR_EQ_TREBLE = "treble_level"
 
 
 async def async_setup_entry(
@@ -230,10 +228,12 @@ async def async_setup_entry(
     platform.async_register_entity_service(  # type: ignore
         SERVICE_SET_OPTION,
         {
-            vol.Optional(ATTR_BUTTONS_ENABLED): cv.boolean,
-            vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
-            vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
-            vol.Optional(ATTR_STATUS_LIGHT): cv.boolean,
+            vol.Optional(ATTR_EQ_BASS): vol.All(
+                vol.Coerce(int), vol.Range(min=-10, max=10)
+            ),
+            vol.Optional(ATTR_EQ_TREBLE): vol.All(
+                vol.Coerce(int), vol.Range(min=-10, max=10)
+            ),
         },
         "set_option",
     )
@@ -292,20 +292,19 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             return STATE_PLAYING
         return STATE_IDLE
 
-    async def async_update(self, now: datetime.datetime | None = None) -> None:
-        """Retrieve latest state."""
-        await self.hass.async_add_executor_job(self._update, now)
+    async def _async_poll(self) -> None:
+        """Retrieve latest state by polling."""
+        await self.hass.data[DATA_SONOS].favorites[
+            self.speaker.household_id
+        ].async_poll()
+        await self.hass.async_add_executor_job(self._update)
 
-    def _update(self, now: datetime.datetime | None = None) -> None:
-        """Retrieve latest state."""
-        _LOGGER.debug("Polling speaker %s", self.speaker.zone_name)
-        try:
-            self.speaker.update_groups()
-            self.speaker.update_volume()
-            if self.speaker.is_coordinator:
-                self.speaker.update_media()
-        except SoCoException:
-            pass
+    def _update(self) -> None:
+        """Retrieve latest state by polling."""
+        self.speaker.update_groups()
+        self.speaker.update_volume()
+        if self.speaker.is_coordinator:
+            self.speaker.update_media()
 
     @property
     def volume_level(self) -> float | None:
@@ -368,6 +367,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def media_channel(self) -> str | None:
         """Channel currently playing."""
         return self.media.channel or None
+
+    @property
+    def media_playlist(self) -> str | None:
+        """Title of playlist currently playing."""
+        return self.media.playlist_name
 
     @property  # type: ignore[misc]
     def media_artist(self) -> str | None:
@@ -512,6 +516,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         If media_id is a Plex payload, attempt Plex->Sonos playback.
 
+        If media_id is a Sonos or Tidal share link, attempt playback
+        using the respective service.
+
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
 
@@ -521,27 +528,21 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if media_id and media_id.startswith(PLEX_URI_SCHEME):
             media_id = media_id[len(PLEX_URI_SCHEME) :]
             play_on_sonos(self.hass, media_type, media_id, self.name)  # type: ignore[no-untyped-call]
+            return
+
+        share_link = self.speaker.share_link
+        if share_link.is_share_link(media_id):
+            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+                share_link.add_share_link_to_queue(media_id)
+            else:
+                soco.clear_queue()
+                share_link.add_share_link_to_queue(media_id)
+                soco.play_from_queue(0)
         elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
-                try:
-                    if soco.is_service_uri(media_id):
-                        soco.add_service_uri_to_queue(media_id)
-                    else:
-                        soco.add_uri_to_queue(media_id)
-                except SoCoUPnPException:
-                    _LOGGER.error(
-                        'Error parsing media uri "%s", '
-                        "please check it's a valid media resource "
-                        "supported by Sonos",
-                        media_id,
-                    )
+                soco.add_uri_to_queue(media_id)
             else:
-                if soco.is_service_uri(media_id):
-                    soco.clear_queue()
-                    soco.add_service_uri_to_queue(media_id)
-                    soco.play_from_queue(0)
-                else:
-                    soco.play_uri(media_id)
+                soco.play_uri(media_id)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
                 item = get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
@@ -550,11 +551,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             try:
                 playlists = soco.get_sonos_playlists()
                 playlist = next(p for p in playlists if p.title == media_id)
+            except StopIteration:
+                _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
+            else:
                 soco.clear_queue()
                 soco.add_to_queue(playlist)
                 soco.play_from_queue(0)
-            except StopIteration:
-                _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
         elif media_type in PLAYABLE_MEDIA_TYPES:
             item = get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
 
@@ -606,23 +608,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error()
     def set_option(
         self,
-        buttons_enabled: bool | None = None,
-        night_sound: bool | None = None,
-        speech_enhance: bool | None = None,
-        status_light: bool | None = None,
+        bass_level: int | None = None,
+        treble_level: int | None = None,
     ) -> None:
         """Modify playback options."""
-        if buttons_enabled is not None:
-            self.soco.buttons_enabled = buttons_enabled
+        if bass_level is not None:
+            self.soco.bass = bass_level
 
-        if night_sound is not None and self.speaker.night_mode is not None:
-            self.soco.night_mode = night_sound
-
-        if speech_enhance is not None and self.speaker.dialog_mode is not None:
-            self.soco.dialog_mode = speech_enhance
-
-        if status_light is not None:
-            self.soco.status_light = status_light
+        if treble_level is not None:
+            self.soco.treble = treble_level
 
     @soco_error()
     def play_queue(self, queue_position: int = 0) -> None:
@@ -641,11 +635,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             ATTR_SONOS_GROUP: self.speaker.sonos_group_entities
         }
 
-        if self.speaker.night_mode is not None:
-            attributes[ATTR_NIGHT_SOUND] = self.speaker.night_mode
+        if self.speaker.bass_level is not None:
+            attributes[ATTR_EQ_BASS] = self.speaker.bass_level
 
-        if self.speaker.dialog_mode is not None:
-            attributes[ATTR_SPEECH_ENHANCE] = self.speaker.dialog_mode
+        if self.speaker.treble_level is not None:
+            attributes[ATTR_EQ_TREBLE] = self.speaker.treble_level
 
         if self.media.queue_position is not None:
             attributes[ATTR_QUEUE_POSITION] = self.media.queue_position
@@ -669,8 +663,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 media_content_id,
                 MEDIA_TYPES_TO_SONOS[media_content_type],
             )
-            image_url = getattr(item, "album_art_uri", None)
-            if image_url:
+            if image_url := getattr(item, "album_art_uri", None):
                 result = await self._async_fetch_image(image_url)  # type: ignore[no-untyped-call]
                 return result  # type: ignore
 

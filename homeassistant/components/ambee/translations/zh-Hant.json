@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_api_key": "API \u5bc6\u9470\u7121\u6548"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470",
+                    "description": "\u91cd\u65b0\u8a8d\u8b49 Ambee \u5e33\u865f\u3002"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6",
+                    "name": "\u540d\u7a31"
+                },
+                "description": "\u8a2d\u5b9a Ambee \u4ee5\u6574\u5408\u81f3 Home Assistant\u3002"
+            }
+        }
+    }
+}

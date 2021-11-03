@@ -3,7 +3,13 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.lock import DOMAIN
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import (
+    STATE_JAMMED,
+    STATE_LOCKED,
+    STATE_LOCKING,
+    STATE_UNLOCKED,
+    STATE_UNLOCKING,
+)
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
@@ -60,6 +66,27 @@ async def test_get_conditions(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_unlocking",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_locking",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_jammed",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
     ]
     conditions = await async_get_device_automations(hass, "condition", device_entry.id)
     assert_lists_same(conditions, expected_conditions)
@@ -110,6 +137,60 @@ async def test_if_state(hass, calls):
                         },
                     },
                 },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event3"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": "lock.entity",
+                            "type": "is_unlocking",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_unlocking - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event4"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": "lock.entity",
+                            "type": "is_locking",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_locking - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event5"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": "lock.entity",
+                            "type": "is_jammed",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_jammed - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
             ]
         },
     )
@@ -125,3 +206,21 @@ async def test_if_state(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "is_unlocked - event - test_event2"
+
+    hass.states.async_set("lock.entity", STATE_UNLOCKING)
+    hass.bus.async_fire("test_event3")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    assert calls[2].data["some"] == "is_unlocking - event - test_event3"
+
+    hass.states.async_set("lock.entity", STATE_LOCKING)
+    hass.bus.async_fire("test_event4")
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+    assert calls[3].data["some"] == "is_locking - event - test_event4"
+
+    hass.states.async_set("lock.entity", STATE_JAMMED)
+    hass.bus.async_fire("test_event5")
+    await hass.async_block_till_done()
+    assert len(calls) == 5
+    assert calls[4].data["some"] == "is_jammed - event - test_event5"

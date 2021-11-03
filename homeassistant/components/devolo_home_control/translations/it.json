@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
-            "invalid_auth": "Autenticazione non valida"
+            "invalid_auth": "Autenticazione non valida",
+            "reauth_failed": "Si prega di utilizzare lo stesso utente mydevolo di prima."
         },
         "step": {
             "user": {

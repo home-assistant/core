@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from httpx import ConnectTimeout
 from pypoint import PointSession
 import voluptuous as vol
 
@@ -14,12 +15,13 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 
@@ -74,7 +76,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Point from a config entry."""
 
     async def token_saver(token, **kwargs):
@@ -92,6 +94,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     try:
         await session.ensure_active_token()
+    except ConnectTimeout as err:
+        _LOGGER.debug("Connection Timeout")
+        raise ConfigEntryNotReady from err
     except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Authentication Error")
         return False
@@ -133,7 +138,7 @@ async def async_setup_webhook(hass: HomeAssistant, entry: ConfigEntry, session):
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     session = hass.data[DOMAIN].pop(entry.entry_id)
@@ -303,20 +308,20 @@ class MinutPointEntity(Entity):
         return attrs
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         device = self.device.device
-        return {
-            "connections": {
+        return DeviceInfo(
+            connections={
                 (device_registry.CONNECTION_NETWORK_MAC, device["device_mac"])
             },
-            "identifieres": device["device_id"],
-            "manufacturer": "Minut",
-            "model": f"Point v{device['hardware_version']}",
-            "name": device["description"],
-            "sw_version": device["firmware"]["installed"],
-            "via_device": (DOMAIN, device["home"]),
-        }
+            identifiers=device["device_id"],
+            manufacturer="Minut",
+            model=f"Point v{device['hardware_version']}",
+            name=device["description"],
+            sw_version=device["firmware"]["installed"],
+            via_device=(DOMAIN, device["home"]),
+        )
 
     @property
     def name(self):

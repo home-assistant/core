@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "province": "\u5dde"
+                }
+            }
+        }
+    }
+}

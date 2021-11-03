@@ -83,7 +83,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         return self.name.lower().replace(" ", "_")
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -93,7 +93,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         return self._sensor_type
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor.unit
 
@@ -108,9 +108,9 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         return self._tag.sensor[self._sensor_type]
 
     @callback
-    def _update_tag_info_callback(self, event):
+    def _update_tag_info_callback(self, new_tag):
         """Handle push notification sent by tag manager."""
-        _LOGGER.debug("Entity to update state: %s event data: %s", self, event.data)
-        new_value = self._sensor.value_from_update_event(event.data)
-        self._state = self.decorate_value(new_value)
+        _LOGGER.debug("Entity to update state: %s with new tag: %s", self, new_tag)
+        self._tag = new_tag
+        self._state = self.updated_state_value()
         self.async_write_ha_state()

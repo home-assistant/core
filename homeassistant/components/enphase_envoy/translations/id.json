@@ -1,14 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Perangkat sudah dikonfigurasi"
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "Envoy {serial} ({host})",
+        "flow_title": "{serial} ({host})",
         "step": {
             "user": {
                 "data": {

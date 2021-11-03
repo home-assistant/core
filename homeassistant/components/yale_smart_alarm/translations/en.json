@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "Area ID",
+                    "name": "Name",
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "Area ID",
+                    "name": "Name",
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    }
+}

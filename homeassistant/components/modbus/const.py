@@ -1,4 +1,5 @@
 """Constants used in modbus integration."""
+from enum import Enum
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
@@ -29,12 +30,16 @@ CONF_FANS = "fans"
 CONF_HUB = "hub"
 CONF_INPUTS = "inputs"
 CONF_INPUT_TYPE = "input_type"
+CONF_LAZY_ERROR = "lazy_error_count"
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
+CONF_MSG_WAIT = "message_wait_milliseconds"
 CONF_PARITY = "parity"
 CONF_REGISTER = "register"
 CONF_REGISTER_TYPE = "register_type"
 CONF_REGISTERS = "registers"
+CONF_RETRIES = "retries"
+CONF_RETRY_ON_EMPTY = "retry_on_empty"
 CONF_REVERSE_ORDER = "reverse_order"
 CONF_PRECISION = "precision"
 CONF_SCALE = "scale"
@@ -59,6 +64,12 @@ CONF_VERIFY_REGISTER = "verify_register"
 CONF_VERIFY_STATE = "verify_state"
 CONF_WRITE_TYPE = "write_type"
 
+RTUOVERTCP = "rtuovertcp"
+SERIAL = "serial"
+TCP = "tcp"
+UDP = "udp"
+
+
 # service call attributes
 ATTR_ADDRESS = "address"
 ATTR_HUB = "hub"
@@ -67,12 +78,25 @@ ATTR_VALUE = "value"
 ATTR_STATE = "state"
 ATTR_TEMPERATURE = "temperature"
 
-# data types
-DATA_TYPE_CUSTOM = "custom"
-DATA_TYPE_FLOAT = "float"
-DATA_TYPE_INT = "int"
-DATA_TYPE_UINT = "uint"
-DATA_TYPE_STRING = "string"
+
+class DataType(str, Enum):
+    """Data types used by sensor etc."""
+
+    CUSTOM = "custom"
+    FLOAT = "float"  # deprecated
+    INT = "int"  # deprecated
+    UINT = "uint"  # deprecated
+    STRING = "string"
+    INT16 = "int16"
+    INT32 = "int32"
+    INT64 = "int64"
+    UINT16 = "uint16"
+    UINT32 = "uint32"
+    UINT64 = "uint64"
+    FLOAT16 = "float16"
+    FLOAT32 = "float32"
+    FLOAT64 = "float64"
+
 
 # call types
 CALL_TYPE_COIL = "coil"
@@ -83,24 +107,28 @@ CALL_TYPE_WRITE_COIL = "write_coil"
 CALL_TYPE_WRITE_COILS = "write_coils"
 CALL_TYPE_WRITE_REGISTER = "write_register"
 CALL_TYPE_WRITE_REGISTERS = "write_registers"
+CALL_TYPE_X_COILS = "coils"
+CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 
 # service calls
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
+SERVICE_STOP = "stop"
+SERVICE_RESTART = "restart"
+
+# dispatcher signals
+SIGNAL_STOP_ENTITY = "modbus.stop"
+SIGNAL_START_ENTITY = "modbus.start"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
-MINIMUM_SCAN_INTERVAL = 5  # seconds
 DEFAULT_SCAN_INTERVAL = 15  # seconds
 DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"
-DEFAULT_STRUCT_FORMAT = {
-    DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
-    DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
-    DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
-}
 DEFAULT_TEMP_UNIT = "C"
 MODBUS_DOMAIN = "modbus"
+
+ACTIVE_SCAN_INTERVAL = 2  # limit to force an extra update
 
 PLATFORMS = (
     (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS),

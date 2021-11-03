@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from http import HTTPStatus
 import logging
 from pathlib import Path
 from typing import Any
@@ -14,7 +15,6 @@ from homeassistant.components.alexa import (
     smart_home as alexa_sh,
 )
 from homeassistant.components.google_assistant import const as gc, smart_home as ga
-from homeassistant.const import HTTP_OK
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -108,8 +108,8 @@ class CloudClient(Interface):
 
         return self._google_config
 
-    async def logged_in(self) -> None:
-        """When user logs in."""
+    async def cloud_started(self) -> None:
+        """When cloud is started."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
         async def enable_alexa(_):
@@ -148,9 +148,12 @@ class CloudClient(Interface):
             tasks.append(enable_google)
 
         if tasks:
-            await asyncio.gather(*[task(None) for task in tasks])
+            await asyncio.gather(*(task(None) for task in tasks))
 
-    async def cleanups(self) -> None:
+    async def cloud_stopped(self) -> None:
+        """When the cloud is stopped."""
+
+    async def logout_cleanups(self) -> None:
         """Cleanup some stuff after logout."""
         await self.prefs.async_set_username(None)
 
@@ -168,6 +171,10 @@ class CloudClient(Interface):
         """Match cloud notification to dispatcher."""
         if identifier.startswith("remote_"):
             async_dispatcher_send(self._hass, DISPATCHER_REMOTE_UPDATE, data)
+
+    async def async_cloud_connect_update(self, connect: bool) -> None:
+        """Process cloud remote message to client."""
+        await self._prefs.async_update(remote_enabled=connect)
 
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud alexa message to client."""
@@ -203,7 +210,7 @@ class CloudClient(Interface):
                 break
 
         if found is None:
-            return {"status": HTTP_OK}
+            return {"status": HTTPStatus.OK}
 
         request = MockRequest(
             content=payload["body"].encode("utf-8"),

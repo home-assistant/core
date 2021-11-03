@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
@@ -100,7 +100,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         return True
 
     @property
-    def state(self) -> StateType:
+    def state(self) -> str | None:
         """Return player state."""
         state = STATE_OFF
         if "playback_position" in self._state:
@@ -131,11 +131,11 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": DEFAULT_NAME,
-            "manufacturer": ATTR_MANUFACTURER,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer=ATTR_MANUFACTURER,
+            name=DEFAULT_NAME,
+        )
 
     @property
     def volume_level(self) -> float:

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from aiohttp import ContentTypeError
 from requests.exceptions import ConnectTimeout, HTTPError
@@ -35,7 +36,9 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user or redirected to by import."""
         if not user_input:
             return self._show_form()

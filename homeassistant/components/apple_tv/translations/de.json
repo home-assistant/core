@@ -16,7 +16,7 @@
             "no_usable_service": "Es wurde ein Ger\u00e4t gefunden, aber es konnte keine M\u00f6glichkeit gefunden werden, eine Verbindung zu diesem Ger\u00e4t herzustellen. Wenn diese Meldung weiterhin erscheint, versuche, die IP-Adresse anzugeben oder den Apple TV neu zu starten.",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "Apple TV: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Es wird der Apple TV mit dem Namen \" {name} \" zu Home Assistant hinzugef\u00fcgt. \n\n ** Um den Vorgang abzuschlie\u00dfen, m\u00fcssen m\u00f6glicherweise mehrere PIN-Codes eingegeben werden. ** \n\n Bitte beachte, dass der Apple TV mit dieser Integration * nicht * ausgeschalten werden kann. Nur der Media Player in Home Assistant wird ausgeschaltet!",

@@ -28,11 +28,8 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("elkm1", "config_flow.py"),
     ("elkm1", "scene.py"),
     ("fibaro", "scene.py"),
-    ("flume", "config_flow.py"),
     ("hangouts", "config_flow.py"),
     ("harmony", "config_flow.py"),
-    ("hisense_aehw4a1", "config_flow.py"),
-    ("home_connect", "config_flow.py"),
     ("huawei_lte", "config_flow.py"),
     ("ifttt", "config_flow.py"),
     ("ios", "config_flow.py"),
@@ -65,7 +62,6 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("velux", "scene.py"),
     ("wemo", "config_flow.py"),
     ("wiffi", "config_flow.py"),
-    ("wink", "scene.py"),
 }
 
 

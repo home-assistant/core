@@ -1,4 +1,5 @@
 """Support for August doorbell camera."""
+from __future__ import annotations
 
 from yalexs.activity import ActivityType
 from yalexs.util import update_doorbell_image_from_activity
@@ -35,11 +36,8 @@ class AugustCamera(AugustEntityMixin, Camera):
         self._session = session
         self._image_url = None
         self._image_content = None
-
-    @property
-    def name(self):
-        """Return the name of this device."""
-        return f"{self._device.device_name} Camera"
+        self._attr_name = f"{device.device_name} Camera"
+        self._attr_unique_id = f"{self._device_id:s}_camera"
 
     @property
     def is_recording(self):
@@ -71,7 +69,9 @@ class AugustCamera(AugustEntityMixin, Camera):
         if doorbell_activity is not None:
             update_doorbell_image_from_activity(self._detail, doorbell_activity)
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         self._update_from_data()
 
@@ -81,8 +81,3 @@ class AugustCamera(AugustEntityMixin, Camera):
                 self._session, timeout=self._timeout
             )
         return self._image_content
-
-    @property
-    def unique_id(self) -> str:
-        """Get the unique id of the camera."""
-        return f"{self._device_id:s}_camera"

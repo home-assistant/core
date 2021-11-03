@@ -1,11 +1,14 @@
 """deCONZ services."""
 
-import asyncio
-
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
@@ -13,15 +16,7 @@ from homeassistant.helpers.entity_registry import (
 )
 
 from .config_flow import get_master_gateway
-from .const import (
-    CONF_BRIDGE_ID,
-    DOMAIN,
-    LOGGER,
-    NEW_GROUP,
-    NEW_LIGHT,
-    NEW_SCENE,
-    NEW_SENSOR,
-)
+from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
 
 DECONZ_SERVICES = "deconz_services"
 
@@ -46,63 +41,69 @@ SERVICE_DEVICE_REFRESH = "device_refresh"
 SERVICE_REMOVE_ORPHANED_ENTRIES = "remove_orphaned_entries"
 SELECT_GATEWAY_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
 
+SUPPORTED_SERVICES = (
+    SERVICE_CONFIGURE_DEVICE,
+    SERVICE_DEVICE_REFRESH,
+    SERVICE_REMOVE_ORPHANED_ENTRIES,
+)
 
-async def async_setup_services(hass):
+SERVICE_TO_SCHEMA = {
+    SERVICE_CONFIGURE_DEVICE: SERVICE_CONFIGURE_DEVICE_SCHEMA,
+    SERVICE_DEVICE_REFRESH: SELECT_GATEWAY_SCHEMA,
+    SERVICE_REMOVE_ORPHANED_ENTRIES: SELECT_GATEWAY_SCHEMA,
+}
+
+
+@callback
+def async_setup_services(hass):
     """Set up services for deCONZ integration."""
-    if hass.data.get(DECONZ_SERVICES, False):
-        return
-
-    hass.data[DECONZ_SERVICES] = True
 
     async def async_call_deconz_service(service_call):
         """Call correct deCONZ service."""
         service = service_call.service
         service_data = service_call.data
 
+        gateway = get_master_gateway(hass)
+        if CONF_BRIDGE_ID in service_data:
+            found_gateway = False
+            bridge_id = normalize_bridge_id(service_data[CONF_BRIDGE_ID])
+
+            for possible_gateway in hass.data[DOMAIN].values():
+                if possible_gateway.bridgeid == bridge_id:
+                    gateway = possible_gateway
+                    found_gateway = True
+                    break
+
+            if not found_gateway:
+                LOGGER.error("Could not find the gateway %s", bridge_id)
+                return
+
         if service == SERVICE_CONFIGURE_DEVICE:
-            await async_configure_service(hass, service_data)
+            await async_configure_service(gateway, service_data)
 
         elif service == SERVICE_DEVICE_REFRESH:
-            await async_refresh_devices_service(hass, service_data)
+            await async_refresh_devices_service(gateway)
 
         elif service == SERVICE_REMOVE_ORPHANED_ENTRIES:
-            await async_remove_orphaned_entries_service(hass, service_data)
+            await async_remove_orphaned_entries_service(gateway)
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CONFIGURE_DEVICE,
-        async_call_deconz_service,
-        schema=SERVICE_CONFIGURE_DEVICE_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_DEVICE_REFRESH,
-        async_call_deconz_service,
-        schema=SELECT_GATEWAY_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_REMOVE_ORPHANED_ENTRIES,
-        async_call_deconz_service,
-        schema=SELECT_GATEWAY_SCHEMA,
-    )
+    for service in SUPPORTED_SERVICES:
+        hass.services.async_register(
+            DOMAIN,
+            service,
+            async_call_deconz_service,
+            schema=SERVICE_TO_SCHEMA[service],
+        )
 
 
-async def async_unload_services(hass):
+@callback
+def async_unload_services(hass):
     """Unload deCONZ services."""
-    if not hass.data.get(DECONZ_SERVICES):
-        return
-
-    hass.data[DECONZ_SERVICES] = False
-
-    hass.services.async_remove(DOMAIN, SERVICE_CONFIGURE_DEVICE)
-    hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
-    hass.services.async_remove(DOMAIN, SERVICE_REMOVE_ORPHANED_ENTRIES)
+    for service in SUPPORTED_SERVICES:
+        hass.services.async_remove(DOMAIN, service)
 
 
-async def async_configure_service(hass, data):
+async def async_configure_service(gateway, data):
     """Set attribute of device in deCONZ.
 
     Entity is used to resolve to a device path (e.g. '/lights/1').
@@ -118,10 +119,6 @@ async def async_configure_service(hass, data):
     See Dresden Elektroniks REST API documentation for details:
     http://dresden-elektronik.github.io/deconz-rest-doc/rest/
     """
-    gateway = get_master_gateway(hass)
-    if CONF_BRIDGE_ID in data:
-        gateway = hass.data[DOMAIN][normalize_bridge_id(data[CONF_BRIDGE_ID])]
-
     field = data.get(SERVICE_FIELD, "")
     entity_id = data.get(SERVICE_ENTITY)
     data = data[SERVICE_DATA]
@@ -136,32 +133,20 @@ async def async_configure_service(hass, data):
     await gateway.api.request("put", field, json=data)
 
 
-async def async_refresh_devices_service(hass, data):
+async def async_refresh_devices_service(gateway):
     """Refresh available devices from deCONZ."""
-    gateway = get_master_gateway(hass)
-    if CONF_BRIDGE_ID in data:
-        gateway = hass.data[DOMAIN][normalize_bridge_id(data[CONF_BRIDGE_ID])]
-
     gateway.ignore_state_updates = True
     await gateway.api.refresh_state()
     gateway.ignore_state_updates = False
 
-    gateway.async_add_device_callback(NEW_GROUP, force=True)
-    gateway.async_add_device_callback(NEW_LIGHT, force=True)
-    gateway.async_add_device_callback(NEW_SCENE, force=True)
-    gateway.async_add_device_callback(NEW_SENSOR, force=True)
+    for resource_type in gateway.deconz_resource_type_to_signal_new_device:
+        gateway.async_add_device_callback(resource_type, force=True)
 
 
-async def async_remove_orphaned_entries_service(hass, data):
+async def async_remove_orphaned_entries_service(gateway):
     """Remove orphaned deCONZ entries from device and entity registries."""
-    gateway = get_master_gateway(hass)
-    if CONF_BRIDGE_ID in data:
-        gateway = hass.data[DOMAIN][normalize_bridge_id(data[CONF_BRIDGE_ID])]
-
-    device_registry, entity_registry = await asyncio.gather(
-        hass.helpers.device_registry.async_get_registry(),
-        hass.helpers.entity_registry.async_get_registry(),
-    )
+    device_registry = dr.async_get(gateway.hass)
+    entity_registry = er.async_get(gateway.hass)
 
     entity_entries = async_entries_for_config_entry(
         entity_registry, gateway.config_entry.entry_id
@@ -184,7 +169,7 @@ async def async_remove_orphaned_entries_service(hass, data):
 
     # Don't remove the Gateway service entry
     gateway_service = device_registry.async_get_device(
-        identifiers={(DOMAIN, gateway.api.config.bridgeid)}, connections=set()
+        identifiers={(DOMAIN, gateway.api.config.bridge_id)}, connections=set()
     )
     if gateway_service.id in devices_to_be_removed:
         devices_to_be_removed.remove(gateway_service.id)

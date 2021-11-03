@@ -255,7 +255,7 @@ class ChannelsPlayer(MediaPlayerEntity):
         if media_type == MEDIA_TYPE_CHANNEL:
             response = self.client.play_channel(media_id)
             self.update_state(response)
-        elif media_type in [MEDIA_TYPE_MOVIE, MEDIA_TYPE_EPISODE, MEDIA_TYPE_TVSHOW]:
+        elif media_type in (MEDIA_TYPE_MOVIE, MEDIA_TYPE_EPISODE, MEDIA_TYPE_TVSHOW):
             response = self.client.play_recording(media_id)
             self.update_state(response)
 

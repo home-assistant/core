@@ -25,20 +25,20 @@ from .const import (
 )
 from .utils import get_tradable_asset_pairs
 
+CALL_RATE_LIMIT_SLEEP = 1
+
 PLATFORMS = ["sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up kraken from a config entry."""
-    kraken_data = KrakenData(hass, config_entry)
+    kraken_data = KrakenData(hass, entry)
     await kraken_data.async_setup()
     hass.data[DOMAIN] = kraken_data
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(async_options_updated)
-    )
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(async_options_updated))
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
@@ -127,7 +127,8 @@ class KrakenData:
                 self._config_entry, options=options
             )
         await self._async_refresh_tradable_asset_pairs()
-        await asyncio.sleep(1)  # Wait 1 second to avoid triggering the CallRateLimiter
+        # Wait 1 second to avoid triggering the KrakenAPI CallRateLimiter
+        await asyncio.sleep(CALL_RATE_LIMIT_SLEEP)
         self.coordinator = DataUpdateCoordinator(
             self._hass,
             _LOGGER,
@@ -138,6 +139,8 @@ class KrakenData:
             ),
         )
         await self.coordinator.async_config_entry_first_refresh()
+        # Wait 1 second to avoid triggering the KrakenAPI CallRateLimiter
+        await asyncio.sleep(CALL_RATE_LIMIT_SLEEP)
 
     def _get_websocket_name_asset_pairs(self) -> str:
         return ",".join(wsname for wsname in self.tradable_asset_pairs.values())

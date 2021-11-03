@@ -35,7 +35,8 @@
                     "name": "Nombre del servicio de notificaci\u00f3n (el cambio requiere reiniciar)",
                     "recipient": "Destinatarios de notificaciones por SMS",
                     "track_new_devices": "Rastrea nuevos dispositivos",
-                    "track_wired_clients": "Seguir clientes de red cableados"
+                    "track_wired_clients": "Seguir clientes de red cableados",
+                    "unauthenticated_mode": "Modo no autenticado (el cambio requiere recarga)"
                 }
             }
         }

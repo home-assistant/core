@@ -1,5 +1,7 @@
 """Test different accessory types: Media Players."""
 
+import pytest
+
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
@@ -242,7 +244,7 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: "HDMI 5"})
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 0
-    assert caplog.records[-2].levelname == "WARNING"
+    assert caplog.records[-2].levelname == "DEBUG"
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
@@ -353,8 +355,9 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
 
     hass.bus.async_listen(EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED, listener)
 
-    await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 20)
-    await hass.async_block_till_done()
+    with pytest.raises(ValueError):
+        await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 20)
+        await hass.async_block_till_done()
 
     await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 7)
     await hass.async_block_till_done()

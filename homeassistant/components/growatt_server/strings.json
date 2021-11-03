@@ -17,7 +17,8 @@
                 "data": {
                     "name": "[%key:common::config_flow::data::name%]",
                     "password": "[%key:common::config_flow::data::password%]",
-                    "username": "[%key:common::config_flow::data::username%]"
+                    "username": "[%key:common::config_flow::data::username%]",
+                    "url": "[%key:common::config_flow::data::url%]"
                 },
                 "title": "Enter your Growatt information"
             }

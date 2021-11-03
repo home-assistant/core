@@ -1,6 +1,7 @@
 """Config flow for Ambiclimate."""
 import logging
 
+from aiohttp import web
 import ambiclimate
 
 from homeassistant import config_entries
@@ -85,9 +86,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Received code for authentication."""
         self._async_abort_entries_match()
 
-        token_info = await self._get_token_info(code)
-
-        if token_info is None:
+        if await self._get_token_info(code) is None:
             return self.async_abort(reason="access_token")
 
         config = self.hass.data[DATA_AMBICLIMATE_IMPL].copy()
@@ -139,10 +138,10 @@ class AmbiclimateAuthCallbackView(HomeAssistantView):
     url = AUTH_CALLBACK_PATH
     name = AUTH_CALLBACK_NAME
 
-    async def get(self, request):
+    async def get(self, request: web.Request) -> str:
         """Receive authorization token."""
-        code = request.query.get("code")
-        if code is None:
+        # pylint: disable=no-self-use
+        if (code := request.query.get("code")) is None:
             return "No code"
         hass = request.app["hass"]
         hass.async_create_task(

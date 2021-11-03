@@ -21,8 +21,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Configure Gammu state machine."""
     hass.data.setdefault(DOMAIN, {})
-    sms_config = config.get(DOMAIN, {})
-    if not sms_config:
+    if not (sms_config := config.get(DOMAIN, {})):
         return True
 
     hass.async_create_task(
@@ -36,7 +35,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure Gammu state machine."""
 
     device = entry.data[CONF_DEVICE]
@@ -50,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

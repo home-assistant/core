@@ -21,8 +21,8 @@ from homeassistant.components.cover import (
 from homeassistant.const import CONF_OPTIMISTIC, STATE_CLOSED, STATE_OPEN
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import SomfyEntity
-from .const import API, COORDINATOR, DOMAIN
+from .const import COORDINATOR, DOMAIN
+from .entity import SomfyEntity
 
 BLIND_DEVICE_CATEGORIES = {Category.INTERIOR_BLIND.value, Category.EXTERIOR_BLIND.value}
 SHUTTER_DEVICE_CATEGORIES = {Category.EXTERIOR_BLIND.value}
@@ -37,10 +37,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy cover platform."""
     domain_data = hass.data[DOMAIN]
     coordinator = domain_data[COORDINATOR]
-    api = domain_data[API]
 
     covers = [
-        SomfyCover(coordinator, device_id, api, domain_data[CONF_OPTIMISTIC])
+        SomfyCover(coordinator, device_id, domain_data[CONF_OPTIMISTIC])
         for device_id, device in coordinator.data.items()
         if SUPPORTED_CATEGORIES & set(device.categories)
     ]
@@ -51,9 +50,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
     """Representation of a Somfy cover device."""
 
-    def __init__(self, coordinator, device_id, api, optimistic):
+    def __init__(self, coordinator, device_id, optimistic):
         """Initialize the Somfy device."""
-        super().__init__(coordinator, device_id, api)
+        super().__init__(coordinator, device_id)
         self.categories = set(self.device.categories)
         self.optimistic = optimistic
         self._closed = None
@@ -64,7 +63,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
 
     def _create_device(self) -> Blind:
         """Update the device with the latest data."""
-        self._cover = Blind(self.device, self.api)
+        self._cover = Blind(self.device, self.coordinator.client)
 
     @property
     def supported_features(self) -> int:

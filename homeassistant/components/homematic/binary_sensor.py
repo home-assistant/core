@@ -26,7 +26,9 @@ SENSOR_TYPES_CLASS = {
     "TiltSensor": None,
     "WeatherSensor": None,
     "IPContact": DEVICE_CLASS_OPENING,
+    "MotionIP": DEVICE_CLASS_MOTION,
     "MotionIPV2": DEVICE_CLASS_MOTION,
+    "MotionIPContactSabotage": DEVICE_CLASS_MOTION,
     "IPRemoteMotionV2": DEVICE_CLASS_MOTION,
 }
 
@@ -74,10 +76,7 @@ class HMBinarySensor(HMDevice, BinarySensorEntity):
 class HMBatterySensor(HMDevice, BinarySensorEntity):
     """Representation of an HomeMatic low battery sensor."""
 
-    @property
-    def device_class(self):
-        """Return battery as a device class."""
-        return DEVICE_CLASS_BATTERY
+    _attr_device_class = DEVICE_CLASS_BATTERY
 
     @property
     def is_on(self):

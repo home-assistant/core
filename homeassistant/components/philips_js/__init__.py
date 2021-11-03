@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from haphilipsjs import ConnectionFailure, PhilipsTV
 
@@ -20,14 +21,14 @@ from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, c
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import CONF_ALLOW_NOTIFY, DOMAIN
 
-PLATFORMS = ["media_player", "remote"]
+PLATFORMS = ["media_player", "light", "remote"]
 
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Philips TV from a config entry."""
 
     tvapi = PhilipsTV(
@@ -36,8 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
     )
-
-    coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi)
+    coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi, entry.options)
 
     await coordinator.async_refresh()
     hass.data.setdefault(DOMAIN, {})
@@ -45,10 +45,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(async_update_entry))
+
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update options."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -94,9 +101,10 @@ class PluggableAction:
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
-    def __init__(self, hass, api: PhilipsTV) -> None:
+    def __init__(self, hass, api: PhilipsTV, options: dict) -> None:
         """Set up the coordinator."""
         self.api = api
+        self.options = options
         self._notify_future: asyncio.Task | None = None
 
         @callback
@@ -116,8 +124,22 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ),
         )
 
+    @property
+    def _notify_wanted(self):
+        """Return if the notify feature should be active.
+
+        We only run it when TV is considered fully on. When powerstate is in standby, the TV
+        will go in low power states and seemingly break the http server in odd ways.
+        """
+        return (
+            self.api.on
+            and self.api.powerstate == "On"
+            and self.api.notify_change_supported
+            and self.options.get(CONF_ALLOW_NOTIFY, False)
+        )
+
     async def _notify_task(self):
-        while self.api.on and self.api.notify_change_supported:
+        while self._notify_wanted:
             res = await self.api.notifyChange(130)
             if res:
                 self.async_set_updated_data(None)
@@ -133,11 +155,10 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     @callback
     def _async_notify_schedule(self):
-        if (
-            (self._notify_future is None or self._notify_future.done())
-            and self.api.on
-            and self.api.notify_change_supported
-        ):
+        if self._notify_future and not self._notify_future.done():
+            return
+
+        if self._notify_wanted:
             self._notify_future = asyncio.create_task(self._notify_task())
 
     @callback

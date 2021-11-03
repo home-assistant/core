@@ -64,7 +64,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
                 user = await self._awair.user()
                 devices = await user.devices()
                 results = await gather(
-                    *[self._fetch_air_data(device) for device in devices]
+                    *(self._fetch_air_data(device) for device in devices)
                 )
                 return {result.device.uuid: result for result in results}
             except AuthError as err:
@@ -74,6 +74,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _fetch_air_data(self, device):
         """Fetch latest air quality data."""
+        # pylint: disable=no-self-use
         LOGGER.debug("Fetching data for %s", device.uuid)
         air_data = await device.air_data_latest()
         LOGGER.debug(air_data)

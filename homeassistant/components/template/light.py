@@ -595,7 +595,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             # This behavior is legacy
             self._state = False
             if not self._availability_template:
-                self._available = True
+                self._attr_available = True
             return
 
         if isinstance(result, bool):

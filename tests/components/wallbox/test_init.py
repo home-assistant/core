@@ -1,165 +1,122 @@
 """Test Wallbox Init Component."""
 import json
 
-import pytest
 import requests_mock
-from voluptuous.schema_builder import raises
 
-from homeassistant.components import wallbox
-from homeassistant.components.wallbox.const import CONF_STATION, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.components.wallbox import (
+    CONF_CONNECTIONS,
+    CONF_MAX_CHARGING_CURRENT_KEY,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from . import test_response
 
-entry = MockConfigEntry(
-    domain=DOMAIN,
-    data={
-        CONF_USERNAME: "test_username",
-        CONF_PASSWORD: "test_password",
-        CONF_STATION: "12345",
-    },
-    entry_id="testEntry",
+from tests.components.wallbox import (
+    DOMAIN,
+    entry,
+    setup_integration,
+    setup_integration_connection_error,
+    setup_integration_read_only,
+)
+from tests.components.wallbox.const import (
+    CONF_ERROR,
+    CONF_JWT,
+    CONF_STATUS,
+    CONF_TTL,
+    CONF_USER_ID,
 )
 
-test_response = json.loads(
-    '{"charging_power": 0,"max_available_power": 25,"charging_speed": 0,"added_range": 372,"added_energy": 44.697}'
+authorisation_response = json.loads(
+    json.dumps(
+        {
+            CONF_JWT: "fakekeyhere",
+            CONF_USER_ID: 12345,
+            CONF_TTL: 145656758,
+            CONF_ERROR: "false",
+            CONF_STATUS: 200,
+        }
+    )
 )
 
-test_response_rounding_error = json.loads(
-    '{"charging_power": "XX","max_available_power": "xx","charging_speed": 0,"added_range": "xx","added_energy": "XX"}'
-)
 
-
-async def test_wallbox_setup_entry(hass: HomeAssistantType):
-    """Test Wallbox Setup."""
-    with requests_mock.Mocker() as m:
-        m.get(
-            "https://api.wall-box.com/auth/token/user",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-            status_code=200,
-        )
-        m.get(
-            "https://api.wall-box.com/chargers/status/12345",
-            text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
-            status_code=200,
-        )
-        assert await wallbox.async_setup_entry(hass, entry)
-
-    with requests_mock.Mocker() as m, raises(ConnectionError):
-        m.get(
-            "https://api.wall-box.com/auth/token/user",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":404}',
-            status_code=404,
-        )
-        assert await wallbox.async_setup_entry(hass, entry) is False
-
-
-async def test_wallbox_unload_entry(hass: HomeAssistantType):
+async def test_wallbox_setup_unload_entry(hass: HomeAssistant):
     """Test Wallbox Unload."""
-    hass.data[DOMAIN] = {"connections": {entry.entry_id: entry}}
 
-    assert await wallbox.async_unload_entry(hass, entry)
+    await setup_integration(hass)
+    assert entry.state == ConfigEntryState.LOADED
 
-    hass.data[DOMAIN] = {"fail_entry": entry}
-
-    with pytest.raises(KeyError):
-        await wallbox.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_get_data(hass: HomeAssistantType):
-    """Test hub class, get_data."""
+async def test_wallbox_unload_entry_connection_error(hass: HomeAssistant):
+    """Test Wallbox Unload Connection Error."""
 
-    station = ("12345",)
-    username = ("test-username",)
-    password = "test-password"
+    await setup_integration_connection_error(hass)
+    assert entry.state == ConfigEntryState.SETUP_ERROR
 
-    hub = wallbox.WallboxHub(station, username, password, hass)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED
 
-    with requests_mock.Mocker() as m:
-        m.get(
+
+async def test_wallbox_refresh_failed_invalid_auth(hass: HomeAssistant):
+    """Test Wallbox setup with authentication error."""
+
+    await setup_integration(hass)
+    assert entry.state == ConfigEntryState.LOADED
+
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
             "https://api.wall-box.com/auth/token/user",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-            status_code=200,
+            json=authorisation_response,
+            status_code=403,
         )
-        m.get(
-            "https://api.wall-box.com/chargers/status/('12345',)",
-            json=test_response,
-            status_code=200,
+        mock_request.put(
+            "https://api.wall-box.com/v2/charger/12345",
+            json=json.loads(json.dumps({CONF_MAX_CHARGING_CURRENT_KEY: 20})),
+            status_code=403,
         )
-        assert await hub.async_get_data()
+
+        wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
+
+        await wallbox.async_refresh()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_get_data_rounding_error(hass: HomeAssistantType):
-    """Test hub class, get_data with rounding error."""
+async def test_wallbox_refresh_failed_connection_error(hass: HomeAssistant):
+    """Test Wallbox setup with connection error."""
 
-    station = ("12345",)
-    username = ("test-username",)
-    password = "test-password"
+    await setup_integration(hass)
+    assert entry.state == ConfigEntryState.LOADED
 
-    hub = wallbox.WallboxHub(station, username, password, hass)
-
-    with requests_mock.Mocker() as m:
-        m.get(
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
             "https://api.wall-box.com/auth/token/user",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            json=authorisation_response,
             status_code=200,
         )
-        m.get(
-            "https://api.wall-box.com/chargers/status/('12345',)",
-            json=test_response_rounding_error,
-            status_code=200,
-        )
-        assert await hub.async_get_data()
-
-
-async def test_authentication_exception(hass: HomeAssistantType):
-    """Test hub class, authentication raises exception."""
-
-    station = ("12345",)
-    username = ("test-username",)
-    password = "test-password"
-
-    hub = wallbox.WallboxHub(station, username, password, hass)
-
-    with requests_mock.Mocker() as m, raises(wallbox.InvalidAuth):
-        m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
-
-        assert await hub.async_authenticate()
-
-    with requests_mock.Mocker() as m, raises(ConnectionError):
-        m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=404)
-
-        assert await hub.async_authenticate()
-
-    with requests_mock.Mocker() as m, raises(wallbox.InvalidAuth):
-        m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
-        m.get(
-            "https://api.wall-box.com/chargers/status/test",
+        mock_request.get(
+            "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
             status_code=403,
         )
-        assert await hub.async_get_data()
+
+        wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
+
+        await wallbox.async_refresh()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_get_data_exception(hass: HomeAssistantType):
-    """Test hub class, authentication raises exception."""
+async def test_wallbox_refresh_failed_read_only(hass: HomeAssistant):
+    """Test Wallbox setup for read-only user."""
 
-    station = ("12345",)
-    username = ("test-username",)
-    password = "test-password"
+    await setup_integration_read_only(hass)
+    assert entry.state == ConfigEntryState.LOADED
 
-    hub = wallbox.WallboxHub(station, username, password, hass)
-
-    with requests_mock.Mocker() as m, raises(ConnectionError):
-        m.get(
-            "https://api.wall-box.com/auth/token/user",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-            status_code=200,
-        )
-        m.get(
-            "https://api.wall-box.com/chargers/status/('12345',)",
-            text="data",
-            status_code=404,
-        )
-        assert await hub.async_get_data()
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED

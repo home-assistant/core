@@ -2,7 +2,7 @@
   "domain": "synology_dsm",
   "name": "Synology DSM",
   "documentation": "https://www.home-assistant.io/integrations/synology_dsm",
-  "requirements": ["synologydsm-api==1.0.2"],
+  "requirements": ["py-synologydsm-api==1.0.4"],
   "codeowners": ["@hacf-fr", "@Quentame", "@mib1185"],
   "config_flow": true,
   "ssdp": [

@@ -65,9 +65,7 @@ def async_request_config(
     if description_image is not None:
         description += f"\n\n![Description image]({description_image})"
 
-    instance = hass.data.get(_KEY_INSTANCE)
-
-    if instance is None:
+    if (instance := hass.data.get(_KEY_INSTANCE)) is None:
         instance = hass.data[_KEY_INSTANCE] = Configurator(hass)
 
     request_id = instance.async_request_config(
@@ -166,10 +164,10 @@ class Configurator:
         data.update(
             {
                 key: value
-                for key, value in [
+                for key, value in (
                     (ATTR_DESCRIPTION, description),
                     (ATTR_SUBMIT_CAPTION, submit_caption),
-                ]
+                )
                 if value is not None
             }
         )

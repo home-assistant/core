@@ -9,7 +9,7 @@
             "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
             "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})"
         },
-        "flow_title": "Smappee: {name}",
+        "flow_title": "{name}",
         "step": {
             "environment": {
                 "data": {

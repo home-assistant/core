@@ -1,4 +1,6 @@
 """Support for using humidifier with ecobee thermostats."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.components.humidifier import HumidifierEntity
@@ -9,8 +11,9 @@ from homeassistant.components.humidifier.const import (
     MODE_AUTO,
     SUPPORT_MODES,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
-from .const import DOMAIN
+from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
@@ -42,6 +45,38 @@ class EcobeeHumidifier(HumidifierEntity):
         self._last_humidifier_on_mode = MODE_MANUAL
 
         self.update_without_throttle = False
+
+    @property
+    def name(self):
+        """Return the name of the humidifier."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return unique_id for humidifier."""
+        return f"{self.thermostat['identifier']}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information for the ecobee humidifier."""
+        model: str | None
+        try:
+            model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
+        except KeyError:
+            # Ecobee model is not in our list
+            model = None
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.thermostat["identifier"])},
+            manufacturer=MANUFACTURER,
+            model=model,
+            name=self.name,
+        )
+
+    @property
+    def available(self):
+        """Return if device is available."""
+        return self.thermostat["runtime"]["connected"]
 
     async def async_update(self):
         """Get the latest state from the thermostat."""
@@ -83,11 +118,6 @@ class EcobeeHumidifier(HumidifierEntity):
     def mode(self):
         """Return the current mode, e.g., off, auto, manual."""
         return self.thermostat["settings"]["humidifierMode"]
-
-    @property
-    def name(self):
-        """Return the name of the ecobee thermostat."""
-        return self._name
 
     @property
     def supported_features(self):

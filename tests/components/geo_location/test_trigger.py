@@ -1,4 +1,6 @@
 """The tests for the geolocation trigger."""
+import logging
+
 import pytest
 
 from homeassistant.components import automation, zone
@@ -317,4 +319,47 @@ async def test_if_fires_on_zone_disappear(hass, calls):
     assert len(calls) == 1
     assert (
         calls[0].data["some"] == "geo_location - geo_location.entity - hello -  - test"
+    )
+
+
+async def test_zone_undefined(hass, calls, caplog):
+    """Test for undefined zone."""
+    hass.states.async_set(
+        "geo_location.entity",
+        "hello",
+        {"latitude": 32.880586, "longitude": -117.237564, "source": "test_source"},
+    )
+    await hass.async_block_till_done()
+
+    caplog.set_level(logging.WARNING)
+
+    zone_does_not_exist = "zone.does_not_exist"
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "geo_location",
+                    "source": "test_source",
+                    "zone": zone_does_not_exist,
+                    "event": "leave",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set(
+        "geo_location.entity",
+        "hello",
+        {"latitude": 32.881011, "longitude": -117.234758, "source": "test_source"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+    assert (
+        f"Unable to execute automation automation 0: Zone {zone_does_not_exist} not found"
+        in caplog.text
     )

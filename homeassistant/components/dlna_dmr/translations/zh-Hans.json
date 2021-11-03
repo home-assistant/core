@@ -1,0 +1,12 @@
+{
+    "config": {
+        "error": {
+            "could_not_connect": "\u65e0\u6cd5\u8fde\u63a5\u5230 DLNA \u8bbe\u5907"
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "\u65e0\u6548\u7f51\u5740"
+        }
+    }
+}

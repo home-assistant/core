@@ -268,7 +268,7 @@ async def handle_manifest_list(
     """Handle integrations command."""
     loaded_integrations = async_get_loaded_integrations(hass)
     integrations = await asyncio.gather(
-        *[async_get_integration(hass, domain) for domain in loaded_integrations]
+        *(async_get_integration(hass, domain) for domain in loaded_integrations)
     )
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]
@@ -420,9 +420,7 @@ def handle_entity_source(
                 perm_category=CAT_ENTITIES,
             )
 
-        source = raw_sources.get(entity_id)
-
-        if source is None:
+        if (source := raw_sources.get(entity_id)) is None:
             connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
             return
 

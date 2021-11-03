@@ -5,6 +5,7 @@ set_auto_off:
     entity:
       integration: switcher_kis
       domain: switch
+      device_class: switch
   fields:
     auto_off:
       name: Auto off
@@ -21,6 +22,7 @@ turn_on_with_timer:
     entity:
       integration: switcher_kis
       domain: switch
+      device_class: switch
   fields:
     timer_minutes:
       name: Timer

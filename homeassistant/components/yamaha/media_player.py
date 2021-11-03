@@ -1,4 +1,6 @@
 """Support for Yamaha Receivers."""
+from __future__ import annotations
+
 import logging
 
 import requests
@@ -30,11 +32,23 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import SERVICE_ENABLE_OUTPUT, SERVICE_SELECT_SCENE
+from .const import (
+    CURSOR_TYPE_DOWN,
+    CURSOR_TYPE_LEFT,
+    CURSOR_TYPE_RETURN,
+    CURSOR_TYPE_RIGHT,
+    CURSOR_TYPE_SELECT,
+    CURSOR_TYPE_UP,
+    SERVICE_ENABLE_OUTPUT,
+    SERVICE_MENU_CURSOR,
+    SERVICE_SELECT_SCENE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CURSOR = "cursor"
 ATTR_ENABLED = "enabled"
 ATTR_PORT = "port"
 
@@ -45,6 +59,14 @@ CONF_SOURCE_NAMES = "source_names"
 CONF_ZONE_IGNORE = "zone_ignore"
 CONF_ZONE_NAMES = "zone_names"
 
+CURSOR_TYPE_MAP = {
+    CURSOR_TYPE_DOWN: rxv.RXV.menu_down.__name__,
+    CURSOR_TYPE_LEFT: rxv.RXV.menu_left.__name__,
+    CURSOR_TYPE_RETURN: rxv.RXV.menu_return.__name__,
+    CURSOR_TYPE_RIGHT: rxv.RXV.menu_right.__name__,
+    CURSOR_TYPE_SELECT: rxv.RXV.menu_sel.__name__,
+    CURSOR_TYPE_UP: rxv.RXV.menu_up.__name__,
+}
 DATA_YAMAHA = "yamaha_known_receivers"
 DEFAULT_NAME = "Yamaha Receiver"
 
@@ -77,11 +99,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class YamahaConfigInfo:
     """Configuration Info for Yamaha Receivers."""
 
-    def __init__(self, config: None, discovery_info: None) -> None:
+    def __init__(self, config: ConfigType, discovery_info: DiscoveryInfoType) -> None:
         """Initialize the Configuration Info for Yamaha Receiver."""
         self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
-        self.ctrl_url = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
+        self.ctrl_url: str | None = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
         self.source_ignore = config.get(CONF_SOURCE_IGNORE)
         self.source_names = config.get(CONF_SOURCE_NAMES)
         self.zone_ignore = config.get(CONF_ZONE_IGNORE)
@@ -163,6 +185,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         SERVICE_ENABLE_OUTPUT,
         {vol.Required(ATTR_ENABLED): cv.boolean, vol.Required(ATTR_PORT): cv.string},
         "enable_output",
+    )
+    # Register Service 'menu_cursor'
+    platform.async_register_entity_service(
+        SERVICE_MENU_CURSOR,
+        {vol.Required(ATTR_CURSOR): vol.In(CURSOR_TYPE_MAP)},
+        YamahaDevice.menu_cursor.__name__,
     )
 
 
@@ -381,6 +409,10 @@ class YamahaDevice(MediaPlayerEntity):
     def enable_output(self, port, enabled):
         """Enable or disable an output port.."""
         self.receiver.enable_output(port, enabled)
+
+    def menu_cursor(self, cursor):
+        """Press a menu cursor button."""
+        getattr(self.receiver, CURSOR_TYPE_MAP[cursor])()
 
     def set_scene(self, scene):
         """Set the current scene."""

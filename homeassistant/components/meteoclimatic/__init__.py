@@ -5,7 +5,7 @@ from meteoclimatic import MeteoclimaticClient
 from meteoclimatic.exceptions import MeteoclimaticError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_STATION_CODE, DOMAIN, PLATFORMS, SCAN_INTERVAL
@@ -13,7 +13,7 @@ from .const import CONF_STATION_CODE, DOMAIN, PLATFORMS, SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Meteoclimatic entry."""
     station_code = entry.data[CONF_STATION_CODE]
     meteoclimatic_client = MeteoclimaticClient()
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=f"Meteoclimatic Coordinator for {station_code}",
+        name=f"Meteoclimatic weather for {entry.title} ({station_code})",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
     )
@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     return unload_ok

@@ -8,10 +8,11 @@ from functools import partial
 from typing import Any, Callable, TypeVar, cast
 
 from homeassistant.components.hassio import (
-    async_create_snapshot,
+    async_create_backup,
     async_get_addon_discovery_info,
     async_get_addon_info,
     async_install_addon,
+    async_restart_addon,
     async_set_addon_options,
     async_start_addon,
     async_stop_addon,
@@ -23,7 +24,16 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 
-from .const import ADDON_SLUG, CONF_ADDON_DEVICE, CONF_ADDON_NETWORK_KEY, DOMAIN, LOGGER
+from .const import (
+    ADDON_SLUG,
+    CONF_ADDON_DEVICE,
+    CONF_ADDON_S0_LEGACY_KEY,
+    CONF_ADDON_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_S2_AUTHENTICATED_KEY,
+    CONF_ADDON_S2_UNAUTHENTICATED_KEY,
+    DOMAIN,
+    LOGGER,
+)
 
 F = TypeVar("F", bound=Callable[..., Any])  # pylint: disable=invalid-name
 
@@ -89,6 +99,7 @@ class AddonManager:
         """Set up the add-on manager."""
         self._hass = hass
         self._install_task: asyncio.Task | None = None
+        self._restart_task: asyncio.Task | None = None
         self._start_task: asyncio.Task | None = None
         self._update_task: asyncio.Task | None = None
 
@@ -168,7 +179,13 @@ class AddonManager:
 
     @callback
     def async_schedule_install_setup_addon(
-        self, usb_path: str, network_key: str, catch_error: bool = False
+        self,
+        usb_path: str,
+        s0_legacy_key: str,
+        s2_access_control_key: str,
+        s2_authenticated_key: str,
+        s2_unauthenticated_key: str,
+        catch_error: bool = False,
     ) -> asyncio.Task:
         """Schedule a task that installs and sets up the Z-Wave JS add-on.
 
@@ -178,7 +195,14 @@ class AddonManager:
             LOGGER.info("Z-Wave JS add-on is not installed. Installing add-on")
             self._install_task = self._async_schedule_addon_operation(
                 self.async_install_addon,
-                partial(self.async_configure_addon, usb_path, network_key),
+                partial(
+                    self.async_configure_addon,
+                    usb_path,
+                    s0_legacy_key,
+                    s2_access_control_key,
+                    s2_authenticated_key,
+                    s2_unauthenticated_key,
+                ),
                 self.async_start_addon,
                 catch_error=catch_error,
             )
@@ -200,7 +224,7 @@ class AddonManager:
         if not addon_info.update_available:
             return
 
-        await self.async_create_snapshot()
+        await self.async_create_backup()
         await async_update_addon(self._hass, ADDON_SLUG)
 
     @callback
@@ -222,6 +246,11 @@ class AddonManager:
         """Start the Z-Wave JS add-on."""
         await async_start_addon(self._hass, ADDON_SLUG)
 
+    @api_error("Failed to restart the Z-Wave JS add-on")
+    async def async_restart_addon(self) -> None:
+        """Restart the Z-Wave JS add-on."""
+        await async_restart_addon(self._hass, ADDON_SLUG)
+
     @callback
     def async_schedule_start_addon(self, catch_error: bool = False) -> asyncio.Task:
         """Schedule a task that starts the Z-Wave JS add-on.
@@ -235,18 +264,41 @@ class AddonManager:
             )
         return self._start_task
 
+    @callback
+    def async_schedule_restart_addon(self, catch_error: bool = False) -> asyncio.Task:
+        """Schedule a task that restarts the Z-Wave JS add-on.
+
+        Only schedule a new restart task if the there's no running task.
+        """
+        if not self._restart_task or self._restart_task.done():
+            LOGGER.info("Restarting Z-Wave JS add-on")
+            self._restart_task = self._async_schedule_addon_operation(
+                self.async_restart_addon, catch_error=catch_error
+            )
+        return self._restart_task
+
     @api_error("Failed to stop the Z-Wave JS add-on")
     async def async_stop_addon(self) -> None:
         """Stop the Z-Wave JS add-on."""
         await async_stop_addon(self._hass, ADDON_SLUG)
 
-    async def async_configure_addon(self, usb_path: str, network_key: str) -> None:
+    async def async_configure_addon(
+        self,
+        usb_path: str,
+        s0_legacy_key: str,
+        s2_access_control_key: str,
+        s2_authenticated_key: str,
+        s2_unauthenticated_key: str,
+    ) -> None:
         """Configure and start Z-Wave JS add-on."""
         addon_info = await self.async_get_addon_info()
 
         new_addon_options = {
             CONF_ADDON_DEVICE: usb_path,
-            CONF_ADDON_NETWORK_KEY: network_key,
+            CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
+            CONF_ADDON_S2_ACCESS_CONTROL_KEY: s2_access_control_key,
+            CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
+            CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
         }
 
         if new_addon_options != addon_info.options:
@@ -254,7 +306,13 @@ class AddonManager:
 
     @callback
     def async_schedule_setup_addon(
-        self, usb_path: str, network_key: str, catch_error: bool = False
+        self,
+        usb_path: str,
+        s0_legacy_key: str,
+        s2_access_control_key: str,
+        s2_authenticated_key: str,
+        s2_unauthenticated_key: str,
+        catch_error: bool = False,
     ) -> asyncio.Task:
         """Schedule a task that configures and starts the Z-Wave JS add-on.
 
@@ -263,20 +321,27 @@ class AddonManager:
         if not self._start_task or self._start_task.done():
             LOGGER.info("Z-Wave JS add-on is not running. Starting add-on")
             self._start_task = self._async_schedule_addon_operation(
-                partial(self.async_configure_addon, usb_path, network_key),
+                partial(
+                    self.async_configure_addon,
+                    usb_path,
+                    s0_legacy_key,
+                    s2_access_control_key,
+                    s2_authenticated_key,
+                    s2_unauthenticated_key,
+                ),
                 self.async_start_addon,
                 catch_error=catch_error,
             )
         return self._start_task
 
-    @api_error("Failed to create a snapshot of the Z-Wave JS add-on.")
-    async def async_create_snapshot(self) -> None:
-        """Create a partial snapshot of the Z-Wave JS add-on."""
+    @api_error("Failed to create a backup of the Z-Wave JS add-on.")
+    async def async_create_backup(self) -> None:
+        """Create a partial backup of the Z-Wave JS add-on."""
         addon_info = await self.async_get_addon_info()
         name = f"addon_{ADDON_SLUG}_{addon_info.version}"
 
-        LOGGER.debug("Creating snapshot: %s", name)
-        await async_create_snapshot(
+        LOGGER.debug("Creating backup: %s", name)
+        await async_create_backup(
             self._hass,
             {"name": name, "addons": [ADDON_SLUG]},
             partial=True,

@@ -56,7 +56,7 @@ ATTR_ALL = "all"
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
-PLATFORMS = ["light", "cover", "notify"]
+PLATFORMS = ["light", "cover", "notify", "fan", "binary_sensor"]
 
 REG_KEY = f"{DOMAIN}_registry"
 
@@ -121,9 +121,7 @@ def is_on(hass, entity_id):
         # Integration not setup yet, it cannot be on
         return False
 
-    state = hass.states.get(entity_id)
-
-    if state is not None:
+    if (state := hass.states.get(entity_id)) is not None:
         return state.state in hass.data[REG_KEY].on_off_mapping
 
     return False
@@ -213,9 +211,7 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup(hass, config):
     """Set up all groups found defined in the configuration."""
-    component = hass.data.get(DOMAIN)
-
-    if component is None:
+    if (component := hass.data.get(DOMAIN)) is None:
         component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
@@ -228,8 +224,7 @@ async def async_setup(hass, config):
         """Remove all user-defined groups and load new ones from config."""
         auto = list(filter(lambda e: not e.user_defined, component.entities))
 
-        conf = await component.async_prepare_reload()
-        if conf is None:
+        if (conf := await component.async_prepare_reload()) is None:
             return
         await _async_process_config(hass, conf, component)
 
@@ -507,9 +502,7 @@ class Group(Entity):
         )
 
         # If called before the platform async_setup is called (test cases)
-        component = hass.data.get(DOMAIN)
-
-        if component is None:
+        if (component := hass.data.get(DOMAIN)) is None:
             component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
         await component.async_add_entities([group])
@@ -661,9 +654,8 @@ class Group(Entity):
             return
 
         self.async_set_context(event.context)
-        new_state = event.data.get("new_state")
 
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             # The state was removed from the state machine
             self._reset_tracked_state()
 
@@ -677,9 +669,7 @@ class Group(Entity):
         self._on_states = set()
 
         for entity_id in self.trackable:
-            state = self.hass.states.get(entity_id)
-
-            if state is not None:
+            if (state := self.hass.states.get(entity_id)) is not None:
                 self._see_state(state)
 
     def _see_state(self, new_state):

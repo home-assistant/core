@@ -29,10 +29,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SomaSensor(SomaEntity, SensorEntity):
     """Representation of a Soma cover device."""
 
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_BATTERY
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
     def name(self):
@@ -40,14 +38,9 @@ class SomaSensor(SomaEntity, SensorEntity):
         return self.device["name"] + " battery level"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         return self.battery_state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement this sensor expresses itself in."""
-        return PERCENTAGE
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
