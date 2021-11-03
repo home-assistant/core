@@ -47,6 +47,7 @@ async def check_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
         # we discover its capabilities at every startup
         websession = aiohttp_client.async_get_clientsession(hass)
         supported_api_version = 2 if await is_v2_bridge(host, websession) else 1
+        supported_api_version = 1
         # the call to is_v2_bridge returns (silently) False even on connection error
         # so if a migration is needed it will be done on next startup
 
@@ -100,9 +101,8 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
             for ent in async_entries_for_device(ent_reg, hass_dev.id, True):
                 # migrate light
                 if ent.entity_id.startswith("light"):
-                    new_unique_id = hue_dev.lights[
-                        0
-                    ]  # should always return one lightid here
+                    # should always return one lightid here
+                    new_unique_id = next(iter(hue_dev.lights))
                     if ent.unique_id == new_unique_id:
                         continue  # just in case
                     LOGGER.info(
@@ -131,7 +131,7 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
                         continue
                     new_unique_id = sensor.id
                     if ent.unique_id == new_unique_id:
-                        continue  # just in case
+                        break  # just in case
                     LOGGER.info(
                         "Migrating %s from unique id %s to %s",
                         ent.entity_id,
