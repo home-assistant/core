@@ -1005,7 +1005,7 @@ micloud==0.4
 miflora==0.7.0
 
 # homeassistant.components.mill
-millheater==0.7.3
+millheater==0.7.4
 
 # homeassistant.components.minio
 minio==4.0.9
