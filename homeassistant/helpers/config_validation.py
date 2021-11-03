@@ -78,7 +78,6 @@ from homeassistant.helpers import (
     script_variables as script_variables_helper,
     template as template_helper,
 )
-from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -762,11 +761,7 @@ def _deprecated(
             if fail:
                 raise vol.Invalid(warning_local)
 
-            KeywordStyleAdapter(logging.getLogger(module_name)).warning(
-                warning_local,
-                key=key,
-                replacement_key=replacement_key,
-            )
+            logging.getLogger(module_name).warning(warning_local)
             value = config[key]
             if replacement_key:
                 config.pop(key)
