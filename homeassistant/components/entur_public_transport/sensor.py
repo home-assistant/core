@@ -206,8 +206,7 @@ class EnturPublicTransportSensor(SensorEntity):
             self._attributes[CONF_LATITUDE] = data.latitude
             self._attributes[CONF_LONGITUDE] = data.longitude
 
-        calls = data.estimated_calls
-        if not calls:
+        if not (calls := data.estimated_calls):
             self._state = None
             return
 

@@ -1,5 +1,8 @@
 """Class to hold all sensor accessories."""
+from __future__ import annotations
+
 import logging
+from typing import Callable, NamedTuple
 
 from pyhap.const import CATEGORY_SENSOR
 
@@ -60,18 +63,31 @@ from .util import convert_to_float, density_to_air_quality, temperature_to_homek
 
 _LOGGER = logging.getLogger(__name__)
 
-BINARY_SENSOR_SERVICE_MAP = {
-    DEVICE_CLASS_CO: (SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int),
-    DEVICE_CLASS_CO2: (SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
-    DEVICE_CLASS_DOOR: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
-    DEVICE_CLASS_GARAGE_DOOR: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
-    DEVICE_CLASS_GAS: (SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int),
-    DEVICE_CLASS_MOISTURE: (SERV_LEAK_SENSOR, CHAR_LEAK_DETECTED, int),
-    DEVICE_CLASS_MOTION: (SERV_MOTION_SENSOR, CHAR_MOTION_DETECTED, bool),
-    DEVICE_CLASS_OCCUPANCY: (SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED, int),
-    DEVICE_CLASS_OPENING: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
-    DEVICE_CLASS_SMOKE: (SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED, int),
-    DEVICE_CLASS_WINDOW: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
+
+class SI(NamedTuple):
+    """Service info."""
+
+    service: str
+    char: str
+    format: Callable[[bool], int | bool]
+
+
+BINARY_SENSOR_SERVICE_MAP: dict[str, SI] = {
+    DEVICE_CLASS_CO: SI(
+        SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
+    ),
+    DEVICE_CLASS_CO2: SI(SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
+    DEVICE_CLASS_DOOR: SI(SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
+    DEVICE_CLASS_GARAGE_DOOR: SI(SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
+    DEVICE_CLASS_GAS: SI(
+        SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
+    ),
+    DEVICE_CLASS_MOISTURE: SI(SERV_LEAK_SENSOR, CHAR_LEAK_DETECTED, int),
+    DEVICE_CLASS_MOTION: SI(SERV_MOTION_SENSOR, CHAR_MOTION_DETECTED, bool),
+    DEVICE_CLASS_OCCUPANCY: SI(SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED, int),
+    DEVICE_CLASS_OPENING: SI(SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
+    DEVICE_CLASS_SMOKE: SI(SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED, int),
+    DEVICE_CLASS_WINDOW: SI(SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
 }
 
 
@@ -276,11 +292,11 @@ class BinarySensor(HomeAccessory):
             else BINARY_SENSOR_SERVICE_MAP[DEVICE_CLASS_OCCUPANCY]
         )
 
-        self.format = service_char[2]
-        service = self.add_preload_service(service_char[0])
+        self.format = service_char.format
+        service = self.add_preload_service(service_char.service)
         initial_value = False if self.format is bool else 0
         self.char_detected = service.configure_char(
-            service_char[1], value=initial_value
+            service_char.char, value=initial_value
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup

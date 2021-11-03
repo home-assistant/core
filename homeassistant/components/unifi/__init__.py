@@ -1,6 +1,7 @@
 """Integration to UniFi controllers and its various features."""
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import (
@@ -43,8 +44,10 @@ async def async_setup_entry(hass, config_entry):
             config_entry, unique_id=controller.site_id
         )
 
+    if not hass.data[UNIFI_DOMAIN]:
+        async_setup_services(hass)
+
     hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
-    await async_setup_services(hass)
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
@@ -55,9 +58,10 @@ async def async_setup_entry(hass, config_entry):
     if controller.mac is None:
         return True
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
+        configuration_url=controller.api.url,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
         default_manufacturer=ATTR_MANUFACTURER,
         default_model="UniFi Controller",
@@ -72,7 +76,7 @@ async def async_unload_entry(hass, config_entry):
     controller = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
 
     if not hass.data[UNIFI_DOMAIN]:
-        await async_unload_services(hass)
+        async_unload_services(hass)
 
     return await controller.async_reset()
 

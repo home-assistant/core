@@ -1,6 +1,5 @@
 """Test the motionEye camera."""
 import copy
-import logging
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock
 
@@ -48,7 +47,11 @@ from . import (
 
 from tests.common import async_fire_time_changed
 
-_LOGGER = logging.getLogger(__name__)
+
+@pytest.fixture
+def aiohttp_server(loop, aiohttp_server, socket_enabled):
+    """Return aiohttp_server and allow opening sockets."""
+    return aiohttp_server
 
 
 async def test_setup_camera(hass: HomeAssistant) -> None:

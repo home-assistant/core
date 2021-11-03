@@ -1,7 +1,5 @@
 """Support for monitoring the Syncthing instance."""
 
-import logging
-
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
@@ -22,8 +20,6 @@ from .const import (
     SERVER_UNAVAILABLE,
     STATE_CHANGED_RECEIVED,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

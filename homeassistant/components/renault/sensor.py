@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import (
     KamereonVehicleBatteryStatusData,
     KamereonVehicleCockpitData,
     KamereonVehicleHvacStatusData,
+    KamereonVehicleLocationData,
 )
 
 from homeassistant.components.sensor import (
@@ -25,6 +26,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
@@ -37,6 +39,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import as_utc, parse_datetime
 
 from .const import DEVICE_CLASS_CHARGE_STATE, DEVICE_CLASS_PLUG_STATE, DOMAIN
 from .renault_coordinator import T
@@ -148,6 +151,14 @@ def _get_rounded_value(entity: RenaultSensor[T]) -> float:
     return round(cast(float, entity.data))
 
 
+def _get_utc_value(entity: RenaultSensor[T]) -> str:
+    """Return the UTC value of this entity."""
+    original_dt = parse_datetime(cast(str, entity.data))
+    if TYPE_CHECKING:
+        assert original_dt is not None
+    return as_utc(original_dt).isoformat()
+
+
 SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
     RenaultSensorEntityDescription(
         key="battery_level",
@@ -243,6 +254,16 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     RenaultSensorEntityDescription(
+        key="battery_last_activity",
+        coordinator="battery",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        data_key="timestamp",
+        entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
+        entity_registry_enabled_default=False,
+        name="Battery Last Activity",
+        value_lambda=_get_utc_value,
+    ),
+    RenaultSensorEntityDescription(
         key="mileage",
         coordinator="cockpit",
         data_key="totalMileage",
@@ -286,5 +307,15 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         name="Outside Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="location_last_activity",
+        coordinator="location",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        data_key="lastUpdateTime",
+        entity_class=RenaultSensor[KamereonVehicleLocationData],
+        entity_registry_enabled_default=False,
+        name="Location Last Activity",
+        value_lambda=_get_utc_value,
     ),
 )

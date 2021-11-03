@@ -5,13 +5,8 @@ from datetime import datetime
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -19,7 +14,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import ATTR_ENTRY_TYPE, DOMAIN, ENTRY_TYPE_SERVICE, SENSORS
+from .const import DOMAIN, ENTRY_TYPE_SERVICE, SENSORS
 from .models import ForecastSolarSensorEntityDescription
 
 
@@ -57,13 +52,13 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
         self.entity_id = f"{SENSOR_DOMAIN}.{entity_description.key}"
         self._attr_unique_id = f"{entry_id}_{entity_description.key}"
 
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, entry_id)},
-            ATTR_NAME: "Solar Production Forecast",
-            ATTR_MANUFACTURER: "Forecast.Solar",
-            ATTR_MODEL: coordinator.data.account_type.value,
-            ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,
-        }
+        self._attr_device_info = DeviceInfo(
+            entry_type=ENTRY_TYPE_SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="Forecast.Solar",
+            model=coordinator.data.account_type.value,
+            name="Solar Production Forecast",
+        )
 
     @property
     def native_value(self) -> StateType:

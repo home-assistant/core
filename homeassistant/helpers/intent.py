@@ -33,8 +33,7 @@ SPEECH_TYPE_SSML = "ssml"
 @bind_hass
 def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
-    intents = hass.data.get(DATA_KEY)
-    if intents is None:
+    if (intents := hass.data.get(DATA_KEY)) is None:
         intents = hass.data[DATA_KEY] = {}
 
     assert handler.intent_type is not None, "intent_type cannot be None"

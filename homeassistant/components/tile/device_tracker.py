@@ -44,10 +44,10 @@ async def async_setup_entry(
         [
             TileDeviceTracker(
                 entry,
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][tile_uuid],
+                hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][tile_uuid],
                 tile,
             )
-            for tile_uuid, tile in hass.data[DOMAIN][DATA_TILE][entry.entry_id].items()
+            for tile_uuid, tile in hass.data[DOMAIN][entry.entry_id][DATA_TILE].items()
         ]
     )
 

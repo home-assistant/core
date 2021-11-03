@@ -152,7 +152,18 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         (0x0405, 1, {"measured_value"}),
         (0x0406, 1, {"occupancy"}),
         (0x0702, 1, {"instantaneous_demand"}),
-        (0x0B04, 1, {"active_power"}),
+        (
+            0x0B04,
+            1,
+            {
+                "active_power",
+                "active_power_max",
+                "rms_current",
+                "rms_current_max",
+                "rms_voltage",
+                "rms_voltage_max",
+            },
+        ),
     ],
 )
 async def test_in_channel_config(

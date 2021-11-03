@@ -259,13 +259,10 @@ class IntesisAC(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-
-        if hvac_mode:
+        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(hvac_mode)
 
-        if temperature:
+        if temperature := kwargs.get(ATTR_TEMPERATURE):
             _LOGGER.debug("Setting %s to %s degrees", self._device_type, temperature)
             await self._controller.set_temperature(self._device_id, temperature)
             self._target_temp = temperature

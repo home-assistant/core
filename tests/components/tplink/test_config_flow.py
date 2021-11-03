@@ -293,7 +293,6 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
 
 async def test_discovered_by_discovery_and_dhcp(hass):
     """Test we get the form with discovery and abort for dhcp source when we get both."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with _patch_discovery(), _patch_single_discovery():
         result = await hass.config_entries.flow.async_init(
@@ -351,7 +350,6 @@ async def test_discovered_by_discovery_and_dhcp(hass):
 )
 async def test_discovered_by_dhcp_or_discovery(hass, source, data):
     """Test we can setup when discovered from dhcp or discovery."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with _patch_discovery(), _patch_single_discovery():
         result = await hass.config_entries.flow.async_init(
@@ -393,7 +391,6 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
 )
 async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source, data):
     """Test we abort if we cannot get the unique id when discovered from dhcp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with _patch_discovery(no_device=True), _patch_single_discovery(no_device=True):
         result = await hass.config_entries.flow.async_init(

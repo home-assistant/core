@@ -63,7 +63,7 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     api: WiffiIntegrationApi = hass.data[DOMAIN][entry.entry_id]
     await api.server.close_server()
@@ -103,8 +103,7 @@ class WiffiIntegrationApi:
 
         Remove listener for periodic callbacks.
         """
-        remove_listener = self._periodic_callback
-        if remove_listener is not None:
+        if (remove_listener := self._periodic_callback) is not None:
             remove_listener()
 
     async def __call__(self, device, metrics):
