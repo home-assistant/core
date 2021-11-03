@@ -5,6 +5,9 @@ from abc import abstractmethod
 from datetime import timedelta
 import logging
 
+from pyhomematic import HMConnection
+from pyhomematic.devicetypes.generic import HMGeneric
+
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import ATTR_NAME
 import homeassistant.helpers.config_validation as cv
@@ -43,8 +46,8 @@ class HMDevice(Entity):
         self._state = config.get(ATTR_PARAM)
         self._unique_id = config.get(ATTR_UNIQUE_ID)
         self._data: dict[str, str] = {}
-        self._homematic = None
-        self._hmdevice = None
+        self._homematic: HMConnection = None
+        self._hmdevice: HMGeneric = None
         self._connected = False
         self._available = False
         self._channel_map: set[str] = set()
