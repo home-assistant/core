@@ -12,9 +12,7 @@ from tests.common import MockConfigEntry, load_fixture
 @pytest.fixture(scope="session")
 def data_fixture():
     """Fixture data."""
-
     data = json.loads(load_fixture("data.json", "evil_genius_labs"))
-
     return {item["name"]: item for item in data}
 
 
