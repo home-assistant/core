@@ -393,14 +393,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 all_devices.append(entity)
 
     try:
-        _entities_from_descriptions(
+        await _entities_from_descriptions(
             hass, name, all_devices, BURNER_SENSORS, api.burners
         )
     except PyViCareNotSupportedFeatureError:
         _LOGGER.info("No burners found")
 
     try:
-        _entities_from_descriptions(
+        await _entities_from_descriptions(
             hass, name, all_devices, COMPRESSOR_SENSORS, api.compressors
         )
     except PyViCareNotSupportedFeatureError:
