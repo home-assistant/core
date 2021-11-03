@@ -1,4 +1,5 @@
 """Provide backwards compat transitions."""
+from __future__ import annotations
 
 import asyncio
 import contextlib
@@ -17,8 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def timeout(
-    delay: Optional[float], loop: Optional[asyncio.AbstractEventLoop] = None
-) -> "async_timeout.Timeout":
+    delay: float | None, loop: asyncio.AbstractEventLoop | None = None
+) -> async_timeout.Timeout:
     """Backwards compatible timeout context manager that warns with loop usage."""
     if loop is None:
         loop = asyncio.get_running_loop()
