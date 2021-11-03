@@ -722,8 +722,12 @@ def test_deprecated_removed_param(caplog, schema):
     deprecated_schema = vol.All(cv.removed("mars"), schema)
 
     test_data = {"mars": True}
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(vol.Invalid) as excinfo:
         deprecated_schema(test_data)
+    assert (
+        "The 'mars' option is deprecated, please remove it from your configuration"
+        in str(excinfo.value)
+    )
     assert len(caplog.records) == 0
 
     test_data = {"venus": True}
