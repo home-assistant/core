@@ -876,6 +876,13 @@ def test_deprecated_cant_find_module():
             default=False,
         )
 
+    with patch("inspect.getmodule", return_value=None):
+        # This used to raise.
+        cv.removed(
+            "mars",
+            default=False,
+        )
+
 
 def test_deprecated_logger_with_config_attributes(caplog):
     """Test if the logger outputs the correct message if the line and file attribute is available in config."""
