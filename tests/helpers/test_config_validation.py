@@ -723,17 +723,7 @@ def test_deprecated_removed_param(caplog, schema):
 
     test_data = {"mars": True}
     with pytest.raises(vol.Invalid):
-        deprecated_schema(test_data.copy())
-    assert len(caplog.records) == 1
-    assert caplog.records[0].name in [
-        __name__,
-        "homeassistant.helpers.config_validation",
-    ]
-    assert (
-        "The 'mars' option is deprecated, please remove it from your configuration"
-    ) in caplog.text
-
-    caplog.clear()
+        deprecated_schema(test_data)
     assert len(caplog.records) == 0
 
     test_data = {"venus": True}

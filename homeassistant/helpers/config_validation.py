@@ -746,35 +746,27 @@ def _deprecated(
             " please remove it from your configuration"
         )
 
-    if fail:
-        keyword_style_adapter = KeywordStyleAdapter(
-            logging.getLogger(module_name)
-        ).error
-    else:
-        keyword_style_adapter = KeywordStyleAdapter(
-            logging.getLogger(module_name)
-        ).warning
-
     def validator(config: dict) -> dict:
         """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                keyword_style_adapter(
-                    warning.replace(
-                        "'{key}' option",
-                        f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
-                    ),
-                    key=key,
-                    replacement_key=replacement_key,
+                warning_local = warning.replace(
+                    "'{key}' option",
+                    f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
                 )
             except AttributeError:
-                keyword_style_adapter(
-                    warning,
+                warning_local = warning.format(
                     key=key,
                     replacement_key=replacement_key,
                 )
             if fail:
-                raise vol.Invalid(f"Option '{key}' is deprecated and not allowed")
+                raise vol.Invalid(warning_local)
+
+            KeywordStyleAdapter(logging.getLogger(module_name)).warning(
+                warning_local,
+                key=key,
+                replacement_key=replacement_key,
+            )
             value = config[key]
             if replacement_key:
                 config.pop(key)
