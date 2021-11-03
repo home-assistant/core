@@ -347,9 +347,7 @@ class AlarmPanel:
     @callback
     def async_current_settings_payload(self):
         """Return a dict of configuration currently stored on the device."""
-        settings = self.status["settings"]
-        if not settings:
-            settings = {}
+        settings = self.status["settings"] or {}
 
         return {
             "sensors": [

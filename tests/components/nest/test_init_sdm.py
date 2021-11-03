@@ -5,6 +5,7 @@ The tests fake out the subscriber/devicemanager and simulate setup behavior
 and failure modes.
 """
 
+import copy
 import logging
 from unittest.mock import patch
 
@@ -41,7 +42,7 @@ async def async_setup_sdm(hass, config=CONFIG):
 
 async def test_setup_configuration_failure(hass, caplog):
     """Test configuration error."""
-    config = CONFIG.copy()
+    config = copy.deepcopy(CONFIG)
     config[DOMAIN]["subscriber_id"] = "invalid-subscriber-format"
 
     result = await async_setup_sdm(hass, config)
@@ -107,7 +108,7 @@ async def test_subscriber_auth_failure(hass, caplog):
 
 async def test_setup_missing_subscriber_id(hass, caplog):
     """Test successful setup."""
-    config = CONFIG
+    config = copy.deepcopy(CONFIG)
     del config[DOMAIN]["subscriber_id"]
     with caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
         result = await async_setup_sdm(hass, config)

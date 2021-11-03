@@ -3,6 +3,7 @@ import asyncio
 import datetime
 import functools
 import logging
+import socket
 import ssl
 import threading
 from unittest.mock import MagicMock, patch
@@ -10,6 +11,7 @@ from unittest.mock import MagicMock, patch
 from aiohttp.test_utils import make_mocked_request
 import multidict
 import pytest
+import pytest_socket
 import requests_mock as _requests_mock
 
 from homeassistant import core as ha, loader, runner, util
@@ -59,6 +61,70 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
+
+
+def pytest_runtest_setup():
+    """Throw if tests attempt to open sockets.
+
+    allow_unix_socket is set to True because it's needed by asyncio.
+    Important: socket_allow_hosts must be called before disable_socket, otherwise all
+    destinations will be allowed.
+    """
+    pytest_socket.socket_allow_hosts(["127.0.0.1"])
+    disable_socket(allow_unix_socket=True)
+
+
+@pytest.fixture
+def socket_disabled(pytestconfig):
+    """Disable socket.socket for duration of this test function.
+
+    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
+    and hardcodes allow_unix_socket to True because it's not passed on the command line.
+    """
+    socket_was_enabled = socket.socket == pytest_socket._true_socket
+    disable_socket(allow_unix_socket=True)
+    yield
+    if socket_was_enabled:
+        pytest_socket.enable_socket()
+
+
+@pytest.fixture
+def socket_enabled(pytestconfig):
+    """Enable socket.socket for duration of this test function.
+
+    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
+    and hardcodes allow_unix_socket to True because it's not passed on the command line.
+    """
+    socket_was_disabled = socket.socket != pytest_socket._true_socket
+    pytest_socket.enable_socket()
+    yield
+    if socket_was_disabled:
+        disable_socket(allow_unix_socket=True)
+
+
+def disable_socket(allow_unix_socket=False):
+    """Disable socket.socket to disable the Internet. useful in testing.
+
+    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/75
+    """
+
+    class GuardedSocket(socket.socket):
+        """socket guard to disable socket creation (from pytest-socket)."""
+
+        def __new__(cls, *args, **kwargs):
+            try:
+                if len(args) > 0:
+                    is_unix_socket = args[0] == socket.AF_UNIX
+                else:
+                    is_unix_socket = kwargs.get("family") == socket.AF_UNIX
+            except AttributeError:
+                # AF_UNIX not supported on Windows https://bugs.python.org/issue33408
+                is_unix_socket = False
+            if is_unix_socket and allow_unix_socket:
+                return super().__new__(cls, *args, **kwargs)
+            raise pytest_socket.SocketBlockedError()
+
+    socket.socket = GuardedSocket
 
 
 def check_real(func):
@@ -319,7 +385,7 @@ def local_auth(hass):
 
 
 @pytest.fixture
-def hass_client(hass, aiohttp_client, hass_access_token):
+def hass_client(hass, aiohttp_client, hass_access_token, socket_enabled):
     """Return an authenticated HTTP client."""
 
     async def auth_client():
@@ -332,7 +398,7 @@ def hass_client(hass, aiohttp_client, hass_access_token):
 
 
 @pytest.fixture
-def hass_client_no_auth(hass, aiohttp_client):
+def hass_client_no_auth(hass, aiohttp_client, socket_enabled):
     """Return an unauthenticated HTTP client."""
 
     async def client():
@@ -367,7 +433,7 @@ def current_request_with_host(current_request):
 
 
 @pytest.fixture
-def hass_ws_client(aiohttp_client, hass_access_token, hass):
+def hass_ws_client(aiohttp_client, hass_access_token, hass, socket_enabled):
     """Websocket client fixture connected to websocket server."""
 
     async def create_client(hass=hass, access_token=hass_access_token):

@@ -60,8 +60,6 @@ from .core.const import (
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
-DEPENDENCIES = ["zha"]
-
 ATTR_SYS_MODE = "system_mode"
 ATTR_RUNNING_MODE = "running_mode"
 ATTR_SETPT_CHANGE_SRC = "setpoint_change_source"
@@ -76,6 +74,7 @@ ATTR_UNOCCP_COOL_SETPT = "unoccupied_cooling_setpoint"
 
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, DOMAIN)
 RUNNING_MODE = {0x00: HVAC_MODE_OFF, 0x03: HVAC_MODE_COOL, 0x04: HVAC_MODE_HEAT}
 
 
@@ -164,15 +163,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_THERMOSTAT, aux_channels=CHANNEL_FAN)
+@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, aux_channels=CHANNEL_FAN)
 class Thermostat(ZhaEntity, ClimateEntity):
     """Representation of a ZHA Thermostat device."""
 
     DEFAULT_MAX_TEMP = 35
     DEFAULT_MIN_TEMP = 7
-
-    _domain = DOMAIN
-    value_attribute = 0x0000
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize ZHA Thermostat instance."""
@@ -519,9 +515,10 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return await handler(enable)
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names={CHANNEL_THERMOSTAT, "sinope_manufacturer_specific"},
     manufacturers="Sinope Technologies",
+    stop_on_match=True,
 )
 class SinopeTechnologiesThermostat(Thermostat):
     """Sinope Technologies Thermostat."""
@@ -570,10 +567,11 @@ class SinopeTechnologiesThermostat(Thermostat):
         return res
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Zen Within",
+    stop_on_match=True,
 )
 class ZenWithinThermostat(Thermostat):
     """Zen Within Thermostat implementation."""
@@ -582,8 +580,7 @@ class ZenWithinThermostat(Thermostat):
     def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
-        running_state = self._thrm.running_state
-        if running_state is None:
+        if (running_state := self._thrm.running_state) is None:
             return None
         if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
             return CURRENT_HVAC_HEAT
@@ -599,11 +596,12 @@ class ZenWithinThermostat(Thermostat):
         return CURRENT_HVAC_OFF
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Centralite",
     models="3157100",
+    stop_on_match=True,
 )
 class CentralitePearl(ZenWithinThermostat):
     """Centralite Pearl Thermostat implementation."""

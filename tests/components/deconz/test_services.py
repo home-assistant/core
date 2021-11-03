@@ -1,5 +1,5 @@
 """deCONZ service tests."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -10,15 +10,13 @@ from homeassistant.components.deconz.const import (
 )
 from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
 from homeassistant.components.deconz.services import (
-    DECONZ_SERVICES,
     SERVICE_CONFIGURE_DEVICE,
     SERVICE_DATA,
     SERVICE_DEVICE_REFRESH,
     SERVICE_ENTITY,
     SERVICE_FIELD,
     SERVICE_REMOVE_ORPHANED_ENTRIES,
-    async_setup_services,
-    async_unload_services,
+    SUPPORTED_SERVICES,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -35,46 +33,33 @@ from .test_gateway import (
 from tests.common import async_capture_events
 
 
-async def test_service_setup(hass):
+async def test_service_setup_and_unload(hass, aioclient_mock):
     """Verify service setup works."""
-    assert DECONZ_SERVICES not in hass.data
-    with patch(
-        "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
-    ) as async_register:
-        await async_setup_services(hass)
-        assert hass.data[DECONZ_SERVICES] is True
-        assert async_register.call_count == 3
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
+    for service in SUPPORTED_SERVICES:
+        assert hass.services.has_service(DECONZ_DOMAIN, service)
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    for service in SUPPORTED_SERVICES:
+        assert not hass.services.has_service(DECONZ_DOMAIN, service)
 
 
-async def test_service_setup_already_registered(hass):
-    """Make sure that services are only registered once."""
-    hass.data[DECONZ_SERVICES] = True
-    with patch(
-        "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
-    ) as async_register:
-        await async_setup_services(hass)
-        async_register.assert_not_called()
+@patch("homeassistant.core.ServiceRegistry.async_remove")
+@patch("homeassistant.core.ServiceRegistry.async_register")
+async def test_service_setup_and_unload_not_called_if_multiple_integrations_detected(
+    register_service_mock, remove_service_mock, hass, aioclient_mock
+):
+    """Make sure that services are only setup and removed once."""
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
+    register_service_mock.reset_mock()
+    config_entry_2 = await setup_deconz_integration(hass, aioclient_mock, entry_id=2)
+    register_service_mock.assert_not_called()
 
-
-async def test_service_unload(hass):
-    """Verify service unload works."""
-    hass.data[DECONZ_SERVICES] = True
-    with patch(
-        "homeassistant.core.ServiceRegistry.async_remove", return_value=Mock(True)
-    ) as async_remove:
-        await async_unload_services(hass)
-        assert hass.data[DECONZ_SERVICES] is False
-        assert async_remove.call_count == 3
-
-
-async def test_service_unload_not_registered(hass):
-    """Make sure that services can only be unloaded once."""
-    with patch(
-        "homeassistant.core.ServiceRegistry.async_remove", return_value=Mock(True)
-    ) as async_remove:
-        await async_unload_services(hass)
-        assert DECONZ_SERVICES not in hass.data
-        async_remove.assert_not_called()
+    register_service_mock.assert_not_called()
+    assert await hass.config_entries.async_unload(config_entry_2.entry_id)
+    remove_service_mock.assert_not_called()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert remove_service_mock.call_count == 3
 
 
 async def test_configure_service_with_field(hass, aioclient_mock):

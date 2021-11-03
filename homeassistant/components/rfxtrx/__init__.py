@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -393,11 +394,11 @@ class RfxtrxEntity(RestoreEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, *self._device_id)},
-            "name": f"{self._device.type_string} {self._device.id_string}",
-            "model": self._device.type_string,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, *self._device_id)},
+            model=self._device.type_string,
+            name=f"{self._device.type_string} {self._device.id_string}",
+        )
 
     def _event_applies(self, event, device_id):
         """Check if event applies to me."""

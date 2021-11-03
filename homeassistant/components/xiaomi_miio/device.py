@@ -1,16 +1,17 @@
 """Code to handle a Xiaomi Device."""
+import datetime
+from enum import Enum
 from functools import partial
 import logging
 
 from construct.core import ChecksumError
 from miio import Device, DeviceException
 
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MAC, CONF_MODEL, DOMAIN
+from .const import CONF_MAC, CONF_MODEL, DOMAIN, AuthException, SetupException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,14 +47,11 @@ class ConnectXiaomiDevice:
             )
         except DeviceException as error:
             if isinstance(error.__cause__, ChecksumError):
-                raise ConfigEntryAuthFailed(error) from error
+                raise AuthException(error) from error
 
-            _LOGGER.error(
-                "DeviceException during setup of xiaomi device with host %s: %s",
-                host,
-                error,
-            )
-            return False
+            raise SetupException(
+                f"DeviceException during setup of xiaomi device with host {host}"
+            ) from error
 
         _LOGGER.debug(
             "%s %s %s detected",
@@ -61,7 +59,6 @@ class ConnectXiaomiDevice:
             self._device_info.firmware_version,
             self._device_info.hardware_version,
         )
-        return True
 
 
 class XiaomiMiioEntity(Entity):
@@ -157,3 +154,44 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
                 _LOGGER.error(mask_error, exc)
 
             return False
+
+    @classmethod
+    def _extract_value_from_attribute(cls, state, attribute):
+        value = getattr(state, attribute)
+        if isinstance(value, Enum):
+            return value.value
+        if isinstance(value, datetime.timedelta):
+            return cls._parse_time_delta(value)
+        if isinstance(value, datetime.time):
+            return cls._parse_datetime_time(value)
+        if isinstance(value, datetime.datetime):
+            return cls._parse_datetime_datetime(value)
+        if isinstance(value, datetime.timedelta):
+            return cls._parse_time_delta(value)
+        if value is None:
+            _LOGGER.debug("Attribute %s is None, this is unexpected", attribute)
+
+        return value
+
+    @staticmethod
+    def _parse_time_delta(timedelta: datetime.timedelta) -> int:
+        return timedelta.seconds
+
+    @staticmethod
+    def _parse_datetime_time(time: datetime.time) -> str:
+        time = datetime.datetime.now().replace(
+            hour=time.hour, minute=time.minute, second=0, microsecond=0
+        )
+
+        if time < datetime.datetime.now():
+            time += datetime.timedelta(days=1)
+
+        return time.isoformat()
+
+    @staticmethod
+    def _parse_datetime_datetime(time: datetime.datetime) -> str:
+        return time.isoformat()
+
+    @staticmethod
+    def _parse_datetime_timedelta(time: datetime.timedelta) -> int:
+        return time.seconds

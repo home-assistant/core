@@ -314,8 +314,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def _async_get_stream_source(self):
         """Find the camera stream source url."""
-        stream_source = self.config.get(CONF_STREAM_SOURCE)
-        if stream_source:
+        if stream_source := self.config.get(CONF_STREAM_SOURCE):
             return stream_source
         try:
             stream_source = await self.hass.components.camera.async_get_stream_source(
@@ -447,8 +446,7 @@ class Camera(HomeAccessory, PyhapCamera):
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
         session_id = session_info["id"]
-        stream = session_info.get("stream")
-        if not stream:
+        if not (stream := session_info.get("stream")):
             _LOGGER.debug("No stream for session ID %s", session_id)
             return
 

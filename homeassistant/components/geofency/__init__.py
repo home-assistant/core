@@ -1,4 +1,6 @@
 """Support for Geofency."""
+from http import HTTPStatus
+
 from aiohttp import web
 import voluptuous as vol
 
@@ -8,7 +10,6 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_WEBHOOK_ID,
-    HTTP_UNPROCESSABLE_ENTITY,
     STATE_NOT_HOME,
 )
 from homeassistant.helpers import config_entry_flow
@@ -88,7 +89,9 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
-        return web.Response(text=error.error_message, status=HTTP_UNPROCESSABLE_ENTITY)
+        return web.Response(
+            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
+        )
 
     if _is_mobile_beacon(data, hass.data[DOMAIN]["beacons"]):
         return _set_location(hass, data, None)

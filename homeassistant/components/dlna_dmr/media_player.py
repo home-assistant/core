@@ -7,8 +7,9 @@ from datetime import datetime, timedelta
 import functools
 from typing import Any, Callable, TypeVar, cast
 
-from async_upnp_client import UpnpError, UpnpService, UpnpStateVariable
+from async_upnp_client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
+from async_upnp_client.exceptions import UpnpError, UpnpResponseError
 from async_upnp_client.profiles.dlna import DmrDevice, TransportState
 from async_upnp_client.utils import async_get_local_ip
 import voluptuous as vol
@@ -42,12 +43,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
-    DEFAULT_NAME,
     DOMAIN,
     LOGGER as _LOGGER,
     MEDIA_TYPE_MAP,
@@ -69,7 +70,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Required(CONF_URL): cv.string,
             vol.Optional(CONF_LISTEN_IP): cv.string,
             vol.Optional(CONF_LISTEN_PORT): cv.port,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_CALLBACK_URL_OVERRIDE): cv.url,
         }
     ),
@@ -98,13 +99,35 @@ def catch_request_errors(func: Func) -> Func:
     return cast(Func, wrapper)
 
 
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up DLNA media_player platform."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config,
+        )
+    )
+
+    _LOGGER.warning(
+        "Configuring dlna_dmr via yaml is deprecated; the configuration for"
+        " %s will be migrated to a config entry and can be safely removed when"
+        "migration is complete",
+        config.get(CONF_URL),
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the DlnaDmrEntity from a config entry."""
-    del hass  # Unused
     _LOGGER.debug("media_player.async_setup_entry %s (%s)", entry.entry_id, entry.title)
 
     # Create our own device-wrapping entity
@@ -116,10 +139,6 @@ async def async_setup_entry(
         event_callback_url=entry.options.get(CONF_CALLBACK_URL_OVERRIDE),
         poll_availability=entry.options.get(CONF_POLL_AVAILABILITY, False),
         location=entry.data[CONF_URL],
-    )
-
-    entry.async_on_unload(
-        entry.add_update_listener(entity.async_config_update_listener)
     )
 
     async_add_entities([entity])
@@ -139,7 +158,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmrDevice | None = None
-    _remove_ssdp_callbacks: list[Callable]
     check_available: bool = False
 
     # Track BOOTID in SSDP advertisements for device changes
@@ -167,10 +185,19 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.poll_availability = poll_availability
         self.location = location
         self._device_lock = asyncio.Lock()
-        self._remove_ssdp_callbacks = []
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
+        # Update this entity when the associated config entry is modified
+        if self.registry_entry and self.registry_entry.config_entry_id:
+            config_entry = self.hass.config_entries.async_get_entry(
+                self.registry_entry.config_entry_id
+            )
+            assert config_entry is not None
+            self.async_on_remove(
+                config_entry.add_update_listener(self.async_config_update_listener)
+            )
+
         # Try to connect to the last known location, but don't worry if not available
         if not self._device:
             try:
@@ -179,7 +206,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 _LOGGER.debug("Couldn't connect immediately: %r", err)
 
         # Get SSDP notifications for only this device
-        self._remove_ssdp_callbacks.append(
+        self.async_on_remove(
             await ssdp.async_register_callback(
                 self.hass, self.async_ssdp_callback, {"USN": self.usn}
             )
@@ -189,7 +216,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         # (device name) which often is not the USN (service within the device)
         # that we're interested in. So also listen for byebye advertisements for
         # the UDN, which is reported in the _udn field of the combined_headers.
-        self._remove_ssdp_callbacks.append(
+        self.async_on_remove(
             await ssdp.async_register_callback(
                 self.hass,
                 self.async_ssdp_callback,
@@ -199,9 +226,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
-        for callback in self._remove_ssdp_callbacks:
-            callback()
-        self._remove_ssdp_callbacks.clear()
         await self._device_disconnect()
 
     async def async_ssdp_callback(
@@ -255,13 +279,12 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 )
 
         # Device could have been de/re-connected, state probably changed
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_config_update_listener(
         self, hass: HomeAssistant, entry: config_entries.ConfigEntry
     ) -> None:
         """Handle options update by modifying self in-place."""
-        del hass  # Unused
         _LOGGER.debug(
             "Updating: %s with data=%s and options=%s",
             self.name,
@@ -292,7 +315,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             _LOGGER.warning("Couldn't (re)connect after config change: %r", err)
 
         # Device was de/re-connected, state might have changed
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _device_connect(self, location: str) -> None:
         """Connect to the device now that it's available."""
@@ -325,6 +348,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
             try:
                 self._device.on_event = self._on_event
                 await self._device.async_subscribe_services(auto_resubscribe=True)
+            except UpnpResponseError as err:
+                # Device rejected subscription request. This is OK, variables
+                # will be polled instead.
+                _LOGGER.debug("Device rejected subscription: %r", err)
             except UpnpError as err:
                 # Don't leave the device half-constructed
                 self._device.on_event = None
@@ -415,11 +442,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self, service: UpnpService, state_variables: Sequence[UpnpStateVariable]
     ) -> None:
         """State variable(s) changed, let home-assistant know."""
-        del service  # Unused
         if not state_variables:
             # Indicates a failure to resubscribe, check if device is still available
             self.check_available = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def available(self) -> bool:

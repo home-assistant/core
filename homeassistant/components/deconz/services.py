@@ -1,11 +1,14 @@
 """deCONZ services."""
 
-import asyncio
-
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
@@ -13,15 +16,7 @@ from homeassistant.helpers.entity_registry import (
 )
 
 from .config_flow import get_master_gateway
-from .const import (
-    CONF_BRIDGE_ID,
-    DOMAIN,
-    LOGGER,
-    NEW_GROUP,
-    NEW_LIGHT,
-    NEW_SCENE,
-    NEW_SENSOR,
-)
+from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
 
 DECONZ_SERVICES = "deconz_services"
 
@@ -46,13 +41,22 @@ SERVICE_DEVICE_REFRESH = "device_refresh"
 SERVICE_REMOVE_ORPHANED_ENTRIES = "remove_orphaned_entries"
 SELECT_GATEWAY_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
 
+SUPPORTED_SERVICES = (
+    SERVICE_CONFIGURE_DEVICE,
+    SERVICE_DEVICE_REFRESH,
+    SERVICE_REMOVE_ORPHANED_ENTRIES,
+)
 
-async def async_setup_services(hass):
+SERVICE_TO_SCHEMA = {
+    SERVICE_CONFIGURE_DEVICE: SERVICE_CONFIGURE_DEVICE_SCHEMA,
+    SERVICE_DEVICE_REFRESH: SELECT_GATEWAY_SCHEMA,
+    SERVICE_REMOVE_ORPHANED_ENTRIES: SELECT_GATEWAY_SCHEMA,
+}
+
+
+@callback
+def async_setup_services(hass):
     """Set up services for deCONZ integration."""
-    if hass.data.get(DECONZ_SERVICES, False):
-        return
-
-    hass.data[DECONZ_SERVICES] = True
 
     async def async_call_deconz_service(service_call):
         """Call correct deCONZ service."""
@@ -83,38 +87,20 @@ async def async_setup_services(hass):
         elif service == SERVICE_REMOVE_ORPHANED_ENTRIES:
             await async_remove_orphaned_entries_service(gateway)
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CONFIGURE_DEVICE,
-        async_call_deconz_service,
-        schema=SERVICE_CONFIGURE_DEVICE_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_DEVICE_REFRESH,
-        async_call_deconz_service,
-        schema=SELECT_GATEWAY_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_REMOVE_ORPHANED_ENTRIES,
-        async_call_deconz_service,
-        schema=SELECT_GATEWAY_SCHEMA,
-    )
+    for service in SUPPORTED_SERVICES:
+        hass.services.async_register(
+            DOMAIN,
+            service,
+            async_call_deconz_service,
+            schema=SERVICE_TO_SCHEMA[service],
+        )
 
 
-async def async_unload_services(hass):
+@callback
+def async_unload_services(hass):
     """Unload deCONZ services."""
-    if not hass.data.get(DECONZ_SERVICES):
-        return
-
-    hass.data[DECONZ_SERVICES] = False
-
-    hass.services.async_remove(DOMAIN, SERVICE_CONFIGURE_DEVICE)
-    hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
-    hass.services.async_remove(DOMAIN, SERVICE_REMOVE_ORPHANED_ENTRIES)
+    for service in SUPPORTED_SERVICES:
+        hass.services.async_remove(DOMAIN, service)
 
 
 async def async_configure_service(gateway, data):
@@ -153,16 +139,14 @@ async def async_refresh_devices_service(gateway):
     await gateway.api.refresh_state()
     gateway.ignore_state_updates = False
 
-    for new_device_type in (NEW_GROUP, NEW_LIGHT, NEW_SCENE, NEW_SENSOR):
-        gateway.async_add_device_callback(new_device_type, force=True)
+    for resource_type in gateway.deconz_resource_type_to_signal_new_device:
+        gateway.async_add_device_callback(resource_type, force=True)
 
 
 async def async_remove_orphaned_entries_service(gateway):
     """Remove orphaned deCONZ entries from device and entity registries."""
-    device_registry, entity_registry = await asyncio.gather(
-        gateway.hass.helpers.device_registry.async_get_registry(),
-        gateway.hass.helpers.entity_registry.async_get_registry(),
-    )
+    device_registry = dr.async_get(gateway.hass)
+    entity_registry = er.async_get(gateway.hass)
 
     entity_entries = async_entries_for_config_entry(
         entity_registry, gateway.config_entry.entry_id

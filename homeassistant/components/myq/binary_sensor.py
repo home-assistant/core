@@ -3,6 +3,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
 )
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 
 from . import MyQEntity
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY
@@ -26,6 +27,7 @@ class MyQBinarySensorEntity(MyQEntity, BinarySensorEntity):
     """Representation of a MyQ gateway."""
 
     _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @property
     def name(self):

@@ -1,138 +1,227 @@
 """Support for monitoring OctoPrint sensors."""
+from __future__ import annotations
+
+from datetime import timedelta
 import logging
 
-import requests
+from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN as COMPONENT_DOMAIN, SENSOR_TYPES
+from . import OctoprintDataUpdateCoordinator
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-NOTIFICATION_ID = "octoprint_notification"
-NOTIFICATION_TITLE = "OctoPrint sensor setup error"
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the available OctoPrint binary sensors."""
+    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]["coordinator"]
+    device_id = config_entry.unique_id
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the available OctoPrint sensors."""
-    if discovery_info is None:
-        return
+    assert device_id is not None
 
-    name = discovery_info["name"]
-    base_url = discovery_info["base_url"]
-    monitored_conditions = discovery_info["sensors"]
-    octoprint_api = hass.data[COMPONENT_DOMAIN][base_url]
-    tools = octoprint_api.get_tools()
-
-    if "Temperatures" in monitored_conditions and not tools:
-        hass.components.persistent_notification.create(
-            "Your printer appears to be offline.<br />"
-            "If you do not want to have your printer on <br />"
-            " at all times, and you would like to monitor <br /> "
-            "temperatures, please add <br />"
-            "bed and/or number&#95;of&#95;tools to your configuration <br />"
-            "and restart.",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
-
-    devices = []
-    types = ["actual", "target"]
-    for octo_type in monitored_conditions:
-        if octo_type == "Temperatures":
-            for tool in tools:
-                for temp_type in types:
-                    new_sensor = OctoPrintSensor(
-                        octoprint_api,
+    entities: list[SensorEntity] = []
+    if coordinator.data["printer"]:
+        printer_info = coordinator.data["printer"]
+        types = ["actual", "target"]
+        for tool in printer_info.temperatures:
+            for temp_type in types:
+                entities.append(
+                    OctoPrintTemperatureSensor(
+                        coordinator,
+                        tool.name,
                         temp_type,
-                        temp_type,
-                        name,
-                        SENSOR_TYPES[octo_type][3],
-                        SENSOR_TYPES[octo_type][0],
-                        SENSOR_TYPES[octo_type][1],
-                        tool,
+                        device_id,
                     )
-                    devices.append(new_sensor)
-        else:
-            new_sensor = OctoPrintSensor(
-                octoprint_api,
-                octo_type,
-                SENSOR_TYPES[octo_type][2],
-                name,
-                SENSOR_TYPES[octo_type][3],
-                SENSOR_TYPES[octo_type][0],
-                SENSOR_TYPES[octo_type][1],
-                None,
-                SENSOR_TYPES[octo_type][4],
-            )
-            devices.append(new_sensor)
-    add_entities(devices, True)
+                )
+    else:
+        _LOGGER.error("Printer appears to be offline, skipping temperature sensors")
+
+    entities.append(OctoPrintStatusSensor(coordinator, device_id))
+    entities.append(OctoPrintJobPercentageSensor(coordinator, device_id))
+    entities.append(OctoPrintEstimatedFinishTimeSensor(coordinator, device_id))
+    entities.append(OctoPrintStartTimeSensor(coordinator, device_id))
+
+    async_add_entities(entities)
 
 
-class OctoPrintSensor(SensorEntity):
+class OctoPrintSensorBase(CoordinatorEntity, SensorEntity):
     """Representation of an OctoPrint sensor."""
+
+    coordinator: OctoprintDataUpdateCoordinator
 
     def __init__(
         self,
-        api,
-        condition,
-        sensor_type,
-        sensor_name,
-        unit,
-        endpoint,
-        group,
-        tool=None,
-        icon=None,
-    ):
+        coordinator: OctoprintDataUpdateCoordinator,
+        sensor_type: str,
+        device_id: str,
+    ) -> None:
         """Initialize a new OctoPrint sensor."""
-        self.sensor_name = sensor_name
-        if tool is None:
-            self._name = f"{sensor_name} {condition}"
-        else:
-            self._name = f"{sensor_name} {condition} {tool} temp"
-        self.sensor_type = sensor_type
-        self.api = api
-        self._state = None
-        self._unit_of_measurement = unit
-        self.api_endpoint = endpoint
-        self.api_group = group
-        self.api_tool = tool
-        self._icon = icon
-        _LOGGER.debug("Created OctoPrint sensor %r", self)
+        super().__init__(coordinator)
+        self._device_id = device_id
+        self._attr_name = f"OctoPrint {sensor_type}"
+        self._attr_unique_id = f"{sensor_type}-{device_id}"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+    def device_info(self):
+        """Device info."""
+        return self.coordinator.device_info
+
+
+class OctoPrintStatusSensor(OctoPrintSensorBase):
+    """Representation of an OctoPrint sensor."""
+
+    _attr_icon = "mdi:printer-3d"
+
+    def __init__(
+        self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
+    ) -> None:
+        """Initialize a new OctoPrint sensor."""
+        super().__init__(coordinator, "Current State", device_id)
 
     @property
     def native_value(self):
-        """Return the state of the sensor."""
-        sensor_unit = self.unit_of_measurement
-        if sensor_unit in (TEMP_CELSIUS, PERCENTAGE):
-            # API sometimes returns null and not 0
-            if self._state is None:
-                self._state = 0
-            return round(self._state, 2)
-        return self._state
+        """Return sensor state."""
+        printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
+        if not printer:
+            return None
+
+        return printer.state.text
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success and self.coordinator.data["printer"]
 
-    def update(self):
-        """Update state of sensor."""
-        try:
-            self._state = self.api.update(
-                self.sensor_type, self.api_endpoint, self.api_group, self.api_tool
-            )
-        except requests.exceptions.ConnectionError:
-            # Error calling the api, already logged in api.update()
-            return
+
+class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
+    """Representation of an OctoPrint sensor."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_icon = "mdi:file-percent"
+
+    def __init__(
+        self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
+    ) -> None:
+        """Initialize a new OctoPrint sensor."""
+        super().__init__(coordinator, "Job Percentage", device_id)
 
     @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return self._icon
+    def native_value(self):
+        """Return sensor state."""
+        job: OctoprintJobInfo = self.coordinator.data["job"]
+        if not job:
+            return None
+
+        state = job.progress.completion
+        if not state:
+            return 0
+
+        return round(state, 2)
+
+
+class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
+    """Representation of an OctoPrint sensor."""
+
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
+    def __init__(
+        self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
+    ) -> None:
+        """Initialize a new OctoPrint sensor."""
+        super().__init__(coordinator, "Estimated Finish Time", device_id)
+
+    @property
+    def native_value(self):
+        """Return sensor state."""
+        job: OctoprintJobInfo = self.coordinator.data["job"]
+        if not job or not job.progress.print_time_left or job.state != "Printing":
+            return None
+
+        read_time = self.coordinator.data["last_read_time"]
+
+        return (read_time + timedelta(seconds=job.progress.print_time_left)).isoformat()
+
+
+class OctoPrintStartTimeSensor(OctoPrintSensorBase):
+    """Representation of an OctoPrint sensor."""
+
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
+    def __init__(
+        self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
+    ) -> None:
+        """Initialize a new OctoPrint sensor."""
+        super().__init__(coordinator, "Start Time", device_id)
+
+    @property
+    def native_value(self):
+        """Return sensor state."""
+        job: OctoprintJobInfo = self.coordinator.data["job"]
+
+        if not job or not job.progress.print_time or job.state != "Printing":
+            return None
+
+        read_time = self.coordinator.data["last_read_time"]
+
+        return (read_time - timedelta(seconds=job.progress.print_time)).isoformat()
+
+
+class OctoPrintTemperatureSensor(OctoPrintSensorBase):
+    """Representation of an OctoPrint sensor."""
+
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
+    def __init__(
+        self,
+        coordinator: OctoprintDataUpdateCoordinator,
+        tool: str,
+        temp_type: str,
+        device_id: str,
+    ) -> None:
+        """Initialize a new OctoPrint sensor."""
+        super().__init__(coordinator, f"{temp_type} {tool} temp", device_id)
+        self._temp_type = temp_type
+        self._api_tool = tool
+
+    @property
+    def native_value(self):
+        """Return sensor state."""
+        printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
+        if not printer:
+            return None
+
+        for temp in printer.temperatures:
+            if temp.name == self._api_tool:
+                return round(
+                    temp.actual_temp
+                    if self._temp_type == "actual"
+                    else temp.target_temp,
+                    2,
+                )
+
+        return None
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success and self.coordinator.data["printer"]

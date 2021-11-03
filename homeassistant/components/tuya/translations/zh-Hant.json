@@ -6,7 +6,8 @@
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
-            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "login_error": "\u767b\u5165\u932f\u8aa4\uff08{code}\uff09\uff1a{msg}"
         },
         "flow_title": "Tuya \u8a2d\u5b9a",
         "step": {
@@ -25,13 +26,16 @@
             },
             "user": {
                 "data": {
-                    "country_code": "\u5e33\u865f\u570b\u5bb6\u4ee3\u78bc\uff08\u4f8b\u5982\uff1a\u7f8e\u570b 1 \u6216\u4e2d\u570b 86\uff09",
+                    "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "country_code": "\u570b\u5bb6",
                     "password": "\u5bc6\u78bc",
                     "platform": "\u5e33\u6236\u8a3b\u518a\u6240\u5728\u4f4d\u7f6e",
+                    "region": "\u5340\u57df",
                     "tuya_project_type": "Tuya \u96f2\u5c08\u6848\u985e\u578b",
-                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                    "username": "\u5e33\u865f"
                 },
-                "description": "\u8f38\u5165 Tuya \u6191\u8b49\u3002",
+                "description": "\u8f38\u5165 Tuya \u6191\u8b49",
                 "title": "Tuya \u6574\u5408"
             }
         }

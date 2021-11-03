@@ -10,6 +10,20 @@
       "NL*"
     ]
   },
+  "ssdp": [
+    {
+      "st": "Nanoleaf_aurora:light"
+    },
+    {
+      "st": "nanoleaf:nl29"
+    },
+    {
+      "st": "nanoleaf:nl42"
+    },
+    {
+      "st": "nanoleaf:nl52"
+    }
+  ],
   "codeowners": ["@milanmeu"],
   "iot_class": "local_polling"
 }

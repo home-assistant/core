@@ -35,6 +35,14 @@ MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
     "SHVIN-1",
 )
 
+# Bulbs that support white & color modes
+DUAL_MODE_LIGHT_MODELS: Final = (
+    "SHBDUO-1",
+    "SHBLB-1",
+    "SHCB-1",
+    "SHRGBW2",
+)
+
 # Used in "_async_update_data" as timeout for polling data from devices.
 POLLING_TIMEOUT_SEC: Final = 18
 
@@ -137,3 +145,6 @@ UPTIME_DEVIATION: Final = 5
 
 # Max RPC switch/input key instances
 MAX_RPC_KEY_INSTANCES = 4
+
+# Time to wait before reloading entry upon device config change
+ENTRY_RELOAD_COOLDOWN = 60

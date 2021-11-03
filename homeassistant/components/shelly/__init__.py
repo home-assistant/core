@@ -24,6 +24,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -39,6 +40,8 @@ from .const import (
     DEFAULT_COAP_PORT,
     DEVICE,
     DOMAIN,
+    DUAL_MODE_LIGHT_MODELS,
+    ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_DICT,
     POLLING_TIMEOUT_SEC,
@@ -76,8 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
 
-    conf = config.get(DOMAIN)
-    if conf is not None:
+    if (conf := config.get(DOMAIN)) is not None:
         hass.data[DOMAIN][CONF_COAP_PORT] = conf[CONF_COAP_PORT]
 
     return True
@@ -130,7 +132,13 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            identifiers={(DOMAIN, entry.unique_id)}, connections=set()
+            identifiers=set(),
+            connections={
+                (
+                    device_registry.CONNECTION_NETWORK_MAC,
+                    device_registry.format_mac(entry.unique_id),
+                )
+            },
         )
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
@@ -230,9 +238,8 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     ) -> None:
         """Initialize the Shelly device wrapper."""
         self.device_id: str | None = None
-        sleep_period = entry.data["sleep_period"]
 
-        if sleep_period:
+        if sleep_period := entry.data["sleep_period"]:
             update_interval = SLEEP_PERIOD_MULTIPLIER * sleep_period
         else:
             update_interval = (
@@ -252,6 +259,18 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
+        self._debounced_reload = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=ENTRY_RELOAD_COOLDOWN,
+            immediate=False,
+            function=self._async_reload_entry,
+        )
+        entry.async_on_unload(self._debounced_reload.async_cancel)
+        self._last_cfg_changed: int | None = None
+        self._last_mode: str | None = None
+        self._last_effect: int | None = None
+
         entry.async_on_unload(
             self.async_add_listener(self._async_device_updates_handler)
         )
@@ -260,6 +279,11 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
+
+    async def _async_reload_entry(self) -> None:
+        """Reload entry."""
+        _LOGGER.debug("Reloading entry %s", self.name)
+        await self.hass.config_entries.async_reload(self.entry.entry_id)
 
     @callback
     def _async_device_updates_handler(self) -> None:
@@ -280,8 +304,24 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
                 break
 
-        # Check for input events
+        # Check for input events and config change
+        cfg_changed = 0
         for block in self.device.blocks:
+            if block.type == "device":
+                cfg_changed = block.cfgChanged
+
+            # For dual mode bulbs ignore change if it is due to mode/effect change
+            if self.model in DUAL_MODE_LIGHT_MODELS:
+                if "mode" in block.sensor_ids and self.model != "SHRGBW2":
+                    if self._last_mode != block.mode:
+                        self._last_cfg_changed = None
+                    self._last_mode = block.mode
+
+                if "effect" in block.sensor_ids:
+                    if self._last_effect != block.effect:
+                        self._last_cfg_changed = None
+                    self._last_effect = block.effect
+
             if (
                 "inputEvent" not in block.sensor_ids
                 or "inputEventCnt" not in block.sensor_ids
@@ -317,6 +357,15 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                     event_type,
                     self.name,
                 )
+
+        if self._last_cfg_changed is not None and cfg_changed > self._last_cfg_changed:
+            _LOGGER.info(
+                "Config for %s changed, reloading entry in %s seconds",
+                self.name,
+                ENTRY_RELOAD_COOLDOWN,
+            )
+            self.hass.async_create_task(self._debounced_reload.async_call())
+        self._last_cfg_changed = cfg_changed
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
@@ -354,6 +403,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
+            configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
@@ -496,6 +546,15 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
+        self._debounced_reload = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=ENTRY_RELOAD_COOLDOWN,
+            immediate=False,
+            function=self._async_reload_entry,
+        )
+        entry.async_on_unload(self._debounced_reload.async_cancel)
+
         entry.async_on_unload(
             self.async_add_listener(self._async_device_updates_handler)
         )
@@ -504,6 +563,11 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
+
+    async def _async_reload_entry(self) -> None:
+        """Reload entry."""
+        _LOGGER.debug("Reloading entry %s", self.name)
+        await self.hass.config_entries.async_reload(self.entry.entry_id)
 
     @callback
     def _async_device_updates_handler(self) -> None:
@@ -518,7 +582,18 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self._last_event = self.device.event
 
         for event in self.device.event["events"]:
-            if event.get("event") not in RPC_INPUTS_EVENTS_TYPES:
+            event_type = event.get("event")
+            if event_type is None:
+                continue
+
+            if event_type == "config_changed":
+                _LOGGER.info(
+                    "Config for %s changed, reloading entry in %s seconds",
+                    self.name,
+                    ENTRY_RELOAD_COOLDOWN,
+                )
+                self.hass.async_create_task(self._debounced_reload.async_call())
+            elif event_type not in RPC_INPUTS_EVENTS_TYPES:
                 continue
 
             self.hass.bus.async_fire(
@@ -565,6 +640,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
+            configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)

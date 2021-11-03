@@ -17,6 +17,7 @@ from homeassistant.components.recorder import (
     statistics,
     util as recorder_util,
 )
+from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMetaData,
@@ -39,12 +40,14 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
     POWER_KILO_WATT,
     POWER_WATT,
     PRESSURE_BAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
+    PRESSURE_KPA,
     PRESSURE_MBAR,
     PRESSURE_PA,
     PRESSURE_PSI,
@@ -95,6 +98,7 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     # Convert energy to kWh
     DEVICE_CLASS_ENERGY: {
         ENERGY_KILO_WATT_HOUR: lambda x: x,
+        ENERGY_MEGA_WATT_HOUR: lambda x: x * 1000,
         ENERGY_WATT_HOUR: lambda x: x / 1000,
     },
     # Convert power W
@@ -108,6 +112,7 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
         PRESSURE_BAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_BAR],
         PRESSURE_HPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_HPA],
         PRESSURE_INHG: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_INHG],
+        PRESSURE_KPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_KPA],
         PRESSURE_MBAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_MBAR],
         PRESSURE_PA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PA],
         PRESSURE_PSI: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PSI],
@@ -287,7 +292,7 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
     return report_issue
 
 
-def warn_dip(hass: HomeAssistant, entity_id: str) -> None:
+def warn_dip(hass: HomeAssistant, entity_id: str, state: State) -> None:
     """Log a warning once if a sensor with state_class_total has a decreasing value.
 
     The log will be suppressed until two dips have been seen to prevent warning due to
@@ -308,14 +313,17 @@ def warn_dip(hass: HomeAssistant, entity_id: str) -> None:
             return
         _LOGGER.warning(
             "Entity %s %shas state class total_increasing, but its state is "
-            "not strictly increasing. Please %s",
+            "not strictly increasing. Triggered by state %s with last_updated set to %s. "
+            "Please %s",
             entity_id,
             f"from integration {domain} " if domain else "",
+            state.state,
+            state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
         )
 
 
-def warn_negative(hass: HomeAssistant, entity_id: str) -> None:
+def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
     """Log a warning once if a sensor with state_class_total has a negative value."""
     if WARN_NEGATIVE not in hass.data:
         hass.data[WARN_NEGATIVE] = set()
@@ -324,28 +332,34 @@ def warn_negative(hass: HomeAssistant, entity_id: str) -> None:
         domain = entity_sources(hass).get(entity_id, {}).get("domain")
         _LOGGER.warning(
             "Entity %s %shas state class total_increasing, but its state is "
-            "negative. Please %s",
+            "negative. Triggered by state %s with last_updated set to %s. Please %s",
             entity_id,
             f"from integration {domain} " if domain else "",
+            state.state,
+            state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
         )
 
 
 def reset_detected(
-    hass: HomeAssistant, entity_id: str, state: float, previous_state: float | None
+    hass: HomeAssistant,
+    entity_id: str,
+    fstate: float,
+    previous_fstate: float | None,
+    state: State,
 ) -> bool:
     """Test if a total_increasing sensor has been reset."""
-    if previous_state is None:
+    if previous_fstate is None:
         return False
 
-    if 0.9 * previous_state <= state < previous_state:
-        warn_dip(hass, entity_id)
+    if 0.9 * previous_fstate <= fstate < previous_fstate:
+        warn_dip(hass, entity_id, state)
 
-    if state < 0:
-        warn_negative(hass, entity_id)
+    if fstate < 0:
+        warn_negative(hass, entity_id, state)
         raise HomeAssistantError
 
-    return state < 0.9 * previous_state
+    return fstate < 0.9 * previous_fstate
 
 
 def _wanted_statistics(sensor_states: list[State]) -> dict[str, set[str]]:
@@ -403,7 +417,7 @@ def _compile_statistics(  # noqa: C901
     sensor_states = _get_sensor_states(hass)
     wanted_statistics = _wanted_statistics(sensor_states)
     old_metadatas = statistics.get_metadata_with_session(
-        hass, session, [i.entity_id for i in sensor_states], None
+        hass, session, statistic_ids=[i.entity_id for i in sensor_states]
     )
 
     # Get history between start and end
@@ -463,9 +477,10 @@ def _compile_statistics(  # noqa: C901
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     _LOGGER.warning(
-                        "The unit of %s (%s) does not match the unit of already "
+                        "The %sunit of %s (%s) does not match the unit of already "
                         "compiled statistics (%s). Generation of long term statistics "
                         "will be suppressed unless the unit changes back to %s",
+                        "normalized " if device_class in DEVICE_CLASS_UNITS else "",
                         entity_id,
                         unit,
                         old_metadata[1]["unit_of_measurement"],
@@ -475,10 +490,12 @@ def _compile_statistics(  # noqa: C901
 
         # Set meta data
         meta: StatisticMetaData = {
-            "statistic_id": entity_id,
-            "unit_of_measurement": unit,
             "has_mean": "mean" in wanted_statistics[entity_id],
             "has_sum": "sum" in wanted_statistics[entity_id],
+            "name": None,
+            "source": RECORDER_DOMAIN,
+            "statistic_id": entity_id,
+            "unit_of_measurement": unit,
         }
 
         # Make calculations
@@ -546,13 +563,15 @@ def _compile_statistics(  # noqa: C901
                 elif state_class == STATE_CLASS_TOTAL_INCREASING:
                     try:
                         if old_state is None or reset_detected(
-                            hass, entity_id, fstate, new_state
+                            hass, entity_id, fstate, new_state, state
                         ):
                             reset = True
                             _LOGGER.info(
-                                "Detected new cycle for %s, value dropped from %s to %s",
+                                "Detected new cycle for %s, value dropped from %s to %s, "
+                                "triggered by state with last_updated set to %s",
                                 entity_id,
                                 new_state,
+                                state.last_updated.isoformat(),
                                 fstate,
                             )
                     except HomeAssistantError:
@@ -589,7 +608,7 @@ def _compile_statistics(  # noqa: C901
             stat["sum"] = _sum
             stat["state"] = new_state
 
-        result.append({"meta": meta, "stat": (stat,)})
+        result.append({"meta": meta, "stat": stat})
 
     return result
 
@@ -621,14 +640,20 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
             continue
 
         if device_class not in UNIT_CONVERSIONS:
-            statistic_ids[state.entity_id] = native_unit
+            statistic_ids[state.entity_id] = {
+                "source": RECORDER_DOMAIN,
+                "unit_of_measurement": native_unit,
+            }
             continue
 
         if native_unit not in UNIT_CONVERSIONS[device_class]:
             continue
 
         statistics_unit = DEVICE_CLASS_UNITS[device_class]
-        statistic_ids[state.entity_id] = statistics_unit
+        statistic_ids[state.entity_id] = {
+            "source": RECORDER_DOMAIN,
+            "unit_of_measurement": statistics_unit,
+        }
 
     return statistic_ids
 
@@ -640,7 +665,9 @@ def validate_statistics(
     validation_result = defaultdict(list)
 
     sensor_states = hass.states.all(DOMAIN)
-    metadatas = statistics.get_metadata(hass, [i.entity_id for i in sensor_states])
+    metadatas = statistics.get_metadata(hass, statistic_source=RECORDER_DOMAIN)
+    sensor_entity_ids = {i.entity_id for i in sensor_states}
+    sensor_statistic_ids = set(metadatas)
 
     for state in sensor_states:
         entity_id = state.entity_id
@@ -653,7 +680,7 @@ def validate_statistics(
                 # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
-                        "entity_not_recorded",
+                        "entity_no_longer_recorded",
                         {"statistic_id": entity_id},
                     )
                 )
@@ -694,9 +721,19 @@ def validate_statistics(
                         },
                     )
                 )
+        elif state_class in STATE_CLASSES:
+            if not is_entity_recorded(hass, state.entity_id):
+                # Sensor is not recorded
+                validation_result[entity_id].append(
+                    statistics.ValidationIssue(
+                        "entity_not_recorded",
+                        {"statistic_id": entity_id},
+                    )
+                )
 
         if (
-            device_class in UNIT_CONVERSIONS
+            state_class in STATE_CLASSES
+            and device_class in UNIT_CONVERSIONS
             and state_unit not in UNIT_CONVERSIONS[device_class]
         ):
             # The unit in the state is not supported for this device class
@@ -710,5 +747,16 @@ def validate_statistics(
                     },
                 )
             )
+
+    for statistic_id in sensor_statistic_ids - sensor_entity_ids:
+        # There is no sensor matching the statistics_id
+        validation_result[statistic_id].append(
+            statistics.ValidationIssue(
+                "no_state",
+                {
+                    "statistic_id": statistic_id,
+                },
+            )
+        )
 
     return validation_result

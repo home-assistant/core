@@ -62,7 +62,6 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("velux", "scene.py"),
     ("wemo", "config_flow.py"),
     ("wiffi", "config_flow.py"),
-    ("wink", "scene.py"),
 }
 
 
