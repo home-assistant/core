@@ -262,9 +262,9 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle an AirVisual options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize."""
-        self.config_entry = config_entry
+        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -279,7 +279,7 @@ class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_SHOW_ON_MAP,
-                        default=self.config_entry.options.get(CONF_SHOW_ON_MAP),
+                        default=self.entry.options.get(CONF_SHOW_ON_MAP),
                     ): bool
                 }
             ),

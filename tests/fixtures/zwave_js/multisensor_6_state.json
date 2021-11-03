@@ -1824,5 +1824,6 @@
                 "label": "Z-Wave chip hardware version"
             }
         }
-    ]
+    ],
+    "highestSecurityClass": 7
 }

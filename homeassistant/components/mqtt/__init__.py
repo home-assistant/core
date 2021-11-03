@@ -56,6 +56,7 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
+    CONF_COMMAND_TOPIC,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -97,9 +98,6 @@ CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
 CONF_TLS_VERSION = "tls_version"
-
-CONF_COMMAND_TOPIC = "command_topic"
-CONF_TOPIC = "topic"
 
 PROTOCOL_31 = "3.1"
 
@@ -600,8 +598,7 @@ class MQTT:
         """
         self = hass.data[DATA_MQTT]
 
-        conf = hass.data.get(DATA_MQTT_CONFIG)
-        if conf is None:
+        if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
             conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
 
         self.conf = _merge_config(entry, conf)
@@ -624,8 +621,7 @@ class MQTT:
         else:
             proto = mqtt.MQTTv311
 
-        client_id = self.conf.get(CONF_CLIENT_ID)
-        if client_id is None:
+        if (client_id := self.conf.get(CONF_CLIENT_ID)) is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
@@ -639,9 +635,7 @@ class MQTT:
         if username is not None:
             self._mqttc.username_pw_set(username, password)
 
-        certificate = self.conf.get(CONF_CERTIFICATE)
-
-        if certificate == "auto":
+        if (certificate := self.conf.get(CONF_CERTIFICATE)) == "auto":
             certificate = certifi.where()
 
         client_key = self.conf.get(CONF_CLIENT_KEY)
@@ -1004,8 +998,7 @@ async def websocket_remove_device(hass, connection, msg):
     device_id = msg["device_id"]
     dev_registry = await hass.helpers.device_registry.async_get_registry()
 
-    device = dev_registry.async_get(device_id)
-    if not device:
+    if not (device := dev_registry.async_get(device_id)):
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
         )

@@ -45,6 +45,7 @@ class DeviceMock(Zwave):
         self.name = "Test Device"
         self.uid = "Test"
         self.settings_property = {"general_device_settings": SettingsMock()}
+        self.href = "https://www.mydevolo.com"
 
 
 class BinarySensorMock(DeviceMock):

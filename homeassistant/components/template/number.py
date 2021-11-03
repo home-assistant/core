@@ -18,7 +18,13 @@ from homeassistant.components.number.const import (
     DOMAIN as NUMBER_DOMAIN,
 )
 from homeassistant.components.template import TriggerUpdateCoordinator
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_ICON,
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    CONF_STATE,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import Config, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -47,6 +53,7 @@ NUMBER_SCHEMA = vol.Schema(
         vol.Optional(CONF_AVAILABILITY): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_ICON): cv.template,
     }
 )
 
@@ -72,6 +79,7 @@ async def _async_create_entities(
                 definition[ATTR_MAX],
                 definition[CONF_OPTIMISTIC],
                 unique_id,
+                definition.get(CONF_ICON),
             )
         )
     return entities
@@ -119,9 +127,12 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         maximum_template: Template | None,
         optimistic: bool,
         unique_id: str | None,
+        icon_template: Template | None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(availability_template=availability_template)
+        super().__init__(
+            availability_template=availability_template, icon_template=icon_template
+        )
         self._attr_name = DEFAULT_NAME
         self._name_template = name_template
         name_template.hass = hass

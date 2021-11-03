@@ -38,8 +38,7 @@ class _BaseFlowManagerView(HomeAssistantView):
 
         data = result.copy()
 
-        schema = data["data_schema"]
-        if schema is None:
+        if (schema := data["data_schema"]) is None:
             data["data_schema"] = []
         else:
             data["data_schema"] = voluptuous_serialize.convert(

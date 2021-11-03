@@ -1,4 +1,14 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_motion": "{entity_name} est\u00e1 detectando movimento",
+            "is_no_motion": "{entity_name} n\u00e3o est\u00e1 detectando movimento"
+        },
+        "trigger_type": {
+            "motion": "{entity_name} come\u00e7ou a detectar movimento",
+            "no_motion": "{entity_name} parou de detectar movimento"
+        }
+    },
     "state": {
         "_": {
             "off": "Desligado",

@@ -1,5 +1,6 @@
 """The tests for generic camera component."""
 import asyncio
+from http import HTTPStatus
 from os import path
 from unittest.mock import patch
 
@@ -9,11 +10,7 @@ import respx
 from homeassistant import config as hass_config
 from homeassistant.components.generic import DOMAIN
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import (
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_NOT_FOUND,
-    SERVICE_RELOAD,
-)
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 
 
@@ -41,7 +38,7 @@ async def test_fetching_url(hass, hass_client):
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert respx.calls.call_count == 1
     body = await resp.text()
     assert body == "hello world"
@@ -75,7 +72,7 @@ async def test_fetching_without_verify_ssl(hass, hass_client):
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 @respx.mock
@@ -103,7 +100,7 @@ async def test_fetching_url_with_verify_ssl(hass, hass_client):
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 @respx.mock
@@ -112,7 +109,7 @@ async def test_limit_refetch(hass, hass_client):
     respx.get("http://example.com/5a").respond(text="hello world")
     respx.get("http://example.com/10a").respond(text="hello world")
     respx.get("http://example.com/15a").respond(text="hello planet")
-    respx.get("http://example.com/20a").respond(status_code=HTTP_NOT_FOUND)
+    respx.get("http://example.com/20a").respond(status_code=HTTPStatus.NOT_FOUND)
 
     await async_setup_component(
         hass,
@@ -137,19 +134,19 @@ async def test_limit_refetch(hass, hass_client):
     with patch("async_timeout.timeout", side_effect=asyncio.TimeoutError()):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert respx.calls.call_count == 0
-        assert resp.status == HTTP_INTERNAL_SERVER_ERROR
+        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     hass.states.async_set("sensor.temp", "10")
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert respx.calls.call_count == 1
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "hello world"
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert respx.calls.call_count == 1
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "hello world"
 
@@ -158,7 +155,7 @@ async def test_limit_refetch(hass, hass_client):
     # Url change = fetch new image
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert respx.calls.call_count == 2
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "hello planet"
 
@@ -166,7 +163,7 @@ async def test_limit_refetch(hass, hass_client):
     hass.states.async_remove("sensor.temp")
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert respx.calls.call_count == 2
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "hello planet"
 
@@ -340,14 +337,14 @@ async def test_camera_content_type(hass, hass_client):
 
     resp_1 = await client.get("/api/camera_proxy/camera.config_test_svg")
     assert respx.calls.call_count == 1
-    assert resp_1.status == 200
+    assert resp_1.status == HTTPStatus.OK
     assert resp_1.content_type == "image/svg+xml"
     body = await resp_1.text()
     assert body == svg_image
 
     resp_2 = await client.get("/api/camera_proxy/camera.config_test_jpg")
     assert respx.calls.call_count == 2
-    assert resp_2.status == 200
+    assert resp_2.status == HTTPStatus.OK
     assert resp_2.content_type == "image/jpeg"
     body = await resp_2.text()
     assert body == svg_image
@@ -377,7 +374,7 @@ async def test_reloading(hass, hass_client):
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert respx.calls.call_count == 1
     body = await resp.text()
     assert body == "hello world"
@@ -400,11 +397,11 @@ async def test_reloading(hass, hass_client):
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
 
-    assert resp.status == 404
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     resp = await client.get("/api/camera_proxy/camera.reload")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert respx.calls.call_count == 2
     body = await resp.text()
     assert body == "hello world"
@@ -435,7 +432,7 @@ async def test_timeout_cancelled(hass, hass_client):
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert respx.calls.call_count == 1
     assert await resp.text() == "hello world"
 
@@ -447,7 +444,7 @@ async def test_timeout_cancelled(hass, hass_client):
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert respx.calls.call_count == 1
-        assert resp.status == 500
+        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     respx.get("http://example.com").side_effect = [
         httpx.RequestError,
@@ -457,7 +454,7 @@ async def test_timeout_cancelled(hass, hass_client):
     for total_calls in range(2, 4):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert respx.calls.call_count == total_calls
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         assert await resp.text() == "hello world"
 
 

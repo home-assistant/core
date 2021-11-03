@@ -36,14 +36,12 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.loader import async_get_integration
 
 from .const import (
-    CONF_AUTO_START,
     CONF_ENTITY_CONFIG,
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
-    DEFAULT_AUTO_START,
     DEFAULT_CONFIG_FLOW_PORT,
     DEFAULT_HOMEKIT_MODE,
     DOMAIN,
@@ -311,13 +309,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_advanced(self, user_input=None):
         """Choose advanced options."""
-        if not self.show_advanced_options or user_input is not None:
+        if (
+            not self.show_advanced_options
+            or user_input is not None
+            or self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_BRIDGE
+        ):
             if user_input:
                 self.hk_options.update(user_input)
-
-            self.hk_options[CONF_AUTO_START] = self.hk_options.get(
-                CONF_AUTO_START, DEFAULT_AUTO_START
-            )
 
             for key in (CONF_DOMAINS, CONF_ENTITIES):
                 if key in self.hk_options:
@@ -331,23 +329,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             return self.async_create_entry(title="", data=self.hk_options)
 
-        data_schema = {
-            vol.Optional(
-                CONF_AUTO_START,
-                default=self.hk_options.get(CONF_AUTO_START, DEFAULT_AUTO_START),
-            ): bool
-        }
-
-        if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE:
-            all_supported_devices = await _async_get_supported_devices(self.hass)
-            devices = self.hk_options.get(CONF_DEVICES, [])
-            data_schema[vol.Optional(CONF_DEVICES, default=devices)] = cv.multi_select(
-                all_supported_devices
-            )
-
+        all_supported_devices = await _async_get_supported_devices(self.hass)
         return self.async_show_form(
             step_id="advanced",
-            data_schema=vol.Schema(data_schema),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_DEVICES, default=self.hk_options.get(CONF_DEVICES, [])
+                    ): cv.multi_select(all_supported_devices)
+                }
+            ),
         )
 
     async def async_step_cameras(self, user_input=None):

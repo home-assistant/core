@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import airthings
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.airthings.const import CONF_ID, CONF_SECRET, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
@@ -18,7 +18,7 @@ TEST_DATA = {
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

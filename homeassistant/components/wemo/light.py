@@ -1,6 +1,5 @@
 """Support for Belkin WeMo lights."""
 import asyncio
-import logging
 
 from pywemo.ouimeaux_device import bridge
 
@@ -23,8 +22,6 @@ import homeassistant.util.color as color_util
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoEntity
 from .wemo_device import DeviceCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_WEMO = (
     SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_TRANSITION
@@ -120,8 +117,7 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def hs_color(self):
         """Return the hs color values of this light."""
-        xy_color = self.light.state.get("color_xy")
-        if xy_color:
+        if xy_color := self.light.state.get("color_xy"):
             return color_util.color_xy_to_hs(*xy_color)
         return None
 

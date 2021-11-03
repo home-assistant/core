@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "device_name": {
+                "data": {
+                    "name": "Nom"
+                }
+            },
+            "discovery_confirm": {
+                "description": "Vols configurar {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP"
+                }
+            }
+        }
+    }
+}

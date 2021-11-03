@@ -51,8 +51,8 @@
     },
     "options": {
         "error": {
-            "bad_birth": "\u00c9rv\u00e9nytelen sz\u00fclet\u00e9si t\u00e9ma.",
-            "bad_will": "\u00c9rv\u00e9nytelen t\u00e9ma.",
+            "bad_birth": "\u00c9rv\u00e9nytelen 'birth' topik.",
+            "bad_will": "\u00c9rv\u00e9nytelen 'will' topik.",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {

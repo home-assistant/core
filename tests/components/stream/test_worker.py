@@ -40,7 +40,7 @@ from homeassistant.components.stream.core import StreamSettings
 from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
 from homeassistant.setup import async_setup_component
 
-from tests.components.stream.common import generate_h264_video
+from tests.components.stream.common import generate_h264_video, generate_h265_video
 from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
 STREAM_SOURCE = "some-stream-source"
@@ -200,6 +200,9 @@ class FakePyAvBuffer:
 
             def __str__(self) -> str:
                 return f"FakeAvOutputStream<{template.name}>"
+
+            def name(self) -> str:
+                return "avc1"
 
         if template.name == AUDIO_STREAM_FORMAT:
             return FakeAvOutputStream(self.audio_packets)
@@ -674,6 +677,10 @@ async def test_worker_log(hass, caplog):
 
 async def test_durations(hass, record_worker_sync):
     """Test that the duration metadata matches the media."""
+
+    # Use a target part duration which has a slight mismatch
+    # with the incoming frame rate to better expose problems.
+    target_part_duration = TEST_PART_DURATION - 0.01
     await async_setup_component(
         hass,
         "stream",
@@ -681,12 +688,12 @@ async def test_durations(hass, record_worker_sync):
             "stream": {
                 CONF_LL_HLS: True,
                 CONF_SEGMENT_DURATION: SEGMENT_DURATION,
-                CONF_PART_DURATION: TEST_PART_DURATION,
+                CONF_PART_DURATION: target_part_duration,
             }
         },
     )
 
-    source = generate_h264_video()
+    source = generate_h264_video(duration=SEGMENT_DURATION + 1)
     stream = create_stream(hass, source, {})
 
     # use record_worker_sync to grab output segments
@@ -699,16 +706,37 @@ async def test_durations(hass, record_worker_sync):
     # check that the Part duration metadata matches the durations in the media
     running_metadata_duration = 0
     for segment in complete_segments:
-        for part in segment.parts:
+        av_segment = av.open(io.BytesIO(segment.init + segment.get_data()))
+        av_segment.close()
+        for part_num, part in enumerate(segment.parts):
             av_part = av.open(io.BytesIO(segment.init + part.data))
             running_metadata_duration += part.duration
-            # av_part.duration will just return the largest dts in av_part.
-            # When we normalize by av.time_base this should equal the running duration
+            # av_part.duration actually returns the dts of the first packet of the next
+            # av_part. When we normalize this by av.time_base we get the running
+            # duration of the media.
+            # The metadata duration may differ slightly from the media duration.
+            # The worker has some flexibility of where to set each metadata boundary,
+            # and when the media's duration is slightly too long or too short, the
+            # metadata duration may be adjusted up or down.
+            # We check here that the divergence between the metadata duration and the
+            # media duration is not too large (2 frames seems reasonable here).
+            assert math.isclose(
+                (av_part.duration - av_part.start_time) / av.time_base,
+                part.duration,
+                abs_tol=2 / av_part.streams.video[0].rate + 1e-6,
+            )
+            # Also check that the sum of the durations so far matches the last dts
+            # in the media.
             assert math.isclose(
                 running_metadata_duration,
                 av_part.duration / av.time_base,
                 abs_tol=1e-6,
             )
+            # And check that the metadata duration is between 0.85x and 1.0x of
+            # the part target duration
+            if not (part.has_keyframe or part_num == len(segment.parts) - 1):
+                assert part.duration > 0.85 * target_part_duration - 1e-6
+            assert part.duration < target_part_duration + 1e-6
             av_part.close()
     # check that the Part durations are consistent with the Segment durations
     for segment in complete_segments:
@@ -758,6 +786,41 @@ async def test_has_keyframe(hass, record_worker_sync):
             )
             av_part.close()
             assert part.has_keyframe == media_has_keyframe
+
+    await record_worker_sync.join()
+
+    stream.stop()
+
+
+async def test_h265_video_is_hvc1(hass, record_worker_sync):
+    """Test that a h265 video gets muxed as hvc1."""
+    await async_setup_component(
+        hass,
+        "stream",
+        {
+            "stream": {
+                CONF_LL_HLS: True,
+                CONF_SEGMENT_DURATION: SEGMENT_DURATION,
+                CONF_PART_DURATION: TEST_PART_DURATION,
+            }
+        },
+    )
+
+    source = generate_h265_video()
+    stream = create_stream(hass, source, {})
+
+    # use record_worker_sync to grab output segments
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path")
+
+    complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    assert len(complete_segments) >= 1
+
+    segment = complete_segments[0]
+    part = segment.parts[0]
+    av_part = av.open(io.BytesIO(segment.init + part.data))
+    assert av_part.streams.video[0].codec_tag == "hvc1"
+    av_part.close()
 
     await record_worker_sync.join()
 

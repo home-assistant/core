@@ -36,9 +36,7 @@ async def async_setup_entry(
     coordinator: IPPDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     # config flow sets this to either UUID, serial number or None
-    unique_id = entry.unique_id
-
-    if unique_id is None:
+    if (unique_id := entry.unique_id) is None:
         unique_id = entry.entry_id
 
     sensors = []

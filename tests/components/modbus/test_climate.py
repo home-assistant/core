@@ -8,10 +8,7 @@ from homeassistant.components.modbus.const import (
     CONF_DATA_TYPE,
     CONF_LAZY_ERROR,
     CONF_TARGET_TEMP,
-    DATA_TYPE_FLOAT32,
-    DATA_TYPE_FLOAT64,
-    DATA_TYPE_INT16,
-    DATA_TYPE_INT32,
+    DataType,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -97,11 +94,13 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
         {
             CONF_CLIMATES: [
                 {
+                    CONF_COUNT: 2,
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
                     CONF_SCAN_INTERVAL: 0,
+                    CONF_DATA_TYPE: DataType.INT32,
                 }
             ]
         },
@@ -128,7 +127,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
-                        CONF_DATA_TYPE: DATA_TYPE_INT16,
+                        CONF_DATA_TYPE: DataType.INT16,
                     }
                 ]
             },
@@ -143,7 +142,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
-                        CONF_DATA_TYPE: DATA_TYPE_INT32,
+                        CONF_DATA_TYPE: DataType.INT32,
                     }
                 ]
             },
@@ -158,7 +157,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
-                        CONF_DATA_TYPE: DATA_TYPE_FLOAT32,
+                        CONF_DATA_TYPE: DataType.FLOAT32,
                     }
                 ]
             },
@@ -173,7 +172,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
-                        CONF_DATA_TYPE: DATA_TYPE_FLOAT64,
+                        CONF_DATA_TYPE: DataType.FLOAT64,
                     }
                 ]
             },

@@ -232,6 +232,8 @@ async def _get_gateway(
             protocol_version=version,
         )
     gateway.event_callback = event_callback
+    gateway.metric = hass.config.units.is_metric
+
     if persistence:
         await gateway.start_persistence()
 
