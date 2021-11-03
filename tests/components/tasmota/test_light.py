@@ -868,21 +868,21 @@ async def test_sending_mqtt_commands_rgbw_legacy(hass, mqtt_mock, setup_tasmota)
     )
     mqtt_mock.async_publish.reset_mock()
 
-    # rgbw_color should be ignored
+    # rgbw_color should be converted
     await common.async_turn_on(hass, "light.test", rgbw_color=[128, 64, 32, 0])
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON",
+        "NoDelay;Power1 ON;NoDelay;HsbColor1 20;NoDelay;HsbColor2 75",
         0,
         False,
     )
     mqtt_mock.async_publish.reset_mock()
 
-    # rgbw_color should be ignored
+    # rgbw_color should be converted
     await common.async_turn_on(hass, "light.test", rgbw_color=[16, 64, 32, 128])
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON",
+        "NoDelay;Power1 ON;NoDelay;HsbColor1 141;NoDelay;HsbColor2 25",
         0,
         False,
     )
@@ -974,21 +974,21 @@ async def test_sending_mqtt_commands_rgbw(hass, mqtt_mock, setup_tasmota):
     )
     mqtt_mock.async_publish.reset_mock()
 
-    # rgbw_color should be ignored
+    # rgbw_color should be converted
     await common.async_turn_on(hass, "light.test", rgbw_color=[128, 64, 32, 0])
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON",
+        "NoDelay;Power1 ON;NoDelay;HsbColor1 20;NoDelay;HsbColor2 75",
         0,
         False,
     )
     mqtt_mock.async_publish.reset_mock()
 
-    # rgbw_color should be ignored
+    # rgbw_color should be converted
     await common.async_turn_on(hass, "light.test", rgbw_color=[16, 64, 32, 128])
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON",
+        "NoDelay;Power1 ON;NoDelay;HsbColor1 141;NoDelay;HsbColor2 25",
         0,
         False,
     )

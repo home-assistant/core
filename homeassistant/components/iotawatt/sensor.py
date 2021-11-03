@@ -191,15 +191,13 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         return self._sensor_data.getName()
 
     @property
-    def device_info(self) -> entity.DeviceInfo | None:
+    def device_info(self) -> entity.DeviceInfo:
         """Return device info."""
-        return {
-            "connections": {
-                (CONNECTION_NETWORK_MAC, self._sensor_data.hub_mac_address)
-            },
-            "manufacturer": "IoTaWatt",
-            "model": "IoTaWatt",
-        }
+        return entity.DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._sensor_data.hub_mac_address)},
+            manufacturer="IoTaWatt",
+            model="IoTaWatt",
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

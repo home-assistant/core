@@ -1,4 +1,4 @@
-"""Common constants and functions for Uptime Robot tests."""
+"""Common constants and functions for UptimeRobot tests."""
 from __future__ import annotations
 
 from enum import Enum
@@ -61,7 +61,7 @@ def mock_uptimerobot_api_response(
     status: APIStatus = APIStatus.OK,
     key: MockApiResponseKey = MockApiResponseKey.MONITORS,
 ) -> UptimeRobotApiResponse:
-    """Mock API response for Uptime Robot."""
+    """Mock API response for UptimeRobot."""
     return UptimeRobotApiResponse.from_dict(
         {
             "stat": {"error": APIStatus.FAIL}.get(key, status),
@@ -77,7 +77,7 @@ def mock_uptimerobot_api_response(
 
 
 async def setup_uptimerobot_integration(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up the Uptime Robot integration."""
+    """Set up the UptimeRobot integration."""
     mock_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     mock_entry.add_to_hass(hass)
 

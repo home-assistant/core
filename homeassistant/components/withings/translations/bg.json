@@ -3,6 +3,10 @@
         "create_entry": {
             "default": "\u0423\u0441\u043f\u0435\u0448\u043d\u043e \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0438\u0440\u0430\u043d\u0435 \u0441 Withings \u0437\u0430 \u0438\u0437\u0431\u0440\u0430\u043d\u0438\u044f \u043f\u0440\u043e\u0444\u0438\u043b."
         },
+        "error": {
+            "already_configured": "\u041f\u0440\u043e\u0444\u0438\u043b\u044a\u0442 \u0432\u0435\u0447\u0435 \u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0438\u0440\u0430\u043d"
+        },
+        "flow_title": "{profile}",
         "step": {
             "profile": {
                 "data": {

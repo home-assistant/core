@@ -92,25 +92,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle Nanoleaf Zeroconf discovery."""
         _LOGGER.debug("Zeroconf discovered: %s", discovery_info)
-        return await self._async_discovery_handler(discovery_info)
+        return await self._async_homekit_zeroconf_discovery_handler(discovery_info)
 
     async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle Nanoleaf Homekit discovery."""
         _LOGGER.debug("Homekit discovered: %s", discovery_info)
-        return await self._async_discovery_handler(discovery_info)
+        return await self._async_homekit_zeroconf_discovery_handler(discovery_info)
 
-    async def _async_discovery_handler(
+    async def _async_homekit_zeroconf_discovery_handler(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
+        """Handle Nanoleaf Homekit and Zeroconf discovery."""
+        return await self._async_discovery_handler(
+            discovery_info["host"],
+            discovery_info["name"].replace(f".{discovery_info['type']}", ""),
+            discovery_info["properties"]["id"],
+        )
+
+    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+        """Handle Nanoleaf SSDP discovery."""
+        _LOGGER.debug("SSDP discovered: %s", discovery_info)
+        return await self._async_discovery_handler(
+            discovery_info["_host"],
+            discovery_info["nl-devicename"],
+            discovery_info["nl-deviceid"],
+        )
+
+    async def _async_discovery_handler(
+        self, host: str, name: str, device_id: str
+    ) -> FlowResult:
         """Handle Nanoleaf discovery."""
-        host = discovery_info["host"]
         # The name is unique and printed on the device and cannot be changed.
-        name = discovery_info["name"].replace(f".{discovery_info['type']}", "")
         await self.async_set_unique_id(name)
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
         # Import from discovery integration
-        self.device_id = discovery_info["properties"]["id"]
+        self.device_id = device_id
         self.discovery_conf = cast(
             dict,
             await self.hass.async_add_executor_job(

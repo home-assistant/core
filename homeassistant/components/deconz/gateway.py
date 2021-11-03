@@ -2,12 +2,17 @@
 import asyncio
 
 import async_timeout
-from pydeconz import DeconzSession, errors
+from pydeconz import DeconzSession, errors, group, light, sensor
 
+from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -21,10 +26,6 @@ from .const import (
     DEFAULT_ALLOW_NEW_DEVICES,
     DOMAIN as DECONZ_DOMAIN,
     LOGGER,
-    NEW_GROUP,
-    NEW_LIGHT,
-    NEW_SCENE,
-    NEW_SENSOR,
     PLATFORMS,
 )
 from .deconz_event import async_setup_events, async_unload_events
@@ -49,6 +50,20 @@ class DeconzGateway:
 
         self.available = True
         self.ignore_state_updates = False
+
+        self.signal_reachable = f"deconz-reachable-{config_entry.entry_id}"
+
+        self.signal_new_group = f"deconz_new_group_{config_entry.entry_id}"
+        self.signal_new_light = f"deconz_new_light_{config_entry.entry_id}"
+        self.signal_new_scene = f"deconz_new_scene_{config_entry.entry_id}"
+        self.signal_new_sensor = f"deconz_new_sensor_{config_entry.entry_id}"
+
+        self.deconz_resource_type_to_signal_new_device = {
+            group.RESOURCE_TYPE: self.signal_new_group,
+            light.RESOURCE_TYPE: self.signal_new_light,
+            group.RESOURCE_TYPE_SCENE: self.signal_new_scene,
+            sensor.RESOURCE_TYPE: self.signal_new_sensor,
+        }
 
         self.deconz_ids = {}
         self.entities = {}
@@ -92,24 +107,6 @@ class DeconzGateway:
             CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
         )
 
-    # Signals
-
-    @property
-    def signal_reachable(self) -> str:
-        """Gateway specific event to signal a change in connection status."""
-        return f"deconz-reachable-{self.bridgeid}"
-
-    @callback
-    def async_signal_new_device(self, device_type) -> str:
-        """Gateway specific event to signal new device."""
-        new_device = {
-            NEW_GROUP: f"deconz_new_group_{self.bridgeid}",
-            NEW_LIGHT: f"deconz_new_light_{self.bridgeid}",
-            NEW_SCENE: f"deconz_new_scene_{self.bridgeid}",
-            NEW_SENSOR: f"deconz_new_sensor_{self.bridgeid}",
-        }
-        return new_device[device_type]
-
     # Callbacks
 
     @callback
@@ -117,14 +114,18 @@ class DeconzGateway:
         """Handle signals of gateway connection status."""
         self.available = available
         self.ignore_state_updates = False
-        async_dispatcher_send(self.hass, self.signal_reachable, True)
+        async_dispatcher_send(self.hass, self.signal_reachable)
 
     @callback
     def async_add_device_callback(
-        self, device_type, device=None, force: bool = False
+        self, resource_type, device=None, force: bool = False
     ) -> None:
         """Handle event of new device creation in deCONZ."""
-        if not force and not self.option_allow_new_devices:
+        if (
+            not force
+            and not self.option_allow_new_devices
+            or resource_type not in self.deconz_resource_type_to_signal_new_device
+        ):
             return
 
         args = []
@@ -134,13 +135,13 @@ class DeconzGateway:
 
         async_dispatcher_send(
             self.hass,
-            self.async_signal_new_device(device_type),
+            self.deconz_resource_type_to_signal_new_device[resource_type],
             *args,  # Don't send device if None, it would override default value in listeners
         )
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self.hass)
 
         # Host device
         device_registry.async_get_or_create(
@@ -149,8 +150,13 @@ class DeconzGateway:
         )
 
         # Gateway service
+        configuration_url = f"http://{self.host}:{self.config_entry.data[CONF_PORT]}"
+        if self.config_entry.source == SOURCE_HASSIO:
+            configuration_url = None
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
+            configuration_url=configuration_url,
+            entry_type="service",
             identifiers={(DECONZ_DOMAIN, self.api.config.bridge_id)},
             manufacturer="Dresden Elektronik",
             model=self.api.config.model_id,
@@ -207,7 +213,7 @@ class DeconzGateway:
         deconz_ids = []
 
         if self.option_allow_clip_sensor:
-            self.async_add_device_callback(NEW_SENSOR)
+            self.async_add_device_callback(sensor.RESOURCE_TYPE)
 
         else:
             deconz_ids += [
@@ -217,12 +223,12 @@ class DeconzGateway:
             ]
 
         if self.option_allow_deconz_groups:
-            self.async_add_device_callback(NEW_GROUP)
+            self.async_add_device_callback(group.RESOURCE_TYPE)
 
         else:
             deconz_ids += [group.deconz_id for group in self.api.groups.values()]
 
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry = er.async_get(self.hass)
 
         for entity_id, deconz_id in self.deconz_ids.items():
             if deconz_id in deconz_ids and entity_registry.async_is_registered(

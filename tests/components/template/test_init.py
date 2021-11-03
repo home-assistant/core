@@ -163,10 +163,10 @@ async def test_reloadable_handles_partial_valid_config(hass, start_ha):
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
     assert hass.states.get("sensor.state").state == "mytest"
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all("sensor")) == 2
 
     await async_yaml_patch_helper(hass, "broken_configuration.yaml")
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all("sensor")) == 3
 
     assert hass.states.get("sensor.state") is None
     assert hass.states.get("sensor.watching_tv_in_master_bedroom").state == "off"

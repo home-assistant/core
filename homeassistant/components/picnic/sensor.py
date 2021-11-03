@@ -1,12 +1,12 @@
 """Definition of Picnic sensors."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -41,8 +41,8 @@ async def async_setup_entry(
 class PicnicSensor(SensorEntity, CoordinatorEntity):
     """The CoordinatorEntity subclass representing Picnic sensors."""
 
+    _attr_attribution = ATTRIBUTION
     entity_description: PicnicSensorEntityDescription
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def __init__(
         self,
@@ -68,7 +68,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
             if self.coordinator.data is not None
             else {}
         )
-        return self.entity_description.state(data_set)
+        return self.entity_description.value_fn(data_set)
 
     @property
     def available(self) -> bool:
@@ -76,15 +76,15 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
         return self.coordinator.last_update_success and self.state is not None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._service_unique_id)},
-            "manufacturer": "Picnic",
-            "model": self._service_unique_id,
-            "name": f"Picnic: {self.coordinator.data[ADDRESS]}",
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, cast(str, self._service_unique_id))},
+            manufacturer="Picnic",
+            model=self._service_unique_id,
+            name=f"Picnic: {self.coordinator.data[ADDRESS]}",
+        )
 
     @staticmethod
     def _to_capitalized_name(name: str) -> str:

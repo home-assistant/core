@@ -1,5 +1,6 @@
 """Test configuration and mocks for Smart Meter Texas."""
 import asyncio
+from http import HTTPStatus
 import json
 from pathlib import Path
 
@@ -67,7 +68,7 @@ def mock_connection(
     elif auth_fail:
         aioclient_mock.post(
             auth_endpoint,
-            status=400,
+            status=HTTPStatus.BAD_REQUEST,
             json={"errormessage": "ERR-USR-INVALIDPASSWORDERROR"},
         )
     else:  # auth_timeout

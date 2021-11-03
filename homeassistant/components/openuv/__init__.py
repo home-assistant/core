@@ -31,7 +31,6 @@ from .const import (
     CONF_FROM_WINDOW,
     CONF_TO_WINDOW,
     DATA_CLIENT,
-    DATA_LISTENER,
     DATA_PROTECTION_WINDOW,
     DATA_UV,
     DEFAULT_FROM_WINDOW,
@@ -50,32 +49,32 @@ TOPIC_UPDATE = f"{DOMAIN}_data_update"
 PLATFORMS = ["binary_sensor", "sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenUV as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}, DATA_LISTENER: {}})
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     try:
         websession = aiohttp_client.async_get_clientsession(hass)
         openuv = OpenUV(
-            config_entry,
+            entry,
             Client(
-                config_entry.data[CONF_API_KEY],
-                config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
-                config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
-                altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),
+                entry.data[CONF_API_KEY],
+                entry.data.get(CONF_LATITUDE, hass.config.latitude),
+                entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+                altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
                 session=websession,
-                logger=LOGGER,
             ),
         )
         await openuv.async_update()
-        hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = openuv
     except OpenUvError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = openuv
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @_verify_domain_control
     async def update_data(_: ServiceCall) -> None:
@@ -108,21 +107,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OpenUV config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate the config entry upon new versions."""
-    version = config_entry.version
-    data = {**config_entry.data}
+    version = entry.version
+    data = {**entry.data}
 
     LOGGER.debug("Migrating from version %s", version)
 
@@ -130,8 +127,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if version == 1:
         data.pop(CONF_BINARY_SENSORS, None)
         data.pop(CONF_SENSORS, None)
-        version = config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        version = entry.version = 2
+        hass.config_entries.async_update_entry(entry, data=data)
         LOGGER.debug("Migration to version %s successful", version)
 
     return True
@@ -140,16 +137,16 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 class OpenUV:
     """Define a generic OpenUV object."""
 
-    def __init__(self, config_entry: ConfigEntry, client: Client) -> None:
+    def __init__(self, entry: ConfigEntry, client: Client) -> None:
         """Initialize."""
-        self._config_entry = config_entry
+        self._entry = entry
         self.client = client
         self.data: dict[str, Any] = {}
 
     async def async_update_protection_data(self) -> None:
         """Update binary sensor (protection window) data."""
-        low = self._config_entry.options.get(CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW)
-        high = self._config_entry.options.get(CONF_TO_WINDOW, DEFAULT_TO_WINDOW)
+        low = self._entry.options.get(CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW)
+        high = self._entry.options.get(CONF_TO_WINDOW, DEFAULT_TO_WINDOW)
 
         try:
             resp = await self.client.uv_protection_window(low=low, high=high)

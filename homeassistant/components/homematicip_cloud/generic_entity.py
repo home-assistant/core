@@ -96,18 +96,18 @@ class HomematicipGenericEntity(Entity):
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
-            return {
-                "identifiers": {
+            return DeviceInfo(
+                identifiers={
                     # Serial numbers of Homematic IP device
                     (HMIPC_DOMAIN, self._device.id)
                 },
-                "name": self._device.label,
-                "manufacturer": self._device.oem,
-                "model": self._device.modelType,
-                "sw_version": self._device.firmwareVersion,
+                manufacturer=self._device.oem,
+                model=self._device.modelType,
+                name=self._device.label,
+                sw_version=self._device.firmwareVersion,
                 # Link to the homematic ip access point.
-                "via_device": (HMIPC_DOMAIN, self._device.homeId),
-            }
+                via_device=(HMIPC_DOMAIN, self._device.homeId),
+            )
         return None
 
     async def async_added_to_hass(self) -> None:
@@ -153,8 +153,7 @@ class HomematicipGenericEntity(Entity):
         if not self.registry_entry:
             return
 
-        device_id = self.registry_entry.device_id
-        if device_id:
+        if device_id := self.registry_entry.device_id:
             # Remove from device registry.
             device_registry = await dr.async_get_registry(self.hass)
             if device_id in device_registry.devices:
@@ -163,8 +162,7 @@ class HomematicipGenericEntity(Entity):
         else:
             # Remove from entity registry.
             # Only relevant for entities that do not belong to a device.
-            entity_id = self.registry_entry.entity_id
-            if entity_id:
+            if entity_id := self.registry_entry.entity_id:
                 entity_registry = await er.async_get_registry(self.hass)
                 if entity_id in entity_registry.entities:
                     entity_registry.async_remove(entity_id)

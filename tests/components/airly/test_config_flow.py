@@ -1,17 +1,12 @@
 """Define tests for the Airly config flow."""
+from http import HTTPStatus
+
 from airly.exceptions import AirlyError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    HTTP_NOT_FOUND,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
 from . import API_NEAREST_URL, API_POINT_URL
 
@@ -40,7 +35,7 @@ async def test_invalid_api_key(hass, aioclient_mock):
     aioclient_mock.get(
         API_POINT_URL,
         exc=AirlyError(
-            HTTP_UNAUTHORIZED, {"message": "Invalid authentication credentials"}
+            HTTPStatus.UNAUTHORIZED, {"message": "Invalid authentication credentials"}
         ),
     )
 
@@ -57,7 +52,7 @@ async def test_invalid_location(hass, aioclient_mock):
 
     aioclient_mock.get(
         API_NEAREST_URL,
-        exc=AirlyError(HTTP_NOT_FOUND, {"message": "Installation was not found"}),
+        exc=AirlyError(HTTPStatus.NOT_FOUND, {"message": "Installation was not found"}),
     )
 
     result = await hass.config_entries.flow.async_init(

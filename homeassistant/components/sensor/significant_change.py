@@ -48,9 +48,7 @@ def async_check_significant_change(
     **kwargs: Any,
 ) -> bool | None:
     """Test if state significantly changed."""
-    device_class = new_attrs.get(ATTR_DEVICE_CLASS)
-
-    if device_class is None:
+    if (device_class := new_attrs.get(ATTR_DEVICE_CLASS)) is None:
         return None
 
     absolute_change: float | None = None

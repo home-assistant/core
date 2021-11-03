@@ -3,7 +3,13 @@ import logging
 
 from homeassistant import core
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+)
+from homeassistant.helpers import entity_registry as er
 
 from .auth import Auth
 from .config import AbstractConfig
@@ -60,7 +66,18 @@ class AlexaConfig(AbstractConfig):
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
-        return self._config[CONF_FILTER](entity_id)
+        if not self._config[CONF_FILTER].empty_filter:
+            return self._config[CONF_FILTER](entity_id)
+
+        entity_registry = er.async_get(self.hass)
+        if registry_entry := entity_registry.async_get(entity_id):
+            auxiliary_entity = registry_entry.entity_category in (
+                ENTITY_CATEGORY_CONFIG,
+                ENTITY_CATEGORY_DIAGNOSTIC,
+            )
+        else:
+            auxiliary_entity = False
+        return not auxiliary_entity
 
     @core.callback
     def async_invalidate_access_token(self):

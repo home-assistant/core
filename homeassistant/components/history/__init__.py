@@ -211,8 +211,7 @@ class HistoryPeriodView(HomeAssistantView):
         if start_time > now:
             return self.json([])
 
-        end_time_str = request.query.get("end_time")
-        if end_time_str:
+        if end_time_str := request.query.get("end_time"):
             end_time = dt_util.parse_datetime(end_time_str)
             if end_time:
                 end_time = dt_util.as_utc(end_time)
@@ -304,13 +303,11 @@ class HistoryPeriodView(HomeAssistantView):
 def sqlalchemy_filter_from_include_exclude_conf(conf):
     """Build a sql filter from config."""
     filters = Filters()
-    exclude = conf.get(CONF_EXCLUDE)
-    if exclude:
+    if exclude := conf.get(CONF_EXCLUDE):
         filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
         filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
         filters.excluded_entity_globs = exclude.get(CONF_ENTITY_GLOBS, [])
-    include = conf.get(CONF_INCLUDE)
-    if include:
+    if include := conf.get(CONF_INCLUDE):
         filters.included_entities = include.get(CONF_ENTITIES, [])
         filters.included_domains = include.get(CONF_DOMAINS, [])
         filters.included_entity_globs = include.get(CONF_ENTITY_GLOBS, [])

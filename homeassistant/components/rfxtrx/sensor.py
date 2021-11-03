@@ -28,6 +28,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     POWER_WATT,
@@ -86,6 +87,7 @@ SENSOR_TYPES = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         convert=_battery_convert,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     RfxtrxSensorEntityDescription(
         key="Current",
@@ -129,6 +131,7 @@ SENSOR_TYPES = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         convert=_rssi_convert,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     RfxtrxSensorEntityDescription(
         key="Temperature",
@@ -302,12 +305,12 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
         """Restore device state."""
         await super().async_added_to_hass()
 
-        if self._event is None:
-            old_state = await self.async_get_last_state()
-            if old_state is not None:
-                event = old_state.attributes.get(ATTR_EVENT)
-                if event:
-                    self._apply_event(get_rfx_object(event))
+        if (
+            self._event is None
+            and (old_state := await self.async_get_last_state()) is not None
+            and (event := old_state.attributes.get(ATTR_EVENT))
+        ):
+            self._apply_event(get_rfx_object(event))
 
     @property
     def native_value(self):
