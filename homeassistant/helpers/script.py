@@ -476,7 +476,11 @@ class _ScriptRun:
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
             wait_var = self._variables["wait"]
-            wait_var["remaining"] = to_context.remaining if to_context else timeout
+            wait_var["remaining"] = (
+                (to_context.deadline - self._hass.loop.time())
+                if to_context
+                else timeout
+            )
             wait_var["completed"] = True
             done.set()
 
@@ -777,7 +781,11 @@ class _ScriptRun:
 
         async def async_done(variables, context=None):
             wait_var = self._variables["wait"]
-            wait_var["remaining"] = to_context.remaining if to_context else timeout
+            wait_var["remaining"] = (
+                (to_context.deadline - self._hass.loop.time())
+                if to_context
+                else timeout
+            )
             wait_var["trigger"] = variables["trigger"]
             done.set()
 
