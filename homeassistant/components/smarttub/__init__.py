@@ -1,10 +1,6 @@
 """SmartTub integration."""
-import logging
-
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .controller import SmartTubController
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["binary_sensor", "climate", "light", "sensor", "switch"]
 

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "Alan Kodu",
+                    "name": "\u0130sim",
+                    "password": "\u015eifre",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "Alan Kodu",
+                    "name": "\u0130sim",
+                    "password": "\u015eifre",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    }
+}

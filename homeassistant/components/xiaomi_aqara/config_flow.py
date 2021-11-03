@@ -76,10 +76,8 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.host is None:
             self.host = user_input.get(CONF_HOST)
         if self.sid is None:
-            mac_address = user_input.get(CONF_MAC)
-
             # format sid from mac_address
-            if mac_address is not None:
+            if (mac_address := user_input.get(CONF_MAC)) is not None:
                 self.sid = format_mac(mac_address).replace(":", "")
 
         # if host is already known by zeroconf discovery or manual optional settings

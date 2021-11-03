@@ -13,7 +13,8 @@
             "cloud_login_error": "Kan niet inloggen op Xioami Miio Cloud, controleer de inloggegevens.",
             "cloud_no_devices": "Geen apparaten gevonden in dit Xiaomi Miio-cloudaccount.",
             "no_device_selected": "Geen apparaat geselecteerd, selecteer 1 apparaat alstublieft",
-            "unknown_device": "Het apparaatmodel is niet bekend, niet in staat om het apparaat in te stellen met config flow."
+            "unknown_device": "Het apparaatmodel is niet bekend, niet in staat om het apparaat in te stellen met config flow.",
+            "wrong_token": "Checksum-fout, verkeerd token"
         },
         "flow_title": "{name}",
         "step": {

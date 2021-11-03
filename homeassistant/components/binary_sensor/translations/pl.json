@@ -31,6 +31,8 @@
             "is_not_plugged_in": "sensor {entity_name} wykrywa od\u0142\u0105czenie",
             "is_not_powered": "sensor {entity_name} nie wykrywa zasilania",
             "is_not_present": "sensor {entity_name} nie wykrywa obecno\u015bci",
+            "is_not_running": "{entity_name} nie dzia\u0142a",
+            "is_not_tampered": "sensor {entity_name} nie wykrywa naruszenia",
             "is_not_unsafe": "sensor {entity_name} nie wykrywa zagro\u017cenia",
             "is_occupied": "sensor {entity_name} jest zaj\u0119ty",
             "is_off": "sensor {entity_name} jest wy\u0142\u0105czony",
@@ -40,8 +42,10 @@
             "is_powered": "sensor {entity_name} wykrywa zasilanie",
             "is_present": "sensor {entity_name} wykrywa obecno\u015b\u0107",
             "is_problem": "sensor {entity_name} wykrywa problem",
+            "is_running": "{entity_name} dzia\u0142a",
             "is_smoke": "sensor {entity_name} wykrywa dym",
             "is_sound": "sensor {entity_name} wykrywa d\u017awi\u0119k",
+            "is_tampered": "sensor {entity_name} wykrywa naruszenie",
             "is_unsafe": "sensor {entity_name} wykrywa zagro\u017cenie",
             "is_update": "dla {entity_name} jest dost\u0119pna aktualizacja",
             "is_vibration": "sensor {entity_name} wykrywa wibracje"
@@ -52,6 +56,8 @@
             "connected": "nast\u0105pi pod\u0142\u0105czenie {entity_name}",
             "gas": "sensor {entity_name} wykryje gaz",
             "hot": "sensor {entity_name} wykryje gor\u0105co",
+            "is_not_tampered": "sensor {entity_name} przestanie wykrywa\u0107 naruszenie",
+            "is_tampered": "sensor {entity_name} wykryje naruszenie",
             "light": "sensor {entity_name} wykryje \u015bwiat\u0142o",
             "locked": "nast\u0105pi zamkni\u0119cie {entity_name}",
             "moist": "nast\u0105pi wykrycie wilgoci {entity_name}",
@@ -77,6 +83,7 @@
             "not_plugged_in": "nast\u0105pi od\u0142\u0105czenie {entity_name}",
             "not_powered": "nast\u0105pi od\u0142\u0105czenie zasilania {entity_name}",
             "not_present": "sensor {entity_name} przestanie wykrywa\u0107 obecno\u015b\u0107",
+            "not_running": "zako\u0144czy si\u0119 dzia\u0142anie {entity_name}",
             "not_unsafe": "sensor {entity_name} przestanie wykrywa\u0107 zagro\u017cenie",
             "occupied": "sensor {entity_name} stanie si\u0119 zaj\u0119ty",
             "opened": "nast\u0105pi otwarcie {entity_name}",
@@ -84,6 +91,7 @@
             "powered": "nast\u0105pi pod\u0142\u0105czenie zasilenia {entity_name}",
             "present": "sensor {entity_name} wykryje obecno\u015b\u0107",
             "problem": "sensor {entity_name} wykryje problem",
+            "running": "rozpocznie si\u0119 dzia\u0142anie {entity_name}",
             "smoke": "sensor {entity_name} wykryje dym",
             "sound": "sensor {entity_name} wykryje d\u017awi\u0119k",
             "turned_off": "nast\u0105pi wy\u0142\u0105czenie {entity_name}",
@@ -169,6 +177,10 @@
         "problem": {
             "off": "ok",
             "on": "problem"
+        },
+        "running": {
+            "off": "nie dzia\u0142a",
+            "on": "dzia\u0142a"
         },
         "safety": {
             "off": "brak zagro\u017cenia",

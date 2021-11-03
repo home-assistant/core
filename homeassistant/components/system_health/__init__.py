@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 import dataclasses
 from datetime import datetime
 import logging
-from typing import Callable
 
 import aiohttp
 import async_timeout

@@ -40,7 +40,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 21
+SCHEMA_VERSION = 23
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -223,7 +223,23 @@ class States(Base):  # type: ignore
             return None
 
 
-class StatisticData(TypedDict, total=False):
+class StatisticResult(TypedDict):
+    """Statistic result data class.
+
+    Allows multiple datapoints for the same statistic_id.
+    """
+
+    meta: StatisticMetaData
+    stat: StatisticData
+
+
+class StatisticDataBase(TypedDict):
+    """Mandatory fields for statistic data class."""
+
+    start: datetime
+
+
+class StatisticData(StatisticDataBase, total=False):
     """Statistic data class."""
 
     mean: float
@@ -232,13 +248,12 @@ class StatisticData(TypedDict, total=False):
     last_reset: datetime | None
     state: float
     sum: float
-    sum_increase: float
 
 
 class StatisticsBase:
     """Statistics base class."""
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, Identity(), primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
     @declared_attr
@@ -257,14 +272,12 @@ class StatisticsBase:
     last_reset = Column(DATETIME_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
-    sum_increase = Column(DOUBLE_TYPE)
 
     @classmethod
-    def from_stats(cls, metadata_id: str, start: datetime, stats: StatisticData):
+    def from_stats(cls, metadata_id: int, stats: StatisticData):
         """Create object from a statistics."""
         return cls(  # type: ignore
             metadata_id=metadata_id,
-            start=start,
             **stats,
         )
 
@@ -293,13 +306,15 @@ class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore
     __tablename__ = TABLE_STATISTICS_SHORT_TERM
 
 
-class StatisticMetaData(TypedDict, total=False):
+class StatisticMetaData(TypedDict):
     """Statistic meta data class."""
 
-    statistic_id: str
-    unit_of_measurement: str | None
     has_mean: bool
     has_sum: bool
+    name: str | None
+    source: str
+    statistic_id: str
+    unit_of_measurement: str | None
 
 
 class StatisticsMeta(Base):  # type: ignore
@@ -309,29 +324,18 @@ class StatisticsMeta(Base):  # type: ignore
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATISTICS_META
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, Identity(), primary_key=True)
     statistic_id = Column(String(255), index=True)
     source = Column(String(32))
     unit_of_measurement = Column(String(255))
     has_mean = Column(Boolean)
     has_sum = Column(Boolean)
+    name = Column(String(255))
 
     @staticmethod
-    def from_meta(
-        source: str,
-        statistic_id: str,
-        unit_of_measurement: str | None,
-        has_mean: bool,
-        has_sum: bool,
-    ) -> StatisticsMeta:
+    def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
         """Create object from meta data."""
-        return StatisticsMeta(
-            source=source,
-            statistic_id=statistic_id,
-            unit_of_measurement=unit_of_measurement,
-            has_mean=has_mean,
-            has_sum=has_sum,
-        )
+        return StatisticsMeta(**meta)
 
 
 class RecorderRuns(Base):  # type: ignore
@@ -406,7 +410,7 @@ class StatisticsRuns(Base):  # type: ignore
     """Representation of statistics run."""
 
     __tablename__ = TABLE_STATISTICS_RUNS
-    run_id = Column(Integer, primary_key=True)
+    run_id = Column(Integer, Identity(), primary_key=True)
     start = Column(DateTime(timezone=True))
 
     def __repr__(self) -> str:

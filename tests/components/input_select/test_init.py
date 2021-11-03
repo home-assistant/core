@@ -27,7 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
-from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
@@ -65,80 +64,12 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-@bind_hass
-def select_option(hass, entity_id, option):
-    """Set value of input_select.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
-        )
-    )
-
-
-@bind_hass
-def select_next(hass, entity_id):
-    """Set next value of input_select.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_SELECT_NEXT, {ATTR_ENTITY_ID: entity_id}
-        )
-    )
-
-
-@bind_hass
-def select_previous(hass, entity_id):
-    """Set previous value of input_select.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_SELECT_PREVIOUS, {ATTR_ENTITY_ID: entity_id}
-        )
-    )
-
-
-@bind_hass
-def select_first(hass, entity_id):
-    """Set first value of input_select.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_SELECT_FIRST, {ATTR_ENTITY_ID: entity_id}
-        )
-    )
-
-
-@bind_hass
-def select_last(hass, entity_id):
-    """Set last value of input_select.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_SELECT_LAST, {ATTR_ENTITY_ID: entity_id}
-        )
-    )
-
-
 async def test_config(hass):
     """Test config."""
     invalid_configs = [
         None,
         {},
         {"name with space": None},
-        # {'bad_options': {'options': None}},
         {"bad_initial": {"options": [1, 2], "initial": 3}},
     ]
 
@@ -158,15 +89,21 @@ async def test_select_option(hass):
     state = hass.states.get(entity_id)
     assert state.state == "some option"
 
-    select_option(hass, entity_id, "another option")
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "another option"},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
     assert state.state == "another option"
 
-    select_option(hass, entity_id, "non existing option")
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "non existing option"},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
     assert state.state == "another option"
 
@@ -190,15 +127,21 @@ async def test_select_next(hass):
     state = hass.states.get(entity_id)
     assert state.state == "middle option"
 
-    select_next(hass, entity_id)
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_NEXT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
     assert state.state == "last option"
 
-    select_next(hass, entity_id)
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_NEXT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
     assert state.state == "first option"
 
@@ -222,15 +165,21 @@ async def test_select_previous(hass):
     state = hass.states.get(entity_id)
     assert state.state == "middle option"
 
-    select_previous(hass, entity_id)
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_PREVIOUS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
     assert state.state == "first option"
 
-    select_previous(hass, entity_id)
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_PREVIOUS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
     assert state.state == "last option"
 
@@ -254,14 +203,22 @@ async def test_select_first_last(hass):
     state = hass.states.get(entity_id)
     assert state.state == "middle option"
 
-    select_first(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_FIRST,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
 
     state = hass.states.get(entity_id)
     assert state.state == "first option"
 
-    select_last(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_LAST,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
 
     state = hass.states.get(entity_id)
     assert state.state == "last option"
@@ -326,20 +283,39 @@ async def test_set_options_service(hass):
     state = hass.states.get(entity_id)
     assert state.state == "middle option"
 
-    data = {ATTR_OPTIONS: ["test1", "test2"], "entity_id": entity_id}
-    await hass.services.async_call(DOMAIN, SERVICE_SET_OPTIONS, data)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_OPTIONS,
+        {ATTR_OPTIONS: ["first option", "middle option"], ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == "middle option"
 
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_OPTIONS,
+        {ATTR_OPTIONS: ["test1", "test2"], ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
     assert state.state == "test1"
 
-    select_option(hass, entity_id, "first option")
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "first option"},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
     assert state.state == "test1"
 
-    select_option(hass, entity_id, "test2")
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "test2"},
+        blocking=True,
+    )
     state = hass.states.get(entity_id)
     assert state.state == "test2"
 
@@ -488,7 +464,6 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start + 2 == len(hass.states.async_entity_ids())
 
@@ -671,6 +646,5 @@ async def test_setup_no_config(hass, hass_admin_user):
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start == len(hass.states.async_entity_ids())

@@ -9,7 +9,7 @@ import pytest
 from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -202,7 +202,7 @@ async def test_get_translations_while_loading_components(hass):
         nonlocal load_count
         load_count += 1
         # Mimic race condition by loading a component during setup
-        setup_component(hass, "persistent_notification", {})
+
         return {"component1": {"title": "world"}}
 
     with patch(

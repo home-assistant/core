@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import faulthandler
 import os
 import platform
 import subprocess
@@ -9,6 +10,8 @@ import sys
 import threading
 
 from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
+
+FAULT_LOG_FILENAME = "home-assistant.log.fault"
 
 
 def validate_python() -> None:
@@ -132,16 +135,14 @@ def get_arguments() -> argparse.Namespace:
 def daemonize() -> None:
     """Move current process to daemon process."""
     # Create first fork
-    pid = os.fork()
-    if pid > 0:
+    if os.fork() > 0:
         sys.exit(0)
 
     # Decouple fork
     os.setsid()
 
     # Create second fork
-    pid = os.fork()
-    if pid > 0:
+    if os.fork() > 0:
         sys.exit(0)
 
     # redirect standard file descriptors to devnull
@@ -311,7 +312,15 @@ def main() -> int:
         open_ui=args.open_ui,
     )
 
-    exit_code = runner.run(runtime_conf)
+    fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
+    with open(fault_file_name, mode="a", encoding="utf8") as fault_file:
+        faulthandler.enable(fault_file)
+        exit_code = runner.run(runtime_conf)
+        faulthandler.disable()
+
+    if os.path.getsize(fault_file_name) == 0:
+        os.remove(fault_file_name)
+
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 

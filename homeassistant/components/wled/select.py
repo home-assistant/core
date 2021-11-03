@@ -7,6 +7,7 @@ from wled import Playlist, Preset
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -105,9 +106,9 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
 class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     """Defines a WLED Palette select."""
 
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
     _attr_icon = "mdi:palette-outline"
     _segment: int
-    _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator, segment: int) -> None:
         """Initialize WLED ."""

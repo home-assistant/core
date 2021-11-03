@@ -134,9 +134,7 @@ class WorxLandroidSensor(SensorEntity):
 
     def get_state(self, obj):
         """Get the state of the mower."""
-        state = self.get_error(obj)
-
-        if state is None:
+        if (state := self.get_error(obj)) is None:
             if obj["batteryChargerState"] == "charging":
                 return obj["batteryChargerState"]
 

@@ -58,6 +58,7 @@ async def test_list_devices(hass, client, registry):
             "area_id": None,
             "name_by_user": None,
             "disabled_by": None,
+            "configuration_url": None,
         },
         {
             "config_entries": ["1234"],
@@ -72,6 +73,7 @@ async def test_list_devices(hass, client, registry):
             "area_id": None,
             "name_by_user": None,
             "disabled_by": None,
+            "configuration_url": None,
         },
     ]
 

@@ -1,4 +1,12 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_power_factor": "\u73fe\u5728\u306e {entity_name} \u529b\u7387"
+        },
+        "trigger_type": {
+            "power_factor": "{entity_name} \u529b\u7387\u304c\u5909\u66f4"
+        }
+    },
     "state": {
         "_": {
             "off": "\u30aa\u30d5",

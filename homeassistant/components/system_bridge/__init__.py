@@ -84,6 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             while (
                 coordinator.bridge.battery is None
                 or coordinator.bridge.cpu is None
+                or coordinator.bridge.display is None
                 or coordinator.bridge.filesystem is None
                 or coordinator.bridge.graphics is None
                 or coordinator.bridge.information is None
@@ -261,10 +262,10 @@ class SystemBridgeDeviceEntity(SystemBridgeEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this System Bridge instance."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "manufacturer": self._manufacturer,
-            "model": self._model,
-            "name": self._hostname,
-            "sw_version": self._version,
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
+            manufacturer=self._manufacturer,
+            model=self._model,
+            name=self._hostname,
+            sw_version=self._version,
+        )

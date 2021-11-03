@@ -11,7 +11,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Be szeretn\u00e9 \u00e1ll\u00edtani a {name}-t?"
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?"
             },
             "pick_radio": {
                 "data": {
@@ -46,10 +46,10 @@
             "title": "Riaszt\u00f3 vez\u00e9rl\u0151panel opci\u00f3k"
         },
         "zha_options": {
-            "consider_unavailable_battery": "Fontolja meg, hogy az akkumul\u00e1toros eszk\u00f6z\u00f6k (m\u00e1sodpercek m\u00falva) nem \u00e9rhet\u0151k el",
-            "consider_unavailable_mains": "Fontolja meg, hogy a h\u00e1l\u00f3zati t\u00e1pell\u00e1t\u00e1s\u00fa eszk\u00f6z\u00f6k (m\u00e1sodpercek m\u00falva) nem \u00e9rhet\u0151k el",
+            "consider_unavailable_battery": "Elemmel ell\u00e1tott eszk\u00f6z\u00f6k nem el\u00e9rhet\u0151 \u00e1llapot\u00faak ennyi id\u0151 ut\u00e1n (mp.)",
+            "consider_unavailable_mains": "H\u00e1l\u00f3zati t\u00e1pell\u00e1t\u00e1s\u00fa eszk\u00f6z\u00f6k nem el\u00e9rhet\u0151 \u00e1llapot\u00faak ennyi id\u0151 ut\u00e1n (mp.)",
             "default_light_transition": "Alap\u00e9rtelmezett f\u00e9ny-\u00e1tmeneti id\u0151 (m\u00e1sodpercben)",
-            "enable_identify_on_join": "Azonos\u00edt\u00f3 hat\u00e1s enged\u00e9lyez\u00e9se, amikor az eszk\u00f6z\u00f6k csatlakoznak a h\u00e1l\u00f3zathoz",
+            "enable_identify_on_join": "Azonos\u00edt\u00f3 hat\u00e1s, amikor az eszk\u00f6z\u00f6k csatlakoznak a h\u00e1l\u00f3zathoz",
             "title": "Glob\u00e1lis be\u00e1ll\u00edt\u00e1sok"
         }
     },

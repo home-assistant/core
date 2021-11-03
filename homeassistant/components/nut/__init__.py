@@ -7,6 +7,9 @@ from pynut2.nut2 import PyNUTClient, PyNUTError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
     CONF_ALIAS,
     CONF_HOST,
     CONF_PASSWORD,
@@ -16,7 +19,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -25,10 +27,6 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     PYNUT_DATA,
-    PYNUT_FIRMWARE,
-    PYNUT_MANUFACTURER,
-    PYNUT_MODEL,
-    PYNUT_NAME,
     PYNUT_UNIQUE_ID,
     UNDO_UPDATE_LISTENER,
 )
@@ -38,6 +36,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Network UPS Tools (NUT) from a config entry."""
+
+    # strip out the stale options CONF_RESOURCES
+    if CONF_RESOURCES in entry.options:
+        new_options = {k: v for k, v in entry.options.items() if k != CONF_RESOURCES}
+        hass.config_entries.async_update_entry(entry, options=new_options)
 
     config = entry.data
     host = config[CONF_HOST]
@@ -56,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.async_add_executor_job(data.update)
             if not data.status:
                 raise UpdateFailed("Error fetching UPS state")
+            return data.status
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -67,18 +71,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
-    status = data.status
-
-    if not status:
-        _LOGGER.error("NUT Sensor has no data, unable to set up")
-        raise ConfigEntryNotReady
+    status = coordinator.data
 
     _LOGGER.debug("NUT Sensors Available: %s", status)
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     unique_id = _unique_id_from_status(status)
-
     if unique_id is None:
         unique_id = entry.entry_id
 
@@ -87,10 +86,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         COORDINATOR: coordinator,
         PYNUT_DATA: data,
         PYNUT_UNIQUE_ID: unique_id,
-        PYNUT_MANUFACTURER: _manufacturer_from_status(status),
-        PYNUT_MODEL: _model_from_status(status),
-        PYNUT_FIRMWARE: _firmware_from_status(status),
-        PYNUT_NAME: data.name,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
@@ -156,14 +151,7 @@ def _unique_id_from_status(status):
     return "_".join(unique_id_group)
 
 
-def find_resources_in_config_entry(config_entry):
-    """Find the configured resources in the config entry."""
-    if CONF_RESOURCES in config_entry.options:
-        return config_entry.options[CONF_RESOURCES]
-    return config_entry.data[CONF_RESOURCES]
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -193,6 +181,7 @@ class PyNUTData:
         self._client = PyNUTClient(self._host, port, username, password, 5, False)
         self.ups_list = None
         self._status = None
+        self._device_info = None
 
     @property
     def status(self):
@@ -203,6 +192,11 @@ class PyNUTData:
     def name(self):
         """Return the name of the ups."""
         return self._alias
+
+    @property
+    def device_info(self):
+        """Return the device info for the ups."""
+        return self._device_info or {}
 
     def _get_alias(self):
         """Get the ups alias from NUT."""
@@ -219,6 +213,23 @@ class PyNUTData:
         self.ups_list = ups_list
         return list(ups_list)[0]
 
+    def _get_device_info(self):
+        """Get the ups device info from NUT."""
+        if not self._status:
+            return None
+
+        manufacturer = _manufacturer_from_status(self._status)
+        model = _model_from_status(self._status)
+        firmware = _firmware_from_status(self._status)
+        device_info = {}
+        if model:
+            device_info[ATTR_MODEL] = model
+        if manufacturer:
+            device_info[ATTR_MANUFACTURER] = manufacturer
+        if firmware:
+            device_info[ATTR_SW_VERSION] = firmware
+        return device_info
+
     def _get_status(self):
         """Get the ups status from NUT."""
         if self._alias is None:
@@ -230,6 +241,8 @@ class PyNUTData:
             _LOGGER.debug("Error getting NUT vars for host %s: %s", self._host, err)
             return None
 
-    def update(self, **kwargs):
+    def update(self):
         """Fetch the latest status from NUT."""
         self._status = self._get_status()
+        if self._device_info is None:
+            self._device_info = self._get_device_info()

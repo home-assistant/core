@@ -182,9 +182,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 },
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
-            )
         raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_step_dhcp(self, discovery_info):

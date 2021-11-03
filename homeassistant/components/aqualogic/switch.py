@@ -66,23 +66,20 @@ class AquaLogicSwitch(SwitchEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        panel = self._processor.panel
-        if panel is None:
+        if (panel := self._processor.panel) is None:
             return False
         state = panel.get_state(self._state_name)
         return state
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        panel = self._processor.panel
-        if panel is None:
+        if (panel := self._processor.panel) is None:
             return
         panel.set_state(self._state_name, True)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        panel = self._processor.panel
-        if panel is None:
+        if (panel := self._processor.panel) is None:
             return
         panel.set_state(self._state_name, False)
 

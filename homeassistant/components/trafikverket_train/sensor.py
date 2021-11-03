@@ -191,8 +191,7 @@ class TrainSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the departure state."""
-        state = self._state
-        if state is not None:
+        if (state := self._state) is not None:
             if state.time_at_location is not None:
                 return state.time_at_location
             if state.estimated_time_at_location is not None:

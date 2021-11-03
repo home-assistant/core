@@ -1,7 +1,12 @@
 """Support for Ambient Weather Station sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
@@ -25,10 +30,16 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX, AmbientWeatherEntity
-from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN
+from . import (
+    TYPE_SOLARRADIATION,
+    TYPE_SOLARRADIATION_LX,
+    AmbientStation,
+    AmbientWeatherEntity,
+)
+from .const import ATTR_LAST_DATA, DOMAIN
 
 TYPE_24HOURRAININ = "24hourrainin"
 TYPE_BAROMABSIN = "baromabsin"
@@ -109,54 +120,63 @@ SENSOR_DESCRIPTIONS = (
         name="24 Hr Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_BAROMABSIN,
         name="Abs Pressure",
         native_unit_of_measurement=PRESSURE_INHG,
         device_class=DEVICE_CLASS_PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_BAROMRELIN,
         name="Rel Pressure",
         native_unit_of_measurement=PRESSURE_INHG,
         device_class=DEVICE_CLASS_PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_CO2,
         name="co2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=DEVICE_CLASS_CO2,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_DAILYRAININ,
         name="Daily Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_DEWPOINT,
         name="Dew Point",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_EVENTRAININ,
         name="Event Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_FEELSLIKE,
         name="Feels Like",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HOURLYRAININ,
         name="Hourly Rain Rate",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES_PER_HOUR,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY10,
@@ -241,12 +261,14 @@ SENSOR_DESCRIPTIONS = (
         name="Max Gust",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_MONTHLYRAININ,
         name="Monthly Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_24H,
@@ -259,6 +281,7 @@ SENSOR_DESCRIPTIONS = (
         name="PM25 Indoor",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=DEVICE_CLASS_PM25,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_IN_24H,
@@ -271,6 +294,7 @@ SENSOR_DESCRIPTIONS = (
         name="PM25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=DEVICE_CLASS_PM25,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM10,
@@ -337,162 +361,189 @@ SENSOR_DESCRIPTIONS = (
         name="Soil Temp 10",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP1F,
         name="Soil Temp 1",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP2F,
         name="Soil Temp 2",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP3F,
         name="Soil Temp 3",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP4F,
         name="Soil Temp 4",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP5F,
         name="Soil Temp 5",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP6F,
         name="Soil Temp 6",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP7F,
         name="Soil Temp 7",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP8F,
         name="Soil Temp 8",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP9F,
         name="Soil Temp 9",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOLARRADIATION,
         name="Solar Rad",
         native_unit_of_measurement=IRRADIATION_WATTS_PER_SQUARE_METER,
         device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOLARRADIATION_LX,
-        name="Solar Rad (lx)",
+        name="Solar Rad",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP10F,
         name="Temp 10",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP1F,
         name="Temp 1",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP2F,
         name="Temp 2",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP3F,
         name="Temp 3",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP4F,
         name="Temp 4",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP5F,
         name="Temp 5",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP6F,
         name="Temp 6",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP7F,
         name="Temp 7",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP8F,
         name="Temp 8",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP9F,
         name="Temp 9",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMPF,
         name="Temp",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMPINF,
         name="Inside Temp",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TOTALRAININ,
         name="Lifetime Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_UV,
         name="UV Index",
         native_unit_of_measurement="Index",
         device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_WEEKLYRAININ,
         name="Weekly Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR,
@@ -510,7 +561,7 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_WINDDIR_AVG2M,
         name="Wind Dir Avg 2m",
         icon="mdi:weather-windy",
-        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTDIR,
@@ -523,6 +574,7 @@ SENSOR_DESCRIPTIONS = (
         name="Wind Gust",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPDMPH_AVG10M,
@@ -541,12 +593,14 @@ SENSOR_DESCRIPTIONS = (
         name="Wind Speed",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_YEARLYRAININ,
         name="Yearly Rain",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
 )
 
@@ -555,7 +609,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Ambient PWS sensors based on a config entry."""
-    ambient = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    ambient = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -569,6 +623,22 @@ async def async_setup_entry(
 
 class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
     """Define an Ambient sensor."""
+
+    def __init__(
+        self,
+        ambient: AmbientStation,
+        mac_address: str,
+        station_name: str,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(ambient, mac_address, station_name, description)
+
+        if description.key == TYPE_SOLARRADIATION_LX:
+            # Since TYPE_SOLARRADIATION and TYPE_SOLARRADIATION_LX will have the same
+            # name in the UI, we influence the entity ID of TYPE_SOLARRADIATION_LX here
+            # to differentiate them:
+            self.entity_id = f"sensor.{station_name}_solar_rad_lx"
 
     @callback
     def update_from_latest_data(self) -> None:

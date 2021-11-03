@@ -83,6 +83,9 @@ DEVICE_CLASS_PRESENCE = "presence"
 # On means problem detected, Off means no problem (OK)
 DEVICE_CLASS_PROBLEM = "problem"
 
+# On means running, Off means not running
+DEVICE_CLASS_RUNNING = "running"
+
 # On means unsafe, Off means safe
 DEVICE_CLASS_SAFETY = "safety"
 
@@ -91,6 +94,9 @@ DEVICE_CLASS_SMOKE = "smoke"
 
 # On means sound detected, Off means no sound (clear)
 DEVICE_CLASS_SOUND = "sound"
+
+# On means tampering detected, Off means no tampering (clear)
+DEVICE_CLASS_TAMPER = "tamper"
 
 # On means update available, Off means up-to-date
 DEVICE_CLASS_UPDATE = "update"
@@ -121,9 +127,11 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_RUNNING,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
+    DEVICE_CLASS_TAMPER,
     DEVICE_CLASS_UPDATE,
     DEVICE_CLASS_VIBRATION,
     DEVICE_CLASS_WINDOW,

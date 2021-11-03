@@ -10,13 +10,14 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TIMESTAMP,
     DOMAIN as SENSOR_DOMAIN,
 )
-from homeassistant.components.wled.const import ATTR_LED_COUNT, ATTR_MAX_POWER, DOMAIN
+from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     DATA_BYTES,
     ELECTRIC_CURRENT_MILLIAMPERE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     STATE_UNKNOWN,
@@ -94,9 +95,6 @@ async def test_sensors(
 
     state = hass.states.get("sensor.wled_rgb_light_estimated_current")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:power"
-    assert state.attributes.get(ATTR_LED_COUNT) == 30
-    assert state.attributes.get(ATTR_MAX_POWER) == 850
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_MILLIAMPERE
     )
@@ -106,6 +104,7 @@ async def test_sensors(
     entry = registry.async_get("sensor.wled_rgb_light_estimated_current")
     assert entry
     assert entry.unique_id == "aabbccddeeff_estimated_current"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
     state = hass.states.get("sensor.wled_rgb_light_uptime")
     assert state
@@ -116,26 +115,31 @@ async def test_sensors(
     entry = registry.async_get("sensor.wled_rgb_light_uptime")
     assert entry
     assert entry.unique_id == "aabbccddeeff_uptime"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
     state = hass.states.get("sensor.wled_rgb_light_free_memory")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:memory"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == DATA_BYTES
     assert state.state == "14600"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
     entry = registry.async_get("sensor.wled_rgb_light_free_memory")
     assert entry
     assert entry.unique_id == "aabbccddeeff_free_heap"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
     state = hass.states.get("sensor.wled_rgb_light_wifi_signal")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "76"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
     entry = registry.async_get("sensor.wled_rgb_light_wifi_signal")
     assert entry
     assert entry.unique_id == "aabbccddeeff_wifi_signal"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
     state = hass.states.get("sensor.wled_rgb_light_wifi_rssi")
     assert state
@@ -149,6 +153,7 @@ async def test_sensors(
     entry = registry.async_get("sensor.wled_rgb_light_wifi_rssi")
     assert entry
     assert entry.unique_id == "aabbccddeeff_wifi_rssi"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
     state = hass.states.get("sensor.wled_rgb_light_wifi_channel")
     assert state
@@ -159,6 +164,7 @@ async def test_sensors(
     entry = registry.async_get("sensor.wled_rgb_light_wifi_channel")
     assert entry
     assert entry.unique_id == "aabbccddeeff_wifi_channel"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
     state = hass.states.get("sensor.wled_rgb_light_wifi_bssid")
     assert state
@@ -169,6 +175,7 @@ async def test_sensors(
     entry = registry.async_get("sensor.wled_rgb_light_wifi_bssid")
     assert entry
     assert entry.unique_id == "aabbccddeeff_wifi_bssid"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
 
 @pytest.mark.parametrize(
