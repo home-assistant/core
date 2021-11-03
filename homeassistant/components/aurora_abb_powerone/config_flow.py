@@ -81,15 +81,9 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_setup")
 
         conf = {}
-        conf[ATTR_SERIAL_NUMBER] = "sn_unknown_yaml"
-        conf[ATTR_MODEL] = "model_unknown_yaml"
-        conf[ATTR_FIRMWARE] = "fw_unknown_yaml"
         conf[CONF_PORT] = config["device"]
         conf[CONF_ADDRESS] = config["address"]
         # config["name"] from yaml is ignored.
-
-        await self.async_set_unique_id(self.flow_id)
-        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=DEFAULT_INTEGRATION_TITLE, data=conf)
 
