@@ -52,7 +52,13 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
 from . import history, migration, purge, statistics, websocket_api
-from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
+from .const import (
+    CONF_DB_INTEGRITY_CHECK,
+    DATA_INSTANCE,
+    DOMAIN,
+    MAX_QUEUE_BACKLOG,
+    SQLITE_URL_PREFIX,
+)
 from .models import (
     Base,
     Events,
@@ -82,8 +88,6 @@ SERVICE_DISABLE = "disable"
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"
 ATTR_APPLY_FILTER = "apply_filter"
-
-MAX_QUEUE_BACKLOG = 30000
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
