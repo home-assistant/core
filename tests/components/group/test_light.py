@@ -1,5 +1,4 @@
 """The tests for the Group Light platform."""
-from os import path
 import unittest.mock
 from unittest.mock import MagicMock, patch
 
@@ -52,6 +51,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+
+from tests.common import get_fixture_path
 
 
 async def test_default_state(hass):
@@ -1379,11 +1380,7 @@ async def test_reload(hass):
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_ON
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "group/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "group")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -1421,11 +1418,7 @@ async def test_reload_with_platform_not_setup(hass):
     )
     await hass.async_block_till_done()
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "group/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "group")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -1458,11 +1451,7 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
     hass.states.async_set("light.outside_patio_lights", STATE_OFF)
     hass.states.async_set("light.outside_patio_lights_2", STATE_OFF)
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "group/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "group")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -1513,7 +1502,3 @@ async def test_nested_group(hass):
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ENTITY_ID) == ["light.bedroom_group"]
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))
