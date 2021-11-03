@@ -32,9 +32,9 @@ PROJECT_URLS = {
 PACKAGES = find_packages(exclude=["tests", "tests.*"])
 
 REQUIRES = [
-    "aiohttp==3.7.4.post0",
+    "aiohttp==3.8.0",
     "astral==2.2",
-    "async_timeout==3.0.1",
+    "async_timeout==4.0.0",
     "attrs==21.2.0",
     "awesomeversion==21.10.1",
     'backports.zoneinfo;python_version<"3.9"',

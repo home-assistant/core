@@ -204,7 +204,7 @@ class CloudLogoutView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.logout()
 
         return self.json_message("ok")
@@ -230,7 +230,7 @@ class CloudRegisterView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_register(data["email"], data["password"])
 
         return self.json_message("ok")
@@ -249,7 +249,7 @@ class CloudResendConfirmView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_resend_email_confirm(data["email"])
 
         return self.json_message("ok")
@@ -268,7 +268,7 @@ class CloudForgotPasswordView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_forgot_password(data["email"])
 
         return self.json_message("ok")
@@ -314,7 +314,7 @@ async def websocket_subscription(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
     try:
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             data = await cloud_api.async_subscription_info(cloud)
     except aiohttp.ClientError:
         connection.send_error(
@@ -353,7 +353,7 @@ async def websocket_update_prefs(hass, connection, msg):
     if changes.get(PREF_ALEXA_REPORT_STATE):
         alexa_config = await cloud.client.get_alexa_config()
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 await alexa_config.async_get_access_token()
         except asyncio.TimeoutError:
             connection.send_error(
@@ -574,7 +574,7 @@ async def alexa_sync(hass, connection, msg):
     cloud = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
 
-    with async_timeout.timeout(10):
+    async with async_timeout.timeout(10):
         try:
             success = await alexa_config.async_sync_entities()
         except alexa_errors.NoTokenAvailable:
@@ -597,7 +597,7 @@ async def thingtalk_convert(hass, connection, msg):
     """Convert a query."""
     cloud = hass.data[DOMAIN]
 
-    with async_timeout.timeout(10):
+    async with async_timeout.timeout(10):
         try:
             connection.send_result(
                 msg["id"], await thingtalk.async_convert(cloud, msg["query"])

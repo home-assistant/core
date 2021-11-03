@@ -70,7 +70,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = None
 
         try:
-            with timeout(TIMEOUT):
+            async with timeout(TIMEOUT):
                 device = await Appliance.factory(
                     host,
                     self.hass.helpers.aiohttp_client.async_get_clientsession(),
