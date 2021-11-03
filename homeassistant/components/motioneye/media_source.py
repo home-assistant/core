@@ -10,7 +10,6 @@ from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_MOVIE,
     MEDIA_CLASS_VIDEO,
     MEDIA_TYPE_IMAGE,
     MEDIA_TYPE_VIDEO,
@@ -252,7 +251,7 @@ class MotionEyeMediaSource(MediaSource):
             can_play=False,
             can_expand=True,
             children_media_class=(
-                MEDIA_CLASS_MOVIE if kind == "movies" else MEDIA_CLASS_IMAGE
+                MEDIA_CLASS_VIDEO if kind == "movies" else MEDIA_CLASS_IMAGE
             ),
         )
 

@@ -166,7 +166,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
                 ),
                 "can_play": False,
                 "can_expand": True,
-                "children_media_class": "movie",
+                "children_media_class": "video",
                 "thumbnail": None,
             },
             {
@@ -200,7 +200,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
-        "children_media_class": "movie",
+        "children_media_class": "video",
         "thumbnail": None,
         "children": [
             {
@@ -234,7 +234,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
-        "children_media_class": "movie",
+        "children_media_class": "video",
         "thumbnail": None,
         "children": [
             {
@@ -476,7 +476,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
         ),
         "can_play": False,
         "can_expand": True,
-        "children_media_class": "movie",
+        "children_media_class": "video",
         "thumbnail": None,
         "children": [],
     }
