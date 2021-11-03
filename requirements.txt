@@ -1,7 +1,7 @@
 -c homeassistant/package_constraints.txt
 
 # Home Assistant Core
-aiohttp==3.7.4.post0
+aiohttp==3.8.0
 astral==2.2
 async_timeout==3.0.1
 attrs==21.2.0
