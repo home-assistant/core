@@ -709,17 +709,17 @@ class multi_select:
         return selected
 
 
-def deprecated(
+def _deprecated(
     key: str,
     replacement_key: str | None = None,
     default: Any | None = None,
     fail: bool | None = False,
 ) -> Callable[[dict], dict]:
     """
-    Log key as deprecated and provide a replacement (if exists).
+    Log key as deprecated and provide a replacement (if exists) or fail.
 
     Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected
+        - Outputs the appropriate deprecation warning if key is detected (fail == False)
         - Outputs the appropriate deprecation error if key is detected and removed from support (fail == True)
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
@@ -793,6 +793,40 @@ def deprecated(
         return has_at_most_one_key(*keys)(config)
 
     return validator
+
+
+def deprecated(
+    key: str,
+    replacement_key: str | None = None,
+    default: Any | None = None,
+) -> Callable[[dict], dict]:
+    """
+    Log key as deprecated and provide a replacement (if exists).
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning if neither key nor replacement_key are provided
+            - Adds replacement_key with default value in this case
+    """
+    return _deprecated(
+        key, replacement_key=replacement_key, default=default, fail=False
+    )
+
+
+def removed(
+    key: str,
+    default: Any | None = None,
+) -> Callable[[dict], dict]:
+    """
+    Log key as deprecated and fail the config validation.
+
+    Expected behavior:
+        - Outputs the appropriate deprecation error if key is detected and removed from support
+    """
+    return _deprecated(key, replacement_key=None, default=default, fail=True)
 
 
 def key_value_schemas(
