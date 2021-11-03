@@ -882,12 +882,13 @@ def test_deprecated_logger_with_config_attributes(caplog):
     """Test if the logger outputs the correct message if the line and file attribute is available in config."""
     file: str = "configuration.yaml"
     line: int = 54
-    replacement = f"'mars' option near {file}:{line} is deprecated"
+    replacement_key = "jupiter"
+    replacement = f"'mars' option near {file}:{line} is deprecated, please replace it with '{replacement_key}'"
     config = OrderedDict([("mars", "blah")])
     setattr(config, "__config_file__", file)
     setattr(config, "__line__", line)
 
-    cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
+    cv.deprecated("mars", replacement_key=replacement_key, default=False)(config)
 
     assert len(caplog.records) == 1
     assert replacement in caplog.text

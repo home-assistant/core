@@ -754,10 +754,11 @@ def _deprecated(
                     f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
                 )
             except AttributeError:
-                warning_local = warning.format(
-                    key=key,
-                    replacement_key=replacement_key,
-                )
+                warning_local = warning
+            warning_local = warning_local.format(
+                key=key,
+                replacement_key=replacement_key,
+            )
             if fail:
                 raise vol.Invalid(warning_local)
 
