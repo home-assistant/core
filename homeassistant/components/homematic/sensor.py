@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
+    ATTR_NAME,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     DEVICE_CLASS_CO2,
@@ -37,7 +38,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 
-from .const import ATTR_DISCOVER_DEVICES
+from .const import ATTR_DISCOVER_DEVICES, ATTR_PARAM
 from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -235,7 +236,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devices = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = HMSensor(conf)
+        state = conf.get(ATTR_PARAM)
+        entity_desc = SENSOR_DESCRIPTIONS.get(state)
+        if entity_desc is None:
+            name = conf.get(ATTR_NAME)
+            _LOGGER.warning(
+                "Sensor (%s) entity description is missing. Sensor state (%s) needs to be maintained",
+                name,
+                state,
+            )
+            entity_desc = copy(DEFAULT_SENSOR_DESCRIPTION)
+
+        new_device = HMSensor(conf, entity_desc)
         devices.append(new_device)
 
     add_entities(devices, True)
@@ -243,18 +255,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class HMSensor(HMDevice, SensorEntity):
     """Representation of a HomeMatic sensor."""
-
-    def __init__(self, conf):
-        """Initialize HMSensor."""
-        super().__init__(conf)
-        self.entity_description = SENSOR_DESCRIPTIONS.get(self._state)
-        if self.entity_description is None:
-            _LOGGER.warning(
-                "Sensor (%s) entity description is missing. Sensor state (%s) needs to be maintained",
-                self._name,
-                self._state,
-            )
-            self.entity_description = copy(DEFAULT_SENSOR_DESCRIPTION)
 
     @property
     def native_value(self):

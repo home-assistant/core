@@ -1,8 +1,11 @@
 """Homematic base entity."""
+from __future__ import annotations
+
 from abc import abstractmethod
 from datetime import timedelta
 import logging
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import ATTR_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -27,7 +30,11 @@ SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
 class HMDevice(Entity):
     """The HomeMatic device base object."""
 
-    def __init__(self, config):
+    def __init__(
+        self,
+        config: dict[str, str],
+        entity_description: SensorEntityDescription | None = None,
+    ) -> None:
         """Initialize a generic HomeMatic device."""
         self._name = config.get(ATTR_NAME)
         self._address = config.get(ATTR_ADDRESS)
@@ -35,12 +42,15 @@ class HMDevice(Entity):
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
         self._unique_id = config.get(ATTR_UNIQUE_ID)
-        self._data = {}
+        self._data: dict[str, str] = {}
         self._homematic = None
         self._hmdevice = None
         self._connected = False
         self._available = False
-        self._channel_map = set()
+        self._channel_map: set[str] = set()
+
+        if entity_description is not None:
+            self.entity_description = entity_description
 
         # Set parameter to uppercase
         if self._state:
