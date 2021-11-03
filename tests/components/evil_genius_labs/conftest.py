@@ -1,21 +1,19 @@
 """Test helpers for Evil Genius Labs."""
 import json
-import pathlib
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(scope="session")
 def data_fixture():
     """Fixture data."""
-    data = json.loads(
-        (pathlib.Path(__file__).parent / "evil-genius-labs-data.json").read_text()
-    )
+
+    data = json.loads(load_fixture("data.json", "evil_genius_labs"))
 
     return {item["name"]: item for item in data}
 
@@ -23,9 +21,7 @@ def data_fixture():
 @pytest.fixture(scope="session")
 def info_fixture():
     """Fixture info."""
-    return json.loads(
-        (pathlib.Path(__file__).parent / "evil-genius-labs-info.json").read_text()
-    )
+    return json.loads(load_fixture("info.json", "evil_genius_labs"))
 
 
 @pytest.fixture
