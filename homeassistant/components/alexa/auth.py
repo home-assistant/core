@@ -105,7 +105,7 @@ class Auth:
 
         try:
             session = aiohttp_client.async_get_clientsession(self.hass)
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 response = await session.post(
                     LWA_TOKEN_URI,
                     headers=LWA_HEADERS,

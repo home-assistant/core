@@ -132,7 +132,7 @@ async def async_send_changereport_message(
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
     try:
-        with async_timeout.timeout(DEFAULT_TIMEOUT):
+        async with async_timeout.timeout(DEFAULT_TIMEOUT):
             response = await session.post(
                 config.endpoint,
                 headers=headers,
@@ -263,7 +263,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
     try:
-        with async_timeout.timeout(DEFAULT_TIMEOUT):
+        async with async_timeout.timeout(DEFAULT_TIMEOUT):
             response = await session.post(
                 config.endpoint,
                 headers=headers,
