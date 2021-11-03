@@ -714,6 +714,7 @@ def _deprecated(
     replacement_key: str | None = None,
     default: Any | None = None,
     fail: bool | None = False,
+    module_name: str | None = __name__,
 ) -> Callable[[dict], dict]:
     """
     Log key as deprecated and provide a replacement (if exists) or fail.
@@ -727,15 +728,6 @@ def _deprecated(
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    module = inspect.getmodule(inspect.stack(context=0)[1].frame)
-    if module is not None:
-        module_name = module.__name__
-    else:
-        # If Python is unable to access the sources files, the call stack frame
-        # will be missing information, so let's guard.
-        # https://github.com/home-assistant/core/issues/24982
-        module_name = __name__
-
     if replacement_key:
         warning = (
             "The '{key}' option is deprecated,"
@@ -775,7 +767,7 @@ def _deprecated(
                     replacement_key=replacement_key,
                 )
             if fail:
-                raise vol.Invalid("Option {key} is deprecated and not allowed")
+                raise vol.Invalid(f"Option '{key}' is deprecated and not allowed")
             value = config[key]
             if replacement_key:
                 config.pop(key)
@@ -811,8 +803,21 @@ def deprecated(
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
+    module = inspect.getmodule(inspect.stack(context=0)[1].frame)
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/core/issues/24982
+        module_name = __name__
+
     return _deprecated(
-        key, replacement_key=replacement_key, default=default, fail=False
+        key,
+        replacement_key=replacement_key,
+        default=default,
+        fail=False,
+        module_name=module_name,
     )
 
 
@@ -826,7 +831,18 @@ def removed(
     Expected behavior:
         - Outputs the appropriate deprecation error if key is detected and removed from support
     """
-    return _deprecated(key, replacement_key=None, default=default, fail=True)
+    module = inspect.getmodule(inspect.stack(context=0)[1].frame)
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/core/issues/24982
+        module_name = __name__
+
+    return _deprecated(
+        key, replacement_key=None, default=default, fail=True, module_name=module_name
+    )
 
 
 def key_value_schemas(

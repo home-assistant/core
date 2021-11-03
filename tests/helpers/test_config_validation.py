@@ -712,6 +712,36 @@ def test_deprecated_with_no_optionals(caplog, schema):
     assert test_data == output
 
 
+def test_deprecated_removed_param(caplog, schema):
+    """
+    Test removed deprecation and fail the config validation.
+
+    Expected behavior:
+        - Outputs the appropriate deprecation error if key is detected and removed from support
+    """
+    deprecated_schema = vol.All(cv.removed("mars"), schema)
+
+    test_data = {"mars": True}
+    with pytest.raises(vol.Invalid):
+        deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 1
+    assert caplog.records[0].name in [
+        __name__,
+        "homeassistant.helpers.config_validation",
+    ]
+    assert (
+        "The 'mars' option is deprecated, please remove it from your configuration"
+    ) in caplog.text
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+    test_data = {"venus": True}
+    output = deprecated_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert test_data == output
+
+
 def test_deprecated_with_replacement_key(caplog, schema):
     """
     Test deprecation behaves correctly when only a replacement key is provided.
