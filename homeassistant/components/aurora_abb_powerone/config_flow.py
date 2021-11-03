@@ -110,7 +110,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await self.hass.async_add_executor_job(
                     validate_and_connect, self.hass, user_input
                 )
-                info.update(user_input)
             except OSError as error:
                 if error.errno == 19:  # No such device.
                     errors["base"] = "invalid_serial_port"
@@ -128,6 +127,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                     errors["base"] = "cannot_connect"
             else:
+                info.update(user_input)
                 # Bomb out early if someone has already set up this device.
                 device_unique_id = info["serial_number"]
                 await self.async_set_unique_id(device_unique_id)
