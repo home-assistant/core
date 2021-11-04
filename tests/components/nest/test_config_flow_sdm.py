@@ -126,6 +126,7 @@ class OAuthFixture:
                 result["flow_id"], user_input
             )
             assert len(mock_setup.mock_calls) == 1
+            await self.hass.async_block_till_done()
 
         return get_config_entry(self.hass)
 

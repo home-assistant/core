@@ -153,7 +153,8 @@ class NestFlowHandler(
             )
         existing_entries = self._async_current_entries()
         if existing_entries:
-            # Pick an existing auth implementation for Reauth if present
+            # Pick an existing auth implementation for Reauth if present. Note
+            # only one ConfigEntry is allowed so its safe to pick the first.
             entry = next(iter(existing_entries))
             if "auth_implementation" in entry.data:
                 data = {"implementation": entry.data["auth_implementation"]}
