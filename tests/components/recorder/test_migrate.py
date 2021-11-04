@@ -38,7 +38,7 @@ def _get_native_states(hass, entity_id):
 
 async def test_schema_update_calls(hass):
     """Test that schema migrations occur in correct order."""
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
@@ -51,7 +51,7 @@ async def test_schema_update_calls(hass):
         )
         await async_wait_recording_done_without_instance(hass)
 
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
     update.assert_has_calls(
         [
             call(hass.data[DATA_INSTANCE], ANY, version + 1, 0)
@@ -62,7 +62,7 @@ async def test_schema_update_calls(hass):
 
 async def test_migration_in_progress(hass):
     """Test that we can check for migration in progress."""
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
@@ -71,15 +71,15 @@ async def test_migration_in_progress(hass):
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )
         await hass.data[DATA_INSTANCE].async_migration_event.wait()
-        assert recorder.util.async_migration_in_progress(hass) is True
+        assert await recorder.async_migration_in_progress(hass) is True
         await async_wait_recording_done_without_instance(hass)
 
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
 
 
 async def test_database_migration_failed(hass):
     """Test we notify if the migration fails."""
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
@@ -101,7 +101,7 @@ async def test_database_migration_failed(hass):
         await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
         await hass.async_block_till_done()
 
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
     assert len(mock_create.mock_calls) == 2
     assert len(mock_dismiss.mock_calls) == 1
 
@@ -109,7 +109,7 @@ async def test_database_migration_failed(hass):
 async def test_database_migration_encounters_corruption(hass):
     """Test we move away the database if its corrupt."""
 
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
 
     sqlite3_exception = DatabaseError("statement", {}, [])
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
@@ -130,13 +130,13 @@ async def test_database_migration_encounters_corruption(hass):
         hass.states.async_set("my.entity", "off", {})
         await async_wait_recording_done_without_instance(hass)
 
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
     assert move_away.called
 
 
 async def test_database_migration_encounters_corruption_not_sqlite(hass):
     """Test we fail on database error when we cannot recover."""
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
         "homeassistant.components.recorder.migration.schema_is_current",
@@ -161,7 +161,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
         await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
         await hass.async_block_till_done()
 
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
     assert not move_away.called
     assert len(mock_create.mock_calls) == 2
     assert len(mock_dismiss.mock_calls) == 1
@@ -170,7 +170,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
 async def test_events_during_migration_are_queued(hass):
     """Test that events during migration are queued."""
 
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
@@ -187,7 +187,7 @@ async def test_events_during_migration_are_queued(hass):
         await hass.data[DATA_INSTANCE].async_recorder_ready.wait()
         await async_wait_recording_done_without_instance(hass)
 
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
     db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
     assert len(db_states) == 2
 
@@ -195,7 +195,7 @@ async def test_events_during_migration_are_queued(hass):
 async def test_events_during_migration_queue_exhausted(hass):
     """Test that events during migration takes so long the queue is exhausted."""
 
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
 
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
@@ -213,7 +213,7 @@ async def test_events_during_migration_queue_exhausted(hass):
         await hass.data[DATA_INSTANCE].async_recorder_ready.wait()
         await async_wait_recording_done_without_instance(hass)
 
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
     db_states = await hass.async_add_executor_job(_get_native_states, hass, "my.entity")
     assert len(db_states) == 1
     hass.states.async_set("my.entity", "on", {})

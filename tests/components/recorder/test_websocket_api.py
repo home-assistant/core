@@ -309,7 +309,7 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
 
 async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
     """Test getting recorder status when recorder queue is exhausted."""
-    assert recorder.util.async_migration_in_progress(hass) is False
+    assert await recorder.async_migration_in_progress(hass) is False
 
     migration_done = threading.Event()
 
