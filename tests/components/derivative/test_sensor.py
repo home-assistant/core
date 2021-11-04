@@ -248,3 +248,33 @@ async def test_suffix(hass):
 
     # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes/s2
     assert round(float(state.state), config["sensor"]["round"]) == 0.0
+
+
+async def test_overflow(hass):
+    """Test derivative sensor state using a network counter source."""
+    config = {
+        "sensor": {
+            "platform": "derivative",
+            "name": "derivative",
+            "source": "sensor.bytes_per_second",
+            "round": 2,
+            "unit_prefix": "Ki",
+            "unit_time": TIME_SECONDS,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    base = dt_util.utcnow()
+    with patch("homeassistant.util.dt.utcnow") as now:
+        now.return_value = base
+        hass.states.async_set(entity_id, 1000, {})
+        await hass.async_block_till_done()
+
+        now.return_value += timedelta(seconds=10)
+        hass.states.async_set(entity_id, 100, {}, force_update=True)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.derivative")
+    assert state.state == "unknown"
