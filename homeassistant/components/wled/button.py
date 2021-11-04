@@ -20,11 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up WLED button based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    switches = [
-        WLEDRestartButton(coordinator),
-    ]
-    async_add_entities(switches)
+    async_add_entities([WLEDRestartButton(coordinator)])
 
 
 class WLEDRestartButton(WLEDEntity, ButtonEntity):
