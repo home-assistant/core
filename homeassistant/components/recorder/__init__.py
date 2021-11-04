@@ -522,6 +522,7 @@ class Recorder(threading.Thread):
                     self.queue.get_nowait()
                 except queue.Empty:
                     break
+            _LOGGER.debug("Inserting None")
             self.queue.put(None)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, _empty_queue)
@@ -530,6 +531,7 @@ class Recorder(threading.Thread):
             """Shut down the Recorder."""
             if not hass_started.done():
                 hass_started.set_result(shutdown_task)
+            _LOGGER.debug("Inserting None")
             self.queue.put(None)
             self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
             self.join()
@@ -577,29 +579,35 @@ class Recorder(threading.Thread):
             # after it completes to ensure it does not happen
             # until after the database is vacuumed
             purge_before = dt_util.utcnow() - timedelta(days=self.keep_days)
+            _LOGGER.debug("Inserting PurgeTask")
             self.queue.put(PurgeTask(purge_before, repack=False, apply_filter=False))
         else:
+            _LOGGER.debug("Inserting PerodicCleanupTask")
             self.queue.put(PerodicCleanupTask())
 
     @callback
     def async_periodic_statistics(self, now):
         """Trigger the hourly statistics run."""
         start = statistics.get_start_time()
+        _LOGGER.debug("Inserting StatisticsTask")
         self.queue.put(StatisticsTask(start))
 
     @callback
     def async_clear_statistics(self, statistic_ids):
         """Clear statistics for a list of statistic_ids."""
+        _LOGGER.debug("Inserting ClearStatisticsTask")
         self.queue.put(ClearStatisticsTask(statistic_ids))
 
     @callback
     def async_update_statistics_metadata(self, statistic_id, unit_of_measurement):
         """Update statistics metadata for a statistic_id."""
+        _LOGGER.debug("Inserting UpdateStatisticsMetadataTask")
         self.queue.put(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
 
     @callback
     def async_external_statistics(self, metadata, stats):
         """Schedule external statistics."""
+        _LOGGER.debug("Inserting ExternalStatisticsTask")
         self.queue.put(ExternalStatisticsTask(metadata, stats))
 
     @callback
@@ -765,6 +773,7 @@ class Recorder(threading.Thread):
             perodic_db_cleanups(self)
             return
         # Schedule a new purge task if this one didn't finish
+        _LOGGER.debug("Inserting PurgeTask")
         self.queue.put(PurgeTask(purge_before, repack, apply_filter))
 
     def _run_purge_entities(self, entity_filter):
@@ -772,6 +781,7 @@ class Recorder(threading.Thread):
         if purge.purge_entity_data(self, entity_filter):
             return
         # Schedule a new purge task if this one didn't finish
+        _LOGGER.debug("Inserting PurgeEntitiesTask")
         self.queue.put(PurgeEntitiesTask(entity_filter))
 
     def _run_statistics(self, start):
@@ -779,6 +789,7 @@ class Recorder(threading.Thread):
         if statistics.compile_statistics(self, start):
             return
         # Schedule a new statistics task if this one didn't finish
+        _LOGGER.debug("Inserting StatisticsTask")
         self.queue.put(StatisticsTask(start))
 
     def _run_external_statistics(self, metadata, stats):
@@ -787,9 +798,11 @@ class Recorder(threading.Thread):
             return
         # Schedule a new statistics task if this one didn't finish
         self.queue.put(StatisticsTask(metadata, stats))
+        _LOGGER.debug("Inserting ExternalTask")
 
     def _process_one_event(self, event):
         """Process one event."""
+        _LOGGER.debug("Processing event %s", event)
         if isinstance(event, PurgeTask):
             self._run_purge(event.purge_before, event.repack, event.apply_filter)
             return
@@ -964,6 +977,7 @@ class Recorder(threading.Thread):
     @callback
     def event_listener(self, event):
         """Listen for new events and put them in the process queue."""
+        _LOGGER.debug("Inserting event %s", event)
         self.queue.put(event)
 
     def block_till_done(self):
@@ -981,6 +995,7 @@ class Recorder(threading.Thread):
         if self._event_listener is None:
             return
         self._queue_watch.clear()
+        _LOGGER.debug("Inserting WaitTask")
         self.queue.put(WaitTask())
         self._queue_watch.wait()
 
