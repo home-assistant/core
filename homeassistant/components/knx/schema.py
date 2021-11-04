@@ -273,8 +273,8 @@ class ButtonSchema(KNXPlatformSchema):
     ENTITY_SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Required(CONF_PAYLOAD): cv.positive_int,
-            vol.Required(CONF_PAYLOAD_LENGTH): vol.All(
+            vol.Optional(CONF_PAYLOAD, default=1): cv.positive_int,
+            vol.Optional(CONF_PAYLOAD_LENGTH, default=0): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=14)
             ),
             vol.Required(KNX_ADDRESS): ga_list_validator,
