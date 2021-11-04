@@ -78,7 +78,6 @@ from homeassistant.helpers import (
     script_variables as script_variables_helper,
     template as template_helper,
 )
-from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -709,23 +708,26 @@ class multi_select:
         return selected
 
 
-def deprecated(
+def _deprecated_or_removed(
     key: str,
     replacement_key: str | None = None,
     default: Any | None = None,
+    raise_if_present: bool | None = False,
+    option_status: str | None = "is deprecated",
 ) -> Callable[[dict], dict]:
     """
-    Log key as deprecated and provide a replacement (if exists).
+    Log key as deprecated and provide a replacement (if exists) or fail.
 
     Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected
+        - Outputs or throws the appropriate deprecation warning if key is detected
+        - Outputs or throws the appropriate error if key is detected and removed from support
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    module = inspect.getmodule(inspect.stack(context=0)[1].frame)
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
     if module is not None:
         module_name = module.__name__
     else:
@@ -733,36 +735,36 @@ def deprecated(
         # will be missing information, so let's guard.
         # https://github.com/home-assistant/core/issues/24982
         module_name = __name__
-
     if replacement_key:
         warning = (
-            "The '{key}' option is deprecated,"
+            "The '{key}' option {option_status},"
             " please replace it with '{replacement_key}'"
         )
     else:
         warning = (
-            "The '{key}' option is deprecated,"
+            "The '{key}' option {option_status},"
             " please remove it from your configuration"
         )
 
     def validator(config: dict) -> dict:
-        """Check if key is in config and log warning."""
+        """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
-                    warning.replace(
-                        "'{key}' option",
-                        f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
-                    ),
-                    key=key,
-                    replacement_key=replacement_key,
+                warning_local = warning.replace(
+                    "'{key}' option",
+                    f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
                 )
             except AttributeError:
-                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
-                    warning,
-                    key=key,
-                    replacement_key=replacement_key,
-                )
+                warning_local = warning
+            warning_local = warning_local.format(
+                key=key,
+                replacement_key=replacement_key,
+                option_status=option_status,
+            )
+            if raise_if_present:
+                raise vol.Invalid(warning_local)
+
+            logging.getLogger(module_name).warning(warning_local)
             value = config[key]
             if replacement_key:
                 config.pop(key)
@@ -780,6 +782,52 @@ def deprecated(
         return has_at_most_one_key(*keys)(config)
 
     return validator
+
+
+def deprecated(
+    key: str,
+    replacement_key: str | None = None,
+    default: Any | None = None,
+    raise_if_present: bool | None = False,
+) -> Callable[[dict], dict]:
+    """
+    Log key as deprecated and provide a replacement (if exists).
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected or raises an exception
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning if neither key nor replacement_key are provided
+            - Adds replacement_key with default value in this case
+    """
+    return _deprecated_or_removed(
+        key,
+        replacement_key=replacement_key,
+        default=default,
+        raise_if_present=raise_if_present,
+        option_status="is deprecated",
+    )
+
+
+def removed(
+    key: str,
+    default: Any | None = None,
+    raise_if_present: bool | None = True,
+) -> Callable[[dict], dict]:
+    """
+    Log key as deprecated and fail the config validation.
+
+    Expected behavior:
+        - Outputs the appropriate error if key is detected and removed from support or raises an exception
+    """
+    return _deprecated_or_removed(
+        key,
+        replacement_key=None,
+        default=default,
+        raise_if_present=raise_if_present,
+        option_status="was removed",
+    )
 
 
 def key_value_schemas(
