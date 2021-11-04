@@ -49,7 +49,7 @@ MIN_VERSION_MARIA_DB_ROWNUM = AwesomeVersion("10.2.0", AwesomeVersionStrategy.SI
 MIN_VERSION_MYSQL = AwesomeVersion("8.0.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_MYSQL_ROWNUM = AwesomeVersion("5.8.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_PGSQL = AwesomeVersion("12.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_SQLITE = AwesomeVersion("3.32.1", AwesomeVersionStrategy.SIMPLEVER)
+MIN_VERSION_SQLITE = AwesomeVersion("3.31.0", AwesomeVersionStrategy.SIMPLEVER)
 MIN_VERSION_SQLITE_ROWNUM = AwesomeVersion("3.25.0", AwesomeVersionStrategy.SIMPLEVER)
 
 # This is the maximum time after the recorder ends the session
@@ -295,7 +295,7 @@ def _warn_unsupported_dialect(dialect):
         "Starting with Home Assistant 2022.2 this will prevent the recorder from "
         "starting. Please migrate your database to a supported software before then",
         dialect,
-        "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.32.1",
+        "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.31.0",
     )
 
 
