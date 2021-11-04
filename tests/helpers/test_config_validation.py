@@ -712,20 +712,36 @@ def test_deprecated_with_no_optionals(caplog, schema):
     assert test_data == output
 
 
-def test_deprecated_removed_param(caplog, schema):
+def test_deprecated_or_removed_param_and_raise(caplog, schema):
     """
-    Test removed deprecation and fail the config validation.
+    Test removed or deprecation options and fail the config validation by raising an exception.
 
     Expected behavior:
-        - Outputs the appropriate deprecation error if key is detected and removed from support
+        - Outputs the appropriate deprecation or removed from support error if key is detected
     """
+    removed_schema = vol.All(cv.deprecated("mars", raise_if_present=True), schema)
+
+    test_data = {"mars": True}
+    with pytest.raises(vol.Invalid) as excinfo:
+        removed_schema(test_data)
+    assert (
+        "The 'mars' option is deprecated, please remove it from your configuration"
+        in str(excinfo.value)
+    )
+    assert len(caplog.records) == 0
+
+    test_data = {"venus": True}
+    output = removed_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert test_data == output
+
     deprecated_schema = vol.All(cv.removed("mars"), schema)
 
     test_data = {"mars": True}
     with pytest.raises(vol.Invalid) as excinfo:
         deprecated_schema(test_data)
     assert (
-        "The 'mars' option is deprecated, please remove it from your configuration"
+        "The 'mars' option was removed, please remove it from your configuration"
         in str(excinfo.value)
     )
     assert len(caplog.records) == 0
@@ -878,17 +894,35 @@ def test_deprecated_cant_find_module():
         )
 
 
-def test_deprecated_logger_with_config_attributes(caplog):
+def test_deprecated_or_removed_logger_with_config_attributes(caplog):
     """Test if the logger outputs the correct message if the line and file attribute is available in config."""
     file: str = "configuration.yaml"
     line: int = 54
+
+    # test as deprecated option
     replacement_key = "jupiter"
-    replacement = f"'mars' option near {file}:{line} is deprecated, please replace it with '{replacement_key}'"
+    option_status = "is deprecated"
+    replacement = f"'mars' option near {file}:{line} {option_status}, please replace it with '{replacement_key}'"
     config = OrderedDict([("mars", "blah")])
     setattr(config, "__config_file__", file)
     setattr(config, "__line__", line)
 
     cv.deprecated("mars", replacement_key=replacement_key, default=False)(config)
+
+    assert len(caplog.records) == 1
+    assert replacement in caplog.text
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+    # test as removed option
+    option_status = "was removed"
+    replacement = f"'mars' option near {file}:{line} {option_status}, please remove it from your configuration"
+    config = OrderedDict([("mars", "blah")])
+    setattr(config, "__config_file__", file)
+    setattr(config, "__line__", line)
+
+    cv.removed("mars", default=False, raise_if_present=False)(config)
 
     assert len(caplog.records) == 1
     assert replacement in caplog.text
