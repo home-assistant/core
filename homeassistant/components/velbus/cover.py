@@ -73,6 +73,6 @@ class VelbusCover(VelbusEntity, CoverEntity):
         """Stop the cover."""
         await self._channel.stop()
 
-    async def async_set_cover_position(self, **kwargs) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         self._channel.set_position(100 - kwargs[ATTR_POSITION])
