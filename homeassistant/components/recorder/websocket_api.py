@@ -21,7 +21,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_validate_statistics)
     websocket_api.async_register_command(hass, ws_clear_statistics)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
-    websocket_api.async_register_command(hass, ws_status)
+    websocket_api.async_register_command(hass, ws_info)
 
 
 @websocket_api.websocket_command(
@@ -86,7 +86,7 @@ def ws_update_statistics_metadata(
     }
 )
 @callback
-def ws_status(
+def ws_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Return status of the recorder."""
