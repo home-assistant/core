@@ -24,6 +24,7 @@ homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
 homeassistant.components.braviatv.*
 homeassistant.components.brother.*
+homeassistant.components.button.*
 homeassistant.components.calendar.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
