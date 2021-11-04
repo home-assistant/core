@@ -15,6 +15,8 @@ from zwave_js_server.const import (
     CommandClass,
     InclusionStrategy,
     LogLevel,
+    Protocols,
+    QRCodeVersion,
     SecurityClass,
 )
 from zwave_js_server.exceptions import (
@@ -25,7 +27,12 @@ from zwave_js_server.exceptions import (
     SetValueFailed,
 )
 from zwave_js_server.firmware import begin_firmware_update
-from zwave_js_server.model.controller import ControllerStatistics, InclusionGrant
+from zwave_js_server.model.controller import (
+    ControllerStatistics,
+    InclusionGrant,
+    ProvisioningEntry,
+    QRProvisioningInformation,
+)
 from zwave_js_server.model.firmware import (
     FirmwareUpdateFinished,
     FirmwareUpdateProgress,
@@ -33,12 +40,14 @@ from zwave_js_server.model.firmware import (
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
 from zwave_js_server.model.node import Node, NodeStatistics
+from zwave_js_server.model.utils import async_parse_qr_code_string
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.const import (
+    ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
@@ -80,8 +89,6 @@ TYPE = "type"
 PROPERTY = "property"
 PROPERTY_KEY = "property_key"
 VALUE = "value"
-INCLUSION_STRATEGY = "inclusion_strategy"
-PIN = "pin"
 
 # constants for log config commands
 CONFIG = "config"
@@ -105,6 +112,56 @@ CLIENT_SIDE_AUTH = "client_side_auth"
 
 # constants for migration
 DRY_RUN = "dry_run"
+
+# constants for inclusion
+INCLUSION_STRATEGY = "inclusion_strategy"
+PIN = "pin"
+PROVISIONING = "provisioning"
+FORCE_SECURITY = "force_security"
+PLANNED_PROVISIIONING_ENTRY = "planned_provisioning_entry"
+QR_PROVISIONING_INFORMATION = "qr_provisioning_information"
+QR_CODE_STRING = "qr_code_string"
+
+DSK = "dsk"
+
+PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.Schema(
+    {
+        vol.Required(DSK): str,
+        vol.Required(SECURITY_CLASSES): vol.All(cv.ensure_list, [int]),
+    },
+    # Provisioning entries can have extra keys for SmartStart
+    extra=vol.ALLOW_EXTRA,
+)
+
+VERSION = "version"
+GENERIC_DEVICE_CLASS = "generic_device_class"
+SPECIFIC_DEVICE_CLASS = "specific_device_class"
+INSTALLER_ICON_TYPE = "installer_icon_type"
+MANUFACTURER_ID = "manufacturer_id"
+PRODUCT_TYPE = "product_type"
+PRODUCT_ID = "product_id"
+APPLICATION_VERSION = "application_version"
+MAX_INCLUSION_REQUEST_INTERVAL = "max_inclusion_request_interval"
+UUID = "uuid"
+SUPPORTED_PROTOCOLS = "supported_protocols"
+
+QR_PROVISIONING_INFORMATION_SCHEMA = vol.Schema(
+    {
+        vol.Required(VERSION): int,
+        vol.Required(SECURITY_CLASSES): vol.All(cv.ensure_list, [int]),
+        vol.Required(DSK): str,
+        vol.Required(GENERIC_DEVICE_CLASS): int,
+        vol.Required(SPECIFIC_DEVICE_CLASS): int,
+        vol.Required(INSTALLER_ICON_TYPE): int,
+        vol.Required(MANUFACTURER_ID): int,
+        vol.Required(PRODUCT_TYPE): int,
+        vol.Required(PRODUCT_ID): int,
+        vol.Required(APPLICATION_VERSION): str,
+        vol.Optional(MAX_INCLUSION_REQUEST_INTERVAL): int,
+        vol.Optional(UUID): str,
+        vol.Optional(SUPPORTED_PROTOCOLS): vol.All(cv.ensure_list, [int]),
+    }
+)
 
 
 def async_get_entry(orig_func: Callable) -> Callable:
@@ -183,6 +240,56 @@ def async_handle_failed_command(orig_func: Callable) -> Callable:
     return async_handle_failed_command_func
 
 
+def get_provisioning_info(
+    msg: dict,
+) -> str | ProvisioningEntry | QRProvisioningInformation | None:
+    """Process provisioning parameters and return the appropriate value."""
+    if planned_provisioning_entry := msg.get(PLANNED_PROVISIIONING_ENTRY):
+        return ProvisioningEntry(
+            dsk=planned_provisioning_entry[DSK],
+            security_classes=[
+                SecurityClass(sec_cls)
+                for sec_cls in planned_provisioning_entry[SECURITY_CLASSES]
+            ],
+            additional_properties={
+                k: v
+                for k, v in planned_provisioning_entry.items()
+                if k not in (DSK, SECURITY_CLASSES)
+            },
+        )
+
+    if qr_provisioning_information := msg.get(QR_PROVISIONING_INFORMATION):
+        protocols = [
+            Protocols(proto)
+            for proto in qr_provisioning_information.get(SUPPORTED_PROTOCOLS, [])
+        ]
+        return QRProvisioningInformation(
+            version=QRCodeVersion(qr_provisioning_information[VERSION]),
+            security_classes=[
+                SecurityClass(sec_cls)
+                for sec_cls in qr_provisioning_information[SECURITY_CLASSES]
+            ],
+            dsk=qr_provisioning_information[DSK],
+            generic_device_class=qr_provisioning_information[GENERIC_DEVICE_CLASS],
+            specific_device_class=qr_provisioning_information[SPECIFIC_DEVICE_CLASS],
+            installer_icon_type=qr_provisioning_information[INSTALLER_ICON_TYPE],
+            manufacturer_id=qr_provisioning_information[MANUFACTURER_ID],
+            product_type=qr_provisioning_information[PRODUCT_TYPE],
+            product_id=qr_provisioning_information[PRODUCT_ID],
+            application_version=qr_provisioning_information[APPLICATION_VERSION],
+            max_inclusion_request_interval=qr_provisioning_information.get(
+                MAX_INCLUSION_REQUEST_INTERVAL
+            ),
+            uuid=qr_provisioning_information.get(UUID),
+            supported_protocols=protocols if protocols else None,
+        )
+
+    if qr_code_string := msg.get(QR_CODE_STRING):
+        return qr_code_string
+
+    return None
+
+
 @callback
 def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
@@ -194,6 +301,10 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_add_node)
     websocket_api.async_register_command(hass, websocket_grant_security_classes)
     websocket_api.async_register_command(hass, websocket_validate_dsk_and_enter_pin)
+    websocket_api.async_register_command(hass, websocket_provision_smart_start_node)
+    websocket_api.async_register_command(hass, websocket_unprovision_smart_start_node)
+    websocket_api.async_register_command(hass, websocket_get_provisioning_entries)
+    websocket_api.async_register_command(hass, websocket_parse_qr_code_string)
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
@@ -437,6 +548,14 @@ async def websocket_ping_node(
         vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.In(
             [strategy.value for strategy in InclusionStrategy]
         ),
+        vol.Optional(FORCE_SECURITY): bool,
+        vol.Exclusive(
+            PLANNED_PROVISIIONING_ENTRY, "options"
+        ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
+        vol.Exclusive(
+            QR_PROVISIONING_INFORMATION, "options"
+        ): QR_PROVISIONING_INFORMATION_SCHEMA,
+        vol.Exclusive(QR_CODE_STRING, "options"): str,
     }
 )
 @websocket_api.async_response
@@ -452,6 +571,8 @@ async def websocket_add_node(
     """Add a node to the Z-Wave network."""
     controller = client.driver.controller
     inclusion_strategy = InclusionStrategy(msg[INCLUSION_STRATEGY])
+    force_security = msg.get(FORCE_SECURITY)
+    provisioning = get_provisioning_info(msg)
 
     @callback
     def async_cleanup() -> None:
@@ -542,7 +663,18 @@ async def websocket_add_node(
         ),
     ]
 
-    result = await controller.async_begin_inclusion(inclusion_strategy)
+    try:
+        result = await controller.async_begin_inclusion(
+            inclusion_strategy, force_security=force_security, provisioning=provisioning
+        )
+    except ValueError as err:
+        connection.send_error(
+            msg[ID],
+            ERR_INVALID_FORMAT,
+            err.args[0],
+        )
+        return
+
     connection.send_result(
         msg[ID],
         result,
@@ -570,7 +702,7 @@ async def websocket_grant_security_classes(
     entry: ConfigEntry,
     client: Client,
 ) -> None:
-    """Add a node to the Z-Wave network."""
+    """Chooes SecurityClass grants as part of S2 inclusion process."""
     inclusion_grant = InclusionGrant(
         [SecurityClass(sec_cls) for sec_cls in msg[SECURITY_CLASSES]],
         msg[CLIENT_SIDE_AUTH],
@@ -597,9 +729,132 @@ async def websocket_validate_dsk_and_enter_pin(
     entry: ConfigEntry,
     client: Client,
 ) -> None:
-    """Add a node to the Z-Wave network."""
+    """Validate DSK and enter PIN as part of S2 inclusion process."""
     await client.driver.controller.async_validate_dsk_and_enter_pin(msg[PIN])
     connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/provision_smart_start_node",
+        vol.Required(ENTRY_ID): str,
+        vol.Exclusive(
+            PLANNED_PROVISIIONING_ENTRY, "options"
+        ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
+        vol.Exclusive(
+            QR_PROVISIONING_INFORMATION, "options"
+        ): QR_PROVISIONING_INFORMATION_SCHEMA,
+        vol.Exclusive(QR_CODE_STRING, "options"): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_provision_smart_start_node(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Pre-provision a smart start node."""
+    provisioning_info = get_provisioning_info(msg)
+    if provisioning_info is None:
+        connection.send_error(
+            msg[ID],
+            ERR_INVALID_FORMAT,
+            (
+                f"Either {PLANNED_PROVISIIONING_ENTRY}, {QR_PROVISIONING_INFORMATION}, "
+                f"or {QR_CODE_STRING} must be provided"
+            ),
+        )
+        return
+    await client.driver.controller.async_provision_smart_start_node(provisioning_info)
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/unprovision_smart_start_node",
+        vol.Required(ENTRY_ID): str,
+        vol.Exclusive(DSK, "input"): str,
+        vol.Exclusive(NODE_ID, "input"): int,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_unprovision_smart_start_node(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Unprovision a smart start node."""
+    dsk_or_node_id = msg.get(DSK) or msg.get(NODE_ID)
+    if dsk_or_node_id is None:
+        connection.send_error(
+            msg[ID],
+            ERR_INVALID_FORMAT,
+            f"Either {DSK} or {NODE_ID} must be provided",
+        )
+        return
+    await client.driver.controller.async_unprovision_smart_start_node(dsk_or_node_id)
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/get_provisioning_entries",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_get_provisioning_entries(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Get provisioning entries (entries that have been pre-provisioned)."""
+    provisioning_entries = (
+        await client.driver.controller.async_get_provisioning_entries()
+    )
+    connection.send_result(
+        msg[ID], [dataclasses.asdict(entry) for entry in provisioning_entries]
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/parse_qr_code_string",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(QR_CODE_STRING): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_parse_qr_code_string(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Parse a QR Code String and return QRProvisioningInformation dict."""
+    qr_provisioning_information = await async_parse_qr_code_string(
+        client, msg[QR_CODE_STRING]
+    )
+    connection.send_result(msg[ID], dataclasses.asdict(qr_provisioning_information))
 
 
 @websocket_api.require_admin
@@ -723,6 +978,14 @@ async def websocket_remove_node(
         vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.In(
             [strategy.value for strategy in InclusionStrategy]
         ),
+        vol.Optional(FORCE_SECURITY): bool,
+        vol.Exclusive(
+            PLANNED_PROVISIIONING_ENTRY, "options"
+        ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
+        vol.Exclusive(
+            QR_PROVISIONING_INFORMATION, "options"
+        ): QR_PROVISIONING_INFORMATION_SCHEMA,
+        vol.Exclusive(QR_CODE_STRING, "options"): str,
     }
 )
 @websocket_api.async_response
@@ -739,6 +1002,8 @@ async def websocket_replace_failed_node(
     controller = client.driver.controller
     node_id = msg[NODE_ID]
     inclusion_strategy = InclusionStrategy(msg[INCLUSION_STRATEGY])
+    force_security = msg.get(FORCE_SECURITY)
+    provisioning = get_provisioning_info(msg)
 
     @callback
     def async_cleanup() -> None:
@@ -842,7 +1107,21 @@ async def websocket_replace_failed_node(
         ),
     ]
 
-    result = await controller.async_replace_failed_node(node_id, inclusion_strategy)
+    try:
+        result = await controller.async_replace_failed_node(
+            node_id,
+            inclusion_strategy,
+            force_security=force_security,
+            provisioning=provisioning,
+        )
+    except ValueError as err:
+        connection.send_error(
+            msg[ID],
+            ERR_INVALID_FORMAT,
+            err.args[0],
+        )
+        return
+
     connection.send_result(
         msg[ID],
         result,
@@ -1309,13 +1588,13 @@ async def websocket_subscribe_log_updates(
                 {
                     vol.Optional(ENABLED): cv.boolean,
                     vol.Optional(LEVEL): vol.All(
-                        cv.string,
+                        str,
                         vol.Lower,
                         vol.In([log_level.value for log_level in LogLevel]),
                         lambda val: LogLevel(val),  # pylint: disable=unnecessary-lambda
                     ),
                     vol.Optional(LOG_TO_FILE): cv.boolean,
-                    vol.Optional(FILENAME): cv.string,
+                    vol.Optional(FILENAME): str,
                     vol.Optional(FORCE_CONSOLE): cv.boolean,
                 }
             ),

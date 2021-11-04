@@ -9,6 +9,8 @@ from zwave_js_server.const import (
     CommandClass,
     InclusionStrategy,
     LogLevel,
+    Protocols,
+    QRCodeVersion,
     SecurityClass,
 )
 from zwave_js_server.event import Event
@@ -19,31 +21,47 @@ from zwave_js_server.exceptions import (
     NotFoundError,
     SetValueFailed,
 )
+from zwave_js_server.model.controller import (
+    ProvisioningEntry,
+    QRProvisioningInformation,
+)
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import _get_value_id_from_dict, get_value_id
 
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
+    APPLICATION_VERSION,
     CLIENT_SIDE_AUTH,
     COMMAND_CLASS_ID,
     CONFIG,
+    DSK,
     ENABLED,
     ENTRY_ID,
     ERR_NOT_LOADED,
     FILENAME,
     FORCE_CONSOLE,
+    GENERIC_DEVICE_CLASS,
     ID,
     INCLUSION_STRATEGY,
+    INSTALLER_ICON_TYPE,
     LEVEL,
     LOG_TO_FILE,
+    MANUFACTURER_ID,
     NODE_ID,
     OPTED_IN,
     PIN,
+    PLANNED_PROVISIIONING_ENTRY,
+    PRODUCT_ID,
+    PRODUCT_TYPE,
     PROPERTY,
     PROPERTY_KEY,
+    QR_CODE_STRING,
+    QR_PROVISIONING_INFORMATION,
     SECURITY_CLASSES,
+    SPECIFIC_DEVICE_CLASS,
     TYPE,
     VALUE,
+    VERSION,
 )
 from homeassistant.components.zwave_js.const import (
     CONF_DATA_COLLECTION_OPTED_IN,
@@ -423,7 +441,7 @@ async def test_add_node(
 
     await ws_client.send_json(
         {
-            ID: 3,
+            ID: 1,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
@@ -542,6 +560,127 @@ async def test_add_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "interview failed"
 
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/add_node",
+            ENTRY_ID: entry.entry_id,
+            INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
+            PLANNED_PROVISIIONING_ENTRY: {
+                DSK: "test",
+                SECURITY_CLASSES: [0],
+            },
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {
+            "strategy": InclusionStrategy.SECURITY_S2,
+            "provisioning": ProvisioningEntry(
+                "test", [SecurityClass.S2_UNAUTHENTICATED]
+            ).to_dict(),
+        },
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/add_node",
+            ENTRY_ID: entry.entry_id,
+            INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
+            QR_PROVISIONING_INFORMATION: {
+                VERSION: 0,
+                SECURITY_CLASSES: [0],
+                DSK: "test",
+                GENERIC_DEVICE_CLASS: 1,
+                SPECIFIC_DEVICE_CLASS: 1,
+                INSTALLER_ICON_TYPE: 1,
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 1,
+                PRODUCT_ID: 1,
+                APPLICATION_VERSION: "test",
+            },
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {
+            "strategy": InclusionStrategy.SECURITY_S2,
+            "provisioning": QRProvisioningInformation(
+                QRCodeVersion.S2,
+                [SecurityClass.S2_UNAUTHENTICATED],
+                "test",
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                "test",
+                None,
+                None,
+                None,
+            ).to_dict(),
+        },
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/add_node",
+            ENTRY_ID: entry.entry_id,
+            INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
+            QR_CODE_STRING: "test",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {"strategy": InclusionStrategy.SECURITY_S2, "provisioning": "test"},
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    # Test ValueError is caught as failure
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/add_node",
+            ENTRY_ID: entry.entry_id,
+            INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
+            QR_CODE_STRING: "test",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 0
+
     # Test FailedZWaveCommand is caught
     with patch(
         "zwave_js_server.model.controller.Controller.async_begin_inclusion",
@@ -549,7 +688,7 @@ async def test_add_node(
     ):
         await ws_client.send_json(
             {
-                ID: 4,
+                ID: 6,
                 TYPE: "zwave_js/add_node",
                 ENTRY_ID: entry.entry_id,
             }
@@ -565,7 +704,7 @@ async def test_add_node(
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 5, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
+        {ID: 7, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
@@ -653,6 +792,394 @@ async def test_validate_dsk_and_enter_pin(hass, integration, client, hass_ws_cli
             TYPE: "zwave_js/validate_dsk_and_enter_pin",
             ENTRY_ID: entry.entry_id,
             PIN: "test",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_provision_smart_start_node(hass, integration, client, hass_ws_client):
+    """Test provision_smart_start_node websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/provision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+            PLANNED_PROVISIIONING_ENTRY: {
+                DSK: "test",
+                SECURITY_CLASSES: [0],
+            },
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.provision_smart_start_node",
+        "entry": ProvisioningEntry(
+            "test", [SecurityClass.S2_UNAUTHENTICATED]
+        ).to_dict(),
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/provision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+            QR_PROVISIONING_INFORMATION: {
+                VERSION: 0,
+                SECURITY_CLASSES: [0],
+                DSK: "test",
+                GENERIC_DEVICE_CLASS: 1,
+                SPECIFIC_DEVICE_CLASS: 1,
+                INSTALLER_ICON_TYPE: 1,
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 1,
+                PRODUCT_ID: 1,
+                APPLICATION_VERSION: "test",
+            },
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.provision_smart_start_node",
+        "entry": QRProvisioningInformation(
+            QRCodeVersion.S2,
+            [SecurityClass.S2_UNAUTHENTICATED],
+            "test",
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            "test",
+            None,
+            None,
+            None,
+        ).to_dict(),
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/provision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+            QR_CODE_STRING: "test",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.provision_smart_start_node",
+        "entry": "test",
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    # Test no provisioning parameter provided causes failure
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/provision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_provision_smart_start_node",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 6,
+                TYPE: "zwave_js/provision_smart_start_node",
+                ENTRY_ID: entry.entry_id,
+                QR_CODE_STRING: "test",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 7,
+            TYPE: "zwave_js/provision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+            QR_CODE_STRING: "test",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_unprovision_smart_start_node(hass, integration, client, hass_ws_client):
+    """Test unprovision_smart_start_node websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/unprovision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 1,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.unprovision_smart_start_node",
+        "dskOrNodeId": 1,
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {}
+
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/unprovision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+            DSK: "test",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.unprovision_smart_start_node",
+        "dskOrNodeId": "test",
+    }
+
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_unprovision_smart_start_node",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 6,
+                TYPE: "zwave_js/unprovision_smart_start_node",
+                ENTRY_ID: entry.entry_id,
+                DSK: "test",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 7,
+            TYPE: "zwave_js/unprovision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+            DSK: "test",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_get_provisioning_entries(hass, integration, client, hass_ws_client):
+    """Test get_provisioning_entries websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {
+        "entries": [{"dsk": "test", "securityClasses": [0], "fake": "test"}]
+    }
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/get_provisioning_entries",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == [
+        {
+            "dsk": "test",
+            "security_classes": [SecurityClass.S2_UNAUTHENTICATED],
+            "additional_properties": {"fake": "test"},
+        }
+    ]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.get_provisioning_entries",
+    }
+
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_get_provisioning_entries",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 6,
+                TYPE: "zwave_js/get_provisioning_entries",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {ID: 7, TYPE: "zwave_js/get_provisioning_entries", ENTRY_ID: entry.entry_id}
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
+    """Test parse_qr_code_string websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {
+        "qrProvisioningInformation": {
+            "version": 0,
+            "securityClasses": [0],
+            "dsk": "test",
+            "genericDeviceClass": 1,
+            "specificDeviceClass": 1,
+            "installerIconType": 1,
+            "manufacturerId": 1,
+            "productType": 1,
+            "productId": 1,
+            "applicationVersion": "test",
+            "maxInclusionRequestInterval": 1,
+            "uuid": "test",
+            "supportedProtocols": [0],
+        }
+    }
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/parse_qr_code_string",
+            ENTRY_ID: entry.entry_id,
+            QR_CODE_STRING: "test",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "version": 0,
+        "security_classes": [SecurityClass.S2_UNAUTHENTICATED],
+        "dsk": "test",
+        "generic_device_class": 1,
+        "specific_device_class": 1,
+        "installer_icon_type": 1,
+        "manufacturer_id": 1,
+        "product_type": 1,
+        "product_id": 1,
+        "application_version": "test",
+        "max_inclusion_request_interval": 1,
+        "uuid": "test",
+        "supported_protocols": [Protocols.ZWAVE],
+    }
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "utils.parse_qr_code_string",
+        "qr": "test",
+    }
+
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "homeassistant.components.zwave_js.api.async_parse_qr_code_string",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 6,
+                TYPE: "zwave_js/parse_qr_code_string",
+                ENTRY_ID: entry.entry_id,
+                QR_CODE_STRING: "test",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 7,
+            TYPE: "zwave_js/parse_qr_code_string",
+            ENTRY_ID: entry.entry_id,
+            QR_CODE_STRING: "test",
         }
     )
     msg = await ws_client.receive_json()
@@ -851,7 +1378,7 @@ async def test_replace_failed_node(
     # `inclusion stopped`, `node removed`, `node added`, then interview stages.
     await ws_client.send_json(
         {
-            ID: 3,
+            ID: 1,
             TYPE: "zwave_js/replace_failed_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,
@@ -997,6 +1524,134 @@ async def test_replace_failed_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "interview failed"
 
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/replace_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+            INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
+            PLANNED_PROVISIIONING_ENTRY: {
+                DSK: "test",
+                SECURITY_CLASSES: [0],
+            },
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.replace_failed_node",
+        "nodeId": 67,
+        "options": {
+            "strategy": InclusionStrategy.SECURITY_S2,
+            "provisioning": ProvisioningEntry(
+                "test", [SecurityClass.S2_UNAUTHENTICATED]
+            ).to_dict(),
+        },
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/replace_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+            INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
+            QR_PROVISIONING_INFORMATION: {
+                VERSION: 0,
+                SECURITY_CLASSES: [0],
+                DSK: "test",
+                GENERIC_DEVICE_CLASS: 1,
+                SPECIFIC_DEVICE_CLASS: 1,
+                INSTALLER_ICON_TYPE: 1,
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 1,
+                PRODUCT_ID: 1,
+                APPLICATION_VERSION: "test",
+            },
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.replace_failed_node",
+        "nodeId": 67,
+        "options": {
+            "strategy": InclusionStrategy.SECURITY_S2,
+            "provisioning": QRProvisioningInformation(
+                QRCodeVersion.S2,
+                [SecurityClass.S2_UNAUTHENTICATED],
+                "test",
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                "test",
+                None,
+                None,
+                None,
+            ).to_dict(),
+        },
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/replace_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+            INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
+            QR_CODE_STRING: "test",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.replace_failed_node",
+        "nodeId": 67,
+        "options": {"strategy": InclusionStrategy.SECURITY_S2, "provisioning": "test"},
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    # Test ValueError is caught as failure
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/replace_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+            INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
+            QR_CODE_STRING: "test",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 0
+
     # Test FailedZWaveCommand is caught
     with patch(
         "zwave_js_server.model.controller.Controller.async_replace_failed_node",
@@ -1004,7 +1659,7 @@ async def test_replace_failed_node(
     ):
         await ws_client.send_json(
             {
-                ID: 4,
+                ID: 6,
                 TYPE: "zwave_js/replace_failed_node",
                 ENTRY_ID: entry.entry_id,
                 NODE_ID: 67,
@@ -1022,7 +1677,7 @@ async def test_replace_failed_node(
 
     await ws_client.send_json(
         {
-            ID: 5,
+            ID: 7,
             TYPE: "zwave_js/replace_failed_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,
