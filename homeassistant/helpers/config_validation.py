@@ -713,7 +713,7 @@ def _deprecated_or_removed(
     replacement_key: str | None,
     default: Any | None,
     raise_if_present: bool,
-    removed: bool,
+    option_removed: bool,
 ) -> Callable[[dict], dict]:
     """
     Log key as deprecated and provide a replacement (if exists) or fail.
@@ -735,7 +735,7 @@ def _deprecated_or_removed(
         # will be missing information, so let's guard.
         # https://github.com/home-assistant/core/issues/24982
         module_name = __name__
-    if removed:
+    if option_removed:
         logger_func = logging.getLogger(module_name).error
         option_status = "has been removed"
     else:
@@ -804,7 +804,7 @@ def deprecated(
         replacement_key=replacement_key,
         default=default,
         raise_if_present=raise_if_present or False,
-        removed=False,
+        option_removed=False,
     )
 
 
@@ -824,7 +824,7 @@ def removed(
         replacement_key=None,
         default=default,
         raise_if_present=raise_if_present or False,
-        removed=True,
+        option_removed=True,
     )
 
 
