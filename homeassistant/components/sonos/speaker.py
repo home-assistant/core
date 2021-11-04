@@ -972,7 +972,7 @@ class SonosSpeaker:
             return True
 
         try:
-            with async_timeout.timeout(5):
+            async with async_timeout.timeout(5):
                 while not _test_groups(groups):
                     await hass.data[DATA_SONOS].topology_condition.wait()
         except asyncio.TimeoutError:

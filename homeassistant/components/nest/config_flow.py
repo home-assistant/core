@@ -211,7 +211,7 @@ class NestFlowHandler(
 
         if user_input is not None:
             try:
-                with async_timeout.timeout(10):
+                async with async_timeout.timeout(10):
                     tokens = await flow["convert_code"](user_input["code"])
                 return self._entry_from_tokens(
                     f"Nest (via {flow['name']})", flow, tokens
@@ -228,7 +228,7 @@ class NestFlowHandler(
                 _LOGGER.exception("Unexpected error resolving code")
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 url = await flow["gen_authorize_url"](self.flow_id)
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")

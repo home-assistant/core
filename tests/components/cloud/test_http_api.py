@@ -119,7 +119,7 @@ async def test_login_view(hass, cloud_client):
 
 async def test_login_view_random_exception(cloud_client):
     """Try logging in with invalid JSON."""
-    with patch("async_timeout.timeout", side_effect=ValueError("Boom")):
+    with patch("hass_nabucasa.Cloud.login", side_effect=ValueError("Boom")):
         req = await cloud_client.post(
             "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
         )

@@ -210,7 +210,7 @@ class RestSwitch(SwitchEntity):
         rendered_headers = render_templates(self._headers)
         rendered_params = render_templates(self._params)
 
-        with async_timeout.timeout(self._timeout):
+        async with async_timeout.timeout(self._timeout):
             req = await getattr(websession, self._method)(
                 self._resource,
                 auth=self._auth,
@@ -236,7 +236,7 @@ class RestSwitch(SwitchEntity):
         rendered_headers = render_templates(self._headers)
         rendered_params = render_templates(self._params)
 
-        with async_timeout.timeout(self._timeout):
+        async with async_timeout.timeout(self._timeout):
             req = await websession.get(
                 self._state_resource,
                 auth=self._auth,

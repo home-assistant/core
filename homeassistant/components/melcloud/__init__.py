@@ -145,7 +145,7 @@ async def mel_devices_setup(hass, token) -> list[MelCloudDevice]:
     """Query connected devices from MELCloud."""
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
-        with timeout(10):
+        async with timeout(10):
             all_devices = await get_devices(
                 token,
                 session,
