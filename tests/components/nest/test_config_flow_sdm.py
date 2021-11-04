@@ -28,8 +28,9 @@ CONFIG = {
     "http": {"base_url": "https://example.com"},
 }
 
-WEB_AUTH = f"{DOMAIN}.web"
-APP_AUTH = f"{DOMAIN}.installed"
+ORIG_AUTH_DOMAIN = DOMAIN
+WEB_AUTH_DOMAIN = f"{DOMAIN}.web"
+APP_AUTH_DOMAIN = f"{DOMAIN}.installed"
 WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
 
@@ -148,7 +149,7 @@ async def test_web_full_flow(hass, oauth):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result = await oauth.async_pick_flow(result, WEB_AUTH)
+    result = await oauth.async_pick_flow(result, WEB_AUTH_DOMAIN)
 
     entry = await oauth.async_oauth_web_flow(result)
     assert entry.title == "OAuth for Web"
@@ -171,7 +172,7 @@ async def test_web_reauth(hass, oauth):
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            "auth_implementation": WEB_AUTH,
+            "auth_implementation": WEB_AUTH_DOMAIN,
             "token": {
                 # Verify this is replaced at end of the test
                 "access_token": "some-revoked-token",
@@ -209,13 +210,13 @@ async def test_web_reauth(hass, oauth):
         "type": "Bearer",
         "expires_in": 60,
     }
-    assert entry.data["auth_implementation"] == WEB_AUTH
+    assert entry.data["auth_implementation"] == WEB_AUTH_DOMAIN
 
 
 async def test_single_config_entry(hass):
     """Test that only a single config entry is allowed."""
     old_entry = MockConfigEntry(
-        domain=DOMAIN, data={"auth_implementation": WEB_AUTH, "sdm": {}}
+        domain=DOMAIN, data={"auth_implementation": WEB_AUTH_DOMAIN, "sdm": {}}
     )
     old_entry.add_to_hass(hass)
 
@@ -237,12 +238,12 @@ async def test_unexpected_existing_config_entries(hass, oauth):
     assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
 
     old_entry = MockConfigEntry(
-        domain=DOMAIN, data={"auth_implementation": WEB_AUTH, "sdm": {}}
+        domain=DOMAIN, data={"auth_implementation": WEB_AUTH_DOMAIN, "sdm": {}}
     )
     old_entry.add_to_hass(hass)
 
     old_entry = MockConfigEntry(
-        domain=DOMAIN, data={"auth_implementation": WEB_AUTH, "sdm": {}}
+        domain=DOMAIN, data={"auth_implementation": WEB_AUTH_DOMAIN, "sdm": {}}
     )
     old_entry.add_to_hass(hass)
 
@@ -282,7 +283,7 @@ async def test_app_full_flow(hass, oauth, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await oauth.async_pick_flow(result, APP_AUTH)
+    result = await oauth.async_pick_flow(result, APP_AUTH_DOMAIN)
 
     entry = await oauth.async_oauth_app_flow(result)
     assert entry.title == "OAuth for Apps"
@@ -305,7 +306,7 @@ async def test_app_reauth(hass, oauth):
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            "auth_implementation": APP_AUTH,
+            "auth_implementation": APP_AUTH_DOMAIN,
             "token": {
                 # Verify this is replaced at end of the test
                 "access_token": "some-revoked-token",
@@ -344,4 +345,4 @@ async def test_app_reauth(hass, oauth):
         "type": "Bearer",
         "expires_in": 60,
     }
-    assert entry.data["auth_implementation"] == APP_AUTH
+    assert entry.data["auth_implementation"] == APP_AUTH_DOMAIN

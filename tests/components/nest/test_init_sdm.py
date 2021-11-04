@@ -7,21 +7,15 @@ and failure modes.
 
 import copy
 import logging
-import time
 from unittest.mock import patch
 
 from google_nest_sdm.exceptions import AuthException, GoogleNestException
 
-from homeassistant.components.nest import DOMAIN, async_migrate_entry
+from homeassistant.components.nest import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.setup import async_setup_component
 
-from .common import (
-    CONFIG,
-    async_setup_sdm_platform,
-    create_config_entry,
-    create_v1_config_entry,
-)
+from .common import CONFIG, async_setup_sdm_platform, create_config_entry
 
 PLATFORM = "sensor"
 
@@ -135,22 +129,3 @@ async def test_empty_config(hass, caplog):
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 0
-
-
-async def test_migrate_entry_v1_to_v2(hass):
-    """Test that migration from v1 config entry gives same result as v2."""
-    token_expiration_time = time.time() + 86400
-    v1 = create_v1_config_entry(hass, token_expiration_time)
-    v2 = create_config_entry(hass, token_expiration_time)
-    await async_migrate_entry(hass, v1)
-    assert v1.data == v2.data
-
-
-async def test_migrate_entry_v2_no_op(hass):
-    """Test that migration of v2 ConfigEntry is a no-op."""
-    token_expiration_time = time.time() + 86400
-    v2 = create_config_entry(hass, token_expiration_time)
-    v2_copy = create_config_entry(hass, token_expiration_time)
-    await async_migrate_entry(hass, v2)
-    # No change
-    assert v2.data == v2_copy.data

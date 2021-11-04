@@ -34,7 +34,7 @@ FAKE_REFRESH_TOKEN = "some-refresh-token"
 
 
 def create_config_entry(
-    hass, token_expiration_time=None, auth_implementation="nest.web", version=2
+    hass, token_expiration_time=None, auth_implementation="nest"
 ) -> ConfigEntry:
     """Create a ConfigEntry and add it to Home Assistant."""
     if token_expiration_time is None:
@@ -51,20 +51,11 @@ def create_config_entry(
         },
     }
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=config_entry_data, version=version
+        domain=DOMAIN,
+        data=config_entry_data,
     )
     config_entry.add_to_hass(hass)
     return config_entry
-
-
-def create_v1_config_entry(hass, token_expiration_time=None) -> ConfigEntry:
-    """Create a ConfigEntry for exercising migration path."""
-    return create_config_entry(
-        hass,
-        token_expiration_time=token_expiration_time,
-        auth_implementation="nest",
-        version=1,
-    )
 
 
 class FakeDeviceManager(DeviceManager):

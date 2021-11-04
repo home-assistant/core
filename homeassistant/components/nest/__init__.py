@@ -1,7 +1,7 @@
 """Support for Nest devices."""
 
 import logging
-from typing import Any, Dict
+from types import MappingProxyType
 
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import (
@@ -76,6 +76,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 # Platforms for SDM API
 PLATFORMS = ["sensor", "camera", "climate"]
+WEB_AUTH_DOMAIN = f"{DOMAIN}.web"
+INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
 
 class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -89,7 +91,7 @@ class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
         """Initialize WebAuth."""
         super().__init__(
             hass,
-            f"{DOMAIN}.web",
+            WEB_AUTH_DOMAIN,
             client_id,
             client_secret,
             OAUTH2_AUTHORIZE.format(project_id=project_id),
@@ -108,7 +110,7 @@ class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
         """Initialize InstalledAppAuth."""
         super().__init__(
             hass,
-            f"{DOMAIN}.installed",
+            INSTALLED_AUTH_DOMAIN,
             client_id,
             client_secret,
             OAUTH2_AUTHORIZE.format(project_id=project_id),
@@ -192,20 +194,17 @@ class SignalUpdateCallback:
             self._hass.bus.async_fire(NEST_EVENT, message)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
+def _entry_compat(config_entry: ConfigEntry) -> None:
+    """Update a ConfigEntry to newest format for backwards compatibility."""
     if DATA_SDM not in config_entry.data:
-        # Legacy API
-        return True
+        return
 
-    if config_entry.version == 1:
-        _LOGGER.debug("Migrating from version %s", config_entry.version)
-        new: Dict[str, Any] = {**config_entry.data}
-        new["auth_implementation"] = f"{DOMAIN}.web"
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=new)
-        _LOGGER.info("Migration to version %s successful", config_entry.version)
-    return True
+    if config_entry.data.get("auth_implementation") == DOMAIN:
+        # SDM API previously only supported a single auth implementation type
+        # so update on demand to new name for the original impl.
+        new = {**config_entry.data}
+        new["auth_implementation"] = WEB_AUTH_DOMAIN
+        config_entry.data = MappingProxyType({**new})
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -213,6 +212,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
+
+    _entry_compat(entry)
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
