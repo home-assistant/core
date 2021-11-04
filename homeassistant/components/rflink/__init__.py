@@ -270,7 +270,7 @@ async def async_setup(hass, config):
         )
 
         try:
-            with async_timeout.timeout(CONNECTION_TIMEOUT):
+            async with async_timeout.timeout(CONNECTION_TIMEOUT):
                 transport, protocol = await connection
 
         except (
