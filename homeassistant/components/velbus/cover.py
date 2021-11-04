@@ -69,7 +69,7 @@ class VelbusCover(VelbusEntity, CoverEntity):
         """Close the cover."""
         await self._channel.close()
 
-    async def async_stop_cover(self, **kwargs) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._channel.stop()
 
