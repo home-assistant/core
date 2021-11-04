@@ -713,7 +713,7 @@ def _deprecated_or_removed(
     replacement_key: str | None = None,
     default: Any | None = None,
     raise_if_present: bool | None = False,
-    option_status: str | None = "deprecated",
+    option_status: str | None = "is deprecated",
 ) -> Callable[[dict], dict]:
     """
     Log key as deprecated and provide a replacement (if exists) or fail.
