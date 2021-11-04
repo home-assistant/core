@@ -213,6 +213,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
 
+    # Soft migrate config entries to new format
     _entry_compat(entry)
 
     implementation = (
