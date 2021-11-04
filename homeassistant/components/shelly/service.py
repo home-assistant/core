@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC, SERVICE_OTA_UPDATE
+from .const import ATTR_BETA, BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC, SERVICE_OTA_UPDATE
 from .utils import get_device_entry_gen
 
 
@@ -18,7 +18,7 @@ async def async_services_setup(hass: HomeAssistant) -> None:
         if not (call.data.get(ATTR_DEVICE_ID) or call.data.get(ATTR_AREA_ID)):
             raise HomeAssistantError("No target selected for OTA update")
 
-        beta_channel = bool(call.data.get("beta"))
+        beta_channel = bool(call.data.get(ATTR_BETA))
 
         entry_ids = await async_extract_config_entry_ids(hass, call)
         for entry_id in entry_ids:

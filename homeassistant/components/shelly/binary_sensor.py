@@ -17,7 +17,7 @@ from homeassistant.components.binary_sensor import (
     STATE_ON,
     BinarySensorEntity,
 )
-from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD
+from homeassistant.components.shelly.const import ATTR_BETA, CONF_SLEEP_PERIOD
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
@@ -158,7 +158,7 @@ RPC_SENSORS: Final = {
         extra_state_attributes=lambda status, shelly: {
             "latest_stable_version": status.get("stable", {"version": ""})["version"],
             "installed_version": shelly["ver"],
-            "beta_version": status.get("beta", {"version": ""})["version"],
+            "beta_version": status.get(ATTR_BETA, {"version": ""})["version"],
         },
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),

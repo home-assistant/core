@@ -14,6 +14,7 @@ from homeassistant.util import slugify
 
 from . import BlockDeviceWrapper, RpcDeviceWrapper
 from .const import (
+    ATTR_BETA,
     BLOCK,
     CONF_OTA_BETA_CHANNEL,
     DATA_CONFIG_ENTRY,
@@ -78,6 +79,6 @@ class ShellyOtaUpdateButton(ButtonEntity):
             SERVICE_OTA_UPDATE,
             {
                 ATTR_DEVICE_ID: self.wrapper.device_id,
-                "beta": self.entry.options.get(CONF_OTA_BETA_CHANNEL),
+                ATTR_BETA: self.entry.options.get(CONF_OTA_BETA_CHANNEL),
             },
         )

@@ -29,6 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
+    ATTR_BETA,
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
@@ -286,7 +287,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self._last_effect: int | None = None
 
         self._ota_update_pending = False
-        self._ota_update_params = {"beta": False}
+        self._ota_update_params = {ATTR_BETA: False}
 
         entry.async_on_unload(
             self.async_add_listener(self._async_device_updates_handler)
@@ -457,15 +458,15 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
         if self.entry.data.get(CONF_SLEEP_PERIOD):
             self._ota_update_pending = True
-            self._ota_update_params = {"beta": beta}
+            self._ota_update_params = {ATTR_BETA: beta}
             _LOGGER.info("OTA update scheduled for sleeping device %s", self.name)
         else:
-            self._ota_update_params = {"beta": beta}
+            self._ota_update_params = {ATTR_BETA: beta}
             await self._async_do_ota_update()
 
     async def _async_do_ota_update(self) -> None:
         """Perform an ota update."""
-        beta_channel = self._ota_update_params["beta"]
+        beta_channel = self._ota_update_params[ATTR_BETA]
         update_data = self.device.status["update"]
         new_version = update_data["new_version"]
         if beta_channel:
@@ -624,7 +625,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
-        self._ota_update_params = {"beta": False}
+        self._ota_update_params = {ATTR_BETA: False}
 
         self._debounced_reload = Debouncer(
             hass,
@@ -734,22 +735,22 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             _LOGGER.error("No OTA update available for device %s", self.name)
             return
 
-        if beta and not update_data.get("beta"):
+        if beta and not update_data.get(ATTR_BETA):
             _LOGGER.error(
                 "No OTA update on beta channel available for device %s", self.name
             )
             return
 
-        self._ota_update_params = {"beta": beta}
+        self._ota_update_params = {ATTR_BETA: beta}
         await self._async_do_ota_update()
 
     async def _async_do_ota_update(self) -> None:
         """Perform an ota update."""
-        beta_channel = self._ota_update_params["beta"]
+        beta_channel = self._ota_update_params[ATTR_BETA]
         update_data = self.device.status["sys"]["available_updates"]
         new_version = update_data.get("stable", {"version": ""})["version"]
         if beta_channel:
-            new_version = update_data.get("beta", {"version": ""})["version"]
+            new_version = update_data.get(ATTR_BETA, {"version": ""})["version"]
 
         assert self.device.shelly
         _LOGGER.info(
