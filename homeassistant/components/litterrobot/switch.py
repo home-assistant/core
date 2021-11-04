@@ -9,11 +9,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotControlEntity
+from .entity import LitterRobotConfigEntity
 from .hub import LitterRobotHub
 
 
-class LitterRobotNightLightModeSwitch(LitterRobotControlEntity, SwitchEntity):
+class LitterRobotNightLightModeSwitch(LitterRobotConfigEntity, SwitchEntity):
     """Litter-Robot Night Light Mode Switch."""
 
     @property
@@ -35,7 +35,7 @@ class LitterRobotNightLightModeSwitch(LitterRobotControlEntity, SwitchEntity):
         await self.perform_action_and_refresh(self.robot.set_night_light, False)
 
 
-class LitterRobotPanelLockoutSwitch(LitterRobotControlEntity, SwitchEntity):
+class LitterRobotPanelLockoutSwitch(LitterRobotConfigEntity, SwitchEntity):
     """Litter-Robot Panel Lockout Switch."""
 
     @property
@@ -57,7 +57,7 @@ class LitterRobotPanelLockoutSwitch(LitterRobotControlEntity, SwitchEntity):
         await self.perform_action_and_refresh(self.robot.set_panel_lockout, False)
 
 
-ROBOT_SWITCHES: list[tuple[type[LitterRobotControlEntity], str]] = [
+ROBOT_SWITCHES: list[tuple[type[LitterRobotConfigEntity], str]] = [
     (LitterRobotNightLightModeSwitch, "Night Light Mode"),
     (LitterRobotPanelLockoutSwitch, "Panel Lockout"),
 ]
