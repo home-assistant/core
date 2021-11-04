@@ -1,7 +1,10 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
 import datetime
+import importlib
 import sqlite3
+import sys
+import threading
 from unittest.mock import ANY, Mock, PropertyMock, call, patch
 
 import pytest
@@ -222,7 +225,8 @@ async def test_events_during_migration_queue_exhausted(hass):
     assert len(db_states) == 2
 
 
-async def test_schema_migrate(hass):
+@pytest.mark.parametrize("start_version", [0, 16, 18, 22])
+async def test_schema_migrate(hass, start_version):
     """Test the full schema migration logic.
 
     We're just testing that the logic can execute successfully here without
@@ -230,21 +234,76 @@ async def test_schema_migrate(hass):
     inspection could quickly become quite cumbersome.
     """
 
+    migration_done = threading.Event()
+    migration_stall = threading.Event()
+    migration_version = None
+    real_migration = recorder.migration.migrate_schema
+
+    def _create_engine_test(*args, **kwargs):
+        """Test version of create_engine that initializes with old schema.
+
+        This simulates an existing db with the old schema.
+        """
+        module = f"tests.components.recorder.models_schema_{str(start_version)}"
+        importlib.import_module(module)
+        old_models = sys.modules[module]
+        engine = create_engine(*args, **kwargs)
+        old_models.Base.metadata.create_all(engine)
+        if start_version > 0:
+            with Session(engine) as session:
+                session.add(recorder.models.SchemaChanges(schema_version=start_version))
+                session.commit()
+        return engine
+
     def _mock_setup_run(self):
         self.run_info = RecorderRuns(
             start=self.recording_start, created=dt_util.utcnow()
         )
 
-    with patch("sqlalchemy.create_engine", new=create_engine_test), patch(
+    def _instrument_migration(*args):
+        """Control migration progress and check results."""
+        nonlocal migration_done
+        nonlocal migration_version
+        nonlocal migration_stall
+        migration_stall.wait()
+        try:
+            real_migration(*args)
+        except Exception:
+            migration_done.set()
+            raise
+
+        # Check and report the outcome of the migration; if migration fails
+        # the recorder will silently create a new database.
+        with session_scope(hass=hass) as session:
+            res = (
+                session.query(models.SchemaChanges)
+                .order_by(models.SchemaChanges.change_id.desc())
+                .first()
+            )
+            migration_version = res.schema_version
+        migration_done.set()
+
+    with patch(
+        "homeassistant.components.recorder.create_engine", new=_create_engine_test
+    ), patch(
         "homeassistant.components.recorder.Recorder._setup_run",
         side_effect=_mock_setup_run,
         autospec=True,
-    ) as setup_run:
+    ) as setup_run, patch(
+        "homeassistant.components.recorder.migration.migrate_schema",
+        wraps=_instrument_migration,
+    ):
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )
+        assert await recorder.async_migration_in_progress(hass) is True
+        migration_stall.set()
         await hass.async_block_till_done()
+        migration_done.wait()
+        await async_wait_recording_done_without_instance(hass)
+        assert migration_version == models.SCHEMA_VERSION
         assert setup_run.called
+        assert await recorder.async_migration_in_progress(hass) is not True
 
 
 def test_invalid_update():
