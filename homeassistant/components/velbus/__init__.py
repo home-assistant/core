@@ -1,16 +1,20 @@
 """Support for Velbus devices."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
+from velbusaio.channels import Channel as VelbusChannel
 from velbusaio.controller import Velbus
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_INTERFACE,
@@ -30,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Velbus platform."""
     # Import from the configuration file if needed
     if DOMAIN not in config:
@@ -62,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Establish connection with velbus."""
     hass.data.setdefault(DOMAIN, {})
 
+    # Init the velbus controller
     controller = Velbus(
         entry.data[CONF_PORT],
         cache_dir=hass.config.path(".storage/velbuscache/"),
@@ -77,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if hass.services.has_service(DOMAIN, SERVICE_SCAN):
         return True
 
-    def check_entry_id(interface: str):
+    def check_entry_id(interface: str) -> str:
         for entry in hass.config_entries.async_entries(DOMAIN):
             if "port" in entry.data and entry.data["port"] == interface:
                 return entry.entry_id
@@ -85,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "The interface provided is not defined as a port in a Velbus integration"
         )
 
-    async def scan(call):
+    async def scan(call: ServiceCall) -> None:
         await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].scan()
 
     hass.services.async_register(
@@ -95,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vol.Schema({vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id)}),
     )
 
-    async def syn_clock(call):
+    async def syn_clock(call: ServiceCall) -> None:
         await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].sync_clock()
 
     hass.services.async_register(
@@ -105,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vol.Schema({vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id)}),
     )
 
-    async def set_memo_text(call):
+    async def set_memo_text(call: ServiceCall) -> None:
         """Handle Memo Text service call."""
         memo_text = call.data[CONF_MEMO_TEXT]
         memo_text.hass = hass
@@ -147,47 +152,51 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class VelbusEntity(Entity):
     """Representation of a Velbus entity."""
 
-    def __init__(self, channel):
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        channel: VelbusChannel,
+        entity_description: EntityDescription | None = None,
+    ) -> None:
         """Initialize a Velbus entity."""
         self._channel = channel
 
-    @property
-    def unique_id(self):
-        """Get unique ID."""
         if (serial := self._channel.get_module_serial()) == 0:
             serial = self._channel.get_module_address()
-        return f"{serial}-{self._channel.get_channel_number()}"
+        self._attr_unique_id = f"{serial}-{self._channel.get_channel_number()}"
+        self._attr_name = self._channel.get_name()
 
-    @property
-    def name(self):
-        """Return the display name of this entity."""
-        return self._channel.get_name()
+        if entity_description is not None:
+            self.entity_description = entity_description
+            if entity_description.key is not None and entity_description.key != "":
+                self._attr_unique_id += f"-{entity_description.key}"
+            if entity_description.name is not None and entity_description.name != "":
+                self._attr_name = f"{self._attr_name}-{entity_description.name}"
 
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (
+                    DOMAIN,
+                    str(self._channel.get_module_address()),
+                )
+            },
+            name=self._channel.get_full_name(),
+            manufacturer="Velleman",
+            model=self._channel.get_module_type_name(),
+            sw_version=self._channel.get_module_sw_version(),
+        )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Add listener for state changes."""
         self._channel.on_status_update(self._on_update)
 
-    async def _on_update(self):
+    async def _on_update(self) -> None:
         self.async_write_ha_state()
 
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {
-                (
-                    DOMAIN,
-                    self._channel.get_module_address(),
-                    self._channel.get_module_serial(),
-                )
-            },
-            "name": self._channel.get_full_name(),
-            "manufacturer": "Velleman",
-            "model": self._channel.get_module_type_name(),
-            "sw_version": self._channel.get_module_sw_version(),
-        }
+
+@dataclass
+class VelbusEntityDescriptionMixin:
+    """Bases description for Velbus entities."""
+
+    suitable: Callable[[VelbusChannel], bool]
