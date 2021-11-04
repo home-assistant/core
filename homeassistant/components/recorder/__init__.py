@@ -798,7 +798,7 @@ class Recorder(threading.Thread):
         if statistics.add_external_statistics(self, metadata, stats):
             return
         # Schedule a new statistics task if this one didn't finish
-        self.queue.put(StatisticsTask(metadata, stats))
+        self.queue.put(ExternalStatisticsTask(metadata, stats))
 
     def _process_one_event(self, event):
         """Process one event."""
