@@ -7,13 +7,20 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VelbusEntity
 from .const import DOMAIN, PRESET_MODES
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Velbus switch based on config_entry."""
     await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
@@ -26,40 +33,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class VelbusClimate(VelbusEntity, ClimateEntity):
     """Representation of a Velbus thermostat."""
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list off supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit."""
-        return TEMP_CELSIUS
-
-    @property
-    def current_temperature(self) -> int | None:
-        """Return the current temperature."""
-        return self._channel.get_state()
-
-    @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode."""
-        return HVAC_MODE_HEAT
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_HEAT]
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_hvac_mode = HVAC_MODE_HEAT
+    _attr_hvac_modes = [HVAC_MODE_HEAT]
+    _attr_preset_modes = list(PRESET_MODES)
 
     @property
     def target_temperature(self) -> int | None:
         """Return the temperature we try to reach."""
         return self._channel.get_climate_target()
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of all possible presets."""
-        return list(PRESET_MODES)
 
     @property
     def preset_mode(self) -> str | None:
