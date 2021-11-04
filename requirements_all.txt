@@ -1017,7 +1017,7 @@ millheater==0.8.0
 minio==4.0.9
 
 # homeassistant.components.mitemp_bt
-mitemp_bt==0.0.3
+mitemp_bt==0.0.5
 
 # homeassistant.components.motion_blinds
 motionblinds==0.5.7
