@@ -193,27 +193,11 @@ class SignalUpdateCallback:
             self._hass.bus.async_fire(NEST_EVENT, message)
 
 
-def _entry_compat(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Update a ConfigEntry to newest format for backwards compatibility."""
-    if DATA_SDM not in config_entry.data:
-        return
-
-    if config_entry.data.get("auth_implementation") == DOMAIN:
-        # SDM API previously only supported a single auth implementation type
-        # so update on demand to new name for the original impl.
-        new = {**config_entry.data}
-        new["auth_implementation"] = WEB_AUTH_DOMAIN
-        hass.config_entries.async_update_entry(config_entry, data=new)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
 
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
-
-    # Soft migrate config entries to new format
-    _entry_compat(hass, entry)
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
