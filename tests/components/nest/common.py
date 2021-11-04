@@ -38,7 +38,7 @@ def create_config_entry(hass, token_expiration_time=None):
         token_expiration_time = time.time() + 86400
     config_entry_data = {
         "sdm": {},  # Indicates new SDM API, not legacy API
-        "auth_implementation": "nest",  # old name for testing compat
+        "auth_implementation": "nest",
         "token": {
             "access_token": FAKE_TOKEN,
             "refresh_token": FAKE_REFRESH_TOKEN,
