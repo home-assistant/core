@@ -1,6 +1,5 @@
 """Test the Google Nest Device Access config flow."""
 
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -51,9 +50,7 @@ class OAuthFixture:
         self.hass_client = hass_client_no_auth
         self.aioclient_mock = aioclient_mock
 
-    async def async_pick_flow(
-        self, result: dict[str, Any], auth_domain: str
-    ) -> dict[str, Any]:
+    async def async_pick_flow(self, result: dict, auth_domain: str) -> dict:
         """Invoke flow to puth the auth type to use for this flow."""
         assert result["type"] == "form"
         assert result["step_id"] == "pick_implementation"
@@ -62,7 +59,7 @@ class OAuthFixture:
             result["flow_id"], {"implementation": auth_domain}
         )
 
-    async def async_oauth_web_flow(self, result: dict[str, Any]) -> ConfigEntry:
+    async def async_oauth_web_flow(self, result: dict) -> ConfigEntry:
         """Invoke the oauth flow for Web Auth with fake responses."""
         state = self.create_state(result, WEB_REDIRECT_URL)
         assert result["url"] == self.authorize_url(state, WEB_REDIRECT_URL)
@@ -75,7 +72,7 @@ class OAuthFixture:
 
         return await self.async_finish_flow(result)
 
-    async def async_oauth_app_flow(self, result: dict[str, Any]) -> ConfigEntry:
+    async def async_oauth_app_flow(self, result: dict) -> ConfigEntry:
         """Invoke the oauth flow for Installed Auth with fake responses."""
         # Render form with a link to get an auth token
         assert result["type"] == "form"
@@ -89,7 +86,7 @@ class OAuthFixture:
         # Simulate user entering auth token in form
         return await self.async_finish_flow(result, {"code": "abcd"})
 
-    def create_state(self, result: dict[str, Any], redirect_url: str) -> str:
+    def create_state(self, result: dict, redirect_url: str) -> str:
         """Create state object based on redirect url."""
         return config_entry_oauth2_flow._encode_jwt(
             self.hass,
@@ -110,9 +107,7 @@ class OAuthFixture:
             "&access_type=offline&prompt=consent"
         )
 
-    async def async_finish_flow(
-        self, result, user_input: dict[str, Any] = None
-    ) -> ConfigEntry:
+    async def async_finish_flow(self, result, user_input: dict = None) -> ConfigEntry:
         """Finish the OAuth flow exchanging auth token for refresh token."""
         self.aioclient_mock.post(
             OAUTH2_TOKEN,
