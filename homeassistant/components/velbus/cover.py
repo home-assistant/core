@@ -61,7 +61,7 @@ class VelbusCover(VelbusEntity, CoverEntity):
         pos = self._channel.get_position()
         return 100 - pos
 
-    async def async_open_cover(self, **kwargs) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._channel.open()
 
