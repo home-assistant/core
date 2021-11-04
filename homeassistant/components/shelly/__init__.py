@@ -445,7 +445,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             _LOGGER.error("No OTA update available for device %s", self.name)
             return
 
-        if beta and not update_data.get("beta_version") and not beta:
+        if beta and not update_data.get("beta_version"):
             _LOGGER.error(
                 "No OTA update on beta channel available for device %s", self.name
             )
