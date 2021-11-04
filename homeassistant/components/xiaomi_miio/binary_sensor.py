@@ -29,6 +29,7 @@ from .const import (
     MODELS_HUMIDIFIER_MJJSQ,
     MODELS_VACUUM,
     MODELS_VACUUM_WITH_MOP,
+    MODELS_VACUUM_WITH_SEPARATE_MOP,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
@@ -77,7 +78,7 @@ FAN_ZA5_BINARY_SENSORS = (ATTR_POWERSUPPLY_ATTACHED,)
 
 VACUUM_SENSORS = {
     ATTR_MOP_ATTACHED: XiaomiMiioBinarySensorDescription(
-        key=ATTR_MOP_ATTACHED,
+        key=ATTR_WATER_BOX_ATTACHED,
         name="Mop Attached",
         icon="mdi:square-rounded",
         parent_key=VacuumCoordinatorDataAttributes.status,
@@ -105,6 +106,19 @@ VACUUM_SENSORS = {
     ),
 }
 
+VACUUM_SENSORS_SEPARATE_MOP = {
+    **VACUUM_SENSORS,
+    ATTR_MOP_ATTACHED: XiaomiMiioBinarySensorDescription(
+        key=ATTR_MOP_ATTACHED,
+        name="Mop Attached",
+        icon="mdi:square-rounded",
+        parent_key=VacuumCoordinatorDataAttributes.status,
+        entity_registry_enabled_default=True,
+        device_class=DEVICE_CLASS_CONNECTIVITY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+}
+
 HUMIDIFIER_MIIO_BINARY_SENSORS = (ATTR_WATER_TANK_DETACHED,)
 HUMIDIFIER_MIOT_BINARY_SENSORS = (ATTR_WATER_TANK_DETACHED,)
 HUMIDIFIER_MJJSQ_BINARY_SENSORS = (ATTR_NO_WATER, ATTR_WATER_TANK_DETACHED)
@@ -118,8 +132,12 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
     device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     entities = []
+    sensors = VACUUM_SENSORS
 
-    for sensor, description in VACUUM_SENSORS.items():
+    if config_entry.data[CONF_MODEL] in MODELS_VACUUM_WITH_SEPARATE_MOP:
+        sensors = VACUUM_SENSORS_SEPARATE_MOP
+
+    for sensor, description in sensors.items():
         parent_key_data = getattr(coordinator.data, description.parent_key)
         if getattr(parent_key_data, description.key, None) is None:
             _LOGGER.debug(
