@@ -75,7 +75,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 # Platforms for SDM API
 PLATFORMS = ["sensor", "camera", "climate"]
-WEB_AUTH_DOMAIN = f"{DOMAIN}.web"
+WEB_AUTH_DOMAIN = DOMAIN
 INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
 

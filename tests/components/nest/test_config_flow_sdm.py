@@ -29,7 +29,7 @@ CONFIG = {
 }
 
 ORIG_AUTH_DOMAIN = DOMAIN
-WEB_AUTH_DOMAIN = f"{DOMAIN}.web"
+WEB_AUTH_DOMAIN = DOMAIN
 APP_AUTH_DOMAIN = f"{DOMAIN}.installed"
 WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
