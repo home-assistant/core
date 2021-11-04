@@ -277,6 +277,7 @@ class SensorEntity(Entity):
         units = self.hass.config.units
         if (
             value is not None
+            and not isinstance(value, datetime)
             and unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
             and unit_of_measurement != units.temperature_unit
         ):
