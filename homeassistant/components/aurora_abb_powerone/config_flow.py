@@ -1,5 +1,8 @@
 """Config flow for Aurora ABB PowerOne integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 import serial.tools.list_ports
@@ -7,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     ATTR_FIRMWARE,
@@ -22,7 +26,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_and_connect(hass: core.HomeAssistant, data):
+def validate_and_connect(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -50,15 +56,15 @@ def validate_and_connect(hass: core.HomeAssistant, data):
     return ret
 
 
-def scan_comports():
+def scan_comports() -> tuple[list[str] | None, str | None]:
     """Find and store available com ports for the GUI dropdown."""
-    comports = serial.tools.list_ports.comports(include_links=True)
-    comportslist = []
-    for port in comports:
-        comportslist.append(port.device)
+    com_ports = serial.tools.list_ports.comports(include_links=True)
+    com_ports_list = []
+    for port in com_ports:
+        com_ports_list.append(port.device)
         _LOGGER.debug("COM port option: %s", port.device)
-    if len(comportslist) > 0:
-        return comportslist, comportslist[0]
+    if len(com_ports_list) > 0:
+        return com_ports_list, com_ports_list[0]
     _LOGGER.warning("No com ports found.  Need a valid RS485 device to communicate")
     return None, None
 
@@ -67,18 +73,17 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aurora ABB PowerOne."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialise the config flow."""
         self.config = None
-        self._comportslist = None
-        self._defaultcomport = None
+        self._com_ports_list = None
+        self._default_com_port = None
 
-    async def async_step_import(self, config: dict):
+    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a configuration from config.yaml."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="already_configured")
 
         conf = {}
         conf[CONF_PORT] = config["device"]
@@ -87,14 +92,16 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=DEFAULT_INTEGRATION_TITLE, data=conf)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialised by the user."""
 
         errors = {}
-        if self._comportslist is None:
+        if self._com_ports_list is None:
             result = await self.hass.async_add_executor_job(scan_comports)
-            self._comportslist, self._defaultcomport = result
-            if self._defaultcomport is None:
+            self._com_ports_list, self._default_com_port = result
+            if self._default_com_port is None:
                 return self.async_abort(reason="no_serial_ports")
 
         # Handle the initial step.
@@ -103,14 +110,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await self.hass.async_add_executor_job(
                     validate_and_connect, self.hass, user_input
                 )
-                info.update(user_input)
-                # Bomb out early if someone has already set up this device.
-                device_unique_id = info["serial_number"]
-                await self.async_set_unique_id(device_unique_id)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(title=info["title"], data=info)
-
             except OSError as error:
                 if error.errno == 19:  # No such device.
                     errors["base"] = "invalid_serial_port"
@@ -127,10 +126,18 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         error,
                     )
                     errors["base"] = "cannot_connect"
+            else:
+                info.update(user_input)
+                # Bomb out early if someone has already set up this device.
+                device_unique_id = info["serial_number"]
+                await self.async_set_unique_id(device_unique_id)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=info["title"], data=info)
+
         # If no user input, must be first pass through the config.  Show  initial form.
         config_options = {
-            vol.Required(CONF_PORT, default=self._defaultcomport): vol.In(
-                self._comportslist
+            vol.Required(CONF_PORT, default=self._default_com_port): vol.In(
+                self._com_ports_list
             ),
             vol.Required(CONF_ADDRESS, default=DEFAULT_ADDRESS): vol.In(
                 range(MIN_ADDRESS, MAX_ADDRESS + 1)
