@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 
 from miio import AirQualityMonitor, DeviceException
@@ -44,7 +45,9 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
+    TIME_DAYS,
     TIME_HOURS,
+    TIME_MINUTES,
     TIME_SECONDS,
     VOLUME_CUBIC_METERS,
 )
@@ -203,7 +206,7 @@ SENSOR_TYPES = {
     ATTR_USE_TIME: XiaomiMiioSensorDescription(
         key=ATTR_USE_TIME,
         name="Use Time",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=TIME_HOURS,
         icon="mdi:progress-clock",
         state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -437,7 +440,7 @@ VACUUM_SENSORS = {
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     f"last_clean_{ATTR_LAST_CLEAN_TIME}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=TIME_MINUTES,
         icon="mdi:timer-sand",
         key=ATTR_LAST_CLEAN_TIME,
         parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
@@ -453,7 +456,7 @@ VACUUM_SENSORS = {
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     f"clean_history_{ATTR_CLEAN_HISTORY_TOTAL_DURATION}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=TIME_HOURS,
         icon="mdi:timer-sand",
         key=ATTR_CLEAN_HISTORY_TOTAL_DURATION,
         parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
@@ -491,7 +494,7 @@ VACUUM_SENSORS = {
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     f"consumable_{ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=TIME_HOURS,
         icon="mdi:brush",
         key=ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
@@ -500,7 +503,7 @@ VACUUM_SENSORS = {
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     f"consumable_{ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=TIME_HOURS,
         icon="mdi:brush",
         key=ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
@@ -509,7 +512,7 @@ VACUUM_SENSORS = {
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     f"consumable_{ATTR_CONSUMABLE_STATUS_FILTER_LEFT}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=TIME_HOURS,
         icon="mdi:air-filter",
         key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
@@ -518,7 +521,7 @@ VACUUM_SENSORS = {
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     f"consumable_{ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=TIME_HOURS,
         icon="mdi:eye-outline",
         key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
@@ -657,6 +660,33 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self._attr_native_value = self._determine_native_value()
         self._attr_extra_state_attributes = self._extract_attributes(coordinator.data)
+
+    def _extract_value_from_attribute(self, state, attribute):
+        """Overridden to handle different time units for timedelta.
+
+        This ensures that the device reported native values are converted to the ones
+        as defined in the entity descriptions.
+
+        This needs to be done here as the parent class does not have access
+        to the entity description.
+        """
+        value = getattr(state, attribute)
+        if not isinstance(value, timedelta):
+            return super()._extract_value_from_attribute(state, attribute)
+
+        conversion_map = {
+            TIME_SECONDS: timedelta(seconds=1),
+            TIME_MINUTES: timedelta(minutes=1),
+            TIME_HOURS: timedelta(hours=1),
+            TIME_DAYS: timedelta(days=1),
+        }
+
+        native_unit = self.entity_description.native_unit_of_measurement
+        if native_unit in conversion_map:
+            return round((value / conversion_map[native_unit]), 2)
+
+        _LOGGER.debug("No known conversion for %s, returning seconds", native_unit)
+        return value.total_seconds()
 
     @callback
     def _extract_attributes(self, data):

@@ -156,17 +156,16 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
 
             return False
 
-    @classmethod
-    def _extract_value_from_attribute(cls, state, attribute):
+    def _extract_value_from_attribute(self, state, attribute):
         value = getattr(state, attribute)
         if isinstance(value, Enum):
             return value.value
         if isinstance(value, datetime.timedelta):
-            return cls._parse_time_delta(value)
+            return self._parse_time_delta(value)
         if isinstance(value, datetime.time):
-            return cls._parse_datetime_time(value)
+            return self._parse_datetime_time(value)
         if isinstance(value, datetime.datetime):
-            return cls._parse_datetime_datetime(value)
+            return self._parse_datetime_datetime(value)
 
         if value is None:
             _LOGGER.debug("Attribute %s is None, this is unexpected", attribute)
