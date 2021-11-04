@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from enum import Enum
 from functools import partial
 import logging
 
@@ -414,8 +413,7 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
                 for key, value in service.data.items()
                 if key != ATTR_ENTITY_ID
             }
-            entity_ids = service.data.get(ATTR_ENTITY_ID)
-            if entity_ids:
+            if entity_ids := service.data.get(ATTR_ENTITY_ID):
                 devices = [
                     device
                     for device in hass.data[DATA_KEY].values()
@@ -474,14 +472,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         ):
             return False
         return super().available
-
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on an option of the miio device."""

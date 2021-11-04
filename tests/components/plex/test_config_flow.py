@@ -1,5 +1,6 @@
 """Tests for Plex config flow."""
 import copy
+from http import HTTPStatus
 import ssl
 from unittest.mock import patch
 
@@ -528,7 +529,7 @@ async def test_callback_view(hass, hass_client_no_auth, current_request_with_hos
         forward_url = f'{config_flow.AUTH_CALLBACK_PATH}?flow_id={result["flow_id"]}'
 
         resp = await client.get(forward_url)
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
 
 
 async def test_manual_config(hass, mock_plex_calls, current_request_with_host):

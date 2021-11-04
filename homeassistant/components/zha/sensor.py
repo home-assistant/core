@@ -35,6 +35,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -223,6 +224,7 @@ class Battery(Sensor):
     _device_class = DEVICE_CLASS_BATTERY
     _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @staticmethod
     def formatter(value: int) -> int:
@@ -388,8 +390,7 @@ class SmartEnergyMetering(Sensor):
         attrs = {}
         if self._channel.device_type is not None:
             attrs["device_type"] = self._channel.device_type
-        status = self._channel.status
-        if status is not None:
+        if (status := self._channel.status) is not None:
             attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
 
@@ -578,8 +579,7 @@ class ZenHVACAction(ThermostatHVACAction):
     def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
-        running_state = self._channel.running_state
-        if running_state is None:
+        if (running_state := self._channel.running_state) is None:
             return None
 
         rs_heat = (

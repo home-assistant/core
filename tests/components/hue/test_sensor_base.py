@@ -8,6 +8,8 @@ import pytest
 from homeassistant.components import hue
 from homeassistant.components.hue import sensor_base
 from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
 from .conftest import create_mock_bridge, setup_bridge_for_sensors as setup_bridge
@@ -356,6 +358,12 @@ async def test_sensors(hass, mock_bridge):
     assert battery_remote_1 is not None
     assert battery_remote_1.state == "100"
     assert battery_remote_1.name == "Hue dimmer switch 1 battery level"
+
+    ent_reg = async_get(hass)
+    assert (
+        ent_reg.async_get("sensor.hue_dimmer_switch_1_battery_level").entity_category
+        == ENTITY_CATEGORY_DIAGNOSTIC
+    )
 
 
 async def test_unsupported_sensors(hass, mock_bridge):

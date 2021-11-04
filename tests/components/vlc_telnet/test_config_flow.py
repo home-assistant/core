@@ -10,6 +10,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.vlc_telnet.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +55,7 @@ async def test_user_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
     with patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"), patch(
@@ -67,7 +72,7 @@ async def test_user_flow(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == entry_data["host"]
     assert result["data"] == entry_data
     assert len(mock_setup_entry.mock_calls) == 1
@@ -75,6 +80,12 @@ async def test_user_flow(
 
 async def test_import_flow(hass: HomeAssistant) -> None:
     """Test successful import flow."""
+    test_data = {
+        "password": "test-password",
+        "host": "1.1.1.1",
+        "port": 8888,
+        "name": "custom name",
+    }
     with patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"), patch(
         "homeassistant.components.vlc_telnet.config_flow.Client.login"
     ), patch(
@@ -86,23 +97,13 @@ async def test_import_flow(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "password": "test-password",
-                "host": "1.1.1.1",
-                "port": 8888,
-                "name": "custom name",
-            },
+            data=test_data,
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
-    assert result["title"] == "custom name"
-    assert result["data"] == {
-        "password": "test-password",
-        "host": "1.1.1.1",
-        "port": 8888,
-        "name": "custom name",
-    }
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == test_data["name"]
+    assert result["data"] == test_data
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -127,7 +128,7 @@ async def test_abort_already_configured(hass: HomeAssistant, source: str) -> Non
         data=entry_data,
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -168,7 +169,7 @@ async def test_errors(
             {"password": "test-password"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": error}
 
 
@@ -208,15 +209,10 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
-    assert dict(entry.data) == {
-        "password": "new-password",
-        "host": "1.1.1.1",
-        "port": 8888,
-        "name": "custom name",
-    }
+    assert dict(entry.data) == {**entry_data, "password": "new-password"}
 
 
 @pytest.mark.parametrize(
@@ -268,5 +264,109 @@ async def test_reauth_errors(
             {"password": "test-password"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": error}
+
+
+async def test_hassio_flow(hass: HomeAssistant) -> None:
+    """Test successful hassio flow."""
+    with patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"), patch(
+        "homeassistant.components.vlc_telnet.config_flow.Client.login"
+    ), patch(
+        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect"
+    ), patch(
+        "homeassistant.components.vlc_telnet.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        test_data = {
+            "password": "test-password",
+            "host": "1.1.1.1",
+            "port": 8888,
+            "name": "custom name",
+            "addon": "vlc",
+        }
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_HASSIO},
+            data=test_data,
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == RESULT_TYPE_FORM
+
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result2["title"] == test_data["name"]
+        assert result2["data"] == test_data
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_hassio_already_configured(hass: HomeAssistant) -> None:
+    """Test successful hassio flow."""
+
+    entry_data = {
+        "password": "test-password",
+        "host": "1.1.1.1",
+        "port": 8888,
+        "name": "custom name",
+        "addon": "vlc",
+    }
+
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id="hassio")
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=entry_data,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+
+
+@pytest.mark.parametrize(
+    "error, connect_side_effect, login_side_effect",
+    [
+        ("invalid_auth", None, AuthError),
+        ("cannot_connect", ConnectError, None),
+        ("unknown", Exception, None),
+    ],
+)
+async def test_hassio_errors(
+    hass: HomeAssistant,
+    error: str,
+    connect_side_effect: Exception | None,
+    login_side_effect: Exception | None,
+) -> None:
+    """Test we handle hassio errors."""
+    with patch(
+        "homeassistant.components.vlc_telnet.config_flow.Client.connect",
+        side_effect=connect_side_effect,
+    ), patch(
+        "homeassistant.components.vlc_telnet.config_flow.Client.login",
+        side_effect=login_side_effect,
+    ), patch(
+        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect"
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_HASSIO},
+            data={
+                "password": "test-password",
+                "host": "1.1.1.1",
+                "port": 8888,
+                "name": "custom name",
+                "addon": "vlc",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == RESULT_TYPE_FORM
+
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["reason"] == error

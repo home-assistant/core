@@ -23,6 +23,7 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -92,11 +93,11 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
         # Entity class attributes
         self._attr_name = coordinator.name
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
-        self._attr_device_info = {
-            "connections": {
+        self._attr_device_info = DeviceInfo(
+            connections={
                 (device_registry.CONNECTION_NETWORK_MAC, coordinator.mac_address)
             }
-        }
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

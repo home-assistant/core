@@ -354,7 +354,7 @@ class ModbusHub:
             return False
         else:
             message = f"modbus {self.name} communication open"
-            _LOGGER.warning(message)
+            _LOGGER.info(message)
             return True
 
     def _pymodbus_call(
@@ -386,7 +386,7 @@ class ModbusHub:
             return None
         async with self._lock:
             if not self._client:
-                return None
+                return None  # pragma: no cover
             result = await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )

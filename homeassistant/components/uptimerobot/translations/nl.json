@@ -17,14 +17,14 @@
                 "data": {
                     "api_key": "API-sleutel"
                 },
-                "description": "U moet een alleen-lezen API-sleutel van Uptime Robot opgeven",
+                "description": "U moet een nieuwe alleen-lezen API-sleutel van UptimeRobot opgeven",
                 "title": "Verifieer de integratie opnieuw"
             },
             "user": {
                 "data": {
                     "api_key": "API-sleutel"
                 },
-                "description": "U moet een alleen-lezen API-sleutel van Uptime Robot opgeven"
+                "description": "U moet een alleen-lezen API-sleutel van UptimeRobot opgeven"
             }
         }
     }

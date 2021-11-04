@@ -115,7 +115,7 @@ async def test_entity_picture_template(hass, start_ha):
 
 @pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
-    "attribute,config",
+    "attribute,config,expected",
     [
         (
             "friendly_name",
@@ -130,6 +130,22 @@ async def test_entity_picture_template(hass, start_ha):
                     },
                 },
             },
+            ("It .", "It Works."),
+        ),
+        (
+            "friendly_name",
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "{{ states.sensor.test_state.state }}",
+                            "friendly_name_template": "{{ 'It ' + states.sensor.test_state.state + '.'}}",
+                        }
+                    },
+                },
+            },
+            (None, "It Works."),
         ),
         (
             "friendly_name",
@@ -144,6 +160,7 @@ async def test_entity_picture_template(hass, start_ha):
                     },
                 },
             },
+            ("It .", "It Works."),
         ),
         (
             "test_attribute",
@@ -160,16 +177,17 @@ async def test_entity_picture_template(hass, start_ha):
                     },
                 },
             },
+            ("It .", "It Works."),
         ),
     ],
 )
-async def test_friendly_name_template(hass, attribute, start_ha):
+async def test_friendly_name_template(hass, attribute, expected, start_ha):
     """Test friendly_name template with an unknown value_template."""
-    assert hass.states.get(TEST_NAME).attributes.get(attribute) == "It ."
+    assert hass.states.get(TEST_NAME).attributes.get(attribute) == expected[0]
 
     hass.states.async_set("sensor.test_state", "Works")
     await hass.async_block_till_done()
-    assert hass.states.get(TEST_NAME).attributes[attribute] == "It Works."
+    assert hass.states.get(TEST_NAME).attributes[attribute] == expected[1]
 
 
 @pytest.mark.parametrize("count,domain", [(0, sensor.DOMAIN)])

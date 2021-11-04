@@ -22,6 +22,7 @@ ERROR_UNKNOWN = "unknown_error"
 FRITZ_SERVICES = "fritz_services"
 SERVICE_REBOOT = "reboot"
 SERVICE_RECONNECT = "reconnect"
+SERVICE_CLEANUP = "cleanup"
 
 SWITCH_TYPE_DEFLECTION = "CallDeflection"
 SWITCH_TYPE_PORTFORWARD = "PortForward"

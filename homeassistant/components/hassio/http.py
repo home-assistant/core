@@ -129,8 +129,7 @@ def _init_header(request: web.Request) -> dict[str, str]:
     }
 
     # Add user data
-    user = request.get("hass_user")
-    if user is not None:
+    if request.get("hass_user") is not None:
         headers[X_HASS_USER_ID] = request["hass_user"].id
         headers[X_HASS_IS_ADMIN] = str(int(request["hass_user"].is_admin))
 

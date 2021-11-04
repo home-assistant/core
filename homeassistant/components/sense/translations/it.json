@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "E-mail",
-                    "password": "Password"
+                    "password": "Password",
+                    "timeout": "Tempo scaduto"
                 },
                 "title": "Connettiti al tuo Sense Energy Monitor"
             }

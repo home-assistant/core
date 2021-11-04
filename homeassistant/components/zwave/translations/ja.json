@@ -1,4 +1,9 @@
 {
+    "config": {
+        "error": {
+            "option_error": "Z-Wave\u306e\u691c\u8a3c\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002USB\u30b9\u30c6\u30a3\u30c3\u30af\u3078\u306e\u30d1\u30b9\u306f\u6b63\u3057\u3044\u3067\u3059\u304b\uff1f"
+        }
+    },
     "state": {
         "_": {
             "initializing": "\u521d\u671f\u5316\u4e2d",

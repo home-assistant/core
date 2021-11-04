@@ -1,6 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
         "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
             "unknown": "Nieoczekiwany b\u0142\u0105d",
             "unknown_coordinates": "Brak danych dla szeroko\u015bci/d\u0142ugo\u015bci geograficznej"
         },
@@ -17,6 +22,12 @@
                     "location_type": "Lokalizacja"
                 },
                 "description": "Wybierz lokalizacj\u0119 do monitorowania:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "user": {
                 "data": {

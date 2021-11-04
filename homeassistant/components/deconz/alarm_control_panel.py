@@ -112,14 +112,14 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
         self.alarm_system = get_alarm_system_for_unique_id(gateway, device.unique_id)
 
     @callback
-    def async_update_callback(self, force_update: bool = False) -> None:
+    def async_update_callback(self) -> None:
         """Update the control panels state."""
         keys = {"panel", "reachable"}
-        if force_update or (
+        if (
             self._device.changed_keys.intersection(keys)
             and self._device.state in DECONZ_TO_ALARM_STATE
         ):
-            super().async_update_callback(force_update=force_update)
+            super().async_update_callback()
 
     @property
     def state(self) -> str | None:

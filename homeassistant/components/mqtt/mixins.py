@@ -9,6 +9,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_CONFIGURATION_URL,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_SW_VERSION,
+    ATTR_VIA_DEVICE,
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
@@ -21,7 +28,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA, Entity
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA, DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from . import DATA_MQTT, debug_info, publish, subscription
@@ -513,36 +520,36 @@ class MqttDiscoveryUpdate(Entity):
             self._remove_signal = None
 
 
-def device_info_from_config(config):
+def device_info_from_config(config) -> DeviceInfo | None:
     """Return a device description for device registry."""
     if not config:
         return None
 
-    info = {
-        "identifiers": {(DOMAIN, id_) for id_ in config[CONF_IDENTIFIERS]},
-        "connections": {tuple(x) for x in config[CONF_CONNECTIONS]},
-    }
+    info = DeviceInfo(
+        identifiers={(DOMAIN, id_) for id_ in config[CONF_IDENTIFIERS]},
+        connections={(conn_[0], conn_[1]) for conn_ in config[CONF_CONNECTIONS]},
+    )
 
     if CONF_MANUFACTURER in config:
-        info["manufacturer"] = config[CONF_MANUFACTURER]
+        info[ATTR_MANUFACTURER] = config[CONF_MANUFACTURER]
 
     if CONF_MODEL in config:
-        info["model"] = config[CONF_MODEL]
+        info[ATTR_MODEL] = config[CONF_MODEL]
 
     if CONF_NAME in config:
-        info["name"] = config[CONF_NAME]
+        info[ATTR_NAME] = config[CONF_NAME]
 
     if CONF_SW_VERSION in config:
-        info["sw_version"] = config[CONF_SW_VERSION]
+        info[ATTR_SW_VERSION] = config[CONF_SW_VERSION]
 
     if CONF_VIA_DEVICE in config:
-        info["via_device"] = (DOMAIN, config[CONF_VIA_DEVICE])
+        info[ATTR_VIA_DEVICE] = (DOMAIN, config[CONF_VIA_DEVICE])
 
     if CONF_SUGGESTED_AREA in config:
-        info["suggested_area"] = config[CONF_SUGGESTED_AREA]
+        info[ATTR_SUGGESTED_AREA] = config[CONF_SUGGESTED_AREA]
 
     if CONF_CONFIGURATION_URL in config:
-        info["configuration_url"] = config[CONF_CONFIGURATION_URL]
+        info[ATTR_CONFIGURATION_URL] = config[CONF_CONFIGURATION_URL]
 
     return info
 
@@ -563,11 +570,12 @@ class MqttEntityDeviceInfo(Entity):
         device_info = self.device_info
 
         if config_entry_id is not None and device_info is not None:
-            device_info["config_entry_id"] = config_entry_id
-            device_registry.async_get_or_create(**device_info)
+            device_registry.async_get_or_create(
+                config_entry_id=config_entry_id, **device_info
+            )
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         return device_info_from_config(self._device_config)
 

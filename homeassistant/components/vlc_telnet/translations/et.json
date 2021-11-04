@@ -2,7 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Teenus on juba h\u00e4\u00e4lestatud",
-            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "unknown": "Ootamatu t\u00f5rge"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
@@ -11,6 +14,9 @@
         },
         "flow_title": "{host}",
         "step": {
+            "hassio_confirm": {
+                "description": "Kas loon \u00fchenduse lisandmooduliga {addon} ?"
+            },
             "reauth_confirm": {
                 "data": {
                     "password": "Salas\u00f5na"

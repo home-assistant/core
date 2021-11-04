@@ -3,11 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from sense_energy import (
-    ASyncSenseable,
-    SenseAPITimeoutException,
-    SenseAuthenticationException,
-)
+from sense_energy import ASyncSenseable, SenseAuthenticationException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -30,6 +26,7 @@ from .const import (
     SENSE_DEVICE_UPDATE,
     SENSE_DEVICES_DATA,
     SENSE_DISCOVERED_DEVICES_DATA,
+    SENSE_EXCEPTIONS,
     SENSE_TIMEOUT_EXCEPTIONS,
     SENSE_TRENDS_COORDINATOR,
 )
@@ -76,14 +73,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Could not authenticate with sense server")
         return False
     except SENSE_TIMEOUT_EXCEPTIONS as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            str(err) or "Timed out during authentication"
+        ) from err
+    except SENSE_EXCEPTIONS as err:
+        raise ConfigEntryNotReady(str(err) or "Error during authentication") from err
 
     sense_devices_data = SenseDevicesData()
     try:
         sense_discovered_devices = await gateway.get_discovered_device_data()
         await gateway.update_realtime()
     except SENSE_TIMEOUT_EXCEPTIONS as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            str(err) or "Timed out during realtime update"
+        ) from err
+    except SENSE_EXCEPTIONS as err:
+        raise ConfigEntryNotReady(str(err) or "Error during realtime update") from err
 
     trends_coordinator = DataUpdateCoordinator(
         hass,
@@ -114,8 +119,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Retrieve latest state."""
         try:
             await gateway.update_realtime()
-        except SenseAPITimeoutException:
-            _LOGGER.error("Timeout retrieving data")
+        except SENSE_TIMEOUT_EXCEPTIONS as ex:
+            _LOGGER.error("Timeout retrieving data: %s", ex)
+        except SENSE_EXCEPTIONS as ex:
+            _LOGGER.error("Failed to update data: %s", ex)
 
         data = gateway.get_realtime()
         if "devices" in data:
