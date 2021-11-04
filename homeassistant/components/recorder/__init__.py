@@ -992,8 +992,6 @@ class Recorder(threading.Thread):
         after calling this to ensure the data
         is in the database.
         """
-        if self._event_listener is None:
-            return
         self._queue_watch.clear()
         _LOGGER.debug("Inserting WaitTask")
         self.queue.put(WaitTask())

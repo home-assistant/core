@@ -294,7 +294,9 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
         )
         assert recorder.DOMAIN not in hass.config.components
     await hass.async_block_till_done()
-    await async_wait_recording_done_without_instance(hass)
+
+    # Wait for recorder to shut down
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
 
     client = await hass_ws_client()
 
@@ -351,7 +353,6 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
 
     # Let migration finish
     migration_done.set()
-
     await async_wait_recording_done_without_instance(hass)
 
     # Check the status after migration finished
