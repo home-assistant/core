@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 from json import JSONEncoder
 import logging
 import os
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
@@ -36,10 +37,8 @@ async def async_migrator(
 
     async def old_conf_migrate_func(old_data)
     """
-    store_data = await store.async_load()
-
     # If we already have store data we have already migrated in the past.
-    if store_data is not None:
+    if (store_data := await store.async_load()) is not None:
         return store_data
 
     def load_old_config():

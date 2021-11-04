@@ -178,6 +178,10 @@
             "off": "No detectado",
             "on": "Detectado"
         },
+        "update": {
+            "off": "Actualizado",
+            "on": "Actualizaci\u00f3n disponible"
+        },
         "vibration": {
             "off": "No detectado",
             "on": "Detectado"

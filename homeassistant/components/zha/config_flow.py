@@ -31,7 +31,7 @@ DECONZ_DOMAIN = "deconz"
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self):
         """Initialize flow instance."""
@@ -108,7 +108,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_DEVICE: {
-                        **current_entry.data[CONF_DEVICE],
+                        **current_entry.data.get(CONF_DEVICE, {}),
                         CONF_DEVICE_PATH: dev_path,
                     },
                 }
@@ -120,9 +120,8 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # If they already have a discovery for deconz
         # we ignore the usb discovery as they probably
         # want to use it there instead
-        for flow in self.hass.config_entries.flow.async_progress():
-            if flow["handler"] == DECONZ_DOMAIN:
-                return self.async_abort(reason="not_zha_device")
+        if self.hass.config_entries.flow.async_progress_by_handler(DECONZ_DOMAIN):
+            return self.async_abort(reason="not_zha_device")
         for entry in self.hass.config_entries.async_entries(DECONZ_DOMAIN):
             if entry.source != config_entries.SOURCE_IGNORE:
                 return self.async_abort(reason="not_zha_device")
@@ -172,7 +171,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_DEVICE: {
-                        **current_entry.data[CONF_DEVICE],
+                        **current_entry.data.get(CONF_DEVICE, {}),
                         CONF_DEVICE_PATH: device_path,
                     },
                 }

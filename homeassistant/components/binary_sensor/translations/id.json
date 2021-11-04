@@ -178,6 +178,9 @@
             "off": "Tidak ada",
             "on": "Terdeteksi"
         },
+        "update": {
+            "on": "Pembaruan tersedia"
+        },
         "vibration": {
             "off": "Tidak ada",
             "on": "Terdeteksi"

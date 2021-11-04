@@ -44,13 +44,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="fido_dollar",
         name="Fido dollar",
         native_unit_of_measurement=PRICE,
-        icon="mdi:cash-usd",
+        icon="mdi:cash",
     ),
     SensorEntityDescription(
         key="balance",
         name="Balance",
         native_unit_of_measurement=PRICE,
-        icon="mdi:cash-usd",
+        icon="mdi:cash",
     ),
     SensorEntityDescription(
         key="data_used",
@@ -218,8 +218,7 @@ class FidoSensor(SensorEntity):
     async def async_update(self):
         """Get the latest data from Fido and update the state."""
         await self.fido_data.async_update()
-        sensor_type = self.entity_description.key
-        if sensor_type == "balance":
+        if (sensor_type := self.entity_description.key) == "balance":
             if self.fido_data.data.get(sensor_type) is not None:
                 self._attr_native_value = round(self.fido_data.data[sensor_type], 2)
         else:

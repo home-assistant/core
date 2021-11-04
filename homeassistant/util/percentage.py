@@ -43,8 +43,7 @@ def percentage_to_ordered_list_item(ordered_list: list[T], percentage: int) -> T
         51-75: high
         76-100: very_high
     """
-    list_len = len(ordered_list)
-    if not list_len:
+    if not (list_len := len(ordered_list)):
         raise ValueError("The ordered list is empty")
 
     for offset, speed in enumerate(ordered_list):

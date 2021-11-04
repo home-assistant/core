@@ -39,6 +39,13 @@
                 "description": "P\u00f5hjus: {details}",
                 "title": "Synology DSM: Taastuvasta sidumine"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Taastuvasta Synology DSM"
+            },
             "user": {
                 "data": {
                     "host": "",

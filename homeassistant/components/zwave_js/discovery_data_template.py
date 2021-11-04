@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from zwave_js_server.const import CommandClass
@@ -32,8 +32,8 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
 )
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
-from zwave_js_server.util.command_class import (
-    get_meter_scale_type,
+from zwave_js_server.util.command_class.meter import get_meter_scale_type
+from zwave_js_server.util.command_class.multilevel_sensor import (
     get_multilevel_sensor_type,
 )
 
@@ -92,8 +92,11 @@ class ZwaveValueID:
     property_key: str | int | None = None
 
 
+@dataclass
 class BaseDiscoverySchemaDataTemplate:
     """Base class for discovery schema data templates."""
+
+    static_data: Any | None = None
 
     def resolve_data(self, value: ZwaveValue) -> Any:
         """
@@ -141,11 +144,13 @@ class BaseDiscoverySchemaDataTemplate:
 class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
     """Data template class for Z-Wave JS Climate entities with dynamic current temps."""
 
-    lookup_table: dict[str | int, ZwaveValueID]
-    dependent_value: ZwaveValueID
+    lookup_table: dict[str | int, ZwaveValueID] = field(default_factory=dict)
+    dependent_value: ZwaveValueID | None = None
 
     def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
         """Resolve helper class data for a discovered value."""
+        if not self.lookup_table or not self.dependent_value:
+            raise ValueError("Invalid discovery data template")
         data: dict[str, Any] = {
             "lookup_table": {},
             "dependent_value": self._get_value_from_id(
@@ -221,3 +226,28 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                     return key
 
         return None
+
+
+@dataclass
+class TiltValueMix:
+    """Mixin data class for the tilt_value."""
+
+    tilt_value_id: ZwaveValueID
+
+
+@dataclass
+class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
+    """Tilt data template class for Z-Wave Cover entities."""
+
+    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+        """Resolve helper class data for a discovered value."""
+        return {"tilt_value": self._get_value_from_id(value.node, self.tilt_value_id)}
+
+    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+        """Return list of all ZwaveValues resolved by helper that should be watched."""
+        return [resolved_data["tilt_value"]]
+
+    @staticmethod
+    def current_tilt_value(resolved_data: dict[str, Any]) -> ZwaveValue | None:
+        """Get current tilt ZwaveValue from resolved data."""
+        return resolved_data["tilt_value"]

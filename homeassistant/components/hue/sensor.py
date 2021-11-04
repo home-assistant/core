@@ -11,6 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -95,6 +96,7 @@ class HueBattery(GenericHueSensor, SensorEntity):
     _attr_device_class = DEVICE_CLASS_BATTERY
     _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @property
     def unique_id(self):

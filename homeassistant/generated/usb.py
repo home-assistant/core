@@ -7,10 +7,27 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "domain": "modem_callerid",
+        "vid": "0572",
+        "pid": "1340"
+    },
+    {
         "domain": "zha",
         "vid": "10C4",
         "pid": "EA60",
         "description": "*2652*"
+    },
+    {
+        "domain": "zha",
+        "vid": "10C4",
+        "pid": "EA60",
+        "description": "*tubeszb*"
+    },
+    {
+        "domain": "zha",
+        "vid": "1A86",
+        "pid": "7523",
+        "description": "*tubeszb*"
     },
     {
         "domain": "zha",
@@ -25,6 +42,12 @@ USB = [
         "description": "*zigbee*"
     },
     {
+        "domain": "zha",
+        "vid": "10C4",
+        "pid": "8B34",
+        "description": "*bv 2010/10*"
+    },
+    {
         "domain": "zwave_js",
         "vid": "0658",
         "pid": "0200"
@@ -32,7 +55,8 @@ USB = [
     {
         "domain": "zwave_js",
         "vid": "10C4",
-        "pid": "8A2A"
+        "pid": "8A2A",
+        "description": "*z-wave*"
     },
     {
         "domain": "zwave_js",

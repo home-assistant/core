@@ -58,8 +58,8 @@ class TasmotaSwitch(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        self._tasmota_entity.set_state(True)
+        await self._tasmota_entity.set_state(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self._tasmota_entity.set_state(False)
+        await self._tasmota_entity.set_state(False)

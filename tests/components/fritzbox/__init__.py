@@ -57,6 +57,7 @@ class FritzDeviceBinarySensorMock(FritzDeviceBaseMock):
     has_alarm = True
     has_powermeter = False
     has_switch = False
+    has_lightbulb = False
     has_temperature_sensor = False
     has_thermostat = False
     present = True
@@ -75,6 +76,7 @@ class FritzDeviceClimateMock(FritzDeviceBaseMock):
     fw_version = "1.2.3"
     has_alarm = False
     has_powermeter = False
+    has_lightbulb = False
     has_switch = False
     has_temperature_sensor = False
     has_thermostat = True
@@ -94,12 +96,14 @@ class FritzDeviceSensorMock(FritzDeviceBaseMock):
     fw_version = "1.2.3"
     has_alarm = False
     has_powermeter = False
+    has_lightbulb = False
     has_switch = False
     has_temperature_sensor = True
     has_thermostat = False
     lock = "fake_locked"
     present = True
     temperature = 1.23
+    rel_humidity = 42
 
 
 class FritzDeviceSwitchMock(FritzDeviceBaseMock):
@@ -108,9 +112,11 @@ class FritzDeviceSwitchMock(FritzDeviceBaseMock):
     battery_level = None
     device_lock = "fake_locked_device"
     energy = 1234
+    voltage = 230
     fw_version = "1.2.3"
     has_alarm = False
     has_powermeter = True
+    has_lightbulb = False
     has_switch = True
     has_temperature_sensor = True
     has_thermostat = False
@@ -119,3 +125,18 @@ class FritzDeviceSwitchMock(FritzDeviceBaseMock):
     power = 5678
     present = True
     temperature = 1.23
+
+
+class FritzDeviceLightMock(FritzDeviceBaseMock):
+    """Mock of a AVM Fritz!Box light device."""
+
+    fw_version = "1.2.3"
+    has_alarm = False
+    has_powermeter = False
+    has_lightbulb = True
+    has_switch = False
+    has_temperature_sensor = False
+    has_thermostat = False
+    level = 100
+    present = True
+    state = True

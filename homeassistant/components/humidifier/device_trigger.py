@@ -5,7 +5,10 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     toggle_entity,
@@ -80,12 +83,10 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    trigger_type = config[CONF_TYPE]
-
-    if trigger_type == "target_humidity_changed":
+    if config[CONF_TYPE] == "target_humidity_changed":
         numeric_state_config = {
             numeric_state_trigger.CONF_PLATFORM: "numeric_state",
             numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
@@ -115,9 +116,7 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
-    trigger_type = config[CONF_TYPE]
-
-    if trigger_type == "target_humidity_changed":
+    if config[CONF_TYPE] == "target_humidity_changed":
         return {
             "extra_fields": vol.Schema(
                 {

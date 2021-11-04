@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "Nem siker\u00fclt csatlakozni",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
-            "invalid_host": "\u00c9rv\u00e9nytelen gazdag\u00e9pn\u00e9v vagy IP-c\u00edm"
+            "invalid_host": "\u00c9rv\u00e9nytelen C\u00edm"
         },
         "flow_title": "{serial}",
         "step": {

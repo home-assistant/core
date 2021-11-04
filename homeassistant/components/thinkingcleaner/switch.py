@@ -42,8 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ThinkingCleaner platform."""
-    host = config.get(CONF_HOST)
-    if host:
+    if host := config.get(CONF_HOST):
         devices = [ThinkingCleaner(host, "unknown")]
     else:
         discovery = Discovery()
@@ -80,7 +79,7 @@ class ThinkingCleanerSwitch(SwitchEntity):
         self.last_lock_time = None
         self.graceful_state = False
 
-        self._attr_name = f"{tc_object} {description.name}"
+        self._attr_name = f"{tc_object.name} {description.name}"
 
     def lock_update(self):
         """Lock the update since TC clean takes some time to update."""

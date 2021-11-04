@@ -1,6 +1,4 @@
 """Platform for climate integration."""
-import logging
-
 from smarttub import Spa
 
 from homeassistant.components.climate import ClimateEntity
@@ -18,8 +16,6 @@ from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PRESET_DAY = "day"
 

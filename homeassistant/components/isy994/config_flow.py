@@ -89,7 +89,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     )
 
     try:
-        with async_timeout.timeout(30):
+        async with async_timeout.timeout(30):
             isy_conf_xml = await isy_conn.test_connection()
     except ISYInvalidAuthError as error:
         raise InvalidAuth from error
@@ -181,9 +181,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     ),
                 },
-            )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
             )
         raise data_entry_flow.AbortFlow("already_configured")
 

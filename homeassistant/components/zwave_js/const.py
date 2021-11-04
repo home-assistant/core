@@ -1,12 +1,24 @@
 """Constants for the Z-Wave JS integration."""
 import logging
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+
 CONF_ADDON_DEVICE = "device"
 CONF_ADDON_EMULATE_HARDWARE = "emulate_hardware"
 CONF_ADDON_LOG_LEVEL = "log_level"
 CONF_ADDON_NETWORK_KEY = "network_key"
+CONF_ADDON_S0_LEGACY_KEY = "s0_legacy_key"
+CONF_ADDON_S2_ACCESS_CONTROL_KEY = "s2_access_control_key"
+CONF_ADDON_S2_AUTHENTICATED_KEY = "s2_authenticated_key"
+CONF_ADDON_S2_UNAUTHENTICATED_KEY = "s2_unauthenticated_key"
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
 CONF_NETWORK_KEY = "network_key"
+CONF_S0_LEGACY_KEY = "s0_legacy_key"
+CONF_S2_ACCESS_CONTROL_KEY = "s2_access_control_key"
+CONF_S2_AUTHENTICATED_KEY = "s2_authenticated_key"
+CONF_S2_UNAUTHENTICATED_KEY = "s2_unauthenticated_key"
 CONF_USB_PATH = "usb_path"
 CONF_USE_ADDON = "use_addon"
 CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
@@ -56,6 +68,8 @@ ATTR_CURRENT_VALUE_RAW = "current_value_raw"
 ATTR_DESCRIPTION = "description"
 
 # service constants
+SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
+SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
 SERVICE_SET_VALUE = "set_value"
 SERVICE_RESET_METER = "reset_meter"
 SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
@@ -98,3 +112,25 @@ ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
 ENTITY_DESC_KEY_TIMESTAMP = "timestamp"
 ENTITY_DESC_KEY_MEASUREMENT = "measurement"
 ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
+
+# Schema Constants
+
+# Validates that a bitmask is provided in hex form and converts it to decimal
+# int equivalent since that's what the library uses
+BITMASK_SCHEMA = vol.All(
+    cv.string,
+    vol.Lower,
+    vol.Match(
+        r"^(0x)?[0-9a-f]+$",
+        msg="Must provide an integer (e.g. 255) or a bitmask in hex form (e.g. 0xff)",
+    ),
+    lambda value: int(value, 16),
+)
+
+VALUE_SCHEMA = vol.Any(
+    bool,
+    vol.Coerce(int),
+    vol.Coerce(float),
+    BITMASK_SCHEMA,
+    cv.string,
+)

@@ -50,11 +50,11 @@ async def async_get_type(hass, cloud_id, install_code, host):
     )
 
     try:
-        with async_timeout.timeout(30):
+        async with async_timeout.timeout(30):
             meters = await hub.get_device_list()
     except aioeagle.BadAuth as err:
         raise InvalidAuth from err
-    except aiohttp.ClientError:
+    except (KeyError, aiohttp.ClientError):
         # This can happen if it's an eagle-100
         meters = None
 
@@ -136,9 +136,7 @@ class EagleDataCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data_200(self):
         """Get the latest data from the Eagle-200 device."""
-        eagle200_meter = self.eagle200_meter
-
-        if eagle200_meter is None:
+        if (eagle200_meter := self.eagle200_meter) is None:
             hub = aioeagle.EagleHub(
                 aiohttp_client.async_get_clientsession(self.hass),
                 self.cloud_id,

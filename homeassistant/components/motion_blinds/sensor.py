@@ -8,6 +8,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_AVAILABLE, DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
@@ -40,11 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class MotionBatterySensor(CoordinatorEntity, SensorEntity):
-    """
-    Representation of a Motion Battery Sensor.
-
-    Updates are done by the cover platform.
-    """
+    """Representation of a Motion Battery Sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
@@ -54,7 +51,7 @@ class MotionBatterySensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
         self._blind = blind
-        self._attr_device_info = {"identifiers": {(DOMAIN, blind.mac)}}
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, blind.mac)})
         self._attr_name = f"{blind.blind_type}-battery-{blind.mac[12:]}"
         self._attr_unique_id = f"{blind.mac}-battery"
 
@@ -91,11 +88,7 @@ class MotionBatterySensor(CoordinatorEntity, SensorEntity):
 
 
 class MotionTDBUBatterySensor(MotionBatterySensor):
-    """
-    Representation of a Motion Battery Sensor for a Top Down Bottom Up blind.
-
-    Updates are done by the cover platform.
-    """
+    """Representation of a Motion Battery Sensor for a Top Down Bottom Up blind."""
 
     def __init__(self, coordinator, blind, motor):
         """Initialize the Motion Battery Sensor."""
@@ -136,7 +129,7 @@ class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
 
         self._device = device
         self._device_type = device_type
-        self._attr_device_info = {"identifiers": {(DOMAIN, device.mac)}}
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device.mac)})
         self._attr_unique_id = f"{device.mac}-RSSI"
 
     @property

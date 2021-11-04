@@ -18,6 +18,7 @@ from .common import (
     get_zha_gateway,
     send_attributes_report,
 )
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import mock_coro
 from tests.components.zha.common import async_wait_for_updates
@@ -33,9 +34,9 @@ def zigpy_device(zigpy_device_mock):
     """Device tracker zigpy device."""
     endpoints = {
         1: {
-            "in_clusters": [general.Basic.cluster_id, general.OnOff.cluster_id],
-            "out_clusters": [],
-            "device_type": zha.DeviceType.ON_OFF_SWITCH,
+            SIG_EP_INPUT: [general.Basic.cluster_id, general.OnOff.cluster_id],
+            SIG_EP_OUTPUT: [],
+            SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
         }
     }
     return zigpy_device_mock(endpoints)
@@ -48,9 +49,9 @@ async def coordinator(hass, zigpy_device_mock, zha_device_joined):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [],
-                "out_clusters": [],
-                "device_type": zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                SIG_EP_INPUT: [],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.COLOR_DIMMABLE_LIGHT,
             }
         },
         ieee="00:15:8d:00:02:32:4f:32",
@@ -69,9 +70,9 @@ async def device_switch_1(hass, zigpy_device_mock, zha_device_joined):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [general.OnOff.cluster_id, general.Groups.cluster_id],
-                "out_clusters": [],
-                "device_type": zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: [general.OnOff.cluster_id, general.Groups.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
             }
         },
         ieee=IEEE_GROUPABLE_DEVICE,
@@ -89,9 +90,9 @@ async def device_switch_2(hass, zigpy_device_mock, zha_device_joined):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [general.OnOff.cluster_id, general.Groups.cluster_id],
-                "out_clusters": [],
-                "device_type": zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: [general.OnOff.cluster_id, general.Groups.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
             }
         },
         ieee=IEEE_GROUPABLE_DEVICE2,

@@ -34,7 +34,9 @@
                 "data": {
                     "zone_name": "B\u00f6lge Ad\u0131",
                     "zone_relayaddr": "R\u00f6le Adresi",
-                    "zone_relaychan": "R\u00f6le Kanal\u0131"
+                    "zone_relaychan": "R\u00f6le Kanal\u0131",
+                    "zone_rfid": "RF Id",
+                    "zone_type": "B\u00f6lge Tipi"
                 }
             },
             "zone_select": {

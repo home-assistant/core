@@ -154,7 +154,7 @@ async def test_abort_if_oauth_error(
     hass,
     flow_handler,
     local_impl,
-    aiohttp_client,
+    hass_client_no_auth,
     aioclient_mock,
     current_request_with_host,
 ):
@@ -191,7 +191,7 @@ async def test_abort_if_oauth_error(
         f"&state={state}&scope=read+write"
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
@@ -274,7 +274,7 @@ async def test_full_flow(
     hass,
     flow_handler,
     local_impl,
-    aiohttp_client,
+    hass_client_no_auth,
     aioclient_mock,
     current_request_with_host,
 ):
@@ -311,7 +311,7 @@ async def test_full_flow(
         f"&state={state}&scope=read+write"
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"

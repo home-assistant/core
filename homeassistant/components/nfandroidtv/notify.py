@@ -1,5 +1,8 @@
 """Notifications for Android TV notification service."""
+from __future__ import annotations
+
 import logging
+from typing import Any, BinaryIO
 
 from notifications_android_tv import Notifications
 import requests
@@ -16,6 +19,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import ATTR_ICON, CONF_HOST, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_COLOR,
@@ -63,7 +67,11 @@ PLATFORM_SCHEMA = cv.deprecated(
 )
 
 
-async def async_get_service(hass: HomeAssistant, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> NFAndroidTVNotificationService:
     """Get the NFAndroidTV notification service."""
     if discovery_info is not None:
         notify = await hass.async_add_executor_job(
@@ -86,15 +94,15 @@ class NFAndroidTVNotificationService(BaseNotificationService):
     def __init__(
         self,
         notify: Notifications,
-        is_allowed_path,
-    ):
+        is_allowed_path: Any,
+    ) -> None:
         """Initialize the service."""
         self.notify = notify
         self.is_allowed_path = is_allowed_path
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a Android TV device."""
-        data = kwargs.get(ATTR_DATA)
+        data: dict | None = kwargs.get(ATTR_DATA)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         duration = None
         fontsize = None
@@ -107,7 +115,9 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         if data:
             if ATTR_DURATION in data:
                 try:
-                    duration = int(data.get(ATTR_DURATION))
+                    duration = int(
+                        data.get(ATTR_DURATION, Notifications.DEFAULT_DURATION)
+                    )
                 except ValueError:
                     _LOGGER.warning(
                         "Invalid duration-value: %s", str(data.get(ATTR_DURATION))
@@ -152,7 +162,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             if filedata is not None:
                 if ATTR_ICON in filedata:
                     icon = self.load_file(
-                        url=filedata.get(ATTR_ICON),
+                        url=filedata[ATTR_ICON],
                         local_path=filedata.get(ATTR_FILE_PATH),
                         username=filedata.get(ATTR_FILE_USERNAME),
                         password=filedata.get(ATTR_FILE_PASSWORD),
@@ -179,14 +189,20 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         )
 
     def load_file(
-        self, url=None, local_path=None, username=None, password=None, auth=None
-    ):
+        self,
+        url: str | None = None,
+        local_path: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        auth: str | None = None,
+    ) -> bytes | BinaryIO | None:
         """Load image/document/etc from a local path or URL."""
         try:
             if url is not None:
                 # Check whether authentication parameters are provided
                 if username is not None and password is not None:
                     # Use digest or basic authentication
+                    auth_: HTTPDigestAuth | HTTPBasicAuth
                     if ATTR_FILE_AUTH_DIGEST == auth:
                         auth_ = HTTPDigestAuth(username, password)
                     else:

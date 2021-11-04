@@ -39,6 +39,13 @@
                 "description": "\u8a73\u7d30\u8cc7\u8a0a\uff1a{details}",
                 "title": "Synology DSM \u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "Synology DSM \u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
             "user": {
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef",

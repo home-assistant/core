@@ -4,10 +4,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import partial
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     TEMP_CELSIUS,
     VOLUME_CUBIC_METERS,
 )
@@ -41,24 +47,29 @@ class RainMachineSensorEntityDescription(
 SENSOR_DESCRIPTIONS = (
     RainMachineSensorEntityDescription(
         key=TYPE_FLOW_SENSOR_CLICK_M3,
-        name="Flow Sensor Clicks",
+        name="Flow Sensor Clicks per Cubic Meter",
         icon="mdi:water-pump",
         native_unit_of_measurement=f"clicks/{VOLUME_CUBIC_METERS}",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
     ),
     RainMachineSensorEntityDescription(
         key=TYPE_FLOW_SENSOR_CONSUMED_LITERS,
         name="Flow Sensor Consumed Liters",
         icon="mdi:water-pump",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement="liter",
         entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         api_category=DATA_PROVISION_SETTINGS,
     ),
     RainMachineSensorEntityDescription(
         key=TYPE_FLOW_SENSOR_START_INDEX,
         name="Flow Sensor Start Index",
         icon="mdi:water-pump",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement="index",
         entity_registry_enabled_default=False,
         api_category=DATA_PROVISION_SETTINGS,
@@ -67,16 +78,20 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_FLOW_SENSOR_WATERING_CLICKS,
         name="Flow Sensor Clicks",
         icon="mdi:water-pump",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement="clicks",
         entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
     ),
     RainMachineSensorEntityDescription(
         key=TYPE_FREEZE_TEMP,
         name="Freeze Protect Temperature",
         icon="mdi:thermometer",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
     ),
 )
@@ -86,8 +101,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine sensors based on a config entry."""
-    controller = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id]
-    coordinators = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
+    controller = hass.data[DOMAIN][entry.entry_id][DATA_CONTROLLER]
+    coordinators = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
 
     @callback
     def async_get_sensor(api_category: str) -> partial:
@@ -95,11 +110,13 @@ async def async_setup_entry(
         if api_category == DATA_PROVISION_SETTINGS:
             return partial(
                 ProvisionSettingsSensor,
+                entry,
                 coordinators[DATA_PROVISION_SETTINGS],
             )
 
         return partial(
             UniversalRestrictionsSensor,
+            entry,
             coordinators[DATA_RESTRICTIONS_UNIVERSAL],
         )
 

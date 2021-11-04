@@ -28,8 +28,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the iZone component config."""
-    conf = config.get(IZONE)
-    if not conf:
+    if not (conf := config.get(IZONE)):
         return True
 
     hass.data[DATA_CONFIG] = conf

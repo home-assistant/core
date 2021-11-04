@@ -1,10 +1,19 @@
 """Test Customize config panel."""
+from http import HTTPStatus
 import json
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.config import DATA_CUSTOMIZE
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass):
+    """Set up homeassistant integration."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 async def test_get_entity(hass, hass_client):
@@ -22,7 +31,7 @@ async def test_get_entity(hass, hass_client):
     with patch("homeassistant.components.config._read", mock_read):
         resp = await client.get("/api/config/customize/config/hello.beer")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
 
     assert result == {"local": {"free": "beer"}, "global": {"cold": "beer"}}
@@ -65,7 +74,7 @@ async def test_update_entity(hass, hass_client):
         )
         await hass.async_block_till_done()
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"result": "ok"}
 
@@ -94,7 +103,7 @@ async def test_update_entity_invalid_key(hass, hass_client):
         "/api/config/customize/config/not_entity", data=json.dumps({"name": "YO"})
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_update_entity_invalid_json(hass, hass_client):
@@ -106,4 +115,4 @@ async def test_update_entity_invalid_json(hass, hass_client):
 
     resp = await client.post("/api/config/customize/config/hello.beer", data="not json")
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST

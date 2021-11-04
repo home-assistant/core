@@ -65,8 +65,9 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     @property
     def target_temperature(self):
         """Return the temperature we are trying to reach."""
-        if (self._element.mode == ThermostatMode.HEAT.value) or (
-            self._element.mode == ThermostatMode.EMERGENCY_HEAT.value
+        if self._element.mode in (
+            ThermostatMode.HEAT.value,
+            ThermostatMode.EMERGENCY_HEAT.value,
         ):
             return self._element.heat_setpoint
         if self._element.mode == ThermostatMode.COOL.value:

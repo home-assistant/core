@@ -25,7 +25,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-) -> bool:
+) -> None:
     """Load DirecTV remote based on a config entry."""
     dtv = hass.data[DOMAIN][entry.entry_id]
     entities = []
