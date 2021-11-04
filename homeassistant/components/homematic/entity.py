@@ -45,8 +45,8 @@ class HMDevice(Entity):
         self._state = config.get(ATTR_PARAM)
         self._unique_id = config.get(ATTR_UNIQUE_ID)
         self._data: dict[str, str] = {}
-        self._homematic: HMConnection = None
-        self._hmdevice: HMGeneric = None
+        self._homematic: HMConnection | None = None
+        self._hmdevice: HMGeneric | None = None
         self._connected = False
         self._available = False
         self._channel_map: set[str] = set()
