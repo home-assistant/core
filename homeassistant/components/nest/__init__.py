@@ -30,7 +30,14 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
-from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import (
+    DATA_SDM,
+    DATA_SUBSCRIBER,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+    OOB_REDIRECT_URI,
+)
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
 
@@ -68,6 +75,51 @@ CONFIG_SCHEMA = vol.Schema(
 
 # Platforms for SDM API
 PLATFORMS = ["sensor", "camera", "climate"]
+WEB_AUTH_DOMAIN = DOMAIN
+INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
+
+
+class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
+    """OAuth implementation using OAuth for web applications."""
+
+    name = "OAuth for Web"
+
+    def __init__(
+        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
+    ) -> None:
+        """Initialize WebAuth."""
+        super().__init__(
+            hass,
+            WEB_AUTH_DOMAIN,
+            client_id,
+            client_secret,
+            OAUTH2_AUTHORIZE.format(project_id=project_id),
+            OAUTH2_TOKEN,
+        )
+
+
+class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
+    """OAuth implementation using OAuth for installed applications."""
+
+    name = "OAuth for Apps"
+
+    def __init__(
+        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
+    ) -> None:
+        """Initialize InstalledAppAuth."""
+        super().__init__(
+            hass,
+            INSTALLED_AUTH_DOMAIN,
+            client_id,
+            client_secret,
+            OAUTH2_AUTHORIZE.format(project_id=project_id),
+            OAUTH2_TOKEN,
+        )
+
+    @property
+    def redirect_uri(self) -> str:
+        """Return the redirect uri."""
+        return OOB_REDIRECT_URI
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -90,13 +142,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     config_flow.NestFlowHandler.register_sdm_api(hass)
     config_flow.NestFlowHandler.async_register_implementation(
         hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
+        InstalledAppAuth(
             hass,
-            DOMAIN,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
+            project_id,
+        ),
+    )
+    config_flow.NestFlowHandler.async_register_implementation(
+        hass,
+        WebAuth(
+            hass,
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
+            project_id,
         ),
     )
 
