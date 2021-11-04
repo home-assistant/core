@@ -40,11 +40,11 @@ class VelbusCover(VelbusEntity, CoverEntity):
         """Initialize the dimmer."""
         super().__init__(channel)
         if self._channel.support_position():
-            self._attr_supported_feature = (
+            self._attr_supported_features = (
                 SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
             )
         else:
-            self._attr_supported_feature = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+            self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
 
     @property
     def is_closed(self) -> bool | None:
