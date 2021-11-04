@@ -36,7 +36,7 @@ async def async_setup_entry(
 class VelbusCover(VelbusEntity, CoverEntity):
     """Representation a Velbus cover."""
 
-    def __init__(self, channel: VelbusChannel):
+    def __init__(self, channel: VelbusChannel) -> None:
         """Initialize the dimmer."""
         super().__init__(channel)
         if self._channel.support_position():
