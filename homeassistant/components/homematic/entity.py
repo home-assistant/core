@@ -8,10 +8,9 @@ import logging
 from pyhomematic import HMConnection
 from pyhomematic.devicetypes.generic import HMGeneric
 
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import ATTR_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import (
     ATTR_ADDRESS,
@@ -36,7 +35,7 @@ class HMDevice(Entity):
     def __init__(
         self,
         config: dict[str, str],
-        entity_description: SensorEntityDescription | None = None,
+        entity_description: EntityDescription | None = None,
     ) -> None:
         """Initialize a generic HomeMatic device."""
         self._name = config.get(ATTR_NAME)
