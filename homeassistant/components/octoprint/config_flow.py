@@ -189,7 +189,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             user_input[CONF_API_KEY] = await octoprint.request_app_key(
-                "Home Assistant", user_input[CONF_USERNAME], 30
+                "Home Assistant", user_input[CONF_USERNAME], 300
             )
         finally:
             # Continue the flow after show progress when the task is done.
