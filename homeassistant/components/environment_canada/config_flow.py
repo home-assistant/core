@@ -17,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def validate_input(data):
     """Validate the user input allows us to connect."""
-    lat = data.get(CONF_LATITUDE)
-    lon = data.get(CONF_LONGITUDE)
-    station = data.get(CONF_STATION)
+    lat = data.get(CONF_LATITUDE, 0)
+    lon = data.get(CONF_LONGITUDE, 0)
+    station = data.get(CONF_STATION, "")
     lang = data.get(CONF_LANGUAGE)
 
     weather_data = ECWeather(
