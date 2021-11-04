@@ -819,7 +819,7 @@ def removed(
     Log key as deprecated and fail the config validation.
 
     Expected behavior:
-        - Outputs the appropriate error if key is detected and removed from support
+        - Outputs the appropriate error if key is detected and removed from support or raises an exception
     """
     return _deprecated_or_removed(
         key,
