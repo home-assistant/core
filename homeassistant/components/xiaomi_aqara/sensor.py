@@ -158,8 +158,7 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
-        value = data.get(self._data_key)
-        if value is None:
+        if (value := data.get(self._data_key)) is None:
             return False
         if self._data_key in ("coordination", "status"):
             self._attr_native_value = value

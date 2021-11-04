@@ -25,17 +25,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_DISTANCE_SENSOR,
-    ATTR_DOOR_STATE,
-    ATTR_SIGNAL_STRENGTH,
-    CONF_DEVICE_KEY,
-    DEFAULT_PORT,
-    DOMAIN,
-)
+from .const import CONF_DEVICE_KEY, DEFAULT_PORT, DOMAIN
+from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +73,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class OpenGarageCover(CoordinatorEntity, CoverEntity):
+class OpenGarageCover(OpenGarageEntity, CoverEntity):
     """Representation of a OpenGarage cover."""
 
     _attr_device_class = DEVICE_CLASS_GARAGE
@@ -89,14 +81,10 @@ class OpenGarageCover(CoordinatorEntity, CoverEntity):
 
     def __init__(self, open_garage_data_coordinator, device_id):
         """Initialize the cover."""
-        super().__init__(open_garage_data_coordinator)
-
         self._state = None
         self._state_before_move = None
-        self._attr_extra_state_attributes = {}
-        self._attr_unique_id = self._device_id = device_id
-        self._device_name = None
-        self._update_attr()
+
+        super().__init__(open_garage_data_coordinator, device_id)
 
     @property
     def is_closed(self):
@@ -138,12 +126,9 @@ class OpenGarageCover(CoordinatorEntity, CoverEntity):
     @callback
     def _update_attr(self) -> None:
         """Update the state and attributes."""
-        if (status := self.coordinator.data) is None:
-            _LOGGER.error("Unable to connect to OpenGarage device")
-            self._attr_available = False
-            return
+        status = self.coordinator.data
 
-        self._device_name = self._attr_name = status["name"]
+        self._attr_name = status["name"]
         state = STATES_MAP.get(status.get("door"))
         if self._state_before_move is not None:
             if self._state_before_move != state:
@@ -151,20 +136,6 @@ class OpenGarageCover(CoordinatorEntity, CoverEntity):
                 self._state_before_move = None
         else:
             self._state = state
-
-        _LOGGER.debug("%s status: %s", self.name, self._state)
-        if status.get("rssi") is not None:
-            self._attr_extra_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
-        if status.get("dist") is not None:
-            self._attr_extra_state_attributes[ATTR_DISTANCE_SENSOR] = status.get("dist")
-        if self._state is not None:
-            self._attr_extra_state_attributes[ATTR_DOOR_STATE] = self._state
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_attr()
-        self.async_write_ha_state()
 
     async def _push_button(self):
         """Send commands to API."""
@@ -181,13 +152,3 @@ class OpenGarageCover(CoordinatorEntity, CoverEntity):
 
         self._state = self._state_before_move
         self._state_before_move = None
-
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            name=self._device_name,
-            manufacturer="Open Garage",
-        )
-        return device_info

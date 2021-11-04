@@ -167,7 +167,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
             measurements = self.airly.create_measurements_session_point(
                 self.latitude, self.longitude
             )
-        with async_timeout.timeout(20):
+        async with async_timeout.timeout(20):
             try:
                 await measurements.update()
             except (AirlyError, ClientConnectorError) as error:

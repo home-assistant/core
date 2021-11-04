@@ -5,11 +5,12 @@ from itertools import chain
 
 from ismartgate.common import AbstractDoor, get_configured_doors
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -51,6 +52,8 @@ async def async_setup_entry(
 class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
     """Battery sensor entity for gogogate2 door sensor."""
 
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -78,6 +81,11 @@ class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
         return door.voltage  # This is a percentage, not an absolute voltage
 
     @property
+    def state_class(self) -> str:
+        """Return the Measurement State Class."""
+        return STATE_CLASS_MEASUREMENT
+
+    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         door = self._get_door()
@@ -103,6 +111,11 @@ class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
     def name(self):
         """Return the name of the door."""
         return f"{self._get_door().name} temperature"
+
+    @property
+    def state_class(self) -> str:
+        """Return the Measurement State Class."""
+        return STATE_CLASS_MEASUREMENT
 
     @property
     def device_class(self):

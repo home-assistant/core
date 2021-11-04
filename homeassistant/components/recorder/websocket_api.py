@@ -1,13 +1,18 @@
 """The Energy websocket API."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DATA_INSTANCE
+from .const import DATA_INSTANCE, MAX_QUEUE_BACKLOG
 from .statistics import validate_statistics
+
+if TYPE_CHECKING:
+    from . import Recorder
 
 
 @callback
@@ -16,6 +21,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_validate_statistics)
     websocket_api.async_register_command(hass, ws_clear_statistics)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
+    websocket_api.async_register_command(hass, ws_info)
 
 
 @websocket_api.websocket_command(
@@ -72,3 +78,30 @@ def ws_update_statistics_metadata(
         msg["statistic_id"], msg["unit_of_measurement"]
     )
     connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/info",
+    }
+)
+@callback
+def ws_info(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Return status of the recorder."""
+    instance: Recorder = hass.data[DATA_INSTANCE]
+
+    backlog = instance.queue.qsize() if instance and instance.queue else None
+    migration_in_progress = instance.migration_in_progress if instance else False
+    recording = instance.recording if instance else False
+    thread_alive = instance.is_alive() if instance else False
+
+    recorder_info = {
+        "backlog": backlog,
+        "max_backlog": MAX_QUEUE_BACKLOG,
+        "migration_in_progress": migration_in_progress,
+        "recording": recording,
+        "thread_running": thread_alive,
+    }
+    connection.send_result(msg["id"], recorder_info)

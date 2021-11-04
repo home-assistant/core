@@ -59,8 +59,7 @@ class BTSmartHubScanner(DeviceScanner):
         self.success_init = False
 
         # Test the router is accessible
-        data = self.get_bt_smarthub_data()
-        if data:
+        if self.get_bt_smarthub_data():
             self.success_init = True
         else:
             _LOGGER.info("Failed to connect to %s", self.smarthub.router_ip)
@@ -85,8 +84,7 @@ class BTSmartHubScanner(DeviceScanner):
             return
 
         _LOGGER.info("Scanning")
-        data = self.get_bt_smarthub_data()
-        if not data:
+        if not (data := self.get_bt_smarthub_data()):
             _LOGGER.warning("Error scanning devices")
             return
         self.last_results = data

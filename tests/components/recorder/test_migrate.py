@@ -23,10 +23,9 @@ from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done_without_instance
+from .common import async_wait_recording_done_without_instance, create_engine_test
 
 from tests.common import async_fire_time_changed
-from tests.components.recorder import models_original
 
 
 def _get_native_states(hass, entity_id):
@@ -35,16 +34,6 @@ def _get_native_states(hass, entity_id):
             state.to_native()
             for state in session.query(States).filter(States.entity_id == entity_id)
         ]
-
-
-def create_engine_test(*args, **kwargs):
-    """Test version of create_engine that initializes with old schema.
-
-    This simulates an existing db with the old schema.
-    """
-    engine = create_engine(*args, **kwargs)
-    models_original.Base.metadata.create_all(engine)
-    return engine
 
 
 async def test_schema_update_calls(hass):

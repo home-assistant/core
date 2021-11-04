@@ -67,7 +67,7 @@ class FlickPricingSensor(SensorEntity):
         if self._price and self._price.end_at >= utcnow():
             return  # Power price data is still valid
 
-        with async_timeout.timeout(60):
+        async with async_timeout.timeout(60):
             self._price = await self._api.getPricing()
 
         self._attributes[ATTR_START_AT] = self._price.start_at

@@ -51,9 +51,12 @@ ATTR_UPNP_MODEL_NAME = "modelName"
 ATTR_UPNP_MODEL_NUMBER = "modelNumber"
 ATTR_UPNP_MODEL_URL = "modelURL"
 ATTR_UPNP_SERIAL = "serialNumber"
+ATTR_UPNP_SERVICE_LIST = "serviceList"
 ATTR_UPNP_UDN = "UDN"
 ATTR_UPNP_UPC = "UPC"
 ATTR_UPNP_PRESENTATION_URL = "presentationURL"
+# Attributes for accessing info added by Home Assistant
+ATTR_HA_MATCHING_DOMAINS = "x-homeassistant-matching-domains"
 
 PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
 
@@ -398,6 +401,7 @@ class Scanner:
             return
 
         discovery_info = discovery_info_from_headers_and_description(info_with_desc)
+        discovery_info[ATTR_HA_MATCHING_DOMAINS] = matching_domains
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
 
@@ -476,6 +480,10 @@ def discovery_info_from_headers_and_description(
     if ATTR_UPNP_UDN not in info and ATTR_SSDP_USN in info:
         if udn := _udn_from_usn(info[ATTR_SSDP_USN]):
             info[ATTR_UPNP_UDN] = udn
+
+    # Increase compatibility.
+    if ATTR_SSDP_ST not in info and ATTR_SSDP_NT in info:
+        info[ATTR_SSDP_ST] = info[ATTR_SSDP_NT]
 
     return info
 

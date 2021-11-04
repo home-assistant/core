@@ -15,15 +15,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_TOKEN,
     PERCENTAGE,
 )
 from homeassistant.helpers import config_validation as cv, update_coordinator
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import StateType
 
 from . import CO2SignalCoordinator, CO2SignalResponse
@@ -104,13 +102,13 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
             "country_code": coordinator.data["countryCode"],
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, coordinator.entry_id)},
-            ATTR_NAME: "CO2 signal",
-            ATTR_MANUFACTURER: "Tmrow.com",
-            "entry_type": "service",
-            "configuration_url": "https://www.electricitymap.org/",
-        }
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.electricitymap.org/",
+            entry_type="service",
+            identifiers={(DOMAIN, coordinator.entry_id)},
+            manufacturer="Tmrow.com",
+            name="CO2 signal",
+        )
         self._attr_unique_id = (
             f"{coordinator.entry_id}_{description.unique_id or description.key}"
         )

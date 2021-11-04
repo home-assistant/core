@@ -38,5 +38,15 @@
                 "description": "Input your username and password:"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Show monitored location on the map"
+                },
+                "title": "Configure WattTime"
+            }
+        }
     }
 }

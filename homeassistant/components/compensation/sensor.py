@@ -130,8 +130,7 @@ class CompensationSensor(SensorEntity):
     @callback
     def _async_compensation_sensor_state_listener(self, event):
         """Handle sensor state changes."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
 
         if self._unit_of_measurement is None and self._source_attribute is None:

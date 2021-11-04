@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 import concurrent.futures
 from datetime import datetime, timedelta
 import logging
@@ -41,6 +41,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
+    async_track_utc_time_change,
 )
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -51,7 +52,13 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
 from . import history, migration, purge, statistics, websocket_api
-from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
+from .const import (
+    CONF_DB_INTEGRITY_CHECK,
+    DATA_INSTANCE,
+    DOMAIN,
+    MAX_QUEUE_BACKLOG,
+    SQLITE_URL_PREFIX,
+)
 from .models import (
     Base,
     Events,
@@ -81,8 +88,6 @@ SERVICE_DISABLE = "disable"
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"
 ATTR_APPLY_FILTER = "apply_filter"
-
-MAX_QUEUE_BACKLOG = 30000
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
@@ -249,6 +254,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     exclude = conf[CONF_EXCLUDE]
     exclude_t = exclude.get(CONF_EVENT_TYPES, [])
+    if EVENT_STATE_CHANGED in exclude_t:
+        _LOGGER.warning(
+            "State change events are excluded, recorder will not record state changes."
+            "This will become an error in Home Assistant Core 2022.2"
+        )
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
@@ -359,6 +369,13 @@ class StatisticsTask(NamedTuple):
     """An object to insert into the recorder queue to run a statistics task."""
 
     start: datetime
+
+
+class ExternalStatisticsTask(NamedTuple):
+    """An object to insert into the recorder queue to run an external statistics task."""
+
+    metadata: dict
+    statistics: Iterable[dict]
 
 
 class WaitTask:
@@ -593,6 +610,11 @@ class Recorder(threading.Thread):
         self.queue.put(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
 
     @callback
+    def async_external_statistics(self, metadata, stats):
+        """Schedule external statistics."""
+        self.queue.put(ExternalStatisticsTask(metadata, stats))
+
+    @callback
     def _async_setup_periodic_tasks(self):
         """Prepare periodic tasks."""
         if self.hass.is_stopping or not self.get_session:
@@ -605,7 +627,7 @@ class Recorder(threading.Thread):
         )
 
         # Compile short term statistics every 5 minutes
-        async_track_time_change(
+        async_track_utc_time_change(
             self.hass, self.async_periodic_statistics, minute=range(0, 60, 5), second=10
         )
 
@@ -771,6 +793,13 @@ class Recorder(threading.Thread):
         # Schedule a new statistics task if this one didn't finish
         self.queue.put(StatisticsTask(start))
 
+    def _run_external_statistics(self, metadata, stats):
+        """Run statistics task."""
+        if statistics.add_external_statistics(self, metadata, stats):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        self.queue.put(ExternalStatisticsTask(metadata, stats))
+
     def _process_one_event(self, event):
         """Process one event."""
         if isinstance(event, PurgeTask):
@@ -792,6 +821,9 @@ class Recorder(threading.Thread):
             statistics.update_statistics_metadata(
                 self, event.statistic_id, event.unit_of_measurement
             )
+            return
+        if isinstance(event, ExternalStatisticsTask):
+            self._run_external_statistics(event.metadata, event.statistics)
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()
@@ -1061,3 +1093,8 @@ class Recorder(threading.Thread):
         self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
         self._end_session()
         self._close_connection()
+
+    @property
+    def recording(self):
+        """Return if the recorder is recording."""
+        return self._event_listener is not None

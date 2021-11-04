@@ -249,9 +249,12 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         name="Battery",
         device_class=DEVICE_CLASS_BATTERY,
         unit=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     (KEY_MONITORING_STATUS, "CurrentWifiUser"): SensorMeta(
-        name="WiFi clients connected", icon="mdi:wifi"
+        name="WiFi clients connected",
+        icon="mdi:wifi",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     (KEY_MONITORING_STATUS, "PrimaryDns"): SensorMeta(
         name="Primary DNS server", icon="mdi:ip"
@@ -296,7 +299,10 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalConnectTime"): SensorMeta(
-        name="Total connected duration", unit=TIME_SECONDS, icon="mdi:timer-outline"
+        name="Total connected duration",
+        unit=TIME_SECONDS,
+        icon="mdi:timer-outline",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalDownload"): SensorMeta(
         name="Total download",

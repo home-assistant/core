@@ -10,6 +10,7 @@ from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
@@ -40,6 +41,7 @@ PLATFORMS = [
     FAN_DOMAIN,
     LIGHT_DOMAIN,
     LOCK_DOMAIN,
+    NUMBER_DOMAIN,
     SCENE_DOMAIN,
     SENSOR_DOMAIN,
     SIREN_DOMAIN,
