@@ -139,11 +139,6 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         return SUPPORT_SHARKIQ
 
     @property
-    def is_docked(self) -> bool | None:
-        """Is vacuum docked."""
-        return self.sharkiq.get_property_value(Properties.DOCKED_STATUS)
-
-    @property
     def error_code(self) -> int | None:
         """Return the last observed error code (or None)."""
         return self.sharkiq.error_code
@@ -175,7 +170,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         In the app, these are (usually) handled by showing the robot as stopped and sending the
         user a notification.
         """
-        if self.is_docked:
+        if self.sharkiq.get_property_value(Properties.CHARGING_STATUS):
             return STATE_DOCKED
         return self.operating_mode
 
