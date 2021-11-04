@@ -16,6 +16,14 @@ async def test_qnap_qsw_create_sensors(hass):
 
     state = hass.states.get("sensor.qsw_m408_4c_ports")
     assert state.state == "2"
+    assert state.attributes["full_duplex"] == 2
+    assert state.attributes["half_duplex"] == 0
+    assert state.attributes["speed_10"] == 0
+    assert state.attributes["speed_100"] == 1
+    assert state.attributes["speed_1000"] == 1
+    assert state.attributes["speed_2500"] == 0
+    assert state.attributes["speed_5000"] == 0
+    assert state.attributes["speed_10000"] == 0
     assert state.attributes["total"] == 12
 
     state = hass.states.get("sensor.qsw_m408_4c_temperature")

@@ -25,10 +25,12 @@ def qnap_qsw_requests_mock(mock):
     ports_status_fixture = "qnap_qsw/ports-status.json"
     system_board_fixture = "qnap_qsw/system-board.json"
     system_command_reboot_fixture = "qnap_qsw/system-command-reboot.json"
+    system_info_fixture = "qnap_qsw/system-info.json"
     system_sensor_fixture = "qnap_qsw/system-sensor.json"
     system_time_fixture = "qnap_qsw/system-time.json"
     users_exit_fixture = "qnap_qsw/users-exit.json"
     users_login_fixture = "qnap_qsw/users-login.json"
+    users_verification_fixture = "qnap_qsw/users-verification.json"
 
     mock.get(
         "http://192.168.1.200/api/v1/firmware/condition",
@@ -55,6 +57,10 @@ def qnap_qsw_requests_mock(mock):
         text=load_fixture(system_command_reboot_fixture),
     )
     mock.get(
+        "http://192.168.1.200/api/v1/system/info",
+        text=load_fixture(system_info_fixture),
+    )
+    mock.get(
         "http://192.168.1.200/api/v1/system/sensor",
         text=load_fixture(system_sensor_fixture),
     )
@@ -69,6 +75,10 @@ def qnap_qsw_requests_mock(mock):
     mock.post(
         "http://192.168.1.200/api/v1/users/login",
         text=load_fixture(users_login_fixture),
+    )
+    mock.get(
+        "http://192.168.1.200/api/v1/users/verification",
+        text=load_fixture(users_verification_fixture),
     )
 
 

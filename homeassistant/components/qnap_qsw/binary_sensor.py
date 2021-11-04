@@ -10,6 +10,7 @@ from qnap_qsw.const import (
     DATA_FIRMWARE_DOWNLOAD_URL,
     DATA_FIRMWARE_LATEST_VERSION,
     DATA_FIRMWARE_UPDATE,
+    DATA_SYSTEM_HOSTNAME,
     DATA_SYSTEM_PRODUCT,
     DATA_SYSTEM_SERIAL,
 )
@@ -41,7 +42,7 @@ async def async_setup_entry(
         "identifiers": {(DOMAIN, coordinator.data[DATA_SYSTEM_SERIAL])},
         "manufacturer": MANUFACTURER,
         "model": coordinator.data[DATA_SYSTEM_PRODUCT],
-        "name": coordinator.data[DATA_SYSTEM_PRODUCT],
+        "name": coordinator.data[DATA_SYSTEM_HOSTNAME],
         "sw_version": coordinator.data[DATA_FIRMWARE_CURRENT_VERSION],
     }
 

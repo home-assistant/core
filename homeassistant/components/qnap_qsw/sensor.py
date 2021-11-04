@@ -6,6 +6,15 @@ from qnap_qsw.const import (
     DATA_FIRMWARE_CURRENT_VERSION,
     DATA_PORTS_ACTIVE,
     DATA_PORTS_COUNT,
+    DATA_PORTS_DUPLEX_FULL,
+    DATA_PORTS_DUPLEX_HALF,
+    DATA_PORTS_SPEED_10,
+    DATA_PORTS_SPEED_100,
+    DATA_PORTS_SPEED_1000,
+    DATA_PORTS_SPEED_2500,
+    DATA_PORTS_SPEED_5000,
+    DATA_PORTS_SPEED_10000,
+    DATA_SYSTEM_HOSTNAME,
     DATA_SYSTEM_PRODUCT,
     DATA_SYSTEM_SERIAL,
     DATA_TEMPERATURE_CURRENT,
@@ -38,7 +47,7 @@ async def async_setup_entry(
         "identifiers": {(DOMAIN, coordinator.data[DATA_SYSTEM_SERIAL])},
         "manufacturer": MANUFACTURER,
         "model": coordinator.data[DATA_SYSTEM_PRODUCT],
-        "name": coordinator.data[DATA_SYSTEM_PRODUCT],
+        "name": coordinator.data[DATA_SYSTEM_HOSTNAME],
         "sw_version": coordinator.data[DATA_FIRMWARE_CURRENT_VERSION],
     }
 
@@ -73,6 +82,14 @@ class QnapQswSensor(CoordinatorEntity, SensorEntity):
         _state_attr = None
         if self.entity_description.key == DATA_PORTS_ACTIVE:
             _state_attr = {
+                "full_duplex": self.coordinator.data[DATA_PORTS_DUPLEX_FULL],
+                "half_duplex": self.coordinator.data[DATA_PORTS_DUPLEX_HALF],
+                "speed_10": self.coordinator.data[DATA_PORTS_SPEED_10],
+                "speed_100": self.coordinator.data[DATA_PORTS_SPEED_100],
+                "speed_1000": self.coordinator.data[DATA_PORTS_SPEED_1000],
+                "speed_2500": self.coordinator.data[DATA_PORTS_SPEED_2500],
+                "speed_5000": self.coordinator.data[DATA_PORTS_SPEED_5000],
+                "speed_10000": self.coordinator.data[DATA_PORTS_SPEED_10000],
                 "total": self.coordinator.data[DATA_PORTS_COUNT],
             }
         elif self.entity_description.key == DATA_TEMPERATURE_CURRENT:

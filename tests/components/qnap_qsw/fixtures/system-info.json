@@ -1,0 +1,10 @@
+{
+    "error_code":200,
+    "error_message":"OK",
+    "result":{
+        "hostname":"QSW-M408-4C",
+        "contact":"info@aricent.com",
+        "location":"ARICENT",
+        "mac":"24:5E:BE:XX:XX:XX"
+    }
+}
