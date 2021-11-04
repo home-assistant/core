@@ -118,7 +118,6 @@ class HoneywellData:
             return False
 
         self.devices = devices
-        await self._hass.config_entries.async_reload(self._config.entry_id)
         return True
 
     async def _refresh_devices(self):
@@ -143,11 +142,10 @@ class HoneywellData:
             ) as exp:
                 retries -= 1
                 if retries == 0:
+                    _LOGGER.error("SomeComfort update failed. Error: %s", exp)
                     raise exp
 
                 result = await self._retry()
 
                 if not result:
                     raise exp
-
-                _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
