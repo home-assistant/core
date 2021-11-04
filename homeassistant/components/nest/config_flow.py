@@ -1,15 +1,12 @@
 """Config flow to configure Nest.
 
-This configuration flow supports two APIs:
-  - The new Device Access program and the Smart Device Management API
-  - The legacy nest API
+This configuration flow supports the following:
+  - SDM API with Installed app flow where user enters an auth code manually
+  - SDM API with Web OAuth flow with redirect back to Home Assistant
+  - Legacy Nest API auth flow with where user enters an auth code manually
 
 NestFlowHandler is an implementation of AbstractOAuth2FlowHandler with
-some overrides to support the old APIs auth flow.  That is, for the new
-API this class has hardly any special config other than url parameters,
-and everything else custom is for the old api.  When configured with the
-new api via NestFlowHandler.register_sdm_api, the custom methods just
-invoke the AbstractOAuth2FlowHandler methods.
+some overrides to support installed app and old APIs auth flow.
 """
 from __future__ import annotations
 
@@ -28,7 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.json import load_json
 
-from .const import DATA_SDM, DOMAIN, SDM_SCOPES
+from .const import DATA_SDM, DOMAIN, OOB_REDIRECT_URI, SDM_SCOPES
 
 DATA_FLOW_IMPL = "nest_flow_implementation"
 _LOGGER = logging.getLogger(__name__)
@@ -154,6 +151,14 @@ class NestFlowHandler(
                 step_id="reauth_confirm",
                 data_schema=vol.Schema({}),
             )
+        existing_entries = self._async_current_entries()
+        if existing_entries:
+            # Pick an existing auth implementation for Reauth if present. Note
+            # only one ConfigEntry is allowed so its safe to pick the first.
+            entry = next(iter(existing_entries))
+            if "auth_implementation" in entry.data:
+                data = {"implementation": entry.data["auth_implementation"]}
+                return await self.async_step_user(data)
         return await self.async_step_user()
 
     async def async_step_user(
@@ -166,6 +171,33 @@ class NestFlowHandler(
                 return self.async_abort(reason="single_instance_allowed")
             return await super().async_step_user(user_input)
         return await self.async_step_init(user_input)
+
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Create an entry for auth."""
+        if self.flow_impl.domain == "nest.installed":
+            # The default behavior from the parent class is to redirect the
+            # user with an external step. When using installed app auth, we
+            # instead prompt the user to sign in and copy/paste and
+            # authentication code back into this form.
+            # Note: This is similar to the Legacy API flow below, but it is
+            # simpler to reuse the OAuth logic in the parent class than to
+            # reuse SDM code with Legacy API code.
+            if user_input is not None:
+                self.external_data = {
+                    "code": user_input["code"],
+                    "state": {"redirect_uri": OOB_REDIRECT_URI},
+                }
+                return await super().async_step_creation(user_input)
+
+            result = await super().async_step_auth()
+            return self.async_show_form(
+                step_id="auth",
+                description_placeholders={"url": result["url"]},
+                data_schema=vol.Schema({vol.Required("code"): str}),
+            )
+        return await super().async_step_auth(user_input)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
