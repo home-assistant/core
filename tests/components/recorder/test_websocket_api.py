@@ -253,7 +253,11 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
 async def test_recorder_info(hass, hass_ws_client):
     """Test getting recorder status."""
     await async_init_recorder_component(hass)
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+
+    # Try to ensure there are no queued events
+    await async_wait_recording_done_without_instance(hass)
+    await hass.async_block_till_done()
+    await async_wait_recording_done_without_instance(hass)
     await hass.async_block_till_done()
 
     client = await hass_ws_client()
@@ -290,6 +294,7 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
         )
         assert recorder.DOMAIN not in hass.config.components
     await hass.async_block_till_done()
+    await async_wait_recording_done_without_instance(hass)
 
     client = await hass_ws_client()
 
