@@ -13,7 +13,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import BlockDeviceWrapper, RpcDeviceWrapper
-from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC, SERVICE_OTA_UPDATE
+from .const import (
+    BLOCK,
+    CONF_OTA_BETA_CHANNEL,
+    DATA_CONFIG_ENTRY,
+    DOMAIN,
+    RPC,
+    SERVICE_OTA_UPDATE,
+)
 from .utils import get_block_device_name, get_device_entry_gen, get_rpc_device_name
 
 
@@ -61,10 +68,16 @@ class ShellyOtaUpdateButton(ButtonEntity):
         self._attr_name = f"{device_name} OTA Update"
         self._attr_unique_id = slugify(self._attr_name)
 
+        self.entry = entry
         self.wrapper = wrapper
 
     async def async_press(self) -> None:
         """Send out a persistent notification."""
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_OTA_UPDATE, {ATTR_DEVICE_ID: self.wrapper.device_id}
+            DOMAIN,
+            SERVICE_OTA_UPDATE,
+            {
+                ATTR_DEVICE_ID: self.wrapper.device_id,
+                "beta": self.entry.options.get(CONF_OTA_BETA_CHANNEL),
+            },
         )
