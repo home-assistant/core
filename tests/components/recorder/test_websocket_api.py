@@ -252,15 +252,11 @@ async def test_update_statistics_metadata(hass, hass_ws_client, new_unit):
 
 async def test_recorder_info(hass, hass_ws_client):
     """Test getting recorder status."""
+    client = await hass_ws_client()
     await async_init_recorder_component(hass)
 
-    # Try to ensure there are no queued events
+    # Ensure there are no queued events
     await async_wait_recording_done_without_instance(hass)
-    await hass.async_block_till_done()
-    await async_wait_recording_done_without_instance(hass)
-    await hass.async_block_till_done()
-
-    client = await hass_ws_client()
 
     await client.send_json({"id": 1, "type": "recorder/info"})
     response = await client.receive_json()
@@ -288,6 +284,8 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
     """Test getting recorder status when recorder is not started."""
     config = {recorder.CONF_DB_URL: "sqlite://no_file", recorder.CONF_DB_RETRY_WAIT: 0}
 
+    client = await hass_ws_client()
+
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert not await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
@@ -297,8 +295,6 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
 
     # Wait for recorder to shut down
     await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
-
-    client = await hass_ws_client()
 
     await client.send_json({"id": 1, "type": "recorder/info"})
     response = await client.receive_json()
