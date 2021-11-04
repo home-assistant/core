@@ -124,15 +124,6 @@ QR_CODE_STRING = "qr_code_string"
 
 DSK = "dsk"
 
-PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.Schema(
-    {
-        vol.Required(DSK): str,
-        vol.Required(SECURITY_CLASSES): vol.All(cv.ensure_list, [int]),
-    },
-    # Provisioning entries can have extra keys for SmartStart
-    extra=vol.ALLOW_EXTRA,
-)
-
 VERSION = "version"
 GENERIC_DEVICE_CLASS = "generic_device_class"
 SPECIFIC_DEVICE_CLASS = "specific_device_class"
@@ -144,6 +135,18 @@ APPLICATION_VERSION = "application_version"
 MAX_INCLUSION_REQUEST_INTERVAL = "max_inclusion_request_interval"
 UUID = "uuid"
 SUPPORTED_PROTOCOLS = "supported_protocols"
+
+UNPROVISION = "unprovision"
+
+# Helper schemas
+PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.Schema(
+    {
+        vol.Required(DSK): str,
+        vol.Required(SECURITY_CLASSES): vol.All(cv.ensure_list, [int]),
+    },
+    # Provisioning entries can have extra keys for SmartStart
+    extra=vol.ALLOW_EXTRA,
+)
 
 QR_PROVISIONING_INFORMATION_SCHEMA = vol.Schema(
     {
@@ -914,6 +917,7 @@ async def websocket_stop_exclusion(
     {
         vol.Required(TYPE): "zwave_js/remove_node",
         vol.Required(ENTRY_ID): str,
+        vol.Optional(UNPROVISION): bool,
     }
 )
 @websocket_api.async_response
@@ -962,7 +966,7 @@ async def websocket_remove_node(
         controller.on("node removed", node_removed),
     ]
 
-    result = await controller.async_begin_exclusion()
+    result = await controller.async_begin_exclusion(msg.get(UNPROVISION))
     connection.send_result(
         msg[ID],
         result,

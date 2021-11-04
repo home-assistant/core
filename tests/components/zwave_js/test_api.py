@@ -60,6 +60,7 @@ from homeassistant.components.zwave_js.api import (
     SECURITY_CLASSES,
     SPECIFIC_DEVICE_CLASS,
     TYPE,
+    UNPROVISION,
     VALUE,
     VERSION,
 )
@@ -439,6 +440,7 @@ async def test_add_node(
 
     client.async_send_command.return_value = {"success": True}
 
+    # Test inclusion with no provisioning input
     await ws_client.send_json(
         {
             ID: 1,
@@ -563,6 +565,7 @@ async def test_add_node(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
+    # Test S2 planned provisioning entry
     await ws_client.send_json(
         {
             ID: 2,
@@ -593,6 +596,7 @@ async def test_add_node(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
+    # Test S2 QR provisioning information
     await ws_client.send_json(
         {
             ID: 3,
@@ -643,6 +647,7 @@ async def test_add_node(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
+    # Test S2 QR code string
     await ws_client.send_json(
         {
             ID: 4,
@@ -807,6 +812,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
 
     client.async_send_command.return_value = {"success": True}
 
+    # Test provisioning entry
     await ws_client.send_json(
         {
             ID: 2,
@@ -833,6 +839,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
+    # Test QR provisioning information
     await ws_client.send_json(
         {
             ID: 3,
@@ -879,6 +886,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
+    # Test QR code string
     await ws_client.send_json(
         {
             ID: 4,
@@ -956,6 +964,7 @@ async def test_unprovision_smart_start_node(hass, integration, client, hass_ws_c
 
     client.async_send_command.return_value = {}
 
+    # Test node ID as input
     await ws_client.send_json(
         {
             ID: 1,
@@ -977,6 +986,7 @@ async def test_unprovision_smart_start_node(hass, integration, client, hass_ws_c
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {}
 
+    # Test DSK as input
     await ws_client.send_json(
         {
             ID: 2,
@@ -1281,11 +1291,16 @@ async def test_remove_node(
     client.async_send_command.return_value = {"success": True}
 
     await ws_client.send_json(
-        {ID: 3, TYPE: "zwave_js/remove_node", ENTRY_ID: entry.entry_id}
+        {ID: 1, TYPE: "zwave_js/remove_node", ENTRY_ID: entry.entry_id}
     )
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_exclusion",
+    }
 
     event = Event(
         type="exclusion started",
@@ -1318,6 +1333,28 @@ async def test_remove_node(
         identifiers={(DOMAIN, "3245146787-67")},
     )
     assert device is None
+
+    # Test unprovision parameter
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/remove_node",
+            ENTRY_ID: entry.entry_id,
+            UNPROVISION: True,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_exclusion",
+        "unprovision": True,
+    }
 
     # Test FailedZWaveCommand is caught
     with patch(
@@ -1374,6 +1411,7 @@ async def test_replace_failed_node(
 
     client.async_send_command.return_value = {"success": True}
 
+    # Test replace failed node with no provisioning information
     # Order of events we receive for a successful replacement is `inclusion started`,
     # `inclusion stopped`, `node removed`, `node added`, then interview stages.
     await ws_client.send_json(
@@ -1527,6 +1565,7 @@ async def test_replace_failed_node(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
+    # Test S2 planned provisioning entry
     await ws_client.send_json(
         {
             ID: 2,
@@ -1559,6 +1598,7 @@ async def test_replace_failed_node(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
+    # Test S2 QR provisioning information
     await ws_client.send_json(
         {
             ID: 3,
@@ -1611,6 +1651,7 @@ async def test_replace_failed_node(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
+    # Test S2 QR code string
     await ws_client.send_json(
         {
             ID: 4,
