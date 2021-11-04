@@ -106,7 +106,8 @@ VACUUM_SENSORS = {
     ),
 }
 
-VACUUM_SENSORS_SEPARATE_MOP = VACUUM_SENSORS | {
+VACUUM_SENSORS_SEPARATE_MOP = {
+    **VACUUM_SENSORS,
     ATTR_MOP_ATTACHED: XiaomiMiioBinarySensorDescription(
         key=ATTR_MOP_ATTACHED,
         name="Mop Attached",
