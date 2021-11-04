@@ -7,7 +7,7 @@ flake8-comprehensions==3.7.0
 flake8-docstrings==1.6.0
 flake8-noqa==1.2.0
 flake8==4.0.1
-isort==5.9.3
+isort==5.10.0
 mccabe==0.6.1
 pycodestyle==2.8.0
 pydocstyle==6.1.1
