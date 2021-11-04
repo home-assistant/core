@@ -710,10 +710,10 @@ class multi_select:
 
 def _deprecated_or_removed(
     key: str,
-    replacement_key: str | None = None,
-    default: Any | None = None,
-    raise_if_present: bool | None = False,
-    option_status: str | None = "is deprecated",
+    replacement_key: str | None,
+    default: Any | None,
+    raise_if_present: bool,
+    option_removed: bool,
 ) -> Callable[[dict], dict]:
     """
     Log key as deprecated and provide a replacement (if exists) or fail.
@@ -735,36 +735,34 @@ def _deprecated_or_removed(
         # will be missing information, so let's guard.
         # https://github.com/home-assistant/core/issues/24982
         module_name = __name__
-    if replacement_key:
-        warning = (
-            "The '{key}' option {option_status},"
-            " please replace it with '{replacement_key}'"
-        )
+    if option_removed:
+        logger_func = logging.getLogger(module_name).error
+        option_status = "has been removed"
     else:
-        warning = (
-            "The '{key}' option {option_status},"
-            " please remove it from your configuration"
-        )
+        logger_func = logging.getLogger(module_name).warning
+        option_status = "is deprecated"
 
     def validator(config: dict) -> dict:
         """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                warning_local = warning.replace(
-                    "'{key}' option",
-                    f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
-                )
+                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore
             except AttributeError:
-                warning_local = warning
-            warning_local = warning_local.format(
-                key=key,
-                replacement_key=replacement_key,
-                option_status=option_status,
-            )
-            if raise_if_present:
-                raise vol.Invalid(warning_local)
+                near = ""
+            arguments: tuple[str, ...]
+            if replacement_key:
+                warning = "The '%s' option %s%s, please replace it with '%s'"
+                arguments = (key, near, option_status, replacement_key)
+            else:
+                warning = (
+                    "The '%s' option %s%s, please remove it from your configuration"
+                )
+                arguments = (key, near, option_status)
 
-            logging.getLogger(module_name).warning(warning_local)
+            if raise_if_present:
+                raise vol.Invalid(warning % arguments)
+
+            logger_func(warning, *arguments)
             value = config[key]
             if replacement_key:
                 config.pop(key)
@@ -805,8 +803,8 @@ def deprecated(
         key,
         replacement_key=replacement_key,
         default=default,
-        raise_if_present=raise_if_present,
-        option_status="is deprecated",
+        raise_if_present=raise_if_present or False,
+        option_removed=False,
     )
 
 
@@ -825,8 +823,8 @@ def removed(
         key,
         replacement_key=None,
         default=default,
-        raise_if_present=raise_if_present,
-        option_status="was removed",
+        raise_if_present=raise_if_present or False,
+        option_removed=True,
     )
 
 
