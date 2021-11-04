@@ -8,8 +8,11 @@ import requests
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util.network import is_link_local
 
 from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
@@ -90,10 +93,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data = self.discovery_schema or _schema_with_defaults()
         return self.async_show_form(step_id="user", data_schema=data, errors=errors)
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Prepare configuration for a discovered doorbird device."""
-        macaddress = discovery_info["properties"]["macaddress"]
-        host = discovery_info[CONF_HOST]
+        macaddress = discovery_info[zeroconf.ATTR_PROPERTIES]["macaddress"]
+        host = discovery_info[zeroconf.ATTR_HOST]
 
         if macaddress[:6] != DOORBIRD_OUI:
             return self.async_abort(reason="not_doorbird_device")
@@ -109,7 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_doorbird_device")
 
         chop_ending = "._axis-video._tcp.local."
-        friendly_hostname = discovery_info["name"]
+        friendly_hostname = discovery_info[zeroconf.ATTR_NAME]
         if friendly_hostname.endswith(chop_ending):
             friendly_hostname = friendly_hostname[: -len(chop_ending)]
 

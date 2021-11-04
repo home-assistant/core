@@ -167,25 +167,15 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
             return cls._parse_datetime_time(value)
         if isinstance(value, datetime.datetime):
             return cls._parse_datetime_datetime(value)
-        if isinstance(value, datetime.timedelta):
-            return cls._parse_time_delta(value)
-        if isinstance(value, float):
-            return value
-        if isinstance(value, int):
-            return value
 
-        _LOGGER.warning(
-            "Could not determine how to parse state value of type %s for state %s and attribute %s",
-            type(value),
-            type(state),
-            attribute,
-        )
+        if value is None:
+            _LOGGER.debug("Attribute %s is None, this is unexpected", attribute)
 
         return value
 
     @staticmethod
     def _parse_time_delta(timedelta: datetime.timedelta) -> int:
-        return timedelta.seconds
+        return int(timedelta.total_seconds())
 
     @staticmethod
     def _parse_datetime_time(time: datetime.time) -> str:
@@ -201,7 +191,3 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
     @staticmethod
     def _parse_datetime_datetime(time: datetime.datetime) -> str:
         return time.isoformat()
-
-    @staticmethod
-    def _parse_datetime_timedelta(time: datetime.timedelta) -> int:
-        return time.seconds

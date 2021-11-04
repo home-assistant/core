@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafe, SimpliSafeEntity
-from .const import DATA_CLIENT, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 ATTR_LOCK_LOW_BATTERY = "lock_low_battery"
 ATTR_PIN_PAD_LOW_BATTERY = "pin_pad_low_battery"
@@ -37,7 +37,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up SimpliSafe locks based on a config entry."""
-    simplisafe = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    simplisafe = hass.data[DOMAIN][entry.entry_id]
     locks = []
 
     for system in simplisafe.systems.values():

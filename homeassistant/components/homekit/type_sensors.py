@@ -114,8 +114,7 @@ class TemperatureSensor(HomeAccessory):
     def async_update_state(self, new_state):
         """Update temperature after state changed."""
         unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
-        temperature = convert_to_float(new_state.state)
-        if temperature:
+        if temperature := convert_to_float(new_state.state):
             temperature = temperature_to_homekit(temperature, unit)
             self.char_temp.set_value(temperature)
             _LOGGER.debug(
@@ -142,8 +141,7 @@ class HumiditySensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        humidity = convert_to_float(new_state.state)
-        if humidity:
+        if humidity := convert_to_float(new_state.state):
             self.char_humidity.set_value(humidity)
             _LOGGER.debug("%s: Percent set to %d%%", self.entity_id, humidity)
 
@@ -170,8 +168,7 @@ class AirQualitySensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        density = convert_to_float(new_state.state)
-        if density:
+        if density := convert_to_float(new_state.state):
             if self.char_density.value != density:
                 self.char_density.set_value(density)
                 _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
@@ -206,8 +203,7 @@ class CarbonMonoxideSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        value = convert_to_float(new_state.state)
-        if value:
+        if value := convert_to_float(new_state.state):
             self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
@@ -242,8 +238,7 @@ class CarbonDioxideSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        value = convert_to_float(new_state.state)
-        if value:
+        if value := convert_to_float(new_state.state):
             self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
@@ -271,8 +266,7 @@ class LightSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        luminance = convert_to_float(new_state.state)
-        if luminance:
+        if luminance := convert_to_float(new_state.state):
             self.char_light.set_value(luminance)
             _LOGGER.debug("%s: Set to %d", self.entity_id, luminance)
 

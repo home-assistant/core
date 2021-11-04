@@ -59,12 +59,12 @@ class TestVultrSensorSetup(unittest.TestCase):
         """Test the Vultr sensor class and methods."""
         mock.get(
             "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-            text=load_fixture("vultr_account_info.json"),
+            text=load_fixture("account_info.json", "vultr"),
         )
 
         with patch(
             "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("vultr_server_list.json")),
+            return_value=json.loads(load_fixture("server_list.json", "vultr")),
         ):
             # Setup hub
             base_vultr.setup(self.hass, VALID_CONFIG)
@@ -143,12 +143,12 @@ class TestVultrSensorSetup(unittest.TestCase):
         """Test the VultrSensor fails."""
         mock.get(
             "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-            text=load_fixture("vultr_account_info.json"),
+            text=load_fixture("account_info.json", "vultr"),
         )
 
         with patch(
             "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("vultr_server_list.json")),
+            return_value=json.loads(load_fixture("server_list.json", "vultr")),
         ):
             # Setup hub
             base_vultr.setup(self.hass, VALID_CONFIG)

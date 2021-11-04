@@ -1,5 +1,7 @@
 """Constants used for mocking data."""
 
+from homeassistant.components import zeroconf
+
 IP = "1.1.1.1"
 
 CONNECTED_STATIONS = {
@@ -14,13 +16,13 @@ CONNECTED_STATIONS = {
     ],
 }
 
-DISCOVERY_INFO = {
-    "host": IP,
-    "port": 14791,
-    "hostname": "test.local.",
-    "type": "_dvl-deviceapi._tcp.local.",
-    "name": "dLAN pro 1200+ WiFi ac._dvl-deviceapi._tcp.local.",
-    "properties": {
+DISCOVERY_INFO = zeroconf.HaServiceInfo(
+    host=IP,
+    port=14791,
+    hostname="test.local.",
+    type="_dvl-deviceapi._tcp.local.",
+    name="dLAN pro 1200+ WiFi ac._dvl-deviceapi._tcp.local.",
+    properties={
         "Path": "abcdefghijkl/deviceapi",
         "Version": "v0",
         "Product": "dLAN pro 1200+ WiFi ac",
@@ -32,9 +34,9 @@ DISCOVERY_INFO = {
         "PS": "",
         "PlcMacAddress": "AA:BB:CC:DD:EE:FF",
     },
-}
+)
 
-DISCOVERY_INFO_WRONG_DEVICE = {"properties": {"MT": "2600"}}
+DISCOVERY_INFO_WRONG_DEVICE = zeroconf.HaServiceInfo(properties={"MT": "2600"})
 
 NEIGHBOR_ACCESS_POINTS = {
     "neighbor_aps": [

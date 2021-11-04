@@ -10,6 +10,7 @@ from bond_api import Bond
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -94,8 +95,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        name: str = discovery_info[CONF_NAME]
-        host: str = discovery_info[CONF_HOST]
+        name: str = discovery_info[zeroconf.ATTR_NAME]
+        host: str = discovery_info[zeroconf.ATTR_HOST]
         bond_id = name.partition(".")[0]
         await self.async_set_unique_id(bond_id)
         for entry in self._async_current_entries():
