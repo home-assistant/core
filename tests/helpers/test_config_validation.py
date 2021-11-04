@@ -741,7 +741,7 @@ def test_deprecated_or_removed_param_and_raise(caplog, schema):
     with pytest.raises(vol.Invalid) as excinfo:
         deprecated_schema(test_data)
     assert (
-        "The 'mars' option was removed, please remove it from your configuration"
+        "The 'mars' option has been removed, please remove it from your configuration"
         in str(excinfo.value)
     )
     assert len(caplog.records) == 0
@@ -916,7 +916,7 @@ def test_deprecated_or_removed_logger_with_config_attributes(caplog):
     assert len(caplog.records) == 0
 
     # test as removed option
-    option_status = "was removed"
+    option_status = "has been removed"
     replacement = f"'mars' option near {file}:{line} {option_status}, please remove it from your configuration"
     config = OrderedDict([("mars", "blah")])
     setattr(config, "__config_file__", file)
