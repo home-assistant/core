@@ -50,6 +50,7 @@ class SpiderThermostat(ClimateEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return DeviceInfo(
+            configuration_url="https://mijn.ithodaalderop.nl/",
             identifiers={(DOMAIN, self.thermostat.id)},
             manufacturer=self.thermostat.manufacturer,
             model=self.thermostat.model,
