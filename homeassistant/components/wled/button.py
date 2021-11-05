@@ -30,7 +30,7 @@ class WLEDRestartButton(WLEDEntity, ButtonEntity):
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
-        """Initialize the Demo button entity."""
+        """Initialize the button entity."""
         super().__init__(coordinator=coordinator)
         self._attr_name = f"{coordinator.data.info.name} Restart"
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_restart"
