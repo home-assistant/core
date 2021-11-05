@@ -236,22 +236,68 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_inverval,
         )
         # data ids to poll
+        self._fetch = defaultdict(list)
         self._plenticore = plenticore
+
+    def start_fetch_data(self, module_id: str, data_id: str, all_options: str) -> None:
+        """Start fetching the given data (module-id and entry-id)."""
+        self._fetch[module_id].append(data_id)
+
+        # Force an update of all data. Multiple refresh calls
+        # are ignored by the debouncer.
+        async def force_refresh(event_time: datetime) -> None:
+            await self.async_request_refresh()
+            _LOGGER.debug("Own update start_fetch_data")
+
+        async_call_later(self.hass, 2, force_refresh)
+
+    def stop_fetch_data(self, module_id: str, data_id: str) -> None:
+        """Stop fetching the given data (module-id and entry-id)."""
+        self._fetch[module_id].remove(data_id)
 
 
 class SelectDataUpdateCoordinator(PlenticoreSelectUpdateCoordinator):
-    """Implementation of PlenticoreUpdateCoordinator for settings data."""
+    """Implementation of PlenticoreUpdateCoordinator for select data."""
 
-    async def _async_update_data(self) -> [str, bool]:
+    async def _async_update_data(self) -> dict[str, dict[str, str]]:
         client = self._plenticore.client
 
         if client is None:
-            return ''
+            return {}
 
-        # _LOGGER.debug("Fetching select %s for %s", self.name, self.xmodule_id)
+        _LOGGER.debug("Fetching select %s for %s", self.name, self._fetch)
 
-        # current_option = self.get_currentoption(self.xmodule_id, self.xall_options)
-        return 'None'
+        fetched_data = await self.async_get_currentoption(self._fetch)
+        return {
+            module_id: {
+                data_id: data_value
+                for data_id, data_value in data
+            }
+            for module_id, data in fetched_data.items()
+        }
+
+    async def async_get_currentoption(self, fetch) -> dict[str, list]:
+        """Get current option."""
+        for module_id in fetch:
+            for data_id in fetch[module_id]:
+                _LOGGER.debug("async_get_currentoption %s", self.name)
+                all_options = ['None', "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"]
+                for all_option in all_options:
+                    _LOGGER.debug("async_get_currentoption all_options %s", data_id)
+                    _LOGGER.debug("async_get_currentoption all_option %s", all_option)
+                    if all_option != 'None':
+                        val = await self.async_read_data(module_id, all_option)
+                        _LOGGER.debug("async_get_currentoption val %s", val)
+                        for option in val.values():
+                            _LOGGER.debug("async_get_currentoption option 1 %s", option)
+                            _LOGGER.debug("async_get_currentoption option 2 %s", all_option)
+                            _LOGGER.debug("async_get_currentoption option 3 %s", option[all_option])
+                            if option[all_option] == '1':
+                                _LOGGER.debug("async_get_currentoption option is %s", all_option)
+                                fetched = dict()
+                                fetched = {module_id: [(data_id, all_option)]}
+                                return fetched
+        return self.data
 
     async def async_read_data(self, module_id: str, data_id: str) -> [str, bool]:
         """Writes settings back to Plenticore."""

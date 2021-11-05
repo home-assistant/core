@@ -39,7 +39,7 @@ async def async_setup_entry(
         timedelta(seconds=30),
         plenticore,
     )
-    for module_id, data_id, name, sensor_data, is_on in SWITCH_SETTINGS_DATA:
+    for module_id, data_id, name, is_on, on_value, on_label, off_value, off_label in SWITCH_SETTINGS_DATA:
         if module_id not in available_settings_data or data_id not in (
             setting.id for setting in available_settings_data[module_id]
         ):
@@ -56,8 +56,11 @@ async def async_setup_entry(
                 module_id,
                 data_id,
                 name,
-                sensor_data,
                 is_on,
+                on_value,
+                on_label,
+                off_value,
+                off_label,
                 plenticore.device_info,
                 f"{entry.title} {name}",
                 f"{entry.entry_id}_{module_id}_{data_id}",
@@ -77,9 +80,12 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         platform_name: str,
         module_id: str,
         data_id: str,
-        switch_name: str,
-        switch_data: dict[str, Any],
+        name: str,
         is_on: str,
+        on_value: str,
+        on_label: str,
+        off_value: str,
+        off_label: str,
         device_info: DeviceInfo,
         attr_name: str,
         attr_unique_id: str,
@@ -91,10 +97,13 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         self.module_id = module_id
         self.data_id = data_id
         self._last_run_success: bool | None = None
-        self._switch_name = switch_name
-        self._switch_data = switch_data
+        self._name = name
         self._is_on = is_on
         self._attr_name = attr_name
+        self.on_value = on_value
+        self.on_label = on_label
+        self.off_value = off_value
+        self.off_label = off_label
         self._attr_unique_id = attr_unique_id
 
         self._device_info = device_info
@@ -121,16 +130,18 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
 
     async def async_turn_on(self) -> None:
         """Turn device on."""
-        if await self.coordinator.async_write_data(self.module_id, {self.data_id: "1"}):
+        if await self.coordinator.async_write_data(self.module_id, {self.data_id: self.on_value}):
             self._last_run_success = True
+            self.coordinator.name = f"{self.platform_name} {self._name} {self.on_label}"
             await self.coordinator.async_request_refresh()
         else:
             self._last_run_success = False
 
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        if await self.coordinator.async_write_data(self.module_id, {self.data_id: "0"}):
+        if await self.coordinator.async_write_data(self.module_id, {self.data_id: self.off_value}):
             self._last_run_success = True
+            self.coordinator.name = f"{self.platform_name} {self._name} {self.off_label}"
             await self.coordinator.async_request_refresh()
         else:
             self._last_run_success = False
@@ -143,6 +154,10 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
+        if self.coordinator.data[self.module_id][self.data_id] == self._is_on:
+            self.coordinator.name = f"{self.platform_name} {self._name} {self.on_label}"
+        else:
+            self.coordinator.name = f"{self.platform_name} {self._name} {self.off_label}"
         return bool(self.coordinator.data[self.module_id][self.data_id] == self._is_on)
 
     @property

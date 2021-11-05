@@ -618,35 +618,45 @@ SENSOR_SETTINGS_DATA = [
         {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:battery-negative"},
         "format_round",
     ),
-    (
-        "devices:local",
-        "Battery:Strategy",
-        "Battery Strategy",
-        {},
-        "format_round",
-    ),
 ]
 SWITCH_SETTINGS_DATA = [
     (
         "devices:local",
         "Battery:SmartBatteryControl:Enable",
         "Battery SmartBatteryControl Enable",
-        {},
         "1",
+        "1",
+        "",
+        "0",
+        "",
     ),
     (
         "devices:local",
         "Battery:TimeControl:Enable",
         "Battery TimeControl Enable",
-        {},
         "1",
+        "1",
+        "",
+        "0",
+        "",
+    ),
+    (
+        "devices:local",
+        "Battery:Strategy",
+        "Battery Strategy:",
+        "1",
+        "1",
+        "Automatic",
+        "2",
+        "Automatic economical"
     ),
 ]
 SELECT_SETTINGS_DATA = [
     (
         "devices:local",
+        "battery_charge",
         "Battery Charging / Usage mode",
-        ["None", "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"],
+        ['None', "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"],
         "1",
     )
 ]
