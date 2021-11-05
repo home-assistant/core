@@ -155,6 +155,8 @@ async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
     "device_class,native_value",
     [
         (DEVICE_CLASS_BATTERY, date(2017, 12, 19)),
+        (DEVICE_CLASS_DATE, "invalid"),
+        (DEVICE_CLASS_DATE, 123),
         (DEVICE_CLASS_POWER, datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)),
         (DEVICE_CLASS_TIMESTAMP, "invalid"),
         (DEVICE_CLASS_TIMESTAMP, 123),
