@@ -392,9 +392,11 @@ class KNXLight(KnxEntity, LightEntity):
             rgb: tuple[int, int, int], white: int | None, brightness: int | None
         ) -> None:
             """Set color of light. Normalize colors for brightness when not writable."""
-            if brightness and self._device.brightness.writable:
+            if self._device.brightness.writable:
+                # let the KNX light controller handle brightness
                 await self._device.set_color(rgb, white)
-                await self._device.set_brightness(brightness)
+                if brightness:
+                    await self._device.set_brightness(brightness)
                 return
 
             if brightness is None:
