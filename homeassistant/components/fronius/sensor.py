@@ -64,7 +64,7 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_RESOURCE): cv.url,
-            vol.Required(CONF_MONITORED_CONDITIONS): object,
+            vol.Optional(CONF_MONITORED_CONDITIONS): object,
         }
     ),
 )
@@ -261,14 +261,14 @@ METER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "energy_reactive_ac_consumed": SensorEntityDescription(
         key="energy_reactive_ac_consumed",
-        name="Energy Reactive AC consumed",
+        name="Energy reactive AC consumed",
         native_unit_of_measurement=ENERGY_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         icon="mdi:lightning-bolt-outline",
     ),
     "energy_reactive_ac_produced": SensorEntityDescription(
         key="energy_reactive_ac_produced",
-        name="Energy Reactive AC produced",
+        name="Energy reactive AC produced",
         native_unit_of_measurement=ENERGY_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         icon="mdi:lightning-bolt-outline",
@@ -611,7 +611,7 @@ class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
         """Set up an individual Fronius meter sensor."""
         super().__init__(coordinator)
         self.entity_description = self.entity_descriptions[key]
-        self.entity_id = f"{SENSOR_DOMAIN}.{DOMAIN}_{self._entity_id_prefix}_{self.entity_description.name}"
+        self.entity_id = f"{SENSOR_DOMAIN}.{DOMAIN}_{self._entity_id_prefix}_{key}"
         self.solar_net_id = solar_net_id
         self._attr_native_value = self._get_entity_value()
 
