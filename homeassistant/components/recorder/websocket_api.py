@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_INSTANCE, MAX_QUEUE_BACKLOG
 from .statistics import validate_statistics
+from .util import async_migration_in_progress
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -93,7 +94,7 @@ def ws_info(
     instance: Recorder = hass.data[DATA_INSTANCE]
 
     backlog = instance.queue.qsize() if instance and instance.queue else None
-    migration_in_progress = instance.migration_in_progress if instance else False
+    migration_in_progress = async_migration_in_progress(hass)
     recording = instance.recording if instance else False
     thread_alive = instance.is_alive() if instance else False
 
