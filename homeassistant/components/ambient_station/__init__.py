@@ -66,13 +66,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, unique_id=entry.data[CONF_APP_KEY]
         )
 
+    ambient = AmbientStation(
+        hass,
+        entry,
+        Websocket(entry.data[CONF_APP_KEY], entry.data[CONF_API_KEY]),
+    )
+
     try:
-        ambient = AmbientStation(
-            hass,
-            entry,
-            Websocket(entry.data[CONF_APP_KEY], entry.data[CONF_API_KEY]),
-        )
-        hass.loop.create_task(ambient.ws_connect())
+        await ambient.ws_connect()
     except WebsocketError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
