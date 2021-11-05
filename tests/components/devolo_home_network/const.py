@@ -38,6 +38,11 @@ DISCOVERY_INFO = zeroconf.HaServiceInfo(
 
 DISCOVERY_INFO_WRONG_DEVICE = zeroconf.HaServiceInfo(properties={"MT": "2600"})
 
+FIRMWARE_UPDATE_AVAILABLE = {
+    "result": "UPDATE_NOT_AVAILABLE",
+    "new_firmware_version": "",
+}
+
 NEIGHBOR_ACCESS_POINTS = {
     "neighbor_aps": [
         {
