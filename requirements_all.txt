@@ -173,7 +173,7 @@ aioftp==0.12.0
 aiogithubapi==21.8.0
 
 # homeassistant.components.guardian
-aioguardian==1.0.8
+aioguardian==2021.11.0
 
 # homeassistant.components.harmony
 aioharmony==0.2.8
