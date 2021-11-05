@@ -15,10 +15,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     if coordinator.client.alerts is None:
         return
     async_add_entities(
-        [
-            VenstarBinarySensor(coordinator, config_entry, alert["name"])
-            for alert in coordinator.client.alerts
-        ]
+        VenstarBinarySensor(coordinator, config_entry, alert["name"])
+        for alert in coordinator.client.alerts
     )
 
 
