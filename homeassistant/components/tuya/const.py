@@ -181,6 +181,8 @@ class DPCode(str, Enum):
     CONTROL_2 = "control_2"
     CONTROL_3 = "control_3"
     CRY_DETECTION_SWITCH = "cry_detection_switch"
+    COUNTDOWN = "countdown"
+    COUNTDOWN_LEFT = "countdown_left"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_POWER = "cur_power"  # Actual power
