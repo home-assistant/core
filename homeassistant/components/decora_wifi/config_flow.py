@@ -1,6 +1,6 @@
 """Config flow for myLeviton decora_wifi."""
 
-from typing import Dict
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -102,10 +102,10 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.config_entries.async_reload(entry.entry_id)
         return self.async_abort(reason="reauth_successful")
 
-    async def _async_validate_credentials(self) -> Dict[str, str]:
+    async def _async_validate_credentials(self) -> dict[str, str]:
         """Call the myLeviton API to validate user-provided credentials."""
         session = None
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
         try:
             session = await DecoraWifiPlatform.async_setup_decora_wifi(
                 self.hass,
