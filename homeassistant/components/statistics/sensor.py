@@ -203,7 +203,11 @@ class StatisticsSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.mean if not self.is_binary else self.count
+        if self.is_binary:
+            return self.count
+        if self._precision == 0:
+            return int(self.mean)
+        return self.mean
 
     @property
     def native_unit_of_measurement(self):
