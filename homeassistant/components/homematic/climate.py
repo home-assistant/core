@@ -13,8 +13,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from pyhomematic.devicetypes.thermostats import HMThermostat
-
 from .const import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT
 from .entity import HMDevice
 
@@ -49,8 +47,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class HMThermostat(HMDevice, ClimateEntity):
     """Representation of a Homematic thermostat."""
-
-    _hmdevice: HMThermostat
 
     @property
     def supported_features(self):
