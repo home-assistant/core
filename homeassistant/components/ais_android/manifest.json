@@ -1,0 +1,13 @@
+{
+  "domain": "ais_android",
+  "name": "AIS Android",
+  "documentation": "https://www.ai-speaker.org",
+  "requirements": [
+    "adb-shell[async]==0.4.0",
+    "androidtv[async]==0.0.60",
+    "pure-python-adb[async]==0.3.0.dev0"
+  ],
+  "codeowners": ["@ai-speaker"],
+  "config_flow": true,
+  "iot_class": "local_polling"
+}

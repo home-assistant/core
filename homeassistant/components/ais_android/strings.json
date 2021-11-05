@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "AIS Android",
+        "description": "Set required parameters to connect to your Android TV device",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "adbkey": "Path to your ADB key file (leave empty to auto generate)",
+          "adb_server_ip": "IP address of the ADB server (leave empty to not use)",
+          "adb_server_port": "Port of the ADB server",
+          "device_class": "The type of device",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "adbkey_not_file": "ADB key file not found",
+      "key_and_server": "Only provide ADB Key or ADB Server",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_unique_id": "Impossible to determine a valid unique id for the device"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "AIS Android Options",
+        "data": {
+          "apps": "Configure applications list",
+          "get_sources": "Whether or not to retrieve the running apps as the list of sources",
+          "exclude_unnamed_apps": "Exclude app with unknown name",
+          "screencap": "Determines if album art should be pulled from what is shown on screen",
+          "state_detection_rules": "Dictionary of state detection rules (see documentation)",
+          "turn_off_command": "ADB shell command to override default turn_off command",
+          "turn_on_command": "ADB shell command to override default turn_on command"
+        }
+      },
+      "apps": {
+        "title": "Configure AIS Android Apps",
+        "description": "Configure application id {app_id}",
+        "data": {
+          "app_name": "Application Name",
+          "app_id": "Application ID",
+          "app_delete": "Check to delete this application"
+        }
+      }
+    },
+    "error": {
+      "invalid_det_rules": "Invalid state detection rules"
+    }
+  }
+}

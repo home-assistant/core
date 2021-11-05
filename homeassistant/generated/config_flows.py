@@ -19,6 +19,7 @@ FLOWS = [
     "airthings",
     "airtouch4",
     "airvisual",
+    "ais_android",
     "ais_dom_device",
     "ais_drives_service",
     "ais_google_home",
