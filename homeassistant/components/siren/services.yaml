@@ -7,7 +7,7 @@ turn_on:
       domain: siren
   fields:
     tone:
-      description: The tone to emit when turning the siren on. Must be supported by the integration.
+      description: The tone to emit when turning the siren on. When `available_tones` property is a map, either the key or the value can be used. Must be supported by the integration.
       example: fire
       required: false
       selector:

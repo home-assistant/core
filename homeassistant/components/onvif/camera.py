@@ -1,12 +1,12 @@
 """Support for ONVIF Cameras with FFmpeg as decoder."""
-import asyncio
+from __future__ import annotations
 
 from haffmpeg.camera import CameraMjpeg
-from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 from onvif.exceptions import ONVIFError
 import voluptuous as vol
 from yarl import URL
 
+from homeassistant.components import ffmpeg
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, DATA_FFMPEG
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
@@ -120,7 +120,9 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         """Return the stream source."""
         return self._stream_uri
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         image = None
 
@@ -137,15 +139,12 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
                 )
 
         if image is None:
-            ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary)
-            image = await asyncio.shield(
-                ffmpeg.get_image(
-                    self._stream_uri,
-                    output_format=IMAGE_JPEG,
-                    extra_cmd=self.device.config_entry.options.get(
-                        CONF_EXTRA_ARGUMENTS
-                    ),
-                )
+            return await ffmpeg.async_get_image(
+                self.hass,
+                self._stream_uri,
+                extra_cmd=self.device.config_entry.options.get(CONF_EXTRA_ARGUMENTS),
+                width=width,
+                height=height,
             )
 
         return image

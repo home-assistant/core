@@ -12,7 +12,7 @@
             "invalid_key": "Kunci gateway tidak valid",
             "invalid_mac": "Alamat MAC Tidak Valid"
         },
-        "flow_title": "Xiaomi Aqara Gateway: {name}",
+        "flow_title": "{name}",
         "step": {
             "select": {
                 "data": {

@@ -7,7 +7,7 @@ Support for uptime sensors of network clients.
 from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN, SensorEntity
-from homeassistant.const import DATA_MEGABYTES
+from homeassistant.const import DATA_MEGABYTES, ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
@@ -86,7 +86,8 @@ class UniFiBandwidthSensor(UniFiClient, SensorEntity):
 
     DOMAIN = DOMAIN
 
-    _attr_unit_of_measurement = DATA_MEGABYTES
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_native_unit_of_measurement = DATA_MEGABYTES
 
     @property
     def name(self) -> str:
@@ -105,7 +106,7 @@ class UniFiRxBandwidthSensor(UniFiBandwidthSensor):
     TYPE = RX_SENSOR
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
             return self.client.wired_rx_bytes / 1000000
@@ -118,7 +119,7 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
     TYPE = TX_SENSOR
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
             return self.client.wired_tx_bytes / 1000000
@@ -132,6 +133,7 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
     TYPE = UPTIME_SENSOR
 
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, client, controller):
         """Set up tracked client."""
@@ -157,7 +159,7 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
         self.last_updated_time = self.client.uptime
 
         if not update_state:
-            return None
+            return
 
         super().async_update_callback()
 
@@ -167,7 +169,7 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
         return f"{super().name} {self.TYPE.capitalize()}"
 
     @property
-    def state(self) -> datetime:
+    def native_value(self) -> datetime:
         """Return the uptime of the client."""
         if self.client.uptime < 1000000000:
             return (dt_util.now() - timedelta(seconds=self.client.uptime)).isoformat()

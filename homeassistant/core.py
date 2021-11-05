@@ -19,12 +19,13 @@ import threading
 from time import monotonic
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
+from urllib.parse import urlparse
 
 import attr
 import voluptuous as vol
 import yarl
 
-from homeassistant import block_async_io, loader, util
+from homeassistant import async_timeout_backcompat, block_async_io, loader, util
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -81,7 +82,7 @@ STAGE_1_SHUTDOWN_TIMEOUT = 100
 STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
-
+async_timeout_backcompat.enable()
 block_async_io.enable()
 
 T = TypeVar("T")
@@ -487,6 +488,7 @@ class HomeAssistant:
 
     async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
+        # pylint: disable=no-self-use
         wait_time = 0
         while pending:
             _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
@@ -506,7 +508,7 @@ class HomeAssistant:
         """Stop Home Assistant and shuts down all threads.
 
         The "force" flag commands async_stop to proceed regardless of
-        Home Assistan't current state. You should not set this flag
+        Home Assistant's current state. You should not set this flag
         unless you're testing.
 
         This method is a coroutine.
@@ -832,6 +834,10 @@ class EventBus:
             self._async_remove_listener(event_type, filterable_job)
             self._hass.async_run_job(listener, event)
 
+        functools.update_wrapper(
+            _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
+        )
+
         filterable_job = (HassJob(_onetime_listener), None)
 
         return self._async_listen_filterable_job(event_type, filterable_job)
@@ -969,8 +975,7 @@ class State:
         if isinstance(last_updated, str):
             last_updated = dt_util.parse_datetime(last_updated)
 
-        context = json_dict.get("context")
-        if context:
+        if context := json_dict.get("context"):
             context = Context(id=context.get("id"), user_id=context.get("user_id"))
 
         return cls(
@@ -1197,8 +1202,7 @@ class StateMachine:
         entity_id = entity_id.lower()
         new_state = str(new_state)
         attributes = attributes or {}
-        old_state = self._states.get(entity_id)
-        if old_state is None:
+        if (old_state := self._states.get(entity_id)) is None:
             same_state = False
             same_attr = False
             last_changed = None
@@ -1656,9 +1660,7 @@ class Config:
 
     def set_time_zone(self, time_zone_str: str) -> None:
         """Help to set the time zone."""
-        time_zone = dt_util.get_time_zone(time_zone_str)
-
-        if time_zone:
+        if time_zone := dt_util.get_time_zone(time_zone_str):
             self.time_zone = time_zone_str
             dt_util.set_default_time_zone(time_zone)
         else:
@@ -1715,21 +1717,36 @@ class Config:
         store = self.hass.helpers.storage.Store(
             CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True
         )
-        data = await store.async_load()
 
-        if data:
-            self._update(
-                source=SOURCE_STORAGE,
-                latitude=data.get("latitude"),
-                longitude=data.get("longitude"),
-                elevation=data.get("elevation"),
-                unit_system=data.get("unit_system"),
-                location_name=data.get("location_name"),
-                time_zone=data.get("time_zone"),
-                external_url=data.get("external_url", _UNDEF),
-                internal_url=data.get("internal_url", _UNDEF),
-                currency=data.get("currency"),
-            )
+        if not (data := await store.async_load()):
+            return
+
+        # In 2021.9 we fixed validation to disallow a path (because that's never correct)
+        # but this data still lives in storage, so we print a warning.
+        if data.get("external_url") and urlparse(data["external_url"]).path not in (
+            "",
+            "/",
+        ):
+            _LOGGER.warning("Invalid external_url set. It's not allowed to have a path")
+
+        if data.get("internal_url") and urlparse(data["internal_url"]).path not in (
+            "",
+            "/",
+        ):
+            _LOGGER.warning("Invalid internal_url set. It's not allowed to have a path")
+
+        self._update(
+            source=SOURCE_STORAGE,
+            latitude=data.get("latitude"),
+            longitude=data.get("longitude"),
+            elevation=data.get("elevation"),
+            unit_system=data.get("unit_system"),
+            location_name=data.get("location_name"),
+            time_zone=data.get("time_zone"),
+            external_url=data.get("external_url", _UNDEF),
+            internal_url=data.get("internal_url", _UNDEF),
+            currency=data.get("currency"),
+        )
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
@@ -1774,8 +1791,7 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         )
 
         # If we are more than a second late, a tick was missed
-        late = monotonic() - target
-        if late > 1:
+        if (late := monotonic() - target) > 1:
             hass.bus.async_fire(
                 EVENT_TIMER_OUT_OF_SYNC,
                 {ATTR_SECONDS: late},

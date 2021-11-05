@@ -63,17 +63,17 @@ class BeewiSmartclimSensor(SensorEntity):
         self._poller = poller
         self._attr_name = name
         self._device = device
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
         self._attr_device_class = self._device
         self._attr_unique_id = f"{mac}_{device}"
 
     def update(self):
         """Fetch new state data from the poller."""
         self._poller.update_sensor()
-        self._attr_state = None
+        self._attr_native_value = None
         if self._device == DEVICE_CLASS_TEMPERATURE:
-            self._attr_state = self._poller.get_temperature()
+            self._attr_native_value = self._poller.get_temperature()
         if self._device == DEVICE_CLASS_HUMIDITY:
-            self._attr_state = self._poller.get_humidity()
+            self._attr_native_value = self._poller.get_humidity()
         if self._device == DEVICE_CLASS_BATTERY:
-            self._attr_state = self._poller.get_battery()
+            self._attr_native_value = self._poller.get_battery()

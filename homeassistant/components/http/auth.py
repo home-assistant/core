@@ -29,9 +29,7 @@ def async_sign_path(
     hass: HomeAssistant, refresh_token_id: str, path: str, expiration: timedelta
 ) -> str:
     """Sign a path for temporary access without auth header."""
-    secret = hass.data.get(DATA_SIGN_SECRET)
-
-    if secret is None:
+    if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
         secret = hass.data[DATA_SIGN_SECRET] = secrets.token_hex()
 
     now = dt_util.utcnow()
@@ -45,7 +43,7 @@ def async_sign_path(
         secret,
         algorithm="HS256",
     )
-    return f"{path}?{SIGN_QUERY_PARAM}={encoded.decode()}"
+    return f"{path}?{SIGN_QUERY_PARAM}={encoded}"
 
 
 @callback
@@ -80,14 +78,10 @@ def setup_auth(hass: HomeAssistant, app: Application) -> None:
 
     async def async_validate_signed_request(request: Request) -> bool:
         """Validate a signed request."""
-        secret = hass.data.get(DATA_SIGN_SECRET)
-
-        if secret is None:
+        if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
             return False
 
-        signature = request.query.get(SIGN_QUERY_PARAM)
-
-        if signature is None:
+        if (signature := request.query.get(SIGN_QUERY_PARAM)) is None:
             return False
 
         try:

@@ -1,10 +1,14 @@
 """Support for Repetier-Server sensors."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
 import pyrepetier
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -33,28 +37,38 @@ UPDATE_SIGNAL = "repetier_update_signal"
 TEMP_DATA = {"tempset": "temp_set", "tempread": "state", "output": "output"}
 
 
-API_PRINTER_METHODS = {
-    "bed_temperature": {
-        "offline": {"heatedbeds": None, "state": "off"},
-        "state": {"heatedbeds": "temp_data"},
-        "temp_data": TEMP_DATA,
-        "attribute": "heatedbeds",
-    },
-    "extruder_temperature": {
-        "offline": {"extruder": None, "state": "off"},
-        "state": {"extruder": "temp_data"},
-        "temp_data": TEMP_DATA,
-        "attribute": "extruder",
-    },
-    "chamber_temperature": {
-        "offline": {"heatedchambers": None, "state": "off"},
-        "state": {"heatedchambers": "temp_data"},
-        "temp_data": TEMP_DATA,
-        "attribute": "heatedchambers",
-    },
-    "current_state": {
-        "offline": {"state": None},
-        "state": {
+@dataclass
+class APIMethods:
+    """API methods for properties."""
+
+    offline: dict[str, str | None]
+    state: dict[str, str]
+    temp_data: dict[str, str] | None = None
+    attribute: str | None = None
+
+
+API_PRINTER_METHODS: dict[str, APIMethods] = {
+    "bed_temperature": APIMethods(
+        offline={"heatedbeds": None, "state": "off"},
+        state={"heatedbeds": "temp_data"},
+        temp_data=TEMP_DATA,
+        attribute="heatedbeds",
+    ),
+    "extruder_temperature": APIMethods(
+        offline={"extruder": None, "state": "off"},
+        state={"extruder": "temp_data"},
+        temp_data=TEMP_DATA,
+        attribute="extruder",
+    ),
+    "chamber_temperature": APIMethods(
+        offline={"heatedchambers": None, "state": "off"},
+        state={"heatedchambers": "temp_data"},
+        temp_data=TEMP_DATA,
+        attribute="heatedchambers",
+    ),
+    "current_state": APIMethods(
+        offline={"state": None},
+        state={
             "state": "state",
             "activeextruder": "active_extruder",
             "hasxhome": "x_homed",
@@ -63,10 +77,10 @@ API_PRINTER_METHODS = {
             "firmware": "firmware",
             "firmwareurl": "firmware_url",
         },
-    },
-    "current_job": {
-        "offline": {"job": None, "state": "off"},
-        "state": {
+    ),
+    "current_job": APIMethods(
+        offline={"job": None, "state": "off"},
+        state={
             "done": "state",
             "job": "job_name",
             "jobid": "job_id",
@@ -80,25 +94,25 @@ API_PRINTER_METHODS = {
             "y": "y",
             "z": "z",
         },
-    },
-    "job_end": {
-        "offline": {"job": None, "state": "off", "start": None, "printtime": None},
-        "state": {
+    ),
+    "job_end": APIMethods(
+        offline={"job": None, "state": "off", "start": None, "printtime": None},
+        state={
             "job": "job_name",
             "start": "start",
             "printtime": "print_time",
             "printedtimecomp": "from_start",
         },
-    },
-    "job_start": {
-        "offline": {
+    ),
+    "job_start": APIMethods(
+        offline={
             "job": None,
             "state": "off",
             "start": None,
             "printedtimecomp": None,
         },
-        "state": {"job": "job_name", "start": "start", "printedtimecomp": "from_start"},
-    },
+        state={"job": "job_name", "start": "start", "printedtimecomp": "from_start"},
+    ),
 }
 
 
@@ -109,33 +123,66 @@ def has_all_unique_names(value):
     return value
 
 
-SENSOR_TYPES = {
-    # Type, Unit, Icon, post
-    "bed_temperature": [
-        "temperature",
-        TEMP_CELSIUS,
-        None,
-        "_bed_",
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "extruder_temperature": [
-        "temperature",
-        TEMP_CELSIUS,
-        None,
-        "_extruder_",
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "chamber_temperature": [
-        "temperature",
-        TEMP_CELSIUS,
-        None,
-        "_chamber_",
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "current_state": ["state", None, "mdi:printer-3d", "", None],
-    "current_job": ["progress", PERCENTAGE, "mdi:file-percent", "_current_job", None],
-    "job_end": ["progress", None, "mdi:clock-end", "_job_end", None],
-    "job_start": ["progress", None, "mdi:clock-start", "_job_start", None],
+@dataclass
+class RepetierRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    type: str
+
+
+@dataclass
+class RepetierSensorEntityDescription(
+    SensorEntityDescription, RepetierRequiredKeysMixin
+):
+    """Describes Repetier sensor entity."""
+
+
+SENSOR_TYPES: dict[str, RepetierSensorEntityDescription] = {
+    "bed_temperature": RepetierSensorEntityDescription(
+        key="bed_temperature",
+        type="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="_bed_",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    "extruder_temperature": RepetierSensorEntityDescription(
+        key="extruder_temperature",
+        type="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="_extruder_",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    "chamber_temperature": RepetierSensorEntityDescription(
+        key="chamber_temperature",
+        type="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="_chamber_",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    "current_state": RepetierSensorEntityDescription(
+        key="current_state",
+        type="state",
+        icon="mdi:printer-3d",
+    ),
+    "current_job": RepetierSensorEntityDescription(
+        key="current_job",
+        type="progress",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:file-percent",
+        name="_current_job",
+    ),
+    "job_end": RepetierSensorEntityDescription(
+        key="job_end",
+        type="progress",
+        icon="mdi:clock-end",
+        name="_job_end",
+    ),
+    "job_start": RepetierSensorEntityDescription(
+        key="job_start",
+        type="progress",
+        icon="mdi:clock-start",
+        name="_job_start",
+    ),
 }
 
 SENSOR_SCHEMA = vol.Schema(
@@ -214,17 +261,16 @@ class PrinterAPI:
         """Get data from the state cache."""
         printer = self.printers[printer_id]
         methods = API_PRINTER_METHODS[sensor_type]
-        for prop, offline in methods["offline"].items():
-            state = getattr(printer, prop)
-            if state == offline:
+        for prop, offline in methods.offline.items():
+            if getattr(printer, prop) == offline:
                 # if state matches offline, sensor is offline
                 return None
 
         data = {}
-        for prop, attr in methods["state"].items():
+        for prop, attr in methods.state.items():
             prop_data = getattr(printer, prop)
             if attr == "temp_data":
-                temp_methods = methods["temp_data"]
+                temp_methods = methods.temp_data or {}
                 for temp_prop, temp_attr in temp_methods.items():
                     data[temp_attr] = getattr(prop_data[temp_id], temp_prop)
             else:
@@ -253,8 +299,8 @@ class PrinterAPI:
                     continue
 
                 methods = API_PRINTER_METHODS[sensor_type]
-                if "temp_data" in methods["state"].values():
-                    prop_data = getattr(printer, methods["attribute"])
+                if "temp_data" in methods.state.values():
+                    prop_data = getattr(printer, methods.attribute or "")
                     if prop_data is None:
                         continue
                     for idx, _ in enumerate(prop_data):

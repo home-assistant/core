@@ -2,26 +2,29 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from collections.abc import Generator, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping
+import datetime
 from io import BytesIO
 import logging
 from threading import Event
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import av
 
+from homeassistant.core import HomeAssistant
+
 from . import redact_credentials
 from .const import (
+    ATTR_SETTINGS,
     AUDIO_CODECS,
+    DOMAIN,
     MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
-    MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
     SEGMENT_CONTAINER_FORMAT,
     SOURCE_TIMEOUT,
-    TARGET_PART_DURATION,
 )
-from .core import Part, Segment, StreamOutput
+from .core import Part, Segment, StreamOutput, StreamSettings
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,10 +33,13 @@ class SegmentBuffer:
     """Buffer for writing a sequence of packets to the output as a segment."""
 
     def __init__(
-        self, outputs_callback: Callable[[], Mapping[str, StreamOutput]]
+        self,
+        hass: HomeAssistant,
+        outputs_callback: Callable[[], Mapping[str, StreamOutput]],
     ) -> None:
         """Initialize SegmentBuffer."""
         self._stream_id: int = 0
+        self._hass = hass
         self._outputs_callback: Callable[
             [], Mapping[str, StreamOutput]
         ] = outputs_callback
@@ -52,32 +58,75 @@ class SegmentBuffer:
         self._memory_file_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
         self._part_has_keyframe = False
+        self._stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
+        self._start_time = datetime.datetime.utcnow()
 
-    @staticmethod
     def make_new_av(
-        memory_file: BytesIO, sequence: int, input_vstream: av.video.VideoStream
-    ) -> av.container.OutputContainer:
-        """Make a new av OutputContainer."""
-        return av.open(
+        self,
+        memory_file: BytesIO,
+        sequence: int,
+        input_vstream: av.video.VideoStream,
+        input_astream: av.audio.stream.AudioStream,
+    ) -> tuple[
+        av.container.OutputContainer,
+        av.video.VideoStream,
+        av.audio.stream.AudioStream | None,
+    ]:
+        """Make a new av OutputContainer and add output streams."""
+        add_audio = input_astream and input_astream.name in AUDIO_CODECS
+        container = av.open(
             memory_file,
             mode="w",
             format=SEGMENT_CONTAINER_FORMAT,
             container_options={
-                # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-                # "cmaf" flag replaces several of the movflags used, but too recent to use for now
-                "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
-                # Sometimes the first segment begins with negative timestamps, and this setting just
-                # adjusts the timestamps in the output from that segment to start from 0. Helps from
-                # having to make some adjustments in test_durations
-                "avoid_negative_ts": "make_non_negative",
-                "fragment_index": str(sequence + 1),
-                "video_track_timescale": str(int(1 / input_vstream.time_base)),
-                # Create a fragments every TARGET_PART_DURATION. The data from each fragment is stored in
-                # a "Part" that can be combined with the data from all the other "Part"s, plus an init
-                # section, to reconstitute the data in a "Segment".
-                "frag_duration": str(int(TARGET_PART_DURATION * 1e6)),
+                **{
+                    # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
+                    # "cmaf" flag replaces several of the movflags used, but too recent to use for now
+                    "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
+                    # Sometimes the first segment begins with negative timestamps, and this setting just
+                    # adjusts the timestamps in the output from that segment to start from 0. Helps from
+                    # having to make some adjustments in test_durations
+                    "avoid_negative_ts": "make_non_negative",
+                    "fragment_index": str(sequence + 1),
+                    "video_track_timescale": str(int(1 / input_vstream.time_base)),
+                },
+                # Only do extra fragmenting if we are using ll_hls
+                # Let ffmpeg do the work using frag_duration
+                # Fragment durations may exceed the 15% allowed variance but it seems ok
+                **(
+                    {
+                        "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
+                        # Create a fragment every TARGET_PART_DURATION. The data from each fragment is stored in
+                        # a "Part" that can be combined with the data from all the other "Part"s, plus an init
+                        # section, to reconstitute the data in a "Segment".
+                        # The LL-HLS spec allows for a fragment's duration to be within the range [0.85x,1.0x]
+                        # of the part target duration. We use the frag_duration option to tell ffmpeg to try to
+                        # cut the fragments when they reach frag_duration. However, the resulting fragments can
+                        # have variability in their durations and can end up being too short or too long. If
+                        # there are two tracks, as in the case of a video feed with audio, the fragment cut seems
+                        # to be done on the first track that crosses the desired threshold, and cutting on the
+                        # audio track may result in a shorter video fragment than desired. Conversely, with a
+                        # video track with no audio, the discrete nature of frames means that the frame at the
+                        # end of a fragment will sometimes extend slightly beyond the desired frag_duration.
+                        # Given this, our approach is to use a frag_duration near the upper end of the range for
+                        # outputs with audio using a frag_duration at the lower end of the range for outputs with
+                        # only video.
+                        "frag_duration": str(
+                            self._stream_settings.part_target_duration
+                            * (98e4 if add_audio else 9e5)
+                        ),
+                    }
+                    if self._stream_settings.ll_hls
+                    else {}
+                ),
             },
         )
+        output_vstream = container.add_stream(template=input_vstream)
+        # Check if audio is requested
+        output_astream = None
+        if add_audio:
+            output_astream = container.add_stream(template=input_astream)
+        return container, output_vstream, output_astream
 
     def set_streams(
         self,
@@ -93,24 +142,22 @@ class SegmentBuffer:
         """Initialize a new stream segment."""
         # Keep track of the number of segments we've processed
         self._sequence += 1
-        self._segment_start_dts = video_dts
+        self._part_start_dts = self._segment_start_dts = video_dts
         self._segment = None
         self._memory_file = BytesIO()
         self._memory_file_pos = 0
-        self._av_output = self.make_new_av(
+        (
+            self._av_output,
+            self._output_video_stream,
+            self._output_audio_stream,
+        ) = self.make_new_av(
             memory_file=self._memory_file,
             sequence=self._sequence,
             input_vstream=self._input_video_stream,
+            input_astream=self._input_audio_stream,
         )
-        self._output_video_stream = self._av_output.add_stream(
-            template=self._input_video_stream
-        )
-        # Check if audio is requested
-        self._output_audio_stream = None
-        if self._input_audio_stream and self._input_audio_stream.name in AUDIO_CODECS:
-            self._output_audio_stream = self._av_output.add_stream(
-                template=self._input_audio_stream
-            )
+        if self._output_video_stream.name == "hevc":
+            self._output_video_stream.codec_tag = "hvc1"
 
     def mux_packet(self, packet: av.Packet) -> None:
         """Mux a packet to the appropriate output stream."""
@@ -120,12 +167,10 @@ class SegmentBuffer:
             if (
                 packet.is_keyframe
                 and (packet.dts - self._segment_start_dts) * packet.time_base
-                >= MIN_SEGMENT_DURATION
+                >= self._stream_settings.min_segment_duration
             ):
                 # Flush segment (also flushes the stub part segment)
                 self.flush(packet, last_part=True)
-                # Reinitialize
-                self.reset(packet.dts)
 
             # Mux the packet
             packet.stream = self._output_video_stream
@@ -148,13 +193,12 @@ class SegmentBuffer:
                 sequence=self._sequence,
                 stream_id=self._stream_id,
                 init=self._memory_file.getvalue(),
+                # Fetch the latest StreamOutputs, which may have changed since the
+                # worker started.
+                stream_outputs=self._outputs_callback().values(),
+                start_time=self._start_time,
             )
             self._memory_file_pos = self._memory_file.tell()
-            self._part_start_dts = self._segment_start_dts
-            # Fetch the latest StreamOutputs, which may have changed since the
-            # worker started.
-            for stream_output in self._outputs_callback().values():
-                stream_output.put(self._segment)
         else:  # These are the ends of the part segments
             self.flush(packet, last_part=False)
 
@@ -163,28 +207,69 @@ class SegmentBuffer:
 
         If last_part is True, also close the segment, give it a duration,
         and clean up the av_output and memory_file.
+        There are two different ways to enter this function, and when
+        last_part is True, packet has not yet been muxed, while when
+        last_part is False, the packet has already been muxed. However,
+        in both cases, packet is the next packet and is not included in
+        the Part.
+        This function writes the duration metadata for the Part and
+        for the Segment. However, as the fragmentation done by ffmpeg
+        may result in fragment durations which fall outside the
+        [0.85x,1.0x] tolerance band allowed by LL-HLS, we need to fudge
+        some durations a bit by reporting them as being within that
+        range.
+        Note that repeated adjustments may cause drift between the part
+        durations in the metadata and those in the media and result in
+        playback issues in some clients.
         """
+        # Part durations should not exceed the part target duration
+        adjusted_dts = min(
+            packet.dts,
+            self._part_start_dts
+            + self._stream_settings.part_target_duration / packet.time_base,
+        )
         if last_part:
             # Closing the av_output will write the remaining buffered data to the
             # memory_file as a new moof/mdat.
             self._av_output.close()
+        elif not self._part_has_keyframe:
+            # Parts which are not the last part or an independent part should
+            # not have durations below 0.85 of the part target duration.
+            adjusted_dts = max(
+                adjusted_dts,
+                self._part_start_dts
+                + 0.85 * self._stream_settings.part_target_duration / packet.time_base,
+            )
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
-        self._segment.parts.append(
+        self._hass.loop.call_soon_threadsafe(
+            self._segment.async_add_part,
             Part(
-                duration=float((packet.dts - self._part_start_dts) * packet.time_base),
+                duration=float(
+                    (adjusted_dts - self._part_start_dts) * packet.time_base
+                ),
                 has_keyframe=self._part_has_keyframe,
                 data=self._memory_file.read(),
+            ),
+            (
+                segment_duration := float(
+                    (adjusted_dts - self._segment_start_dts) * packet.time_base
+                )
             )
+            if last_part
+            else 0,
         )
         if last_part:
-            self._segment.duration = float(
-                (packet.dts - self._segment_start_dts) * packet.time_base
-            )
+            # If we've written the last part, we can close the memory_file.
             self._memory_file.close()  # We don't need the BytesIO object anymore
+            self._start_time += datetime.timedelta(seconds=segment_duration)
+            # Reinitialize
+            self.reset(packet.dts)
         else:
+            # For the last part, these will get set again elsewhere so we can skip
+            # setting them here.
             self._memory_file_pos = self._memory_file.tell()
-            self._part_start_dts = packet.dts
+            self._part_start_dts = adjusted_dts
         self._part_has_keyframe = False
 
     def discontinuity(self) -> None:
@@ -193,6 +278,7 @@ class SegmentBuffer:
         # simple to check for discontinuity at output time, and to determine
         # the discontinuity sequence number.
         self._stream_id += 1
+        self._start_time = datetime.datetime.utcnow()
 
     def close(self) -> None:
         """Close stream buffer."""
@@ -225,7 +311,7 @@ class PeekIterator(Iterator):
     def replace_underlying_iterator(self, new_iterator: Iterator) -> None:
         """Replace the underlying iterator while preserving the buffer."""
         self._iterator = new_iterator
-        if self._next is not self._pop_buffer:
+        if not self._buffer:
             self._next = self._iterator.__next__
 
     def _pop_buffer(self) -> av.Packet:

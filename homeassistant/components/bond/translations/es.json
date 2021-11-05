@@ -9,13 +9,13 @@
             "old_firmware": "Firmware antiguo no compatible en el dispositivo Bond - actual\u00edzalo antes de continuar",
             "unknown": "Error inesperado"
         },
-        "flow_title": "Bond: {bond_id} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
                 "data": {
                     "access_token": "Token de acceso"
                 },
-                "description": "\u00bfQuieres configurar {bond_id}?"
+                "description": "\u00bfQuieres configurar {name}?"
             },
             "user": {
                 "data": {

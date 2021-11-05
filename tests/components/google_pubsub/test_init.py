@@ -1,6 +1,7 @@
 """The tests for the Google Pub/Sub component."""
 from dataclasses import dataclass
 from datetime import datetime
+import os
 import unittest.mock as mock
 
 import pytest
@@ -51,13 +52,12 @@ def mock_client_fixture():
         yield client
 
 
-@pytest.fixture(autouse=True, name="mock_os")
-def mock_os_fixture():
-    """Mock the OS cli."""
-    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.os") as os_cli:
-        os_cli.path = mock.MagicMock()
-        setattr(os_cli.path, "join", mock.MagicMock(return_value="path"))
-        yield os_cli
+@pytest.fixture(autouse=True, name="mock_is_file")
+def mock_is_file_fixture():
+    """Mock os.path.isfile."""
+    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.os.path.isfile") as is_file:
+        is_file.return_value = True
+        yield is_file
 
 
 @pytest.fixture(autouse=True)
@@ -84,9 +84,9 @@ async def test_minimal_config(hass, mock_client):
     assert hass.bus.listen.called
     assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert mock_client.PublisherClient.from_service_account_json.call_count == 1
-    assert (
-        mock_client.PublisherClient.from_service_account_json.call_args[0][0] == "path"
-    )
+    assert mock_client.PublisherClient.from_service_account_json.call_args[0][
+        0
+    ] == os.path.join(hass.config.config_dir, "creds")
 
 
 async def test_full_config(hass, mock_client):
@@ -111,9 +111,9 @@ async def test_full_config(hass, mock_client):
     assert hass.bus.listen.called
     assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert mock_client.PublisherClient.from_service_account_json.call_count == 1
-    assert (
-        mock_client.PublisherClient.from_service_account_json.call_args[0][0] == "path"
-    )
+    assert mock_client.PublisherClient.from_service_account_json.call_args[0][
+        0
+    ] == os.path.join(hass.config.config_dir, "creds")
 
 
 def make_event(entity_id):

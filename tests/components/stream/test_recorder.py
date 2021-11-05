@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components.stream import create_stream
 from homeassistant.components.stream.const import HLS_PROVIDER, RECORDER_PROVIDER
-from homeassistant.components.stream.core import Part, Segment
+from homeassistant.components.stream.core import Part
 from homeassistant.components.stream.fmp4utils import find_box
 from homeassistant.components.stream.recorder import recorder_save_worker
 from homeassistant.exceptions import HomeAssistantError
@@ -17,7 +17,11 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import generate_h264_video, remux_with_audio
+from tests.components.stream.common import (
+    DefaultSegment as Segment,
+    generate_h264_video,
+    remux_with_audio,
+)
 
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
@@ -126,10 +130,9 @@ def add_parts_to_segment(segment, source):
         Part(
             duration=None,
             has_keyframe=None,
-            http_range_start=None,
             data=source.getbuffer()[moof_locs[i] : moof_locs[i + 1]],
         )
-        for i in range(1, len(moof_locs) - 1)
+        for i in range(len(moof_locs) - 1)
     ]
 
 
@@ -191,7 +194,7 @@ async def test_record_stream_audio(
     await async_setup_component(hass, "stream", {"stream": {}})
 
     # Generate source video with no audio
-    source = generate_h264_video(container_format="mov")
+    orig_source = generate_h264_video(container_format="mov")
 
     for a_codec, expected_audio_streams in (
         ("aac", 1),  # aac is a valid mp4 codec
@@ -199,9 +202,8 @@ async def test_record_stream_audio(
         ("empty", 0),  # audio stream with no packets
         (None, 0),  # no audio stream
     ):
-
         # Remux source video with new audio
-        source = remux_with_audio(source, "mov", a_codec)  # mov can store PCM
+        source = remux_with_audio(orig_source, "mov", a_codec)  # mov can store PCM
 
         record_worker_sync.reset()
         stream_worker_sync.pause()
@@ -219,7 +221,7 @@ async def test_record_stream_audio(
             stream_worker_sync.resume()
 
         result = av.open(
-            BytesIO(last_segment.init + last_segment.get_bytes_without_init()),
+            BytesIO(last_segment.init + last_segment.get_data()),
             "r",
             format="mp4",
         )

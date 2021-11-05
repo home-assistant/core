@@ -1,16 +1,12 @@
 """Support for the Foursquare (Swarm) API."""
+from http import HTTPStatus
 import logging
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    HTTP_BAD_REQUEST,
-    HTTP_CREATED,
-    HTTP_OK,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,7 +56,7 @@ def setup(hass, config):
         url = f"https://api.foursquare.com/v2/checkins/add?oauth_token={config[CONF_ACCESS_TOKEN]}&v=20160802&m=swarm"
         response = requests.post(url, data=call.data, timeout=10)
 
-        if response.status_code not in (HTTP_OK, HTTP_CREATED):
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.CREATED):
             _LOGGER.exception(
                 "Error checking in user. Response %d: %s:",
                 response.status_code,
@@ -95,7 +91,7 @@ class FoursquarePushReceiver(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         secret = data.pop("secret", None)
 
@@ -105,6 +101,6 @@ class FoursquarePushReceiver(HomeAssistantView):
             _LOGGER.error(
                 "Received Foursquare push with invalid push secret: %s", secret
             )
-            return self.json_message("Incorrect secret", HTTP_BAD_REQUEST)
+            return self.json_message("Incorrect secret", HTTPStatus.BAD_REQUEST)
 
         request.app["hass"].bus.async_fire(EVENT_PUSH, data)

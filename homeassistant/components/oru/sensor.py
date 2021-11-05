@@ -42,7 +42,7 @@ class CurrentEnergyUsageSensor(SensorEntity):
     """Representation of the sensor."""
 
     _attr_icon = SENSOR_ICON
-    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     def __init__(self, meter):
         """Initialize the sensor."""
@@ -61,7 +61,7 @@ class CurrentEnergyUsageSensor(SensorEntity):
         return SENSOR_NAME
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

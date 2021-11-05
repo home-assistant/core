@@ -99,7 +99,7 @@ class RedditSensor(SensorEntity):
         return f"reddit_{self._subreddit}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return len(self._subreddit_data)
 

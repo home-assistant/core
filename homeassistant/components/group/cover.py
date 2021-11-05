@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
@@ -48,6 +49,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 
 from . import GroupEntity
+from .util import attribute_equal, reduce_attribute
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"
@@ -84,7 +86,7 @@ async def async_setup_platform(
 class CoverGroup(GroupEntity, CoverEntity):
     """Representation of a CoverGroup."""
 
-    _attr_is_closed: bool | None = False
+    _attr_is_closed: bool | None = None
     _attr_is_opening: bool | None = False
     _attr_is_closing: bool | None = False
     _attr_current_cover_position: int | None = 100
@@ -110,8 +112,7 @@ class CoverGroup(GroupEntity, CoverEntity):
 
     async def _update_supported_features_event(self, event: Event) -> None:
         self.async_set_context(event.context)
-        entity = event.data.get("entity_id")
-        if entity is not None:
+        if (entity := event.data.get("entity_id")) is not None:
             await self.async_update_supported_features(
                 entity, event.data.get("new_state")
             )
@@ -166,8 +167,7 @@ class CoverGroup(GroupEntity, CoverEntity):
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
         for entity_id in self._entities:
-            new_state = self.hass.states.get(entity_id)
-            if new_state is None:
+            if (new_state := self.hass.states.get(entity_id)) is None:
                 continue
             await self.async_update_supported_features(
                 entity_id, new_state, update_state=False
@@ -260,55 +260,47 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_is_closed = True
         self._attr_is_closing = False
         self._attr_is_opening = False
+        has_valid_state = False
         for entity_id in self._entities:
-            state = self.hass.states.get(entity_id)
-            if not state:
+            if not (state := self.hass.states.get(entity_id)):
                 continue
             if state.state == STATE_OPEN:
                 self._attr_is_closed = False
-                break
+                has_valid_state = True
+                continue
+            if state.state == STATE_CLOSED:
+                has_valid_state = True
+                continue
             if state.state == STATE_CLOSING:
                 self._attr_is_closing = True
-                break
+                has_valid_state = True
+                continue
             if state.state == STATE_OPENING:
                 self._attr_is_opening = True
-                break
+                has_valid_state = True
+                continue
+        if not has_valid_state:
+            self._attr_is_closed = None
 
-        self._attr_current_cover_position = None
-        if self._covers[KEY_POSITION]:
-            position: int | None = -1
-            self._attr_current_cover_position = 0 if self.is_closed else 100
-            for entity_id in self._covers[KEY_POSITION]:
-                state = self.hass.states.get(entity_id)
-                if state is None:
-                    continue
-                pos = state.attributes.get(ATTR_CURRENT_POSITION)
-                if position == -1:
-                    position = pos
-                elif position != pos:
-                    self._attr_assumed_state = True
-                    break
-            else:
-                if position != -1:
-                    self._attr_current_cover_position = position
+        position_covers = self._covers[KEY_POSITION]
+        all_position_states = [self.hass.states.get(x) for x in position_covers]
+        position_states: list[State] = list(filter(None, all_position_states))
+        self._attr_current_cover_position = reduce_attribute(
+            position_states, ATTR_CURRENT_POSITION
+        )
+        self._attr_assumed_state |= not attribute_equal(
+            position_states, ATTR_CURRENT_POSITION
+        )
 
-        self._attr_current_cover_tilt_position = None
-        if self._tilts[KEY_POSITION]:
-            position = -1
-            self._attr_current_cover_tilt_position = 100
-            for entity_id in self._tilts[KEY_POSITION]:
-                state = self.hass.states.get(entity_id)
-                if state is None:
-                    continue
-                pos = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
-                if position == -1:
-                    position = pos
-                elif position != pos:
-                    self._attr_assumed_state = True
-                    break
-            else:
-                if position != -1:
-                    self._attr_current_cover_tilt_position = position
+        tilt_covers = self._tilts[KEY_POSITION]
+        all_tilt_states = [self.hass.states.get(x) for x in tilt_covers]
+        tilt_states: list[State] = list(filter(None, all_tilt_states))
+        self._attr_current_cover_tilt_position = reduce_attribute(
+            tilt_states, ATTR_CURRENT_TILT_POSITION
+        )
+        self._attr_assumed_state |= not attribute_equal(
+            tilt_states, ATTR_CURRENT_TILT_POSITION
+        )
 
         supported_features = 0
         supported_features |= (
@@ -327,8 +319,7 @@ class CoverGroup(GroupEntity, CoverEntity):
 
         if not self._attr_assumed_state:
             for entity_id in self._entities:
-                state = self.hass.states.get(entity_id)
-                if state is None:
+                if (state := self.hass.states.get(entity_id)) is None:
                     continue
                 if state and state.attributes.get(ATTR_ASSUMED_STATE):
                     self._attr_assumed_state = True

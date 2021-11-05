@@ -47,7 +47,7 @@ class XBeeTemperatureSensor(SensorEntity):
     """Representation of XBee Pro temperature sensor."""
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(self, config, device):
         """Initialize the sensor."""
@@ -61,7 +61,7 @@ class XBeeTemperatureSensor(SensorEntity):
         return self._config.name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._temp
 

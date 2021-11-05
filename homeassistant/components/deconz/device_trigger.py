@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
+from homeassistant.helpers import device_registry as dr
 
 from . import DOMAIN
 from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE
@@ -516,6 +517,14 @@ BUSCH_JAEGER_REMOTE = {
     (CONF_LONG_RELEASE, CONF_BUTTON_8): {CONF_EVENT: 8003},
 }
 
+SONOFF_SNZB_01_1_MODEL = "WB01"
+SONOFF_SNZB_01_2_MODEL = "WB-01"
+SONOFF_SNZB_01_SWITCH = {
+    (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
+    (CONF_LONG_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1003},
+    (CONF_DOUBLE_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1004},
+}
+
 TRUST_ZYCT_202_MODEL = "ZYCT-202"
 TRUST_ZYCT_202_ZLL_MODEL = "ZLL-NonColorController"
 TRUST_ZYCT_202 = {
@@ -595,6 +604,8 @@ REMOTES = {
     TRUST_ZYCT_202_ZLL_MODEL: TRUST_ZYCT_202,
     UBISYS_POWER_SWITCH_S2_MODEL: UBISYS_POWER_SWITCH_S2,
     UBISYS_CONTROL_UNIT_C4_MODEL: UBISYS_CONTROL_UNIT_C4,
+    SONOFF_SNZB_01_1_MODEL: SONOFF_SNZB_01_SWITCH,
+    SONOFF_SNZB_01_2_MODEL: SONOFF_SNZB_01_SWITCH,
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
@@ -618,7 +629,7 @@ async def async_validate_trigger_config(hass, config):
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
@@ -640,7 +651,7 @@ async def async_validate_trigger_config(hass, config):
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
@@ -674,7 +685,7 @@ async def async_get_triggers(hass, device_id):
     Retrieve the deconz event object matching device entry.
     Generate device trigger list.
     """
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
 
     if device.model not in REMOTES:

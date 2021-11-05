@@ -178,8 +178,7 @@ class EDL21:
 
         new_entities = []
         for telegram in message_body.get("valList", []):
-            obis = telegram.get("objName")
-            if not obis:
+            if not (obis := telegram.get("objName")):
                 continue
 
             if (electricity_id, obis) in self._registered_obis:
@@ -187,8 +186,7 @@ class EDL21:
                     self._hass, SIGNAL_EDL21_TELEGRAM, electricity_id, telegram
                 )
             else:
-                name = self._OBIS_NAMES.get(obis)
-                if name:
+                if name := self._OBIS_NAMES.get(obis):
                     if self._name:
                         name = f"{self._name}: {name}"
                     new_entities.append(
@@ -301,7 +299,7 @@ class EDL21Entity(SensorEntity):
         return self._name
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the value of the last received telegram."""
         return self._telegram.get("value")
 
@@ -315,7 +313,7 @@ class EDL21Entity(SensorEntity):
         }
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._telegram.get("unit")
 

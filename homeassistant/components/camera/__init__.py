@@ -4,15 +4,17 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
-from collections.abc import Awaitable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 import hashlib
+import inspect
 import logging
 import os
 from random import SystemRandom
-from typing import Callable, Final, cast, final
+from typing import Final, cast, final
 
 from aiohttp import web
 import async_timeout
@@ -61,7 +63,10 @@ from .const import (
     DATA_CAMERA_PREFS,
     DOMAIN,
     SERVICE_RECORD,
+    STREAM_TYPE_HLS,
+    STREAM_TYPE_WEB_RTC,
 )
+from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences
 
 # mypy: allow-untyped-calls
@@ -138,28 +143,72 @@ async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) ->
     return await _async_stream_endpoint_url(hass, camera, fmt)
 
 
-@bind_hass
-async def async_get_image(
-    hass: HomeAssistant, entity_id: str, timeout: int = 10
+async def _async_get_image(
+    camera: Camera,
+    timeout: int = 10,
+    width: int | None = None,
+    height: int | None = None,
 ) -> Image:
-    """Fetch an image from a camera entity."""
-    camera = _get_camera_from_entity_id(hass, entity_id)
+    """Fetch a snapshot image from a camera.
 
+    If width and height are passed, an attempt to scale
+    the image will be made on a best effort basis.
+    Not all cameras can scale images or return jpegs
+    that we can scale, however the majority of cases
+    are handled.
+    """
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
         async with async_timeout.timeout(timeout):
-            image = await camera.async_camera_image()
+            # Calling inspect will be removed in 2022.1 after all
+            # custom components have had a chance to change their signature
+            sig = inspect.signature(camera.async_camera_image)
+            if "height" in sig.parameters and "width" in sig.parameters:
+                image_bytes = await camera.async_camera_image(
+                    width=width, height=height
+                )
+            else:
+                camera.async_warn_old_async_camera_image_signature()
+                image_bytes = await camera.async_camera_image()
 
-            if image:
-                return Image(camera.content_type, image)
+            if image_bytes:
+                content_type = camera.content_type
+                image = Image(content_type, image_bytes)
+                if (
+                    width is not None
+                    and height is not None
+                    and ("jpeg" in content_type or "jpg" in content_type)
+                ):
+                    assert width is not None
+                    assert height is not None
+                    return Image(
+                        content_type, scale_jpeg_camera_image(image, width, height)
+                    )
+
+                return image
 
     raise HomeAssistantError("Unable to get image")
+
+
+@bind_hass
+async def async_get_image(
+    hass: HomeAssistant,
+    entity_id: str,
+    timeout: int = 10,
+    width: int | None = None,
+    height: int | None = None,
+) -> Image:
+    """Fetch an image from a camera entity.
+
+    width and height will be passed to the underlying camera.
+    """
+    camera = _get_camera_from_entity_id(hass, entity_id)
+    return await _async_get_image(camera, timeout, width, height)
 
 
 @bind_hass
 async def async_get_stream_source(hass: HomeAssistant, entity_id: str) -> str | None:
     """Fetch the stream source for a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
-
     return await camera.stream_source()
 
 
@@ -223,14 +272,10 @@ async def async_get_still_stream(
 
 def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     """Get camera component from entity_id."""
-    component = hass.data.get(DOMAIN)
-
-    if component is None:
+    if (component := hass.data.get(DOMAIN)) is None:
         raise HomeAssistantError("Camera integration not set up")
 
-    camera = component.get_entity(entity_id)
-
-    if camera is None:
+    if (camera := component.get_entity(entity_id)) is None:
         raise HomeAssistantError("Camera not found")
 
     if not camera.is_on:
@@ -255,6 +300,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         WS_TYPE_CAMERA_THUMBNAIL, websocket_camera_thumbnail, SCHEMA_WS_CAMERA_THUMBNAIL
     )
     hass.components.websocket_api.async_register_command(ws_camera_stream)
+    hass.components.websocket_api.async_register_command(ws_camera_web_rtc_offer)
     hass.components.websocket_api.async_register_command(websocket_get_prefs)
     hass.components.websocket_api.async_register_command(websocket_update_prefs)
 
@@ -330,6 +376,7 @@ class Camera(Entity):
         self.stream_options: dict[str, str] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
+        self._warned_old_signature = False
         self.async_update_token()
 
     @property
@@ -372,6 +419,18 @@ class Camera(Entity):
         """Return the interval between frames of the mjpeg stream."""
         return MIN_STREAM_INTERVAL
 
+    @property
+    def frontend_stream_type(self) -> str | None:
+        """Return the type of stream supported by this camera.
+
+        A camera may have a single stream type which is used to inform the
+        frontend which camera attributes and player to use. The default type
+        is to use HLS, and components can override to change the type.
+        """
+        if not self.supported_features & SUPPORT_STREAM:
+            return None
+        return STREAM_TYPE_HLS
+
     async def create_stream(self) -> Stream | None:
         """Create a Stream for stream_source."""
         # There is at most one stream (a decode worker) per camera
@@ -384,16 +443,51 @@ class Camera(Entity):
         return self.stream
 
     async def stream_source(self) -> str | None:
-        """Return the source of the stream."""
+        """Return the source of the stream.
+
+        This is used by cameras with SUPPORT_STREAM and STREAM_TYPE_HLS.
+        """
+        # pylint: disable=no-self-use
         return None
 
-    def camera_image(self) -> bytes | None:
+    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
+        """Handle the WebRTC offer and return an answer.
+
+        This is used by cameras with SUPPORT_STREAM and STREAM_TYPE_WEB_RTC.
+        """
+        raise NotImplementedError()
+
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         raise NotImplementedError()
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
+        sig = inspect.signature(self.camera_image)
+        # Calling inspect will be removed in 2022.1 after all
+        # custom components have had a chance to change their signature
+        if "height" in sig.parameters and "width" in sig.parameters:
+            return await self.hass.async_add_executor_job(
+                partial(self.camera_image, width=width, height=height)
+            )
+        self.async_warn_old_async_camera_image_signature()
         return await self.hass.async_add_executor_job(self.camera_image)
+
+    # Remove in 2022.1 after all custom components have had a chance to change their signature
+    @callback
+    def async_warn_old_async_camera_image_signature(self) -> None:
+        """Warn once when calling async_camera_image with the function old signature."""
+        if self._warned_old_signature:
+            return
+        _LOGGER.warning(
+            "The camera entity %s does not support requesting width and height, please open an issue with the integration author",
+            self.entity_id,
+        )
+        self._warned_old_signature = True
 
     async def handle_async_still_stream(
         self, request: web.Request, interval: float
@@ -474,6 +568,11 @@ class Camera(Entity):
         if self.motion_detection_enabled:
             attrs["motion_detection"] = self.motion_detection_enabled
 
+        if self.frontend_stream_type:
+            attrs["frontend_stream_type"] = self.frontend_stream_type
+            # Remove after home-assistant/frontend#10298 is merged into nightly
+            attrs["stream_type"] = self.frontend_stream_type
+
         return attrs
 
     @callback
@@ -495,9 +594,7 @@ class CameraView(HomeAssistantView):
 
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
-        camera = self.component.get_entity(entity_id)
-
-        if camera is None:
+        if (camera := self.component.get_entity(entity_id)) is None:
             raise web.HTTPNotFound()
 
         camera = cast(Camera, camera)
@@ -529,14 +626,19 @@ class CameraImageView(CameraView):
 
     async def handle(self, request: web.Request, camera: Camera) -> web.Response:
         """Serve camera image."""
-        with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            async with async_timeout.timeout(CAMERA_IMAGE_TIMEOUT):
-                image = await camera.async_camera_image()
-
-            if image:
-                return web.Response(body=image, content_type=camera.content_type)
-
-        raise web.HTTPInternalServerError()
+        width = request.query.get("width")
+        height = request.query.get("height")
+        try:
+            image = await _async_get_image(
+                camera,
+                CAMERA_IMAGE_TIMEOUT,
+                int(width) if width else None,
+                int(height) if height else None,
+            )
+        except (HomeAssistantError, ValueError) as ex:
+            raise web.HTTPInternalServerError() from ex
+        else:
+            return web.Response(body=image.content, content_type=image.content_type)
 
 
 class CameraMjpegStream(CameraView):
@@ -547,8 +649,7 @@ class CameraMjpegStream(CameraView):
 
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
-        interval_str = request.query.get("interval")
-        if interval_str is None:
+        if (interval_str := request.query.get("interval")) is None:
             stream = await camera.handle_async_mjpeg_stream(request)
             if stream is None:
                 raise web.HTTPBadGateway()
@@ -618,6 +719,50 @@ async def ws_camera_stream(
         connection.send_error(
             msg["id"], "start_stream_failed", "Timeout getting stream source"
         )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/web_rtc_offer",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("offer"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_camera_web_rtc_offer(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Handle the signal path for a WebRTC stream.
+
+    This signal path is used to route the offer created by the client to the
+    camera device through the integration for negitioation on initial setup,
+    which returns an answer. The actual streaming is handled entirely between
+    the client and camera device.
+
+    Async friendly.
+    """
+    entity_id = msg["entity_id"]
+    offer = msg["offer"]
+    camera = _get_camera_from_entity_id(hass, entity_id)
+    if camera.frontend_stream_type != STREAM_TYPE_WEB_RTC:
+        connection.send_error(
+            msg["id"],
+            "web_rtc_offer_failed",
+            f"Camera does not support WebRTC, frontend_stream_type={camera.frontend_stream_type}",
+        )
+        return
+    try:
+        answer = await camera.async_handle_web_rtc_offer(offer)
+    except (HomeAssistantError, ValueError) as ex:
+        _LOGGER.error("Error handling WebRTC offer: %s", ex)
+        connection.send_error(msg["id"], "web_rtc_offer_failed", str(ex))
+    except asyncio.TimeoutError:
+        _LOGGER.error("Timeout handling WebRTC offer")
+        connection.send_error(
+            msg["id"], "web_rtc_offer_failed", "Timeout handling WebRTC offer"
+        )
+    else:
+        connection.send_result(msg["id"], {"answer": answer})
 
 
 @websocket_api.websocket_command(

@@ -81,7 +81,7 @@ class TankUtilitySensor(SensorEntity):
         return self._device
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
@@ -91,7 +91,7 @@ class TankUtilitySensor(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of the device."""
         return self._unit_of_measurement
 
@@ -111,11 +111,9 @@ class TankUtilitySensor(SensorEntity):
         try:
             data = tank_monitor.get_device_data(self._token, self.device)
         except requests.exceptions.HTTPError as http_error:
-            if (
-                http_error.response.status_code
-                == requests.codes.unauthorized  # pylint: disable=no-member
-                or http_error.response.status_code
-                == requests.codes.bad_request  # pylint: disable=no-member
+            if http_error.response.status_code in (
+                requests.codes.unauthorized,  # pylint: disable=no-member
+                requests.codes.bad_request,  # pylint: disable=no-member
             ):
                 _LOGGER.info("Getting new token")
                 self._token = auth.get_token(self._email, self._password, force=True)

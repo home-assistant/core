@@ -8,7 +8,6 @@ import binascii
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import functools
-import logging
 from typing import Any
 
 from aiohttp import web
@@ -49,8 +48,6 @@ from .const import (
     SIGNAL_ENTITY_REMOVE,
     TYPE_HYPERION_CAMERA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 IMAGE_STREAM_JPG_SENTINEL = "data:image/jpg;base64,"
 
@@ -210,7 +207,9 @@ class HyperionCamera(Camera):
         finally:
             await self._stop_image_streaming_for_client()
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return single camera image bytes."""
         async with self._image_streaming() as is_streaming:
             if is_streaming:
@@ -250,12 +249,12 @@ class HyperionCamera(Camera):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._instance_name,
-            "manufacturer": HYPERION_MANUFACTURER_NAME,
-            "model": HYPERION_MODEL_NAME,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=HYPERION_MANUFACTURER_NAME,
+            model=HYPERION_MODEL_NAME,
+            name=self._instance_name,
+        )
 
 
 CAMERA_TYPES = {

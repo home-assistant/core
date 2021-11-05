@@ -60,7 +60,7 @@ async def test_accessory_cancels_track_state_change_on_stop(hass, hk_driver):
     ):
         await acc.run()
     assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]) == 1
-    acc.async_stop()
+    await acc.stop()
     assert entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]
 
 
@@ -696,9 +696,9 @@ def test_home_driver():
     with patch("pyhap.accessory_driver.AccessoryDriver.pair") as mock_pair, patch(
         "homeassistant.components.homekit.accessories.dismiss_setup_message"
     ) as mock_dissmiss_msg:
-        driver.pair("client_uuid", "client_public")
+        driver.pair("client_uuid", "client_public", b"1")
 
-    mock_pair.assert_called_with("client_uuid", "client_public")
+    mock_pair.assert_called_with("client_uuid", "client_public", b"1")
     mock_dissmiss_msg.assert_called_with("hass", "entry_id")
 
     # unpair

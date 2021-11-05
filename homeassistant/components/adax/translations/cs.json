@@ -10,6 +10,7 @@
         "step": {
             "user": {
                 "data": {
+                    "account_id": "ID \u00fa\u010dtu",
                     "host": "Hostitel",
                     "password": "Heslo"
                 }

@@ -50,7 +50,7 @@ class KiraReceiver(SensorEntity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the receiver."""
         return self._state
 

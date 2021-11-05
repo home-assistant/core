@@ -36,7 +36,7 @@ async def _await_cancel(task):
         await task
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
     hass.data[DOMAIN_DATA_ENTRIES] = {}
     hass.data[DOMAIN_DATA_TASKS] = {}
@@ -85,7 +85,7 @@ async def _run_client(hass, client, interval):
 
     while True:
         try:
-            with async_timeout.timeout(interval):
+            async with async_timeout.timeout(interval):
                 await client.start()
 
             _LOGGER.debug("Client connected %s", client.host)

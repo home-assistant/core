@@ -91,6 +91,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str], integration_type: str
     ) -> FlowResult:
         """Validate a Cloud API key."""
+        errors = {}
         websession = aiohttp_client.async_get_clientsession(self.hass)
         cloud_api = CloudAPI(user_input[CONF_API_KEY], session=websession)
 
@@ -117,26 +118,19 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     await coro
                 except InvalidKeyError:
-                    return self.async_show_form(
-                        step_id=error_step,
-                        data_schema=error_schema,
-                        errors={CONF_API_KEY: "invalid_api_key"},
-                    )
+                    errors[CONF_API_KEY] = "invalid_api_key"
                 except NotFoundError:
-                    return self.async_show_form(
-                        step_id=error_step,
-                        data_schema=error_schema,
-                        errors={CONF_CITY: "location_not_found"},
-                    )
+                    errors[CONF_CITY] = "location_not_found"
                 except AirVisualError as err:
                     LOGGER.error(err)
-                    return self.async_show_form(
-                        step_id=error_step,
-                        data_schema=error_schema,
-                        errors={"base": "unknown"},
-                    )
+                    errors["base"] = "unknown"
 
                 valid_keys.add(user_input[CONF_API_KEY])
+
+        if errors:
+            return self.async_show_form(
+                step_id=error_step, data_schema=error_schema, errors=errors
+            )
 
         existing_entry = await self.async_set_unique_id(self._geo_id)
         if existing_entry:
@@ -262,9 +256,9 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle an AirVisual options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize."""
-        self.config_entry = config_entry
+        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -279,7 +273,7 @@ class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_SHOW_ON_MAP,
-                        default=self.config_entry.options.get(CONF_SHOW_ON_MAP),
+                        default=self.entry.options.get(CONF_SHOW_ON_MAP),
                     ): bool
                 }
             ),

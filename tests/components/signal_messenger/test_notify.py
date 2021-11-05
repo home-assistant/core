@@ -1,5 +1,5 @@
 """The tests for the signal_messenger platform."""
-
+from http import HTTPStatus
 import os
 import tempfile
 import unittest
@@ -54,12 +54,12 @@ class TestSignalMesssenger(unittest.TestCase):
         mock.register_uri(
             "POST",
             "http://127.0.0.1:8080/v2/send",
-            status_code=201,
+            status_code=HTTPStatus.CREATED,
         )
         mock.register_uri(
             "GET",
             "http://127.0.0.1:8080/v1/about",
-            status_code=200,
+            status_code=HTTPStatus.OK,
             json={"versions": ["v1", "v2"]},
         )
         with self.assertLogs(
@@ -77,12 +77,12 @@ class TestSignalMesssenger(unittest.TestCase):
         mock.register_uri(
             "POST",
             "http://127.0.0.1:8080/v2/send",
-            status_code=201,
+            status_code=HTTPStatus.CREATED,
         )
         mock.register_uri(
             "GET",
             "http://127.0.0.1:8080/v1/about",
-            status_code=200,
+            status_code=HTTPStatus.OK,
             json={"versions": ["v1", "v2"]},
         )
         with self.assertLogs(
@@ -106,12 +106,12 @@ class TestSignalMesssenger(unittest.TestCase):
         mock.register_uri(
             "POST",
             "http://127.0.0.1:8080/v2/send",
-            status_code=201,
+            status_code=HTTPStatus.CREATED,
         )
         mock.register_uri(
             "GET",
             "http://127.0.0.1:8080/v1/about",
-            status_code=200,
+            status_code=HTTPStatus.OK,
             json={"versions": ["v1", "v2"]},
         )
         with self.assertLogs(

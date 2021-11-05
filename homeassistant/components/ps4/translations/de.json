@@ -15,7 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "Anmeldeinformationen ben\u00f6tigt. Klicke auf \"Senden\" und dann in der PS4 Second Screen app, aktualisiere die Ger\u00e4te und w\u00e4hle das \"Home-Assistant\"-Ger\u00e4t aus, um fortzufahren.",
+                "description": "Anmeldeinformationen ben\u00f6tigt. Klicke auf \"Senden\" und dann in der PS4 Second Screen App, aktualisiere die Ger\u00e4te und w\u00e4hle das \"Home-Assistant\"-Ger\u00e4t aus, um fortzufahren.",
                 "title": "PlayStation 4"
             },
             "link": {

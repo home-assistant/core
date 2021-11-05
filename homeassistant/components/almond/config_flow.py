@@ -1,6 +1,9 @@
 """Config flow to connect with Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 import logging
+from typing import Any
 
 from aiohttp import ClientError
 import async_timeout
@@ -9,6 +12,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries, core, data_entry_flow
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .const import DOMAIN as ALMOND_DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
@@ -20,7 +24,7 @@ async def async_verify_local_connection(hass: core.HomeAssistant, host: str):
     api = WebAlmondAPI(AlmondLocalAuth(host, websession))
 
     try:
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             await api.async_list_apps()
 
         return True
@@ -64,7 +68,7 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
 
         return result
 
-    async def async_oauth_create_entry(self, data: dict) -> dict:
+    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
         """Create an entry for the flow.
 
         Ok to override if you want to fetch extra info or even add another step.
@@ -73,7 +77,7 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
         data["host"] = self.host
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
-    async def async_step_import(self, user_input: dict = None) -> dict:
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import data."""
         # Only allow 1 instance.
         if self._async_current_entries():

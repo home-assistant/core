@@ -1,13 +1,15 @@
 """Support for the Italian train system using ViaggiaTreno API."""
 import asyncio
+from http import HTTPStatus
 import logging
+import time
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, HTTP_OK, TIME_MINUTES
+from homeassistant.const import ATTR_ATTRIBUTION, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,7 +19,7 @@ ATTRIBUTION = "Powered by ViaggiaTreno Data"
 VIAGGIATRENO_ENDPOINT = (
     "http://www.viaggiatreno.it/viaggiatrenonew/"
     "resteasy/viaggiatreno/andamentoTreno/"
-    "{station_id}/{train_id}"
+    "{station_id}/{train_id}/{timestamp}"
 )
 
 REQUEST_TIMEOUT = 5  # seconds
@@ -59,8 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the ViaggiaTreno platform."""
     train_id = config.get(CONF_TRAIN_ID)
     station_id = config.get(CONF_STATION_ID)
-    name = config.get(CONF_NAME)
-    if not name:
+    if not (name := config.get(CONF_NAME)):
         name = DEFAULT_NAME.format(train_id)
     async_add_entities([ViaggiaTrenoSensor(train_id, station_id, name)])
 
@@ -69,9 +70,9 @@ async def async_http_request(hass, uri):
     """Perform actual request."""
     try:
         session = hass.helpers.aiohttp_client.async_get_clientsession(hass)
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await session.get(uri)
-        if req.status != HTTP_OK:
+        if req.status != HTTPStatus.OK:
             return {"error": req.status}
         json_response = await req.json()
         return json_response
@@ -94,7 +95,7 @@ class ViaggiaTrenoSensor(SensorEntity):
         self._name = name
 
         self.uri = VIAGGIATRENO_ENDPOINT.format(
-            station_id=station_id, train_id=train_id
+            station_id=station_id, train_id=train_id, timestamp=int(time.time()) * 1000
         )
 
     @property
@@ -103,7 +104,7 @@ class ViaggiaTrenoSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -113,7 +114,7 @@ class ViaggiaTrenoSensor(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 

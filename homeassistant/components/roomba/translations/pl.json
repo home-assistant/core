@@ -34,7 +34,7 @@
                     "blid": "BLID",
                     "host": "Nazwa hosta lub adres IP"
                 },
-                "description": "W Twojej sieci nie wykryto urz\u0105dzenia Roomba ani Braava. BLID to cz\u0119\u015b\u0107 nazwy hosta urz\u0105dzenia po `iRobot-` lub 'Roomba-'. Post\u0119puj zgodnie z instrukcjami podanymi w dokumentacji pod adresem: {auth_help_url}",
+                "description": "W Twojej sieci nie wykryto urz\u0105dzenia Roomba ani Braava.",
                 "title": "R\u0119czne po\u0142\u0105czenie z urz\u0105dzeniem"
             },
             "user": {

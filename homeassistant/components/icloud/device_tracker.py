@@ -115,12 +115,13 @@ class IcloudTrackerEntity(TrackerEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "name": self._device.name,
-            "manufacturer": "Apple",
-            "model": self._device.device_model,
-        }
+        return DeviceInfo(
+            configuration_url="https://icloud.com/",
+            identifiers={(DOMAIN, self._device.unique_id)},
+            manufacturer="Apple",
+            model=self._device.device_model,
+            name=self._device.name,
+        )
 
     async def async_added_to_hass(self):
         """Register state update callback."""
@@ -134,13 +135,13 @@ class IcloudTrackerEntity(TrackerEntity):
 
 
 def icon_for_icloud_device(icloud_device: IcloudDevice) -> str:
-    """Return a battery icon valid identifier."""
+    """Return an icon for the device."""
     switcher = {
-        "iPad": "mdi:tablet-ipad",
-        "iPhone": "mdi:cellphone-iphone",
+        "iPad": "mdi:tablet",
+        "iPhone": "mdi:cellphone",
         "iPod": "mdi:ipod",
         "iMac": "mdi:desktop-mac",
-        "MacBookPro": "mdi:laptop-mac",
+        "MacBookPro": "mdi:laptop",
     }
 
     return switcher.get(icloud_device.device_class, "mdi:cellphone-link")

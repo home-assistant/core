@@ -85,6 +85,8 @@ DEFAULT_DELIVERY_RESPONSE = {
     ],
 }
 
+SENSOR_KEYS = [desc.key for desc in SENSOR_TYPES]
+
 
 @pytest.mark.usefixtures("hass_storage")
 class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
@@ -136,6 +138,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         if unit:
             assert sensor.attributes["unit_of_measurement"] == unit
 
+        assert sensor.attributes["attribution"] == "Data provided by Picnic"
+
     async def _setup_platform(
         self, use_default_responses=False, enable_all_sensors=True
     ):
@@ -161,7 +165,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
     async def _enable_all_sensors(self):
         """Enable all sensors of the Picnic integration."""
         # Enable the sensors
-        for sensor_type in SENSOR_TYPES.keys():
+        for sensor_type in SENSOR_KEYS:
             updated_entry = self.entity_registry.async_update_entity(
                 f"sensor.picnic_{sensor_type}", disabled_by=None
             )

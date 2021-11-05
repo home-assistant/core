@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "api_ratelimit": "Se ha superado el l\u00edmite de velocidad de la API",
+            "unknown": "Error inesperado"
+        },
+        "error": {
+            "api_ratelimit": "Excedida tasa l\u00edmite del API",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud"
+                }
+            },
+            "country": {
+                "data": {
+                    "country_code": "C\u00f3digo del pa\u00eds"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Token de acceso",
+                    "location": "Obtener datos para"
+                },
+                "description": "Visite https://co2signal.com/ para solicitar un token."
+            }
+        }
+    }
+}

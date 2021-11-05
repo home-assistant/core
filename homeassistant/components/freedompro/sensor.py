@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -54,18 +55,18 @@ class Device(CoordinatorEntity, SensorEntity):
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
-        self._attr_device_info = {
-            "name": self.name,
-            "identifiers": {
+        self._attr_device_info = DeviceInfo(
+            identifiers={
                 (DOMAIN, self.unique_id),
             },
-            "model": device["type"],
-            "manufacturer": "Freedompro",
-        }
+            manufacturer="Freedompro",
+            model=device["type"],
+            name=self.name,
+        )
         self._attr_device_class = DEVICE_CLASS_MAP[device["type"]]
         self._attr_state_class = STATE_CLASS_MAP[device["type"]]
-        self._attr_unit_of_measurement = UNIT_MAP[device["type"]]
-        self._attr_state = 0
+        self._attr_native_unit_of_measurement = UNIT_MAP[device["type"]]
+        self._attr_native_value = 0
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -80,7 +81,7 @@ class Device(CoordinatorEntity, SensorEntity):
         )
         if device is not None and "state" in device:
             state = device["state"]
-            self._attr_state = state[DEVICE_KEY_MAP[self._type]]
+            self._attr_native_value = state[DEVICE_KEY_MAP[self._type]]
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:

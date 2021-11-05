@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
-            "already_in_progress": "Le flux de configuration de l'appareil est d\u00e9j\u00e0 en cours.",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "not_konn_panel": "Non reconnu comme appareil Konnected.io",
-            "unknown": "Une erreur inconnue s'est produite"
+            "unknown": "Erreur inattendue"
         },
         "error": {
-            "cannot_connect": "Impossible de se connecter \u00e0 Konnected Panel sur {host} : {port}"
+            "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
             "confirm": {

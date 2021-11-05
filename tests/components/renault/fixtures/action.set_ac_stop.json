@@ -1,0 +1,7 @@
+{
+  "data": {
+    "type": "HvacStart",
+    "id": "guid",
+    "attributes": { "action": "cancel" }
+  }
+}

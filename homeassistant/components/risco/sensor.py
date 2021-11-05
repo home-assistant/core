@@ -87,7 +87,7 @@ class RiscoSensor(CoordinatorEntity, SensorEntity):
             self.async_write_ha_state()
 
     @property
-    def state(self):
+    def native_value(self):
         """Value of sensor."""
         if self._event is None:
             return None

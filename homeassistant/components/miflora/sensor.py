@@ -1,7 +1,9 @@
 """Support for Xiaomi Mi Flora BLE plant sensor."""
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import btlewrap
 from btlewrap import BluetoothBackendException
@@ -12,6 +14,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.const import (
     CONDUCTIVITY,
@@ -27,12 +30,10 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.util.temperature import celsius_to_fahrenheit
 
 try:
     import bluepy.btle  # noqa: F401 pylint: disable=unused-import
@@ -57,20 +58,46 @@ SCAN_INTERVAL = timedelta(seconds=1200)
 
 ATTR_LAST_SUCCESSFUL_UPDATE = "last_successful_update"
 
-# Sensor types are defined like: Name, units, icon, device_class
-SENSOR_TYPES = {
-    "temperature": ["Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "light": ["Light intensity", LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
-    "moisture": ["Moisture", PERCENTAGE, "mdi:water-percent", None],
-    "conductivity": ["Conductivity", CONDUCTIVITY, "mdi:flash-circle", None],
-    "battery": ["Battery", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="light",
+        name="Light intensity",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+    ),
+    SensorEntityDescription(
+        key="moisture",
+        name="Moisture",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:water-percent",
+    ),
+    SensorEntityDescription(
+        key="conductivity",
+        name="Conductivity",
+        native_unit_of_measurement=CONDUCTIVITY,
+        icon="mdi:lightning-bolt-circle",
+    ),
+    SensorEntityDescription(
+        key="battery",
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN): cv.positive_int,
@@ -90,74 +117,55 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     cache = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL).total_seconds()
     poller = miflora_poller.MiFloraPoller(
-        config.get(CONF_MAC),
+        config[CONF_MAC],
         cache_timeout=cache,
-        adapter=config.get(CONF_ADAPTER),
+        adapter=config[CONF_ADAPTER],
         backend=backend,
     )
-    force_update = config.get(CONF_FORCE_UPDATE)
-    median = config.get(CONF_MEDIAN)
+    force_update = config[CONF_FORCE_UPDATE]
+    median = config[CONF_MEDIAN]
 
-    go_unavailable_timeout = config.get(CONF_GO_UNAVAILABLE_TIMEOUT)
+    go_unavailable_timeout = config[CONF_GO_UNAVAILABLE_TIMEOUT]
 
-    devs = []
-
-    for parameter in config[CONF_MONITORED_CONDITIONS]:
-        name = SENSOR_TYPES[parameter][0]
-        unit = (
-            hass.config.units.temperature_unit
-            if parameter == "temperature"
-            else SENSOR_TYPES[parameter][1]
+    prefix = config[CONF_NAME]
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    entities = [
+        MiFloraSensor(
+            description,
+            poller,
+            prefix,
+            force_update,
+            median,
+            go_unavailable_timeout,
         )
-        icon = SENSOR_TYPES[parameter][2]
-        device_class = SENSOR_TYPES[parameter][3]
+        for description in SENSOR_TYPES
+        if description.key in monitored_conditions
+    ]
 
-        prefix = config.get(CONF_NAME)
-        if prefix:
-            name = f"{prefix} {name}"
-
-        devs.append(
-            MiFloraSensor(
-                poller,
-                parameter,
-                name,
-                unit,
-                icon,
-                device_class,
-                force_update,
-                median,
-                go_unavailable_timeout,
-            )
-        )
-
-    async_add_entities(devs)
+    async_add_entities(entities)
 
 
 class MiFloraSensor(SensorEntity):
     """Implementing the MiFlora sensor."""
 
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
     def __init__(
         self,
+        description: SensorEntityDescription,
         poller,
-        parameter,
-        name,
-        unit,
-        icon,
-        device_class,
+        prefix,
         force_update,
         median,
         go_unavailable_timeout,
     ):
         """Initialize the sensor."""
+        self.entity_description = description
         self.poller = poller
-        self.parameter = parameter
-        self._unit = unit
-        self._icon = icon
-        self._name = name
-        self._state = None
-        self._device_class = device_class
-        self.data = []
-        self._force_update = force_update
+        self.data: list[Any] = []
+        if prefix:
+            self._attr_name = f"{prefix} {description.name}"
+        self._attr_force_update = force_update
         self.go_unavailable_timeout = go_unavailable_timeout
         self.last_successful_update = dt_util.utc_from_timestamp(0)
         # Median is used to filter out outliers. median of 3 will filter
@@ -175,16 +183,6 @@ class MiFloraSensor(SensorEntity):
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, on_startup)
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
     def available(self):
         """Return True if did update since 2h."""
         return self.last_successful_update > (
@@ -196,31 +194,6 @@ class MiFloraSensor(SensorEntity):
         """Return the state attributes of the device."""
         return {ATTR_LAST_SUCCESSFUL_UPDATE: self.last_successful_update}
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def state_class(self):
-        """Return the state class of this entity."""
-        return STATE_CLASS_MEASUREMENT
-
-    @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return self._unit
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._force_update
-
     def update(self):
         """
         Update current conditions.
@@ -229,15 +202,13 @@ class MiFloraSensor(SensorEntity):
         """
         try:
             _LOGGER.debug("Polling data for %s", self.name)
-            data = self.poller.parameter_value(self.parameter)
+            data = self.poller.parameter_value(self.entity_description.key)
         except (OSError, BluetoothBackendException) as err:
             _LOGGER.info("Polling error %s: %s", type(err).__name__, err)
             return
 
         if data is not None:
             _LOGGER.debug("%s = %s", self.name, data)
-            if self._unit == TEMP_FAHRENHEIT:
-                data = celsius_to_fahrenheit(data)
             self.data.append(data)
             self.last_successful_update = dt_util.utcnow()
         else:
@@ -247,7 +218,7 @@ class MiFloraSensor(SensorEntity):
             if self.data:
                 self.data = self.data[1:]
             else:
-                self._state = None
+                self._attr_native_value = None
             return
 
         _LOGGER.debug("Data collected: %s", self.data)
@@ -257,9 +228,9 @@ class MiFloraSensor(SensorEntity):
         if len(self.data) == self.median_count:
             median = sorted(self.data)[int((self.median_count - 1) / 2)]
             _LOGGER.debug("Median is: %s", median)
-            self._state = median
-        elif self._state is None:
+            self._attr_native_value = median
+        elif self._attr_native_value is None:
             _LOGGER.debug("Set initial state")
-            self._state = self.data[0]
+            self._attr_native_value = self.data[0]
         else:
             _LOGGER.debug("Not yet enough data for median calculation")

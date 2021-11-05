@@ -1,10 +1,16 @@
 """Support for monitoring an SABnzbd NZB client."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import timedelta
 import logging
 
 from pysabnzbd import SabnzbdApiException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.discovery import SERVICE_SABNZBD
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     CONF_NAME,
     DATA_GIGABYTES,
@@ -15,6 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+
 
 from .const import (
     ATTR_SPEED,
@@ -29,28 +36,126 @@ from .const import (
     UPDATE_INTERVAL,
 )
 from .sab import get_client
-
-PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    "current_status": ["Status", None, "status"],
-    "speed": ["Speed", DATA_RATE_MEGABYTES_PER_SECOND, "kbpersec"],
-    "queue_size": ["Queue", DATA_MEGABYTES, "mb"],
-    "queue_remaining": ["Left", DATA_MEGABYTES, "mbleft"],
-    "disk_size": ["Disk", DATA_GIGABYTES, "diskspacetotal1"],
-    "disk_free": ["Disk Free", DATA_GIGABYTES, "diskspace1"],
-    "queue_count": ["Queue Count", None, "noofslots_total"],
-    "day_size": ["Daily Total", DATA_GIGABYTES, "day_size"],
-    "week_size": ["Weekly Total", DATA_GIGABYTES, "week_size"],
-    "month_size": ["Monthly Total", DATA_GIGABYTES, "month_size"],
-    "total_size": ["Total", DATA_GIGABYTES, "total_size"],
-}
+PLATFORMS = ["sensor"]
+
+
+@dataclass
+class SabnzbdRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    field_name: str
+
+
+@dataclass
+class SabnzbdSensorEntityDescription(SensorEntityDescription, SabnzbdRequiredKeysMixin):
+    """Describes Sabnzbd sensor entity."""
+
+
+SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
+    SabnzbdSensorEntityDescription(
+        key="current_status",
+        name="Status",
+        field_name="status",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="speed",
+        name="Speed",
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        field_name="kbpersec",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="queue_size",
+        name="Queue",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        field_name="mb",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="queue_remaining",
+        name="Left",
+        native_unit_of_measurement=DATA_MEGABYTES,
+        field_name="mbleft",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="disk_size",
+        name="Disk",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="diskspacetotal1",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="disk_free",
+        name="Disk Free",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="diskspace1",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="queue_count",
+        name="Queue Count",
+        field_name="noofslots_total",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="day_size",
+        name="Daily Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="day_size",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="week_size",
+        name="Weekly Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="week_size",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="month_size",
+        name="Monthly Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="month_size",
+    ),
+    SabnzbdSensorEntityDescription(
+        key="total_size",
+        name="Total",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        field_name="total_size",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 SPEED_LIMIT_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string}
 )
 
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): cv.string,
+                vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                vol.Optional(CONF_PATH): cv.string,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_SENSORS): vol.All(
+                    cv.ensure_list, [vol.In(SENSOR_KEYS)]
+                ),
+                vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+async def async_check_sabnzbd(sab_api):
+    """Check if we can reach SABnzbd."""
+
+    try:
+        await sab_api.check_available()
+        return True
+    except SabnzbdApiException:
+        _LOGGER.error("Connection to SABnzbd API failed")
+        return False
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the SabNzbd Component."""
@@ -65,6 +170,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async_setup_sabnzbd(hass, sab_api)
 
+    async def sabnzbd_discovered(service, info):
+        """Handle service discovery."""
+        ssl = info.get("properties", {}).get("https", "0") == "1"
+        await async_configure_sabnzbd(hass, info, ssl)
+
+    discovery.async_listen(hass, SERVICE_SABNZBD, sabnzbd_discovered)
+
+    if (conf := config.get(DOMAIN)) is not None:
+        use_ssl = conf[CONF_SSL]
+        name = conf.get(CONF_NAME)
+        api_key = conf.get(CONF_API_KEY)
+        await async_configure_sabnzbd(hass, conf, use_ssl, name, api_key)
     return True
 
 

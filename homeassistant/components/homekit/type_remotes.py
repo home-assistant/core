@@ -154,8 +154,7 @@ class RemoteInputSelectAccessory(HomeAccessory):
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, source_name)
         if source_name in self.sources:
             index = self.sources.index(source_name)
-            if self.char_input_source.value != index:
-                self.char_input_source.set_value(index)
+            self.char_input_source.set_value(index)
             return
 
         possible_sources = new_state.attributes.get(self.source_list_key, [])
@@ -174,8 +173,7 @@ class RemoteInputSelectAccessory(HomeAccessory):
             source_name,
             possible_sources,
         )
-        if self.char_input_source.value != 0:
-            self.char_input_source.set_value(0)
+        self.char_input_source.set_value(0)
 
 
 @TYPES.register("ActivityRemote")
@@ -209,8 +207,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
-        key_name = REMOTE_KEYS.get(value)
-        if key_name is None:
+        if (key_name := REMOTE_KEYS.get(value)) is None:
             _LOGGER.warning("%s: Unhandled key press for %s", self.entity_id, value)
             return
         self.hass.bus.async_fire(
@@ -225,7 +222,6 @@ class ActivityRemote(RemoteInputSelectAccessory):
         # Power state remote
         hk_state = 1 if current_state == STATE_ON else 0
         _LOGGER.debug("%s: Set current active state to %s", self.entity_id, hk_state)
-        if self.char_active.value != hk_state:
-            self.char_active.set_value(hk_state)
+        self.char_active.set_value(hk_state)
 
         self._async_update_input_state(hk_state, new_state)

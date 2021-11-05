@@ -12,7 +12,7 @@
     },
     "device_automation": {
         "trigger_type": {
-            "long_press": "Przycisk Wemo zosta\u0142 wci\u015bni\u0119ty przez 2 sekundy"
+            "long_press": "przycisk Wemo zostanie przytrzymany przez 2 sekundy"
         }
     }
 }

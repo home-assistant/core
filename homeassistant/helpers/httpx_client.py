@@ -1,8 +1,9 @@
 """Helper for httpx."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import sys
-from typing import Any, Callable
+from typing import Any
 
 import httpx
 

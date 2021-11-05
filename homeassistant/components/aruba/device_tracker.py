@@ -74,8 +74,7 @@ class ArubaDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        data = self.get_aruba_data()
-        if not data:
+        if not (data := self.get_aruba_data()):
             return False
 
         self.last_results = data.values()
@@ -125,8 +124,7 @@ class ArubaDeviceScanner(DeviceScanner):
 
         devices = {}
         for device in devices_result:
-            match = _DEVICES_REGEX.search(device.decode("utf-8"))
-            if match:
+            if match := _DEVICES_REGEX.search(device.decode("utf-8")):
                 devices[match.group("ip")] = {
                     "ip": match.group("ip"),
                     "mac": match.group("mac").upper(),

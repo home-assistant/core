@@ -78,7 +78,7 @@
                     "alarm2_out2": "OUT2/ALARM2",
                     "out1": "OUT1"
                 },
-                "description": "Pilih konfigurasi I/O lainnya di bawah ini.  Anda dapat mengonfigurasi detail opsi pada langkah berikutnya.",
+                "description": "Pilih konfigurasi I/O lainnya di bawah ini. Anda dapat mengonfigurasi detail opsi pada langkah berikutnya.",
                 "title": "Konfigurasikan I/O yang Diperluas"
             },
             "options_misc": {
