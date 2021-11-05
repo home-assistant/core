@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, fire_time_changed
-from tests.components.recorder import models_original
+from tests.components.recorder import models_schema_0
 
 DEFAULT_PURGE_TASKS = 3
 
@@ -91,5 +91,5 @@ def create_engine_test(*args, **kwargs):
     This simulates an existing db with the old schema.
     """
     engine = create_engine(*args, **kwargs)
-    models_original.Base.metadata.create_all(engine)
+    models_schema_0.Base.metadata.create_all(engine)
     return engine
