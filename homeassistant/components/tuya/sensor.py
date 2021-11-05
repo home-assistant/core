@@ -143,12 +143,12 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     "ggq": (
         SensorEntityDescription(
             key=DPCode.COUNTDOWN,
-            name="Countdown",            
+            name="Countdown",
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         SensorEntityDescription(
             key=DPCode.COUNTDOWN_LEFT,
-            name="Countdown left",            
+            name="Countdown left",
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         *BATTERY_SENSORS,
