@@ -902,7 +902,7 @@ pygatt[GATTTOOL]==4.0.5
 pygti==0.9.2
 
 # homeassistant.components.version
-pyhaversion==21.10.0
+pyhaversion==21.11.1
 
 # homeassistant.components.heos
 pyheos==0.7.2
