@@ -35,7 +35,7 @@ class SpeedtestButton(CoordinatorEntity, ButtonEntity):
         self,
         coordinator: SpeedTestDataCoordinator,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the button."""
         super().__init__(coordinator)
         self._attr_name = f"{DEFAULT_NAME} run now"
         self._attr_unique_id = slugify(self._attr_name)
