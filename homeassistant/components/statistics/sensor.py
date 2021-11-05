@@ -125,6 +125,7 @@ class StatisticsSensor(SensorEntity):
         self._entity_id = entity_id
         self.is_binary = self._entity_id.split(".")[0] == "binary_sensor"
         self._name = name
+        self._available = False
         self._sampling_size = sampling_size
         self._max_age = max_age
         self._precision = precision
@@ -175,7 +176,10 @@ class StatisticsSensor(SensorEntity):
 
     def _add_state_to_queue(self, new_state):
         """Add the state to the queue."""
-        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+        if new_state.state == STATE_UNAVAILABLE:
+            self._available = False
+            return
+        if new_state.state in (STATE_UNKNOWN, None):
             return
 
         try:
@@ -183,6 +187,7 @@ class StatisticsSensor(SensorEntity):
                 self.states.append(new_state.state)
             else:
                 self.states.append(float(new_state.state))
+            self._available = True
 
             self.ages.append(new_state.last_updated)
         except ValueError:
@@ -209,6 +214,11 @@ class StatisticsSensor(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement if not self.is_binary else None
+
+    @property
+    def available(self):
+        """Return the availability of the sensor linked to the source sensor."""
+        return self._available
 
     @property
     def should_poll(self):
