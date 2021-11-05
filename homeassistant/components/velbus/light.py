@@ -18,6 +18,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VelbusEntity
@@ -32,7 +33,7 @@ async def async_setup_entry(
     """Set up Velbus switch based on config_entry."""
     await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    entities: list[Any] = []
+    entities: list[Entity] = []
     for channel in cntrl.get_all("light"):
         entities.append(VelbusLight(channel))
     for channel in cntrl.get_all("led"):
@@ -51,7 +52,7 @@ class VelbusLight(VelbusEntity, LightEntity):
         self._attr_name = self._channel.get_name()
 
     @property
-    def is_on(self) -> Any:
+    def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._channel.is_on()
 

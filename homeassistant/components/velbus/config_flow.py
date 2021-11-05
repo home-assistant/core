@@ -17,10 +17,10 @@ from .const import DOMAIN
 
 
 @callback
-def velbus_entries(hass: HomeAssistant) -> set[Any]:
+def velbus_entries(hass: HomeAssistant) -> set[str]:
     """Return connections for Velbus domain."""
     return {
-        (entry.data[CONF_PORT]) for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data[CONF_PORT] for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
 

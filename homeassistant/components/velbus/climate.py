@@ -42,7 +42,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     _attr_preset_modes = list(PRESET_MODES)
 
     @property
-    def target_temperature(self) -> Any:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._channel.get_climate_target()
 
