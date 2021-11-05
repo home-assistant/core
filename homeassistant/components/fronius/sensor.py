@@ -611,7 +611,7 @@ class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
         """Set up an individual Fronius meter sensor."""
         super().__init__(coordinator)
         self.entity_description = self.entity_descriptions[key]
-        self.entity_id = f"{SENSOR_DOMAIN}.{DOMAIN}_{self._entity_id_prefix}_{key}"
+        self.entity_id = f"{SENSOR_DOMAIN}.{key}_{DOMAIN}_{self._entity_id_prefix}_{coordinator.solar_net.host}"
         self.solar_net_id = solar_net_id
         self._attr_native_value = self._get_entity_value()
 
@@ -658,7 +658,7 @@ class LoggerSensor(_FroniusSensorEntity):
     """Defines a Fronius logger device sensor entity."""
 
     entity_descriptions = LOGGER_ENTITY_DESCRIPTIONS
-    _entity_id_prefix = "logger"
+    _entity_id_prefix = "logger_info_0"
 
     def __init__(
         self,
@@ -696,7 +696,7 @@ class PowerFlowSensor(_FroniusSensorEntity):
     """Defines a Fronius power flow sensor entity."""
 
     entity_descriptions = POWER_FLOW_ENTITY_DESCRIPTIONS
-    _entity_id_prefix = "powerflow"
+    _entity_id_prefix = "power_flow_0"
 
     def __init__(
         self,
