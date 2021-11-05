@@ -26,38 +26,40 @@ def mock_responses(aioclient_mock: AiohttpClientMocker, night: bool = False) -> 
 
     aioclient_mock.get(
         f"{MOCK_HOST}/solar_api/GetAPIVersion.cgi",
-        text=load_fixture("GetAPIVersion.json", "fronius"),
+        text=load_fixture("symo/GetAPIVersion.json", "fronius"),
     )
     aioclient_mock.get(
         f"{MOCK_HOST}/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&"
         "DeviceId=1&DataCollection=CommonInverterData",
         text=load_fixture(
-            f"GetInverterRealtimeDate_Device_1_{_day_or_night}.json", "fronius"
+            f"symo/GetInverterRealtimeDate_Device_1_{_day_or_night}.json", "fronius"
         ),
     )
     aioclient_mock.get(
         f"{MOCK_HOST}/solar_api/v1/GetInverterInfo.cgi",
-        text=load_fixture("GetInverterInfo.json", "fronius"),
+        text=load_fixture("symo/GetInverterInfo.json", "fronius"),
     )
     aioclient_mock.get(
         f"{MOCK_HOST}/solar_api/v1/GetLoggerInfo.cgi",
-        text=load_fixture("GetLoggerInfo.json", "fronius"),
+        text=load_fixture("symo/GetLoggerInfo.json", "fronius"),
     )
     aioclient_mock.get(
         f"{MOCK_HOST}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=Device&DeviceId=0",
-        text=load_fixture("GetMeterRealtimeData_Device_0.json", "fronius"),
+        text=load_fixture("symo/GetMeterRealtimeData_Device_0.json", "fronius"),
     )
     aioclient_mock.get(
         f"{MOCK_HOST}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=System",
-        text=load_fixture("GetMeterRealtimeData_System.json", "fronius"),
+        text=load_fixture("symo/GetMeterRealtimeData_System.json", "fronius"),
     )
     aioclient_mock.get(
         f"{MOCK_HOST}/solar_api/v1/GetPowerFlowRealtimeData.fcgi",
-        text=load_fixture(f"GetPowerFlowRealtimeData_{_day_or_night}.json", "fronius"),
+        text=load_fixture(
+            f"symo/GetPowerFlowRealtimeData_{_day_or_night}.json", "fronius"
+        ),
     )
     aioclient_mock.get(
         f"{MOCK_HOST}/solar_api/v1/GetStorageRealtimeData.cgi?Scope=System",
-        text=load_fixture("GetStorageRealtimeData_System.json", "fronius"),
+        text=load_fixture("symo/GetStorageRealtimeData_System.json", "fronius"),
     )
 
 
