@@ -64,4 +64,4 @@ ATTRIBUTION: Final = "Data retrieved from Speedtest.net by Ookla"
 
 ICON: Final = "mdi:speedometer"
 
-PLATFORMS: Final = ["sensor"]
+PLATFORMS: Final = ["button", "sensor"]
