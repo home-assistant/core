@@ -83,6 +83,7 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
             next_pickup_event = self.coordinator.data[1]
         except IndexError:
             self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
             return
 
         self._attr_extra_state_attributes.update(
