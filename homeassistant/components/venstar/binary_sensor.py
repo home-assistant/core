@@ -31,8 +31,8 @@ class VenstarBinarySensor(VenstarEntity, BinarySensorEntity):
         """Initialize the alert."""
         super().__init__(coordinator, config)
         self.alert = alert
-        self._attr_unique_id = f"{config.entry_id}_{self.alert.replace(' ', '_')}"
-        self._attr_name = f"{self._client.name} {self.alert}"
+        self._attr_unique_id = f"{config.entry_id}_{alert.replace(' ', '_')}"
+        self._attr_name = f"{self._client.name} {alert}"
 
     @property
     def is_on(self):
