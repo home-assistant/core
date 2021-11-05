@@ -37,5 +37,5 @@ class WLEDRestartButton(WLEDEntity, ButtonEntity):
 
     @wled_exception_handler
     async def async_press(self) -> None:
-        """Send out a persistent notification."""
+        """Send out a restart command."""
         await self.coordinator.wled.reset()
