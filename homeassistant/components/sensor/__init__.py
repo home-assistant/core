@@ -4,11 +4,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import inspect
 import logging
 from typing import Any, Final, cast, final
 
+import ciso8601
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -236,7 +237,7 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | date | datetime:
         """Return the value reported by the sensor."""
         return self._attr_native_value
 
@@ -269,15 +270,36 @@ class SensorEntity(Entity):
 
     @final
     @property
-    def state(self) -> Any:
+    def state(self) -> StateType:
         """Return the state of the sensor and perform unit conversions, if needed."""
         unit_of_measurement = self.native_unit_of_measurement
         value = self.native_value
+        device_class = self.device_class
+
+        if (
+            value is not None
+            and device_class in (DEVICE_CLASS_DATE, DEVICE_CLASS_TIMESTAMP)
+            and not isinstance(value, (datetime, date))
+        ):
+            try:
+                ciso8601.parse_datetime(str(value))
+            except (ValueError, IndexError) as error:
+                raise ValueError(
+                    f"Invalid date/datetime: {self.entity_id} provide state '{value}', "
+                    f"while it has device class '{device_class}'"
+                ) from error
+
+        if value is not None and isinstance(value, (datetime, date)):
+            if device_class not in (DEVICE_CLASS_DATE, DEVICE_CLASS_TIMESTAMP):
+                raise ValueError(
+                    f"Invalid date/datetime: {self.entity_id} provides a {type(value)}"
+                    "state, however, does not have a date or timestamp device class"
+                )
+            return value.isoformat()
 
         units = self.hass.config.units
         if (
             value is not None
-            and not isinstance(value, datetime)
             and unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
             and unit_of_measurement != units.temperature_unit
         ):

@@ -63,7 +63,7 @@ class KNXExposeSensor:
         expose_type: int | str,
         entity_id: str,
         attribute: str | None,
-        default: str | int | float | None,
+        default: StateType,
         address: str,
     ) -> None:
         """Initialize of Expose class."""
@@ -111,7 +111,7 @@ class KNXExposeSensor:
             self._remove_listener = None
         self.device.shutdown()
 
-    def _get_expose_value(self, state: State | None) -> str | int | float | None:
+    def _get_expose_value(self, state: State | None) -> StateType:
         """Extract value from state."""
         if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             value = self.expose_default

@@ -489,8 +489,6 @@ class Entity(ABC):
             # If the entity's state is a float, limit precision according to machine
             # epsilon to make the string representation readable
             return f"{state:.{FLOAT_PRECISION}}"
-        if isinstance(state, datetime):
-            return state.isoformat()
         return str(state)
 
     @callback
