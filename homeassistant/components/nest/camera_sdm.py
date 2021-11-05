@@ -4,8 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable
 import datetime
 import logging
-from pathlib import Path
 import os
+from pathlib import Path
 from typing import Any
 
 from google_nest_sdm.camera_traits import (
