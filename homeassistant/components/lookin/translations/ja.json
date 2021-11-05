@@ -2,8 +2,18 @@
     "config": {
         "flow_title": "{name} ({host})",
         "step": {
+            "device_name": {
+                "data": {
+                    "name": "\u540d\u524d"
+                }
+            },
             "discovery_confirm": {
                 "description": "{name} ({host}) \u3092\u8a2d\u5b9a\u3057\u307e\u3059\u304b\uff1f"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP\u30a2\u30c9\u30ec\u30b9"
+                }
             }
         }
     }
