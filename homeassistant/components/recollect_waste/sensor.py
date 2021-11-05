@@ -78,8 +78,12 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        pickup_event = self.coordinator.data[0]
-        next_pickup_event = self.coordinator.data[1]
+        try:
+            pickup_event = self.coordinator.data[0]
+            next_pickup_event = self.coordinator.data[1]
+        except IndexError:
+            self._attr_native_value = None
+            return
 
         self._attr_extra_state_attributes.update(
             {
