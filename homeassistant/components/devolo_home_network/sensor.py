@@ -7,8 +7,13 @@ from typing import Any
 
 from devolo_plc_api.device import Device
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -39,6 +44,7 @@ class DevoloSensorEntityDescription(
 SENSOR_TYPES: dict[str, DevoloSensorEntityDescription] = {
     CONNECTED_PLC_DEVICES: DevoloSensorEntityDescription(
         key=CONNECTED_PLC_DEVICES,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:lan",
         name="Connected PLC devices",
@@ -51,10 +57,12 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription] = {
         entity_registry_enabled_default=True,
         icon="mdi:wifi",
         name="Connected Wifi clients",
+        state_class=STATE_CLASS_MEASUREMENT,
         value_func=lambda data: len(data["connected_stations"]),
     ),
     NEIGHBORING_WIFI_NETWORKS: DevoloSensorEntityDescription(
         key=NEIGHBORING_WIFI_NETWORKS,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:wifi-marker",
         name="Neighboring Wifi networks",

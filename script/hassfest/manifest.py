@@ -38,6 +38,7 @@ NO_IOT_CLASS = [
     "automation",
     "binary_sensor",
     "blueprint",
+    "button",
     "calendar",
     "camera",
     "climate",

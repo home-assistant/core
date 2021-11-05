@@ -52,7 +52,13 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
 from . import history, migration, purge, statistics, websocket_api
-from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
+from .const import (
+    CONF_DB_INTEGRITY_CHECK,
+    DATA_INSTANCE,
+    DOMAIN,
+    MAX_QUEUE_BACKLOG,
+    SQLITE_URL_PREFIX,
+)
 from .models import (
     Base,
     Events,
@@ -82,8 +88,6 @@ SERVICE_DISABLE = "disable"
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"
 ATTR_APPLY_FILTER = "apply_filter"
-
-MAX_QUEUE_BACKLOG = 30000
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
@@ -170,18 +174,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-
-@bind_hass
-async def async_migration_in_progress(hass: HomeAssistant) -> bool:
-    """Determine is a migration is in progress.
-
-    This is a thin wrapper that allows us to change
-    out the implementation later.
-    """
-    if DATA_INSTANCE not in hass.data:
-        return False
-    return hass.data[DATA_INSTANCE].migration_in_progress
 
 
 @bind_hass
@@ -794,7 +786,7 @@ class Recorder(threading.Thread):
         if statistics.add_external_statistics(self, metadata, stats):
             return
         # Schedule a new statistics task if this one didn't finish
-        self.queue.put(StatisticsTask(metadata, stats))
+        self.queue.put(ExternalStatisticsTask(metadata, stats))
 
     def _process_one_event(self, event):
         """Process one event."""
@@ -1089,3 +1081,8 @@ class Recorder(threading.Thread):
         self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
         self._end_session()
         self._close_connection()
+
+    @property
+    def recording(self):
+        """Return if the recorder is recording."""
+        return self._event_listener is not None

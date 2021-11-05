@@ -113,7 +113,7 @@ async def async_setup(hass, hass_config):
         try:
             session = aiohttp_client.async_get_clientsession(hass)
 
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 response = await session.get(url)
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:

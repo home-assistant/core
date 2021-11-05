@@ -16,3 +16,4 @@ SDM_SCOPES = [
     "https://www.googleapis.com/auth/pubsub",
 ]
 API_URL = "https://smartdevicemanagement.googleapis.com/v1"
+OOB_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"

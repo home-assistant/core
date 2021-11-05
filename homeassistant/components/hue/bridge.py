@@ -280,7 +280,7 @@ class HueBridge:
 async def authenticate_bridge(hass: core.HomeAssistant, bridge: aiohue.Bridge):
     """Create a bridge object and verify authentication."""
     try:
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             # Create username if we don't have one
             if not bridge.username:
                 device_name = unicode_slug.slugify(
