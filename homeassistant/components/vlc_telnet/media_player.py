@@ -105,7 +105,7 @@ def catch_vlc_errors(func: Func) -> Func:
 
     @wraps(func)
     async def wrapper(self: VlcDevice, *args: Any, **kwargs: Any) -> Any:
-        """Catch UpnpError errors and check availability before and after request."""
+        """Catch VLC errors and modify availability."""
         try:
             await func(self, *args, **kwargs)
         except CommandError as err:
