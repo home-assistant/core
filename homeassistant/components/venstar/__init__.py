@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
 
-PLATFORMS = ["climate", "binary_sensor"]
+PLATFORMS = ["binary_sensor", "climate"]
 
 
 async def async_setup_entry(hass, config):
