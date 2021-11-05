@@ -115,7 +115,7 @@ aioesphomeapi==10.2.0
 aioflo==0.4.1
 
 # homeassistant.components.guardian
-aioguardian==1.0.8
+aioguardian==2021.11.0
 
 # homeassistant.components.harmony
 aioharmony==0.2.8
@@ -890,6 +890,9 @@ pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.6.2
+
+# homeassistant.components.fronius
+pyfronius==0.7.0
 
 # homeassistant.components.ifttt
 pyfttt==0.3
