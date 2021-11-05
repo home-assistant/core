@@ -1,0 +1,19 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                }
+            },
+            "user": {
+                "data": {
+                    "locale": "\u30ed\u30b1\u30fc\u30eb",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "E\u30e1\u30fc\u30eb"
+                },
+                "title": "\u30eb\u30ce\u30fc\u306e\u8a8d\u8a3c\u60c5\u5831\u3092\u8a2d\u5b9a"
+            }
+        }
+    }
+}
