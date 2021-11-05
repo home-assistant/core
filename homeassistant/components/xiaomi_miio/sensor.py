@@ -661,7 +661,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._attr_native_value = self._determine_native_value()
         self._attr_extra_state_attributes = self._extract_attributes(coordinator.data)
 
-    def _extract_value_from_attribute(self, state, attribute):
+    def _parse_time_delta(self, value: timedelta) -> float:
         """Overridden to handle different time units for timedelta.
 
         This ensures that the device reported native values are converted to the ones
@@ -670,10 +670,6 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         This needs to be done here as the parent class does not have access
         to the entity description.
         """
-        value = getattr(state, attribute)
-        if not isinstance(value, timedelta):
-            return super()._extract_value_from_attribute(state, attribute)
-
         conversion_map = {
             TIME_SECONDS: timedelta(seconds=1),
             TIME_MINUTES: timedelta(minutes=1),
@@ -682,11 +678,8 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         }
 
         native_unit = self.entity_description.native_unit_of_measurement
-        if native_unit in conversion_map:
-            return round((value / conversion_map[native_unit]), 2)
 
-        _LOGGER.debug("No known conversion for %s, returning seconds", native_unit)
-        return value.total_seconds()
+        return round((value / conversion_map[native_unit]), 2)
 
     @callback
     def _extract_attributes(self, data):
