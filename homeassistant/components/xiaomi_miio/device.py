@@ -173,8 +173,8 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
         return value
 
     @staticmethod
-    def _parse_time_delta(timedelta: datetime.timedelta) -> int:
-        return int(timedelta.total_seconds())
+    def _parse_time_delta(value: datetime.timedelta) -> float:
+        return float(value.total_seconds())
 
     @staticmethod
     def _parse_datetime_time(time: datetime.time) -> str:
