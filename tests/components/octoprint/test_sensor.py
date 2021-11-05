@@ -74,3 +74,34 @@ async def test_sensors(hass):
     assert state.name == "OctoPrint Estimated Finish Time"
     entry = entity_registry.async_get("sensor.octoprint_estimated_finish_time")
     assert entry.unique_id == "Estimated Finish Time-uuid"
+
+
+async def test_sensors_no_target_temp(hass):
+    """Test the underlying sensors."""
+    printer = {
+        "state": {
+            "flags": {},
+            "text": "Operational",
+        },
+        "temperature": {"tool1": {"actual": 18.83136, "target": None}},
+    }
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=datetime(2020, 2, 20, 9, 10, 0)
+    ):
+        await init_integration(hass, "sensor", printer=printer)
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    state = hass.states.get("sensor.octoprint_actual_tool1_temp")
+    assert state is not None
+    assert state.state == "18.83"
+    assert state.name == "OctoPrint actual tool1 temp"
+    entry = entity_registry.async_get("sensor.octoprint_actual_tool1_temp")
+    assert entry.unique_id == "actual tool1 temp-uuid"
+
+    state = hass.states.get("sensor.octoprint_target_tool1_temp")
+    assert state is not None
+    assert state.state == "unavailable"
+    assert state.name == "OctoPrint target tool1 temp"
+    entry = entity_registry.async_get("sensor.octoprint_target_tool1_temp")
+    assert entry.unique_id == "target tool1 temp-uuid"

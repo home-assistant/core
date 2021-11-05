@@ -211,16 +211,23 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
 
         for temp in printer.temperatures:
             if temp.name == self._api_tool:
-                return round(
+                val = (
                     temp.actual_temp
                     if self._temp_type == "actual"
-                    else temp.target_temp,
-                    2,
+                    else temp.target_temp
                 )
+                if not val:
+                    return None
+
+                return round(val, 2)
 
         return None
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.coordinator.data["printer"]
+        return (
+            self.coordinator.last_update_success
+            and self.coordinator.data["printer"]
+            and self.native_value
+        )
