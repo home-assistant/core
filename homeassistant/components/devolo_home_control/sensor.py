@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -132,6 +132,7 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
         )
 
         self._attr_device_class = DEVICE_CLASS_MAPPING.get("battery")
+        self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
         self._attr_native_unit_of_measurement = PERCENTAGE
 
         self._value = device_instance.battery_level
