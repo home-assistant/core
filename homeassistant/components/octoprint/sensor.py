@@ -216,7 +216,7 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
                     if self._temp_type == "actual"
                     else temp.target_temp
                 )
-                if not val:
+                if val is None:
                     return None
 
                 return round(val, 2)
@@ -229,5 +229,5 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
         return (
             self.coordinator.last_update_success
             and self.coordinator.data["printer"]
-            and self.native_value
+            and self.native_value is not None
         )
