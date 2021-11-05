@@ -5,6 +5,9 @@ Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """
 from datetime import timedelta
 import json
+import logging
+
+from mpd.asyncio import MPDClient
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -25,17 +28,19 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
+    CONF_HOST,
     CONF_ID,
     CONF_NAME,
     STATE_IDLE,
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
 
 from .browse_media import browse_node, browse_top_level
 from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_VOLUMIO = (
     SUPPORT_PAUSE
@@ -65,20 +70,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     info = data[DATA_INFO]
     uid = config_entry.data[CONF_ID]
     name = config_entry.data[CONF_NAME]
+    host = config_entry.data[CONF_HOST]
 
-    entity = Volumio(volumio, uid, name, info)
+    entity = Volumio(volumio, uid, name, info, host)
     async_add_entities([entity])
 
 
 class Volumio(MediaPlayerEntity):
     """Volumio Player Object."""
 
-    def __init__(self, volumio, uid, name, info):
+    def __init__(self, volumio, uid, name, info, host):
         """Initialize the media player."""
         self._volumio = volumio
         self._uid = uid
         self._name = name
         self._info = info
+        self._host = host
         self._state = {}
         self._playlists = []
         self._currentplaylist = None
@@ -100,15 +107,15 @@ class Volumio(MediaPlayerEntity):
         return self._name
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self):
         """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Volumio",
-            model=self._info["hardware"],
-            name=self.name,
-            sw_version=self._info["systemversion"],
-        )
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Volumio",
+            "sw_version": self._info["systemversion"],
+            "model": self._info["hardware"],
+        }
 
     @property
     def media_content_type(self):
@@ -253,7 +260,13 @@ class Volumio(MediaPlayerEntity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        await self._volumio.replace_and_play(json.loads(media_id))
+        try:
+            await self._volumio.replace_and_play(json.loads(media_id))
+        except ValueError:
+            _LOGGER.info(
+                "Found non json media_id %s. Trying to send to volumios mpd", media_id
+            )
+            await self._play_with_mpd(media_id)
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
@@ -272,3 +285,15 @@ class Volumio(MediaPlayerEntity):
         cached_url = self.thumbnail_cache.get(media_content_id)
         image_url = self._volumio.canonic_url(cached_url)
         return await self._async_fetch_image(image_url)
+
+    async def _play_with_mpd(self, media_id):
+        """Play the media_id (url) with mpd because Volumio api does not support it."""
+        await self._volumio.stop()
+        await self._volumio.clear_playlist()
+        client = MPDClient()
+        client.timeout = 1
+        await client.connect(self._host, 6600)
+        await client.clear()
+        await client.add(media_id)
+        await client.play(0)
+        client.disconnect()
