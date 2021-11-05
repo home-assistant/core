@@ -2,22 +2,20 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime
 from typing import Any
 
-from aioridwell.client import RidwellAccount
+from aioridwell.client import RidwellAccount, RidwellPickupEvent
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_DATE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util.dt import as_utc
 
 from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN
 
@@ -25,12 +23,6 @@ ATTR_CATEGORY = "category"
 ATTR_PICKUP_STATE = "pickup_state"
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_QUANTITY = "quantity"
-
-
-@callback
-def async_get_utc_midnight(target_date: date) -> datetime:
-    """Get UTC midnight for a given date."""
-    return as_utc(datetime.combine(target_date, datetime.min.time()))
 
 
 async def async_setup_entry(
@@ -86,5 +78,5 @@ class RidwellSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        event = self.coordinator.data[self._account.account_id]
-        return async_get_utc_midnight(event.pickup_date).isoformat()
+        event: RidwellPickupEvent = self.coordinator.data[self._account.account_id]
+        return event.pickup_date.isoformat()

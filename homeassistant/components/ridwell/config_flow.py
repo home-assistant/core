@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -39,12 +38,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._password: str | None = None
         self._username: str | None = None
-
-    @callback
-    def _async_show_errors(
-        self, errors: dict, error_step_id: str, error_schema: vol.Schema
-    ) -> FlowResult:
-        """Show an error on the correct form."""
 
     async def _async_validate(
         self, error_step_id: str, error_schema: vol.Schema
