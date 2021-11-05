@@ -296,14 +296,14 @@ async def test_schema_migrate(hass, start_version):
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )
-        assert await recorder.async_migration_in_progress(hass) is True
+        assert recorder.util.async_migration_in_progress(hass) is True
         migration_stall.set()
         await hass.async_block_till_done()
         migration_done.wait()
         await async_wait_recording_done_without_instance(hass)
         assert migration_version == models.SCHEMA_VERSION
         assert setup_run.called
-        assert await recorder.async_migration_in_progress(hass) is not True
+        assert recorder.util.async_migration_in_progress(hass) is not True
 
 
 def test_invalid_update():
