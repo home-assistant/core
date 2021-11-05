@@ -12,6 +12,7 @@ from homeassistant.components.statistics.sensor import DOMAIN, StatisticsSensor
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
@@ -123,17 +124,21 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
 
-        # Source sensor is unavailable, unit and state should not change
-        self.hass.states.set("sensor.test_monitored", "unavailable", {})
-        self.hass.block_till_done()
-        new_state = self.hass.states.get("sensor.test")
-        assert state == new_state
-
         # Source sensor has a non float state, unit and state should not change
         self.hass.states.set("sensor.test_monitored", "beer", {})
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
         assert state == new_state
+
+        # Source sensor turns unavailable, statistics sensor should follow
+        assert self.hass.states.get("sensor.test").state != STATE_UNAVAILABLE
+        self.hass.states.set(
+            "sensor.test_monitored",
+            STATE_UNAVAILABLE,
+            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        )
+        self.hass.block_till_done()
+        assert self.hass.states.get("sensor.test").state == STATE_UNAVAILABLE
 
     def test_sampling_size(self):
         """Test rotation."""
