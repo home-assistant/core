@@ -32,6 +32,9 @@ SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
 class HMDevice(Entity):
     """The HomeMatic device base object."""
 
+    _homematic: HMConnection
+    _hmdevice: HMGeneric
+
     def __init__(
         self,
         config: dict[str, str],
@@ -45,8 +48,6 @@ class HMDevice(Entity):
         self._state = config.get(ATTR_PARAM)
         self._unique_id = config.get(ATTR_UNIQUE_ID)
         self._data: dict[str, str] = {}
-        self._homematic: HMConnection | None = None
-        self._hmdevice: HMGeneric | None = None
         self._connected = False
         self._available = False
         self._channel_map: set[str] = set()
