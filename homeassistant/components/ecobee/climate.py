@@ -628,35 +628,6 @@ class Thermostat(ClimateEntity):
         """Return available preset modes."""
         return list(self._preset_modes.values())
 
-    def set_auto_temp_hold(self, heat_temp, cool_temp):
-        """Set temperature hold in auto mode."""
-        if cool_temp is not None:
-            cool_temp_setpoint = cool_temp
-        else:
-            cool_temp_setpoint = self.thermostat["runtime"]["desiredCool"] / 10.0
-
-        if heat_temp is not None:
-            heat_temp_setpoint = heat_temp
-        else:
-            heat_temp_setpoint = self.thermostat["runtime"]["desiredCool"] / 10.0
-
-        self.data.ecobee.set_hold_temp(
-            self.thermostat_index,
-            cool_temp_setpoint,
-            heat_temp_setpoint,
-            self.hold_preference(),
-            self.hold_hours(),
-        )
-        _LOGGER.debug(
-            "Setting ecobee hold_temp to: heat=%s, is=%s, cool=%s, is=%s",
-            heat_temp,
-            isinstance(heat_temp, (int, float)),
-            cool_temp,
-            isinstance(cool_temp, (int, float)),
-        )
-
-        self.update_without_throttle = True
-
     def set_fan_mode(self, fan_mode):
         """Set the fan mode.  Valid values are "on" or "auto"."""
         if fan_mode.lower() not in (FAN_ON, FAN_AUTO):
@@ -671,7 +642,44 @@ class Thermostat(ClimateEntity):
             holdHours=self.hold_hours(),
         )
 
+        # set_fan_mode succeeded, reflect change in thermostat
+        self.thermostat["runtime"]["desiredFanMode"] = fan_mode
+
         _LOGGER.info("Setting fan mode to: %s", fan_mode)
+
+    def set_auto_temp_hold(self, heat_temp, cool_temp):
+        """Set temperature hold in auto mode."""
+        if cool_temp is not None:
+            cool_temp_setpoint = cool_temp
+        else:
+            cool_temp_setpoint = self.thermostat["runtime"]["desiredCool"] / 10.0
+
+        if heat_temp is not None:
+            heat_temp_setpoint = heat_temp
+        else:
+            heat_temp_setpoint = self.thermostat["runtime"]["desiredHeat"] / 10.0
+
+        self.data.ecobee.set_hold_temp(
+            self.thermostat_index,
+            cool_temp_setpoint,
+            heat_temp_setpoint,
+            self.hold_preference(),
+            self.hold_hours(),
+        )
+
+        # set_hold_temp was successful, reflect changes in thermostat
+        self.thermostat["runtime"]["desiredCool"] = cool_temp_setpoint * 10
+        self.thermostat["runtime"]["desiredHeat"] = heat_temp_setpoint * 10
+
+        _LOGGER.debug(
+            "Setting ecobee hold_temp to: heat=%s, is=%s, cool=%s, is=%s",
+            heat_temp,
+            isinstance(heat_temp, (int, float)),
+            cool_temp,
+            isinstance(cool_temp, (int, float)),
+        )
+
+        self.update_without_throttle = True
 
     def set_temp_hold(self, temp):
         """Set temperature hold in modes other than auto.
@@ -716,6 +724,10 @@ class Thermostat(ClimateEntity):
             )
 
         self.data.ecobee.set_humidity(self.thermostat_index, int(humidity))
+
+        # set_humidity was successful, reflect changes in thermostat
+        self.thermostat["runtime"]["desiredHumidity"] = humidity
+
         self.update_without_throttle = True
 
     def set_hvac_mode(self, hvac_mode):
@@ -726,7 +738,12 @@ class Thermostat(ClimateEntity):
         if ecobee_value is None:
             _LOGGER.error("Invalid mode for set_hvac_mode: %s", hvac_mode)
             return
+
         self.data.ecobee.set_hvac_mode(self.thermostat_index, ecobee_value)
+
+        # set_hvac_mode was successful, reflect changes in thermostat
+        self.thermostat["settings"]["hvacMode"] = ecobee_value
+
         self.update_without_throttle = True
 
     def set_fan_min_on_time(self, fan_min_on_time):
