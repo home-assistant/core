@@ -76,15 +76,15 @@ class VelbusSensor(VelbusEntity, SensorEntity):
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
         if self._is_counter:
-            return self._channel.get_counter_state()
-        return self._channel.get_state()
+            return float(self._channel.get_counter_state())
+        return float(self._channel.get_state())
 
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         if self._is_counter:
-            return self._channel.get_counter_unit()
-        return self._channel.get_unit()
+            return str(self._channel.get_counter_unit())
+        return str(self._channel.get_unit())
 
     @property
     def icon(self) -> str | None:

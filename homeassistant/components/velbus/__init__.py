@@ -183,7 +183,7 @@ class VelbusEntity(Entity):
     @property
     def name(self) -> str:
         """Return the display name of this entity."""
-        return self._channel.get_name()
+        return str(self._channel.get_name())
 
     @property
     def should_poll(self) -> bool:
