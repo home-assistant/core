@@ -60,7 +60,6 @@ class TradfriBaseClass(Entity):
         """Initialize a device."""
         self._api = handle_error(api)
         self._attr_name = device.name
-        self._attr_available = device.reachable
         self._device: Device = device
         self._device_control: BlindControl | LightControl | SocketControl | SignalRepeaterControl | AirPurifierControl | None = (
             None
@@ -140,5 +139,8 @@ class TradfriBaseDevice(TradfriBaseClass):
 
     def _refresh(self, device: Device, write_ha: bool = True) -> None:
         """Refresh the device data."""
+        # The base class _refresh cannot be used, because
+        # there are devices (group) that do not have .reachable
+        # so set _attr_available here and let the base class do the rest.
         self._attr_available = device.reachable
         super()._refresh(device, write_ha)
