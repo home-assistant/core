@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -154,7 +155,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    websession = async_get_clientsession(hass)
+    verify_ssl = entry.data.get(CONF_VERIFY_SSL, True)
+    websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
     client = OctoprintClient(
         entry.data[CONF_HOST],
         websession,

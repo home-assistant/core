@@ -63,6 +63,7 @@ async def test_form(hass):
         "port": 81,
         "ssl": True,
         "path": "/",
+        "verify_ssl": True,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
