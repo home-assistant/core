@@ -9,6 +9,10 @@ from qnap_qsw.const import (
     DATA_FAN2_SPEED,
     DATA_FIRMWARE_UPDATE,
     DATA_PORTS_ACTIVE,
+    DATA_PORTS_BPS_RX,
+    DATA_PORTS_BPS_TX,
+    DATA_PORTS_OCTETS_RX,
+    DATA_PORTS_OCTETS_TX,
     DATA_SYSTEM_MAC_ADDR,
     DATA_TEMPERATURE_CURRENT,
     DATA_UPTIME_DATETIME_ISOFORMAT,
@@ -24,6 +28,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
+    DATA_BYTES,
+    DATA_RATE_BITS_PER_SECOND,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     ENTITY_CATEGORY_DIAGNOSTIC,
@@ -76,6 +82,20 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     ),
     SensorEntityDescription(
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        icon="mdi:download-network",
+        key=DATA_PORTS_OCTETS_RX,
+        name="Network In",
+        native_unit_of_measurement=DATA_BYTES,
+    ),
+    SensorEntityDescription(
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        icon="mdi:upload-network",
+        key=DATA_PORTS_OCTETS_TX,
+        name="Network Out",
+        native_unit_of_measurement=DATA_BYTES,
+    ),
+    SensorEntityDescription(
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         icon="mdi:ethernet",
         key=DATA_PORTS_ACTIVE,
         name="Ports",
@@ -88,6 +108,20 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        icon="mdi:download-network",
+        key=DATA_PORTS_BPS_RX,
+        name="Throughput Network In",
+        native_unit_of_measurement=DATA_RATE_BITS_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        icon="mdi:upload-network",
+        key=DATA_PORTS_BPS_TX,
+        name="Throughput Network Out",
+        native_unit_of_measurement=DATA_RATE_BITS_PER_SECOND,
     ),
     SensorEntityDescription(
         device_class=DEVICE_CLASS_TIMESTAMP,

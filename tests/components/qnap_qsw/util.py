@@ -22,6 +22,7 @@ def qnap_qsw_requests_mock(mock):
     firmware_condition_fixture = "qnap_qsw/firmware-condition.json"
     firmware_info_fixture = "qnap_qsw/firmware-info.json"
     firmware_update_check_fixture = "qnap_qsw/firmware-update-check.json"
+    ports_statistics_fixture = "qnap_qsw/ports-statistics.json"
     ports_status_fixture = "qnap_qsw/ports-status.json"
     system_board_fixture = "qnap_qsw/system-board.json"
     system_command_reboot_fixture = "qnap_qsw/system-command-reboot.json"
@@ -43,6 +44,10 @@ def qnap_qsw_requests_mock(mock):
     mock.get(
         "http://192.168.1.200/api/v1/firmware/update/check",
         text=load_fixture(firmware_update_check_fixture),
+    )
+    mock.get(
+        "http://192.168.1.200/api/v1/ports/statistics",
+        text=load_fixture(ports_statistics_fixture),
     )
     mock.get(
         "http://192.168.1.200/api/v1/ports/status",

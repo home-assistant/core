@@ -79,6 +79,7 @@ class QnapQswDataUpdateCoordinator(DataUpdateCoordinator):
         tasks = [
             self.hass.async_add_executor_job(self.qsha.update_firmware_condition),
             self.hass.async_add_executor_job(self.qsha.update_firmware_info),
+            self.hass.async_add_executor_job(self.qsha.update_ports_statistics),
             self.hass.async_add_executor_job(self.qsha.update_ports_status),
             self.hass.async_add_executor_job(self.qsha.update_system_board),
             self.hass.async_add_executor_job(self.qsha.update_system_info),

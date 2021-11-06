@@ -8,6 +8,8 @@ from qnap_qsw.const import (
     DATA_PORTS_COUNT,
     DATA_PORTS_DUPLEX_FULL,
     DATA_PORTS_DUPLEX_HALF,
+    DATA_PORTS_ERRORS_RX,
+    DATA_PORTS_OCTETS_RX,
     DATA_PORTS_SPEED_10,
     DATA_PORTS_SPEED_100,
     DATA_PORTS_SPEED_1000,
@@ -91,6 +93,10 @@ class QnapQswSensor(CoordinatorEntity, SensorEntity):
                 "speed_5000": self.coordinator.data[DATA_PORTS_SPEED_5000],
                 "speed_10000": self.coordinator.data[DATA_PORTS_SPEED_10000],
                 "total": self.coordinator.data[DATA_PORTS_COUNT],
+            }
+        elif self.entity_description.key == DATA_PORTS_OCTETS_RX:
+            _state_attr = {
+                "errors": self.coordinator.data[DATA_PORTS_ERRORS_RX],
             }
         elif self.entity_description.key == DATA_TEMPERATURE_CURRENT:
             _state_attr = {
