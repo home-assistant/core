@@ -25,7 +25,7 @@ import attr
 import voluptuous as vol
 import yarl
 
-from homeassistant import block_async_io, loader, util
+from homeassistant import async_timeout_backcompat, block_async_io, loader, util
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -82,7 +82,7 @@ STAGE_1_SHUTDOWN_TIMEOUT = 100
 STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
-
+async_timeout_backcompat.enable()
 block_async_io.enable()
 
 T = TypeVar("T")

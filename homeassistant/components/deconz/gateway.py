@@ -4,6 +4,7 @@ import asyncio
 import async_timeout
 from pydeconz import DeconzSession, errors, group, light, sensor
 
+from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -149,8 +150,13 @@ class DeconzGateway:
         )
 
         # Gateway service
+        configuration_url = f"http://{self.host}:{self.config_entry.data[CONF_PORT]}"
+        if self.config_entry.source == SOURCE_HASSIO:
+            configuration_url = None
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
+            configuration_url=configuration_url,
+            entry_type="service",
             identifiers={(DECONZ_DOMAIN, self.api.config.bridge_id)},
             manufacturer="Dresden Elektronik",
             model=self.api.config.model_id,
@@ -270,7 +276,7 @@ async def get_gateway(
         connection_status=async_connection_status_callback,
     )
     try:
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             await deconz.refresh_state()
         return deconz
 

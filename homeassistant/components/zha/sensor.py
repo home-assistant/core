@@ -35,6 +35,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -223,6 +224,7 @@ class Battery(Sensor):
     _device_class = DEVICE_CLASS_BATTERY
     _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @staticmethod
     def formatter(value: int) -> int:

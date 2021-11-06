@@ -22,7 +22,6 @@ from .const import (
     CONF_UID,
     DATA_COORDINATOR,
     DATA_COORDINATOR_PAIRED_SENSOR,
-    DATA_UNSUB_DISPATCHER_CONNECT,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
@@ -69,7 +68,7 @@ async def async_setup_entry(
     @callback
     def add_new_paired_sensor(uid: str) -> None:
         """Add a new paired sensor."""
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][entry.entry_id][
+        coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR_PAIRED_SENSOR][
             uid
         ]
 
@@ -81,7 +80,7 @@ async def async_setup_entry(
         )
 
     # Handle adding paired sensors after HASS startup:
-    hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id].append(
+    entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED.format(entry.data[CONF_UID]),
@@ -92,7 +91,7 @@ async def async_setup_entry(
     # Add all valve controller-specific binary sensors:
     sensors: list[PairedSensorBinarySensor | ValveControllerBinarySensor] = [
         ValveControllerBinarySensor(
-            entry, hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id], description
+            entry, hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR], description
         )
         for description in VALVE_CONTROLLER_DESCRIPTIONS
     ]
@@ -101,8 +100,8 @@ async def async_setup_entry(
     sensors.extend(
         [
             PairedSensorBinarySensor(entry, coordinator, description)
-            for coordinator in hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
-                entry.entry_id
+            for coordinator in hass.data[DOMAIN][entry.entry_id][
+                DATA_COORDINATOR_PAIRED_SENSOR
             ].values()
             for description in PAIRED_SENSOR_DESCRIPTIONS
         ]

@@ -211,8 +211,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistant):
 
     # Get/create config to store a unique id for this hass instance.
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-    config = await store.async_load()
-    if not config:
+    if not (config := await store.async_load()):
         # Create config
         config = {
             CONF_INSTANCE_ID: str(uuid4()),
@@ -406,8 +405,8 @@ async def _continue_flow(
     flow = next(
         (
             flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["handler"] == DOMAIN and flow["context"]["unique_id"] == unique_id
+            for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+            if flow["context"]["unique_id"] == unique_id
         ),
         None,
     )

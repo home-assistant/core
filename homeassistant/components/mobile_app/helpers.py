@@ -174,10 +174,10 @@ def webhook_response(
 
 def device_info(registration: dict) -> DeviceInfo:
     """Return the device info for this registration."""
-    return {
-        "identifiers": {(DOMAIN, registration[ATTR_DEVICE_ID])},
-        "manufacturer": registration[ATTR_MANUFACTURER],
-        "model": registration[ATTR_MODEL],
-        "name": registration[ATTR_DEVICE_NAME],
-        "sw_version": registration[ATTR_OS_VERSION],
-    }
+    return DeviceInfo(
+        identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
+        manufacturer=registration[ATTR_MANUFACTURER],
+        model=registration[ATTR_MODEL],
+        name=registration[ATTR_DEVICE_NAME],
+        sw_version=registration[ATTR_OS_VERSION],
+    )

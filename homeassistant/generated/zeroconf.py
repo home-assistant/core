@@ -58,6 +58,9 @@ ZEROCONF = {
     "_dvl-deviceapi._tcp.local.": [
         {
             "domain": "devolo_home_control"
+        },
+        {
+            "domain": "devolo_home_network"
         }
     ],
     "_easylink._tcp.local.": [
@@ -192,6 +195,11 @@ ZEROCONF = {
     "_nut._tcp.local.": [
         {
             "domain": "nut"
+        }
+    ],
+    "_octoprint._tcp.local.": [
+        {
+            "domain": "octoprint"
         }
     ],
     "_plexmediasvr._tcp.local.": [

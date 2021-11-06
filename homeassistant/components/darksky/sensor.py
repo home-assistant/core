@@ -754,10 +754,9 @@ class DarkSkySensor(SensorEntity):
         """
         sensor_type = self.entity_description.key
         lookup_type = convert_to_camel(sensor_type)
-        state = getattr(data, lookup_type, None)
 
-        if state is None:
-            return state
+        if (state := getattr(data, lookup_type, None)) is None:
+            return None
 
         if "summary" in sensor_type:
             self._icon = getattr(data, "icon", "")

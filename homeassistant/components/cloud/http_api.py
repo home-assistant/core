@@ -1,6 +1,7 @@
 """The HTTP api to control the cloud integration."""
 import asyncio
 from functools import wraps
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -20,12 +21,6 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.websocket_api import const as ws_const
-from homeassistant.const import (
-    HTTP_BAD_GATEWAY,
-    HTTP_BAD_REQUEST,
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_UNAUTHORIZED,
-)
 
 from .const import (
     DOMAIN,
@@ -48,19 +43,19 @@ _LOGGER = logging.getLogger(__name__)
 
 _CLOUD_ERRORS = {
     InvalidTrustedNetworks: (
-        HTTP_INTERNAL_SERVER_ERROR,
+        HTTPStatus.INTERNAL_SERVER_ERROR,
         "Remote UI not compatible with 127.0.0.1/::1 as a trusted network.",
     ),
     InvalidTrustedProxies: (
-        HTTP_INTERNAL_SERVER_ERROR,
+        HTTPStatus.INTERNAL_SERVER_ERROR,
         "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies.",
     ),
     asyncio.TimeoutError: (
-        HTTP_BAD_GATEWAY,
+        HTTPStatus.BAD_GATEWAY,
         "Unable to reach the Home Assistant cloud.",
     ),
     aiohttp.ClientError: (
-        HTTP_INTERNAL_SERVER_ERROR,
+        HTTPStatus.INTERNAL_SERVER_ERROR,
         "Error making internal request",
     ),
 }
@@ -96,15 +91,15 @@ async def async_setup(hass):
 
     _CLOUD_ERRORS.update(
         {
-            auth.UserNotFound: (HTTP_BAD_REQUEST, "User does not exist."),
-            auth.UserNotConfirmed: (HTTP_BAD_REQUEST, "Email not confirmed."),
+            auth.UserNotFound: (HTTPStatus.BAD_REQUEST, "User does not exist."),
+            auth.UserNotConfirmed: (HTTPStatus.BAD_REQUEST, "Email not confirmed."),
             auth.UserExists: (
-                HTTP_BAD_REQUEST,
+                HTTPStatus.BAD_REQUEST,
                 "An account with the given email already exists.",
             ),
-            auth.Unauthenticated: (HTTP_UNAUTHORIZED, "Authentication failed."),
+            auth.Unauthenticated: (HTTPStatus.UNAUTHORIZED, "Authentication failed."),
             auth.PasswordChangeRequired: (
-                HTTP_BAD_REQUEST,
+                HTTPStatus.BAD_REQUEST,
                 "Password change required.",
             ),
         }
@@ -157,7 +152,7 @@ def _process_cloud_exception(exc, where):
 
     if err_info is None:
         _LOGGER.exception("Unexpected error processing request for %s", where)
-        err_info = (HTTP_BAD_GATEWAY, f"Unexpected error: {exc}")
+        err_info = (HTTPStatus.BAD_GATEWAY, f"Unexpected error: {exc}")
 
     return err_info
 
@@ -209,7 +204,7 @@ class CloudLogoutView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.logout()
 
         return self.json_message("ok")
@@ -235,7 +230,7 @@ class CloudRegisterView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_register(data["email"], data["password"])
 
         return self.json_message("ok")
@@ -254,7 +249,7 @@ class CloudResendConfirmView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_resend_email_confirm(data["email"])
 
         return self.json_message("ok")
@@ -273,7 +268,7 @@ class CloudForgotPasswordView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_forgot_password(data["email"])
 
         return self.json_message("ok")
@@ -319,7 +314,7 @@ async def websocket_subscription(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
     try:
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             data = await cloud_api.async_subscription_info(cloud)
     except aiohttp.ClientError:
         connection.send_error(
@@ -358,7 +353,7 @@ async def websocket_update_prefs(hass, connection, msg):
     if changes.get(PREF_ALEXA_REPORT_STATE):
         alexa_config = await cloud.client.get_alexa_config()
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 await alexa_config.async_get_access_token()
         except asyncio.TimeoutError:
             connection.send_error(
@@ -579,7 +574,7 @@ async def alexa_sync(hass, connection, msg):
     cloud = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
 
-    with async_timeout.timeout(10):
+    async with async_timeout.timeout(10):
         try:
             success = await alexa_config.async_sync_entities()
         except alexa_errors.NoTokenAvailable:
@@ -602,7 +597,7 @@ async def thingtalk_convert(hass, connection, msg):
     """Convert a query."""
     cloud = hass.data[DOMAIN]
 
-    with async_timeout.timeout(10):
+    async with async_timeout.timeout(10):
         try:
             connection.send_result(
                 msg["id"], await thingtalk.async_convert(cloud, msg["query"])

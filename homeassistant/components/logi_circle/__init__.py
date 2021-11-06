@@ -147,7 +147,7 @@ async def async_setup_entry(hass, entry):
         return False
 
     try:
-        with async_timeout.timeout(_TIMEOUT):
+        async with async_timeout.timeout(_TIMEOUT):
             # Ensure the cameras property returns the same Camera objects for
             # all devices. Performs implicit login and session validation.
             await logi_circle.synchronize_cameras()

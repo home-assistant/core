@@ -148,11 +148,11 @@ class DenonDevice(MediaPlayerEntity):
         self._attr_name = receiver.name
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
+            configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
             identifiers={(DOMAIN, config_entry.unique_id)},
             manufacturer=config_entry.data[CONF_MANUFACTURER],
-            name=config_entry.title,
             model=f"{config_entry.data[CONF_MODEL]}-{config_entry.data[CONF_TYPE]}",
-            configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
+            name=config_entry.title,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
         self._attr_source_list = receiver.input_func_list

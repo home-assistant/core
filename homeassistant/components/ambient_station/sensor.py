@@ -39,7 +39,7 @@ from . import (
     AmbientStation,
     AmbientWeatherEntity,
 )
-from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN
+from .const import ATTR_LAST_DATA, DOMAIN
 
 TYPE_24HOURRAININ = "24hourrainin"
 TYPE_BAROMABSIN = "baromabsin"
@@ -609,7 +609,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Ambient PWS sensors based on a config entry."""
-    ambient = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    ambient = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [

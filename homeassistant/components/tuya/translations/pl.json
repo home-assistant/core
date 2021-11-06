@@ -13,9 +13,15 @@
         "step": {
             "login": {
                 "data": {
+                    "access_id": "Identyfikator dost\u0119pu",
+                    "access_secret": "Has\u0142o dost\u0119pu",
+                    "country_code": "Kod kraju",
+                    "endpoint": "Strefa dost\u0119pno\u015bci",
                     "password": "Has\u0142o",
+                    "tuya_app_type": "Aplikacja mobilna",
                     "username": "Konto"
                 },
+                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce Tuya",
                 "title": "Tuya"
             },
             "user": {
@@ -24,10 +30,11 @@
                     "password": "Has\u0142o",
                     "platform": "Aplikacja, w kt\u00f3rej zarejestrowane jest Twoje konto",
                     "region": "Region",
+                    "tuya_project_type": "Typ projektu chmury Tuya",
                     "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce",
-                "title": "Tuya"
+                "title": "Integracja Tuya"
             }
         }
     },

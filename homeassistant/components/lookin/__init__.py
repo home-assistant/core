@@ -5,11 +5,17 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-from aiolookin import LookInHttpProtocol, LookinUDPSubscriptions, start_lookin_udp
+from aiolookin import (
+    LookInHttpProtocol,
+    LookinUDPSubscriptions,
+    MeteoSensor,
+    SensorID,
+    start_lookin_udp,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -45,7 +51,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await meteo_coordinator.async_config_entry_first_refresh()
 
+    @callback
+    def _async_meteo_push_update(msg: dict[str, str]) -> None:
+        """Process an update pushed via UDP."""
+        if int(msg["event_id"]):
+            return
+        LOGGER.debug("Processing push message for meteo sensor: %s", msg)
+        meteo: MeteoSensor = meteo_coordinator.data
+        meteo.update_from_value(msg["value"])
+        meteo_coordinator.async_set_updated_data(meteo)
+
     lookin_udp_subs = LookinUDPSubscriptions()
+    entry.async_on_unload(
+        lookin_udp_subs.subscribe_sensor(
+            lookin_device.id, SensorID.Meteo, None, _async_meteo_push_update
+        )
+    )
     entry.async_on_unload(await start_lookin_udp(lookin_udp_subs))
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LookinData(

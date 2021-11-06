@@ -125,9 +125,7 @@ class UbusDeviceScanner(DeviceScanner):
         results = 0
         # for each access point
         for hostapd in self.hostapd:
-            result = self.ubus.get_hostapd_clients(hostapd)
-
-            if result:
+            if result := self.ubus.get_hostapd_clients(hostapd):
                 results = results + 1
                 # Check for each device is authorized (valid wpa key)
                 for key in result["clients"].keys():
@@ -148,8 +146,7 @@ class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
 
     def _generate_mac2name(self):
         if self.leasefile is None:
-            result = self.ubus.get_uci_config("dhcp", "dnsmasq")
-            if result:
+            if result := self.ubus.get_uci_config("dhcp", "dnsmasq"):
                 values = result["values"].values()
                 self.leasefile = next(iter(values))["leasefile"]
             else:
@@ -170,8 +167,7 @@ class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
     """Implement the Ubus device scanning for the odhcp DHCP server."""
 
     def _generate_mac2name(self):
-        result = self.ubus.get_dhcp_method("ipv4leases")
-        if result:
+        if result := self.ubus.get_dhcp_method("ipv4leases"):
             self.mac2name = {}
             for device in result["device"].values():
                 for lease in device["leases"]:

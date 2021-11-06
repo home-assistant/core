@@ -115,8 +115,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine binary sensors based on a config entry."""
-    controller = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id]
-    coordinators = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
+    controller = hass.data[DOMAIN][entry.entry_id][DATA_CONTROLLER]
+    coordinators = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
 
     @callback
     def async_get_sensor(api_category: str) -> partial:

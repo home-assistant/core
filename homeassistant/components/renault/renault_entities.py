@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, cast
 
+from homeassistant.const import ATTR_NAME
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -46,3 +47,11 @@ class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
         if self.coordinator.data is None:
             return None
         return cast(StateType, getattr(self.coordinator.data, key))
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity.
+
+        Overridden to include the device name.
+        """
+        return f"{self.vehicle.device_info[ATTR_NAME]} {self.entity_description.name}"
