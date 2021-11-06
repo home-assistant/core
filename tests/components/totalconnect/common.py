@@ -1,8 +1,7 @@
 """Common methods used across tests for TotalConnect."""
 from unittest.mock import patch
 
-from total_connect_client.const import ArmingState, _ResultCode
-from total_connect_client.zone import ZoneStatus, ZoneType
+from total_connect_client import ArmingState, ResultCode, ZoneStatus, ZoneType
 
 from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -43,7 +42,7 @@ USER = {
 }
 
 RESPONSE_AUTHENTICATE = {
-    "ResultCode": _ResultCode.SUCCESS.value,
+    "ResultCode": ResultCode.SUCCESS.value,
     "SessionID": 1,
     "Locations": LOCATIONS,
     "ModuleFlags": MODULE_FLAGS,
@@ -51,7 +50,7 @@ RESPONSE_AUTHENTICATE = {
 }
 
 RESPONSE_AUTHENTICATE_FAILED = {
-    "ResultCode": _ResultCode.BAD_USER_OR_PASSWORD.value,
+    "ResultCode": ResultCode.BAD_USER_OR_PASSWORD.value,
     "ResultData": "test bad authentication",
 }
 
@@ -254,18 +253,18 @@ RESPONSE_UNKNOWN = {
     "ArmingState": ArmingState.DISARMED,
 }
 
-RESPONSE_ARM_SUCCESS = {"ResultCode": _ResultCode.ARM_SUCCESS.value}
-RESPONSE_ARM_FAILURE = {"ResultCode": _ResultCode.COMMAND_FAILED.value}
-RESPONSE_DISARM_SUCCESS = {"ResultCode": _ResultCode.DISARM_SUCCESS.value}
+RESPONSE_ARM_SUCCESS = {"ResultCode": ResultCode.ARM_SUCCESS.value}
+RESPONSE_ARM_FAILURE = {"ResultCode": ResultCode.COMMAND_FAILED.value}
+RESPONSE_DISARM_SUCCESS = {"ResultCode": ResultCode.DISARM_SUCCESS.value}
 RESPONSE_DISARM_FAILURE = {
-    "ResultCode": _ResultCode.COMMAND_FAILED.value,
+    "ResultCode": ResultCode.COMMAND_FAILED.value,
     "ResultData": "Command Failed",
 }
 RESPONSE_USER_CODE_INVALID = {
-    "ResultCode": _ResultCode.USER_CODE_INVALID.value,
+    "ResultCode": ResultCode.USER_CODE_INVALID.value,
     "ResultData": "testing user code invalid",
 }
-RESPONSE_SUCCESS = {"ResultCode": _ResultCode.SUCCESS.value}
+RESPONSE_SUCCESS = {"ResultCode": ResultCode.SUCCESS.value}
 
 USERNAME = "username@me.com"
 PASSWORD = "password"
@@ -291,7 +290,7 @@ PARTITION_DETAILS_2 = {
 
 PARTITION_DETAILS = {"PartitionDetails": [PARTITION_DETAILS_1, PARTITION_DETAILS_2]}
 RESPONSE_PARTITION_DETAILS = {
-    "ResultCode": _ResultCode.SUCCESS.value,
+    "ResultCode": ResultCode.SUCCESS.value,
     "ResultData": "testing partition details",
     "PartitionsInfoList": PARTITION_DETAILS,
 }
