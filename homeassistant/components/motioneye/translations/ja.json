@@ -3,7 +3,7 @@
         "step": {
             "init": {
                 "data": {
-                    "stream_url_template": "\u30b9\u30c8\u30ea\u30fc\u30e0URL\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8"
+                    "stream_url_template": "Stream URL\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8"
                 }
             }
         }
