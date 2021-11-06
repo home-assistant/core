@@ -18,6 +18,13 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Zugangstoken"
+                },
+                "description": "Um dein Google-Konto zu verkn\u00fcpfen, w\u00e4hle [Konto autorisieren]({url}).\n\nKopiere nach der Autorisierung den unten angegebenen Auth Token Code.",
+                "title": "Google-Konto verkn\u00fcpfen"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Anbieter"

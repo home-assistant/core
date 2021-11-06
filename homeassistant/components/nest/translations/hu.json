@@ -18,6 +18,13 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Hozz\u00e1f\u00e9r\u00e9si token"
+                },
+                "description": "[Enged\u00e9lyezze] Google-fi\u00f3kj\u00e1t az \u00f6sszekapcsol\u00e1hoz ({url}).\n\nAz enged\u00e9lyez\u00e9s ut\u00e1n m\u00e1solja \u00e1t a kapott token k\u00f3dot.",
+                "title": "\u00d6sszekapcsol\u00e1s Google-al"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Szolg\u00e1ltat\u00f3"
