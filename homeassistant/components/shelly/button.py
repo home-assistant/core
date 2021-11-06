@@ -30,7 +30,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Demo config entry."""
+    """Set buttons for device."""
     wrapper: RpcDeviceWrapper | BlockDeviceWrapper | None = None
     if get_device_entry_gen(config_entry) == 2:
         if rpc_wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY][
@@ -73,7 +73,7 @@ class ShellyOtaUpdateButton(ButtonEntity):
         self.wrapper = wrapper
 
     async def async_press(self) -> None:
-        """Send out a persistent notification."""
+        """Triggers the OTA update service."""
         await self.hass.services.async_call(
             DOMAIN,
             SERVICE_OTA_UPDATE,
