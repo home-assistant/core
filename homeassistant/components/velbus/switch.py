@@ -30,7 +30,7 @@ class VelbusSwitch(VelbusEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
-        return self._channel.is_on()
+        return bool(self._channel.is_on())
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""

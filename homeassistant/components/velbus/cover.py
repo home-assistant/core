@@ -51,7 +51,9 @@ class VelbusCover(VelbusEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self._channel.is_closed()
+        if val := self._channel.is_closed():
+            return bool(val)
+        return None
 
     @property
     def current_cover_position(self) -> int | None:
@@ -60,8 +62,9 @@ class VelbusCover(VelbusEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open
         Velbus: 100 = closed, 0 = open
         """
-        pos = self._channel.get_position()
-        return 100 - pos
+        if pos := self._channel.get_position():
+            return int(100 - pos)
+        return None
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

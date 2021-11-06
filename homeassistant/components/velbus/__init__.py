@@ -163,7 +163,7 @@ class VelbusEntity(Entity):
     @property
     def name(self) -> str:
         """Return the display name of this entity."""
-        return self._channel.get_name()
+        return str(self._channel.get_name())
 
     @property
     def should_poll(self) -> bool:
@@ -178,7 +178,7 @@ class VelbusEntity(Entity):
         self.async_write_ha_state()
 
     @property
-    def device_info(self):
+    def device_info(self):  # type: ignore
         """Return the device info."""
         return {
             "identifiers": {

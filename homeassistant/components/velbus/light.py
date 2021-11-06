@@ -54,7 +54,7 @@ class VelbusLight(VelbusEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the light is on."""
-        return self._channel.is_on()
+        return bool(self._channel.is_on())
 
     @property
     def brightness(self) -> int:
