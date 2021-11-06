@@ -123,7 +123,7 @@ class TradfriBaseDevice(TradfriBaseClass):
     ) -> None:
         """Initialize a device."""
         self._attr_available = device.reachable
-        super.__init__(device, api, gateway_id)
+        super().__init__(device, api, gateway_id)
 
     @property
     def device_info(self) -> DeviceInfo:
