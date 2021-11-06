@@ -54,7 +54,9 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return True
         return False
 
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
