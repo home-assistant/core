@@ -117,5 +117,5 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CommFailed:
             errors["base"] = "cannot_connect"
         if session:
-            session.teardown()
+            self.hass.async_add_executor_job(session.teardown)
         return errors

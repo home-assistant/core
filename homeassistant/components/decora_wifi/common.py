@@ -12,7 +12,7 @@ from decora_wifi.models.residential_permission import ResidentialPermission
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import LIGHT_DOMAIN, PLATFORMS
 
@@ -172,12 +172,10 @@ class DecoraWifiEntity(Entity):
         self._mac_address = self._switch.mac
         self._attr_name = self._switch.name
         self._attr_unique_id = self._mac_address
-        self._attr_device_info = {
-            "name": self._switch.name,
-            "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, self._mac_address)
-            },
-            "manufacturer": self._switch.manufacturer,
-            "model": self._model,
-            "sw_version": self._switch.version,
-        }
+        self._attr_device_info = DeviceInfo(
+            name=self._switch.name,
+            connections={(device_registry.CONNECTION_NETWORK_MAC, self._mac_address)},
+            manufacturer=self._switch.manufacturer,
+            model=self._model,
+            sw_version=self._switch.version,
+        )
