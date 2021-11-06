@@ -1,10 +1,13 @@
 """Tests for the TotalConnect config flow."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import data_entry_flow
 from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
     CONFIG_DATA,
@@ -163,3 +166,34 @@ async def test_reauth(hass):
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_no_locations(hass):
+    """Test with no user locations."""
+    # user/pass provided, so check if valid then ask for usercodes on locations form
+    responses = [
+        RESPONSE_AUTHENTICATE,
+        RESPONSE_PARTITION_DETAILS,
+        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+        RESPONSE_DISARMED,
+    ]
+
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses,) as mock_request, patch(
+        "homeassistant.components.totalconnect.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.get_number_locations",
+        return_value=0,
+    ):
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_USER},
+                data=CONFIG_DATA_NO_USERCODES,
+            )
+
+        assert (
+            f"{err.value}"
+            == "There are no locations enabled or available for this TotalConnect user."
+        )
+        assert mock_request.call_count == 1
