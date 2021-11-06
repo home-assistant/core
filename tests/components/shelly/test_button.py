@@ -1,4 +1,4 @@
-"""The scene tests for the myq platform."""
+"""Tests for Shelly button platform."""
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.button.const import SERVICE_PRESS
 from homeassistant.components.shelly.service import async_services_setup

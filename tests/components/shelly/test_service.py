@@ -1,4 +1,4 @@
-"""Tests for the Shelly integration init."""
+"""Tests for the Shelly services."""
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
