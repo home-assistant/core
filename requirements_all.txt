@@ -243,7 +243,7 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.8
 
 # homeassistant.components.shelly
-aioshelly==1.0.2
+aioshelly==1.0.4
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
