@@ -390,7 +390,6 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        print(type(state.state))
         assert state.state == str(int(state.attributes.get("mean")))
 
     def test_precision_1(self):
