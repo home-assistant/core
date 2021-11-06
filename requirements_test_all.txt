@@ -140,7 +140,7 @@ aiolip==1.1.6
 aiolookin==0.0.3
 
 # homeassistant.components.lyric
-aiolyric==1.0.7
+aiolyric==1.0.8
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
