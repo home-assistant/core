@@ -38,6 +38,7 @@ _ESCEA_FAN_TO_HA = {
     Controller.Fan.FAN_BOOST: FAN_HIGH,
     Controller.Fan.AUTO: FAN_AUTO,
 }
+_HA_FAN_TO_ESCEA = {v: k for k, v in _ESCEA_FAN_TO_HA.items()}
 
 
 async def async_setup_entry(
@@ -68,17 +69,17 @@ async def async_setup_entry(
 class ControllerDevice(ClimateEntity):
     """Representation of Escea Controller."""
 
+    _attr_fan_modes = list(_HA_FAN_TO_ESCEA)
     _attr_hvac_modes = [
         HVAC_MODE_HEAT,
         HVAC_MODE_OFF,
     ]
+    _attr_icon = ICON
+    _attr_precision = PRECISION_WHOLE
+    _attr_should_poll = False
     _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = TEMP_CELSIUS
-
-    _attr_precision = PRECISION_WHOLE
-    _attr_icon = ICON
-    _attr_should_poll = False
 
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
@@ -86,11 +87,6 @@ class ControllerDevice(ClimateEntity):
 
         self._attr_min_temp = controller.min_temp
         self._attr_max_temp = controller.max_temp
-
-        self._fan_to_pescea = {}
-        for fan in controller.Fan:
-            self._fan_to_pescea[_ESCEA_FAN_TO_HA[fan]] = fan
-        self._attr_fan_modes = list(self._fan_to_pescea)
 
         self._attr_unique_id = controller.device_uid
         self._attr_name = f"Escea Fireplace {self._attr_unique_id}"
@@ -206,8 +202,7 @@ class ControllerDevice(ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        fan = self._fan_to_pescea[fan_mode]
-        await self.wrap_and_catch(self._controller.set_fan(fan))
+        await self.wrap_and_catch(self._controller.set_fan(_HA_FAN_TO_ESCEA[fan_mode]))
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode."""

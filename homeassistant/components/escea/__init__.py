@@ -1,28 +1,17 @@
 """Platform for the Escea fireplace."""
 
 from homeassistant import config_entries
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ESCEA
 from .discovery import async_start_discovery_service, async_stop_discovery_service
 
-PLATFORMS = ["climate"]
+PLATFORMS = [CLIMATE_DOMAIN]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the Escea component config."""
-    conf = config.get(ESCEA)
-    if not conf:
-        return True
-
-    # Explicitly added in the config file, create a config entry.
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            ESCEA, context={"source": config_entries.SOURCE_IMPORT}
-        )
-    )
-
+    """Set up from YAML config - deprecated."""
     return True
 
 
