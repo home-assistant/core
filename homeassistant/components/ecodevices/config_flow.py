@@ -38,7 +38,7 @@ from .const import (
 BASE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=80): int,
+        vol.Required(CONF_PORT, default=80): int,
         vol.Required(CONF_SCAN_INTERVAL, default=5): int,
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,

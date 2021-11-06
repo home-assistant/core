@@ -48,8 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = async_get_clientsession(hass, False)
 
     controller = EcoDevices(
-        config.get(CONF_HOST),
-        config.get(CONF_PORT),
+        config[CONF_HOST],
+        config[CONF_PORT],
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
         session=session,
@@ -102,6 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         name=controller.host,
         sw_version=controller.version,
         connections={(dr.CONNECTION_NETWORK_MAC, controller.mac_address)},
+        configuration_url=f"http://{config[CONF_HOST]}:{config[CONF_PORT]}",
     )
 
     for platform in PLATFORMS:
