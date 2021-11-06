@@ -129,6 +129,12 @@ class TestStatisticsSensor(unittest.TestCase):
         new_state = self.hass.states.get("sensor.test")
         assert state == new_state
 
+        # Source sensor has the state None, unit and state should not change
+        self.hass.states.set("sensor.test_monitored", None, {})
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert state == new_state
+
         # Source sensor has a non float state, unit and state should not change
         self.hass.states.set("sensor.test_monitored", "beer", {})
         self.hass.block_till_done()
