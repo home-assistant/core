@@ -1,4 +1,7 @@
 """Tests for the devolo Home Network system health."""
+from unittest.mock import patch
+
+from devolo_plc_api.exceptions.device import DeviceUnavailable
 import pytest
 
 from homeassistant.components.devolo_home_network.const import DOMAIN
@@ -21,5 +24,11 @@ async def test_system_health(hass: HomeAssistant):
     await hass.async_block_till_done()
 
     info = await get_system_health_info(hass, DOMAIN)
+    assert info["firmware_updates_available"] is True
 
-    assert info["firmware_updates_available"] is False
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_check_firmware_available",
+        side_effect=DeviceUnavailable,
+    ):
+        info = await get_system_health_info(hass, DOMAIN)
+        assert info["firmware_updates_available"] is False

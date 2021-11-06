@@ -4,6 +4,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+from devolo_plc_api.exceptions.device import DeviceUnavailable
+
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
@@ -25,10 +27,14 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         *[
             entity["device"].device.async_check_firmware_available()
             for entity in hass.data[DOMAIN].values()
-        ]
+        ],
+        return_exceptions=True,
     )
 
     for result in firmware_updates_available:
-        states.append(result["result"] == "UPDATE_AVAILABLE")
+        if isinstance(result, dict):
+            states.append(result["result"] == "UPDATE_AVAILABLE")
+        elif isinstance(result, DeviceUnavailable):  # Treat unaccessible device
+            states.append(False)
 
     return {"firmware_updates_available": any(states)}
