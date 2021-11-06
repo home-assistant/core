@@ -74,20 +74,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conf_resources = None
     if CONF_RESOURCES in entry.data:
         new_data = {k: v for k, v in entry.data.items() if k != CONF_RESOURCES}
+        new_opts = {k: v for k, v in entry.options.items() if k != CONF_RESOURCES}
+        conf_resources = entry.data[CONF_RESOURCES]
         if CONF_RESOURCES in entry.options:
             conf_resources = entry.options[CONF_RESOURCES]
-            new_options = {
-                k: v for k, v in entry.options.items() if k != CONF_RESOURCES
-            }
-        else:
-            conf_resources = entry.data[CONF_RESOURCES]
-            new_options = {**entry.options}
-        hass.config_entries.async_update_entry(
-            entry, data=new_data, options=new_options
-        )
+        hass.config_entries.async_update_entry(entry, data=new_data, options=new_opts)
 
     undo_listener = entry.add_update_listener(_async_update_listener)
-
     unique_id = _unique_id_from_status(status)
     if unique_id is None:
         unique_id = entry.entry_id
