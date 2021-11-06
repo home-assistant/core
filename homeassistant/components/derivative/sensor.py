@@ -178,7 +178,11 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
 
                 elapsed_time = (last_time - first_time).total_seconds()
                 delta_value = Decimal(last_value) - Decimal(first_value)
-                self._overflowed = delta_value < 0
+
+                # check for Byte-counter resetting to zero:
+                if self._unit_prefix in BINARY_PREFIXES:
+                    self._overflowed = delta_value < 0
+
                 derivative = (
                     delta_value
                     / Decimal(elapsed_time)
@@ -210,7 +214,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        if self._unit_prefix in BINARY_PREFIXES and self._overflowed:
+        if self._overflowed:
             return None
         return round(self._state, self._round_digits)
 
