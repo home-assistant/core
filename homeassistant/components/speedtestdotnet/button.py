@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import DEFAULT_NAME, DOMAIN, SPEED_TEST_SERVICE
+from .const import DEFAULT_NAME, DOMAIN
 
 
 async def async_setup_entry(
@@ -48,4 +48,4 @@ class SpeedtestButton(CoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Immediately execute a speed test with Speedtest.net."""
-        await self.hass.services.async_call(DOMAIN, SPEED_TEST_SERVICE)
+        await self.coordinator.async_refresh()

@@ -4,11 +4,11 @@ from unittest.mock import MagicMock
 from homeassistant.components import speedtestdotnet
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.button.const import SERVICE_PRESS
-from homeassistant.components.speedtestdotnet.const import DEFAULT_NAME, DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_CALL_SERVICE, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_capture_events
+from tests.components.speedtestdotnet import MOCK_RESULTS
 
 
 async def test_speedtestdotnet_button(hass: HomeAssistant, mock_api: MagicMock) -> None:
@@ -18,20 +18,24 @@ async def test_speedtestdotnet_button(hass: HomeAssistant, mock_api: MagicMock) 
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    state = hass.states.get(f"button.{DEFAULT_NAME}_run_now")
+    state = hass.states.get("button.speedtest_run_now")
 
     assert state
     assert state.state == STATE_UNKNOWN
 
-    events = async_capture_events(hass, EVENT_CALL_SERVICE)
+    mock_api.return_value.results.dict.return_value = {
+        **MOCK_RESULTS,
+        "download": 2048000,
+    }
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: f"button.{DEFAULT_NAME}_run_now"},
+        {ATTR_ENTITY_ID: "button.speedtest_run_now"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     assert len(events) == 2
-    assert events[0].data.get("domain") == BUTTON_DOMAIN
-    assert events[1].data.get("domain") == DOMAIN
+    assert events[0].data.get("entity_id") == "button.speedtest_run_now"
+    assert events[1].data.get("entity_id") == "sensor.speedtest_download"
