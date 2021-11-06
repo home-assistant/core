@@ -7,9 +7,11 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_TAMPER,
     DEVICE_CLASS_VIBRATION,
     BinarySensorEntity,
@@ -61,6 +63,21 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # CO Detector
+    # https://developer.tuya.com/en/docs/iot/categorycobj?id=Kaiuz3u1j6q1v
+    "cobj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CO_STATE,
+            device_class=DEVICE_CLASS_SAFETY,
+            on_value="1",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CO_STATUS,
+            device_class=DEVICE_CLASS_SAFETY,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     "hps": (
@@ -76,6 +93,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.CH2O_STATE,
             device_class=DEVICE_CLASS_SAFETY,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Methane Detector
+    # https://developer.tuya.com/en/docs/iot/categoryjwbj?id=Kaiuz40u98lkm
+    "jwbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CH4_SENSOR_STATE,
+            device_class=DEVICE_CLASS_GAS,
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
@@ -98,6 +125,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_TAMPER,
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
+        TAMPER_BINARY_SENSOR,
     ),
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
@@ -106,6 +134,31 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=DPCode.PIR,
             device_class=DEVICE_CLASS_MOTION,
             on_value="pir",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # PM2.5 Sensor
+    # https://developer.tuya.com/en/docs/iot/categorypm25?id=Kaiuz3qof3yfu
+    "pm2.5": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PM25_STATE,
+            device_class=DEVICE_CLASS_SAFETY,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Gas Detector
+    # https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
+    "rqbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.GAS_SENSOR_STATUS,
+            device_class=DEVICE_CLASS_GAS,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.GAS_SENSOR_STATE,
+            device_class=DEVICE_CLASS_GAS,
+            on_value="1",
         ),
         TAMPER_BINARY_SENSOR,
     ),
@@ -125,6 +178,43 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.SOS_STATE,
             device_class=DEVICE_CLASS_SAFETY,
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Volatile Organic Compound Sensor
+    # Note: Undocumented in cloud API docs, based on test device
+    "voc": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.VOC_STATE,
+            device_class=DEVICE_CLASS_SAFETY,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Temperature and Humidity Sensor
+    # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
+    "wsdcg": (TAMPER_BINARY_SENSOR,),
+    # Pressure Sensor
+    # https://developer.tuya.com/en/docs/iot/categoryylcg?id=Kaiuz3kc2e4gm
+    "ylcg": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PRESSURE_STATE,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_STATUS,
+            device_class=DEVICE_CLASS_SMOKE,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_STATE,
+            device_class=DEVICE_CLASS_SMOKE,
+            on_value="1",
         ),
         TAMPER_BINARY_SENSOR,
     ),

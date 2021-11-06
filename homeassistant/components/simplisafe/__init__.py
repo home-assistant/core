@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable
 from datetime import timedelta
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from simplipy import API
-from simplipy.device import Device
+from simplipy.device import Device, DeviceTypes
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
@@ -22,17 +22,43 @@ from simplipy.system.v3 import (
     VOLUME_OFF,
     SystemV3,
 )
+from simplipy.websocket import (
+    EVENT_AUTOMATIC_TEST,
+    EVENT_CAMERA_MOTION_DETECTED,
+    EVENT_CONNECTION_LOST,
+    EVENT_CONNECTION_RESTORED,
+    EVENT_DEVICE_TEST,
+    EVENT_DOORBELL_DETECTED,
+    EVENT_LOCK_LOCKED,
+    EVENT_LOCK_UNLOCKED,
+    EVENT_POWER_OUTAGE,
+    EVENT_POWER_RESTORED,
+    EVENT_SECRET_ALERT_TRIGGERED,
+    EVENT_SENSOR_PAIRED_AND_NAMED,
+    EVENT_USER_INITIATED_TEST,
+    WebsocketEvent,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_TOKEN
-from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
+from homeassistant.const import (
+    ATTR_CODE,
+    CONF_CODE,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
@@ -54,17 +80,35 @@ from .const import (
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
     CONF_USER_ID,
-    DATA_CLIENT,
     DOMAIN,
     LOGGER,
 )
 
-EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
+ATTR_CATEGORY = "category"
+ATTR_LAST_EVENT_CHANGED_BY = "last_event_changed_by"
+ATTR_LAST_EVENT_INFO = "last_event_info"
+ATTR_LAST_EVENT_SENSOR_NAME = "last_event_sensor_name"
+ATTR_LAST_EVENT_SENSOR_SERIAL = "last_event_sensor_serial"
+ATTR_LAST_EVENT_SENSOR_TYPE = "last_event_sensor_type"
+ATTR_LAST_EVENT_TIMESTAMP = "last_event_timestamp"
+ATTR_LAST_EVENT_TYPE = "last_event_type"
+ATTR_LAST_EVENT_TYPE = "last_event_type"
+ATTR_MESSAGE = "message"
+ATTR_PIN_LABEL = "label"
+ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
+ATTR_PIN_VALUE = "pin"
+ATTR_SYSTEM_ID = "system_id"
+ATTR_TIMESTAMP = "timestamp"
 
 DEFAULT_ENTITY_MODEL = "alarm_control_panel"
 DEFAULT_ENTITY_NAME = "Alarm Control Panel"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
+
+DISPATCHER_TOPIC_WEBSOCKET_EVENT = "simplisafe_websocket_event_{0}"
+
+EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
+EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
 PLATFORMS = (
     "alarm_control_panel",
@@ -73,15 +117,12 @@ PLATFORMS = (
     "sensor",
 )
 
-ATTR_CATEGORY = "category"
-ATTR_MESSAGE = "message"
-ATTR_PIN_LABEL = "label"
-ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
-ATTR_PIN_VALUE = "pin"
-ATTR_SYSTEM_ID = "system_id"
-ATTR_TIMESTAMP = "timestamp"
-
-VOLUMES = [VOLUME_OFF, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_HIGH]
+VOLUME_MAP = {
+    "high": VOLUME_HIGH,
+    "low": VOLUME_LOW,
+    "medium": VOLUME_MEDIUM,
+    "off": VOLUME_OFF,
+}
 
 SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
 
@@ -100,8 +141,8 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
             lambda value: value.total_seconds(),
             vol.Range(min=30, max=480),
         ),
-        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
-        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
+        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
+        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
         vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
@@ -120,10 +161,21 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         ),
         vol.Optional(ATTR_LIGHT): cv.boolean,
         vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-            vol.Coerce(int), vol.In(VOLUMES)
+            vol.In(VOLUME_MAP), VOLUME_MAP.get
         ),
     }
 )
+
+WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
+WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
+    EVENT_AUTOMATIC_TEST,
+    EVENT_CAMERA_MOTION_DETECTED,
+    EVENT_DOORBELL_DETECTED,
+    EVENT_DEVICE_TEST,
+    EVENT_SECRET_ALERT_TRIGGERED,
+    EVENT_SENSOR_PAIRED_AND_NAMED,
+    EVENT_USER_INITIATED_TEST,
+]
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
@@ -153,11 +205,12 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-async def async_register_base_station(
+@callback
+def _async_register_base_station(
     hass: HomeAssistant, entry: ConfigEntry, system: SystemV2 | SystemV3
 ) -> None:
     """Register a new bridge."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, system.system_id)},
@@ -169,9 +222,6 @@ async def async_register_base_station(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     _async_standardize_config_entry(hass, entry)
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
@@ -194,7 +244,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = simplisafe
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = simplisafe
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @callback
@@ -316,6 +368,7 @@ class SimpliSafe:
         self._hass = hass
         self._system_notifications: dict[int, set[SystemNotification]] = {}
         self.entry = entry
+        self.initial_event_to_use: dict[int, dict[str, Any]] = {}
         self.systems: dict[int, SystemV2 | SystemV3] = {}
 
         # This will get filled in by async_init:
@@ -358,15 +411,84 @@ class SimpliSafe:
 
         self._system_notifications[system.system_id] = latest_notifications
 
+    async def _async_websocket_on_connect(self) -> None:
+        """Define a callback for connecting to the websocket."""
+        if TYPE_CHECKING:
+            assert self._api.websocket
+        await self._api.websocket.async_listen()
+
+    @callback
+    def _async_websocket_on_event(self, event: WebsocketEvent) -> None:
+        """Define a callback for receiving a websocket event."""
+        LOGGER.debug("New websocket event: %s", event)
+
+        async_dispatcher_send(
+            self._hass, DISPATCHER_TOPIC_WEBSOCKET_EVENT.format(event.system_id), event
+        )
+
+        if event.event_type not in WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT:
+            return
+
+        sensor_type: str | None
+        if event.sensor_type:
+            sensor_type = event.sensor_type.name
+        else:
+            sensor_type = None
+
+        self._hass.bus.async_fire(
+            EVENT_SIMPLISAFE_EVENT,
+            event_data={
+                ATTR_LAST_EVENT_CHANGED_BY: event.changed_by,
+                ATTR_LAST_EVENT_TYPE: event.event_type,
+                ATTR_LAST_EVENT_INFO: event.info,
+                ATTR_LAST_EVENT_SENSOR_NAME: event.sensor_name,
+                ATTR_LAST_EVENT_SENSOR_SERIAL: event.sensor_serial,
+                ATTR_LAST_EVENT_SENSOR_TYPE: sensor_type,
+                ATTR_SYSTEM_ID: event.system_id,
+                ATTR_LAST_EVENT_TIMESTAMP: event.timestamp,
+            },
+        )
+
     async def async_init(self) -> None:
-        """Initialize the data class."""
+        """Initialize the SimpliSafe "manager" class."""
+        if TYPE_CHECKING:
+            assert self._api.refresh_token
+            assert self._api.websocket
+
+        self._api.websocket.add_connect_listener(self._async_websocket_on_connect)
+        self._api.websocket.add_event_listener(self._async_websocket_on_event)
+        asyncio.create_task(self._api.websocket.async_connect())
+
+        async def async_websocket_disconnect_listener(_: Event) -> None:
+            """Define an event handler to disconnect from the websocket."""
+            if TYPE_CHECKING:
+                assert self._api.websocket
+
+            if self._api.websocket.connected:
+                await self._api.websocket.async_disconnect()
+
+        self.entry.async_on_unload(
+            self._hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect_listener
+            )
+        )
+
         self.systems = await self._api.async_get_systems()
         for system in self.systems.values():
             self._system_notifications[system.system_id] = set()
 
-            self._hass.async_create_task(
-                async_register_base_station(self._hass, self.entry, system)
-            )
+            _async_register_base_station(self._hass, self.entry, system)
+
+            # Future events will come from the websocket, but since subscription to the
+            # websocket doesn't provide the most recent event, we grab it from the REST
+            # API to ensure event-related attributes aren't empty on startup:
+            try:
+                self.initial_event_to_use[
+                    system.system_id
+                ] = await system.async_get_latest_event()
+            except SimplipyError as err:
+                LOGGER.error("Error while fetching initial event: %s", err)
+                self.initial_event_to_use[system.system_id] = {}
 
         self.coordinator = DataUpdateCoordinator(
             self._hass,
@@ -389,8 +511,6 @@ class SimpliSafe:
             self._api.add_refresh_token_listener(async_save_refresh_token)
         )
 
-        if TYPE_CHECKING:
-            assert self._api.refresh_token
         async_save_refresh_token(self._api.refresh_token)
 
     async def async_update(self) -> None:
@@ -427,6 +547,7 @@ class SimpliSafeEntity(CoordinatorEntity):
         system: SystemV2 | SystemV3,
         *,
         device: Device | None = None,
+        additional_websocket_events: Iterable[str] | None = None,
     ) -> None:
         """Initialize."""
         assert simplisafe.coordinator
@@ -441,14 +562,30 @@ class SimpliSafeEntity(CoordinatorEntity):
             device_name = DEFAULT_ENTITY_NAME
             serial = system.serial
 
-        self._attr_extra_state_attributes = {ATTR_SYSTEM_ID: system.system_id}
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, serial)},
-            "manufacturer": "SimpliSafe",
-            "model": model,
-            "name": device_name,
-            "via_device": (DOMAIN, system.system_id),
+        try:
+            device_type = DeviceTypes(
+                simplisafe.initial_event_to_use[system.system_id].get("sensorType")
+            )
+        except ValueError:
+            device_type = DeviceTypes.unknown
+
+        event = simplisafe.initial_event_to_use[system.system_id]
+
+        self._attr_extra_state_attributes = {
+            ATTR_LAST_EVENT_INFO: event.get("info"),
+            ATTR_LAST_EVENT_SENSOR_NAME: event.get("sensorName"),
+            ATTR_LAST_EVENT_SENSOR_TYPE: device_type.name,
+            ATTR_LAST_EVENT_TIMESTAMP: event.get("eventTimestamp"),
+            ATTR_SYSTEM_ID: system.system_id,
         }
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial)},
+            manufacturer="SimpliSafe",
+            model=model,
+            name=device_name,
+            via_device=(DOMAIN, system.system_id),
+        )
 
         self._attr_name = f"{system.address} {device_name} {' '.join([w.title() for w in model.split('_')])}"
         self._attr_unique_id = serial
@@ -456,6 +593,14 @@ class SimpliSafeEntity(CoordinatorEntity):
         self._online = True
         self._simplisafe = simplisafe
         self._system = system
+        self._websocket_events_to_listen_for = [
+            EVENT_CONNECTION_LOST,
+            EVENT_CONNECTION_RESTORED,
+            EVENT_POWER_OUTAGE,
+            EVENT_POWER_RESTORED,
+        ]
+        if additional_websocket_events:
+            self._websocket_events_to_listen_for += additional_websocket_events
 
     @property
     def available(self) -> bool:
@@ -478,12 +623,75 @@ class SimpliSafeEntity(CoordinatorEntity):
         self.async_update_from_rest_api()
         self.async_write_ha_state()
 
+    @callback
+    def _handle_websocket_update(self, event: WebsocketEvent) -> None:
+        """Update the entity with new websocket data."""
+        # Ignore this event if it belongs to a system other than this one:
+        if event.system_id != self._system.system_id:
+            return
+
+        # Ignore this event if this entity hasn't expressed interest in its type:
+        if event.event_type not in self._websocket_events_to_listen_for:
+            return
+
+        # Ignore this event if it belongs to a entity with a different serial
+        # number from this one's:
+        if (
+            self._device
+            and event.event_type in WEBSOCKET_EVENTS_REQUIRING_SERIAL
+            and event.sensor_serial != self._device.serial
+        ):
+            return
+
+        if event.event_type in (EVENT_CONNECTION_LOST, EVENT_POWER_OUTAGE):
+            self._online = False
+        elif event.event_type in (EVENT_CONNECTION_RESTORED, EVENT_POWER_RESTORED):
+            self._online = True
+
+        # It's uncertain whether SimpliSafe events will still propagate down the
+        # websocket when the base station is offline. Just in case, we guard against
+        # further action until connection is restored:
+        if not self._online:
+            return
+
+        sensor_type: str | None
+        if event.sensor_type:
+            sensor_type = event.sensor_type.name
+        else:
+            sensor_type = None
+
+        self._attr_extra_state_attributes.update(
+            {
+                ATTR_LAST_EVENT_INFO: event.info,
+                ATTR_LAST_EVENT_SENSOR_NAME: event.sensor_name,
+                ATTR_LAST_EVENT_SENSOR_TYPE: sensor_type,
+                ATTR_LAST_EVENT_TIMESTAMP: event.timestamp,
+            }
+        )
+
+        self.async_update_from_websocket_event(event)
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                DISPATCHER_TOPIC_WEBSOCKET_EVENT.format(self._system.system_id),
+                self._handle_websocket_update,
+            )
+        )
+
         self.async_update_from_rest_api()
 
     @callback
     def async_update_from_rest_api(self) -> None:
-        """Update the entity with the provided REST API data."""
+        """Update the entity when new data comes from the REST API."""
+        raise NotImplementedError()
+
+    @callback
+    def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
+        """Update the entity when new data comes from the websocket."""
         raise NotImplementedError()

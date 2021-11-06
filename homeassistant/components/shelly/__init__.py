@@ -132,7 +132,13 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            identifiers={(DOMAIN, entry.unique_id)}, connections=set()
+            identifiers=set(),
+            connections={
+                (
+                    device_registry.CONNECTION_NETWORK_MAC,
+                    device_registry.format_mac(entry.unique_id),
+                )
+            },
         )
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None

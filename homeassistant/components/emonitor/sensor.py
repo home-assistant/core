@@ -94,9 +94,9 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return info about the emonitor device."""
-        return {
-            "name": name_short_mac(self.mac_address[-6:]),
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            "manufacturer": "Powerhouse Dynamics, Inc.",
-            "sw_version": self.coordinator.data.hardware.firmware_version,
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            manufacturer="Powerhouse Dynamics, Inc.",
+            name=name_short_mac(self.mac_address[-6:]),
+            sw_version=self.coordinator.data.hardware.firmware_version,
+        )

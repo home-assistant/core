@@ -540,3 +540,9 @@ async def test_custom_integration_missing(hass, caplog):
 
         with pytest.raises(loader.IntegrationNotFound):
             await loader.async_get_integration(hass, "test1")
+
+
+async def test_validation(hass):
+    """Test we raise if invalid domain passed in."""
+    with pytest.raises(ValueError):
+        await loader.async_get_integration(hass, "some.thing")

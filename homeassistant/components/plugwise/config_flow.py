@@ -109,7 +109,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # unique_id is needed here, to be able to determine whether the discovered device is known, or not.
         unique_id = self.discovery_info.get("hostname").split(".")[0]
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured({CONF_HOST: self.discovery_info[CONF_HOST]})
 
         if DEFAULT_USERNAME not in unique_id:
             self.discovery_info[CONF_USERNAME] = STRETCH_USERNAME

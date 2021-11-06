@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2\u8981\u7d20\u30b3\u30fc\u30c9"
+                },
+                "title": "\u30cf\u30a4\u30d6(Hive)2\u8981\u7d20\u8a8d\u8a3c\u3002"
+            }
+        }
+    }
+}

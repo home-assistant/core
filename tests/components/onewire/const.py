@@ -3,7 +3,13 @@ from pi1wire import InvalidCRCException, UnsupportResponseException
 from pyownet.protocol import Error as ProtocolError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.onewire.const import DOMAIN, PRESSURE_CBAR
+from homeassistant.components.onewire.const import (
+    DOMAIN,
+    MANUFACTURER_EDS,
+    MANUFACTURER_HOBBYBOARDS,
+    MANUFACTURER_MAXIM,
+    PRESSURE_CBAR,
+)
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -20,6 +26,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_VIA_DEVICE,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -49,7 +56,6 @@ FIXED_ATTRIBUTES = (
     ATTR_UNIT_OF_MEASUREMENT,
 )
 
-MANUFACTURER = "Maxim Integrated"
 
 MOCK_OWPROXY_DEVICES = {
     "00.111111111111": {
@@ -64,7 +70,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "05.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2405",
             ATTR_NAME: "05.111111111111",
         },
@@ -84,7 +90,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "10.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS18S20",
             ATTR_NAME: "10.111111111111",
         },
@@ -106,7 +112,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "12.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2406",
             ATTR_NAME: "12.111111111111",
         },
@@ -185,7 +191,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2423",
             ATTR_NAME: "1D.111111111111",
         },
@@ -212,12 +218,21 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS2409",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "1F.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
-            ATTR_MODEL: "DS2409",
-            ATTR_NAME: "1F.111111111111",
-        },
+        ATTR_DEVICE_INFO: [
+            {
+                ATTR_IDENTIFIERS: {(DOMAIN, "1F.111111111111")},
+                ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
+                ATTR_MODEL: "DS2409",
+                ATTR_NAME: "1F.111111111111",
+            },
+            {
+                ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
+                ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
+                ATTR_MODEL: "DS2423",
+                ATTR_NAME: "1D.111111111111",
+                ATTR_VIA_DEVICE: (DOMAIN, "1F.111111111111"),
+            },
+        ],
         "branches": {
             "aux": {},
             "main": {
@@ -225,12 +240,6 @@ MOCK_OWPROXY_DEVICES = {
                     ATTR_INJECT_READS: [
                         b"DS2423",  # read device type
                     ],
-                    ATTR_DEVICE_INFO: {
-                        ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
-                        ATTR_MANUFACTURER: MANUFACTURER,
-                        ATTR_MODEL: "DS2423",
-                        ATTR_NAME: "1D.111111111111",
-                    },
                     SENSOR_DOMAIN: [
                         {
                             ATTR_DEVICE_FILE: "/1F.111111111111/main/1D.111111111111/counter.A",
@@ -261,7 +270,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "22.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS1822",
             ATTR_NAME: "22.111111111111",
         },
@@ -283,7 +292,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "26.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2438",
             ATTR_NAME: "26.111111111111",
         },
@@ -405,7 +414,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "28.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS18B20",
             ATTR_NAME: "28.111111111111",
         },
@@ -427,7 +436,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "29.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2408",
             ATTR_NAME: "29.111111111111",
         },
@@ -610,7 +619,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "3A.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2413",
             ATTR_NAME: "3A.111111111111",
         },
@@ -653,7 +662,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "3B.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS1825",
             ATTR_NAME: "3B.111111111111",
         },
@@ -675,7 +684,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "42.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS28EA00",
             ATTR_NAME: "42.111111111111",
         },
@@ -697,7 +706,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "EF.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_HOBBYBOARDS,
             ATTR_MODEL: "HobbyBoards_EF",
             ATTR_NAME: "EF.111111111111",
         },
@@ -741,7 +750,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "EF.111111111112")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_HOBBYBOARDS,
             ATTR_MODEL: "HB_MOISTURE_METER",
             ATTR_NAME: "EF.111111111112",
         },
@@ -791,8 +800,8 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "7E.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
-            ATTR_MODEL: "EDS",
+            ATTR_MANUFACTURER: MANUFACTURER_EDS,
+            ATTR_MODEL: "EDS0068",
             ATTR_NAME: "7E.111111111111",
         },
         SENSOR_DOMAIN: [
@@ -841,8 +850,8 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "7E.222222222222")},
-            ATTR_MANUFACTURER: MANUFACTURER,
-            ATTR_MODEL: "EDS",
+            ATTR_MANUFACTURER: MANUFACTURER_EDS,
+            ATTR_MODEL: "EDS0066",
             ATTR_NAME: "7E.222222222222",
         },
         SENSOR_DOMAIN: [
@@ -875,7 +884,7 @@ MOCK_SYSBUS_DEVICES = {
     "10-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "10-111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "10",
             ATTR_NAME: "10-111111111111",
         },
@@ -900,7 +909,7 @@ MOCK_SYSBUS_DEVICES = {
     "22-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "22-111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "22",
             ATTR_NAME: "22-111111111111",
         },
@@ -922,7 +931,7 @@ MOCK_SYSBUS_DEVICES = {
     "28-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "28-111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "28",
             ATTR_NAME: "28-111111111111",
         },
@@ -947,7 +956,7 @@ MOCK_SYSBUS_DEVICES = {
     "3B-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "3B-111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "3B",
             ATTR_NAME: "3B-111111111111",
         },
@@ -966,7 +975,7 @@ MOCK_SYSBUS_DEVICES = {
     "42-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "42-111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "42",
             ATTR_NAME: "42-111111111111",
         },
@@ -985,7 +994,7 @@ MOCK_SYSBUS_DEVICES = {
     "42-111111111112": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "42-111111111112")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "42",
             ATTR_NAME: "42-111111111112",
         },
@@ -1004,7 +1013,7 @@ MOCK_SYSBUS_DEVICES = {
     "42-111111111113": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "42-111111111113")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "42",
             ATTR_NAME: "42-111111111113",
         },

@@ -39,8 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # strip out the stale options CONF_RESOURCES
     if CONF_RESOURCES in entry.options:
+        new_data = {**entry.data, CONF_RESOURCES: entry.options[CONF_RESOURCES]}
         new_options = {k: v for k, v in entry.options.items() if k != CONF_RESOURCES}
-        hass.config_entries.async_update_entry(entry, options=new_options)
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, options=new_options
+        )
 
     config = entry.data
     host = config[CONF_HOST]

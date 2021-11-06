@@ -63,8 +63,7 @@ async def websocket_get_device(
     if not (ha_device := dev_registry.async_get(msg[DEVICE_ID])):
         notify_device_not_found(connection, msg, HA_DEVICE_NOT_FOUND)
         return
-    device = get_insteon_device_from_ha_device(ha_device)
-    if not device:
+    if not (device := get_insteon_device_from_ha_device(ha_device)):
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
     ha_name = compute_device_name(ha_device)

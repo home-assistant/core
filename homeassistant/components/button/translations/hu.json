@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "press": "Nyomja meg: {entity_name}"
+        },
+        "trigger_type": {
+            "pressed": "{entity_name} megnyomva"
+        }
+    },
+    "title": "Gomb"
+}

@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
@@ -154,15 +155,15 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         self._attr_name = self._system["name"]
         self._attr_unique_id = unique_id
         self._attr_icon = "mdi:television-ambient-light"
-        self._attr_device_info = {
-            "name": self._system["name"],
-            "identifiers": {
+        self._attr_device_info = DeviceInfo(
+            identifiers={
                 (DOMAIN, self._attr_unique_id),
             },
-            "model": self._system.get("model"),
-            "manufacturer": "Philips",
-            "sw_version": self._system.get("softwareversion"),
-        }
+            manufacturer="Philips",
+            model=self._system.get("model"),
+            name=self._system["name"],
+            sw_version=self._system.get("softwareversion"),
+        )
 
         self._update_from_coordinator()
 
@@ -199,8 +200,7 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         current = self._tv.ambilight_current_configuration
         if current and self._tv.ambilight_mode != "manual":
             if current["isExpert"]:
-                settings = _get_settings(current)
-                if settings:
+                if settings := _get_settings(current):
                     return _get_effect(
                         EFFECT_EXPERT, current["styleName"], settings["algorithm"]
                     )

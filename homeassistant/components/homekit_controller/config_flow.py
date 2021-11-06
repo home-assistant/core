@@ -75,8 +75,7 @@ def ensure_pin_format(pin, allow_insecure_setup_codes=None):
 
     If incorrect code is entered, an exception is raised.
     """
-    match = PIN_FORMAT.search(pin.strip())
-    if not match:
+    if not (match := PIN_FORMAT.search(pin.strip())):
         raise aiohomekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
     pin_without_dashes = "".join(match.groups())
     if not allow_insecure_setup_codes and pin_without_dashes in INSECURE_CODES:
@@ -472,8 +471,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # available. Otherwise request a fresh copy from the API.
         # This removes the 'accessories' key from pairing_data at
         # the same time.
-        accessories = pairing_data.pop("accessories", None)
-        if not accessories:
+        if not (accessories := pairing_data.pop("accessories", None)):
             accessories = await pairing.list_accessories_and_characteristics()
 
         bridge_info = get_bridge_information(accessories)

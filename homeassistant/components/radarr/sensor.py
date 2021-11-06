@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from http import HTTPStatus
 import logging
 import time
 from typing import Any
@@ -29,7 +30,6 @@ from homeassistant.const import (
     DATA_TERABYTES,
     DATA_YOTTABYTES,
     DATA_ZETTABYTES,
-    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
@@ -215,7 +215,7 @@ class RadarrSensor(SensorEntity):
             self._attr_native_value = None
             return
 
-        if res.status_code == HTTP_OK:
+        if res.status_code == HTTPStatus.OK:
             if sensor_type in ("upcoming", "movies", "commands"):
                 self.data = res.json()
                 self._attr_native_value = len(self.data)
