@@ -10,12 +10,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 
 from . import PyNUTData
 from .const import (
@@ -23,8 +21,6 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    KEY_STATUS,
-    KEY_STATUS_DISPLAY,
     SENSOR_TYPES,
 )
 
@@ -48,25 +44,13 @@ def _base_schema(discovery_info):
     return vol.Schema(base_schema)
 
 
-def _resource_schema_base(available_resources, selected_resources):
-    """Resource selection schema."""
+def _check_available_resouces(available_resources):
+    """Check if exists valid resource to monitor."""
 
-    known_available_resources = {
-        sensor_id: sensor_desc.name
-        for sensor_id, sensor_desc in SENSOR_TYPES.items()
-        if sensor_id in available_resources
-    }
-
-    if KEY_STATUS in known_available_resources:
-        known_available_resources[KEY_STATUS_DISPLAY] = SENSOR_TYPES[
-            KEY_STATUS_DISPLAY
-        ].name
-
-    return {
-        vol.Required(CONF_RESOURCES, default=selected_resources): cv.multi_select(
-            known_available_resources
-        )
-    }
+    for sensor_id in SENSOR_TYPES:
+        if sensor_id in available_resources:
+            return True
+    return False
 
 
 def _ups_schema(ups_list):
@@ -112,7 +96,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the nut config flow."""
         self.nut_config = {}
-        self.available_resources = {}
         self.discovery_info = {}
         self.ups_list = None
         self.title = None
@@ -148,8 +131,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 if self._host_port_alias_already_configured(self.nut_config):
                     return self.async_abort(reason="already_configured")
-                self.available_resources.update(info["available_resources"])
-                return await self.async_step_resources()
+                if not _check_available_resouces(info["available_resources"]):
+                    return self.async_abort(reason="resources_not_available")
+                title = _format_host_port_alias(self.nut_config)
+                return self.async_create_entry(title=title, data=self.nut_config)
 
         return self.async_show_form(
             step_id="user", data_schema=_base_schema(self.discovery_info), errors=errors
@@ -165,28 +150,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
             info, errors = await self._async_validate_or_error(self.nut_config)
             if not errors:
-                self.available_resources.update(info["available_resources"])
-                return await self.async_step_resources()
+                if not _check_available_resouces(info["available_resources"]):
+                    return self.async_abort(reason="resources_not_available")
+                title = _format_host_port_alias(self.nut_config)
+                return self.async_create_entry(title=title, data=self.nut_config)
 
         return self.async_show_form(
             step_id="ups",
             data_schema=_ups_schema(self.ups_list),
             errors=errors,
         )
-
-    async def async_step_resources(self, user_input=None):
-        """Handle the picking the resources."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="resources",
-                data_schema=vol.Schema(
-                    _resource_schema_base(self.available_resources, [])
-                ),
-            )
-
-        self.nut_config.update(user_input)
-        title = _format_host_port_alias(self.nut_config)
-        return self.async_create_entry(title=title, data=self.nut_config)
 
     def _host_port_alias_already_configured(self, user_input):
         """See if we already have a nut entry matching user input configured."""

@@ -16,12 +16,6 @@
           "alias": "Alias",
           "resources": "Resources"
         }
-      },
-      "resources": {
-        "title": "Choose the Resources to Monitor",
-        "data": {
-          "resources": "Resources"
-        }
       }
     },
     "error": {
@@ -29,7 +23,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "resources_not_available": "No known resources found"
     }
   },
   "options": {
