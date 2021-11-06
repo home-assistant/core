@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.update_coordinator import (
@@ -22,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "supla"
 CONF_SERVER = "server"
 CONF_SERVERS = "servers"
+CONF_NO_CHECK_CERTIFICATE = "no_check_certificate"
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -44,7 +46,10 @@ SERVER_CONFIG = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {vol.Required(CONF_SERVERS): vol.All(cv.ensure_list, [SERVER_CONFIG])}
+            {
+                vol.Required(CONF_SERVERS): vol.All(cv.ensure_list, [SERVER_CONFIG]),
+                vol.Optional(CONF_NO_CHECK_CERTIFICATE): cv.boolean,
+            }
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -58,7 +63,12 @@ async def async_setup(hass, base_config):
 
     hass.data[DOMAIN] = {SUPLA_SERVERS: {}, SUPLA_COORDINATORS: {}}
 
-    session = async_get_clientsession(hass)
+    no_check_certificate = base_config[DOMAIN].get(CONF_NO_CHECK_CERTIFICATE, False)
+
+    if no_check_certificate:
+        session = aiohttp_client.async_create_clientsession(hass, verify_ssl=False)
+    else:
+        session = async_get_clientsession(hass)
 
     for server_conf in server_confs:
 
