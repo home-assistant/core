@@ -176,7 +176,7 @@ class WebSocketHandler:
 
             # Auth Phase
             try:
-                with async_timeout.timeout(10):
+                async with async_timeout.timeout(10):
                     msg = await wsock.receive()
             except asyncio.TimeoutError as err:
                 disconnect_warn = "Did not receive auth message within 10 seconds"

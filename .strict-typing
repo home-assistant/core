@@ -24,6 +24,7 @@ homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
 homeassistant.components.braviatv.*
 homeassistant.components.brother.*
+homeassistant.components.button.*
 homeassistant.components.calendar.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
@@ -95,6 +96,7 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.proximity.*
 homeassistant.components.rainmachine.*
+homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
@@ -134,6 +136,7 @@ homeassistant.components.uptime.*
 homeassistant.components.uptimerobot.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
+homeassistant.components.vlc_telnet.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*

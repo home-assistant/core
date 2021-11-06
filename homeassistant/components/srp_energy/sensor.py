@@ -44,7 +44,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             # Fetch srp_energy data
             start_date = datetime.now() + timedelta(days=-1)
             end_date = datetime.now()
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 hourly_usage = await hass.async_add_executor_job(
                     api.usage,
                     start_date,

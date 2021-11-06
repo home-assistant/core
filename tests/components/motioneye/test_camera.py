@@ -414,9 +414,9 @@ async def test_set_text_overlay_bad_entity_identifier(hass: HomeAssistant) -> No
     }
 
     client.reset_mock()
-    await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
-    await hass.async_block_till_done()
-    assert not client.async_set_camera.called
+    with pytest.raises(vol.error.MultipleInvalid):
+        await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
+        await hass.async_block_till_done()
 
 
 async def test_set_text_overlay_bad_empty(hass: HomeAssistant) -> None:

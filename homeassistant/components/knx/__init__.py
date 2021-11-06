@@ -10,15 +10,26 @@ from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
-from xknx.exceptions import XKNXException
+from xknx.exceptions import ConversionError, XKNXException
 from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import AddressFilter, Telegram
-from xknx.telegram.address import parse_device_group_address
+from xknx.telegram.address import (
+    DeviceGroupAddress,
+    GroupAddress,
+    InternalGroupAddress,
+    parse_device_group_address,
+)
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_EVENT,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery
@@ -44,6 +55,7 @@ from .schema import (
     ClimateSchema,
     ConnectionSchema,
     CoverSchema,
+    EventSchema,
     ExposeSchema,
     FanSchema,
     LightSchema,
@@ -81,6 +93,7 @@ CONFIG_SCHEMA = vol.Schema(
             cv.deprecated(CONF_KNX_INDIVIDUAL_ADDRESS),
             cv.deprecated(ConnectionSchema.CONF_KNX_MCAST_GRP),
             cv.deprecated(ConnectionSchema.CONF_KNX_MCAST_PORT),
+            cv.deprecated(CONF_KNX_EVENT_FILTER),
             # deprecated since 2021.4
             cv.deprecated("config_file"),
             # deprecated since 2021.2
@@ -93,6 +106,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_KNX_EVENT_FILTER, default=[]): vol.All(
                         cv.ensure_list, [cv.string]
                     ),
+                    **EventSchema.SCHEMA,
                     **ExposeSchema.platform_node(),
                     **BinarySensorSchema.platform_node(),
                     **ClimateSchema.platform_node(),
@@ -153,6 +167,7 @@ SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
             cv.ensure_list,
             [ga_validator],
         ),
+        vol.Optional(CONF_TYPE): sensor_type_validator,
         vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
     }
 )
@@ -322,9 +337,14 @@ class KNXModule:
         self.entry = entry
 
         self.init_xknx()
-        self._knx_event_callback: TelegramQueue.Callback = self.register_callback()
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
+        )
+
+        self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
+        self._group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
+        self._knx_event_callback: TelegramQueue.Callback = (
+            self.register_event_callback()
         )
 
         self.entry.async_on_unload(
@@ -369,15 +389,47 @@ class KNXModule:
 
         return ConnectionConfig(auto_reconnect=True)
 
+    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
+        """Call invoked after a KNX connection state change was received."""
+        self.connected = state == XknxConnectionState.CONNECTED
+        if tasks := [device.after_update() for device in self.xknx.devices]:
+            await asyncio.gather(*tasks)
+
     async def telegram_received_cb(self, telegram: Telegram) -> None:
         """Call invoked after a KNX telegram was received."""
-        data = None
         # Not all telegrams have serializable data.
+        data: int | tuple[int, ...] | None = None
+        value = None
         if (
             isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse))
             and telegram.payload.value is not None
+            and isinstance(
+                telegram.destination_address, (GroupAddress, InternalGroupAddress)
+            )
         ):
             data = telegram.payload.value.value
+
+            if isinstance(data, tuple):
+                if transcoder := (
+                    self._group_address_transcoder.get(telegram.destination_address)
+                    or next(
+                        (
+                            _transcoder
+                            for _filter, _transcoder in self._address_filter_transcoder.items()
+                            if _filter.match(telegram.destination_address)
+                        ),
+                        None,
+                    )
+                ):
+                    try:
+                        value = transcoder.from_knx(data)
+                    except ConversionError as err:
+                        _LOGGER.warning(
+                            "Error in `knx_event` at decoding type '%s' from telegram %s\n%s",
+                            transcoder.__name__,
+                            telegram,
+                            err,
+                        )
 
         self.hass.bus.async_fire(
             "knx_event",
@@ -385,22 +437,29 @@ class KNXModule:
                 "data": data,
                 "destination": str(telegram.destination_address),
                 "direction": telegram.direction.value,
+                "value": value,
                 "source": str(telegram.source_address),
                 "telegramtype": telegram.payload.__class__.__name__,
             },
         )
 
-    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
-        """Call invoked after a KNX connection state change was received."""
-        self.connected = state == XknxConnectionState.CONNECTED
-        if tasks := [device.after_update() for device in self.xknx.devices]:
-            await asyncio.gather(*tasks)
+    def register_event_callback(self) -> TelegramQueue.Callback:
+        """Register callback for knx_event within XKNX TelegramQueue."""
+        # backwards compatibility for deprecated CONF_KNX_EVENT_FILTER
+        # use `address_filters = []` when this is not needed anymore
+        address_filters = list(
+            map(AddressFilter, self.config[DOMAIN][CONF_KNX_EVENT_FILTER])
+        )
+        for filter_set in self.config[DOMAIN][CONF_EVENT]:
+            _filters = list(map(AddressFilter, filter_set[KNX_ADDRESS]))
+            address_filters.extend(_filters)
+            if (dpt := filter_set.get(CONF_TYPE)) and (
+                transcoder := DPTBase.parse_transcoder(dpt)
+            ):
+                self._address_filter_transcoder.update(
+                    {_filter: transcoder for _filter in _filters}  # type: ignore[misc]
+                )
 
-    def register_callback(self) -> TelegramQueue.Callback:
-        """Register callback within XKNX TelegramQueue."""
-        address_filters = [
-            AddressFilter(filter) for filter in self.config[CONF_KNX_EVENT_FILTER]
-        ]
         return self.xknx.telegram_queue.register_telegram_received_cb(
             self.telegram_received_cb,
             address_filters=address_filters,
@@ -411,7 +470,7 @@ class KNXModule:
     async def service_event_register_modify(self, call: ServiceCall) -> None:
         """Service for adding or removing a GroupAddress to the knx_event filter."""
         attr_address = call.data[KNX_ADDRESS]
-        group_addresses = map(parse_device_group_address, attr_address)
+        group_addresses = list(map(parse_device_group_address, attr_address))
 
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
             for group_address in group_addresses:
@@ -422,8 +481,16 @@ class KNXModule:
                         "Service event_register could not remove event for '%s'",
                         str(group_address),
                     )
+                if group_address in self._group_address_transcoder:
+                    del self._group_address_transcoder[group_address]
             return
 
+        if (dpt := call.data.get(CONF_TYPE)) and (
+            transcoder := DPTBase.parse_transcoder(dpt)
+        ):
+            self._group_address_transcoder.update(
+                {_address: transcoder for _address in group_addresses}  # type: ignore[misc]
+            )
         for group_address in group_addresses:
             if group_address in self._knx_event_callback.group_addresses:
                 continue

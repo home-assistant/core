@@ -95,13 +95,13 @@ class SaveRecordWorkerSync:
 
     async def get_segments(self):
         """Return the recorded video segments."""
-        with async_timeout.timeout(TEST_TIMEOUT):
+        async with async_timeout.timeout(TEST_TIMEOUT):
             await self._save_event.wait()
         return self._segments
 
     async def join(self):
         """Verify save worker was invoked and block on shutdown."""
-        with async_timeout.timeout(TEST_TIMEOUT):
+        async with async_timeout.timeout(TEST_TIMEOUT):
             await self._save_event.wait()
         self._save_thread.join(timeout=TEST_TIMEOUT)
         assert not self._save_thread.is_alive()

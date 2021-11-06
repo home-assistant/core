@@ -77,12 +77,14 @@ SCHEMA_TEXT_OVERLAY = vol.In(
 )
 SCHEMA_SERVICE_SET_TEXT = vol.Schema(
     vol.All(
-        {
-            vol.Optional(KEY_TEXT_OVERLAY_LEFT): SCHEMA_TEXT_OVERLAY,
-            vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
-            vol.Optional(KEY_TEXT_OVERLAY_RIGHT): SCHEMA_TEXT_OVERLAY,
-            vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
-        },
+        cv.make_entity_service_schema(
+            {
+                vol.Optional(KEY_TEXT_OVERLAY_LEFT): SCHEMA_TEXT_OVERLAY,
+                vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
+                vol.Optional(KEY_TEXT_OVERLAY_RIGHT): SCHEMA_TEXT_OVERLAY,
+                vol.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
+            },
+        ),
         cv.has_at_least_one_key(
             KEY_TEXT_OVERLAY_LEFT,
             KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
@@ -90,7 +92,6 @@ SCHEMA_SERVICE_SET_TEXT = vol.Schema(
             KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
         ),
     ),
-    extra=vol.ALLOW_EXTRA,
 )
 
 
