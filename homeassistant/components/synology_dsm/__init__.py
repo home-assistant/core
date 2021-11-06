@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
