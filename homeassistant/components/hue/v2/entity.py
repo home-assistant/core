@@ -5,12 +5,20 @@ from aiohue.v2.controllers.base import BaseResourcesController
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.models.clip import CLIPResource
 from aiohue.v2.models.connectivity import ConnectivityServiceStatus
+from aiohue.v2.models.resource import ResourceTypes
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from ..bridge import HueBridge
 from ..const import DOMAIN as DOMAIN
+
+RESOURCE_TYPE_NAMES = {
+    # a simple mapping of hue resource type to Hass name
+    ResourceTypes.LIGHT_LEVEL: "Illuminance",
+    ResourceTypes.DEVICE_POWER: "Battery",
+}
 
 
 class HueBaseEntity(Entity):
@@ -36,6 +44,7 @@ class HueBaseEntity(Entity):
         # Entity class attributes
         self._attr_unique_id = resource.id
         # device is precreated in main handler
+        # this attaches the entity to the precreated device
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device.id)},
         )
@@ -43,7 +52,15 @@ class HueBaseEntity(Entity):
     @property
     def name(self) -> str:
         """Return name for the entity."""
-        return getattr(self.resource, "name", self.device.metadata.name)
+        dev_name = self.device.metadata.name
+        # if resource is a light, use the device name
+        if self.resource.type == ResourceTypes.LIGHT:
+            return dev_name
+        # for sensors etc, use devicename + pretty name of type
+        type_title = RESOURCE_TYPE_NAMES.get(
+            self.resource.type, self.resource.type.value.replace("_", " ").title()
+        )
+        return f"{dev_name}: {type_title}"
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -77,7 +94,8 @@ class HueBaseEntity(Entity):
             self.logger.debug("Received delete for %s", self.entity_id)
             # non-device bound entities like groups and scenes need to be removed here
             # all others will be be removed by device setup in case of device removal
-            self.hass.create_task(self.async_remove(force_remove=True))
+            ent_reg = async_get_entity_registry(self.hass)
+            ent_reg.async_remove(self.entity_id)
         else:
             self.logger.debug("Received status update for %s", self.entity_id)
             self.on_update()

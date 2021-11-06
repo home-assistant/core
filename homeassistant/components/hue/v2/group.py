@@ -5,8 +5,7 @@ from typing import Any
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.groups import GroupedLightController
-from aiohue.v2.models.grouped_light import GroupedLight
+from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
 
 from homeassistant.components.group.light import LightGroup
 from homeassistant.components.light import (
@@ -16,7 +15,9 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_ONOFF,
     COLOR_MODE_XY,
+    SUPPORT_TRANSITION,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -25,6 +26,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
+
+ALLOWED_ERRORS = [
+    "device (groupedLight) has communication issues, command (on) may not have effect",
+    'device (groupedLight) is "soft off", command (on) may not have effect',
+    "device (light) has communication issues, command (on) may not have effect",
+    'device (light) is "soft off", command (on) may not have effect',
+]
 
 
 async def async_setup_entry(
@@ -35,48 +43,53 @@ async def async_setup_entry(
     """Set up Hue groups on light platform."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
-    controller: GroupedLightController = api.groups.grouped_light
 
-    @callback
-    def async_add_grouped_light(event_type: EventType, resource: GroupedLight) -> None:
-        """Add HUE Grouped Light."""
-        if controller.get_zone(resource.id) is None:
-            # filter out special "all lights" group
-            return
-        light = GroupedHueLight(bridge, controller, resource)
-        async_add_entities([light])
+    # to prevent race conditions (groupedlight is created before zone/room)
+    # we create groupedlights from the room/zone and actually use the
+    # underlying grouped_light resource for control
+    for controller in (api.groups.room, api.groups.zone):
 
-    for light in controller:
-        async_add_grouped_light(EventType.RESOURCE_ADDED, light)
+        @callback
+        def async_add_light(event_type: EventType, resource: Room | Zone) -> None:
+            """Add Grouped Light for Hue Room/Zone."""
+            if grouped_light_id := resource.grouped_light:
+                grouped_light = api.groups.grouped_light[grouped_light_id]
+                light = GroupedHueLight(bridge, grouped_light, resource)
+                async_add_entities([light])
 
-    # register listener for new lights
-    config_entry.async_on_unload(
-        controller.subscribe(
-            async_add_grouped_light, event_filter=EventType.RESOURCE_ADDED
+        for item in controller:
+            async_add_light(EventType.RESOURCE_ADDED, item)
+
+        # register listener for new groups
+        config_entry.async_on_unload(
+            controller.subscribe(async_add_light, event_filter=EventType.RESOURCE_ADDED)
         )
-    )
 
 
 class GroupedHueLight(HueBaseEntity, LightGroup):
     """Representation of a Grouped Hue light."""
 
     def __init__(
-        self,
-        bridge: HueBridge,
-        controller: GroupedLightController,
-        resource: GroupedLight,
+        self, bridge: HueBridge, resource: GroupedLight, group: Room | Zone
     ) -> None:
         """Initialize the light."""
+        controller = bridge.api.groups.grouped_light
         super().__init__(bridge, controller, resource)
         self.resource = resource
+        self.group = group
         self.controller = controller
         self.api: HueBridgeV2 = bridge.api
+        self._attr_supported_features |= SUPPORT_TRANSITION
         self._update_values()
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
 
+        # subscribe to group updates
+        self.async_on_remove(
+            self.api.groups.subscribe(self._handle_event, self.group.id)
+        )
         # We need to watch the underlying lights too
         # if we want feedback about color/brightness changes
         if self._attr_supported_color_modes:
@@ -90,9 +103,7 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
     @property
     def name(self) -> str:
         """Return name of room/zone for this grouped light."""
-        if zone := self.controller.get_zone(self.resource.id):
-            return zone.metadata.name
-        return ""
+        return self.group.metadata.name
 
     @property
     def is_on(self) -> bool:
@@ -102,16 +113,15 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
-        if zone := self.controller.get_zone(self.resource.id):
-            scenes = {
-                x.metadata.name for x in self.api.scenes if x.group.rid == zone.id
-            }
-        else:
-            scenes = set()
+        scenes = {
+            x.metadata.name for x in self.api.scenes if x.group.rid == self.group.id
+        }
+        lights = {x.metadata.name for x in self.controller.get_lights(self.resource.id)}
         return {
             "is_hue_group": True,
             "hue_scenes": scenes,
-            "hue_type": zone.type.value if zone else "",
+            "hue_type": self.group.type.value,
+            "lights": lights,
         }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -123,19 +133,34 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
         if brightness is not None:
             # Hue uses a range of [0, 100] to control brightness.
             brightness = round((brightness / 255) * 100)
+        if transition is not None:
+            # hue transition duration is in steps of 100 ms
+            transition = int(transition * 100)
 
-        await self.controller.set_state(
+        await self.bridge.async_request_call(
+            self.controller.set_state,
             id=self.resource.id,
             on=True,
             brightness=brightness,
             color_xy=xy_color,
             color_temp=color_temp,
             transition_time=transition,
+            allowed_errors=ALLOWED_ERRORS,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.controller.set_state(id=self.resource.id, on=False)
+        transition = kwargs.get(ATTR_TRANSITION)
+        if transition is not None:
+            # hue transition duration is in steps of 100 ms
+            transition = int(transition * 100)
+        await self.bridge.async_request_call(
+            self.controller.set_state,
+            id=self.resource.id,
+            on=False,
+            transition_time=transition,
+            allowed_errors=ALLOWED_ERRORS,
+        )
 
     @callback
     def on_update(self) -> None:
@@ -179,10 +204,14 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
         if lights_with_color_temp_support > 0:
             supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
         if lights_with_dimming_support > 0:
-            supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+            if len(supported_color_modes) == 0:
+                # only add color mode brightness if no color variants
+                supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
             self._attr_brightness = round(
                 ((total_brightness / lights_with_dimming_support) / 100) * 255
             )
+        else:
+            supported_color_modes.add(COLOR_MODE_ONOFF)
         self._attr_supported_color_modes = supported_color_modes
         # pick a winner for the current colormode
         if lights_in_colortemp_mode == lights_with_color_temp_support:
@@ -192,4 +221,4 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
         elif lights_with_dimming_support > 0:
             self._attr_color_mode = COLOR_MODE_BRIGHTNESS
         else:
-            self._attr_color_mode = None
+            self._attr_color_mode = COLOR_MODE_ONOFF

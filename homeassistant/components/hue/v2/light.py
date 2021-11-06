@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_ONOFF,
     COLOR_MODE_XY,
     SUPPORT_TRANSITION,
     LightEntity,
@@ -26,6 +27,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
+
+ALLOWED_ERRORS = [
+    "device (light) has communication issues, command (on) may not have effect",
+    'device (light) is "soft off", command (on) may not have effect',
+]
 
 
 async def async_setup_entry(
@@ -70,7 +76,10 @@ class HueLight(HueBaseEntity, LightEntity):
         if self.resource.supports_color_temperature:
             self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
         if self.resource.supports_dimming:
-            self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+            if len(self._supported_color_modes) == 0:
+                # only add color mode brightness if no color variants
+                self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+            # support transition if brightness control
             self._attr_supported_features |= SUPPORT_TRANSITION
 
     @property
@@ -82,7 +91,7 @@ class HueLight(HueBaseEntity, LightEntity):
         return None
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> str:
         """Return the current color mode of the light."""
         if color_temp := self.resource.color_temperature:
             if color_temp.mirek_valid and color_temp.mirek is not None:
@@ -91,7 +100,7 @@ class HueLight(HueBaseEntity, LightEntity):
             return COLOR_MODE_XY
         if self.resource.supports_dimming:
             return COLOR_MODE_BRIGHTNESS
-        return None
+        return COLOR_MODE_ONOFF
 
     @property
     def is_on(self) -> bool:
@@ -148,16 +157,31 @@ class HueLight(HueBaseEntity, LightEntity):
         if brightness is not None:
             # Hue uses a range of [0, 100] to control brightness.
             brightness = round((brightness / 255) * 100)
+        if transition is not None:
+            # hue transition duration is in steps of 100 ms
+            transition = int(transition * 100)
 
-        await self.controller.set_state(
+        await self.bridge.async_request_call(
+            self.controller.set_state,
             id=self.resource.id,
             on=True,
             brightness=brightness,
             color_xy=xy_color,
             color_temp=color_temp,
             transition_time=transition,
+            allowed_errors=ALLOWED_ERRORS,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.controller.set_state(id=self.resource.id, on=False)
+        transition = kwargs.get(ATTR_TRANSITION)
+        if transition is not None:
+            # hue transition duration is in steps of 100 ms
+            transition = int(transition * 100)
+        await self.bridge.async_request_call(
+            self.controller.set_state,
+            id=self.resource.id,
+            on=False,
+            transition_time=transition,
+            allowed_errors=ALLOWED_ERRORS,
+        )

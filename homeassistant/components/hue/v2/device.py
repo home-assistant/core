@@ -5,7 +5,6 @@ from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.models.device import Device, DeviceArchetypes
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
     ATTR_IDENTIFIERS,
@@ -16,7 +15,7 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     ATTR_VIA_DEVICE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 
 from ..const import DOMAIN as DOMAIN
@@ -25,10 +24,10 @@ if TYPE_CHECKING:
     from ..bridge import HueBridge
 
 
-async def async_setup_devices(
-    hass: HomeAssistant, entry: ConfigEntry, bridge: "HueBridge"
-):
+async def async_setup_devices(bridge: "HueBridge"):
     """Manage setup of devices from Hue devices."""
+    entry = bridge.config_entry
+    hass = bridge.hass
     api: HueBridgeV2 = bridge.api  # to satisfy typing
     dev_reg = device_registry.async_get(hass)
     dev_controller = api.devices
@@ -61,7 +60,7 @@ async def async_setup_devices(
     def remove_device(hue_device_id: str) -> None:
         """Remove device from registry."""
         if device := dev_reg.async_get_device({(DOMAIN, hue_device_id)}):
-            # note: removal of entity registry entry is handled by core
+            # note: removal of any underlying entities is handled by core
             dev_reg.async_remove_device(device.id)
 
     @callback

@@ -1,7 +1,7 @@
 """Support for HUE sensors."""
 from __future__ import annotations
 
-from typing import Union
+from typing import Any, Union
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -10,11 +10,14 @@ from aiohue.v2.controllers.sensors import (
     LightLevelController,
     SensorsController,
     TemperatureController,
+    ZigbeeConnectivityController,
 )
+from aiohue.v2.models.connectivity import ZigbeeConnectivity
 from aiohue.v2.models.device_power import DevicePower
 from aiohue.v2.models.light_level import LightLevel
 from aiohue.v2.models.temperature import Temperature
 
+from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -33,9 +36,12 @@ from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 
-SensorType = Union[DevicePower, LightLevel, Temperature]
+SensorType = Union[DevicePower, LightLevel, Temperature, ZigbeeConnectivity]
 ControllerType = Union[
-    DevicePowerController, LightLevelController, TemperatureController
+    DevicePowerController,
+    LightLevelController,
+    TemperatureController,
+    ZigbeeConnectivityController,
 ]
 
 
@@ -54,6 +60,7 @@ async def async_setup_entry(
         (ctrl_base.temperature, HueTemperatureSensor),
         (ctrl_base.light_level, HueLightLevelSensor),
         (ctrl_base.device_power, HueBatterySensor),
+        (ctrl_base.zigbee_connectivity, HueZigbeeConnectivitySensor),
     ):
 
         @callback
@@ -89,11 +96,6 @@ class HueSensorBase(HueBaseEntity, SensorEntity):
         self.resource = resource
         self.controller = controller
 
-    @property
-    def name(self) -> str:
-        """Return sensor name from device name and device class."""
-        return f"{self.device.metadata.name}: {self._attr_device_class}"
-
 
 class HueTemperatureSensor(HueSensorBase):
     """Representation of a Hue Temperature sensor."""
@@ -105,6 +107,11 @@ class HueTemperatureSensor(HueSensorBase):
     def native_value(self) -> float:
         """Return the value reported by the sensor."""
         return round(self.resource.temperature.temperature, 1)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the optional state attributes."""
+        return {"temperature_valid": self.resource.temperature.temperature_valid}
 
 
 class HueLightLevelSensor(HueSensorBase):
@@ -122,6 +129,14 @@ class HueLightLevelSensor(HueSensorBase):
         # levels.
         return int(10 ** ((self.resource.light.light_level - 1) / 10000))
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the optional state attributes."""
+        return {
+            "light_level": self.resource.light.light_level,
+            "light_level_valid": self.resource.light.light_level_valid,
+        }
+
 
 class HueBatterySensor(HueSensorBase):
     """Representation of a Hue Battery sensor."""
@@ -134,3 +149,26 @@ class HueBatterySensor(HueSensorBase):
     def native_value(self) -> int:
         """Return the value reported by the sensor."""
         return self.resource.power_state.battery_level
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the optional state attributes."""
+        return {"battery_state": self.resource.power_state.battery_state.value}
+
+
+class HueZigbeeConnectivitySensor(HueSensorBase):
+    """Representation of a Hue ZigbeeConnectivity sensor."""
+
+    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @property
+    def native_value(self) -> str:
+        """Return the value reported by the sensor."""
+        return self.resource.status.value
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the optional state attributes."""
+        return {"mac_address": self.resource.mac_address}

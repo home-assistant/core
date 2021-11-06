@@ -511,13 +511,9 @@ class HueLight(CoordinatorEntity, LightEntity):
                 command["effect"] = "none"
 
         if self.is_group:
-            await self.bridge.async_request_call(
-                partial(self.light.set_action, **command)
-            )
+            await self.bridge.async_request_call(self.light.set_action, **command)
         else:
-            await self.bridge.async_request_call(
-                partial(self.light.set_state, **command)
-            )
+            await self.bridge.async_request_call(self.light.set_state, **command)
 
         await self.coordinator.async_request_refresh()
 
@@ -540,13 +536,9 @@ class HueLight(CoordinatorEntity, LightEntity):
             command["alert"] = "none"
 
         if self.is_group:
-            await self.bridge.async_request_call(
-                partial(self.light.set_action, **command)
-            )
+            await self.bridge.async_request_call(self.light.set_action, **command)
         else:
-            await self.bridge.async_request_call(
-                partial(self.light.set_state, **command)
-            )
+            await self.bridge.async_request_call(self.light.set_state, **command)
 
         await self.coordinator.async_request_refresh()
 

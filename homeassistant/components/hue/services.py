@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from functools import partial
 import logging
 
 from aiohue import HueBridgeV1, HueBridgeV2
@@ -120,7 +119,7 @@ async def hue_activate_scene_v1(
         return False
 
     await bridge.async_request_call(
-        partial(group.set_action, scene=scene.id, transitiontime=transition)
+        group.set_action, scene=scene.id, transitiontime=transition
     )
     return True
 

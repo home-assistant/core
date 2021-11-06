@@ -1,7 +1,7 @@
 """Support for HUE binary sensors."""
 from __future__ import annotations
 
-from typing import Union
+from typing import Any, Union
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.config import EntertainmentConfigurationController
@@ -87,6 +87,11 @@ class HueMotionSensor(HueBinarySensorBase):
         """Return true if the binary sensor is on."""
         return self.resource.motion.motion
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the optional state attributes."""
+        return {"motion_valid": self.resource.motion.motion_valid}
+
 
 class HueEntertainmentActiveSensor(HueBinarySensorBase):
     """Representation of a Hue Entertainment Configuration as binary sensor."""
@@ -101,4 +106,5 @@ class HueEntertainmentActiveSensor(HueBinarySensorBase):
     @property
     def name(self) -> str:
         """Return sensor name."""
-        return f"HUE Entertainment: {self.resource.name}"
+        type_title = self.resource.type.value.replace("_", " ").title()
+        return f"{self.resource.name}: {type_title}"

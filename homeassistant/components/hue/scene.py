@@ -1,4 +1,4 @@
-"""Support for select platform for Hue scenes (V2 only)."""
+"""Support for scene platform for Hue scenes (V2 only)."""
 from __future__ import annotations
 
 from typing import Any
@@ -23,7 +23,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Hue select platform from Hue group scenes."""
+    """Set up scene platform from Hue group scenes."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
 
@@ -89,8 +89,11 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
             # hue transition duration is in steps of 100 ms
             transition = int(transition * 100)
         dynamic = kwargs.get("dynamic", self.is_dynamic)
-        await self.controller.recall(
-            self.resource.id, dynamic=dynamic, duration=transition
+        await self.bridge.async_request_call(
+            self.controller.recall,
+            self.resource.id,
+            dynamic=dynamic,
+            duration=transition,
         )
 
     @property

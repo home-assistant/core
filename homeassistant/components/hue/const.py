@@ -13,6 +13,8 @@ DEFAULT_ALLOW_UNREACHABLE = False
 
 CONF_API_VERSION = "api_version"
 
+CONF_SUBTYPE = "subtype"
+
 ATTR_HUE_EVENT = "hue_event"
 SERVICE_HUE_ACTIVATE_SCENE = "hue_activate_scene"
 ATTR_GROUP_NAME = "group_name"

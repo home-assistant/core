@@ -1,4 +1,6 @@
 """Provides device automations for Philips Hue events in V1 bridge/api."""
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -14,10 +16,17 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
+from homeassistant.helpers.device_registry import DeviceEntry
 
-from ..const import DOMAIN, ATTR_HUE_EVENT
+if TYPE_CHECKING:
+    from ..bridge import HueBridge
 
-CONF_SUBTYPE = "subtype"
+from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
+
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
+    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
+)
+
 
 CONF_SHORT_PRESS = "remote_button_short_press"
 CONF_SHORT_RELEASE = "remote_button_short_release"
@@ -93,10 +102,6 @@ REMOTES = {
     HUE_FOHSWITCH_REMOTE_MODEL: HUE_FOHSWITCH_REMOTE,
 }
 
-TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
-)
-
 
 def _get_hue_event_from_device_id(hass, device_id):
     """Resolve hue event from device id."""
@@ -108,26 +113,22 @@ def _get_hue_event_from_device_id(hass, device_id):
     return None
 
 
-async def async_validate_trigger_config(hass, config):
+async def async_validate_trigger_config(bridge, device_entry, config):
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
-
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
-
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    if not device:
+    if not device_entry:
         raise InvalidDeviceAutomationConfig(
             f"Device {config[CONF_DEVICE_ID]} not found"
         )
 
-    if device.model not in REMOTES:
+    if device_entry.model not in REMOTES:
         raise InvalidDeviceAutomationConfig(
-            f"Device model {device.model} is not a remote"
+            f"Device model {device_entry.model} is not a remote"
         )
 
-    if trigger not in REMOTES[device.model]:
+    if trigger not in REMOTES[device_entry.model]:
         raise InvalidDeviceAutomationConfig(
             f"Device does not support trigger {trigger}"
         )
@@ -135,18 +136,17 @@ async def async_validate_trigger_config(hass, config):
     return config
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(bridge, device_entry, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    hass = bridge.hass
 
-    hue_event = _get_hue_event_from_device_id(hass, device.id)
+    hue_event = _get_hue_event_from_device_id(hass, device_entry.id)
     if hue_event is None:
         raise InvalidDeviceAutomationConfig
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    trigger = REMOTES[device.model][trigger]
+    trigger = REMOTES[device_entry.model][trigger]
 
     event_config = {
         event_trigger.CONF_PLATFORM: "event",
@@ -160,16 +160,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
     )
 
 
-async def async_get_triggers(hass, device_id):
-    """List device triggers.
+async def async_get_triggers(bridge: "HueBridge", device: DeviceEntry):
+    """Return device triggers for device on `v1` bridge.
 
     Make sure device is a supported remote model.
     Retrieve the hue event object matching device entry.
     Generate device trigger list.
     """
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(device_id)
-
     if device.model not in REMOTES:
         return
 
@@ -177,7 +174,7 @@ async def async_get_triggers(hass, device_id):
     for trigger, subtype in REMOTES[device.model]:
         triggers.append(
             {
-                CONF_DEVICE_ID: device_id,
+                CONF_DEVICE_ID: device.id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_PLATFORM: "device",
                 CONF_TYPE: trigger,
