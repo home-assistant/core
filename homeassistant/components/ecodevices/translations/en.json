@@ -1,19 +1,10 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "Device is already configured"
-    },
-    "error": {
-      "cannot_connect": "Failed to connect",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
-    },
     "step": {
       "user": {
-        "title": "Parameters of Eco-Device",
+        "title": "Initial Eco-Devices configuration",
         "description": "Set connexion settings and select which input you use.",
         "data": {
-          "name": "Name",
           "host": "Host",
           "port": "Port",
           "scan_interval": "Seconds between updates",
@@ -26,7 +17,7 @@
         }
       },
       "params": {
-        "title": "Parameters of Eco-Device entities",
+        "title": "Parameters of Eco-Devices entities",
         "data": {
           "t1_unit_of_measurement": "Teleinfo 1 Unit of measurement",
           "t2_unit_of_measurement": "Teleinfo 2 Unit of measurement",
@@ -38,6 +29,52 @@
           "c2_total_unit_of_measurement": "Meter 2 Unit of measurement for total value"
         }
       }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Eco-Devices options",
+        "description": "Update connexion settings and select which input you use.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "scan_interval": "Seconds between updates",
+          "t1_enabled": "Teleinfo 1",
+          "t2_enabled": "Teleinfo 2",
+          "c1_enabled": "Meter 1",
+          "c2_enabled": "Meter 2"
+        }
+      },
+      "params": {
+        "title": "Parameters of Eco-Devices entities",
+        "data": {
+          "t1_unit_of_measurement": "Teleinfo 1 Unit of measurement",
+          "t2_unit_of_measurement": "Teleinfo 2 Unit of measurement",
+          "c1_device_class": "Meter 1 Device Class (sensor)",
+          "c1_unit_of_measurement": "Meter 1 Unit of measurement for current value",
+          "c1_total_unit_of_measurement": "Meter 1 Unit of measurement for total value",
+          "c2_device_class": "Meter 2 Device Class (sensor)",
+          "c2_unit_of_measurement": "Meter 2 Unit of measurement for current value",
+          "c2_total_unit_of_measurement": "Meter 2 Unit of measurement for total value"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
     }
   }
 }

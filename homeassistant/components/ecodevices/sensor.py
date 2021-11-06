@@ -21,7 +21,6 @@ from .const import (
     CONF_T1_UNIT_OF_MEASUREMENT,
     CONF_T2_ENABLED,
     CONF_T2_UNIT_OF_MEASUREMENT,
-    CONFIG,
     CONTROLLER,
     COORDINATOR,
     DEFAULT_C1_NAME,
@@ -39,19 +38,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     data = hass.data[DOMAIN][config_entry.entry_id]
     controller = data[CONTROLLER]
     coordinator = data[COORDINATOR]
-    config = data[CONFIG]
+    config = config_entry.data
+    options = config_entry.options
+
+    t1_enabled = options.get(CONF_T1_ENABLED, config.get(CONF_T1_ENABLED))
+    t2_enabled = options.get(CONF_T2_ENABLED, config.get(CONF_T2_ENABLED))
+    c1_enabled = options.get(CONF_C1_ENABLED, config.get(CONF_C1_ENABLED))
+    c2_enabled = options.get(CONF_C2_ENABLED, config.get(CONF_C2_ENABLED))
 
     entities = []
 
-    if config.get(CONF_T1_ENABLED):
-        _LOGGER.debug("Add the teleinfo 1 entity")
+    if t1_enabled:
+        _LOGGER.debug("Add the teleinfo 1 entities")
         entities.append(
             T1EdDevice(
                 controller,
                 coordinator,
                 input_name="t1",
                 name=DEFAULT_T1_NAME,
-                unit=config.get(CONF_T1_UNIT_OF_MEASUREMENT),
+                unit=options.get(
+                    CONF_T1_UNIT_OF_MEASUREMENT, config.get(CONF_T1_UNIT_OF_MEASUREMENT)
+                ),
                 device_class="power",
                 state_class=STATE_CLASS_MEASUREMENT,
                 icon="mdi:flash",
@@ -69,15 +76,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 icon="mdi:flash",
             )
         )
-    if config.get(CONF_T2_ENABLED):
-        _LOGGER.debug("Add the teleinfo 2 entity")
+    if t2_enabled:
+        _LOGGER.debug("Add the teleinfo 2 entities")
         entities.append(
             T2EdDevice(
                 controller,
                 coordinator,
                 input_name="t2",
                 name=DEFAULT_T2_NAME,
-                unit=config.get(CONF_T2_UNIT_OF_MEASUREMENT),
+                unit=options.get(
+                    CONF_T2_UNIT_OF_MEASUREMENT, config.get(CONF_T2_UNIT_OF_MEASUREMENT)
+                ),
                 device_class="power",
                 state_class=STATE_CLASS_MEASUREMENT,
                 icon="mdi:flash",
@@ -95,16 +104,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 icon="mdi:flash",
             )
         )
-    if config.get(CONF_C1_ENABLED):
-        _LOGGER.debug("Add the meter 1 entity")
+    if c1_enabled:
+        _LOGGER.debug("Add the meter 1 entities")
         entities.append(
             C1EdDevice(
                 controller,
                 coordinator,
                 input_name="c1",
                 name=DEFAULT_C1_NAME,
-                unit=config.get(CONF_C1_UNIT_OF_MEASUREMENT),
-                device_class=config.get(CONF_C1_DEVICE_CLASS),
+                unit=options.get(
+                    CONF_C1_UNIT_OF_MEASUREMENT, config.get(CONF_C1_UNIT_OF_MEASUREMENT)
+                ),
+                device_class=options.get(
+                    CONF_C1_DEVICE_CLASS, config.get(CONF_C1_DEVICE_CLASS)
+                ),
                 state_class=STATE_CLASS_MEASUREMENT,
                 icon="mdi:counter",
             )
@@ -115,17 +128,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 coordinator,
                 input_name="c1_total",
                 name=DEFAULT_C1_NAME + " Total",
-                unit=config.get(
+                unit=options.get(
                     CONF_C1_TOTAL_UNIT_OF_MEASUREMENT,
-                    config.get(CONF_C1_UNIT_OF_MEASUREMENT),
+                    config.get(
+                        CONF_C1_TOTAL_UNIT_OF_MEASUREMENT,
+                        config.get(CONF_C1_UNIT_OF_MEASUREMENT),
+                    ),
                 ),
-                device_class=config.get(CONF_C1_DEVICE_CLASS),
+                device_class=options.get(
+                    CONF_C1_DEVICE_CLASS, config.get(CONF_C1_DEVICE_CLASS)
+                ),
                 state_class=STATE_CLASS_TOTAL_INCREASING,
                 icon="mdi:counter",
             )
         )
-    if config.get(CONF_C2_ENABLED):
-        _LOGGER.debug("Add the meter 2 entity")
+    if c2_enabled:
+        _LOGGER.debug("Add the meter 2 entities")
         entities.append(
             C2EdDevice(
                 controller,
@@ -133,7 +151,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 input_name="c2",
                 name=DEFAULT_C2_NAME,
                 unit=config.get(CONF_C2_UNIT_OF_MEASUREMENT),
-                device_class=config.get(CONF_C2_DEVICE_CLASS),
+                device_class=options.get(
+                    CONF_C2_DEVICE_CLASS, config.get(CONF_C2_DEVICE_CLASS)
+                ),
                 state_class=STATE_CLASS_MEASUREMENT,
                 icon="mdi:counter",
             )
@@ -144,11 +164,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 coordinator,
                 input_name="c2_total",
                 name=DEFAULT_C2_NAME + " Total",
-                unit=config.get(
+                unit=options.get(
                     CONF_C2_TOTAL_UNIT_OF_MEASUREMENT,
-                    config.get(CONF_C2_UNIT_OF_MEASUREMENT),
+                    config.get(
+                        CONF_C2_TOTAL_UNIT_OF_MEASUREMENT,
+                        config.get(CONF_C1_UNIT_OF_MEASUREMENT),
+                    ),
                 ),
-                device_class=config.get(CONF_C2_DEVICE_CLASS),
+                device_class=options.get(
+                    CONF_C2_DEVICE_CLASS, config.get(CONF_C2_DEVICE_CLASS)
+                ),
                 state_class=STATE_CLASS_TOTAL_INCREASING,
                 icon="mdi:counter",
             )
@@ -240,8 +265,8 @@ class T1TotalEdDevice(EdDevice):
     @property
     def native_value(self):
         """Return the total value if it's greater than 0."""
-        value = self.coordinator.data["T1_BASE"]
-        if float(value) > 0:
+        value = float(self.coordinator.data["T1_BASE"])
+        if value > 0:
             return value
 
 
@@ -287,8 +312,8 @@ class T2TotalEdDevice(EdDevice):
     @property
     def native_value(self):
         """Return the total value if it's greater than 0."""
-        value = self.coordinator.data["T2_BASE"]
-        if float(value) > 0:
+        value = float(self.coordinator.data["T2_BASE"])
+        if value > 0:
             return value
 
 
@@ -314,11 +339,12 @@ class C1TotalEdDevice(EdDevice):
     """Initialize the C1 sensor."""
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the total value if it's greater than 0."""
-        value = self.coordinator.data["count0"]
-        if float(value) > 0:
-            return value
+        value = float(self.coordinator.data["count0"])
+        if value > 0:
+            return value / 1000
+        raise EcoDevicesIncorrectValueError("Total value not greater than 0.")
 
 
 class C2EdDevice(EdDevice):
@@ -343,8 +369,13 @@ class C2TotalEdDevice(EdDevice):
     """Initialize the C1 sensor."""
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the total value if it's greater than 0."""
-        value = self.coordinator.data["count1"]
-        if float(value) > 0:
-            return value
+        value = float(self.coordinator.data["count1"])
+        if value > 0:
+            return value / 1000
+        raise EcoDevicesIncorrectValueError("Total value not greater than 0.")
+
+
+class EcoDevicesIncorrectValueError(Exception):
+    """Exception to indicate that the Eco-Device return an incorrect value."""

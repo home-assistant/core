@@ -3,7 +3,6 @@ DOMAIN = "ecodevices"
 
 CONTROLLER = "controller"
 COORDINATOR = "coordinator"
-CONFIG = "config"
 PLATFORMS = ["sensor"]
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
@@ -26,3 +25,4 @@ DEFAULT_T2_NAME = "Teleinfo 2"
 DEFAULT_T2_UNIT_OF_MEASUREMENT = "VA"
 DEFAULT_C1_NAME = "Meter 1"
 DEFAULT_C2_NAME = "Meter 2"
+DEFAULT_SCAN_INTERVAL = 5
