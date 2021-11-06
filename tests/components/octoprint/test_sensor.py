@@ -101,7 +101,7 @@ async def test_sensors_no_target_temp(hass):
 
     state = hass.states.get("sensor.octoprint_target_tool1_temp")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
     assert state.name == "OctoPrint target tool1 temp"
     entry = entity_registry.async_get("sensor.octoprint_target_tool1_temp")
     assert entry.unique_id == "target tool1 temp-uuid"
