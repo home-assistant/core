@@ -10,6 +10,8 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.components.wallbox import WallboxCoordinator
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
@@ -21,6 +23,9 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_KILO_WATT,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -130,9 +135,11 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Create wallbox sensor entities in HASS."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -147,15 +154,21 @@ class WallboxSensor(CoordinatorEntity, SensorEntity):
     """Representation of the Wallbox portal."""
 
     entity_description: WallboxSensorEntityDescription
+    coordinator: WallboxCoordinator
 
-    def __init__(self, coordinator, entry, description: WallboxSensorEntityDescription):
+    def __init__(
+        self,
+        coordinator: WallboxCoordinator,
+        entry: ConfigEntry,
+        description: WallboxSensorEntityDescription,
+    ) -> None:
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{entry.title} {description.name}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if (sensor_round := self.entity_description.precision) is not None:
             try:

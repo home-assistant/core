@@ -1,7 +1,10 @@
 """The Wallbox integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import Any, Dict
 
 import requests
 from wallbox import Wallbox
@@ -20,10 +23,10 @@ PLATFORMS = ["sensor", "number"]
 UPDATE_INTERVAL = 30
 
 
-class WallboxCoordinator(DataUpdateCoordinator):
+class WallboxCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
     """Wallbox Coordinator class."""
 
-    def __init__(self, station, wallbox, hass):
+    def __init__(self, station: str, wallbox: Wallbox, hass: HomeAssistant) -> None:
         """Initialize."""
         self._station = station
         self._wallbox = wallbox
@@ -53,11 +56,11 @@ class WallboxCoordinator(DataUpdateCoordinator):
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
-    def _get_data(self):
+    def _get_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
         try:
             self._authenticate()
-            data = self._wallbox.getChargerStatus(self._station)
+            data: dict[str, Any] = self._wallbox.getChargerStatus(self._station)
             data[CONF_MAX_CHARGING_CURRENT_KEY] = data[CONF_DATA_KEY][
                 CONF_MAX_CHARGING_CURRENT_KEY
             ]
@@ -67,7 +70,7 @@ class WallboxCoordinator(DataUpdateCoordinator):
         except requests.exceptions.HTTPError as wallbox_connection_error:
             raise ConnectionError from wallbox_connection_error
 
-    def _set_charging_current(self, charging_current):
+    def _set_charging_current(self, charging_current: str | float) -> None:
         """Set maximum charging current for Wallbox."""
         try:
             self._authenticate()
@@ -77,14 +80,14 @@ class WallboxCoordinator(DataUpdateCoordinator):
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
-    async def async_set_charging_current(self, charging_current):
+    async def async_set_charging_current(self, charging_current: str | float) -> None:
         """Set maximum charging current for Wallbox."""
         await self.hass.async_add_executor_job(
             self._set_charging_current, charging_current
         )
         await self.async_request_refresh()
 
-    async def _async_update_data(self) -> bool:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
         data = await self.hass.async_add_executor_job(self._get_data)
         return data

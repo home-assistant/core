@@ -1,9 +1,14 @@
 """Config flow for Wallbox integration."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 from wallbox import Wallbox
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 
 from . import InvalidAuth, WallboxCoordinator
 from .const import CONF_STATION, DOMAIN
@@ -19,7 +24,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -36,11 +43,13 @@ async def validate_input(hass: core.HomeAssistant, data):
 class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
     """Handle a config flow for Wallbox."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Start the Wallbox config flow."""
-        self._reauth_entry = None
+        self._reauth_entry: config_entries.ConfigEntry | None = None
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -48,7 +57,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
