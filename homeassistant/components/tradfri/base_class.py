@@ -126,15 +126,17 @@ class TradfriBaseDevice(TradfriBaseClass):
         self._hub_available = True
         super().__init__(device, api, gateway_id)
 
+    async def async_added_to_hass(self) -> None:
+        """Start thread when added to hass."""
+        # Only devices shall receive SIGNAL_GW
+        async_dispatcher_connect(self.hass, SIGNAL_GW, self.set_hub_available)
+        await super().async_added_to_hass()
+
     def set_hub_available(self, available: bool) -> None:
         """Set status of hub."""
         if available != self._hub_available:
             self._hub_available = available
             self._refresh(self._device)
-
-    def setup(self) -> None:
-        """Connect signal handler."""
-        async_dispatcher_connect(self.hass, SIGNAL_GW, self.set_hub_available)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -154,5 +156,5 @@ class TradfriBaseDevice(TradfriBaseClass):
         # The base class _refresh cannot be used, because
         # there are devices (group) that do not have .reachable
         # so set _attr_available here and let the base class do the rest.
-        self._attr_available = device.reachable & self._hub_available
+        self._attr_available = device.reachable and self._hub_available
         super()._refresh(device, write_ha)

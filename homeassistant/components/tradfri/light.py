@@ -54,8 +54,6 @@ async def async_setup_entry(
     ]
     if len(entities) > 0:
         async_add_entities(entities)
-        for entity in entities:
-            entity.setup()
     if config_entry.data[CONF_IMPORT_GROUPS] and (groups := tradfri_data[GROUPS]):
         async_add_entities([TradfriGroup(group, api, gateway_id) for group in groups])
 

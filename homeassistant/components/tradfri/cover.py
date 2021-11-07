@@ -31,8 +31,6 @@ async def async_setup_entry(
     ]
     if len(entities) > 0:
         async_add_entities(entities)
-        for entity in entities:
-            entity.setup()
 
 
 class TradfriCover(TradfriBaseDevice, CoverEntity):

@@ -38,8 +38,6 @@ async def async_setup_entry(
     ]
     if len(entities) > 0:
         async_add_entities(entities)
-        for entity in entities:
-            entity.setup()
 
 
 def _from_percentage(percentage: int) -> int:
