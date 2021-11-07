@@ -22,7 +22,7 @@ async def test_reauth_started(hass):
         "homeassistant.components.totalconnect.TotalConnectClient",
         autospec=True,
     ) as mock_client:
-        mock_client.return_value.is_valid_credentials.return_value = False
+        mock_client.return_value.is_logged_in.return_value = False
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
