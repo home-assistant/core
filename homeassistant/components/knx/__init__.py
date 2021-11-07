@@ -224,7 +224,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return False
 
         conf = conf[DOMAIN]
-        hass.data[DATA_KNX_CONFIG] = conf
 
     # If user didn't have configuration.yaml config, generate defaults
     if conf is None:
@@ -238,6 +237,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except XKNXException as ex:
         raise ConfigEntryNotReady from ex
 
+    hass.data[DATA_KNX_CONFIG] = conf
     hass.data[DOMAIN] = knx_module
 
     if CONF_KNX_EXPOSE in config:
@@ -316,8 +316,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if unload_ok:
         await knx_module.stop()
-        hass.data[DOMAIN] = None
-        hass.data[DATA_KNX_CONFIG] = None
+        hass.data.pop(DOMAIN)
+        hass.data.pop(DATA_KNX_CONFIG)
 
     return unload_ok
 
