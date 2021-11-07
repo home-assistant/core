@@ -9,8 +9,14 @@
         "step": {
             "protocol": {
                 "data": {
+                    "device_path": "Cihaz Yolu",
                     "host": "Ana Bilgisayar",
                     "port": "Port"
+                }
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protokol"
                 }
             }
         }

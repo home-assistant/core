@@ -1,0 +1,19 @@
+{
+    "config": {
+        "flow_title": "Bosch SHC: {name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "L\u00fctfen LED yan\u0131p s\u00f6nmeye ba\u015flayana kadar Bosch Ak\u0131ll\u0131 Ev Denetleyicisinin \u00f6n taraf\u0131ndaki d\u00fc\u011fmeye bas\u0131n.\n Home Assistant ile {model} @ {host} kurulumuna devam etmeye haz\u0131r m\u0131s\u0131n\u0131z?"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Ak\u0131ll\u0131 Ev Denetleyicisinin \u015eifresi"
+                }
+            },
+            "user": {
+                "title": "SHC kimlik do\u011frulama parametreleri"
+            }
+        }
+    },
+    "title": "Bosch SHC"
+}

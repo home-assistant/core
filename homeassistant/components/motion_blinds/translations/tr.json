@@ -5,11 +5,15 @@
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "connection_error": "Ba\u011flanma hatas\u0131"
         },
+        "error": {
+            "invalid_interface": "Ge\u00e7ersiz a\u011f aray\u00fcz\u00fc"
+        },
         "flow_title": "Hareketli Panjurlar",
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "API Anahtar\u0131"
+                    "api_key": "API Anahtar\u0131",
+                    "interface": "Kullan\u0131lacak a\u011f aray\u00fcz\u00fc"
                 }
             },
             "select": {
@@ -24,6 +28,17 @@
                     "host": "IP adresi"
                 },
                 "description": "Motion Gateway'inize ba\u011flan\u0131n, IP adresi ayarlanmad\u0131ysa, otomatik ke\u015fif kullan\u0131l\u0131r",
+                "title": "Hareketli Panjurlar"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "G\u00fcncellemede \u00e7ok noktaya yay\u0131n i\u00e7in bekleyin"
+                },
+                "description": "\u0130ste\u011fe ba\u011fl\u0131 ayarlar\u0131 belirtin",
                 "title": "Hareketli Panjurlar"
             }
         }

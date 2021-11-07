@@ -1,9 +1,33 @@
 {
     "device_automation": {
+        "condition_type": {
+            "is_no_update": "{entity_name} g\u00fcncel",
+            "is_not_running": "{entity_name} \u00e7al\u0131\u015fm\u0131yor",
+            "is_running": "{entity_name} \u00e7al\u0131\u015f\u0131yor",
+            "is_update": "{entity_name} i\u00e7in bir g\u00fcncelleme mevcut"
+        },
         "trigger_type": {
             "moist": "{entity_name} nemli oldu",
-            "not_opened": "{entity_name} kapat\u0131ld\u0131"
+            "no_update": "{entity_name} g\u00fcncellendi",
+            "not_opened": "{entity_name} kapat\u0131ld\u0131",
+            "not_running": "{entity_name} art\u0131k \u00e7al\u0131\u015fm\u0131yor",
+            "running": "{entity_name} \u00e7al\u0131\u015fmaya ba\u015flad\u0131",
+            "update": "{entity_name} bir g\u00fcncelleme ald\u0131",
+            "vibration": "{entity_name} , titre\u015fimi alg\u0131lamaya ba\u015flad\u0131"
         }
+    },
+    "device_class": {
+        "cold": "so\u011fuk",
+        "gas": "gaz",
+        "heat": "s\u0131cakl\u0131k",
+        "moisture": "nem",
+        "motion": "hareket",
+        "occupancy": "doluluk",
+        "power": "g\u00fc\u00e7",
+        "problem": "sorun",
+        "smoke": "duman",
+        "sound": "ses",
+        "vibration": "titre\u015fim"
     },
     "state": {
         "_": {
@@ -82,6 +106,10 @@
             "off": "Tamam",
             "on": "Sorun"
         },
+        "running": {
+            "off": "\u00c7al\u0131\u015fm\u0131yor",
+            "on": "\u00c7al\u0131\u015f"
+        },
         "safety": {
             "off": "G\u00fcvenli",
             "on": "G\u00fcvensiz"
@@ -93,6 +121,10 @@
         "sound": {
             "off": "Temiz",
             "on": "Alg\u0131land\u0131"
+        },
+        "update": {
+            "off": "G\u00fcncel",
+            "on": "G\u00fcncelle\u015ftirme kullan\u0131labilir"
         },
         "vibration": {
             "off": "Temiz",

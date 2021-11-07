@@ -12,5 +12,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_audyssey": "Audyssey ayarlar\u0131n\u0131 g\u00fcncelleyin"
+                }
+            }
+        }
     }
 }

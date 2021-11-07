@@ -7,10 +7,15 @@
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
         "step": {
+            "creds": {
+                "title": "PlayStation 4"
+            },
             "link": {
                 "data": {
-                    "ip_address": "\u0130p Adresi"
-                }
+                    "ip_address": "\u0130p Adresi",
+                    "region": "B\u00f6lge"
+                },
+                "title": "PlayStation 4"
             },
             "mode": {
                 "data": {

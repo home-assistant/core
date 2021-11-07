@@ -7,6 +7,15 @@
         },
         "error": {
             "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "code": "Eri\u015fim Anahtar\u0131"
+                },
+                "description": "Google hesab\u0131n\u0131z\u0131 ba\u011flamak i\u00e7in [hesab\u0131n\u0131z\u0131 yetkilendirin]( {url} ). \n\n Yetkilendirmeden sonra, sa\u011flanan Auth Token kodunu a\u015fa\u011f\u0131ya kopyalay\u0131p yap\u0131\u015ft\u0131r\u0131n.",
+                "title": "Google Hesab\u0131n\u0131 Ba\u011fla"
+            }
         }
     },
     "device_automation": {

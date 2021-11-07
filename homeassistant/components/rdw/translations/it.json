@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown_license_plate": "Targa sconosciuta"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "license_plate": "Targa"
+                }
+            }
+        }
+    }
+}

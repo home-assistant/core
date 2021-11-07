@@ -10,6 +10,7 @@
                 }
             },
             "select_location": {
+                "description": "L\u00fctfen Home Assistant'a eklemek istedi\u011finiz SmartThings Konumunu se\u00e7in. Ard\u0131ndan yeni bir pencere a\u00e7aca\u011f\u0131z ve sizden oturum a\u00e7man\u0131z\u0131 ve Home Assistant entegrasyonunun se\u00e7ilen konuma y\u00fcklenmesine izin vermenizi isteyece\u011fiz.",
                 "title": "Konum Se\u00e7in"
             }
         }

@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "\u0130ki ad\u0131ml\u0131 kimlik do\u011frulama kodu"
+                }
+            }
+        }
+    }
+}
