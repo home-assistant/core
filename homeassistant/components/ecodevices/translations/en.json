@@ -45,8 +45,8 @@
         "title": "Eco-Devices options",
         "description": "Update connexion settings and select which input you use.",
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
+          "username": "Username",
+          "password": "Password",
           "scan_interval": "Seconds between updates",
           "t1_enabled": "Teleinfo 1",
           "t2_enabled": "Teleinfo 2",
