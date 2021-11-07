@@ -35,21 +35,19 @@ class WallboxCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
-    def _authenticate(self):
+    def _authenticate(self) -> None:
         """Authenticate using Wallbox API."""
         try:
             self._wallbox.authenticate()
-            return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
                 raise ConfigEntryAuthFailed from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
-    def _validate(self):
+    def _validate(self) -> None:
         """Authenticate using Wallbox API."""
         try:
             self._wallbox.authenticate()
-            return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
@@ -91,10 +89,9 @@ class WallboxCoordinator(DataUpdateCoordinator):
         data = await self.hass.async_add_executor_job(self._get_data)
         return data
 
-    async def async_validate_input(self) -> bool:
+    async def async_validate_input(self) -> None:
         """Get new sensor data for Wallbox component."""
-        data = await self.hass.async_add_executor_job(self._validate)
-        return data
+        await self.hass.async_add_executor_job(self._validate)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
