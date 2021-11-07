@@ -324,7 +324,9 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
         # check if OTA update is scheduled
         if self._ota_update_pending:
-            self.hass.async_create_task(self._async_do_ota_update())
+            self.hass.async_create_task(
+                self.async_trigger_ota_update(**self._ota_update_params)
+            )
 
         # Check for input events and config change
         cfg_changed = 0
@@ -433,6 +435,30 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def async_trigger_ota_update(self, beta: bool = False) -> None:
         """Trigger or schedule an ota update."""
+
+        async def _async_do_ota_update() -> None:
+            """Perform an ota update."""
+            beta_channel = self._ota_update_params[ATTR_BETA]
+            update_data = self.device.status["update"]
+            new_version = update_data["new_version"]
+            if beta_channel:
+                new_version = update_data["beta_version"]
+
+            _LOGGER.info(
+                "Start OTA update of device %s from '%s' to '%s'",
+                self.name,
+                update_data["old_version"],
+                new_version,
+            )
+            result = None
+            try:
+                async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                    result = await self.device.trigger_ota_update(beta=beta_channel)
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.exception("Error while perform ota update: %s", err)
+
+            _LOGGER.debug("Result of OTA update call: %s", result)
+
         update_data = self.device.status["update"]
         _LOGGER.debug("OTA update service - update_data: %s", update_data)
 
@@ -462,30 +488,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             _LOGGER.info("OTA update scheduled for sleeping device %s", self.name)
         else:
             self._ota_update_params = {ATTR_BETA: beta}
-            await self._async_do_ota_update()
-
-    async def _async_do_ota_update(self) -> None:
-        """Perform an ota update."""
-        beta_channel = self._ota_update_params[ATTR_BETA]
-        update_data = self.device.status["update"]
-        new_version = update_data["new_version"]
-        if beta_channel:
-            new_version = update_data["beta_version"]
-
-        _LOGGER.info(
-            "Start OTA update of device %s from '%s' to '%s'",
-            self.name,
-            update_data["old_version"],
-            new_version,
-        )
-        result = None
-        try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                result = await self.device.trigger_ota_update(beta=beta_channel)
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Error while perform ota update: %s", err)
-
-        _LOGGER.debug("Result of OTA update call: %s", result)
+            await _async_do_ota_update()
 
     def shutdown(self) -> None:
         """Shutdown the wrapper."""
@@ -727,7 +730,32 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.device.subscribe_updates(self.async_set_updated_data)
 
     async def async_trigger_ota_update(self, beta: bool = False) -> None:
-        """Trigger or schedule an ota update."""
+        """Trigger an ota update."""
+
+        async def _async_do_ota_update() -> None:
+            """Perform an ota update."""
+            beta_channel = self._ota_update_params[ATTR_BETA]
+            update_data = self.device.status["sys"]["available_updates"]
+            new_version = update_data.get("stable", {"version": ""})["version"]
+            if beta_channel:
+                new_version = update_data.get(ATTR_BETA, {"version": ""})["version"]
+
+            assert self.device.shelly
+            _LOGGER.info(
+                "Start OTA update of device %s from '%s' to '%s'",
+                self.name,
+                self.device.shelly["fw"],
+                new_version,
+            )
+            result = None
+            try:
+                async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                    result = await self.device.trigger_ota_update(beta=beta_channel)
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.exception("Error while perform ota update: %s", err)
+
+            _LOGGER.debug("Result of OTA update call: %s", result)
+
         update_data = self.device.status["sys"]["available_updates"]
         _LOGGER.debug("OTA update service - update_data: %s", update_data)
 
@@ -742,31 +770,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             return
 
         self._ota_update_params = {ATTR_BETA: beta}
-        await self._async_do_ota_update()
-
-    async def _async_do_ota_update(self) -> None:
-        """Perform an ota update."""
-        beta_channel = self._ota_update_params[ATTR_BETA]
-        update_data = self.device.status["sys"]["available_updates"]
-        new_version = update_data.get("stable", {"version": ""})["version"]
-        if beta_channel:
-            new_version = update_data.get(ATTR_BETA, {"version": ""})["version"]
-
-        assert self.device.shelly
-        _LOGGER.info(
-            "Start OTA update of device %s from '%s' to '%s'",
-            self.name,
-            self.device.shelly["fw"],
-            new_version,
-        )
-        result = None
-        try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                result = await self.device.trigger_ota_update(beta=beta_channel)
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Error while perform ota update: %s", err)
-
-        _LOGGER.debug("Result of OTA update call: %s", result)
+        await _async_do_ota_update()
 
     async def shutdown(self) -> None:
         """Shutdown the wrapper."""
