@@ -270,16 +270,27 @@ class ButtonSchema(KNXPlatformSchema):
     CONF_PAYLOAD_LENGTH = "payload_length"
     DEFAULT_NAME = "KNX Button"
 
-    ENTITY_SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_PAYLOAD, default=1): cv.positive_int,
-            vol.Optional(CONF_PAYLOAD_LENGTH, default=0): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=14)
-            ),
-            vol.Required(KNX_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
-        }
+    ENTITY_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_PAYLOAD, default=1): cv.positive_int,
+                vol.Required(CONF_PAYLOAD): cv.positive_int,
+                vol.Required(KNX_ADDRESS): ga_validator,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+                vol.Exclusive(CONF_PAYLOAD_LENGTH, "raw_or_type"): object,
+                vol.Exclusive(CONF_TYPE, "raw_or_type"): sensor_type_validator,
+            }
+        ),
+        vol.Schema(
+            # default to `payload_length: 0` when neither `payload_length` nor `type` is given
+            {
+                vol.Optional(CONF_PAYLOAD_LENGTH, default=0): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=14)
+                ),
+            },
+            extra=vol.ALLOW_EXTRA,
+        ),
     )
 
 
