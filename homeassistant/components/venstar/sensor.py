@@ -18,7 +18,7 @@ from .const import DOMAIN
 
 @dataclass
 class VenstarSensorEntityDescription(SensorEntityDescription):
-    """Base description of a Venstar Sensor entity."""
+    """Base description of a Sensor entity."""
 
 
 HUMIDITY_SENSOR_DESCRIPTION = VenstarSensorEntityDescription(
@@ -84,7 +84,7 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         entity_description: VenstarSensorEntityDescription,
         sensor_name: str,
     ) -> None:
-        """Initialize the alert."""
+        """Initialize the sensor."""
         super().__init__(coordinator, config)
         self.entity_description = entity_description
         self.sensor_name = sensor_name
