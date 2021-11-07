@@ -226,6 +226,22 @@ class Battery(Sensor):
     _unit = PERCENTAGE
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Unlike any other entity, PowerConfiguration cluster may not support
+        battery_percent_remaining attribute, but zha-device-handlers takes care of it
+        so create the entity regardless
+        """
+        return cls(unique_id, zha_device, channels, **kwargs)
+
     @staticmethod
     def formatter(value: int) -> int:
         """Return the state of the entity."""
