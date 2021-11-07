@@ -4,7 +4,7 @@ aiodiscover==1.4.5
 aiohttp==3.8.0
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.22.11
+async-upnp-client==0.22.12
 async_timeout==4.0.0
 attrs==21.2.0
 awesomeversion==21.10.1
