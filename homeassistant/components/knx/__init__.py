@@ -447,10 +447,8 @@ class KNXModule:
         """Register callback for knx_event within XKNX TelegramQueue."""
         # backwards compatibility for deprecated CONF_KNX_EVENT_FILTER
         # use `address_filters = []` when this is not needed anymore
-        address_filters = list(
-            map(AddressFilter, self.config[DOMAIN][CONF_KNX_EVENT_FILTER])
-        )
-        for filter_set in self.config[DOMAIN][CONF_EVENT]:
+        address_filters = list(map(AddressFilter, self.config[CONF_KNX_EVENT_FILTER]))
+        for filter_set in self.config[CONF_EVENT]:
             _filters = list(map(AddressFilter, filter_set[KNX_ADDRESS]))
             address_filters.extend(_filters)
             if (dpt := filter_set.get(CONF_TYPE)) and (
