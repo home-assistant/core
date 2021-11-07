@@ -12,6 +12,7 @@ from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_KNX_AUTOMATIC,
@@ -199,7 +200,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(
                 ConnectionSchema.CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT
             )
-        ] = vol.Coerce(int)
+        ] = cv.port
 
         return self.async_show_form(
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
