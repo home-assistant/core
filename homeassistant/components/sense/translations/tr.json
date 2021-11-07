@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "E-posta",
-                    "password": "Parola"
+                    "password": "Parola",
+                    "timeout": "Zaman a\u015f\u0131m\u0131"
                 }
             }
         }

@@ -13,6 +13,9 @@
                     "host": "Ana Bilgisayar",
                     "port": "Port"
                 }
+            },
+            "zeroconf_confirm": {
+                "title": "Ke\u015ffedilen Elgato Light cihaz\u0131"
             }
         }
     }

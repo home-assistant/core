@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "description": "SmartTub entegrasyonunun hesab\u0131n\u0131z\u0131 yeniden do\u011frulamas\u0131 gerekiyor"
+            },
+            "user": {
+                "title": "Oturum a\u00e7ma"
+            }
+        }
+    }
+}

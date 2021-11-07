@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "action_type": {
+            "set_humidity": "{entity_name} i\u00e7in nemi ayarla",
             "set_mode": "{entity_name} \u00fczerindeki mod de\u011fi\u015ftirme",
             "turn_on": "{entity_name} a\u00e7\u0131n"
         },

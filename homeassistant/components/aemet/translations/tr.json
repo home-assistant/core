@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "station_updates": "AEMET hava istasyonlar\u0131ndan veri toplay\u0131n"
+                }
+            }
+        }
+    }
+}

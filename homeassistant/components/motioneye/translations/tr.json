@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_url": "Ge\u00e7ersiz URL"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stream_url_template": "Ak\u0131\u015f URL \u015fablonu"
+                }
+            }
+        }
+    }
+}

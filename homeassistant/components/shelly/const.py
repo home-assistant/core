@@ -54,6 +54,7 @@ AIOSHELLY_DEVICE_TIMEOUT_SEC: Final = 10
 
 # Multiplier used to calculate the "update_interval" for sleeping devices.
 SLEEP_PERIOD_MULTIPLIER: Final = 1.2
+CONF_SLEEP_PERIOD: Final = "sleep_period"
 
 # Multiplier used to calculate the "update_interval" for non-sleeping devices.
 UPDATE_PERIOD_MULTIPLIER: Final = 2.2

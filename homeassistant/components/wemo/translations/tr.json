@@ -9,5 +9,10 @@
                 "description": "Wemo'yu kurmak istiyor musunuz?"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Wemo d\u00fc\u011fmesine 2 saniye bas\u0131ld\u0131"
+        }
     }
 }

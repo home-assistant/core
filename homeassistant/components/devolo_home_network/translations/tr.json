@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "home_control": "devolo Ev Kontrol Merkezi Birimi bu entegrasyonla \u00e7al\u0131\u015fmaz."
+        },
+        "flow_title": "{product} ({name})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Adresleri"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "{host_name} ` ana bilgisayar ad\u0131na sahip devolo ev a\u011f\u0131 cihaz\u0131n\u0131 Home Assistant'a eklemek ister misiniz?",
+                "title": "Ke\u015ffedilen devolo ev a\u011f\u0131 cihaz\u0131"
+            }
+        }
+    }
+}

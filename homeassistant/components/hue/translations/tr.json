@@ -1,19 +1,27 @@
 {
     "config": {
         "abort": {
+            "all_configured": "T\u00fcm Philips Hue k\u00f6pr\u00fcleri zaten yap\u0131land\u0131r\u0131lm\u0131\u015ft\u0131r",
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "discover_timeout": "Hue k\u00f6pr\u00fcleri bulunam\u0131yor",
+            "no_bridges": "Philips Hue k\u00f6pr\u00fcs\u00fc bulunamad\u0131",
             "unknown": "Beklenmeyen hata"
         },
         "error": {
-            "linking": "Beklenmeyen hata"
+            "linking": "Beklenmeyen hata",
+            "register_failed": "Kay\u0131t ba\u015far\u0131s\u0131z oldu, l\u00fctfen tekrar deneyin"
         },
         "step": {
             "init": {
                 "data": {
                     "host": "Ana Bilgisayar"
-                }
+                },
+                "title": "Hue k\u00f6pr\u00fcs\u00fcn\u00fc se\u00e7in"
+            },
+            "link": {
+                "description": "Philips Hue'yu Home Assistant'a kaydetmek i\u00e7in k\u00f6pr\u00fcdeki d\u00fc\u011fmeye bas\u0131n. \n\n ![K\u00f6pr\u00fcdeki d\u00fc\u011fmenin konumu](/static/images/config_philips_hue.jpg)"
             },
             "manual": {
                 "data": {

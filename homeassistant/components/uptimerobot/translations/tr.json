@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "reauth_failed_existing": "Yap\u0131land\u0131rma giri\u015fi g\u00fcncellenemedi, l\u00fctfen entegrasyonu kald\u0131r\u0131n ve yeniden kurun."
+        },
+        "error": {
+            "reauth_failed_matching_account": "Sa\u011flad\u0131\u011f\u0131n\u0131z API anahtar\u0131, mevcut yap\u0131land\u0131rman\u0131n hesap kimli\u011fiyle e\u015fle\u015fmiyor."
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "UptimeRobot'tan yeni bir salt okunur API anahtar\u0131 sa\u011flaman\u0131z gerekiyor"
+            },
+            "user": {
+                "description": "UptimeRobot'tan salt okunur bir API anahtar\u0131 sa\u011flaman\u0131z gerekiyor"
+            }
+        }
+    }
+}

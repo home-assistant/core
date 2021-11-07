@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "description": "Ambee hesab\u0131n\u0131zla yeniden kimlik do\u011frulamas\u0131 yap\u0131n."
+                }
+            },
+            "user": {
+                "description": "Ambee'yi Home Assistant ile entegre olacak \u015fekilde ayarlay\u0131n."
+            }
+        }
+    }
+}

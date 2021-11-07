@@ -2,6 +2,30 @@
     "config": {
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "dsmr_version": "DSMR s\u00fcr\u00fcm\u00fcn\u00fc se\u00e7in"
+                },
+                "title": "Ba\u011flant\u0131 adresini se\u00e7in"
+            },
+            "setup_serial": {
+                "data": {
+                    "dsmr_version": "DSMR s\u00fcr\u00fcm\u00fcn\u00fc se\u00e7in",
+                    "port": "Cihaz se\u00e7"
+                },
+                "title": "Cihaz"
+            },
+            "setup_serial_manual_path": {
+                "title": "Yol"
+            },
+            "user": {
+                "data": {
+                    "type": "Ba\u011flant\u0131 t\u00fcr\u00fc"
+                },
+                "title": "Ba\u011flant\u0131 t\u00fcr\u00fcn\u00fc se\u00e7in"
+            }
         }
     },
     "options": {

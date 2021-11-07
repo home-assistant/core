@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                }
+            },
+            "user": {
+                "title": "Subaru Starlink Yap\u0131land\u0131rmas\u0131"
+            }
+        }
+    }
+}

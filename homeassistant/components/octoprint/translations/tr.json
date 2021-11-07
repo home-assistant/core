@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "auth_failed": "Uygulama API anahtar\u0131 al\u0131namad\u0131"
+        },
+        "flow_title": "OctoPrint Yaz\u0131c\u0131: {host}",
+        "progress": {
+            "get_api_key": "OctoPrint UI'sini a\u00e7\u0131n ve 'Ev Asistan\u0131' i\u00e7in Eri\u015fim \u0130ste\u011finde '\u0130zin Ver'i t\u0131klay\u0131n."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "path": "Uygulama Yolu",
+                    "port": "Ba\u011flant\u0131 Noktas\u0131 Numaras\u0131",
+                    "ssl": "SSL Kullan",
+                    "username": "Kullan\u0131c\u0131 ad\u0131"
+                }
+            }
+        }
+    }
+}

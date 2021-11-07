@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "start_config": {
+                "description": "FRITZ!Box'\u0131n\u0131z\u0131 kontrol etmek i\u00e7in FRITZ!Box Tools'u kurun.\n Minimum gerekli: kullan\u0131c\u0131 ad\u0131, \u015fifre.",
+                "title": "FRITZ!Box Tools Kurulumu - zorunlu"
+            },
+            "user": {
+                "description": "FRITZ!Box'\u0131n\u0131z\u0131 kontrol etmek i\u00e7in FRITZ!Box Tools'u kurun.\n Minimum gerekli: kullan\u0131c\u0131 ad\u0131, \u015fifre.",
+                "title": "FRITZ!Box Tools Kurulumu"
+            }
+        }
+    }
+}

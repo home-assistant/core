@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "no_plants": "Bu hesapta bitki bulunamad\u0131"
+        },
+        "step": {
+            "plant": {
+                "data": {
+                    "plant_id": "Bitki"
+                }
+            },
+            "user": {
+                "title": "Growatt bilgilerinizi girin"
+            }
+        }
+    },
+    "title": "Growatt Sunucusu"
+}
