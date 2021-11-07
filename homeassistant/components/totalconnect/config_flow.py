@@ -40,7 +40,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 TotalConnectClient, username, password, None
             )
 
-            if client.is_valid_credentials():
+            if client.is_logged_in():
                 # username/password valid so show user locations
                 self.username = username
                 self.password = password
@@ -136,7 +136,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.usercodes,
         )
 
-        if not client.is_valid_credentials():
+        if not client.is_logged_in():
             errors["base"] = "invalid_auth"
             return self.async_show_form(
                 step_id="reauth_confirm",
