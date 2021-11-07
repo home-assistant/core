@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         identifiers={(DOMAIN, controller.host)},
         manufacturer="GCE",
         model="Eco-Devices",
-        name=controller.host,
+        default_name=f"Eco-Devices {controller.host}",
         sw_version=controller.version,
         connections={(dr.CONNECTION_NETWORK_MAC, controller.mac_address)},
         configuration_url=f"http://{config[CONF_HOST]}:{config[CONF_PORT]}",
