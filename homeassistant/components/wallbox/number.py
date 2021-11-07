@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Optional, cast
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -75,12 +76,14 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
     @property
     def max_value(self) -> float:
         """Return the maximum available current."""
-        return self._coordinator.data[CONF_MAX_AVAILABLE_POWER_KEY]
+        return cast(float, self._coordinator.data[CONF_MAX_AVAILABLE_POWER_KEY])
 
     @property
     def value(self) -> float | None:
         """Return the state of the sensor."""
-        return self._coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
+        return cast(
+            Optional[float], self._coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
+        )
 
     async def async_set_value(self, value: float) -> None:
         """Set the value of the entity."""
