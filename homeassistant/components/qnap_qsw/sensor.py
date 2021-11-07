@@ -5,11 +5,14 @@ from qnap_qsw.const import (
     DATA_CONFIG_URL,
     DATA_FIRMWARE_CURRENT_VERSION,
     DATA_PORTS_ACTIVE,
+    DATA_PORTS_BPS_RX,
+    DATA_PORTS_BPS_TX,
     DATA_PORTS_COUNT,
     DATA_PORTS_DUPLEX_FULL,
     DATA_PORTS_DUPLEX_HALF,
     DATA_PORTS_ERRORS_RX,
     DATA_PORTS_OCTETS_RX,
+    DATA_PORTS_OCTETS_TX,
     DATA_PORTS_SPEED_10,
     DATA_PORTS_SPEED_100,
     DATA_PORTS_SPEED_1000,
@@ -111,4 +114,15 @@ class QnapQswSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state."""
-        return self.coordinator.data[self.entity_description.key]
+        value = self.coordinator.data[self.entity_description.key]
+        if self.entity_description.key in [
+            DATA_PORTS_BPS_RX,
+            DATA_PORTS_BPS_TX,
+        ]:
+            value = round(value / 1000.0 ** 2, 3)
+        elif self.entity_description.key in [
+            DATA_PORTS_OCTETS_RX,
+            DATA_PORTS_OCTETS_TX,
+        ]:
+            value = round(value / 1024.0 ** 2, 3)
+        return value

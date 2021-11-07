@@ -15,11 +15,11 @@ async def test_qnap_qsw_create_sensors(hass):
     assert state.state == "24:5E:BE:00:00:00"
 
     state = hass.states.get("sensor.qsw_m408_4c_network_in")
-    assert state.state == "2197110278"
+    assert state.state == "2095.328"
     assert state.attributes["errors"] == 0
 
     state = hass.states.get("sensor.qsw_m408_4c_network_out")
-    assert state.state == "140538421"
+    assert state.state == "134.028"
 
     state = hass.states.get("sensor.qsw_m408_4c_ports")
     assert state.state == "2"
@@ -38,10 +38,10 @@ async def test_qnap_qsw_create_sensors(hass):
     assert state.attributes["maximum"] == 85
 
     state = hass.states.get("sensor.qsw_m408_4c_throughput_network_in")
-    assert state.state == "0"
+    assert state.state == "0.0"
 
     state = hass.states.get("sensor.qsw_m408_4c_throughput_network_out")
-    assert state.state == "0"
+    assert state.state == "0.0"
 
     state = hass.states.get("sensor.qsw_m408_4c_uptime")
     assert state.state is not None

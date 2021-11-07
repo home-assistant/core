@@ -29,8 +29,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
-    DATA_BYTES,
-    DATA_RATE_BITS_PER_SECOND,
+    DATA_MEBIBYTES,
+    DATA_RATE_MEGABITS_PER_SECOND,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     ENTITY_CATEGORY_DIAGNOSTIC,
@@ -86,7 +86,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         icon="mdi:download-network",
         key=DATA_PORTS_OCTETS_RX,
         name="Network In",
-        native_unit_of_measurement=DATA_BYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
@@ -94,7 +94,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         icon="mdi:upload-network",
         key=DATA_PORTS_OCTETS_TX,
         name="Network Out",
-        native_unit_of_measurement=DATA_BYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
@@ -117,7 +117,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         icon="mdi:download-network",
         key=DATA_PORTS_BPS_RX,
         name="Throughput Network In",
-        native_unit_of_measurement=DATA_RATE_BITS_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -125,7 +125,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         icon="mdi:upload-network",
         key=DATA_PORTS_BPS_TX,
         name="Throughput Network Out",
-        native_unit_of_measurement=DATA_RATE_BITS_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
