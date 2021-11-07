@@ -67,7 +67,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         suitable=lambda device: device.rel_humidity is not None,
         native_value=lambda device: device.rel_humidity,  # type: ignore[no-any-return]
     ),
