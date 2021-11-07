@@ -464,23 +464,23 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         _LOGGER.debug("OTA update service - update_data: %s", update_data)
 
         if self._ota_update_pending:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "OTA update already scheduled for sleeping device %s", self.name
             )
             return
 
         if not update_data["has_update"] and not beta:
-            _LOGGER.error("No OTA update available for device %s", self.name)
+            _LOGGER.warning("No OTA update available for device %s", self.name)
             return
 
         if beta and not update_data.get("beta_version"):
-            _LOGGER.error(
+            _LOGGER.warning(
                 "No OTA update on beta channel available for device %s", self.name
             )
             return
 
         if update_data["status"] == "updating":
-            _LOGGER.error("OTA update already in progress for %s", self.name)
+            _LOGGER.warning("OTA update already in progress for %s", self.name)
             return
 
         if self.entry.data.get(CONF_SLEEP_PERIOD):
@@ -761,11 +761,11 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         _LOGGER.debug("OTA update service - update_data: %s", update_data)
 
         if not bool(update_data) or (not update_data.get("stable") and not beta):
-            _LOGGER.error("No OTA update available for device %s", self.name)
+            _LOGGER.warning("No OTA update available for device %s", self.name)
             return
 
         if beta and not update_data.get(ATTR_BETA):
-            _LOGGER.error(
+            _LOGGER.warning(
                 "No OTA update on beta channel available for device %s", self.name
             )
             return
