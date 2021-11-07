@@ -324,6 +324,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
         # check if OTA update is scheduled
         if self._ota_update_pending:
+            self._ota_update_pending = False
             self.hass.async_create_task(
                 self.async_trigger_ota_update(**self._ota_update_params)
             )
