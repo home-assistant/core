@@ -1459,7 +1459,7 @@ pyefergy==0.1.4
 pyeight==0.1.9
 
 # homeassistant.components.emby
-pyemby==1.7
+pyemby==1.8
 
 # homeassistant.components.envisalink
 pyenvisalink==4.0
