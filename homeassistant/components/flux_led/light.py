@@ -321,15 +321,6 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        import pprint
-
-        pprint.pprint(
-            [
-                "pp",
-                self._device.preset_pattern_num,
-                hex(self._device.preset_pattern_num),
-            ]
-        )
         effect = self._device.effect
         if effect is None:
             return None
