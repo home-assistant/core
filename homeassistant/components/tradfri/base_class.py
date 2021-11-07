@@ -132,6 +132,7 @@ class TradfriBaseDevice(TradfriBaseClass):
         async_dispatcher_connect(self.hass, SIGNAL_GW, self.set_hub_available)
         await super().async_added_to_hass()
 
+    @callback
     def set_hub_available(self, available: bool) -> None:
         """Set status of hub."""
         if available != self._hub_available:
