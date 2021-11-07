@@ -5,7 +5,7 @@ from typing import Any, TypeVar, cast
 
 from . import EvilGeniusEntity
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+CallableT = TypeVar("CallableT", bound=Callable)
 
 
 def update_when_done(func: CALLABLE_T) -> CALLABLE_T:
