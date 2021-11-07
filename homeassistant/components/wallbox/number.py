@@ -28,9 +28,9 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
 }
 
 
-async def async_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Create wallbox sensor entities in HASS."""
-    coordinator = hass.data[DOMAIN][config.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     # Check if the user is authorized to change current, if so, add number component:
     try:
         await coordinator.async_set_charging_current(
@@ -41,7 +41,7 @@ async def async_setup_entry(hass, config, async_add_entities):
 
     async_add_entities(
         [
-            WallboxNumber(coordinator, config, description)
+            WallboxNumber(coordinator, entry, description)
             for ent in coordinator.data
             if (description := NUMBER_TYPES.get(ent))
         ]
@@ -53,14 +53,12 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
 
     entity_description: WallboxNumberEntityDescription
 
-    def __init__(
-        self, coordinator, config, description: WallboxNumberEntityDescription
-    ):
+    def __init__(self, coordinator, entry, description: WallboxNumberEntityDescription):
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._coordinator = coordinator
-        self._attr_name = f"{config.title} {description.name}"
+        self._attr_name = f"{entry.title} {description.name}"
         self._attr_min_value = description.min_value
 
     @property

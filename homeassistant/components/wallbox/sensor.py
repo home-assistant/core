@@ -130,13 +130,13 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
 }
 
 
-async def async_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Create wallbox sensor entities in HASS."""
-    coordinator = hass.data[DOMAIN][config.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
-            WallboxSensor(coordinator, config, description)
+            WallboxSensor(coordinator, entry, description)
             for ent in coordinator.data
             if (description := SENSOR_TYPES.get(ent))
         ]
@@ -148,13 +148,11 @@ class WallboxSensor(CoordinatorEntity, SensorEntity):
 
     entity_description: WallboxSensorEntityDescription
 
-    def __init__(
-        self, coordinator, config, description: WallboxSensorEntityDescription
-    ):
+    def __init__(self, coordinator, entry, description: WallboxSensorEntityDescription):
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{config.title} {description.name}"
+        self._attr_name = f"{entry.title} {description.name}"
 
     @property
     def native_value(self):
