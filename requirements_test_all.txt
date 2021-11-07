@@ -1339,7 +1339,7 @@ tesla-powerwall==0.3.12
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2021.8.3
+total_connect_client==2021.11.2
 
 # homeassistant.components.transmission
 transmissionrpc==0.11
