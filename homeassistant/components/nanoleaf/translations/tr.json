@@ -1,0 +1,11 @@
+{
+    "config": {
+        "flow_title": "{name}",
+        "step": {
+            "link": {
+                "description": "Nanoleaf'inizdeki g\u00fc\u00e7 d\u00fc\u011fmesini d\u00fc\u011fme LED'leri yan\u0131p s\u00f6nmeye ba\u015flayana kadar 5 saniye bas\u0131l\u0131 tutun, ard\u0131ndan 30 saniye i\u00e7inde **G\u00d6NDER**'e t\u0131klay\u0131n.",
+                "title": "Ba\u011flant\u0131 Nanoleaf"
+            }
+        }
+    }
+}

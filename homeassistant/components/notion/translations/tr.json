@@ -8,6 +8,12 @@
             "no_devices": "Hesapta cihaz bulunamad\u0131"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u015eifre"
+                },
+                "description": "{username} \u015fifresini tekrar girin."
+            },
             "user": {
                 "data": {
                     "password": "Parola",

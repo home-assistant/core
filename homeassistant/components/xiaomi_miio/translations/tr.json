@@ -2,13 +2,34 @@
     "config": {
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor"
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "not_xiaomi_miio": "Cihaz (hen\u00fcz) Xiaomi Miio taraf\u0131ndan desteklenmiyor."
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "cloud_credentials_incomplete": "Bulut kimlik bilgileri eksik, l\u00fctfen kullan\u0131c\u0131 ad\u0131n\u0131, \u015fifreyi ve \u00fclkeyi girin",
+            "cloud_login_error": "Xiaomi Miio Cloud'da oturum a\u00e7\u0131lamad\u0131, kimlik bilgilerini kontrol edin.",
+            "cloud_no_devices": "Bu Xiaomi Miio bulut hesab\u0131nda cihaz bulunamad\u0131.",
             "no_device_selected": "Cihaz se\u00e7ilmedi, l\u00fctfen bir cihaz se\u00e7in."
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "cloud_country": "Bulut sunucusu \u00fclkesi",
+                    "cloud_password": "Bulut \u015fifresi",
+                    "cloud_username": "Bulut kullan\u0131c\u0131 ad\u0131",
+                    "manual": "Manuel olarak yap\u0131land\u0131r\u0131n (\u00f6nerilmez)"
+                },
+                "description": "Xiaomi Miio bulutunda oturum a\u00e7\u0131n, bulut sunucusunun kullanmas\u0131 i\u00e7in https://www.openhab.org/addons/bindings/miio/#country-servers adresine bak\u0131n.",
+                "title": "Bir Xiaomi Miio Cihaz\u0131na veya Xiaomi A\u011f Ge\u00e7idine Ba\u011flan"
+            },
+            "connect": {
+                "data": {
+                    "model": "Cihaz modeli"
+                },
+                "description": "Desteklenen modellerden cihaz modelini manuel olarak se\u00e7in.",
+                "title": "Bir Xiaomi Miio Cihaz\u0131na veya Xiaomi A\u011f Ge\u00e7idine Ba\u011flan"
+            },
             "device": {
                 "data": {
                     "name": "Cihaz\u0131n ad\u0131"
@@ -22,11 +43,35 @@
                 },
                 "title": "Bir Xiaomi A\u011f Ge\u00e7idine ba\u011flan\u0131n"
             },
+            "manual": {
+                "title": "Bir Xiaomi Miio Cihaz\u0131na veya Xiaomi A\u011f Ge\u00e7idine Ba\u011flan"
+            },
+            "select": {
+                "data": {
+                    "select_device": "Miio cihaz\u0131"
+                },
+                "description": "Kurulumu i\u00e7in Xiaomi Miio cihaz\u0131n\u0131 se\u00e7in.",
+                "title": "Bir Xiaomi Miio Cihaz\u0131na veya Xiaomi A\u011f Ge\u00e7idine Ba\u011flan"
+            },
             "user": {
                 "data": {
                     "gateway": "Bir Xiaomi A\u011f Ge\u00e7idine ba\u011flan\u0131n"
                 },
                 "description": "Hangi cihaza ba\u011flanmak istedi\u011finizi se\u00e7in.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cloud_credentials_incomplete": "Bulut kimlik bilgileri eksik, l\u00fctfen kullan\u0131c\u0131 ad\u0131n\u0131, \u015fifreyi ve \u00fclkeyi girin"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "cloud_subdevices": "Ba\u011fl\u0131 alt cihazlar almak i\u00e7in bulutu kullan\u0131n"
+                },
+                "description": "\u0130ste\u011fe ba\u011fl\u0131 ayarlar\u0131 belirtin",
                 "title": "Xiaomi Miio"
             }
         }

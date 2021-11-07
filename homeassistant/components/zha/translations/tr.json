@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
+            "usb_probe_failed": "USB ayg\u0131t\u0131 ara\u015ft\u0131r\u0131lamad\u0131"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
@@ -16,6 +17,17 @@
                 },
                 "title": "Ayarlar"
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Kurma eylemleri i\u00e7in gerekli kod",
+            "alarm_failed_tries": "Bir alarm\u0131 tetiklemek i\u00e7in ard\u0131\u015f\u0131k ba\u015far\u0131s\u0131z kod giri\u015flerinin say\u0131s\u0131",
+            "alarm_master_code": "Alarm kontrol panel(ler)i i\u00e7in ana kod",
+            "title": "Alarm Kontrol Paneli Se\u00e7enekleri"
+        },
+        "zha_options": {
+            "title": "Genel Se\u00e7enekler"
         }
     },
     "device_automation": {

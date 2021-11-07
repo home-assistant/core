@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "country": {
+                "data": {
+                    "country_code": "\u00dclke kodu"
+                }
+            },
+            "user": {
+                "data": {
+                    "location": "Veri alma"
+                }
+            }
+        }
+    }
+}

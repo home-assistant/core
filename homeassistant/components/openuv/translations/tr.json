@@ -15,5 +15,12 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "OpenUV'yi yap\u0131land\u0131r\u0131n"
+            }
+        }
     }
 }

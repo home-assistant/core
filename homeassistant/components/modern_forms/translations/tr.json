@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "zeroconf_confirm": {
+                "description": "'{name}' adl\u0131 Modern Formlar fan\u0131n\u0131 Ev Asistan\u0131'na eklemek istiyor musunuz?",
+                "title": "Ke\u015ffedilen Modern Formlar fan cihaz\u0131"
+            }
+        }
+    },
+    "title": "Modern Formlar"
+}

@@ -8,6 +8,10 @@
             "unknown": "Beklenmeyen hata"
         },
         "step": {
+            "confirm_discovery": {
+                "description": "Y\u00f6nlendiricinizde DHCP rezervasyonu yap\u0131lmas\u0131 \u00f6nerilir. Kurulmazsa, Home Assistant yeni ip adresini alg\u0131layana kadar cihaz kullan\u0131lamayabilir. Y\u00f6nlendiricinizin kullan\u0131m k\u0131lavuzuna bak\u0131n.",
+                "title": "Goal Zero Yeti"
+            },
             "user": {
                 "data": {
                     "host": "Ana Bilgisayar"

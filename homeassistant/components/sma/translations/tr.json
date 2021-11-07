@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_retrieve_device_info": "Ba\u015far\u0131yla ba\u011fland\u0131, ancak cihaz bilgileri al\u0131namad\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "group": "Grup"
+                },
+                "description": "SMA cihaz bilgilerinizi girin.",
+                "title": "SMA Solar'\u0131 kurun"
+            }
+        }
+    }
+}

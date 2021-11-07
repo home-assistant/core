@@ -1,10 +1,26 @@
 {
     "config": {
+        "abort": {
+            "kamereon_no_account": "Kamereon hesab\u0131 bulunamad\u0131"
+        },
         "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "Kamereon hesap kimli\u011fi"
+                },
+                "title": "Kamereon hesap kimli\u011fini se\u00e7in"
+            },
             "reauth_confirm": {
                 "data": {
                     "password": "\u015eifre"
-                }
+                },
+                "description": "{username} i\u00e7in \u015fifrenizi g\u00fcncelleyin"
+            },
+            "user": {
+                "data": {
+                    "locale": "Yerel ayar"
+                },
+                "title": "Renault kimlik bilgilerini ayarla"
             }
         }
     }

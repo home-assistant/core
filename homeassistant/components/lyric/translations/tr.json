@@ -10,6 +10,9 @@
         "step": {
             "pick_implementation": {
                 "title": "Kimlik Do\u011frulama Y\u00f6ntemini Se\u00e7in"
+            },
+            "reauth_confirm": {
+                "description": "Lyric entegrasyonunun hesab\u0131n\u0131z\u0131 yeniden do\u011frulamas\u0131 gerekiyor."
             }
         }
     }

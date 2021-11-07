@@ -1,7 +1,7 @@
 {
     "device_automation": {
         "action_type": {
-            "press": "Nyomja meg: {entity_name}"
+            "press": "{entity_name} megnyom\u00e1sa"
         },
         "trigger_type": {
             "pressed": "{entity_name} megnyomva"

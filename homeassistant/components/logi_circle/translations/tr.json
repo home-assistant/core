@@ -5,6 +5,11 @@
         },
         "error": {
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "step": {
+            "auth": {
+                "description": "L\u00fctfen a\u015fa\u011f\u0131daki ba\u011flant\u0131y\u0131 takip edin ve Logi Circle hesab\u0131n\u0131za eri\u015fimi **Kabul** edin, ard\u0131ndan geri d\u00f6n\u00fcn ve a\u015fa\u011f\u0131daki **G\u00f6nder**'e bas\u0131n. \n\n [Ba\u011flant\u0131]( {authorization_url} )"
+            }
         }
     }
 }

@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Ba\u015flang\u0131\u00e7 ve Var\u0131\u015f Yeri i\u00e7in, konumun adresini veya GPS koordinatlar\u0131n\u0131 girin (GPS koordinatlar\u0131 virg\u00fclle ayr\u0131lmal\u0131d\u0131r). Bu bilgiyi kendi durumunda sa\u011flayan bir varl\u0131k kimli\u011fi, enlem ve boylam niteliklerine sahip bir varl\u0131k kimli\u011fi veya b\u00f6lge dostu ad da girebilirsiniz."
+            }
+        }
+    }
+}

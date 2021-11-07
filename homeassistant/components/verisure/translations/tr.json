@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "installation": {
+                "data": {
+                    "giid": "Kurulum"
+                },
+                "description": "Home Assistant, Sayfalar\u0131m hesab\u0131n\u0131zda birden fazla Verisure y\u00fcklemesi buldu. L\u00fctfen Home Assistant'a eklemek i\u00e7in kurulumu se\u00e7in."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Verisure My Pages hesab\u0131n\u0131zla yeniden kimlik do\u011frulamas\u0131 yap\u0131n."
+                }
+            },
+            "user": {
+                "data": {
+                    "description": "Verisure My Pages hesab\u0131n\u0131zla oturum a\u00e7\u0131n."
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Varsay\u0131lan PIN kodu, gerekli basamak say\u0131s\u0131yla e\u015fle\u015fmiyor"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "Kilitler i\u00e7in PIN kodundaki hane say\u0131s\u0131"
+                }
+            }
+        }
+    }
+}
