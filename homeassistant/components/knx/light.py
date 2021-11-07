@@ -7,6 +7,7 @@ from xknx import XKNX
 from xknx.devices.light import Light as XknxLight, XYYColor
 from xknx.telegram.address import parse_device_group_address
 
+from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -27,30 +28,33 @@ from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN, KNX_ADDRESS, ColorTempModes
+from .const import (
+    DATA_KNX_CONFIG,
+    DOMAIN,
+    KNX_ADDRESS,
+    ColorTempModes,
+    SupportedPlatforms,
+)
 from .knx_entity import KnxEntity
 from .schema import LightSchema
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up lights for KNX platform."""
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-    platform_config = discovery_info["platform_config"]
+    """Set up light(s) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
+        SupportedPlatforms.LIGHT.value
+    ]
 
-    _async_migrate_unique_id(hass, platform_config)
-    async_add_entities(
-        KNXLight(xknx, entity_config) for entity_config in platform_config
-    )
+    _async_migrate_unique_id(hass, config)
+    async_add_entities(KNXLight(xknx, entity_config) for entity_config in config)
 
 
 @callback

@@ -9,6 +9,7 @@ from xknx import XKNX
 from xknx.devices import Cover as XknxCover, Device as XknxDevice
 from xknx.telegram.address import parse_device_group_address
 
+from homeassistant import config_entries
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -28,29 +29,26 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_KNX_CONFIG, DOMAIN, SupportedPlatforms
 from .knx_entity import KnxEntity
 from .schema import CoverSchema
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover(s) for KNX platform."""
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-    platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
+        SupportedPlatforms.COVER.value
+    ]
 
-    _async_migrate_unique_id(hass, platform_config)
-    async_add_entities(
-        KNXCover(xknx, entity_config) for entity_config in platform_config
-    )
+    _async_migrate_unique_id(hass, config)
+    async_add_entities(KNXCover(xknx, entity_config) for entity_config in config)
 
 
 @callback
