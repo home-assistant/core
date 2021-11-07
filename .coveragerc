@@ -254,6 +254,13 @@ omit =
     homeassistant/components/eight_sleep/*
     homeassistant/components/eliqonline/sensor.py
     homeassistant/components/elkm1/*
+	homeassistant/components/elmax/__init__.py
+    homeassistant/components/elmax/alarm_control_panel.py
+    homeassistant/components/elmax/const.py
+    homeassistant/components/elmax/cover.py
+    homeassistant/components/elmax/device_action.py
+    homeassistant/components/elmax/sensor.py
+    homeassistant/components/elmax/switch.py
     homeassistant/components/elv/*
     homeassistant/components/emby/media_player.py
     homeassistant/components/emoncms/sensor.py
