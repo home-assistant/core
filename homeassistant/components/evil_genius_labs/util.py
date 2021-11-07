@@ -8,7 +8,7 @@ from . import EvilGeniusEntity
 CallableT = TypeVar("CallableT", bound=Callable)
 
 
-def update_when_done(func: CALLABLE_T) -> CALLABLE_T:
+def update_when_done(func: CallableT) -> CallableT:
     """Decorate function to trigger update when function is done."""
 
     @wraps(func)
@@ -18,4 +18,4 @@ def update_when_done(func: CALLABLE_T) -> CALLABLE_T:
         await self.coordinator.async_request_refresh()
         return result
 
-    return cast(CALLABLE_T, wrapper)
+    return cast(CallableT, wrapper)
