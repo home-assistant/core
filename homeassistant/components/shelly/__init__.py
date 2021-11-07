@@ -455,7 +455,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             try:
                 async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                     result = await self.device.trigger_ota_update(beta=beta_channel)
-            except Exception as err:  # pylint: disable=broad-except
+            except (asyncio.TimeoutError, OSError) as err:
                 _LOGGER.exception("Error while perform ota update: %s", err)
 
             _LOGGER.debug("Result of OTA update call: %s", result)
@@ -752,7 +752,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             try:
                 async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                     result = await self.device.trigger_ota_update(beta=beta_channel)
-            except Exception as err:  # pylint: disable=broad-except
+            except (asyncio.TimeoutError, OSError) as err:
                 _LOGGER.exception("Error while perform ota update: %s", err)
 
             _LOGGER.debug("Result of OTA update call: %s", result)
