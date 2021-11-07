@@ -319,7 +319,7 @@ async def async_create_miio_device_and_coordinator(
             _LOGGER.warning(
                 "Vacuum model %s is not officially supported, please create an issue at "
                 "https://github.com/rytilahti/python-miio/issues and provide the model name if it works as "
-                "expected.",
+                "expected",
                 model,
             )
 
