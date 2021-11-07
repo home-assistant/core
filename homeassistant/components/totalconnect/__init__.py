@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         TotalConnectClient, username, password, usercodes
     )
 
-    if not client.is_valid_credentials():
+    if not client.is_logged_in():
         raise ConfigEntryAuthFailed("TotalConnect authentication failed")
 
     coordinator = TotalConnectDataUpdateCoordinator(hass, client)
@@ -88,5 +88,3 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(exception) from exception
         except ValueError as exception:
             raise UpdateFailed("Unknown state from TotalConnect") from exception
-
-        return True
