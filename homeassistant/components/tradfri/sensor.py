@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseDevice
-from .const import CONF_GATEWAY_ID, DEVICES, DOMAIN, ENTITIES, KEY_API
+from .const import CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
 
 
 async def async_setup_entry(
@@ -27,19 +27,21 @@ async def async_setup_entry(
     api = tradfri_data[KEY_API]
     devices = tradfri_data[DEVICES]
 
-    entities = []
-    for dev in devices:
+    entities = [
+        TradfriSensor(dev, api, gateway_id)
+        for dev in devices
         if (
             not dev.has_light_control
             and not dev.has_socket_control
             and not dev.has_blind_control
             and not dev.has_signal_repeater_control
             and not dev.has_air_purifier_control
-        ):
-            entities.append(TradfriSensor(dev, api, gateway_id))
+        )
+    ]
     if len(entities) > 0:
-        tradfri_data[ENTITIES].extend(entities)
         async_add_entities(entities)
+        for entity in entities:
+            entity.setup()
 
 
 class TradfriSensor(TradfriBaseDevice, SensorEntity):

@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import TradfriBaseDevice
-from .const import ATTR_AUTO, CONF_GATEWAY_ID, DEVICES, DOMAIN, ENTITIES, KEY_API
+from .const import ATTR_AUTO, CONF_GATEWAY_ID, DEVICES, DOMAIN, KEY_API
 
 
 async def async_setup_entry(
@@ -31,13 +31,15 @@ async def async_setup_entry(
     api = tradfri_data[KEY_API]
     devices = tradfri_data[DEVICES]
 
-    entities = []
-    for dev in devices:
-        if dev.has_air_purifier_control:
-            entities.append(TradfriAirPurifierFan(dev, api, gateway_id))
+    entities = [
+        TradfriAirPurifierFan(dev, api, gateway_id)
+        for dev in devices
+        if dev.has_air_purifier_control
+    ]
     if len(entities) > 0:
-        tradfri_data[ENTITIES].extend(entities)
         async_add_entities(entities)
+        for entity in entities:
+            entity.setup()
 
 
 def _from_percentage(percentage: int) -> int:

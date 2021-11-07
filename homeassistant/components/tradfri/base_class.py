@@ -20,9 +20,10 @@ from pytradfri.device.socket_control import SocketControl
 from pytradfri.error import PytradfriError
 
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_GW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,6 +131,10 @@ class TradfriBaseDevice(TradfriBaseClass):
         if available != self._hub_available:
             self._hub_available = available
             self._refresh(self._device)
+
+    def setup(self) -> None:
+        """Connect signal handler."""
+        async_dispatcher_connect(self.hass, SIGNAL_GW, self.set_hub_available)
 
     @property
     def device_info(self) -> DeviceInfo:

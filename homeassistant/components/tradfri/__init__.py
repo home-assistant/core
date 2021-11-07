@@ -15,6 +15,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import Event, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -31,10 +32,10 @@ from .const import (
     DEFAULT_ALLOW_TRADFRI_GROUPS,
     DEVICES,
     DOMAIN,
-    ENTITIES,
     GROUPS,
     KEY_API,
     PLATFORMS,
+    SIGNAL_GW,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,7 +120,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tradfri_data[FACTORY] = factory
     tradfri_data[DEVICES] = devices
     tradfri_data[GROUPS] = groups
-    tradfri_data[ENTITIES] = []
 
     dev_reg = await hass.helpers.device_registry.async_get_registry()
     dev_reg.async_get_or_create(
@@ -146,8 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Keep-alive failed")
             gw_status = False
 
-        for entity in tradfri_data[ENTITIES]:
-            entity.set_hub_available(gw_status)
+        async_dispatcher_send(hass, SIGNAL_GW, gw_status)
 
     listeners.append(
         async_track_time_interval(hass, async_keep_alive, timedelta(seconds=60))
