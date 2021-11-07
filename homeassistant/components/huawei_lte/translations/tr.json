@@ -14,6 +14,7 @@
             "response_error": "Cihazdan bilinmeyen hata",
             "unknown": "Beklenmeyen hata"
         },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -30,7 +31,9 @@
             "init": {
                 "data": {
                     "recipient": "SMS bildirimi al\u0131c\u0131lar\u0131",
-                    "track_new_devices": "Yeni cihazlar\u0131 izle"
+                    "track_new_devices": "Yeni cihazlar\u0131 izle",
+                    "track_wired_clients": "Kablolu a\u011f istemcilerini izleyin",
+                    "unauthenticated_mode": "Kimli\u011fi do\u011frulanmam\u0131\u015f mod (de\u011fi\u015fiklik yeniden y\u00fckleme gerektirir)"
                 }
             }
         }

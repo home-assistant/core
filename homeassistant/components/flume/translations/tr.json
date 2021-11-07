@@ -9,6 +9,10 @@
             "unknown": "Beklenmeyen hata"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "{username} i\u00e7in \u015fifre art\u0131k ge\u00e7erli de\u011fil.",
+                "title": "Flume Hesab\u0131n\u0131z\u0131 Yeniden Do\u011frulay\u0131n"
+            },
             "user": {
                 "data": {
                     "password": "Parola",

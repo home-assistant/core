@@ -16,5 +16,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ph_offset": "pH ofseti (pozitif veya negatif)"
+                }
+            }
+        }
     }
 }

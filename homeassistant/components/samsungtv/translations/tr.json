@@ -5,12 +5,16 @@
             "already_in_progress": "Samsung TV ayar\u0131 zaten s\u00fcr\u00fcyor.",
             "auth_missing": "Home Assistant'\u0131n bu Samsung TV'ye ba\u011flanma izni yok. Home Assistant'\u0131 yetkilendirmek i\u00e7in l\u00fctfen TV'nin ayarlar\u0131n\u0131 kontrol et.",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "missing_config_entry": "Bu Samsung cihaz\u0131nda bir yap\u0131land\u0131rma giri\u015fi yok.",
             "not_supported": "Bu Samsung TV cihaz\u0131 \u015fu anda desteklenmiyor."
         },
         "flow_title": "Samsung TV: {model}",
         "step": {
             "confirm": {
                 "title": "Samsung TV"
+            },
+            "reauth_confirm": {
+                "description": "G\u00f6nderdikten sonra, 30 saniye i\u00e7inde yetkilendirme isteyen {device} \u00fczerindeki a\u00e7\u0131l\u0131r pencereyi kabul edin."
             },
             "user": {
                 "data": {

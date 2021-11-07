@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "cloud_id": "Bulut kimli\u011fi",
+                    "install_code": "Y\u00fckleme kodu"
+                }
+            }
+        }
+    }
+}

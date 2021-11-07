@@ -46,6 +46,14 @@
                     "port": "Port",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 }
+            },
+            "options": {
+                "data": {
+                    "discovery": "Ke\u015ffetmeyi etkinle\u015ftir",
+                    "will_retain": "Mesaj korunacak m\u0131",
+                    "will_topic": "Mesaj konusu olacak"
+                },
+                "description": "Ke\u015fif - Ke\u015fif etkinle\u015ftirilirse (\u00f6nerilir), Home Assistant, yap\u0131land\u0131rmalar\u0131n\u0131 MQTT arac\u0131s\u0131nda yay\u0131nlayan cihazlar\u0131 ve varl\u0131klar\u0131 otomatik olarak ke\u015ffeder. Ke\u015fif devre d\u0131\u015f\u0131 b\u0131rak\u0131l\u0131rsa, t\u00fcm yap\u0131land\u0131rma manuel olarak yap\u0131lmal\u0131d\u0131r.\n Do\u011fum mesaj\u0131 - Do\u011fum mesaj\u0131, Home Assistant (yeniden) MQTT arac\u0131s\u0131na her ba\u011fland\u0131\u011f\u0131nda g\u00f6nderilir.\n Will mesaj\u0131 - Will mesaj\u0131, Home Assistant arac\u0131yla olan ba\u011flant\u0131s\u0131n\u0131 her kaybetti\u011finde, hem temizlik durumunda (\u00f6rn. Home Assistant kapan\u0131yor) hem de kirli bir durumda (\u00f6rn. ba\u011flant\u0131y\u0131 kes."
             }
         }
     }

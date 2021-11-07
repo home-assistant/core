@@ -22,7 +22,7 @@
                 "data": {
                     "code": "Hozz\u00e1f\u00e9r\u00e9si token"
                 },
-                "description": "[Enged\u00e9lyezze] Google-fi\u00f3kj\u00e1t az \u00f6sszekapcsol\u00e1hoz ({url}).\n\nAz enged\u00e9lyez\u00e9s ut\u00e1n m\u00e1solja \u00e1t a kapott token k\u00f3dot.",
+                "description": "[Enged\u00e9lyezze]({url}) Google-fi\u00f3kj\u00e1t az \u00f6sszekapcsol\u00e1hoz.\n\nAz enged\u00e9lyez\u00e9s ut\u00e1n m\u00e1solja \u00e1t a kapott token k\u00f3dot.",
                 "title": "\u00d6sszekapcsol\u00e1s Google-al"
             },
             "init": {

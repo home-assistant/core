@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "title": "Senkronizasyon entegrasyonunu kurun",
+                    "token": "Anahtar"
+                }
+            }
+        }
+    },
+    "title": "E\u015fitleme"
+}

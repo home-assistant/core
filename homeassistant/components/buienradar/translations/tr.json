@@ -1,0 +1,12 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "country_code": "Kamera g\u00f6r\u00fcnt\u00fclerinin g\u00f6r\u00fcnt\u00fclenece\u011fi \u00fclkenin \u00fclke kodu.",
+                    "delta": "Kamera g\u00f6r\u00fcnt\u00fcs\u00fc g\u00fcncellemeleri aras\u0131ndaki saniye cinsinden zaman aral\u0131\u011f\u0131"
+                }
+            }
+        }
+    }
+}

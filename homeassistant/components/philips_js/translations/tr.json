@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "pair": {
+                "description": "TV'nizde g\u00f6r\u00fcnt\u00fclenen PIN'i girin"
+            }
+        }
+    }
+}

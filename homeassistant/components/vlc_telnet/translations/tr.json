@@ -8,6 +8,9 @@
             "cannot_connect": "Ba\u011flant\u0131 ba\u015far\u0131s\u0131z"
         },
         "step": {
+            "hassio_confirm": {
+                "description": "{addon} eklentisine ba\u011flanmak istiyor musunuz?"
+            },
             "reauth_confirm": {
                 "data": {
                     "password": "\u015eifre"

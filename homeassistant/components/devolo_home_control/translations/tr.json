@@ -4,7 +4,8 @@
             "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
         },
         "error": {
-            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "reauth_failed": "L\u00fctfen \u00f6ncekiyle ayn\u0131 mydevolo kullan\u0131c\u0131s\u0131n\u0131 kullan\u0131n."
         },
         "step": {
             "user": {

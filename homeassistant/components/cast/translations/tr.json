@@ -4,8 +4,28 @@
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
         },
         "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Bilinen ana bilgisayarlar"
+                },
+                "title": "Google Cast yap\u0131land\u0131rmas\u0131"
+            },
             "confirm": {
                 "description": "Kuruluma ba\u015flamak ister misiniz?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced_options": {
+                "title": "Geli\u015fmi\u015f Google Cast yap\u0131land\u0131rmas\u0131"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Bilinen ana bilgisayarlar"
+                },
+                "description": "Bilinen Ana Bilgisayarlar - Yay\u0131n cihazlar\u0131n\u0131n ana bilgisayar adlar\u0131n\u0131n veya IP adreslerinin virg\u00fclle ayr\u0131lm\u0131\u015f listesi, mDNS ke\u015ffi \u00e7al\u0131\u015fm\u0131yorsa kullan\u0131n.",
+                "title": "Google Cast yap\u0131land\u0131rmas\u0131"
             }
         }
     }

@@ -6,14 +6,24 @@
             "kalibration_heizbetrieb": "Is\u0131tma modu kalibrasyonu",
             "kalibration_kombibetrieb": "Kombi modu kalibrasyonu",
             "reduzierter_betrieb": "S\u0131n\u0131rl\u0131 mod",
+            "smart_home": "Ak\u0131ll\u0131 Ev",
+            "softstart": "Yumu\u015fak ba\u015flang\u0131\u00e7",
             "solarbetrieb": "G\u00fcne\u015f modu",
             "sparbetrieb": "Ekonomi modu",
+            "sparen": "Ekonomi",
+            "stabilisierung": "Stabilizasyon",
             "standby": "Bekleme",
             "start": "Ba\u015flat",
             "storung": "Hata",
+            "taktsperre": "Anti-d\u00f6ng\u00fc",
+            "telefonfernschalter": "Telefon uzaktan anahtar\u0131",
             "test": "Test",
+            "tpw": "TPW",
             "urlaubsmodus": "Tatil modu",
-            "warmwasserbetrieb": "DHW modu"
+            "ventilprufung": "Valf testi",
+            "warmwasser": "DHW",
+            "warmwasserbetrieb": "DHW modu",
+            "zunden": "Ate\u015fleme"
         }
     }
 }

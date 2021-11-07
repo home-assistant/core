@@ -6,6 +6,9 @@
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Bu Guardian cihaz\u0131n\u0131 kurmak istiyor musunuz?"
+            },
             "user": {
                 "data": {
                     "ip_address": "\u0130p Adresi",

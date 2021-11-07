@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "azimuth": "Azimut (360 derece, 0 = Kuzey, 90 = Do\u011fu, 180 = G\u00fcney, 270 = Bat\u0131)",
+                    "declination": "Sapma (0 = Yatay, 90 = Dikey)"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "azimuth": "Azimut (360 derece, 0 = Kuzey, 90 = Do\u011fu, 180 = G\u00fcney, 270 = Bat\u0131)"
+                }
+            }
+        }
+    }
+}

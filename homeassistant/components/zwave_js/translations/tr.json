@@ -22,6 +22,9 @@
             "configure_addon": {
                 "data": {
                     "network_key": "A\u011f Anahtar\u0131",
+                    "s2_access_control_key": "S2 Eri\u015fim Kontrol Anahtar\u0131",
+                    "s2_authenticated_key": "S2 Kimli\u011fi Do\u011frulanm\u0131\u015f Anahtar",
+                    "s2_unauthenticated_key": "S2 Kimli\u011fi Do\u011frulanmam\u0131\u015f Anahtar",
                     "usb_path": "USB Ayg\u0131t Yolu"
                 },
                 "title": "Z-Wave JS eklenti yap\u0131land\u0131rmas\u0131na girin"
@@ -43,12 +46,52 @@
                 },
                 "description": "Z-Wave JS Supervisor eklentisini kullanmak istiyor musunuz?",
                 "title": "Ba\u011flant\u0131 y\u00f6ntemini se\u00e7in"
+            },
+            "usb_confirm": {
+                "description": "{name} Z-Wave JS eklentisiyle kurmak istiyor musunuz?"
             }
         }
     },
     "device_automation": {
         "action_type": {
-            "ping": "ping"
+            "clear_lock_usercode": "{entity_name} \u00fczerindeki kullan\u0131c\u0131 kodunu temizle",
+            "ping": "ping",
+            "refresh_value": "{entity_name} i\u00e7in de\u011ferleri yenileme",
+            "reset_meter": "{subtype} \u00fczerindeki saya\u00e7lar\u0131 s\u0131f\u0131rla",
+            "set_config_parameter": "{subtype} yap\u0131land\u0131rma parametresinin de\u011ferini ayarlama",
+            "set_lock_usercode": "{entity_name} \u00fczerinde kullan\u0131c\u0131 kodu ayarlama"
+        },
+        "condition_type": {
+            "config_parameter": "Yap\u0131land\u0131rma parametresi {subtype} de\u011feri"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Giri\u015f Kontrol\u00fc bildirimi g\u00f6nderdi",
+            "event.notification.notification": "Bildirim g\u00f6nderdi",
+            "event.value_notification.central_scene": "{subtype} \u00fczerinde Merkezi Sahne eylemi",
+            "event.value_notification.scene_activation": "{subtype} \u00fczerinde Sahne Aktivasyonu"
+        }
+    },
+    "options": {
+        "abort": {
+            "different_device": "Ba\u011fl\u0131 USB ayg\u0131t\u0131, bu yap\u0131land\u0131rma giri\u015fi i\u00e7in daha \u00f6nce yap\u0131land\u0131r\u0131lanla ayn\u0131 de\u011fil. L\u00fctfen bunun yerine yeni cihaz i\u00e7in yeni bir yap\u0131land\u0131rma giri\u015fi olu\u015fturun."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Donan\u0131m\u0131 Taklit Et",
+                    "log_level": "G\u00fcnl\u00fck d\u00fczeyi",
+                    "network_key": "A\u011f Anahtar\u0131",
+                    "s2_access_control_key": "S2 Eri\u015fim Kontrol Anahtar\u0131",
+                    "s2_authenticated_key": "S2 Kimli\u011fi Do\u011frulanm\u0131\u015f Anahtar",
+                    "s2_unauthenticated_key": "S2 Kimli\u011fi Do\u011frulanmam\u0131\u015f Anahtar"
+                }
+            },
+            "on_supervisor": {
+                "title": "Ba\u011flant\u0131 y\u00f6ntemini se\u00e7in"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS eklentisi ba\u015fl\u0131yor."
+            }
         }
     },
     "title": "Z-Wave JS"
