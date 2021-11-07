@@ -6,7 +6,11 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
+        "flow_title": "{model} {id} ({host})",
         "step": {
+            "discovery_confirm": {
+                "description": "{model} ( {host} ) kurulumu yapmak istiyor musunuz?"
+            },
             "pick_device": {
                 "data": {
                     "device": "Cihaz"

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "mqtt_required": "MQTT entegrasyonu kurulmam\u0131\u015f"
+        },
+        "step": {
+            "gw_mqtt": {
+                "description": "MQTT a\u011f ge\u00e7idi kurulumu"
+            },
+            "gw_tcp": {
+                "data": {
+                    "tcp_port": "port",
+                    "version": "MySensors s\u00fcr\u00fcm\u00fc"
+                },
+                "description": "Ethernet a\u011f ge\u00e7idi kurulumu"
+            },
+            "user": {
+                "data": {
+                    "gateway_type": "A\u011f ge\u00e7idi t\u00fcr\u00fc"
+                },
+                "description": "A\u011f ge\u00e7idine ba\u011flant\u0131 y\u00f6ntemini se\u00e7in"
+            }
+        }
+    },
+    "title": "Sens\u00f6rlerim"
+}

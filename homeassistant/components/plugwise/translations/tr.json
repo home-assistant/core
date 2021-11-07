@@ -10,6 +10,9 @@
         },
         "flow_title": "Smile: {name}",
         "step": {
+            "user": {
+                "description": "\u00dcr\u00fcn:"
+            },
             "user_gateway": {
                 "data": {
                     "host": "\u0130p Adresi",
@@ -18,6 +21,13 @@
                     "username": "Smile Kullan\u0131c\u0131 Ad\u0131"
                 },
                 "description": "L\u00fctfen girin"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Plugwise Se\u00e7eneklerini Ayarlay\u0131n"
             }
         }
     }

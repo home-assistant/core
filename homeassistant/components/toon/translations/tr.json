@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Se\u00e7ilen anla\u015fma zaten yap\u0131land\u0131r\u0131lm\u0131\u015f.",
+            "no_agreements": "Bu hesapta Toon ekran\u0131 yok.",
             "unknown_authorize_url_generation": "Yetkilendirme url'si olu\u015fturulurken bilinmeyen hata."
         },
         "step": {

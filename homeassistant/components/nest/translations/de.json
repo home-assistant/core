@@ -22,7 +22,7 @@
                 "data": {
                     "code": "Zugangstoken"
                 },
-                "description": "Um dein Google-Konto zu verkn\u00fcpfen, w\u00e4hle [Konto autorisieren]({url}).\n\nKopiere nach der Autorisierung den unten angegebenen Auth Token Code.",
+                "description": "Um dein Google-Konto zu verkn\u00fcpfen, w\u00e4hle [Konto autorisieren]({url}).\n\nKopiere nach der Autorisierung den unten angegebenen Authentifizierungstoken-Code.",
                 "title": "Google-Konto verkn\u00fcpfen"
             },
             "init": {

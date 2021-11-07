@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "unknown_license_plate": "Bilinmeyen plaka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "license_plate": "Plaka"
+                }
+            }
+        }
+    }
+}
