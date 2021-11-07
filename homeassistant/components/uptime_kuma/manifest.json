@@ -1,0 +1,9 @@
+{
+  "domain": "uptime_kuma",
+  "name": "Uptime Kuma",
+  "documentation": "https://www.home-assistant.io/integrations/uptime_kuma",
+  "requirements": ["uptime_kuma_monitor==1.0.0"],
+  "codeowners": ["@meichthys"],
+  "iot_class": "cloud_polling",
+  "config_flow": true
+}

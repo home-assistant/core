@@ -555,6 +555,7 @@ homeassistant/components/upc_connect/* @pvizeli @fabaff
 homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23
+homeassistant/components/uptime_kuma/* @meichthys
 homeassistant/components/uptimerobot/* @ludeeus
 homeassistant/components/usb/* @bdraco
 homeassistant/components/usgs_earthquakes_feed/* @exxamalte
