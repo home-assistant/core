@@ -70,7 +70,7 @@ class TileFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class TileOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Tile options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Tile options flow."""
         self.config_entry = config_entry
 
