@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "damping": "\u6e1b\u8870\u4fc2\u6570(\u30c0\u30f3\u30d4\u30f3\u30b0\u30d5\u30a1\u30af\u30bf\u30fc): \u671d\u3068\u5915\u65b9\u306e\u7d50\u679c\u3092\u8abf\u6574\u3059\u308b"
+                }
+            }
+        }
+    }
+}

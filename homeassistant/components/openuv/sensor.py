@@ -122,7 +122,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
-    openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    openuv = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
     async_add_entities(
         [OpenUvSensor(openuv, description) for description in SENSOR_DESCRIPTIONS]
     )
@@ -134,9 +134,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        data = self.openuv.data[DATA_UV].get("result")
-
-        if not data:
+        if not (data := self.openuv.data[DATA_UV].get("result")):
             self._attr_available = False
             return
 
@@ -159,8 +157,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
                 self._attr_native_value = UV_LEVEL_LOW
         elif self.entity_description.key == TYPE_MAX_UV_INDEX:
             self._attr_native_value = data["uv_max"]
-            uv_max_time = parse_datetime(data["uv_max_time"])
-            if uv_max_time:
+            if uv_max_time := parse_datetime(data["uv_max_time"]):
                 self._attr_extra_state_attributes.update(
                     {ATTR_MAX_UV_TIME: as_local(uv_max_time)}
                 )

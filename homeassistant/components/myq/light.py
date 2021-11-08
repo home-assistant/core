@@ -1,6 +1,4 @@
 """Support for MyQ-Enabled lights."""
-import logging
-
 from pymyq.errors import MyQError
 
 from homeassistant.components.light import LightEntity
@@ -9,8 +7,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import MyQEntity
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, MYQ_TO_HASS
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

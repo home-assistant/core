@@ -76,13 +76,13 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "identifiers": {(HMIPC_DOMAIN, self._device.id)},
-            "name": self._device.label,
-            "manufacturer": "eQ-3",
-            "model": self._device.modelType,
-            "via_device": (HMIPC_DOMAIN, self._device.homeId),
-        }
+        return DeviceInfo(
+            identifiers={(HMIPC_DOMAIN, self._device.id)},
+            manufacturer="eQ-3",
+            model=self._device.modelType,
+            name=self._device.label,
+            via_device=(HMIPC_DOMAIN, self._device.homeId),
+        )
 
     @property
     def temperature_unit(self) -> str:
@@ -207,8 +207,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         if self.min_temp <= temperature <= self.max_temp:

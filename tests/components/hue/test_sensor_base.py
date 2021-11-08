@@ -3,14 +3,29 @@ import asyncio
 from unittest.mock import Mock
 
 import aiohue
+import pytest
 
+from homeassistant.components import hue
 from homeassistant.components.hue import sensor_base
 from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
 from .conftest import create_mock_bridge, setup_bridge_for_sensors as setup_bridge
 
-from tests.common import async_capture_events, async_fire_time_changed
+from tests.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    mock_device_registry,
+)
+
+
+@pytest.fixture
+def device_reg(hass):
+    """Return an empty, loaded, registry."""
+    return mock_device_registry(hass)
+
 
 PRESENCE_SENSOR_1_PRESENT = {
     "state": {"presence": True, "lastupdated": "2019-01-01T01:00:00"},
@@ -344,6 +359,12 @@ async def test_sensors(hass, mock_bridge):
     assert battery_remote_1.state == "100"
     assert battery_remote_1.name == "Hue dimmer switch 1 battery level"
 
+    ent_reg = async_get(hass)
+    assert (
+        ent_reg.async_get("sensor.hue_dimmer_switch_1_battery_level").entity_category
+        == ENTITY_CATEGORY_DIAGNOSTIC
+    )
+
 
 async def test_unsupported_sensors(hass, mock_bridge):
     """Test that unsupported sensors don't get added and don't fail."""
@@ -435,7 +456,7 @@ async def test_update_unauthorized(hass, mock_bridge):
     assert len(mock_bridge.handle_unauthorized_error.mock_calls) == 1
 
 
-async def test_hue_events(hass, mock_bridge):
+async def test_hue_events(hass, mock_bridge, device_reg):
     """Test that hue remotes fire events when pressed."""
     mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
 
@@ -445,6 +466,10 @@ async def test_hue_events(hass, mock_bridge):
     assert len(mock_bridge.mock_requests) == 1
     assert len(hass.states.async_all()) == 7
     assert len(events) == 0
+
+    hue_tap_device = device_reg.async_get_device(
+        {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
+    )
 
     mock_bridge.api.sensors["7"].last_event = {"type": "button"}
     mock_bridge.api.sensors["8"].last_event = {"type": "button"}
@@ -467,11 +492,16 @@ async def test_hue_events(hass, mock_bridge):
     assert len(hass.states.async_all()) == 7
     assert len(events) == 1
     assert events[-1].data == {
+        "device_id": hue_tap_device.id,
         "id": "hue_tap",
         "unique_id": "00:00:00:00:00:44:23:08-f2",
         "event": 18,
         "last_updated": "2019-12-28T22:58:03",
     }
+
+    hue_dimmer_device = device_reg.async_get_device(
+        {(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
+    )
 
     new_sensor_response = dict(new_sensor_response)
     new_sensor_response["8"] = dict(new_sensor_response["8"])
@@ -491,6 +521,7 @@ async def test_hue_events(hass, mock_bridge):
     assert len(hass.states.async_all()) == 7
     assert len(events) == 2
     assert events[-1].data == {
+        "device_id": hue_dimmer_device.id,
         "id": "hue_dimmer_switch_1",
         "unique_id": "00:17:88:01:10:3e:3a:dc-02-fc00",
         "event": 3002,
@@ -571,10 +602,15 @@ async def test_hue_events(hass, mock_bridge):
     )
     await hass.async_block_till_done()
 
+    hue_aurora_device = device_reg.async_get_device(
+        {(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
+    )
+
     assert len(mock_bridge.mock_requests) == 6
     assert len(hass.states.async_all()) == 8
     assert len(events) == 3
     assert events[-1].data == {
+        "device_id": hue_aurora_device.id,
         "id": "lutron_aurora_1",
         "unique_id": "ff:ff:00:0f:e7:fd:bc:b7-01-fc00-0014",
         "event": 2,

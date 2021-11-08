@@ -8,7 +8,6 @@ CONF_FROM_WINDOW = "from_window"
 CONF_TO_WINDOW = "to_window"
 
 DATA_CLIENT = "data_client"
-DATA_LISTENER = "data_listener"
 DATA_PROTECTION_WINDOW = "protection_window"
 DATA_UV = "uv"
 

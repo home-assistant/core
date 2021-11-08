@@ -68,9 +68,7 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up for Vera controllers."""
     hass.data[DOMAIN] = {}
 
-    config = base_config.get(DOMAIN)
-
-    if not config:
+    if not (config := base_config.get(DOMAIN)):
         return True
 
     hass.async_create_task(
@@ -270,8 +268,7 @@ class VeraDevice(Generic[DeviceType], Entity):
             attr[ATTR_ARMED] = "True" if armed else "False"
 
         if self.vera_device.is_trippable:
-            last_tripped = self.vera_device.last_trip
-            if last_tripped is not None:
+            if (last_tripped := self.vera_device.last_trip) is not None:
                 utc_time = utc_from_timestamp(int(last_tripped))
                 attr[ATTR_LAST_TRIP_TIME] = utc_time.isoformat()
             else:
@@ -279,12 +276,10 @@ class VeraDevice(Generic[DeviceType], Entity):
             tripped = self.vera_device.is_tripped
             attr[ATTR_TRIPPED] = "True" if tripped else "False"
 
-        power = self.vera_device.power
-        if power:
+        if power := self.vera_device.power:
             attr[ATTR_CURRENT_POWER_W] = convert(power, float, 0.0)
 
-        energy = self.vera_device.energy
-        if energy:
+        if energy := self.vera_device.energy:
             attr[ATTR_CURRENT_ENERGY_KWH] = convert(energy, float, 0.0)
 
         attr["Vera Device Id"] = self.vera_device.vera_device_id

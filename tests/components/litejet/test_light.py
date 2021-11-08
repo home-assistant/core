@@ -1,14 +1,10 @@
 """The tests for the litejet component."""
-import logging
-
 from homeassistant.components import light
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_TRANSITION
 from homeassistant.components.litejet.const import CONF_DEFAULT_TRANSITION
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 
 from . import async_init_integration
-
-_LOGGER = logging.getLogger(__name__)
 
 ENTITY_LIGHT = "light.mock_load_1"
 ENTITY_LIGHT_NUMBER = 1

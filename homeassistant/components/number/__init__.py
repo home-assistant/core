@@ -4,11 +4,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, final
+from typing import Any, Literal, final
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -27,6 +28,7 @@ from .const import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DOMAIN,
+    MODE_AUTO,
     SERVICE_SET_VALUE,
 )
 
@@ -90,6 +92,7 @@ class NumberEntity(Entity):
     _attr_min_value: float = DEFAULT_MIN_VALUE
     _attr_state: None = None
     _attr_step: float
+    _attr_mode: Literal["auto", "slider", "box"] = MODE_AUTO
     _attr_value: float
 
     @property
@@ -99,6 +102,7 @@ class NumberEntity(Entity):
             ATTR_MIN: self.min_value,
             ATTR_MAX: self.max_value,
             ATTR_STEP: self.step,
+            ATTR_MODE: self.mode,
         }
 
     @property
@@ -122,6 +126,11 @@ class NumberEntity(Entity):
             while value_range <= step:
                 step /= 10.0
         return step
+
+    @property
+    def mode(self) -> Literal["auto", "slider", "box"]:
+        """Return the mode of the entity."""
+        return self._attr_mode
 
     @property
     @final

@@ -6,6 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
@@ -49,7 +50,10 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Check if it is a gateway
-        if discovery_info.get("properties", {}).get("MT") in SUPPORTED_MODEL_TYPES:
+        if (
+            discovery_info.get(zeroconf.ATTR_PROPERTIES, {}).get("MT")
+            in SUPPORTED_MODEL_TYPES
+        ):
             await self._async_handle_discovery_without_unique_id()
             return await self.async_step_zeroconf_confirm()
         return self.async_abort(reason="Not a devolo Home Control gateway.")

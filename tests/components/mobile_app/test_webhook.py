@@ -1,4 +1,5 @@
 """Webhook tests for mobile_app."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -9,6 +10,7 @@ from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
@@ -76,7 +78,7 @@ async def test_webhook_handle_render_template(create_registrations, webhook_clie
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     json = await resp.json()
     assert json == {
@@ -97,7 +99,7 @@ async def test_webhook_handle_call_services(hass, create_registrations, webhook_
         json=CALL_SERVICE,
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     assert len(calls) == 1
 
@@ -117,7 +119,7 @@ async def test_webhook_handle_fire_event(hass, create_registrations, webhook_cli
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]), json=FIRE_EVENT
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     json = await resp.json()
     assert json == {}
 
@@ -131,7 +133,7 @@ async def test_webhook_update_registration(webhook_client, authed_api_client):
         "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
     )
 
-    assert register_resp.status == 201
+    assert register_resp.status == HTTPStatus.CREATED
     register_json = await register_resp.json()
 
     webhook_id = register_json[CONF_WEBHOOK_ID]
@@ -142,7 +144,7 @@ async def test_webhook_update_registration(webhook_client, authed_api_client):
         f"/api/webhook/{webhook_id}", json=update_container
     )
 
-    assert update_resp.status == 200
+    assert update_resp.status == HTTPStatus.OK
     update_json = await update_resp.json()
     assert update_json["app_version"] == "2.0.0"
     assert CONF_WEBHOOK_ID not in update_json
@@ -180,7 +182,7 @@ async def test_webhook_handle_get_zones(hass, create_registrations, webhook_clie
         json={"type": "get_zones"},
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     json = await resp.json()
     assert len(json) == 3
@@ -206,7 +208,7 @@ async def test_webhook_handle_get_config(hass, create_registrations, webhook_cli
         json={"type": "get_config"},
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     json = await resp.json()
     if "components" in json:
@@ -239,7 +241,7 @@ async def test_webhook_returns_error_incorrect_json(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]), data="not json"
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     json = await resp.json()
     assert json == {}
     assert "invalid JSON" in caplog.text
@@ -256,7 +258,7 @@ async def test_webhook_handle_decryption(webhook_client, create_registrations):
         "/api/webhook/{}".format(create_registrations[0]["webhook_id"]), json=container
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     webhook_json = await resp.json()
     assert "encrypted_data" in webhook_json
@@ -273,7 +275,7 @@ async def test_webhook_requires_encryption(webhook_client, create_registrations)
         json=RENDER_TEMPLATE,
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
     webhook_json = await resp.json()
     assert "error" in webhook_json
@@ -291,7 +293,7 @@ async def test_webhook_update_location(hass, webhook_client, create_registration
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     state = hass.states.get("device_tracker.test_1_2")
     assert state is not None
@@ -310,7 +312,7 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
         json={"type": "enable_encryption"},
     )
 
-    assert enable_enc_resp.status == 200
+    assert enable_enc_resp.status == HTTPStatus.OK
 
     enable_enc_json = await enable_enc_resp.json()
     assert len(enable_enc_json) == 1
@@ -323,7 +325,7 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
         json=RENDER_TEMPLATE,
     )
 
-    assert enc_required_resp.status == 400
+    assert enc_required_resp.status == HTTPStatus.BAD_REQUEST
 
     enc_required_json = await enc_required_resp.json()
     assert "error" in enc_required_json
@@ -340,7 +342,7 @@ async def test_webhook_enable_encryption(hass, webhook_client, create_registrati
 
     enc_resp = await webhook_client.post(f"/api/webhook/{webhook_id}", json=container)
 
-    assert enc_resp.status == 200
+    assert enc_resp.status == HTTPStatus.OK
 
     enc_json = await enc_resp.json()
     assert "encrypted_data" in enc_json
@@ -364,7 +366,7 @@ async def test_webhook_camera_stream_non_existent(
         },
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     webhook_json = await resp.json()
     assert webhook_json["success"] is False
 
@@ -385,7 +387,7 @@ async def test_webhook_camera_stream_non_hls(
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     webhook_json = await resp.json()
     assert webhook_json["hls_path"] is None
     assert (
@@ -416,7 +418,7 @@ async def test_webhook_camera_stream_stream_available(
             },
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     webhook_json = await resp.json()
     assert webhook_json["hls_path"] == "/api/streams/some_hls_stream"
     assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"
@@ -444,7 +446,7 @@ async def test_webhook_camera_stream_stream_available_but_errors(
             },
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     webhook_json = await resp.json()
     assert webhook_json["hls_path"] is None
     assert webhook_json["mjpeg_path"] == "/api/camera_proxy_stream/camera.stream_camera"
@@ -466,10 +468,106 @@ async def test_webhook_handle_scan_tag(hass, create_registrations, webhook_clien
         json={"type": "scan_tag", "data": {"tag_id": "mock-tag-id"}},
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     json = await resp.json()
     assert json == {}
 
     assert len(events) == 1
     assert events[0].data["tag_id"] == "mock-tag-id"
     assert events[0].data["device_id"] == "mock-device-id"
+
+
+async def test_register_sensor_limits_state_class(
+    hass, create_registrations, webhook_client
+):
+    """Test that we limit state classes to sensors only."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 100,
+                "type": "sensor",
+                "state_class": "total",
+                "unique_id": "abcd",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 100,
+                "type": "binary_sensor",
+                "state_class": "total",
+                "unique_id": "efgh",
+            },
+        },
+    )
+
+    # This means it was ignored.
+    assert reg_resp.status == HTTPStatus.OK
+
+
+async def test_reregister_sensor(hass, create_registrations, webhook_client):
+    """Test that we can add more info in re-registration."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 100,
+                "type": "sensor",
+                "unique_id": "abcd",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+
+    ent_reg = er.async_get(hass)
+    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    assert entry.original_name == "Test 1 Battery State"
+    assert entry.device_class is None
+    assert entry.unit_of_measurement is None
+    assert entry.entity_category is None
+    assert entry.original_icon == "mdi:cellphone"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "New Name",
+                "state": 100,
+                "type": "sensor",
+                "unique_id": "abcd",
+                "state_class": "total",
+                "device_class": "battery",
+                "entity_category": "diagnostic",
+                "icon": "mdi:new-icon",
+                "unit_of_measurement": "%",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    assert entry.original_name == "Test 1 New Name"
+    assert entry.device_class == "battery"
+    assert entry.unit_of_measurement == "%"
+    assert entry.entity_category == "diagnostic"
+    assert entry.original_icon == "mdi:new-icon"

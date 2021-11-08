@@ -292,17 +292,15 @@ class EDL21:
 
         new_entities = []
         for telegram in message_body.get("valList", []):
-            obis = telegram.get("objName")
-            if not obis:
+            if not (obis := telegram.get("objName")):
                 continue
 
             if (electricity_id, obis) in self._registered_obis:
                 async_dispatcher_send(
                     self._hass, SIGNAL_EDL21_TELEGRAM, electricity_id, telegram
                 )
-            else:
-                entity_description = self._OBIS_SENSOR_ENTITY_DESCRIPTIONS.get(obis)
-                if entity_description and entity_description.name:
+            else:         
+                if entity_description := self._OBIS_SENSOR_ENTITY_DESCRIPTIONS.get(obis) and entity_description.name:
                     if self._name:
                         name = f"{self._name}: {entity_description.name}"
                     new_entities.append(

@@ -65,7 +65,7 @@ async def _update_google_domains(hass, session, domain, user, password, timeout)
     params = {"hostname": domain}
 
     try:
-        with async_timeout.timeout(timeout):
+        async with async_timeout.timeout(timeout):
             resp = await session.get(url, params=params)
             body = await resp.text()
 

@@ -28,7 +28,7 @@ async def test_invalid_path(hass):
     """Test that an invalid path is caught."""
     config = {"sensor": {"platform": "folder", CONF_FOLDER_PATHS: "invalid_path"}}
     assert await async_setup_component(hass, "sensor", config)
-    assert len(hass.states.async_entity_ids()) == 0
+    assert len(hass.states.async_entity_ids("sensor")) == 0
 
 
 async def test_valid_path(hass):

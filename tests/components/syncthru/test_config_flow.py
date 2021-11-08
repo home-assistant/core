@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from pysyncthru import SyncThruAPINotSupported
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.syncthru.config_flow import SyncThru
 from homeassistant.components.syncthru.const import DOMAIN
@@ -49,7 +49,7 @@ async def test_show_setup_form(hass):
 
 async def test_already_configured_by_url(hass, aioclient_mock):
     """Test we match and update already configured devices by URL."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     udn = "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
     MockConfigEntry(
         domain=DOMAIN,
@@ -103,7 +103,7 @@ async def test_unknown_state(hass):
 
 async def test_success(hass, aioclient_mock):
     """Test successful flow provides entry creation data."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     mock_connection(aioclient_mock)
 
     with patch(
@@ -123,7 +123,7 @@ async def test_success(hass, aioclient_mock):
 
 async def test_ssdp(hass, aioclient_mock):
     """Test SSDP discovery initiates config properly."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     mock_connection(aioclient_mock)
 
     url = "http://192.168.1.2/"

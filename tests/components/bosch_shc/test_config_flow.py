@@ -9,7 +9,8 @@ from boschshcpy.exceptions import (
 )
 from boschshcpy.information import SHCInformation
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.bosch_shc.config_flow import write_tls_asset
 from homeassistant.components.bosch_shc.const import CONF_SHC_CERT, CONF_SHC_KEY, DOMAIN
 
@@ -19,18 +20,18 @@ MOCK_SETTINGS = {
     "name": "Test name",
     "device": {"mac": "test-mac", "hostname": "test-host"},
 }
-DISCOVERY_INFO = {
-    "host": "1.1.1.1",
-    "port": 0,
-    "hostname": "shc012345.local.",
-    "type": "_http._tcp.local.",
-    "name": "Bosch SHC [test-mac]._http._tcp.local.",
-}
+DISCOVERY_INFO = zeroconf.HaServiceInfo(
+    host=["169.1.1.1", "1.1.1.1"],
+    port=0,
+    hostname="shc012345.local.",
+    type="_http._tcp.local.",
+    name="Bosch SHC [test-mac]._http._tcp.local.",
+)
 
 
 async def test_form_user(hass, mock_zeroconf):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -376,7 +377,7 @@ async def test_form_validate_exception(hass, mock_zeroconf):
 
 async def test_form_already_configured(hass, mock_zeroconf):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain="bosch_shc", unique_id="test-mac", data={"host": "0.0.0.0"}
     )
@@ -412,7 +413,6 @@ async def test_form_already_configured(hass, mock_zeroconf):
 
 async def test_zeroconf(hass, mock_zeroconf):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "boschshcpy.session.SHCSession.mdns_info",
@@ -481,7 +481,7 @@ async def test_zeroconf(hass, mock_zeroconf):
 
 async def test_zeroconf_already_configured(hass, mock_zeroconf):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain="bosch_shc", unique_id="test-mac", data={"host": "0.0.0.0"}
     )
@@ -526,11 +526,33 @@ async def test_zeroconf_cannot_connect(hass, mock_zeroconf):
         assert result["reason"] == "cannot_connect"
 
 
+async def test_zeroconf_link_local(hass, mock_zeroconf):
+    """Test we get the form."""
+    DISCOVERY_INFO_LINK_LOCAL = zeroconf.HaServiceInfo(
+        host=["169.1.1.1"],
+        port=0,
+        hostname="shc012345.local.",
+        type="_http._tcp.local.",
+        name="Bosch SHC [test-mac]._http._tcp.local.",
+    )
+
+    with patch(
+        "boschshcpy.session.SHCSession.mdns_info", side_effect=SHCConnectionError
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO_LINK_LOCAL,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
+
+
 async def test_zeroconf_not_bosch_shc(hass, mock_zeroconf):
     """Test we filter out non-bosch_shc devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"host": "1.1.1.1", "name": "notboschshc"},
+        data=zeroconf.HaServiceInfo(host="1.1.1.1", name="notboschshc"),
         context={"source": config_entries.SOURCE_ZEROCONF},
     )
     assert result["type"] == "abort"
@@ -539,7 +561,7 @@ async def test_zeroconf_not_bosch_shc(hass, mock_zeroconf):
 
 async def test_reauth(hass, mock_zeroconf):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test-mac",

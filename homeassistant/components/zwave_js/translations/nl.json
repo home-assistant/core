@@ -27,6 +27,10 @@
             "configure_addon": {
                 "data": {
                     "network_key": "Netwerksleutel",
+                    "s0_legacy_key": "S0 Sleutel (Legacy)",
+                    "s2_access_control_key": "S2 Toegangscontrolesleutel",
+                    "s2_authenticated_key": "S2 geverifieerde sleutel",
+                    "s2_unauthenticated_key": "S2 niet-geverifieerde sleutel",
                     "usb_path": "USB-apparaatpad"
                 },
                 "title": "Voer de Z-Wave JS add-on configuratie in"
@@ -109,6 +113,10 @@
                     "emulate_hardware": "Emulate Hardware",
                     "log_level": "Log level",
                     "network_key": "Netwerksleutel",
+                    "s0_legacy_key": "S0 Sleutel (Legacy)",
+                    "s2_access_control_key": "S2 Toegangscontrolesleutel",
+                    "s2_authenticated_key": "S2 geverifieerde sleutel",
+                    "s2_unauthenticated_key": "S2 niet-geverifieerde sleutel",
                     "usb_path": "USB-apparaatpad"
                 },
                 "title": "Voer de configuratie van de Z-Wave JS-add-on in"

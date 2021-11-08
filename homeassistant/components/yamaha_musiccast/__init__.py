@@ -70,6 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
+    await coordinator.musiccast.device.enable_polling()
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -80,6 +82,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
+        hass.data[DOMAIN][entry.entry_id].musiccast.device.disable_polling()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

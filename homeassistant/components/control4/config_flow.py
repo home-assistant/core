@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import STEP_ID_INIT, STEP_ID_USER
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -96,9 +97,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             hub = Control4Validator(
-                user_input["host"],
-                user_input["username"],
-                user_input["password"],
+                user_input[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
                 self.hass,
             )
             try:
@@ -123,15 +124,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=controller_unique_id,
                     data={
-                        CONF_HOST: user_input["host"],
-                        CONF_USERNAME: user_input["username"],
-                        CONF_PASSWORD: user_input["password"],
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_CONTROLLER_UNIQUE_ID: controller_unique_id,
                     },
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id=STEP_ID_USER, data_schema=DATA_SCHEMA, errors=errors
         )
 
     @staticmethod
@@ -163,7 +164,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
             }
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(step_id=STEP_ID_INIT, data_schema=data_schema)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
