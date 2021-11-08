@@ -64,6 +64,7 @@ async def async_setup_entry(
                 _LOGGER.debug(f"Request failed (#{ex.consecutive_failures_count}).")
                 return {}
             else:
+                # Inverter does not respond anymore (e.g. it went to sleep mode)
                 # return None
                 # sensors will report themselves as not available
                 _LOGGER.debug(

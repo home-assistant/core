@@ -87,7 +87,7 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
 
             try:
-                inverter = await connect(host=host)
+                inverter = await connect(host=host, retries=5)
             except InverterError as err:
                 _LOGGER.error("Connection error during GoodWe config flow: %s", err)
                 errors["base"] = "connection_error"
