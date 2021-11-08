@@ -1169,7 +1169,7 @@ p1monitor==1.0.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-paho-mqtt==1.5.1
+paho-mqtt==1.6.1
 
 # homeassistant.components.panasonic_bluray
 panacotta==0.1
