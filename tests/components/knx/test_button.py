@@ -1,7 +1,11 @@
 """Test KNX button."""
 from datetime import timedelta
 
-from homeassistant.components.knx.const import KNX_ADDRESS
+from homeassistant.components.knx.const import (
+    CONF_PAYLOAD,
+    CONF_PAYLOAD_LENGTH,
+    KNX_ADDRESS,
+)
 from homeassistant.components.knx.schema import ButtonSchema
 from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -20,8 +24,8 @@ async def test_button_raw(hass: HomeAssistant, knx: KNXTestKit):
             ButtonSchema.PLATFORM_NAME: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/3",
-                ButtonSchema.CONF_PAYLOAD: True,
-                ButtonSchema.CONF_PAYLOAD_LENGTH: 0,
+                CONF_PAYLOAD: True,
+                CONF_PAYLOAD_LENGTH: 0,
             }
         }
     )
@@ -59,7 +63,7 @@ async def test_button_type(hass: HomeAssistant, knx: KNXTestKit):
             ButtonSchema.PLATFORM_NAME: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/3",
-                ButtonSchema.CONF_PAYLOAD: 21.0,
+                CONF_PAYLOAD: 21.0,
                 CONF_TYPE: "2byte_float",
             }
         }

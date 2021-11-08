@@ -11,9 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, KNX_ADDRESS
+from .const import CONF_PAYLOAD, CONF_PAYLOAD_LENGTH, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
-from .schema import ButtonSchema
 
 
 async def async_setup_platform(
@@ -45,11 +44,11 @@ class KNXButton(KnxEntity, ButtonEntity):
         ):
             payload_length = transcoder.payload_length
             self._payload = int.from_bytes(
-                transcoder.to_knx(config[ButtonSchema.CONF_PAYLOAD]), byteorder="big"
+                transcoder.to_knx(config[CONF_PAYLOAD]), byteorder="big"
             )
         else:
-            payload_length = config[ButtonSchema.CONF_PAYLOAD_LENGTH]
-            self._payload = config[ButtonSchema.CONF_PAYLOAD]
+            payload_length = config[CONF_PAYLOAD_LENGTH]
+            self._payload = config[CONF_PAYLOAD]
         super().__init__(
             device=XknxRawValue(
                 xknx,

@@ -39,6 +39,8 @@ from .const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    CONF_PAYLOAD,
+    CONF_PAYLOAD_LENGTH,
     CONF_RESET_AFTER,
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -126,7 +128,7 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     """Validate a select entity options configuration."""
     options_seen = set()
     payloads_seen = set()
-    payload_length = entity_config[SelectSchema.CONF_PAYLOAD_LENGTH]
+    payload_length = entity_config[CONF_PAYLOAD_LENGTH]
     if payload_length == 0:
         max_payload = 0x3F
     else:
@@ -134,7 +136,7 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
 
     for opt in entity_config[SelectSchema.CONF_OPTIONS]:
         option = opt[SelectSchema.CONF_OPTION]
-        payload = opt[SelectSchema.CONF_PAYLOAD]
+        payload = opt[CONF_PAYLOAD]
         if payload > max_payload:
             raise vol.Invalid(
                 f"'payload: {payload}' for 'option: {option}' exceeds possible"
@@ -266,8 +268,6 @@ class ButtonSchema(KNXPlatformSchema):
 
     PLATFORM_NAME = SupportedPlatforms.BUTTON.value
 
-    CONF_PAYLOAD = "payload"
-    CONF_PAYLOAD_LENGTH = "payload_length"
     DEFAULT_NAME = "KNX Button"
 
     ENTITY_SCHEMA = vol.All(
@@ -743,8 +743,6 @@ class SelectSchema(KNXPlatformSchema):
 
     CONF_OPTION = "option"
     CONF_OPTIONS = "options"
-    CONF_PAYLOAD = "payload"
-    CONF_PAYLOAD_LENGTH = "payload_length"
     DEFAULT_NAME = "KNX Select"
 
     ENTITY_SCHEMA = vol.All(
