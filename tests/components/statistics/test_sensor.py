@@ -135,6 +135,13 @@ class TestStatisticsSensor(unittest.TestCase):
         new_state = self.hass.states.get("sensor.test")
         assert state == new_state
 
+        # Source sensor is removed, unit and state should not change
+        # This is equal to a None value being published
+        self.hass.states.remove("sensor.test_monitored")
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert state == new_state
+
     def test_sampling_size(self):
         """Test rotation."""
         assert setup_component(
