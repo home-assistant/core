@@ -37,7 +37,7 @@ class KNXButton(KnxEntity, ButtonEntity):
     _device: XknxRawValue
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
-        """Initialize of KNX switch."""
+        """Initialize a KNX button."""
         super().__init__(
             device=XknxRawValue(
                 xknx,

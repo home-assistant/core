@@ -291,7 +291,7 @@ class BinarySensorSchema(KNXPlatformSchema):
 
 
 class ButtonSchema(KNXPlatformSchema):
-    """Voluptuous schema for KNX selects."""
+    """Voluptuous schema for KNX buttons."""
 
     PLATFORM_NAME = SupportedPlatforms.BUTTON.value
 
