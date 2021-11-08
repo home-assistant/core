@@ -83,6 +83,7 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
+        assert self._reauth_entry
         if user_input is None:
             return self.async_show_form(step_id="reauth", data_schema=REAUTH_SCHEMA)
         user_input[CONF_USERNAME] = self._reauth_entry.data[CONF_USERNAME]
