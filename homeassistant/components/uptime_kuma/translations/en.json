@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Enter connection information for your Uptime Kuma instance:",
+                "data": {
+                    "host": "Host/URL",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "abort": {
+            "already_configured": "Service is already configured",
+            "existing_instance_updated": "Updated existing configuration."
+        }
+    }
+}

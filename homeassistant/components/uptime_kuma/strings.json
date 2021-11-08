@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up your Uptime Kuma instance.",
+        "description": "Enter connection information for your Uptime Kuma instance:",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
