@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ports = config.get(CONF_PORTS)
     for port, name in ports.items():
         switches.append(RPiGPIOSwitch(name, port, invert_logic))
-    add_entities(switches)
+    add_entities(switches, True)
 
 
 class RPiGPIOSwitch(ToggleEntity):
@@ -46,10 +46,8 @@ class RPiGPIOSwitch(ToggleEntity):
         """Initialize the pin."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
-        self._invert_logic = invert_logic
-        self._state = False
+        self._on_state = 0 if invert_logic else 1
         rpi_gpio.setup_output(self._port)
-        rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
 
     @property
     def name(self):
@@ -59,21 +57,19 @@ class RPiGPIOSwitch(ToggleEntity):
     @property
     def should_poll(self):
         """No polling needed."""
-        return False
+        return True
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state
+        return rpi_gpio.read_input(self._port) == self._on_state
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        rpi_gpio.write_output(self._port, 0 if self._invert_logic else 1)
-        self._state = True
+        rpi_gpio.write_output(self._port, self._on_state)
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
-        self._state = False
+        rpi_gpio.write_output(self._port, 1 - self._on_state)
         self.schedule_update_ha_state()
