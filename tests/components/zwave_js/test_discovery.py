@@ -6,6 +6,9 @@ from homeassistant.components.zwave_js.discovery import (
     ZWaveDiscoverySchema,
     ZWaveValueDiscoverySchema,
 )
+from homeassistant.components.zwave_js.discovery_data_template import (
+    DynamicCurrentTempClimateDataTemplate,
+)
 
 
 async def test_iblinds_v2(hass, client, iblinds_v2, integration):
@@ -75,4 +78,13 @@ async def test_firmware_version_range_exception(hass):
             "test",
             ZWaveValueDiscoverySchema(command_class=1),
             firmware_version_range=FirmwareVersionRange(),
+        )
+
+
+async def test_dynamic_climate_data_discovery_template_failure(hass, multisensor_6):
+    """Test that initing a DynamicCurrentTempClimateDataTemplate with no data raises."""
+    node = multisensor_6
+    with pytest.raises(ValueError):
+        DynamicCurrentTempClimateDataTemplate().resolve_data(
+            node.values[f"{node.node_id}-49-0-Ultraviolet"]
         )

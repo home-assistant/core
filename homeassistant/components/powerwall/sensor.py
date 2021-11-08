@@ -53,7 +53,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     powerwalls_serial_numbers = powerwall_data[POWERWALL_API_SERIAL_NUMBERS]
 
     entities = []
-    for meter in MeterType:
+    # coordinator.data[POWERWALL_API_METERS].meters holds all meters that are available
+    for meter in coordinator.data[POWERWALL_API_METERS].meters:
         entities.append(
             PowerWallEnergySensor(
                 meter,

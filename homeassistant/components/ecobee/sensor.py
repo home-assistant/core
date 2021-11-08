@@ -3,13 +3,18 @@ from __future__ import annotations
 
 from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
@@ -19,12 +24,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Temperature",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 
@@ -70,7 +77,7 @@ class EcobeeSensor(SensorEntity):
                 return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device information for this sensor."""
         identifier = None
         model = None
@@ -93,12 +100,12 @@ class EcobeeSensor(SensorEntity):
             break
 
         if identifier is not None and model is not None:
-            return {
-                "identifiers": {(DOMAIN, identifier)},
-                "name": self.sensor_name,
-                "manufacturer": MANUFACTURER,
-                "model": model,
-            }
+            return DeviceInfo(
+                identifiers={(DOMAIN, identifier)},
+                manufacturer=MANUFACTURER,
+                model=model,
+                name=self.sensor_name,
+            )
         return None
 
     @property

@@ -26,6 +26,7 @@
             "gas": "Cambio de gas de {entity_name}",
             "humidity": "Cambios de humedad de {entity_name}",
             "illuminance": "Cambios de luminosidad de {entity_name}",
+            "nitrogen_monoxide": "Cambios en la concentraci\u00f3n de mon\u00f3xido de nitr\u00f3geno de {entity_name}",
             "power": "Cambios de potencia de {entity_name}",
             "power_factor": "Cambio de factor de potencia en {entity_name}",
             "pressure": "Cambios de presi\u00f3n de {entity_name}",

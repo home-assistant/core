@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "cameras": {
+                "data": {
+                    "camera_audio": "\u97f3\u58f0\u306b\u5bfe\u5fdc\u3057\u305f\u30ab\u30e1\u30e9"
+                }
+            }
+        }
+    }
+}

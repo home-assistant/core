@@ -13,7 +13,13 @@ from homeassistant.components.select.const import (
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
 )
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_ICON,
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    CONF_STATE,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import Config, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -41,32 +47,34 @@ SELECT_SCHEMA = vol.Schema(
         vol.Optional(CONF_AVAILABILITY): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_ICON): cv.template,
     }
 )
 
 
 async def _async_create_entities(
-    hass: HomeAssistant, entities: list[dict[str, Any]], unique_id_prefix: str | None
+    hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
 ) -> list[TemplateSelect]:
     """Create the Template select."""
-    for entity in entities:
-        unique_id = entity.get(CONF_UNIQUE_ID)
-
+    entities = []
+    for definition in definitions:
+        unique_id = definition.get(CONF_UNIQUE_ID)
         if unique_id and unique_id_prefix:
             unique_id = f"{unique_id_prefix}-{unique_id}"
-
-        return [
+        entities.append(
             TemplateSelect(
                 hass,
-                entity.get(CONF_NAME, DEFAULT_NAME),
-                entity[CONF_STATE],
-                entity.get(CONF_AVAILABILITY),
-                entity[CONF_SELECT_OPTION],
-                entity[ATTR_OPTIONS],
-                entity.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC),
+                definition.get(CONF_NAME, DEFAULT_NAME),
+                definition[CONF_STATE],
+                definition.get(CONF_AVAILABILITY),
+                definition[CONF_SELECT_OPTION],
+                definition[ATTR_OPTIONS],
+                definition.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC),
                 unique_id,
+                definition.get(CONF_ICON),
             )
-        ]
+        )
+    return entities
 
 
 async def async_setup_platform(
@@ -109,9 +117,12 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         options_template: Template,
         optimistic: bool,
         unique_id: str | None,
+        icon_template: Template | None,
     ) -> None:
         """Initialize the select."""
-        super().__init__(availability_template=availability_template)
+        super().__init__(
+            availability_template=availability_template, icon_template=icon_template
+        )
         self._attr_name = DEFAULT_NAME
         name_template.hass = hass
         with contextlib.suppress(TemplateError):

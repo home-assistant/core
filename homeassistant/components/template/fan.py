@@ -18,6 +18,7 @@ from homeassistant.components.fan import (
     SPEED_OFF,
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
+    SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
     FanEntity,
     preset_modes_from_speed_list,
@@ -250,12 +251,10 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._oscillating = None
         self._direction = None
 
-        if (
-            self._speed_template
-            or self._percentage_template
-            or self._preset_mode_template
-        ):
+        if self._speed_template or self._percentage_template:
             self._supported_features |= SUPPORT_SET_SPEED
+        if self._preset_mode_template and preset_modes:
+            self._supported_features |= SUPPORT_PRESET_MODE
         if self._oscillating_template:
             self._supported_features |= SUPPORT_OSCILLATE
         if self._direction_template:

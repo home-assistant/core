@@ -38,6 +38,12 @@ def _set_up_units(hass):
     )
 
 
+def render(hass, template_str, variables=None):
+    """Create render info from template."""
+    tmp = template.Template(template_str, hass)
+    return tmp.async_render(variables)
+
+
 def render_to_info(hass, template_str, variables=None):
     """Create render info from template."""
     tmp = template.Template(template_str, hass)
@@ -196,8 +202,8 @@ def test_iterating_domain_states(hass):
     )
 
 
-def test_float(hass):
-    """Test float."""
+def test_float_function(hass):
+    """Test float function."""
     hass.states.async_set("sensor.temperature", "12")
 
     assert (
@@ -217,6 +223,83 @@ def test_float(hass):
     assert (
         template.Template("{{ float('forgiving') }}", hass).async_render()
         == "forgiving"
+    )
+
+    assert render(hass, "{{ float('bad', 1) }}") == 1
+    assert render(hass, "{{ float('bad', default=1) }}") == 1
+
+
+def test_float_filter(hass):
+    """Test float filter."""
+    hass.states.async_set("sensor.temperature", "12")
+
+    assert render(hass, "{{ states.sensor.temperature.state | float }}") == 12.0
+    assert render(hass, "{{ states.sensor.temperature.state | float > 11 }}") is True
+    assert render(hass, "{{ 'bad' | float }}") == 0
+    assert render(hass, "{{ 'bad' | float(1) }}") == 1
+    assert render(hass, "{{ 'bad' | float(default=1) }}") == 1
+
+
+def test_int_filter(hass):
+    """Test int filter."""
+    hass.states.async_set("sensor.temperature", "12.2")
+    assert render(hass, "{{ states.sensor.temperature.state | int }}") == 12
+    assert render(hass, "{{ states.sensor.temperature.state | int > 11 }}") is True
+
+    hass.states.async_set("sensor.temperature", "0x10")
+    assert render(hass, "{{ states.sensor.temperature.state | int(base=16) }}") == 16
+
+    assert render(hass, "{{ 'bad' | int }}") == 0
+    assert render(hass, "{{ 'bad' | int(1) }}") == 1
+    assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
+
+
+def test_int_function(hass):
+    """Test int filter."""
+    hass.states.async_set("sensor.temperature", "12.2")
+    assert render(hass, "{{ int(states.sensor.temperature.state) }}") == 12
+    assert render(hass, "{{ int(states.sensor.temperature.state) > 11 }}") is True
+
+    hass.states.async_set("sensor.temperature", "0x10")
+    assert render(hass, "{{ int(states.sensor.temperature.state, base=16) }}") == 16
+
+    assert render(hass, "{{ int('bad') }}") == "bad"
+    assert render(hass, "{{ int('bad', 1) }}") == 1
+    assert render(hass, "{{ int('bad', default=1) }}") == 1
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (0, True),
+        (0.0, True),
+        ("0", True),
+        ("0.0", True),
+        (True, True),
+        (False, True),
+        ("True", False),
+        ("False", False),
+        (None, False),
+        ("None", False),
+        ("horse", False),
+        (math.pi, True),
+        (math.nan, False),
+        (math.inf, False),
+        ("nan", False),
+        ("inf", False),
+    ],
+)
+def test_isnumber(hass, value, expected):
+    """Test is_number."""
+    assert (
+        template.Template("{{ is_number(value) }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value | is_number }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
     )
 
 
@@ -260,14 +343,17 @@ def test_rounding_value(hass):
     )
 
 
-def test_rounding_value_get_original_value_on_error(hass):
-    """Test rounding value get original value on error."""
+def test_rounding_value_on_error(hass):
+    """Test rounding value handling of error."""
     assert template.Template("{{ None | round }}", hass).async_render() is None
 
     assert (
         template.Template('{{ "no_number" | round }}', hass).async_render()
         == "no_number"
     )
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | round(default=1) }}") == 1
 
 
 def test_multiply(hass):
@@ -281,6 +367,10 @@ def test_multiply(hass):
             ).async_render()
             == out
         )
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | multiply(10, 1) }}") == 1
+    assert render(hass, "{{ 'no_number' | multiply(10, default=1) }}") == 1
 
 
 def test_logarithm(hass):
@@ -308,6 +398,12 @@ def test_logarithm(hass):
             == expected
         )
 
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | log(10, 1) }}") == 1
+    assert render(hass, "{{ 'no_number' | log(10, default=1) }}") == 1
+    assert render(hass, "{{ log('no_number', 10, 1) }}") == 1
+    assert render(hass, "{{ log('no_number', 10, default=1) }}") == 1
+
 
 def test_sine(hass):
     """Test sine."""
@@ -325,6 +421,13 @@ def test_sine(hass):
             template.Template("{{ %s | sin | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ sin({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | sin(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | sin(default=1) }}") == 1
+    assert render(hass, "{{ sin('no_number', 1) }}") == 1
+    assert render(hass, "{{ sin('no_number', default=1) }}") == 1
 
 
 def test_cos(hass):
@@ -343,6 +446,13 @@ def test_cos(hass):
             template.Template("{{ %s | cos | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ cos({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | sin(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | sin(default=1) }}") == 1
+    assert render(hass, "{{ sin('no_number', 1) }}") == 1
+    assert render(hass, "{{ sin('no_number', default=1) }}") == 1
 
 
 def test_tan(hass):
@@ -361,6 +471,13 @@ def test_tan(hass):
             template.Template("{{ %s | tan | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ tan({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | tan(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | tan(default=1) }}") == 1
+    assert render(hass, "{{ tan('no_number', 1) }}") == 1
+    assert render(hass, "{{ tan('no_number', default=1) }}") == 1
 
 
 def test_sqrt(hass):
@@ -379,6 +496,13 @@ def test_sqrt(hass):
             template.Template("{{ %s | sqrt | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ sqrt({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | sqrt(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | sqrt(default=1) }}") == 1
+    assert render(hass, "{{ sqrt('no_number', 1) }}") == 1
+    assert render(hass, "{{ sqrt('no_number', default=1) }}") == 1
 
 
 def test_arc_sine(hass):
@@ -399,6 +523,13 @@ def test_arc_sine(hass):
             template.Template("{{ %s | asin | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ asin({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | asin(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | asin(default=1) }}") == 1
+    assert render(hass, "{{ asin('no_number', 1) }}") == 1
+    assert render(hass, "{{ asin('no_number', default=1) }}") == 1
 
 
 def test_arc_cos(hass):
@@ -419,6 +550,13 @@ def test_arc_cos(hass):
             template.Template("{{ %s | acos | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ acos({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | acos(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | acos(default=1) }}") == 1
+    assert render(hass, "{{ acos('no_number', 1) }}") == 1
+    assert render(hass, "{{ acos('no_number', default=1) }}") == 1
 
 
 def test_arc_tan(hass):
@@ -441,6 +579,13 @@ def test_arc_tan(hass):
             template.Template("{{ %s | atan | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ atan({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | atan(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | atan(default=1) }}") == 1
+    assert render(hass, "{{ atan('no_number', 1) }}") == 1
+    assert render(hass, "{{ atan('no_number', default=1) }}") == 1
 
 
 def test_arc_tan2(hass):
@@ -475,6 +620,12 @@ def test_arc_tan2(hass):
             == expected
         )
 
+    # Test handling of default return value
+    assert render(hass, "{{ ('duck', 'goose') | atan2(1) }}") == 1
+    assert render(hass, "{{ ('duck', 'goose') | atan2(default=1) }}") == 1
+    assert render(hass, "{{ atan2('duck', 'goose', 1) }}") == 1
+    assert render(hass, "{{ atan2('duck', 'goose', default=1) }}") == 1
+
 
 def test_strptime(hass):
     """Test the parse timestamp method."""
@@ -496,6 +647,10 @@ def test_strptime(hass):
         temp = f"{{{{ strptime('{inp}', '{fmt}') }}}}"
 
         assert template.Template(temp, hass).async_render() == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ strptime('invalid', '%Y', 1) }}") == 1
+    assert render(hass, "{{ strptime('invalid', '%Y', default=1) }}") == 1
 
 
 def test_timestamp_custom(hass):
@@ -519,6 +674,10 @@ def test_timestamp_custom(hass):
 
         assert template.Template(f"{{{{ {inp} | {fil} }}}}", hass).async_render() == out
 
+    # Test handling of default return value
+    assert render(hass, "{{ None | timestamp_custom('invalid', True, 1) }}") == 1
+    assert render(hass, "{{ None | timestamp_custom(default=1) }}") == 1
+
 
 def test_timestamp_local(hass):
     """Test the timestamps to local filter."""
@@ -529,6 +688,10 @@ def test_timestamp_local(hass):
             template.Template("{{ %s | timestamp_local }}" % inp, hass).async_render()
             == out
         )
+
+    # Test handling of default return value
+    assert render(hass, "{{ None | timestamp_local(1) }}") == 1
+    assert render(hass, "{{ None | timestamp_local(default=1) }}") == 1
 
 
 @pytest.mark.parametrize(
@@ -583,6 +746,21 @@ def test_to_json(hass):
     assert actual_result == expected_result
 
 
+def test_to_json_string(hass):
+    """Test the object to JSON string filter."""
+
+    # Note that we're not testing the actual json.loads and json.dumps methods,
+    # only the filters, so we don't need to be exhaustive with our sample JSON.
+    actual_value_ascii = template.Template(
+        "{{ 'Bar ҝ éèà' | to_json }}", hass
+    ).async_render()
+    assert actual_value_ascii == '"Bar \\u049d \\u00e9\\u00e8\\u00e0"'
+    actual_value = template.Template(
+        "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=False) }}", hass
+    ).async_render()
+    assert actual_value == '"Bar ҝ éèà"'
+
+
 def test_from_json(hass):
     """Test the JSON string to object filter."""
 
@@ -593,6 +771,19 @@ def test_from_json(hass):
         '{{ (\'{"Foo": "Bar"}\' | from_json).Foo }}', hass
     ).async_render()
     assert actual_result == expected_result
+
+
+def test_average(hass):
+    """Test the average filter."""
+    assert template.Template("{{ [1, 2, 3] | average }}", hass).async_render() == 2
+    assert template.Template("{{ average([1, 2, 3]) }}", hass).async_render() == 2
+    assert template.Template("{{ average(1, 2, 3) }}", hass).async_render() == 2
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | average }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ average() }}", hass).async_render()
 
 
 def test_min(hass):
@@ -667,6 +858,10 @@ def test_timestamp_utc(hass):
             == out
         )
 
+    # Test handling of default return value
+    assert render(hass, "{{ None | timestamp_utc(1) }}") == 1
+    assert render(hass, "{{ None | timestamp_utc(default=1) }}") == 1
+
 
 def test_as_timestamp(hass):
     """Test the as_timestamp function."""
@@ -684,6 +879,12 @@ def test_as_timestamp(hass):
         '"%Y-%m-%dT%H:%M:%S%z")) }}'
     )
     assert template.Template(tpl, hass).async_render() == 1706951424.0
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'invalid' | as_timestamp(1) }}") == 1
+    assert render(hass, "{{ 'invalid' | as_timestamp(default=1) }}") == 1
+    assert render(hass, "{{ as_timestamp('invalid', 1) }}") == 1
+    assert render(hass, "{{ as_timestamp('invalid', default=1) }}") == 1
 
 
 @patch.object(random, "choice")
@@ -911,6 +1112,44 @@ def test_utcnow(mock_is_safe, hass):
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
+def test_today_at(mock_is_safe, hass):
+    """Test today_at method."""
+    now = dt_util.now()
+    with patch("homeassistant.util.dt.now", return_value=now):
+        now = now.replace(hour=10, minute=0, second=0, microsecond=0)
+        result = template.Template(
+            "{{ today_at('10:00').isoformat() }}",
+            hass,
+        ).async_render()
+        assert result == now.isoformat()
+
+        result = template.Template(
+            "{{ today_at('10:00:00').isoformat() }}",
+            hass,
+        ).async_render()
+        assert result == now.isoformat()
+
+        result = template.Template(
+            "{{ ('10:00:00' | today_at).isoformat() }}",
+            hass,
+        ).async_render()
+        assert result == now.isoformat()
+
+        now = now.replace(hour=0)
+        result = template.Template(
+            "{{ today_at().isoformat() }}",
+            hass,
+        ).async_render()
+        assert result == now.isoformat()
+
+        with pytest.raises(TemplateError):
+            template.Template("{{ today_at('bad') }}", hass).async_render()
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
 def test_relative_time(mock_is_safe, hass):
     """Test relative_time method."""
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
@@ -1108,6 +1347,17 @@ def test_regex_replace(hass):
         hass,
     )
     assert tpl.async_render() == ["Home Assistant test"]
+
+
+def test_regex_findall(hass):
+    """Test regex_findall method."""
+    tpl = template.Template(
+        """
+{{ 'Flight from JFK to LHR' | regex_findall('([A-Z]{3})') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == ["JFK", "LHR"]
 
 
 def test_regex_findall_index(hass):
@@ -1918,6 +2168,91 @@ async def test_area_name(hass):
 
     info = render_to_info(hass, f"{{{{ area_name('{entity_entry.entity_id}') }}}}")
     assert_result_info(info, area_entry.name)
+    assert info.rate_limit is None
+
+
+async def test_area_entities(hass):
+    """Test area_entities function."""
+    config_entry = MockConfigEntry(domain="light")
+    entity_registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ area_entities('deadbeef') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_entities(56) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("sensor.fake")
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        area_id=area_entry.id,
+    )
+
+    info = render_to_info(hass, f"{{{{ area_entities('{area_entry.id}') }}}}")
+    assert_result_info(info, ["light.hue_5678"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
+    assert_result_info(info, ["light.hue_5678"])
+    assert info.rate_limit is None
+
+    # Test for entities that inherit area from device
+    device_entry = device_registry.async_get_or_create(
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        config_entry_id=config_entry.entry_id,
+        suggested_area="sensor.fake",
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        "hue_light",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
+    assert_result_info(info, ["light.hue_5678", "light.hue_light_5678"])
+    assert info.rate_limit is None
+
+
+async def test_area_devices(hass):
+    """Test area_devices function."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ area_devices('deadbeef') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_devices(56) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("sensor.fake")
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        suggested_area=area_entry.name,
+    )
+
+    info = render_to_info(hass, f"{{{{ area_devices('{area_entry.id}') }}}}")
+    assert_result_info(info, [device_entry.id])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_devices }}}}")
+    assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
 
 

@@ -41,9 +41,7 @@ async def async_provide_implementation(hass: HomeAssistant, domain: str):
 
 async def _get_services(hass):
     """Get the available services."""
-    services = hass.data.get(DATA_SERVICES)
-
-    if services is not None:
+    if (services := hass.data.get(DATA_SERVICES)) is not None:
         return services
 
     try:

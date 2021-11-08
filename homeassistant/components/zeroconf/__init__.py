@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 from contextlib import suppress
 import fnmatch
-from ipaddress import IPv6Address, ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 import socket
-from typing import Any, TypedDict, cast
+import sys
+from typing import Any, Final, TypedDict, cast
 
 import voluptuous as vol
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
@@ -20,12 +20,11 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.network.models import Adapter
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     __version__,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import discovery_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
@@ -62,6 +61,15 @@ MAX_PROPERTY_VALUE_LEN = 230
 # Dns label max length
 MAX_NAME_LEN = 63
 
+# Attributes for HaServiceInfo
+ATTR_HOST: Final = "host"
+ATTR_HOSTNAME: Final = "hostname"
+ATTR_NAME: Final = "name"
+ATTR_PORT: Final = "port"
+ATTR_PROPERTIES: Final = "properties"
+ATTR_TYPE: Final = "type"
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -88,14 +96,6 @@ class HaServiceInfo(TypedDict):
     type: str
     name: str
     properties: dict[str, Any]
-
-
-class ZeroconfFlow(TypedDict):
-    """A queued zeroconf discovery flow."""
-
-    domain: str
-    context: dict[str, Any]
-    data: HaServiceInfo
 
 
 @bind_hass
@@ -131,18 +131,31 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
     return aio_zc
 
 
+@callback
+def _async_zc_has_functional_dual_stack() -> bool:
+    """Return true for platforms that not support IP_ADD_MEMBERSHIP on an AF_INET6 socket.
+
+    Zeroconf only supports a single listen socket at this time.
+    """
+    return not sys.platform.startswith("freebsd") and not sys.platform.startswith(
+        "darwin"
+    )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Zeroconf and make Home Assistant discoverable."""
-    zc_args: dict = {}
+    zc_args: dict = {"ip_version": IPVersion.V4Only}
 
     adapters = await network.async_get_adapters(hass)
 
-    ipv6 = True
-    if not any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
-        ipv6 = False
-        zc_args["ip_version"] = IPVersion.V4Only
-    else:
-        zc_args["ip_version"] = IPVersion.All
+    ipv6 = False
+    if _async_zc_has_functional_dual_stack():
+        if any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
+            ipv6 = True
+            zc_args["ip_version"] = IPVersion.All
+    elif not any(adapter["enabled"] and adapter["ipv4"] for adapter in adapters):
+        zc_args["ip_version"] = IPVersion.V6Only
+        ipv6 = True
 
     if not ipv6 and network.async_only_default_interface_enabled(adapters):
         zc_args["interfaces"] = InterfaceChoice.Default
@@ -152,6 +165,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             for source_ip in await network.async_get_enabled_source_ips(hass)
             if not source_ip.is_loopback
             and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
+            and not (
+                isinstance(source_ip, IPv6Address)
+                and zc_args["ip_version"] == IPVersion.V4Only
+            )
+            and not (
+                isinstance(source_ip, IPv4Address)
+                and zc_args["ip_version"] == IPVersion.V6Only
+            )
         ]
 
     aio_zc = await _async_get_instance(hass, **zc_args)
@@ -170,17 +191,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         uuid = await hass.helpers.instance_id.async_get()
         await _async_register_hass_zc_service(hass, aio_zc, uuid)
 
-    @callback
-    def _async_start_discovery(_event: Event) -> None:
-        """Start processing flows."""
-        discovery.async_start()
-
     async def _async_zeroconf_hass_stop(_event: Event) -> None:
         await discovery.async_stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_zeroconf_hass_stop)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_zeroconf_hass_start)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_start_discovery)
 
     return True
 
@@ -266,40 +281,6 @@ async def _async_register_hass_zc_service(
     await aio_zc.async_register_service(info, allow_name_change=True)
 
 
-class FlowDispatcher:
-    """Dispatch discovery flows."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Init the discovery dispatcher."""
-        self.hass = hass
-        self.pending_flows: list[ZeroconfFlow] = []
-        self.started = False
-
-    @callback
-    def async_start(self) -> None:
-        """Start processing pending flows."""
-        self.started = True
-        self.hass.loop.call_soon(self._async_process_pending_flows)
-
-    def _async_process_pending_flows(self) -> None:
-        for flow in self.pending_flows:
-            self.hass.async_create_task(self._init_flow(flow))
-        self.pending_flows = []
-
-    def async_create(self, flow: ZeroconfFlow) -> None:
-        """Create and add or queue a flow."""
-        if self.started:
-            self.hass.async_create_task(self._init_flow(flow))
-        else:
-            self.pending_flows.append(flow)
-
-    def _init_flow(self, flow: ZeroconfFlow) -> Coroutine[None, None, FlowResult]:
-        """Create a flow."""
-        return self.hass.config_entries.flow.async_init(
-            flow["domain"], context=flow["context"], data=flow["data"]
-        )
-
-
 class ZeroconfDiscovery:
     """Discovery via zeroconf."""
 
@@ -318,12 +299,10 @@ class ZeroconfDiscovery:
         self.homekit_models = homekit_models
         self.ipv6 = ipv6
 
-        self.flow_dispatcher: FlowDispatcher | None = None
         self.async_service_browser: HaAsyncServiceBrowser | None = None
 
     async def async_setup(self) -> None:
         """Start discovery."""
-        self.flow_dispatcher = FlowDispatcher(self.hass)
         types = list(self.zeroconf_types)
         # We want to make sure we know about other HomeAssistant
         # instances as soon as possible to avoid name conflicts
@@ -340,12 +319,6 @@ class ZeroconfDiscovery:
         """Cancel the service browser and stop processing the queue."""
         if self.async_service_browser:
             await self.async_service_browser.async_cancel()
-
-    @callback
-    def async_start(self) -> None:
-        """Start processing discovery flows."""
-        assert self.flow_dispatcher is not None
-        self.flow_dispatcher.async_start()
 
     @callback
     def async_service_update(
@@ -382,12 +355,14 @@ class ZeroconfDiscovery:
             return
 
         _LOGGER.debug("Discovered new device %s %s", name, info)
-        assert self.flow_dispatcher is not None
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type in HOMEKIT_TYPES:
-            if pending_flow := handle_homekit(self.hass, self.homekit_models, info):
-                self.flow_dispatcher.async_create(pending_flow)
+            props = info[ATTR_PROPERTIES]
+            if domain := async_get_homekit_discovery_domain(self.homekit_models, props):
+                discovery_flow.async_create_flow(
+                    self.hass, domain, {"source": config_entries.SOURCE_HOMEKIT}, info
+                )
             # Continue on here as homekit_controller
             # still needs to get updates on devices
             # so it can see when the 'c#' field is updated.
@@ -395,32 +370,37 @@ class ZeroconfDiscovery:
             # We only send updates to homekit_controller
             # if the device is already paired in order to avoid
             # offering a second discovery for the same device
-            if pending_flow and HOMEKIT_PAIRED_STATUS_FLAG in info["properties"]:
+            if domain and HOMEKIT_PAIRED_STATUS_FLAG in props:
                 try:
                     # 0 means paired and not discoverable by iOS clients)
-                    if int(info["properties"][HOMEKIT_PAIRED_STATUS_FLAG]):
+                    if int(props[HOMEKIT_PAIRED_STATUS_FLAG]):
                         return
                 except ValueError:
                     # HomeKit pairing status unknown
                     # likely bad homekit data
                     return
 
-        if "name" in info:
-            lowercase_name: str | None = info["name"].lower()
+        if ATTR_NAME in info:
+            lowercase_name: str | None = info[ATTR_NAME].lower()
         else:
             lowercase_name = None
 
-        if "macaddress" in info["properties"]:
-            uppercase_mac: str | None = info["properties"]["macaddress"].upper()
+        if "macaddress" in info[ATTR_PROPERTIES]:
+            uppercase_mac: str | None = info[ATTR_PROPERTIES]["macaddress"].upper()
         else:
             uppercase_mac = None
 
-        if "manufacturer" in info["properties"]:
-            lowercase_manufacturer: str | None = info["properties"][
+        if "manufacturer" in info[ATTR_PROPERTIES]:
+            lowercase_manufacturer: str | None = info[ATTR_PROPERTIES][
                 "manufacturer"
             ].lower()
         else:
             lowercase_manufacturer = None
+
+        if "model" in info[ATTR_PROPERTIES]:
+            lowercase_model: str | None = info[ATTR_PROPERTIES]["model"].lower()
+        else:
+            lowercase_model = None
 
         # Not all homekit types are currently used for discovery
         # so not all service type exist in zeroconf_types
@@ -443,25 +423,28 @@ class ZeroconfDiscovery:
                     )
                 ):
                     continue
+                if "model" in matcher and (
+                    lowercase_model is None
+                    or not fnmatch.fnmatch(lowercase_model, matcher["model"])
+                ):
+                    continue
 
-            flow: ZeroconfFlow = {
-                "domain": matcher["domain"],
-                "context": {"source": config_entries.SOURCE_ZEROCONF},
-                "data": info,
-            }
-            self.flow_dispatcher.async_create(flow)
+            discovery_flow.async_create_flow(
+                self.hass,
+                matcher["domain"],
+                {"source": config_entries.SOURCE_ZEROCONF},
+                info,
+            )
 
 
-def handle_homekit(
-    hass: HomeAssistant, homekit_models: dict[str, str], info: HaServiceInfo
-) -> ZeroconfFlow | None:
+def async_get_homekit_discovery_domain(
+    homekit_models: dict[str, str], props: dict[str, Any]
+) -> str | None:
     """Handle a HomeKit discovery.
 
-    Return if discovery was forwarded.
+    Return the domain to forward the discovery data to
     """
     model = None
-    props = info["properties"]
-
     for key in props:
         if key.lower() == HOMEKIT_MODEL:
             model = props[key]
@@ -478,11 +461,7 @@ def handle_homekit(
         ):
             continue
 
-        return {
-            "domain": homekit_models[test_model],
-            "context": {"source": config_entries.SOURCE_HOMEKIT},
-            "data": info,
-        }
+        return homekit_models[test_model]
 
     return None
 
@@ -509,19 +488,28 @@ def info_from_service(service: AsyncServiceInfo) -> HaServiceInfo | None:
             if isinstance(value, bytes):
                 properties[key] = value.decode("utf-8")
 
-    if not service.addresses:
+    if not (addresses := service.addresses):
+        return None
+    if (host := _first_non_link_local_or_v6_address(addresses)) is None:
         return None
 
-    address = service.addresses[0]
+    return HaServiceInfo(
+        host=str(host),
+        port=service.port,
+        hostname=service.server,
+        type=service.type,
+        name=service.name,
+        properties=properties,
+    )
 
-    return {
-        "host": str(ip_address(address)),
-        "port": service.port,
-        "hostname": service.server,
-        "type": service.type,
-        "name": service.name,
-        "properties": properties,
-    }
+
+def _first_non_link_local_or_v6_address(addresses: list[bytes]) -> str | None:
+    """Return the first ipv6 or non-link local ipv4 address."""
+    for address in addresses:
+        ip_addr = ip_address(address)
+        if not ip_addr.is_link_local or ip_addr.version == 6:
+            return str(ip_addr)
+    return None
 
 
 def _suppress_invalid_properties(properties: dict) -> None:

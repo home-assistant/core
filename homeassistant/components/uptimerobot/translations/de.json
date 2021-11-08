@@ -17,14 +17,14 @@
                 "data": {
                     "api_key": "API-Schl\u00fcssel"
                 },
-                "description": "Du musst einen neuen schreibgesch\u00fctzten API-Schl\u00fcssel von Uptime Robot bereitstellen.",
+                "description": "Du musst einen neuen schreibgesch\u00fctzten API-Schl\u00fcssel von UptimeRobot bereitstellen",
                 "title": "Integration erneut authentifizieren"
             },
             "user": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel"
                 },
-                "description": "Du musst einen schreibgesch\u00fctzten API-Schl\u00fcssel von Uptime Robot bereitstellen."
+                "description": "Du musst einen schreibgesch\u00fctzten API-Schl\u00fcssel von UptimeRobot bereitstellen"
             }
         }
     }

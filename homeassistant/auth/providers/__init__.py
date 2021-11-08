@@ -169,9 +169,7 @@ async def load_auth_provider_module(
     if hass.config.skip_pip or not hasattr(module, "REQUIREMENTS"):
         return module
 
-    processed = hass.data.get(DATA_REQS)
-
-    if processed is None:
+    if (processed := hass.data.get(DATA_REQS)) is None:
         processed = hass.data[DATA_REQS] = set()
     elif provider in processed:
         return module

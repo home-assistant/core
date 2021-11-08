@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
     CONF_SCAN_INTERVAL,
@@ -23,9 +23,9 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     "hosts", ["1.1.1.1", "192.168.1.0/24", "192.168.1.0/24,192.168.2.0/24"]
 )
-async def test_form(hass: HomeAssistant, hosts: str) -> None:
+async def test_form(hass: HomeAssistant, hosts: str, mock_get_source_ip) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -62,9 +62,9 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_range(hass: HomeAssistant) -> None:
+async def test_form_range(hass: HomeAssistant, mock_get_source_ip) -> None:
     """Test we get the form and can take an ip range."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -98,9 +98,9 @@ async def test_form_range(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
+async def test_form_invalid_hosts(hass: HomeAssistant, mock_get_source_ip) -> None:
     """Test invalid hosts passed in."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -122,9 +122,9 @@ async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
     assert result2["errors"] == {CONF_HOSTS: "invalid_hosts"}
 
 
-async def test_form_already_configured(hass: HomeAssistant) -> None:
+async def test_form_already_configured(hass: HomeAssistant, mock_get_source_ip) -> None:
     """Test duplicate host list."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={},
@@ -157,9 +157,9 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_invalid_excludes(hass: HomeAssistant) -> None:
+async def test_form_invalid_excludes(hass: HomeAssistant, mock_get_source_ip) -> None:
     """Test invalid excludes passed in."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -181,7 +181,7 @@ async def test_form_invalid_excludes(hass: HomeAssistant) -> None:
     assert result2["errors"] == {CONF_EXCLUDE: "invalid_hosts"}
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
+async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
     """Test we can edit options."""
 
     config_entry = MockConfigEntry(
@@ -243,9 +243,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import(hass: HomeAssistant) -> None:
+async def test_import(hass: HomeAssistant, mock_get_source_ip) -> None:
     """Test we can import from yaml."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.nmap_tracker.async_setup_entry",
         return_value=True,
@@ -278,7 +278,9 @@ async def test_import(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_aborts_if_matching(hass: HomeAssistant) -> None:
+async def test_import_aborts_if_matching(
+    hass: HomeAssistant, mock_get_source_ip
+) -> None:
     """Test we can import from yaml."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -291,7 +293,6 @@ async def test_import_aborts_if_matching(hass: HomeAssistant) -> None:
         },
     )
     config_entry.add_to_hass(hass)
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

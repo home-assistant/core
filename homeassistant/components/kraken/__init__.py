@@ -127,7 +127,7 @@ class KrakenData:
                 self._config_entry, options=options
             )
         await self._async_refresh_tradable_asset_pairs()
-        # Wait 1 second to avoid triggering the CallRateLimiter
+        # Wait 1 second to avoid triggering the KrakenAPI CallRateLimiter
         await asyncio.sleep(CALL_RATE_LIMIT_SLEEP)
         self.coordinator = DataUpdateCoordinator(
             self._hass,
@@ -139,6 +139,8 @@ class KrakenData:
             ),
         )
         await self.coordinator.async_config_entry_first_refresh()
+        # Wait 1 second to avoid triggering the KrakenAPI CallRateLimiter
+        await asyncio.sleep(CALL_RATE_LIMIT_SLEEP)
 
     def _get_websocket_name_asset_pairs(self) -> str:
         return ",".join(wsname for wsname in self.tradable_asset_pairs.values())

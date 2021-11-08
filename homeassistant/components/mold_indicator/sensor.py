@@ -235,10 +235,7 @@ class MoldIndicator(SensorEntity):
             )
             return None
 
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        hum = util.convert(state.state, float)
-
-        if hum is None:
+        if (hum := util.convert(state.state, float)) is None:
             _LOGGER.error(
                 "Unable to parse humidity sensor %s, state: %s",
                 state.entity_id,
@@ -246,7 +243,7 @@ class MoldIndicator(SensorEntity):
             )
             return None
 
-        if unit != PERCENTAGE:
+        if (unit := state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)) != PERCENTAGE:
             _LOGGER.error(
                 "Humidity sensor %s has unsupported unit: %s %s",
                 state.entity_id,

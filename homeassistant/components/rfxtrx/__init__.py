@@ -10,13 +10,9 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     ATTR_DEVICE_ID,
-    CONF_COMMAND_OFF,
-    CONF_COMMAND_ON,
     CONF_DEVICE,
-    CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
     CONF_DEVICES,
     CONF_HOST,
@@ -26,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -33,11 +30,8 @@ from .const import (
     COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_DEBUG,
     CONF_FIRE_EVENT,
-    CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
-    CONF_SIGNAL_REPETITIONS,
     DATA_CLEANUP_CALLBACKS,
     DATA_LISTENER,
     DATA_RFXOBJECT,
@@ -65,81 +59,9 @@ def _bytearray_string(data):
         ) from err
 
 
-def _ensure_device(value):
-    if value is None:
-        return DEVICE_DATA_SCHEMA({})
-    return DEVICE_DATA_SCHEMA(value)
-
-
 SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
-DEVICE_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-        vol.Optional(CONF_OFF_DELAY): vol.All(
-            cv.time_period, cv.positive_timedelta, lambda value: value.total_seconds()
-        ),
-        vol.Optional(CONF_DATA_BITS): cv.positive_int,
-        vol.Optional(CONF_COMMAND_ON): cv.byte,
-        vol.Optional(CONF_COMMAND_OFF): cv.byte,
-        vol.Optional(CONF_SIGNAL_REPETITIONS, default=1): cv.positive_int,
-    }
-)
-
-BASE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_DEBUG): cv.boolean,
-        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-        vol.Optional(CONF_DEVICES, default={}): {cv.string: _ensure_device},
-    },
-)
-
-DEVICE_SCHEMA = BASE_SCHEMA.extend({vol.Required(CONF_DEVICE): cv.string})
-
-PORT_SCHEMA = BASE_SCHEMA.extend(
-    {vol.Required(CONF_PORT): cv.port, vol.Optional(CONF_HOST): cv.string}
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.deprecated(CONF_DEBUG), vol.Any(DEVICE_SCHEMA, PORT_SCHEMA))},
-    extra=vol.ALLOW_EXTRA,
-)
-
 PLATFORMS = ["switch", "sensor", "light", "binary_sensor", "cover"]
-
-
-async def async_setup(hass, config):
-    """Set up the RFXtrx component."""
-    if DOMAIN not in config:
-        return True
-
-    data = {
-        CONF_HOST: config[DOMAIN].get(CONF_HOST),
-        CONF_PORT: config[DOMAIN].get(CONF_PORT),
-        CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
-        CONF_AUTOMATIC_ADD: config[DOMAIN].get(CONF_AUTOMATIC_ADD),
-        CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
-    }
-
-    # Read device_id from the event code add to the data that will end up in the ConfigEntry
-    for event_code, event_config in data[CONF_DEVICES].items():
-        event = get_rfx_object(event_code)
-        if event is None:
-            continue
-        device_id = get_device_id(
-            event.device, data_bits=event_config.get(CONF_DATA_BITS)
-        )
-        event_config[CONF_DEVICE_ID] = device_id
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=data,
-        )
-    )
-    return True
 
 
 async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
@@ -202,8 +124,7 @@ def _get_device_lookup(devices):
     """Get a lookup structure for devices."""
     lookup = {}
     for event_code, event_config in devices.items():
-        event = get_rfx_object(event_code)
-        if event is None:
+        if (event := get_rfx_object(event_code)) is None:
             continue
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
@@ -272,7 +193,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     @callback
     def _add_device(event, device_id):
         """Add a device to config entry."""
-        config = DEVICE_DATA_SCHEMA({})
+        config = {}
         config[CONF_DEVICE_ID] = device_id
 
         data = entry.data.copy()
@@ -391,10 +312,12 @@ def find_possible_pt2262_device(device_ids, device_id):
 def get_device_id(device, data_bits=None):
     """Calculate a device id for device."""
     id_string = device.id_string
-    if data_bits and device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
-        masked_id = get_pt2262_deviceid(id_string, data_bits)
-        if masked_id:
-            id_string = masked_id.decode("ASCII")
+    if (
+        data_bits
+        and device.packettype == DEVICE_PACKET_TYPE_LIGHTING4
+        and (masked_id := get_pt2262_deviceid(id_string, data_bits))
+    ):
+        id_string = masked_id.decode("ASCII")
 
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
@@ -472,11 +395,11 @@ class RfxtrxEntity(RestoreEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, *self._device_id)},
-            "name": f"{self._device.type_string} {self._device.id_string}",
-            "model": self._device.type_string,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, *self._device_id)},
+            model=self._device.type_string,
+            name=f"{self._device.type_string} {self._device.id_string}",
+        )
 
     def _event_applies(self, event, device_id):
         """Check if event applies to me."""

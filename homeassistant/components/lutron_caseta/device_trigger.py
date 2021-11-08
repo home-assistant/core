@@ -5,7 +5,10 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -19,6 +22,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -217,9 +221,7 @@ async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType)
     if not device:
         return config
 
-    schema = DEVICE_TYPE_SCHEMA_MAP.get(device["type"])
-
-    if not schema:
+    if not (schema := DEVICE_TYPE_SCHEMA_MAP.get(device["type"])):
         raise InvalidDeviceAutomationConfig(
             f"Device type {device['type']} not supported: {config[CONF_DEVICE_ID]}"
         )
@@ -233,8 +235,7 @@ async def async_get_triggers(
     """List device triggers for lutron caseta devices."""
     triggers = []
 
-    device = get_button_device_by_dr_id(hass, device_id)
-    if not device:
+    if not (device := get_button_device_by_dr_id(hass, device_id)):
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device["type"], [])
@@ -254,22 +255,31 @@ async def async_get_triggers(
     return triggers
 
 
+def _device_model_to_type(model: str) -> str:
+    """Convert a lutron_caseta device registry entry model to type."""
+    _, device_type = model.split(" ")
+    return device_type.replace("(", "").replace(")", "")
+
+
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
-    schema = DEVICE_TYPE_SCHEMA_MAP.get(device["type"])
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device["type"])
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    device_type = _device_model_to_type(device.model)
+    _, serial = list(device.identifiers)[0]
+    schema = DEVICE_TYPE_SCHEMA_MAP.get(device_type)
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device_type)
     config = schema(config)
     event_config = {
         event_trigger.CONF_PLATFORM: CONF_EVENT,
         event_trigger.CONF_EVENT_TYPE: LUTRON_CASETA_BUTTON_EVENT,
         event_trigger.CONF_EVENT_DATA: {
-            ATTR_SERIAL: device["serial"],
+            ATTR_SERIAL: serial,
             ATTR_BUTTON_NUMBER: valid_buttons[config[CONF_SUBTYPE]],
             ATTR_ACTION: config[CONF_TYPE],
         },
@@ -287,8 +297,7 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
 
     for config_entry in hass.data[DOMAIN]:
         button_devices = hass.data[DOMAIN][config_entry][BUTTON_DEVICES]
-        device = button_devices.get(device_id)
-        if device:
+        if device := button_devices.get(device_id):
             return device
 
     return None

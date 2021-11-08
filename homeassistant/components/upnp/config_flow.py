@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.components.ssdp import SsdpChange
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 
@@ -36,12 +37,24 @@ def _friendly_name_from_discovery(discovery_info: Mapping[str, Any]) -> str:
     )
 
 
+def _is_complete_discovery(discovery_info: Mapping[str, Any]) -> bool:
+    """Test if discovery is complete and usable."""
+    return (
+        ssdp.ATTR_UPNP_UDN in discovery_info
+        and ssdp.ATTR_SSDP_ST in discovery_info
+        and ssdp.ATTR_SSDP_LOCATION in discovery_info
+        and ssdp.ATTR_SSDP_USN in discovery_info
+    )
+
+
 async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
     """Wait for a device to be discovered."""
     device_discovered_event = asyncio.Event()
 
-    @callback
-    def device_discovered(info: Mapping[str, Any]) -> None:
+    async def device_discovered(info: Mapping[str, Any], change: SsdpChange) -> None:
+        if change == SsdpChange.BYEBYE:
+            return
+
         LOGGER.info(
             "Device discovered: %s, at: %s",
             info[ssdp.ATTR_SSDP_USN],
@@ -49,14 +62,14 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
         )
         device_discovered_event.set()
 
-    cancel_discovered_callback_1 = ssdp.async_register_callback(
+    cancel_discovered_callback_1 = await ssdp.async_register_callback(
         hass,
         device_discovered,
         {
             ssdp.ATTR_SSDP_ST: ST_IGD_V1,
         },
     )
-    cancel_discovered_callback_2 = ssdp.async_register_callback(
+    cancel_discovered_callback_2 = await ssdp.async_register_callback(
         hass,
         device_discovered,
         {
@@ -77,11 +90,11 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
     return True
 
 
-def _discovery_igd_devices(hass: HomeAssistant) -> list[Mapping[str, Any]]:
+async def _async_discover_igd_devices(hass: HomeAssistant) -> list[Mapping[str, Any]]:
     """Discovery IGD devices."""
-    return ssdp.async_get_discovery_info_by_st(
+    return await ssdp.async_get_discovery_info_by_st(
         hass, ST_IGD_V1
-    ) + ssdp.async_get_discovery_info_by_st(hass, ST_IGD_V2)
+    ) + await ssdp.async_get_discovery_info_by_st(hass, ST_IGD_V2)
 
 
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -121,7 +134,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_create_entry_from_discovery(discovery)
 
         # Discover devices.
-        discoveries = _discovery_igd_devices(self.hass)
+        discoveries = await _async_discover_igd_devices(self.hass)
 
         # Store discoveries which have not been configured.
         current_unique_ids = {
@@ -130,7 +143,10 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._discoveries = [
             discovery
             for discovery in discoveries
-            if discovery[ssdp.ATTR_SSDP_USN] not in current_unique_ids
+            if (
+                _is_complete_discovery(discovery)
+                and discovery[ssdp.ATTR_SSDP_USN] not in current_unique_ids
+            )
         ]
 
         # Ensure anything to add.
@@ -171,7 +187,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Discover devices.
         await _async_wait_for_discoveries(self.hass)
-        discoveries = _discovery_igd_devices(self.hass)
+        discoveries = await _async_discover_igd_devices(self.hass)
 
         # Ensure anything to add. If not, silently abort.
         if not discoveries:
@@ -180,12 +196,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Ensure complete discovery.
         discovery = discoveries[0]
-        if (
-            ssdp.ATTR_UPNP_UDN not in discovery
-            or ssdp.ATTR_SSDP_ST not in discovery
-            or ssdp.ATTR_SSDP_LOCATION not in discovery
-            or ssdp.ATTR_SSDP_USN not in discovery
-        ):
+        if not _is_complete_discovery(discovery):
             LOGGER.debug("Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
 
@@ -204,12 +215,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("async_step_ssdp: discovery_info: %s", discovery_info)
 
         # Ensure complete discovery.
-        if (
-            ssdp.ATTR_UPNP_UDN not in discovery_info
-            or ssdp.ATTR_SSDP_ST not in discovery_info
-            or ssdp.ATTR_SSDP_LOCATION not in discovery_info
-            or ssdp.ATTR_SSDP_USN not in discovery_info
-        ):
+        if not _is_complete_discovery(discovery_info):
             LOGGER.debug("Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
 
@@ -270,7 +276,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         title = _friendly_name_from_discovery(discovery)
         data = {
-            CONFIG_ENTRY_UDN: discovery["_udn"],
+            CONFIG_ENTRY_UDN: discovery[ssdp.ATTR_UPNP_UDN],
             CONFIG_ENTRY_ST: discovery[ssdp.ATTR_SSDP_ST],
             CONFIG_ENTRY_HOSTNAME: discovery["_host"],
         }

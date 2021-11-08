@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "unknown": "Odottamaton virhe"
+        },
         "step": {
             "init": {
                 "data": {

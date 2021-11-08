@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "El dispositivo ya est\u00e1 configurado",
+            "switchbot_unsupported_type": "Tipo de Switchbot no compatible.",
+            "unknown": "Error inesperado"
+        },
+        "error": {
+            "cannot_connect": "Fall\u00f3 al conectar"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "mac": "Direcci\u00f3n MAC del dispositivo",
+                    "name": "Nombre",
+                    "password": "Contrase\u00f1a"
+                },
+                "title": "Configurar el dispositivo Switchbot"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "retry_count": "Recuento de reintentos",
+                    "retry_timeout": "Tiempo de espera entre reintentos",
+                    "scan_timeout": "Cu\u00e1nto tiempo se debe buscar datos de anuncio",
+                    "update_time": "Tiempo entre actualizaciones (segundos)"
+                }
+            }
+        }
+    }
+}

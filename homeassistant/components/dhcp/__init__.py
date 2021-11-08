@@ -1,6 +1,5 @@
 """The dhcp integration."""
 
-from abc import abstractmethod
 from datetime import timedelta
 import fnmatch
 from ipaddress import ip_address as make_ip_address
@@ -14,14 +13,10 @@ from aiodiscover.discovery import (
     IP_ADDRESS as DISCOVERY_IP_ADDRESS,
     MAC_ADDRESS as DISCOVERY_MAC_ADDRESS,
 )
-from scapy.arch.common import compile_filter
 from scapy.config import conf
 from scapy.error import Scapy_Exception
-from scapy.layers.dhcp import DHCP
-from scapy.layers.inet import IP
-from scapy.layers.l2 import Ether
-from scapy.sendrecv import AsyncSniffer
 
+from homeassistant import config_entries
 from homeassistant.components.device_tracker.const import (
     ATTR_HOST_NAME,
     ATTR_IP,
@@ -36,6 +31,7 @@ from homeassistant.const import (
     STATE_HOME,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import (
     async_track_state_added_domain,
@@ -43,9 +39,8 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_dhcp
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
-
-from .const import DOMAIN
 
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
@@ -95,6 +90,17 @@ class WatcherBase:
 
     def process_client(self, ip_address, hostname, mac_address):
         """Process a client."""
+        return run_callback_threadsafe(
+            self.hass.loop,
+            self.async_process_client,
+            ip_address,
+            hostname,
+            mac_address,
+        ).result()
+
+    @callback
+    def async_process_client(self, ip_address, hostname, mac_address):
+        """Process a client."""
         made_ip_address = make_ip_address(ip_address)
 
         if (
@@ -106,7 +112,6 @@ class WatcherBase:
             return
 
         data = self._address_data.get(ip_address)
-
         if (
             data
             and data[MAC_ADDRESS] == mac_address
@@ -116,12 +121,9 @@ class WatcherBase:
             # to process it
             return
 
-        self._address_data[ip_address] = {MAC_ADDRESS: mac_address, HOSTNAME: hostname}
+        data = {MAC_ADDRESS: mac_address, HOSTNAME: hostname}
+        self._address_data[ip_address] = data
 
-        self.process_updated_address_data(ip_address, self._address_data[ip_address])
-
-    def process_updated_address_data(self, ip_address, data):
-        """Process the address data update."""
         lowercase_hostname = data[HOSTNAME].lower()
         uppercase_mac = data[MAC_ADDRESS].upper()
 
@@ -144,22 +146,16 @@ class WatcherBase:
                 continue
 
             _LOGGER.debug("Matched %s against %s", data, entry)
-
-            self.create_task(
-                self.hass.config_entries.flow.async_init(
-                    entry["domain"],
-                    context={"source": DOMAIN},
-                    data={
-                        IP_ADDRESS: ip_address,
-                        HOSTNAME: lowercase_hostname,
-                        MAC_ADDRESS: data[MAC_ADDRESS],
-                    },
-                )
+            discovery_flow.async_create_flow(
+                self.hass,
+                entry["domain"],
+                {"source": config_entries.SOURCE_DHCP},
+                {
+                    IP_ADDRESS: ip_address,
+                    HOSTNAME: lowercase_hostname,
+                    MAC_ADDRESS: data[MAC_ADDRESS],
+                },
             )
-
-    @abstractmethod
-    def create_task(self, task):
-        """Pass a task to async_add_task based on which context we are in."""
 
 
 class NetworkWatcher(WatcherBase):
@@ -194,20 +190,16 @@ class NetworkWatcher(WatcherBase):
         """Start a new discovery task if one is not running."""
         if self._discover_task and not self._discover_task.done():
             return
-        self._discover_task = self.create_task(self.async_discover())
+        self._discover_task = self.hass.async_create_task(self.async_discover())
 
     async def async_discover(self):
         """Process discovery."""
         for host in await self._discover_hosts.async_discover():
-            self.process_client(
+            self.async_process_client(
                 host[DISCOVERY_IP_ADDRESS],
                 host[DISCOVERY_HOSTNAME],
                 _format_mac(host[DISCOVERY_MAC_ADDRESS]),
             )
-
-    def create_task(self, task):
-        """Pass a task to async_create_task since we are in async context."""
-        return self.hass.async_create_task(task)
 
 
 class DeviceTrackerWatcher(WatcherBase):
@@ -255,11 +247,7 @@ class DeviceTrackerWatcher(WatcherBase):
         if ip_address is None or mac_address is None:
             return
 
-        self.process_client(ip_address, hostname, _format_mac(mac_address))
-
-    def create_task(self, task):
-        """Pass a task to async_create_task since we are in async context."""
-        return self.hass.async_create_task(task)
+        self.async_process_client(ip_address, hostname, _format_mac(mac_address))
 
 
 class DHCPWatcher(WatcherBase):
@@ -282,11 +270,53 @@ class DHCPWatcher(WatcherBase):
 
     async def async_start(self):
         """Start watching for dhcp packets."""
+        await self.hass.async_add_executor_job(self._start)
+
+    def _start(self):
+        """Start watching for dhcp packets."""
+        # Local import because importing from scapy has side effects such as opening
+        # sockets
+        from scapy import (  # pylint: disable=import-outside-toplevel,unused-import  # noqa: F401
+            arch,
+        )
+        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
+
+        #
+        # Importing scapy.sendrecv will cause a scapy resync which will
+        # import scapy.arch.read_routes which will import scapy.sendrecv
+        #
+        # We avoid this circular import by importing arch above to ensure
+        # the module is loaded and avoid the problem
+        #
+        from scapy.sendrecv import (  # pylint: disable=import-outside-toplevel
+            AsyncSniffer,
+        )
+
+        def _handle_dhcp_packet(packet):
+            """Process a dhcp packet."""
+            if DHCP not in packet:
+                return
+
+            options = packet[DHCP].options
+            request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
+            if request_type != DHCP_REQUEST:
+                # Not a DHCP request
+                return
+
+            ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
+            hostname = _decode_dhcp_option(options, HOSTNAME) or ""
+            mac_address = _format_mac(packet[Ether].src)
+
+            if ip_address is not None and mac_address is not None:
+                self.process_client(ip_address, hostname, mac_address)
+
         # disable scapy promiscuous mode as we do not need it
         conf.sniff_promisc = 0
 
         try:
-            await self.hass.async_add_executor_job(_verify_l2socket_setup, FILTER)
+            _verify_l2socket_setup(FILTER)
         except (Scapy_Exception, OSError) as ex:
             if os.geteuid() == 0:
                 _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
@@ -297,7 +327,7 @@ class DHCPWatcher(WatcherBase):
             return
 
         try:
-            await self.hass.async_add_executor_job(_verify_working_pcap, FILTER)
+            _verify_working_pcap(FILTER)
         except (Scapy_Exception, ImportError) as ex:
             _LOGGER.error(
                 "Cannot watch for dhcp packets without a functional packet filter: %s",
@@ -308,38 +338,13 @@ class DHCPWatcher(WatcherBase):
         self._sniffer = AsyncSniffer(
             filter=FILTER,
             started_callback=self._started.set,
-            prn=self.handle_dhcp_packet,
+            prn=_handle_dhcp_packet,
             store=0,
         )
 
         self._sniffer.start()
         if self._sniffer.thread:
             self._sniffer.thread.name = self.__class__.__name__
-
-    def handle_dhcp_packet(self, packet):
-        """Process a dhcp packet."""
-        if DHCP not in packet:
-            return
-
-        options = packet[DHCP].options
-
-        request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
-        if request_type != DHCP_REQUEST:
-            # DHCP request
-            return
-
-        ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
-        hostname = _decode_dhcp_option(options, HOSTNAME) or ""
-        mac_address = _format_mac(packet[Ether].src)
-
-        if ip_address is None or mac_address is None:
-            return
-
-        self.process_client(ip_address, hostname, mac_address)
-
-    def create_task(self, task):
-        """Pass a task to hass.add_job since we are in a thread."""
-        return self.hass.add_job(task)
 
 
 def _decode_dhcp_option(dhcp_options, key):
@@ -382,4 +387,10 @@ def _verify_working_pcap(cap_filter):
     If we cannot create a filter we will be listening for
     all traffic which is too intensive.
     """
+    # Local import because importing from scapy has side effects such as opening
+    # sockets
+    from scapy.arch.common import (  # pylint: disable=import-outside-toplevel
+        compile_filter,
+    )
+
     compile_filter(cap_filter)

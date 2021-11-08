@@ -1,11 +1,12 @@
 """Support for Amcrest IP camera binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from amcrest import AmcrestError
 import voluptuous as vol
@@ -111,6 +112,7 @@ BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
         key=_ONLINE_KEY,
         name="Online",
         device_class=DEVICE_CLASS_CONNECTIVITY,
+        should_poll=True,
     ),
 )
 BINARY_SENSOR_KEYS = [description.key for description in BINARY_SENSORS]
@@ -168,6 +170,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         """Initialize entity."""
         self._signal_name = name
         self._api = device.api
+        self._channel = device.channel
         self.entity_description: AmcrestSensorEntityDescription = entity_description
 
         self._attr_name = f"{name} {entity_description.name}"
@@ -191,12 +194,14 @@ class AmcrestBinarySensor(BinarySensorEntity):
         if not (self._api.available or self.is_on):
             return
         _LOGGER.debug(_UPDATE_MSG, self.name)
+
         if self._api.available:
             # Send a command to the camera to test if we can still communicate with it.
             # Override of Http.command() in __init__.py will set self._api.available
             # accordingly.
             with suppress(AmcrestError):
                 self._api.current_time  # pylint: disable=pointless-statement
+                self._update_unique_id()
         self._attr_is_on = self._api.available
 
     def _update_others(self) -> None:
@@ -204,8 +209,13 @@ class AmcrestBinarySensor(BinarySensorEntity):
             return
         _LOGGER.debug(_UPDATE_MSG, self.name)
 
-        event_code = self.entity_description.event_code
-        if event_code is None:
+        try:
+            self._update_unique_id()
+        except AmcrestError as error:
+            log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
+            return
+
+        if (event_code := self.entity_description.event_code) is None:
             _LOGGER.error("Binary sensor %s event code not set", self.name)
             return
 
@@ -213,6 +223,14 @@ class AmcrestBinarySensor(BinarySensorEntity):
             self._attr_is_on = len(self._api.event_channels_happened(event_code)) > 0
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
+            return
+
+    def _update_unique_id(self) -> None:
+        """Set the unique id."""
+        if self._attr_unique_id is None and (serial_number := self._api.serial_number):
+            self._attr_unique_id = (
+                f"{serial_number}-{self.entity_description.key}-{self._channel}"
+            )
 
     async def async_on_demand_update(self) -> None:
         """Update state."""

@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import json
 import logging
 import time
-from typing import Any, Callable
+from typing import Any
 
 from azure.eventhub import EventData, EventDataBatch
 from azure.eventhub.aio import EventHubProducerClient, EventHubSharedKeyCredential

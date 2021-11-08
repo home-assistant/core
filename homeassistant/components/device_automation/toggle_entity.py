@@ -5,7 +5,10 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation.const import (
     CONF_IS_OFF,
     CONF_IS_ON,
@@ -126,8 +129,7 @@ async def async_call_action_from_config(
 @callback
 def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
-    condition_type = config[CONF_TYPE]
-    if condition_type == CONF_IS_ON:
+    if config[CONF_TYPE] == CONF_IS_ON:
         stat = "on"
     else:
         stat = "off"
@@ -146,11 +148,10 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_type = config[CONF_TYPE]
-    if trigger_type == CONF_TURNED_ON:
+    if config[CONF_TYPE] == CONF_TURNED_ON:
         to_state = "on"
     else:
         to_state = "off"
