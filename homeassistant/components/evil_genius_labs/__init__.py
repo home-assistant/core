@@ -89,11 +89,10 @@ class EvilGeniusEntity(update_coordinator.CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         info = self.coordinator.info
-        data = self.coordinator.data
         return DeviceInfo(
             identifiers={(DOMAIN, info["wiFiChipId"])},
             connections={(dr.CONNECTION_NETWORK_MAC, info["macAddress"])},
-            name=data["name"]["value"],
+            name=self.coordinator.device_name,
             manufacturer="Evil Genius Labs",
             sw_version=info["coreVersion"].replace("_", "."),
             configuration_url=self.coordinator.client.url,
