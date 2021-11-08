@@ -1470,6 +1470,9 @@ pyephember==0.3.1
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 
+# homeassistant.components.evil_genius_labs
+pyevilgenius==1.0.0
+
 # homeassistant.components.ezviz
 pyezviz==0.1.9.4
 
