@@ -24,7 +24,7 @@
             "init": {
                 "description": "IHC controller indstillinger",
                 "data": {
-                    "info": "Info (Tilføj IHC navn,note og position som attributter)"
+                    "info": "Info (Tilføj IHC navn, note og position som attributter)"
                 }
             }
         }
