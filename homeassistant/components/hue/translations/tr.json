@@ -7,6 +7,7 @@
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "discover_timeout": "Hue k\u00f6pr\u00fcleri bulunam\u0131yor",
             "no_bridges": "Philips Hue k\u00f6pr\u00fcs\u00fc bulunamad\u0131",
+            "not_hue_bridge": "Hue k\u00f6pr\u00fcs\u00fc de\u011fil",
             "unknown": "Beklenmeyen hata"
         },
         "error": {
@@ -21,7 +22,8 @@
                 "title": "Hue k\u00f6pr\u00fcs\u00fcn\u00fc se\u00e7in"
             },
             "link": {
-                "description": "Philips Hue'yu Home Assistant'a kaydetmek i\u00e7in k\u00f6pr\u00fcdeki d\u00fc\u011fmeye bas\u0131n. \n\n ![K\u00f6pr\u00fcdeki d\u00fc\u011fmenin konumu](/static/images/config_philips_hue.jpg)"
+                "description": "Philips Hue'yu Home Assistant'a kaydetmek i\u00e7in k\u00f6pr\u00fcdeki d\u00fc\u011fmeye bas\u0131n. \n\n ![K\u00f6pr\u00fcdeki d\u00fc\u011fmenin konumu](/static/images/config_philips_hue.jpg)",
+                "title": "Ba\u011flant\u0131 Merkezi"
             },
             "manual": {
                 "data": {
@@ -37,10 +39,19 @@
             "button_2": "\u0130kinci d\u00fc\u011fme",
             "button_3": "\u00dc\u00e7\u00fcnc\u00fc d\u00fc\u011fme",
             "button_4": "D\u00f6rd\u00fcnc\u00fc d\u00fc\u011fme",
+            "dim_down": "K\u0131sma",
+            "dim_up": "A\u00e7ma",
             "double_buttons_1_3": "Birinci ve \u00dc\u00e7\u00fcnc\u00fc d\u00fc\u011fmeler",
             "double_buttons_2_4": "\u0130kinci ve D\u00f6rd\u00fcnc\u00fc d\u00fc\u011fmeler",
             "turn_off": "Kapat",
             "turn_on": "A\u00e7"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\" {subtype} \" d\u00fc\u011fmesi uzun bas\u0131ld\u0131ktan sonra b\u0131rak\u0131ld\u0131",
+            "remote_button_short_press": "\" {subtype} \" d\u00fc\u011fmesine bas\u0131ld\u0131",
+            "remote_button_short_release": "\" {subtype} \" d\u00fc\u011fmesi b\u0131rak\u0131ld\u0131",
+            "remote_double_button_long_press": "Her iki \" {subtype} \" uzun bas\u0131\u015ftan sonra b\u0131rak\u0131ld\u0131",
+            "remote_double_button_short_press": "Her iki \"{subtype}\" de b\u0131rak\u0131ld\u0131"
         }
     },
     "options": {

@@ -1,7 +1,15 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
         "step": {
             "user": {
+                "data": {
+                    "host": "Ana bilgisayar",
+                    "name": "Ad"
+                },
                 "description": "Home Assistant ile entegre etmek i\u00e7in P1 Monitor'\u00fc kurun."
             }
         }

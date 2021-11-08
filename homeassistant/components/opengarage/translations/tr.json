@@ -5,13 +5,16 @@
         },
         "error": {
             "cannot_connect": "Ba\u011flant\u0131 ba\u015far\u0131s\u0131z",
-            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
         },
         "step": {
             "user": {
                 "data": {
                     "device_key": "Cihaz Anahtar\u0131",
-                    "port": "Port"
+                    "host": "Ana bilgisayar",
+                    "port": "Port",
+                    "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
                 }
             }
         }

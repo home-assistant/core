@@ -5,6 +5,9 @@
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "no_devices_found": "A\u011fda cihaz bulunamad\u0131"
         },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
         "flow_title": "{model} {id} ({ipaddr})",
         "step": {
             "discovery_confirm": {

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
@@ -10,6 +11,9 @@
         },
         "step": {
             "reauth_confirm": {
+                "data": {
+                    "password": "Parola"
+                },
                 "description": "{username} i\u00e7in \u015fifre art\u0131k ge\u00e7erli de\u011fil.",
                 "title": "MyQ Hesab\u0131n\u0131z\u0131 yeniden do\u011frulay\u0131n"
             },
