@@ -103,7 +103,9 @@ class TestStatisticsSensor(unittest.TestCase):
 
         for value in self.values:
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
 
@@ -163,7 +165,9 @@ class TestStatisticsSensor(unittest.TestCase):
 
         for value in self.values:
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
 
@@ -193,7 +197,9 @@ class TestStatisticsSensor(unittest.TestCase):
 
         for value in self.values[-3:]:  # just the last 3 will do
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
 
@@ -363,6 +369,66 @@ class TestStatisticsSensor(unittest.TestCase):
         ) == state.attributes.get("max_age")
         assert self.change_rate == state.attributes.get("change_rate")
 
+    def test_precision_0(self):
+        """Test correct result with precision=0 as integer."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "precision": 0,
+                }
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in self.values:
+            self.hass.states.set(
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test")
+        assert state.state == str(int(state.attributes.get("mean")))
+
+    def test_precision_1(self):
+        """Test correct result with precision=1 rounded to one decimal."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "precision": 1,
+                }
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in self.values:
+            self.hass.states.set(
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test")
+        assert state.state == str(round(sum(self.values) / len(self.values), 1))
+
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
         # enable the recorder
@@ -372,7 +438,9 @@ class TestStatisticsSensor(unittest.TestCase):
         # store some values
         for value in self.values:
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
         # wait for the recorder to really store the data
