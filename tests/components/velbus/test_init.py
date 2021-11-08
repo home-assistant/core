@@ -5,6 +5,8 @@ from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from tests.common import mock_device_registry
+
 
 @pytest.mark.usefixtures("controller")
 async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -20,3 +22,31 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+@pytest.mark.usefixtures("controller")
+async def test_device_identifier_migration(
+    hass: HomeAssistant, config_entry: ConfigEntry
+):
+    """Test being able to unload an entry."""
+    device_registry = mock_device_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "module_address", "module_serial")},
+        name="cannel_name",
+        manufacturer="Velleman",
+        model="module_type_name",
+        sw_version="module_sw_version",
+    )
+
+    assert not device_registry.async_get_device({(DOMAIN, "module_address")})
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device({(DOMAIN, "module_address")})
+    assert device_entry
+    assert device_entry.name == "cannel_name"
+    assert device_entry.manufacturer == "Velleman"
+    assert device_entry.model == "module_type_name"
+    assert device_entry.sw_version == "module_sw_version"
