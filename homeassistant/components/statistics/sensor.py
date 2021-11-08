@@ -176,10 +176,8 @@ class StatisticsSensor(SensorEntity):
 
     def _add_state_to_queue(self, new_state):
         """Add the state to the queue."""
-        if new_state.state == STATE_UNAVAILABLE:
-            self._available = False
-            return
-        if new_state.state in (STATE_UNKNOWN, None):
+        self._available = new_state.state != STATE_UNAVAILABLE
+        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             return
 
         try:
@@ -187,8 +185,6 @@ class StatisticsSensor(SensorEntity):
                 self.states.append(new_state.state)
             else:
                 self.states.append(float(new_state.state))
-            self._available = True
-
             self.ages.append(new_state.last_updated)
         except ValueError:
             _LOGGER.error(
