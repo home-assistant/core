@@ -3985,4 +3985,42 @@ DEVICES = [
         SIG_MODEL: "XBee3",
         SIG_NODE_DESC: b"\x01@\x8e\x1e\x10R\xff\x00\x00,\xff\x00\x00",
     },
+    {
+        DEV_SIG_DEV_NO: 99,
+        SIG_ENDPOINTS: {
+            1: {
+                SIG_EP_TYPE: 0x000C,
+                DEV_SIG_EP_ID: 1,
+                SIG_EP_INPUT: [0x0000, 0x0001, 0x0402, 0x0408],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_PROFILE: 260,
+            }
+        },
+        DEV_SIG_ENTITIES: [
+            "sensor.efektalab_ru_efekta_pws_77665544_power",
+            "sensor.efektalab_ru_efekta_pws_77665544_temperature",
+            "sensor.efektalab_ru_efekta_pws_77665544_soil_moisture",
+        ],
+        DEV_SIG_ENT_MAP: {
+            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
+                DEV_SIG_CHANNELS: ["power"],
+                DEV_SIG_ENT_MAP_CLASS: "Battery",
+                DEV_SIG_ENT_MAP_ID: "sensor.efektalab_ru_efekta_pws_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
+                DEV_SIG_CHANNELS: ["temperature"],
+                DEV_SIG_ENT_MAP_CLASS: "Temperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.efektalab_ru_efekta_pws_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1032"): {
+                DEV_SIG_CHANNELS: ["soil_moisture"],
+                DEV_SIG_ENT_MAP_CLASS: "SoilMoisture",
+                DEV_SIG_ENT_MAP_ID: "sensor.efektalab_ru_efekta_pws_77665544_soil_moisture",
+            },
+        },
+        DEV_SIG_EVT_CHANNELS: [],
+        SIG_MANUFACTURER: "efektalab.ru",
+        SIG_MODEL: "EFEKTA_PWS",
+        SIG_NODE_DESC: b"\x02@\x80\x00\x00P\xa0\x00\x00\x00\xa0\x00\x00",
+    },
 ]
