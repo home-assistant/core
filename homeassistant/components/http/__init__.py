@@ -298,7 +298,9 @@ class HomeAssistantHTTP:
             # Should be instance of aiohttp.web_exceptions._HTTPMove.
             raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
 
-        self.app["add_cors"](self.app.router.add_route("GET", url, redirect))
+        self.app["allow_configured_cors"](
+            self.app.router.add_route("GET", url, redirect)
+        )
 
     def register_static_path(
         self, url_path: str, path: str, cache_headers: bool = True
@@ -312,7 +314,7 @@ class HomeAssistantHTTP:
             else:
                 resource = web.StaticResource(url_path, path)
             self.app.router.register_resource(resource)
-            self.app["add_cors"](resource)
+            self.app["allow_configured_cors"](resource)
             return
 
         async def serve_file(request: web.Request) -> web.FileResponse:
@@ -321,7 +323,9 @@ class HomeAssistantHTTP:
                 return web.FileResponse(path, headers=CACHE_HEADERS)
             return web.FileResponse(path)
 
-        self.app["add_cors"](self.app.router.add_route("GET", url_path, serve_file))
+        self.app["allow_configured_cors"](
+            self.app.router.add_route("GET", url_path, serve_file)
+        )
 
     async def start(self) -> None:
         """Start the aiohttp server."""

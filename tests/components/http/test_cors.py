@@ -53,7 +53,7 @@ def client(loop, aiohttp_client):
     """Fixture to set up a web.Application."""
     app = web.Application()
     setup_cors(app, [TRUSTED_ORIGIN])
-    app["add_cors"](app.router.add_get("/", mock_handler))
+    app["allow_configured_cors"](app.router.add_get("/", mock_handler))
     return loop.run_until_complete(aiohttp_client(app))
 
 
