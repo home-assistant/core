@@ -29,6 +29,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -155,11 +156,12 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
         self._attr_name = f"{airthings_device.name} {entity_description.name}"
         self._attr_unique_id = f"{airthings_device.device_id}_{entity_description.key}"
         self._id = airthings_device.device_id
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, airthings_device.device_id)},
-            "name": airthings_device.name,
-            "manufacturer": "Airthings",
-        }
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://dashboard.airthings.com/",
+            identifiers={(DOMAIN, airthings_device.device_id)},
+            name=airthings_device.name,
+            manufacturer="Airthings",
+        )
 
     @property
     def native_value(self) -> StateType:

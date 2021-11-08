@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TIMESTAMP,
     DOMAIN as SENSOR_DOMAIN,
 )
-from homeassistant.components.wled.const import ATTR_LED_COUNT, ATTR_MAX_POWER, DOMAIN
+from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -95,9 +95,6 @@ async def test_sensors(
 
     state = hass.states.get("sensor.wled_rgb_light_estimated_current")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:power"
-    assert state.attributes.get(ATTR_LED_COUNT) == 30
-    assert state.attributes.get(ATTR_MAX_POWER) == 850
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_MILLIAMPERE
     )

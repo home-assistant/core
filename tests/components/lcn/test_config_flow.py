@@ -76,8 +76,7 @@ async def test_step_import_existing_host(hass):
     ],
 )
 async def test_step_import_error(hass, error, reason):
-    """Test for authentication error is handled correctly."""
-
+    """Test for error in import is handled correctly."""
     with patch(
         "pypck.connection.PchkConnectionManager.async_connect", side_effect=error
     ):

@@ -120,6 +120,7 @@ def filter_libav_logging() -> None:
         "libav.rtsp",
         "libav.tcp",
         "libav.tls",
+        "libav.mpegts",
         "libav.NULL",
     ):
         logging.getLogger(logging_namespace).addFilter(libav_filter)
@@ -348,8 +349,7 @@ class Stream:
             raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
 
         # Add recorder
-        recorder = self.outputs().get(RECORDER_PROVIDER)
-        if recorder:
+        if recorder := self.outputs().get(RECORDER_PROVIDER):
             assert isinstance(recorder, RecorderOutput)
             raise HomeAssistantError(
                 f"Stream already recording to {recorder.video_path}!"

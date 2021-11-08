@@ -315,12 +315,12 @@ class AbodeDevice(AbodeEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "manufacturer": "Abode",
-            "name": self._device.name,
-            "model": self._device.type,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.device_id)},
+            manufacturer="Abode",
+            model=self._device.type,
+            name=self._device.name,
+        )
 
     def _update_callback(self, device: AbodeDev) -> None:
         """Update the device state."""

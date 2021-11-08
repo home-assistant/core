@@ -1,7 +1,8 @@
 """Tests for the Abode config flow."""
+from http import HTTPStatus
 from unittest.mock import patch
 
-from abodepy.exceptions import AbodeAuthenticationException, AbodeException
+from abodepy.exceptions import AbodeAuthenticationException
 from abodepy.helpers.errors import MFA_CODE_REQUIRED
 from requests.exceptions import ConnectTimeout
 
@@ -9,12 +10,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.abode import config_flow
 from homeassistant.components.abode.const import CONF_POLLING, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    HTTP_BAD_REQUEST,
-    HTTP_INTERNAL_SERVER_ERROR,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -56,7 +52,9 @@ async def test_invalid_credentials(hass: HomeAssistant):
 
     with patch(
         "homeassistant.components.abode.config_flow.Abode",
-        side_effect=AbodeAuthenticationException((HTTP_BAD_REQUEST, "auth error")),
+        side_effect=AbodeAuthenticationException(
+            (HTTPStatus.BAD_REQUEST, "auth error")
+        ),
     ):
         result = await flow.async_step_user(user_input=conf)
         assert result["errors"] == {"base": "invalid_auth"}
@@ -71,7 +69,9 @@ async def test_connection_auth_error(hass: HomeAssistant):
 
     with patch(
         "homeassistant.components.abode.config_flow.Abode",
-        side_effect=AbodeException((HTTP_INTERNAL_SERVER_ERROR, "connection error")),
+        side_effect=AbodeAuthenticationException(
+            (HTTPStatus.INTERNAL_SERVER_ERROR, "connection error")
+        ),
     ):
         result = await flow.async_step_user(user_input=conf)
         assert result["errors"] == {"base": "cannot_connect"}
@@ -130,7 +130,9 @@ async def test_step_mfa(hass: HomeAssistant):
 
     with patch(
         "homeassistant.components.abode.config_flow.Abode",
-        side_effect=AbodeAuthenticationException((HTTP_BAD_REQUEST, "invalid mfa")),
+        side_effect=AbodeAuthenticationException(
+            (HTTPStatus.BAD_REQUEST, "invalid mfa")
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"mfa_code": "123456"}

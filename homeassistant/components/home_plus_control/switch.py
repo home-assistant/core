@@ -8,6 +8,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import dispatcher
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DISPATCHER_REMOVERS, DOMAIN, HW_TYPE, SIGNAL_ADD_ENTITIES
@@ -79,18 +80,18 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
         return self.idx
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device information."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Unique identifiers within the domain
                 (DOMAIN, self.unique_id)
             },
-            "name": self.name,
-            "manufacturer": "Legrand",
-            "model": HW_TYPE.get(self.module.hw_type),
-            "sw_version": self.module.fw,
-        }
+            manufacturer="Legrand",
+            model=HW_TYPE.get(self.module.hw_type),
+            name=self.name,
+            sw_version=self.module.fw,
+        )
 
     @property
     def device_class(self):

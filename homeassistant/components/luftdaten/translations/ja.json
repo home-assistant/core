@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_sensor": "\u30bb\u30f3\u30b5\u30fc\u304c\u5229\u7528\u3067\u304d\u306a\u3044\u304b\u3001\u7121\u52b9\u3067\u3059"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "\u5730\u56f3\u3067\u8868\u793a",
+                    "station_id": "Luftdaten\u30bb\u30f3\u30b5\u30fcID"
+                },
+                "title": "Luftdaten\u306e\u5b9a\u7fa9"
+            }
+        }
+    }
+}

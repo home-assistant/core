@@ -7,15 +7,16 @@ from pyatv.const import Protocol
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
 
 from tests.common import MockConfigEntry
 
-DMAP_SERVICE = {
-    "type": "_touch-able._tcp.local.",
-    "name": "dmapid.something",
-    "properties": {"CtlN": "Apple TV"},
-}
+DMAP_SERVICE = zeroconf.HaServiceInfo(
+    type="_touch-able._tcp.local.",
+    name="dmapid.something",
+    properties={"CtlN": "Apple TV"},
+)
 
 
 @pytest.fixture(autouse=True)
@@ -399,10 +400,10 @@ async def test_zeroconf_unsupported_service_aborts(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "type": "_dummy._tcp.local.",
-            "properties": {},
-        },
+        data=zeroconf.HaServiceInfo(
+            type="_dummy._tcp.local.",
+            properties={},
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"
@@ -413,10 +414,10 @@ async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "type": "_mediaremotetv._tcp.local.",
-            "properties": {"UniqueIdentifier": "mrpid", "Name": "Kitchen"},
-        },
+        data=zeroconf.HaServiceInfo(
+            type="_mediaremotetv._tcp.local.",
+            properties={"UniqueIdentifier": "mrpid", "Name": "Kitchen"},
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["description_placeholders"] == {"name": "MRP Device"}

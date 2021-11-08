@@ -36,6 +36,7 @@ from .const import (
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     BLOCK,
     CONF_COAP_PORT,
+    CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
     DEFAULT_COAP_PORT,
     DEVICE,
@@ -79,8 +80,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
 
-    conf = config.get(DOMAIN)
-    if conf is not None:
+    if (conf := config.get(DOMAIN)) is not None:
         hass.data[DOMAIN][CONF_COAP_PORT] = conf[CONF_COAP_PORT]
 
     return True
@@ -133,12 +133,18 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            identifiers={(DOMAIN, entry.unique_id)}, connections=set()
+            identifiers=set(),
+            connections={
+                (
+                    device_registry.CONNECTION_NETWORK_MAC,
+                    device_registry.format_mac(entry.unique_id),
+                )
+            },
         )
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
-    sleep_period = entry.data.get("sleep_period")
+    sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
 
     @callback
     def _async_device_online(_: Any) -> None:
@@ -147,7 +153,7 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
 
         if sleep_period is None:
             data = {**entry.data}
-            data["sleep_period"] = get_block_device_sleep_period(device.settings)
+            data[CONF_SLEEP_PERIOD] = get_block_device_sleep_period(device.settings)
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
 
@@ -189,7 +195,7 @@ async def async_block_device_setup(
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 
-    if not entry.data.get("sleep_period"):
+    if not entry.data.get(CONF_SLEEP_PERIOD):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
             REST
         ] = ShellyDeviceRestWrapper(hass, device)
@@ -233,9 +239,8 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     ) -> None:
         """Initialize the Shelly device wrapper."""
         self.device_id: str | None = None
-        sleep_period = entry.data["sleep_period"]
 
-        if sleep_period:
+        if sleep_period := entry.data[CONF_SLEEP_PERIOD]:
             update_interval = SLEEP_PERIOD_MULTIPLIER * sleep_period
         else:
             update_interval = (
@@ -365,7 +370,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
-        if sleep_period := self.entry.data.get("sleep_period"):
+        if sleep_period := self.entry.data.get(CONF_SLEEP_PERIOD):
             # Sleeping device, no point polling it, just mark it unavailable
             raise update_coordinator.UpdateFailed(
                 f"Sleeping device did not update within {sleep_period} seconds interval"
@@ -473,7 +478,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 
-    if not entry.data.get("sleep_period"):
+    if not entry.data.get(CONF_SLEEP_PERIOD):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][REST] = None
         platforms = BLOCK_PLATFORMS
 

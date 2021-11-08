@@ -12,6 +12,7 @@ from homeassistant.components.litterrobot.vacuum import (
     SERVICE_SET_WAIT_TIME,
 )
 from homeassistant.components.vacuum import (
+    ATTR_STATUS,
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_START,
     SERVICE_TURN_OFF,
@@ -44,6 +45,17 @@ async def test_vacuum(hass: HomeAssistant, mock_account):
     assert vacuum
     assert vacuum.state == STATE_DOCKED
     assert vacuum.attributes["is_sleeping"] is False
+
+
+async def test_vacuum_status_when_sleeping(
+    hass: HomeAssistant, mock_account_with_sleeping_robot
+):
+    """Tests the vacuum status when sleeping."""
+    await setup_integration(hass, mock_account_with_sleeping_robot, PLATFORM_DOMAIN)
+
+    vacuum = hass.states.get(VACUUM_ENTITY_ID)
+    assert vacuum
+    assert vacuum.attributes.get(ATTR_STATUS) == "Ready (Sleeping)"
 
 
 async def test_no_robots(hass: HomeAssistant, mock_account_with_no_robots):

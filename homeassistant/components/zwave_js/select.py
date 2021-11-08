@@ -9,6 +9,7 @@ from zwave_js_server.const.command_class.sound_switch import ToneID
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -52,6 +53,8 @@ async def async_setup_entry(
 class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
     """Representation of a Z-Wave select entity."""
 
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
     ) -> None:
@@ -85,6 +88,8 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
 
 class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
     """Representation of a Z-Wave default tone select entity."""
+
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo

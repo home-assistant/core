@@ -379,19 +379,21 @@ async def test_discovery_removal_lock(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_lock(hass, mqtt_mock, caplog):
     """Test update of discovered lock."""
-    data1 = (
-        '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "command_topic",'
-        '  "availability_topic": "availability_topic1" }'
+    config1 = {
+        "name": "Beer",
+        "state_topic": "test_topic",
+        "command_topic": "command_topic",
+        "availability_topic": "availability_topic1",
+    }
+    config2 = {
+        "name": "Milk",
+        "state_topic": "test_topic2",
+        "command_topic": "command_topic",
+        "availability_topic": "availability_topic2",
+    }
+    await help_test_discovery_update(
+        hass, mqtt_mock, caplog, LOCK_DOMAIN, config1, config2
     )
-    data2 = (
-        '{ "name": "Milk",'
-        '  "state_topic": "test_topic2",'
-        '  "command_topic": "command_topic",'
-        '  "availability_topic": "availability_topic2" }'
-    )
-    await help_test_discovery_update(hass, mqtt_mock, caplog, LOCK_DOMAIN, data1, data2)
 
 
 async def test_discovery_update_unchanged_lock(hass, mqtt_mock, caplog):

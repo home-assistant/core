@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Aquest compte SimpliSafe ja est\u00e0 en \u00fas.",
-            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "wrong_account": "Les credencials d'usuari proporcionades no coincideixen amb les d'aquest compte SimpliSafe."
         },
         "error": {
             "identifier_exists": "Aquest compte ja est\u00e0 registrat",
@@ -11,6 +12,13 @@
             "unknown": "Error inesperat"
         },
         "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "Codi d'autoritzaci\u00f3"
+                },
+                "description": "Introdueix el codi d'autoritzaci\u00f3 de l'URL de l'aplicaci\u00f3 web SimpliSafe:",
+                "title": "Acabament d'autoritzaci\u00f3"
+            },
             "mfa": {
                 "description": "Consulta el correu i busca-hi un missatge amb un enlla\u00e7 de SimpliSafe. Despr\u00e9s de verificar l'enlla\u00e7, torna aqu\u00ed per completar la instal\u00b7laci\u00f3 de la integraci\u00f3.",
                 "title": "Autenticaci\u00f3 multi-factor SimpliSafe"
@@ -28,6 +36,7 @@
                     "password": "Contrasenya",
                     "username": "Correu electr\u00f2nic"
                 },
+                "description": "A partir del 2021, SimpliSafe ha passat a un nou mecanisme d'autenticaci\u00f3 a trav\u00e9s de la seva aplicaci\u00f3 web. A causa de les limitacions t\u00e8cniques, hi ha un pas manual al final d'aquest proc\u00e9s; assegura't de llegir la [documentaci\u00f3](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) abans de comen\u00e7ar. \n\nQuan estiguis a punt, fes clic a [aqu\u00ed]({url}) per obrir l'aplicaci\u00f3 web SimpliSafe i introduir les credencials. Quan el proc\u00e9s s'hagi completat, torna aqu\u00ed i fes clic a Envia.",
                 "title": "Introdueix la teva informaci\u00f3"
             }
         }

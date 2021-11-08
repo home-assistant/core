@@ -60,8 +60,7 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
             )
         )
 
-        state = await self.async_get_last_state()
-        if not state:
+        if not (state := await self.async_get_last_state()):
             return
         self._attr_native_value = state.state
 
