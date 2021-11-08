@@ -230,6 +230,7 @@ async def _async_setup_entity(
 class MqttFan(MqttEntity, FanEntity):
     """A MQTT fan component."""
 
+    _entity_id_format = fan.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
