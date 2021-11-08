@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 REGULAR_INTERVAL = timedelta(seconds=20)
-FAST_INTERVAL = timedelta(seconds=1)
+FAST_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_platform(
