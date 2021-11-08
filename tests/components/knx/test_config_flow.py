@@ -167,7 +167,7 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
         "homeassistant.components.knx.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        manuel_tunnel_flow = await hass.config_entries.flow.async_configure(
+        manual_tunnel_flow = await hass.config_entries.flow.async_configure(
             manual_tunnel["flow_id"],
             {
                 CONF_HOST: "192.168.0.1",
@@ -175,8 +175,8 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
             },
         )
         await hass.async_block_till_done()
-        assert manuel_tunnel_flow["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert manuel_tunnel_flow["data"] == {
+        assert manual_tunnel_flow["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert manual_tunnel_flow["data"] == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
             CONF_HOST: "192.168.0.1",
             CONF_PORT: 3675,
