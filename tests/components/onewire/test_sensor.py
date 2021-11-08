@@ -101,6 +101,7 @@ async def test_onewiredirect_setup_valid_device(
     ), caplog.at_level(logging.WARNING, logger="homeassistant.components.onewire"):
         await hass.config_entries.async_setup(sysbus_config_entry.entry_id)
         await hass.async_block_till_done()
+        assert "No onewire sensor found. Check if dtoverlay=w1-gpio" not in caplog.text
         if mock_device.get(ATTR_UNKNOWN_DEVICE):
             assert "Ignoring unknown device family" in caplog.text
         else:

@@ -132,7 +132,14 @@ class OneWireHub:
         """Discover all sysbus devices."""
         devices: list[OWDeviceDescription] = []
         assert self.pi1proxy
-        for interface in self.pi1proxy.find_all_sensors():
+        all_sensors = self.pi1proxy.find_all_sensors()
+        if not all_sensors:
+            _LOGGER.error(
+                "No onewire sensor found. Check if dtoverlay=w1-gpio "
+                "is in your /boot/config.txt. "
+                "Check the mount_dir parameter if it's defined"
+            )
+        for interface in all_sensors:
             device_family = interface.mac_address[:2]
             device_id = f"{device_family}-{interface.mac_address[2:]}"
             if device_family not in DEVICE_SUPPORT_SYSBUS:
@@ -155,12 +162,6 @@ class OneWireHub:
                 interface=interface,
             )
             devices.append(device)
-        if not devices:
-            _LOGGER.error(
-                "No onewire sensor found. Check if dtoverlay=w1-gpio "
-                "is in your /boot/config.txt. "
-                "Check the mount_dir parameter if it's defined"
-            )
         return devices
 
     def _discover_devices_owserver(
