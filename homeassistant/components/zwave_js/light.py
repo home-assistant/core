@@ -282,11 +282,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 rgbw_channels[ColorComponent.COLD_WHITE] = rgbw[3]
             await self._async_set_colors(rgbw_channels, transition)
 
-        if kwargs.get(ATTR_BRIGHTNESS) is None:
-            # optimistically assume the light is on
-            self._state = True
-            self.async_write_ha_state()
-
         # set brightness
         await self._async_set_brightness(kwargs.get(ATTR_BRIGHTNESS), transition)
 
@@ -329,6 +324,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if brightness is None:
             # Level 255 means to set it to previous value.
             zwave_brightness = 255
+            # optimistically assume the light is on
+            self._state = True
+            self.async_write_ha_state()
         else:
             # Zwave multilevel switches use a range of [0, 99] to control brightness.
             zwave_brightness = byte_to_zwave_brightness(brightness)
