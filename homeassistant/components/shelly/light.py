@@ -1,12 +1,10 @@
 """Light for Shelly."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
-import async_timeout
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -35,7 +33,6 @@ from homeassistant.util.color import (
 
 from . import BlockDeviceWrapper, RpcDeviceWrapper
 from .const import (
-    AIOSHELLY_DEVICE_TIMEOUT_SEC,
     BLOCK,
     DATA_CONFIG_ENTRY,
     DOMAIN,
@@ -370,7 +367,11 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                     self.wrapper.model,
                 )
 
-        if set_mode and self.mode != set_mode and self.wrapper.model in DUAL_MODE_LIGHT_MODELS:
+        if (
+            set_mode
+            and self.mode != set_mode
+            and self.wrapper.model in DUAL_MODE_LIGHT_MODELS
+        ):
             params["mode"] = set_mode
             self.mode_result = self.control_result = await self.set_state(**params)
         else:
