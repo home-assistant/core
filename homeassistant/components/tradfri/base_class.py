@@ -129,7 +129,9 @@ class TradfriBaseDevice(TradfriBaseClass):
     async def async_added_to_hass(self) -> None:
         """Start thread when added to hass."""
         # Only devices shall receive SIGNAL_GW
-        async_dispatcher_connect(self.hass, SIGNAL_GW, self.set_hub_available)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_GW, self.set_hub_available)
+        )
         await super().async_added_to_hass()
 
     @callback
