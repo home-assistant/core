@@ -1,5 +1,6 @@
 """Support for statistics for sensor values."""
 from collections import deque
+import contextlib
 import logging
 import statistics
 
@@ -205,8 +206,9 @@ class StatisticsSensor(SensorEntity):
         """Return the state of the sensor."""
         if self.is_binary:
             return self.count
-        if self._precision == 0 and isinstance(self.mean, float):
-            return int(self.mean)
+        if self._precision == 0:
+            with contextlib.suppress(TypeError, ValueError):
+                return int(self.mean)
         return self.mean
 
     @property
