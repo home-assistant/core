@@ -49,7 +49,20 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
+class DoorSensorEntity(GoGoGate2Entity, SensorEntity):
+    """Base class for door sensor entities."""
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        attrs = super().extra_state_attributes
+        door = self.door
+        if door.sensorid is not None:
+            attrs["sensor_id"] = door.sensorid
+        return attrs
+
+
+class DoorSensorBattery(DoorSensorEntity):
     """Battery sensor entity for gogogate2 door sensor."""
 
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
@@ -63,38 +76,21 @@ class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
         """Initialize the object."""
         unique_id = sensor_unique_id(config_entry, door, "battery")
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
+        self._attr_device_class = DEVICE_CLASS_BATTERY
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def name(self):
         """Return the name of the door."""
-        return f"{self._get_door().name} battery"
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_BATTERY
+        return f"{self.door.name} battery"
 
     @property
     def native_value(self):
         """Return the state of the entity."""
-        door = self._get_door()
-        return door.voltage  # This is a percentage, not an absolute voltage
-
-    @property
-    def state_class(self) -> str:
-        """Return the Measurement State Class."""
-        return STATE_CLASS_MEASUREMENT
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        door = self._get_door()
-        if door.sensorid is not None:
-            return {"door_id": door.door_id, "sensor_id": door.sensorid}
-        return None
+        return self.door.voltage  # This is a percentage, not an absolute voltage
 
 
-class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
+class DoorSensorTemperature(DoorSensorEntity):
     """Temperature sensor entity for gogogate2 door sensor."""
 
     def __init__(
@@ -106,37 +102,16 @@ class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
         """Initialize the object."""
         unique_id = sensor_unique_id(config_entry, door, "temperature")
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
+        self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
     def name(self):
         """Return the name of the door."""
-        return f"{self._get_door().name} temperature"
-
-    @property
-    def state_class(self) -> str:
-        """Return the Measurement State Class."""
-        return STATE_CLASS_MEASUREMENT
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_TEMPERATURE
+        return f"{self.door.name} temperature"
 
     @property
     def native_value(self):
         """Return the state of the entity."""
-        door = self._get_door()
-        return door.temperature
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit_of_measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        door = self._get_door()
-        if door.sensorid is not None:
-            return {"door_id": door.door_id, "sensor_id": door.sensorid}
-        return None
+        return self.door.temperature

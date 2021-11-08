@@ -18,6 +18,13 @@
             "unknown": "Tundmatu viga tuvastuskoodi kinnitamisel"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Juurdep\u00e4\u00e4sut\u00f5end"
+                },
+                "description": "Oma Google'i konto sidumiseks vali [autoriseeri oma konto]({url}).\n\nP\u00e4rast autoriseerimist kopeeri ja aseta allpool esitatud Auth Token'i kood.",
+                "title": "Google'i konto linkimine"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Pakkuja"

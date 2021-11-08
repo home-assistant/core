@@ -23,7 +23,7 @@ class WallboxNumberEntityDescription(NumberEntityDescription):
     min_value: float = 0
 
 
-NUMBER_TYPES: dict[str, NumberEntityDescription] = {
+NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CONF_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CONF_MAX_CHARGING_CURRENT_KEY,
         name="Max. Charging Current",
@@ -56,6 +56,8 @@ async def async_setup_entry(hass, config, async_add_entities):
 
 class WallboxNumber(CoordinatorEntity, NumberEntity):
     """Representation of the Wallbox portal."""
+
+    entity_description: WallboxNumberEntityDescription
 
     def __init__(
         self, coordinator, config, description: WallboxNumberEntityDescription

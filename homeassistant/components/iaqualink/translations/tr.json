@@ -12,7 +12,8 @@
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
-                "description": "L\u00fctfen iAqualink hesab\u0131n\u0131z i\u00e7in kullan\u0131c\u0131 ad\u0131 ve parolay\u0131 girin."
+                "description": "L\u00fctfen iAqualink hesab\u0131n\u0131z i\u00e7in kullan\u0131c\u0131 ad\u0131 ve parolay\u0131 girin.",
+                "title": "iAqualink'e ba\u011flan\u0131n"
             }
         }
     }
