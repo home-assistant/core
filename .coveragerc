@@ -1156,6 +1156,9 @@ omit =
     homeassistant/components/upcloud/switch.py
     homeassistant/components/upnp/*
     homeassistant/components/upc_connect/*
+    homeassistant/components/uptime_kuma/__init__.py
+    homeassistant/components/uptime_kuma/const.py
+    homeassistant/components/uptime_kuma/binary_sensor.py
     homeassistant/components/uscis/sensor.py
     homeassistant/components/vallox/*
     homeassistant/components/vasttrafik/sensor.py
