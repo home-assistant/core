@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 import os
 from typing import TYPE_CHECKING, Any
 
@@ -138,10 +137,10 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
     ),
 }
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def get_sensor_types(device_sub_type: str) -> dict[str, Any]:
+def get_sensor_types(
+    device_sub_type: str,
+) -> dict[str, tuple[OneWireEntityDescription, ...]]:
     """Return the proper info array for the device type."""
     if "HobbyBoard" in device_sub_type:
         return HOBBYBOARD_EF
@@ -182,11 +181,6 @@ def get_entities(onewirehub: OneWireHub) -> list[SwitchEntity]:
             family = device_type
 
         if family not in get_sensor_types(device_sub_type):
-            _LOGGER.warning(
-                "Ignoring unknown family (%s) of switch found for device: %s",
-                family,
-                device_id,
-            )
             continue
         for description in get_sensor_types(device_sub_type)[family]:
             device_file = os.path.join(os.path.split(device.path)[0], description.key)

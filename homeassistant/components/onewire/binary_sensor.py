@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
@@ -34,9 +33,6 @@ class OneWireBinarySensorEntityDescription(
     OneWireEntityDescription, BinarySensorEntityDescription
 ):
     """Class describing OneWire binary sensor entities."""
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
@@ -86,7 +82,9 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
 }
 
 
-def get_sensor_types(device_sub_type: str) -> dict[str, Any]:
+def get_sensor_types(
+    device_sub_type: str,
+) -> dict[str, tuple[OneWireBinarySensorEntityDescription, ...]]:
     """Return the proper info array for the device type."""
     if "HobbyBoard" in device_sub_type:
         return HOBBYBOARD_EF
@@ -126,11 +124,6 @@ def get_entities(onewirehub: OneWireHub) -> list[BinarySensorEntity]:
             family = device_type
 
         if family not in get_sensor_types(device_sub_type):
-            _LOGGER.warning(
-                "Ignoring unknown family (%s) of binary_sensor found for device: %s",
-                family,
-                device_id,
-            )
             continue
         for description in get_sensor_types(device_sub_type)[family]:
             device_file = os.path.join(os.path.split(device.path)[0], description.key)

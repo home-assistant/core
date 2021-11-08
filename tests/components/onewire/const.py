@@ -800,6 +800,7 @@ MOCK_OWPROXY_DEVICES = {
         SWITCH_DOMAIN: [
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_0_enable",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
@@ -808,6 +809,7 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_1_enable",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
@@ -816,6 +818,7 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_2_enable",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
@@ -824,6 +827,7 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111112_leaf_sensor_3_enable",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
@@ -832,6 +836,7 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_0_enable",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
@@ -840,6 +845,7 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_1_enable",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
@@ -848,6 +854,7 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_2_enable",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
@@ -856,6 +863,7 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111112_moisture_sensor_3_enable",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
@@ -915,6 +923,7 @@ MOCK_OWPROXY_DEVICES = {
         SWITCH_DOMAIN: [
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_0_enable",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
@@ -923,6 +932,7 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_1_enable",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
@@ -931,6 +941,7 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_2_enable",
                 ATTR_INJECT_READS: b"1",
                 ATTR_STATE: STATE_ON,
@@ -939,6 +950,7 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
                 ATTR_ENTITY_ID: "switch.ef_111111111113_hub_branch_3_enable",
                 ATTR_INJECT_READS: b"0",
                 ATTR_STATE: STATE_OFF,
