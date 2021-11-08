@@ -1,7 +1,6 @@
 """Config flow for KNX."""
 from __future__ import annotations
 
-from collections import OrderedDict
 from typing import Final
 
 import voluptuous as vol
@@ -127,11 +126,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             gateway: GatewayDescriptor = next(
-                filter(
-                    lambda _gateway: str(_gateway)
-                    == user_input[CONF_KNX_GATEWAY],  # type: ignore
-                    self._tunnels,
-                )
+                gateway
+                for gateway in self._tunnels
+                if user_input[CONF_KNX_GATEWAY] == str(gateway)
             )
 
             self._gateway_ip = gateway.ip_addr
@@ -177,18 +174,17 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        fields = OrderedDict()
-        fields[
-            vol.Required(CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS)
-        ] = str
-        fields[
-            vol.Required(ConnectionSchema.CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP)
-        ] = str
-        fields[
+        fields = {
+            vol.Required(
+                CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
+            ): str,
+            vol.Required(
+                ConnectionSchema.CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP
+            ): str,
             vol.Required(
                 ConnectionSchema.CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT
-            )
-        ] = cv.port
+            ): cv.port,
+        }
 
         return self.async_show_form(
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
@@ -197,8 +193,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config: dict | None = None) -> FlowResult:
         """Import a config entry.
 
-        Special type of import, we're not actually going to store any data.
-        Instead, we're going to rely on the values that are in config file.
+        Performs a one time import of the YAML configuration and creates a config entry based on it
+        if not already done before.
         """
         if self._async_current_entries() or not config:
             return self.async_abort(reason="single_instance_allowed")

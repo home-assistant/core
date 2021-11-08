@@ -174,6 +174,8 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
                 CONF_PORT: 3675,
             },
         )
+        await hass.async_block_till_done()
+        assert manuel_tunnel_flow["type"] == RESULT_TYPE_CREATE_ENTRY
         assert manuel_tunnel_flow["data"] == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
             CONF_HOST: "192.168.0.1",
