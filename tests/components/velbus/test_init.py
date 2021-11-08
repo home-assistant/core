@@ -1,4 +1,4 @@
-"""Tests for the Velbus initialisation."""
+"""Tests for the Velbus component initialisation."""
 import pytest
 
 from homeassistant.components.velbus.const import DOMAIN

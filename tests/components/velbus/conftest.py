@@ -1,4 +1,4 @@
-"""Tests for the Velbus config flow."""
+"""Fixtures for the Velbus tests."""
 from unittest.mock import AsyncMock, patch
 
 import pytest
