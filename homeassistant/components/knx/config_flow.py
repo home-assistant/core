@@ -1,7 +1,7 @@
 """Config flow for KNX."""
 from __future__ import annotations
 
-from typing import Final
+from typing import Any, Final
 
 import voluptuous as vol
 from xknx import XKNX
@@ -9,7 +9,9 @@ from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
@@ -17,6 +19,7 @@ from .const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
     CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_INITIAL_CONNECTION_TYPES,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
     DOMAIN,
@@ -35,6 +38,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     _gateway_ip: str = ""
     _gateway_port: int = 3675
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> KNXOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return KNXOptionsFlowHandler(config_entry)
+
     async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
@@ -46,7 +55,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_type(self, user_input: dict | None = None) -> FlowResult:
         """Handle connection type configuration."""
         errors: dict = {}
-        supported_connection_types = [CONF_KNX_TUNNELING, CONF_KNX_ROUTING]
+        supported_connection_types = CONF_KNX_INITIAL_CONNECTION_TYPES.copy()
         fields = {}
 
         if user_input is None:
@@ -199,17 +208,35 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries() or not config:
             return self.async_abort(reason="single_instance_allowed")
 
+        data = {
+            ConnectionSchema.CONF_KNX_RATE_LIMIT: config.get(
+                ConnectionSchema.CONF_KNX_RATE_LIMIT,
+                ConnectionSchema.CONF_KNX_DEFAULT_RATE_LIMIT,
+            ),
+            ConnectionSchema.CONF_KNX_STATE_UPDATER: config.get(
+                ConnectionSchema.CONF_KNX_STATE_UPDATER,
+                ConnectionSchema.CONF_KNX_DEFAULT_STATE_UPDATER,
+            ),
+            ConnectionSchema.CONF_KNX_MCAST_GRP: config[
+                ConnectionSchema.CONF_KNX_MCAST_GRP
+            ],
+            ConnectionSchema.CONF_KNX_MCAST_PORT: config[
+                ConnectionSchema.CONF_KNX_MCAST_PORT
+            ],
+            CONF_KNX_INDIVIDUAL_ADDRESS: config[CONF_KNX_INDIVIDUAL_ADDRESS],
+        }
+
         if CONF_KNX_TUNNELING in config:
             return self.async_create_entry(
                 title=config[CONF_KNX_TUNNELING][CONF_HOST],
                 data={
                     CONF_HOST: config[CONF_KNX_TUNNELING][CONF_HOST],
                     CONF_PORT: config[CONF_KNX_TUNNELING][CONF_PORT],
-                    CONF_KNX_INDIVIDUAL_ADDRESS: config[CONF_KNX_INDIVIDUAL_ADDRESS],
                     ConnectionSchema.CONF_KNX_ROUTE_BACK: config[CONF_KNX_TUNNELING][
                         ConnectionSchema.CONF_KNX_ROUTE_BACK
                     ],
                     CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+                    **data,
                 },
             )
 
@@ -217,14 +244,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=CONF_KNX_ROUTING,
                 data={
-                    ConnectionSchema.CONF_KNX_MCAST_GRP: config[
-                        ConnectionSchema.CONF_KNX_MCAST_GRP
-                    ],
-                    ConnectionSchema.CONF_KNX_MCAST_PORT: config[
-                        ConnectionSchema.CONF_KNX_MCAST_PORT
-                    ],
-                    CONF_KNX_INDIVIDUAL_ADDRESS: config[CONF_KNX_INDIVIDUAL_ADDRESS],
                     CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
+                    **data,
                 },
             )
 
@@ -232,19 +253,100 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title=CONF_KNX_AUTOMATIC,
             data={
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
-                CONF_KNX_INDIVIDUAL_ADDRESS: config[CONF_KNX_INDIVIDUAL_ADDRESS],
-                ConnectionSchema.CONF_KNX_MCAST_GRP: config[
-                    ConnectionSchema.CONF_KNX_MCAST_GRP
-                ],
-                ConnectionSchema.CONF_KNX_MCAST_PORT: config[
-                    ConnectionSchema.CONF_KNX_MCAST_PORT
-                ],
+                **data,
             },
         )
 
 
-async def scan_for_gateways() -> list:
+class KNXOptionsFlowHandler(OptionsFlow):
+    """Handle KNX options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize KNX options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage KNX options."""
+        if user_input is not None:
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=user_input
+            )
+
+            return self.async_create_entry(title="", data={})
+
+        supported_connection_types = await get_supported_connection_types()
+        current_config = self.config_entry.data
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_KNX_CONNECTION_TYPE,
+                        default=current_config.get(CONF_KNX_CONNECTION_TYPE),
+                    ): vol.In(supported_connection_types),
+                    vol.Optional(CONF_HOST, default=current_config.get(CONF_HOST)): str,
+                    vol.Optional(
+                        CONF_PORT, default=current_config.get(CONF_PORT, 3671)
+                    ): vol.Coerce(int),
+                    vol.Required(
+                        CONF_KNX_INDIVIDUAL_ADDRESS,
+                        default=current_config.get(
+                            CONF_KNX_INDIVIDUAL_ADDRESS, XKNX.DEFAULT_ADDRESS
+                        ),
+                    ): str,
+                    vol.Required(
+                        ConnectionSchema.CONF_KNX_ROUTE_BACK,
+                        default=current_config.get(
+                            ConnectionSchema.CONF_KNX_ROUTE_BACK, False
+                        ),
+                    ): vol.Coerce(bool),
+                    vol.Required(
+                        ConnectionSchema.CONF_KNX_MCAST_GRP,
+                        default=current_config.get(
+                            ConnectionSchema.CONF_KNX_MCAST_GRP, DEFAULT_MCAST_GRP
+                        ),
+                    ): str,
+                    vol.Required(
+                        ConnectionSchema.CONF_KNX_MCAST_PORT,
+                        default=current_config.get(
+                            ConnectionSchema.CONF_KNX_MCAST_PORT, DEFAULT_MCAST_PORT
+                        ),
+                    ): cv.port,
+                    vol.Optional(
+                        ConnectionSchema.CONF_KNX_STATE_UPDATER,
+                        default=current_config.get(
+                            ConnectionSchema.CONF_KNX_STATE_UPDATER,
+                            ConnectionSchema.CONF_KNX_DEFAULT_STATE_UPDATER,
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        ConnectionSchema.CONF_KNX_RATE_LIMIT,
+                        default=current_config.get(
+                            ConnectionSchema.CONF_KNX_RATE_LIMIT,
+                            ConnectionSchema.CONF_KNX_DEFAULT_RATE_LIMIT,
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+                }
+            ),
+        )
+
+
+async def scan_for_gateways(stop_on_found: int = 0) -> list:
     """Scan for gateways within the network."""
     xknx = XKNX()
-    gatewayscanner = GatewayScanner(xknx, stop_on_found=0, timeout_in_seconds=2)
+    gatewayscanner = GatewayScanner(
+        xknx, stop_on_found=stop_on_found, timeout_in_seconds=2
+    )
     return await gatewayscanner.scan()
+
+
+async def get_supported_connection_types() -> list:
+    """Obtain a list of supported connection types."""
+    supported_connection_types = CONF_KNX_INITIAL_CONNECTION_TYPES.copy()
+    if await scan_for_gateways(1):
+        supported_connection_types.insert(0, CONF_KNX_AUTOMATIC)
+
+    return supported_connection_types
