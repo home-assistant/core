@@ -304,11 +304,11 @@ class EDL21:
                 entity_description = self._OBIS_SENSOR_ENTITY_DESCRIPTIONS.get(obis)
                 if entity_description and entity_description.name:
                     if self._name:
-                        entity_description.name = (
-                            f"{self._name}: {entity_description.name}"
-                        )
+                        name = f"{self._name}: {entity_description.name}"
                     new_entities.append(
-                        EDL21Entity(electricity_id, obis, entity_description, telegram)
+                        EDL21Entity(
+                            electricity_id, obis, name, entity_description, telegram
+                        )
                     )
                     self._registered_obis.add((electricity_id, obis))
                 elif obis not in self._OBIS_BLACKLIST:
@@ -349,10 +349,11 @@ class EDL21:
 class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
-    def __init__(self, electricity_id, obis, entity_description, telegram):
+    def __init__(self, electricity_id, obis, name, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
+        self._name = name
         self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
         self._min_time = MIN_TIME_BETWEEN_UPDATES
@@ -410,6 +411,11 @@ class EDL21Entity(SensorEntity):
     def old_unique_id(self) -> str:
         """Return a less unique ID as used in the first version of edl21."""
         return self._obis
+
+    @property
+    def name(self) -> str | None:
+        """Return a name."""
+        return self._name
 
     @property
     def native_value(self) -> str:
