@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 
 
-class _Switch(LightEntity):
+class _LegrandRflcSwitch(LightEntity):
     _attr_should_poll = False
 
     def __init__(self, hub, zid: int, properties: Mapping):
@@ -72,7 +72,7 @@ class _Switch(LightEntity):
         await self._async_switch(False)
 
 
-class _Dimmer(_Switch):
+class _LegrandRflcDimmer(_LegrandRflcSwitch):
     _attr_color_mode = COLOR_MODE_BRIGHTNESS
     _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
     _attr_supported_features = SUPPORT_TRANSITION
@@ -93,11 +93,17 @@ class _Dimmer(_Switch):
 
     @staticmethod
     def _to_ha(value: int) -> int:
-        return _Dimmer._quantize(_Dimmer._normalize(value, _Dimmer.US), _Dimmer.HA)
+        return _LegrandRflcDimmer._quantize(
+            _LegrandRflcDimmer._normalize(value, _LegrandRflcDimmer.US),
+            _LegrandRflcDimmer.HA,
+        )
 
     @staticmethod
     def _from_ha(value) -> int:
-        return _Dimmer._quantize(_Dimmer._normalize(value, _Dimmer.HA), _Dimmer.US)
+        return _LegrandRflcDimmer._quantize(
+            _LegrandRflcDimmer._normalize(value, _LegrandRflcDimmer.HA),
+            _LegrandRflcDimmer.US,
+        )
 
     def __init__(self, hub, zid: int, properties: Mapping):
         super().__init__(hub, zid, properties)
@@ -161,9 +167,9 @@ async def async_setup_entry(
             properties = message[hub.PROPERTY_LIST]
             device_type = properties[hub.DEVICE_TYPE]
             if device_type == hub.DIMMER:
-                async_add_entities([_Dimmer(hub, zid, properties)], False)
+                async_add_entities([_LegrandRflcDimmer(hub, zid, properties)], False)
             elif device_type == hub.SWITCH:
-                async_add_entities([_Switch(hub, zid, properties)], False)
+                async_add_entities([_LegrandRflcSwitch(hub, zid, properties)], False)
 
         hub.StatusError(message).raise_if()
         for item in message[hub.ZONE_LIST]:
