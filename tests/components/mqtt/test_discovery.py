@@ -209,6 +209,13 @@ async def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
             "binary_sensor",
         ),
         (
+            "homeassistant/button/object/bla/config",
+            '{ "name": "Hello World button", "obj_id": "hello_id", "command_topic": "test-topic" }',
+            "button.hello_id",
+            "Hello World button",
+            "button",
+        ),
+        (
             "homeassistant/camera/object/bla/config",
             '{ "name": "Hello World 3", "obj_id": "hello_id", "state_topic": "test-topic", "topic": "test-topic" }',
             "camera.hello_id",
