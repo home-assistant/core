@@ -57,6 +57,14 @@ class BaseSwitch(SwitchEntity):
             return False
         return self._state
 
+    @property
+    def name(self):
+        """Return the name of the on/off entity."""
+        description = self._on_off_channel.description
+        if description is not None and len(description) > 0:
+            return f"{super().name} {description}"
+        return super().name
+
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         result = await self._on_off_channel.on()
