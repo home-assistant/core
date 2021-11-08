@@ -1,5 +1,5 @@
 """Tests for the Velbus config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from velbusaio.exceptions import VelbusConnectionFailed
@@ -10,6 +10,15 @@ from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import PORT_SERIAL, PORT_TCP
+
+
+@pytest.fixture(autouse=True)
+def override_async_setup_entry() -> AsyncMock:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.velbus.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(name="controller_connection_failed")
