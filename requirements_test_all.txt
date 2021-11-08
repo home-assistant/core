@@ -233,7 +233,7 @@ arcam-fmj==0.12.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.22.11
+async-upnp-client==0.22.12
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -393,7 +393,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.24.17
+flux_led==0.24.18
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1339,7 +1339,7 @@ tesla-powerwall==0.3.12
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2021.8.3
+total_connect_client==2021.11.2
 
 # homeassistant.components.transmission
 transmissionrpc==0.11
