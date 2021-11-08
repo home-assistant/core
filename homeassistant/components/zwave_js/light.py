@@ -124,6 +124,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             value_property_key=ColorComponent.COLD_WHITE,
         )
         self._supported_color_modes = set()
+        self._state = False
+        self._update_state()
 
         # get additional (optional) values and set features
         self._target_brightness = self.get_zwave_value(
@@ -164,6 +166,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     @callback
     def on_value_update(self) -> None:
         """Call when a watched value is added or updated."""
+        self._update_state()
         self._calculate_color_values()
 
     @property
@@ -184,7 +187,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on (brightness above 0)."""
-        return self.brightness > 0
+        return self._state
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -279,6 +282,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 rgbw_channels[ColorComponent.COLD_WHITE] = rgbw[3]
             await self._async_set_colors(rgbw_channels, transition)
 
+        if kwargs.get(ATTR_BRIGHTNESS) is None:
+            # optimistically assume the light is on
+            self._state = True
+            self.async_write_ha_state()
+
         # set brightness
         await self._async_set_brightness(kwargs.get(ATTR_BRIGHTNESS), transition)
 
@@ -337,6 +345,13 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         await self.info.node.async_set_value(
             self._target_brightness, zwave_brightness, zwave_transition
         )
+
+    @callback
+    def _update_state(self) -> None:
+        """Update state."""
+        self._state = False
+        if self.info.primary_value.value is not None:
+            self._state = self.info.primary_value.value > 0
 
     @callback
     def _calculate_color_values(self) -> None:
