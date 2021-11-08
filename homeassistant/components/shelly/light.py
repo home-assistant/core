@@ -367,16 +367,10 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                     self.wrapper.model,
                 )
 
-        if (
-            set_mode
-            and self.mode != set_mode
-            and self.wrapper.model in DUAL_MODE_LIGHT_MODELS
-        ):
+        if set_mode and self.wrapper.model in DUAL_MODE_LIGHT_MODELS:
             params["mode"] = set_mode
-            self.mode_result = self.control_result = await self.set_state(**params)
-        else:
-            self.control_result = await self.set_state(**params)
 
+        self.control_result = await self.set_state(**params)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
