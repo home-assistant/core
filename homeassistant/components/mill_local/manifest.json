@@ -1,0 +1,9 @@
+{
+  "domain": "mill_local",
+  "name": "Mill local",
+  "documentation": "https://www.home-assistant.io/integrations/mill_local",
+  "requirements": ["mill-local==0.0.2"],
+  "codeowners": ["@danielhiversen"],
+  "config_flow": true,
+  "iot_class": "local_polling"
+}

@@ -1010,6 +1010,9 @@ micloud==0.4
 # homeassistant.components.miflora
 miflora==0.7.0
 
+# homeassistant.components.mill_local
+mill-local==0.0.2
+
 # homeassistant.components.mill
 millheater==0.8.0
 

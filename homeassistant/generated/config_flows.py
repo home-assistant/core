@@ -175,6 +175,7 @@ FLOWS = [
     "metoffice",
     "mikrotik",
     "mill",
+    "mill_local",
     "minecraft_server",
     "mobile_app",
     "modem_callerid",

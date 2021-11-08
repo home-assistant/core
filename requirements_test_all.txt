@@ -605,6 +605,9 @@ mficlient==0.3.0
 # homeassistant.components.xiaomi_miio
 micloud==0.4
 
+# homeassistant.components.mill_local
+mill-local==0.0.2
+
 # homeassistant.components.mill
 millheater==0.8.0
 
