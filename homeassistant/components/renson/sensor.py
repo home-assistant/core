@@ -2,15 +2,11 @@
 import logging
 
 from rensonVentilationLib.fieldEnum import (
-    AIR_QUALITY_CONTROL_FIELD,
     AIR_QUALITY_FIELD,
-    BREEZE_ENABLE_FIELD,
     BREEZE_LEVEL_FIELD,
-    BREEZE_MET_FIELD,
     BREEZE_TEMPERATURE_FIELD,
     BYPASS_LEVEL_FIELD,
     BYPASS_TEMPERATURE_FIELD,
-    CO2_CONTROL_FIELD,
     CO2_FIELD,
     CO2_HYSTERESIS_FIELD,
     CO2_QUALITY_FIELD,
@@ -22,64 +18,33 @@ from rensonVentilationLib.fieldEnum import (
     DAYTIME_FIELD,
     FILTER_PRESET_FIELD,
     FILTER_REMAIN_FIELD,
-    FROST_PROTECTION_FIELD,
-    HUMIDITY_CONTROL_FIELD,
     HUMIDITY_FIELD,
     INDOOR_TEMP_FIELD,
     MANUAL_LEVEL_FIELD,
     NIGHT_POLLUTION_FIELD,
     NIGHTTIME_FIELD,
     OUTDOOR_TEMP_FIELD,
-    PREHEATER_FIELD,
     TIME_AND_DATE_FIELD,
 )
 import rensonVentilationLib.renson as renson
 import voluptuous as vol
 
-from homeassistant.components.renson.firmwaresensor import FirmwareSensor
-from homeassistant.components.renson.rensonBinarySensor import RensonBinarySensor
-from homeassistant.components.renson.sensorvalue import SensorValue
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.renson.renson_descriptions import (
+    RensonSensorEntityDescription,
+)
+from homeassistant.components.renson.renson_sensor import RensonSensor
+from homeassistant.components.sensor import PLATFORM_SCHEMA, STATE_CLASS_MEASUREMENT
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (
+    CONF_HOST,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TIMESTAMP,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    AIR_DESC,
-    AIR_QUALITY_CONTROL_DESC,
-    AIR_QUALITY_DESC,
-    BREEZE_ENABLE_DESC,
-    BREEZE_LEVEL_DESC,
-    BREEZE_MET_DESC,
-    BREEZE_TEMPERATURE_DESC,
-    BYPASS_LEVEL_DESC,
-    BYPASS_TEMPERATURE_DESC,
-    CO2_CONTROL_DESC,
-    CO2_DESC,
-    CO2_HYSTERESIS_DESC,
-    CO2_QUALITY_DESC,
-    CO2_THRESHOLD_DESC,
-    CURRENT_AIRFLOW_EXTRACT_DESC,
-    CURRENT_AIRFLOW_INGOING_DESC,
-    CURRENT_LEVEL_DESC,
-    CURRENT_LEVEL_RAW_DESC,
-    DAY_POLLUTION_DESC,
-    DAYTIME_DESC,
-    DOMAIN,
-    FILTER_PRESET_DESC,
-    FILTER_REMAIN_DESC,
-    FROST_PROTECTION_DESC,
-    HUMIDITY_CONTROL_DESC,
-    HUMIDITY_DESC,
-    INDOOR_TEMP_DESC,
-    MANUAL_LEVEL_DESC,
-    NIGHT_POLLUTION_DESC,
-    NIGHTTIME_DESC,
-    OUTDOOR_TEMP_DESC,
-    PREHEATER_DESC,
-    TIME_AND_DATE_DESC,
-)
+from .const import CONCENTRATION_PARTS_PER_CUBIC_METER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,181 +52,215 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST, default=[]): cv.string}
 )
 
+sensor_descriptions = [
+    RensonSensorEntityDescription(
+        key="CO2_QUALITY_FIELD",
+        name="CO2 quality",
+        field=CO2_QUALITY_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RensonSensorEntityDescription(
+        key="AIR_QUALITY_FIELD",
+        name="Air quality",
+        field=AIR_QUALITY_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RensonSensorEntityDescription(
+        key="CO2_FIELD",
+        name="CO2 quality value",
+        field=CO2_FIELD,
+        raw_format=True,
+        state_class=STATE_CLASS_MEASUREMENT,
+        device_class="carbon_dioxide",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+    ),
+    RensonSensorEntityDescription(
+        key="AIR_FIELD",
+        name="Air quality value",
+        field=AIR_QUALITY_FIELD,
+        state_class=STATE_CLASS_MEASUREMENT,
+        raw_format=True,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+    ),
+    RensonSensorEntityDescription(
+        key="CURRENT_LEVEL_FIELD_RAW",
+        name="Ventilation level raw",
+        field=CURRENT_LEVEL_FIELD,
+        state_class=STATE_CLASS_MEASUREMENT,
+        raw_format=True,
+    ),
+    RensonSensorEntityDescription(
+        key="CURRENT_LEVEL_FIELD",
+        name="Ventilation level",
+        state_class=STATE_CLASS_MEASUREMENT,
+        field=CURRENT_LEVEL_FIELD,
+        raw_format=False,
+    ),
+    RensonSensorEntityDescription(
+        key="CURRENT_AIRFLOW_EXTRACT_FIELD",
+        name="Total airflow out",
+        field=CURRENT_AIRFLOW_EXTRACT_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement="m³/h",
+    ),
+    RensonSensorEntityDescription(
+        key="CURRENT_AIRFLOW_INGOING_FIELD",
+        name="Total airflow int",
+        field=CURRENT_AIRFLOW_INGOING_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement="m³/h",
+    ),
+    RensonSensorEntityDescription(
+        key="OUTDOOR_TEMP_FIELD",
+        name="Outdoor air temperature",
+        field=OUTDOOR_TEMP_FIELD,
+        raw_format=False,
+        device_class="temperature",
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    RensonSensorEntityDescription(
+        key="INDOOR_TEMP_FIELD",
+        name="Extract air temperature",
+        field=INDOOR_TEMP_FIELD,
+        raw_format=False,
+        device_class="temperature",
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    RensonSensorEntityDescription(
+        key="FILTER_REMAIN_FIELD",
+        name="Filter change",
+        field=FILTER_REMAIN_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement="days",
+    ),
+    RensonSensorEntityDescription(
+        key="HUMIDITY_FIELD",
+        name="Relative humidity",
+        field=HUMIDITY_FIELD,
+        raw_format=False,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement="%",
+    ),
+    RensonSensorEntityDescription(
+        key="MANUAL_LEVEL_FIELD",
+        name="Manual level",
+        field=MANUAL_LEVEL_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RensonSensorEntityDescription(
+        key="MANUAL_LEVEL_FIELD",
+        name="System time",
+        field=TIME_AND_DATE_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    RensonSensorEntityDescription(
+        key="BREEZE_TEMPERATURE_FIELD",
+        name="Breeze temperature",
+        field=BREEZE_TEMPERATURE_FIELD,
+        raw_format=False,
+        device_class=TEMP_CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    RensonSensorEntityDescription(
+        key="BREEZE_LEVEL_FIELD",
+        name="Breeze level",
+        field=BREEZE_LEVEL_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RensonSensorEntityDescription(
+        key="DAYTIME_FIELD",
+        name="Start day time",
+        field=DAYTIME_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RensonSensorEntityDescription(
+        key="NIGHTTIME_FIELD",
+        name="Start night time",
+        field=NIGHTTIME_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RensonSensorEntityDescription(
+        key="DAY_POLLUTION_FIELD",
+        name="Day pollution level",
+        field=DAY_POLLUTION_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RensonSensorEntityDescription(
+        key="NIGHT_POLLUTION_FIELD",
+        name="Night pollution level",
+        field=NIGHT_POLLUTION_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RensonSensorEntityDescription(
+        key="CO2_THRESHOLD_FIELD",
+        name="CO2 threshold",
+        field=CO2_THRESHOLD_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement="ppm",
+    ),
+    RensonSensorEntityDescription(
+        key="CO2_HYSTERESIS_FIELD",
+        name="CO2 hysteresis",
+        field=CO2_HYSTERESIS_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement="ppm",
+    ),
+    RensonSensorEntityDescription(
+        key="BYPASS_TEMPERATURE_FIELD",
+        name="Bypass activation temperature",
+        field=BYPASS_TEMPERATURE_FIELD,
+        raw_format=False,
+        device_class="temperature",
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    RensonSensorEntityDescription(
+        key="BYPASS_LEVEL_FIELD",
+        name="Bypass level",
+        field=BYPASS_LEVEL_FIELD,
+        raw_format=False,
+        device_class="power_factor",
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement="%",
+    ),
+    RensonSensorEntityDescription(
+        key="FILTER_PRESET_FIELD",
+        name="Filter preset time",
+        field=FILTER_PRESET_FIELD,
+        raw_format=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement="days",
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities, discovery_info=None
 ):
     """Call the Renson integration to setup."""
 
-    rensonApi: renson.RensonVentilation = hass.data[DOMAIN][config.entry_id]
+    renson_api: renson.RensonVentilation = hass.data[DOMAIN][config.entry_id]
 
-    async_add_entities(
-        [
-            SensorValue(CO2_QUALITY_DESC, CO2_QUALITY_FIELD, rensonApi, False),
-            SensorValue(AIR_QUALITY_DESC, AIR_QUALITY_FIELD, rensonApi, False),
-            SensorValue(CO2_DESC, CO2_FIELD, rensonApi, False),
-            SensorValue(
-                AIR_DESC,
-                AIR_QUALITY_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                CURRENT_LEVEL_RAW_DESC,
-                CURRENT_LEVEL_FIELD,
-                rensonApi,
-                True,
-            ),
-            SensorValue(CURRENT_LEVEL_DESC, CURRENT_LEVEL_FIELD, rensonApi, False),
-            SensorValue(
-                CURRENT_AIRFLOW_EXTRACT_DESC,
-                CURRENT_AIRFLOW_EXTRACT_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                CURRENT_AIRFLOW_INGOING_DESC,
-                CURRENT_AIRFLOW_INGOING_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                OUTDOOR_TEMP_DESC,
-                OUTDOOR_TEMP_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                INDOOR_TEMP_DESC,
-                INDOOR_TEMP_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                FILTER_REMAIN_DESC,
-                FILTER_REMAIN_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                HUMIDITY_DESC,
-                HUMIDITY_FIELD,
-                rensonApi,
-                False,
-            ),
-            RensonBinarySensor(
-                FROST_PROTECTION_DESC,
-                FROST_PROTECTION_FIELD,
-                rensonApi,
-            ),
-            SensorValue(
-                MANUAL_LEVEL_DESC,
-                MANUAL_LEVEL_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                TIME_AND_DATE_DESC,
-                TIME_AND_DATE_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                BREEZE_TEMPERATURE_DESC,
-                BREEZE_TEMPERATURE_FIELD,
-                rensonApi,
-                False,
-            ),
-            RensonBinarySensor(
-                BREEZE_ENABLE_DESC,
-                BREEZE_ENABLE_FIELD,
-                rensonApi,
-            ),
-            SensorValue(
-                BREEZE_LEVEL_DESC,
-                BREEZE_LEVEL_FIELD,
-                rensonApi,
-                False,
-            ),
-            RensonBinarySensor(
-                BREEZE_MET_DESC,
-                BREEZE_MET_FIELD,
-                rensonApi,
-            ),
-            SensorValue(
-                DAYTIME_DESC,
-                DAYTIME_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                NIGHTTIME_DESC,
-                NIGHTTIME_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                DAY_POLLUTION_DESC,
-                DAY_POLLUTION_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                NIGHT_POLLUTION_DESC,
-                NIGHT_POLLUTION_FIELD,
-                rensonApi,
-                False,
-            ),
-            RensonBinarySensor(
-                HUMIDITY_CONTROL_DESC,
-                HUMIDITY_CONTROL_FIELD,
-                rensonApi,
-            ),
-            RensonBinarySensor(
-                AIR_QUALITY_CONTROL_DESC,
-                AIR_QUALITY_CONTROL_FIELD,
-                rensonApi,
-            ),
-            RensonBinarySensor(
-                CO2_CONTROL_DESC,
-                CO2_CONTROL_FIELD,
-                rensonApi,
-            ),
-            SensorValue(
-                CO2_THRESHOLD_DESC,
-                CO2_THRESHOLD_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                CO2_HYSTERESIS_DESC,
-                CO2_HYSTERESIS_FIELD,
-                rensonApi,
-                False,
-            ),
-            RensonBinarySensor(
-                PREHEATER_DESC,
-                PREHEATER_FIELD,
-                rensonApi,
-            ),
-            SensorValue(
-                BYPASS_TEMPERATURE_DESC,
-                BYPASS_TEMPERATURE_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                BYPASS_LEVEL_DESC,
-                BYPASS_LEVEL_FIELD,
-                rensonApi,
-                False,
-            ),
-            SensorValue(
-                FILTER_PRESET_DESC,
-                FILTER_PRESET_FIELD,
-                rensonApi,
-                False,
-            ),
-            FirmwareSensor(rensonApi, hass),
-        ]
-    )
+    entities: list = []
+    for description in sensor_descriptions:
+        entities.append(RensonSensor(description, renson_api))
+    async_add_entities(entities)

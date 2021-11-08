@@ -1,10 +1,10 @@
-"""Renson Binary sensor."""
-from rensonVentilationLib.fieldEnum import FieldEnum
+"""Binary sensor for renson."""
+
 import rensonVentilationLib.renson as renson
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
-    BinarySensorEntityDescription,
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.renson.renson_descriptions import (
+    RensonBinarySensorEntityDescription,
 )
 
 
@@ -13,14 +13,13 @@ class RensonBinarySensor(BinarySensorEntity):
 
     def __init__(
         self,
-        description: BinarySensorEntityDescription,
-        field: FieldEnum,
+        description: RensonBinarySensorEntityDescription,
         rensonApi: renson.RensonVentilation,
-    ):
+    ) -> None:
         """Initialize class."""
         self._state = None
         self.renson = rensonApi
-        self.field = field
+        self.field = description.field
         self.entity_description = description
 
     @property

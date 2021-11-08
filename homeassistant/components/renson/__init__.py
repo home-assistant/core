@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import rensonVentilationLib.renson as renson
 
-from homeassistant.components.renson.config_flow import CannotConnect
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
@@ -15,16 +15,16 @@ PLATFORMS = ["sensor"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Renson from a config entry."""
 
-    rensonApi: renson.RensonVentilation = renson.RensonVentilation(entry.data["host"])
+    renson_api: renson.RensonVentilation = renson.RensonVentilation(entry.data["host"])
 
-    connected = await hass.async_add_executor_job(rensonApi.connect)
+    connected = await hass.async_add_executor_job(renson_api.connect)
 
     if not connected:
-        raise CannotConnect
+        raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})
 
-    hass.data[DOMAIN][entry.entry_id] = rensonApi
+    hass.data[DOMAIN][entry.entry_id] = renson_api
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

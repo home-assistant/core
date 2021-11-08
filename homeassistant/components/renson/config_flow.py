@@ -32,9 +32,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, hass: HomeAssistant, data: dict[str, Any]
     ) -> dict[str, Any]:
         """Validate the user input allows us to connect."""
-        rensonLib = renson.RensonVentilation(data["host"])
+        renson_lib = renson.RensonVentilation(data["host"])
 
-        if not await self.hass.async_add_executor_job(rensonLib.connect):
+        if not await self.hass.async_add_executor_job(renson_lib.connect):
             raise CannotConnect
 
         return {"title": "Renson"}
