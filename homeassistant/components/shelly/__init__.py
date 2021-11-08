@@ -45,6 +45,7 @@ from .const import (
     ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_DICT,
+    MODELS_SUPPORTING_LIGHT_EFFECTS,
     POLLING_TIMEOUT_SEC,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -313,11 +314,12 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
             if self.model in DUAL_MODE_LIGHT_MODELS:
-                if "mode" in block.sensor_ids and self.model != "SHRGBW2":
+                if "mode" in block.sensor_ids:
                     if self._last_mode != block.mode:
                         self._last_cfg_changed = None
                     self._last_mode = block.mode
 
+            if self.model in MODELS_SUPPORTING_LIGHT_EFFECTS:
                 if "effect" in block.sensor_ids:
                     if self._last_effect != block.effect:
                         self._last_cfg_changed = None
