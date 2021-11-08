@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -176,14 +176,14 @@ class VelbusEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Get unique ID."""
-        if (serial := self._channel.get_module_serial()) == 0:
-            serial = self._channel.get_module_address()
+        if (serial := self._channel.get_module_serial()) == "":
+            serial = str(self._channel.get_module_address())
         return f"{serial}-{self._channel.get_channel_number()}"
 
     @property
     def name(self) -> str:
         """Return the display name of this entity."""
-        return str(self._channel.get_name())
+        return self._channel.get_name()
 
     @property
     def should_poll(self) -> bool:
@@ -202,7 +202,7 @@ class VelbusEntity(Entity):
         """Return the device info."""
         return DeviceInfo(
             identifiers={
-                (DOMAIN, self._channel.get_module_address()),
+                (DOMAIN, str(self._channel.get_module_address())),
             },
             manufacturer="Velleman",
             model=self._channel.get_module_type_name(),

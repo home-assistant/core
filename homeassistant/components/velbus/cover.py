@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from velbusaio.channels import Channel as VelbusChannel
+from velbusaio.channels import Blind as VelbusBlind
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -38,7 +38,9 @@ async def async_setup_entry(
 class VelbusCover(VelbusEntity, CoverEntity):
     """Representation a Velbus cover."""
 
-    def __init__(self, channel: VelbusChannel) -> None:
+    _channel: VelbusBlind
+
+    def __init__(self, channel: VelbusBlind) -> None:
         """Initialize the dimmer."""
         super().__init__(channel)
         if self._channel.support_position():
@@ -51,9 +53,7 @@ class VelbusCover(VelbusEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if val := self._channel.is_closed():
-            return bool(val)
-        return None
+        return self._channel.is_closed()
 
     @property
     def current_cover_position(self) -> int | None:
@@ -62,9 +62,7 @@ class VelbusCover(VelbusEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open
         Velbus: 100 = closed, 0 = open
         """
-        if pos := self._channel.get_position():
-            return int(100 - pos)
-        return None
+        return 100 - self._channel.get_position()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

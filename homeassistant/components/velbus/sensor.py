@@ -1,7 +1,7 @@
 """Support for Velbus sensors."""
 from __future__ import annotations
 
-from velbusaio.channels import Channel as VelbusChannel
+from velbusaio.channels import ButtonCounter, LightSensor, SensorNumber, Temperature
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -40,7 +40,13 @@ async def async_setup_entry(
 class VelbusSensor(VelbusEntity, SensorEntity):
     """Representation of a sensor."""
 
-    def __init__(self, channel: VelbusChannel, counter: bool = False) -> None:
+    _channel: ButtonCounter | Temperature | LightSensor | SensorNumber
+
+    def __init__(
+        self,
+        channel: ButtonCounter | Temperature | LightSensor | SensorNumber,
+        counter: bool = False,
+    ) -> None:
         """Initialize a sensor Velbus entity."""
         super().__init__(channel)
         self._is_counter: bool = counter

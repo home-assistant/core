@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from velbusaio.channels import Channel as VelbusChannel
+from velbusaio.channels import (
+    Button as VelbusButton,
+    Channel as VelbusChannel,
+    Dimmer as VelbusDimmer,
+)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -44,9 +48,10 @@ async def async_setup_entry(
 class VelbusLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
 
+    _channel: VelbusDimmer
     _attr_supported_feature = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
-    def __init__(self, channel: VelbusChannel) -> None:
+    def __init__(self, channel: VelbusDimmer) -> None:
         """Initialize the dimmer."""
         super().__init__(channel)
         self._attr_name = self._channel.get_name()
@@ -54,7 +59,7 @@ class VelbusLight(VelbusEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the light is on."""
-        return bool(self._channel.is_on())
+        return self._channel.is_on()
 
     @property
     def brightness(self) -> int:
@@ -94,6 +99,7 @@ class VelbusLight(VelbusEntity, LightEntity):
 class VelbusButtonLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
 
+    _channel: VelbusButton
     _attr_entity_registry_enabled_default = False
     _attr_supported_feature = SUPPORT_FLASH
 
@@ -106,11 +112,6 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
     def is_on(self) -> Any:
         """Return true if the light is on."""
         return self._channel.is_on()
-
-    @property
-    def brightness(self) -> int:
-        """Return the brightness of the light."""
-        return int((self._channel.get_dimmer_state() * 255) / 100)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the Velbus light to turn on."""

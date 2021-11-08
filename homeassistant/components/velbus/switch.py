@@ -1,6 +1,8 @@
 """Support for Velbus switches."""
 from typing import Any
 
+from velbusaio.channels import Relay as VelbusRelay
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -27,10 +29,12 @@ async def async_setup_entry(
 class VelbusSwitch(VelbusEntity, SwitchEntity):
     """Representation of a switch."""
 
+    _channel: VelbusRelay
+
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
-        return bool(self._channel.is_on())
+        return self._channel.is_on()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
