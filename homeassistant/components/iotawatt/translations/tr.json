@@ -1,8 +1,22 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
         "step": {
             "auth": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
                 "description": "IoTawatt cihaz\u0131 kimlik do\u011frulama gerektirir. L\u00fctfen kullan\u0131c\u0131 ad\u0131n\u0131 ve \u015fifreyi girin ve G\u00f6nder d\u00fc\u011fmesine t\u0131klay\u0131n."
+            },
+            "user": {
+                "data": {
+                    "host": "Ana bilgisayar"
+                }
             }
         }
     }

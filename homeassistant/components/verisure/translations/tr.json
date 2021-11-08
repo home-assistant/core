@@ -1,5 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
         "step": {
             "installation": {
                 "data": {
@@ -9,12 +17,16 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "description": "Verisure My Pages hesab\u0131n\u0131zla yeniden kimlik do\u011frulamas\u0131 yap\u0131n."
+                    "description": "Verisure My Pages hesab\u0131n\u0131zla yeniden kimlik do\u011frulamas\u0131 yap\u0131n.",
+                    "email": "E-posta",
+                    "password": "Parola"
                 }
             },
             "user": {
                 "data": {
-                    "description": "Verisure My Pages hesab\u0131n\u0131zla oturum a\u00e7\u0131n."
+                    "description": "Verisure My Pages hesab\u0131n\u0131zla oturum a\u00e7\u0131n.",
+                    "email": "E-posta",
+                    "password": "Parola"
                 }
             }
         }
@@ -26,7 +38,8 @@
         "step": {
             "init": {
                 "data": {
-                    "lock_code_digits": "Kilitler i\u00e7in PIN kodundaki hane say\u0131s\u0131"
+                    "lock_code_digits": "Kilitler i\u00e7in PIN kodundaki hane say\u0131s\u0131",
+                    "lock_default_code": "Kilitler i\u00e7in varsay\u0131lan PIN kodu, kod verilmezse kullan\u0131lacakt\u0131r."
                 }
             }
         }

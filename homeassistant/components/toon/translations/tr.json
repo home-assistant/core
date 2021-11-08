@@ -2,7 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Se\u00e7ilen anla\u015fma zaten yap\u0131land\u0131r\u0131lm\u0131\u015f.",
+            "authorize_url_timeout": "Yetkilendirme URL'si olu\u015ftururken zaman a\u015f\u0131m\u0131.",
+            "missing_configuration": "Bile\u015fen yap\u0131land\u0131r\u0131lmam\u0131\u015f. L\u00fctfen belgeleri takip edin.",
             "no_agreements": "Bu hesapta Toon ekran\u0131 yok.",
+            "no_url_available": "Kullan\u0131labilir URL yok. Bu hata hakk\u0131nda bilgi i\u00e7in [yard\u0131m b\u00f6l\u00fcm\u00fcne bak\u0131n]({docs_url})",
             "unknown_authorize_url_generation": "Yetkilendirme url'si olu\u015fturulurken bilinmeyen hata."
         },
         "step": {

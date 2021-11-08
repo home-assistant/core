@@ -14,7 +14,9 @@
                     "ip_address": "\u0130p Adresi",
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "description": "A\u015fa\u011f\u0131da gerekli bilgileri sa\u011flay\u0131n.",
+                "title": "Gogogate2 veya ismartgate'i kurun"
             }
         }
     }

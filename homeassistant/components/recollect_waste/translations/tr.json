@@ -3,11 +3,25 @@
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
         },
+        "error": {
+            "invalid_place_or_service_id": "Ge\u00e7ersiz Yer veya Hizmet Kimli\u011fi"
+        },
         "step": {
             "user": {
                 "data": {
+                    "place_id": "Yer kimli\u011fi",
                     "service_id": "Hizmet Kimli\u011fi"
                 }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "Al\u0131m t\u00fcrleri i\u00e7in kolay adlar kullan\u0131n (m\u00fcmk\u00fcn oldu\u011funda)"
+                },
+                "title": "At\u0131k Geri Toplama Yap\u0131land\u0131r"
             }
         }
     }

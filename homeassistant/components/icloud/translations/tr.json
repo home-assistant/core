@@ -15,7 +15,8 @@
                 "data": {
                     "password": "Parola"
                 },
-                "description": "{username} i\u00e7in \u00f6nceden girdi\u011finiz \u015fifreniz art\u0131k \u00e7al\u0131\u015fm\u0131yor. Bu entegrasyonu kullanmaya devam etmek i\u00e7in \u015fifrenizi g\u00fcncelleyin."
+                "description": "{username} i\u00e7in \u00f6nceden girdi\u011finiz \u015fifreniz art\u0131k \u00e7al\u0131\u015fm\u0131yor. Bu entegrasyonu kullanmaya devam etmek i\u00e7in \u015fifrenizi g\u00fcncelleyin.",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
             },
             "trusted_device": {
                 "data": {

@@ -1,8 +1,41 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_pin": "Ge\u00e7ersiz PIN",
+            "pairing_failure": "E\u015fle\u015ftirilemiyor: {error_id}",
+            "unknown": "Beklenmeyen hata"
+        },
         "step": {
             "pair": {
-                "description": "TV'nizde g\u00f6r\u00fcnt\u00fclenen PIN'i girin"
+                "data": {
+                    "pin": "PIN Kodu"
+                },
+                "description": "TV'nizde g\u00f6r\u00fcnt\u00fclenen PIN'i girin",
+                "title": "E\u015fle\u015ftir"
+            },
+            "user": {
+                "data": {
+                    "api_version": "API S\u00fcr\u00fcm\u00fc",
+                    "host": "Ana bilgisayar"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Cihaz\u0131n a\u00e7\u0131lmas\u0131 isteniyor"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Veri bildirim hizmetinin kullan\u0131m\u0131na izin ver."
+                }
             }
         }
     }
