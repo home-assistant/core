@@ -201,6 +201,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         name="CQI 1",
         icon="mdi:speedometer",
     ),
+    (KEY_DEVICE_SIGNAL, "enodeb_id"): SensorMeta(name="eNodeB ID"),
     (KEY_DEVICE_SIGNAL, "ltedlfreq"): SensorMeta(
         name="Downlink frequency",
         formatter=lambda x: (
