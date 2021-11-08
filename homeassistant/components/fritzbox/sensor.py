@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Final
 
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
@@ -31,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt
 
 from . import FritzBoxEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
@@ -134,7 +134,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_TIMESTAMP,
         suitable=lambda device: device.has_thermostat
         and device.nextchange_endperiod is not None,
-        native_value=lambda device: datetime.fromtimestamp(
+        native_value=lambda device: dt.utc_from_timestamp(
             device.nextchange_endperiod
         ).isoformat(),
     ),
