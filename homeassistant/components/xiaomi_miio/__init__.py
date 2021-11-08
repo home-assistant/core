@@ -313,16 +313,6 @@ async def async_create_miio_device_and_coordinator(
         or model.startswith(ROBOROCK_GENERIC)
         or model.startswith(ROCKROBO_GENERIC)
     ):
-        if model not in MODELS_VACUUM and (
-            model.startswith(ROBOROCK_GENERIC) or model.startswith(ROCKROBO_GENERIC)
-        ):
-            _LOGGER.warning(
-                "Vacuum model %s is not officially supported, please create an issue at "
-                "https://github.com/rytilahti/python-miio/issues and provide the model name if it works as "
-                "expected",
-                model,
-            )
-
         device = Vacuum(host, token)
         update_method = _async_update_data_vacuum
         coordinator_class = DataUpdateCoordinator[VacuumCoordinatorData]
