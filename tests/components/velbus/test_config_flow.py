@@ -1,5 +1,5 @@
 """Tests for the Velbus config flow."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from velbusaio.exceptions import VelbusConnectionFailed
@@ -9,10 +9,7 @@ from homeassistant.components.velbus import config_flow
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
-PORT_SERIAL = "/dev/ttyACME100"
-PORT_TCP = "127.0.1.0.1:3788"
+from .const import PORT_SERIAL, PORT_TCP
 
 
 @pytest.fixture(name="controller_connection_failed")
@@ -20,14 +17,6 @@ def mock_controller_connection_failed():
     """Mock the velbus controller with an assert."""
     with patch("velbusaio.controller.Velbus", side_effect=VelbusConnectionFailed()):
         yield
-
-
-@pytest.fixture(name="controller")
-def mock_controller():
-    """Mock a successful velbus controller."""
-    controller = AsyncMock()
-    with patch("velbusaio.controller.Velbus", return_value=controller):
-        yield controller
 
 
 def init_config_flow(hass: HomeAssistant):
@@ -89,12 +78,10 @@ async def test_import(hass: HomeAssistant):
     assert result["title"] == "velbus_import"
 
 
+@pytest.mark.usefixtures("config_entry")
 async def test_abort_if_already_setup(hass: HomeAssistant):
     """Test we abort if Daikin is already setup."""
     flow = init_config_flow(hass)
-    MockConfigEntry(
-        domain="velbus", data={CONF_PORT: PORT_TCP, CONF_NAME: "velbus home"}
-    ).add_to_hass(hass)
 
     result = await flow.async_step_import(
         {CONF_PORT: PORT_TCP, CONF_NAME: "velbus import test"}
