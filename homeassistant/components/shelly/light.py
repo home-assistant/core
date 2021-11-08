@@ -39,6 +39,7 @@ from .const import (
     BLOCK,
     DATA_CONFIG_ENTRY,
     DOMAIN,
+    DUAL_MODE_LIGHT_MODELS,
     FIRMWARE_PATTERN,
     KELVIN_MAX_VALUE,
     KELVIN_MIN_VALUE_COLOR,
@@ -369,13 +370,11 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                     self.wrapper.model,
                 )
 
-        # Shelly Color Bulb (SHCB-1) has mode parameter in ".../light/0/..."
-        if self.wrapper.model == "SHCB-1" and set_mode and self.mode != set_mode:
+        if set_mode and self.mode != set_mode and self.wrapper.model in DUAL_MODE_LIGHT_MODELS:
             params["mode"] = set_mode
             self.mode_result = self.control_result = await self.set_state(**params)
         else:
-            if await self.set_light_mode(set_mode):
-                self.control_result = await self.set_state(**params)
+            self.control_result = await self.set_state(**params)
 
         self.async_write_ha_state()
 
@@ -391,27 +390,6 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         self.control_result = await self.set_state(**params)
 
         self.async_write_ha_state()
-
-    async def set_light_mode(self, set_mode: str | None) -> bool:
-        """Change device mode color/white if mode has changed."""
-        if set_mode is None or self.mode == set_mode:
-            return True
-
-        _LOGGER.debug("Setting light mode for entity %s, mode: %s", self.name, set_mode)
-        try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                self.mode_result = await self.wrapper.device.switch_light_mode(set_mode)
-        except (asyncio.TimeoutError, OSError) as err:
-            _LOGGER.error(
-                "Setting light mode for entity %s failed, state: %s, error: %s",
-                self.name,
-                set_mode,
-                repr(err),
-            )
-            self.wrapper.last_update_success = False
-            return False
-
-        return True
 
     @callback
     def _update_callback(self) -> None:
