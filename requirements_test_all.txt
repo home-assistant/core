@@ -1348,7 +1348,7 @@ regenmaschine==2022.01.0
 # homeassistant.components.renault
 renault-api==0.1.11
 
-# homeassistant.components.renson_endura_delta
+# homeassistant.components.renson
 rensonVentilationLib==1.2.1
 
 # homeassistant.components.python_script

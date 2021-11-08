@@ -2008,7 +2008,7 @@ homeassistant/components/rejseplanen/* @DarkFox
 homeassistant/components/remote/* @home-assistant/core
 tests/components/remote/* @home-assistant/core
 homeassistant/components/renault/* @epenet
-homeassistant/components/renson_ventilation/* @jimmyd-be
+homeassistant/components/renson/* @jimmyd-be
 tests/components/renault/* @epenet
 homeassistant/components/repetier/* @MTrab @ShadowBr0ther
 homeassistant/components/rflink/* @javicalle

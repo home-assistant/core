@@ -1,4 +1,4 @@
-"""Config flow for Renson Endura Delta integration."""
+"""Config flow for Renson integration."""
 from __future__ import annotations
 
 import logging
@@ -24,7 +24,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Renson Endura Delta."""
+    """Handle a config flow for Renson."""
 
     VERSION = 1
 
@@ -37,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not await self.hass.async_add_executor_job(rensonLib.connect):
             raise CannotConnect
 
-        return {"title": "Renson Endura Delta"}
+        return {"title": "Renson"}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

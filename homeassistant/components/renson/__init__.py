@@ -1,9 +1,9 @@
-"""The Renson Endura Delta integration."""
+"""The Renson integration."""
 from __future__ import annotations
 
 import rensonVentilationLib.renson as renson
 
-from homeassistant.components.renson_endura_delta.config_flow import CannotConnect
+from homeassistant.components.renson.config_flow import CannotConnect
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -13,7 +13,7 @@ PLATFORMS = ["sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Renson Endura Delta from a config entry."""
+    """Set up Renson from a config entry."""
 
     rensonApi: renson.RensonVentilation = renson.RensonVentilation(entry.data["host"])
 

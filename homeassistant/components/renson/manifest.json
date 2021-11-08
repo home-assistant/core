@@ -1,8 +1,8 @@
 {
-  "domain": "renson_endura_delta",
-  "name": "Renson Endura Delta",
+  "domain": "renson",
+  "name": "Renson",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/renson_endura_delta",
+  "documentation": "https://www.home-assistant.io/integrations/renson",
   "requirements": [
     "rensonVentilationLib==1.2.1"
   ],

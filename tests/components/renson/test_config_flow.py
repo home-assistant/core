@@ -1,9 +1,9 @@
-"""Test the Renson Endura Delta config flow."""
+"""Test the Renson config flow."""
 from unittest.mock import patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.renson_endura_delta.config_flow import CannotConnect
-from homeassistant.components.renson_endura_delta.const import DOMAIN
+from homeassistant.components.renson.config_flow import CannotConnect
+from homeassistant.components.renson.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
@@ -18,10 +18,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.renson_endura_delta.config_flow.ConfigFlow.validate_input",
-        return_value={"title": "Renson Endura Delta"},
+        "homeassistant.components.renson.config_flow.ConfigFlow.validate_input",
+        return_value={"title": "Renson"},
     ), patch(
-        "homeassistant.components.renson_endura_delta.async_setup_entry",
+        "homeassistant.components.renson.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -33,7 +33,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Renson Endura Delta"
+    assert result2["title"] == "Renson"
     assert result2["data"] == {
         "host": "1.1.1.1",
     }
@@ -47,7 +47,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.renson_endura_delta.config_flow.ConfigFlow.validate_input",
+        "homeassistant.components.renson.config_flow.ConfigFlow.validate_input",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(

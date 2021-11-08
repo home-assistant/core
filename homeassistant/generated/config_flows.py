@@ -279,7 +279,7 @@ FLOWS = {
         "rdw",
         "recollect_waste",
         "renault",
-        "renson_endura_delta",
+        "renson",
         "rfxtrx",
         "ridwell",
         "ring",

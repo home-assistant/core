@@ -1,4 +1,4 @@
-"""Constants for the Renson Endura Delta integration."""
+"""Constants for the Renson integration."""
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -10,7 +10,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-DOMAIN = "renson_endura_delta"
+DOMAIN = "renson"
 CONCENTRATION_PARTS_PER_CUBIC_METER = "ppm"
 
 CO2_QUALITY_DESC = SensorEntityDescription(

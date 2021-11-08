@@ -36,11 +36,9 @@ from rensonVentilationLib.fieldEnum import (
 import rensonVentilationLib.renson as renson
 import voluptuous as vol
 
-from homeassistant.components.renson_endura_delta.firmwaresensor import FirmwareSensor
-from homeassistant.components.renson_endura_delta.rensonBinarySensor import (
-    RensonBinarySensor,
-)
-from homeassistant.components.renson_endura_delta.sensorvalue import SensorValue
+from homeassistant.components.renson.firmwaresensor import FirmwareSensor
+from homeassistant.components.renson.rensonBinarySensor import RensonBinarySensor
+from homeassistant.components.renson.sensorvalue import SensorValue
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
