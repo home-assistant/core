@@ -48,7 +48,7 @@ async def test_warning_no_devices(
     sysbus_config_entry: ConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ):
-    """Test being able to unload an entry."""
+    """Test warning is generated when no sysbus devices found."""
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.onewire"):
         await hass.config_entries.async_setup(sysbus_config_entry.entry_id)
         await hass.async_block_till_done()
