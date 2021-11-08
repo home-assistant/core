@@ -25,8 +25,6 @@ DEVICE_TYPES = ["PHONE", "TILE"]
 DEFAULT_INIT_TASK_LIMIT = 2
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=2)
 
-CONF_SHOW_INACTIVE = "show_inactive"
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tile as config entry."""

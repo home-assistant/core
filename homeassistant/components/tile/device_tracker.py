@@ -19,7 +19,13 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import DATA_COORDINATOR, DATA_TILE, DOMAIN
+from .const import (
+    CONF_SHOW_INACTIVE,
+    DATA_COORDINATOR,
+    DATA_TILE,
+    DEFAULT_SHOW_INACTIVE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +45,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tile device trackers."""
+    show_inactive = entry.options.get(CONF_SHOW_INACTIVE, DEFAULT_SHOW_INACTIVE)
     async_add_entities(
         [
             TileDeviceTracker(
@@ -47,6 +54,7 @@ async def async_setup_entry(
                 tile,
             )
             for tile_uuid, tile in hass.data[DOMAIN][entry.entry_id][DATA_TILE].items()
+            if tile.visible or show_inactive
         ]
     )
 
