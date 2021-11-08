@@ -154,8 +154,9 @@ class HueBridge:
         ContentResponseError means hub raised an error.
         Since we don't make bad requests, this is on them.
         """
+        max_tries = 5
         async with self.parallel_updates_semaphore:
-            for tries in range(4):
+            for tries in range(max_tries):
                 try:
                     return await task(*args, **kwargs)
                 except AiohueException as err:
@@ -174,7 +175,7 @@ class HueBridge:
                     client_exceptions.ClientResponseError,
                     client_exceptions.ServerDisconnectedError,
                 ) as err:
-                    if tries == 3:
+                    if tries == max_tries:
                         self.logger.error("Request failed %s times, giving up", tries)
                         raise
 

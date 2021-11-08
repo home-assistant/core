@@ -125,7 +125,7 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
         }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
+        """Turn the light on."""
         transition = kwargs.get(ATTR_TRANSITION)
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
@@ -137,28 +137,42 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
             # hue transition duration is in steps of 100 ms
             transition = int(transition * 100)
 
-        await self.bridge.async_request_call(
-            self.controller.set_state,
-            id=self.resource.id,
-            on=True,
-            brightness=brightness,
-            color_xy=xy_color,
-            color_temp=color_temp,
-            transition_time=transition,
-            allowed_errors=ALLOWED_ERRORS,
-        )
+        # NOTE: a grouped_light can only handle turn on/off
+        # To set other features, you'll have to control the attached lights
+        if (
+            brightness is None
+            and xy_color is None
+            and color_temp is None
+            and transition is None
+        ):
+            await self.bridge.async_request_call(
+                self.controller.set_state,
+                id=self.resource.id,
+                on=True,
+                allowed_errors=ALLOWED_ERRORS,
+            )
+            return
+
+        # redirect all other feature commands to underlying lights
+        # note that this silently ignores params sent to light that are not supported
+        for light in self.controller.get_lights(self.resource.id):
+            await self.bridge.async_request_call(
+                self.api.lights.set_state,
+                light.id,
+                on=True,
+                brightness=brightness if light.supports_dimming else None,
+                color_xy=xy_color if light.supports_color else None,
+                color_temp=color_temp if light.supports_color_temperature else None,
+                transition_time=transition,
+                allowed_errors=ALLOWED_ERRORS,
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        transition = kwargs.get(ATTR_TRANSITION)
-        if transition is not None:
-            # hue transition duration is in steps of 100 ms
-            transition = int(transition * 100)
         await self.bridge.async_request_call(
             self.controller.set_state,
             id=self.resource.id,
             on=False,
-            transition_time=transition,
             allowed_errors=ALLOWED_ERRORS,
         )
 
