@@ -23,11 +23,18 @@ def info_fixture():
 
 
 @pytest.fixture
-async def setup_evil_genius_labs(hass, data_fixture, info_fixture, platforms):
+def config_entry(hass):
+    """Evil genius labs config entry."""
+    entry = MockConfigEntry(domain="evil_genius_labs", data={"host": "192.168.1.113"})
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+async def setup_evil_genius_labs(
+    hass, config_entry, data_fixture, info_fixture, platforms
+):
     """Test up Evil Genius Labs instance."""
-    MockConfigEntry(
-        domain="evil_genius_labs", data={"host": "192.168.1.113"}
-    ).add_to_hass(hass)
     with patch(
         "pyevilgenius.EvilGeniusDevice.get_data",
         return_value=data_fixture,
