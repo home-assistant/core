@@ -263,7 +263,7 @@ class Volumio(MediaPlayerEntity):
         try:
             await self._volumio.replace_and_play(json.loads(media_id))
         except ValueError:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Found non json media_id %s. Trying to send to volumios mpd", media_id
             )
             await self._play_with_mpd(media_id)
