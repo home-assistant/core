@@ -93,7 +93,7 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
 
     @property
     def name(self):
-        """Return the name of the number entity."""
+        """Return the name of the binary sensor entity."""
         description = self._channel.description
         if description is not None and len(description) > 0:
             return f"{super().name} {description}"
