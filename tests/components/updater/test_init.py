@@ -51,6 +51,10 @@ async def test_new_version_shows_entity_true(hass, mock_get_newest_version):
         hass.states.get("binary_sensor.updater").attributes["release_notes"]
         == RELEASE_NOTES
     )
+    assert (
+        hass.states.get("binary_sensor.updater").attributes["current_version"]
+        == MOCK_VERSION
+    )
 
 
 async def test_same_version_shows_entity_false(hass, mock_get_newest_version):

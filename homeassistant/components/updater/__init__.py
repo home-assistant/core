@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_RELEASE_NOTES = "release_notes"
 ATTR_NEWEST_VERSION = "newest_version"
+ATTR_CURRENT_VERSION = "current_version"
 
 CONF_REPORTING = "reporting"
 CONF_COMPONENT_REPORTING = "include_used_components"
@@ -51,6 +52,7 @@ class Updater:
         self.update_available = update_available
         self.release_notes = release_notes
         self.newest_version = newest_version
+        self.current_version = current_version
 
 
 async def async_setup(hass, config):

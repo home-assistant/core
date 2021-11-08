@@ -7,7 +7,12 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DOMAIN as UPDATER_DOMAIN
+from . import (
+    ATTR_CURRENT_VERSION,
+    ATTR_NEWEST_VERSION,
+    ATTR_RELEASE_NOTES,
+    DOMAIN as UPDATER_DOMAIN,
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -45,4 +50,6 @@ class UpdaterBinary(CoordinatorEntity, BinarySensorEntity):
             data[ATTR_RELEASE_NOTES] = self.coordinator.data.release_notes
         if self.coordinator.data.newest_version:
             data[ATTR_NEWEST_VERSION] = self.coordinator.data.newest_version
+        if self.coordinator.data.current_version:
+            data[ATTR_CURRENT_VERSION] = self.coordinator.data.current_version
         return data
