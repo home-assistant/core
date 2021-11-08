@@ -92,6 +92,14 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
         return self._state
 
     @property
+    def name(self):
+        """Return the name of the number entity."""
+        description = self._channel.description
+        if description is not None and len(description) > 0:
+            return f"{super().name} {description}"
+        return super().name
+
+    @property
     def device_class(self) -> str:
         """Return device class from component DEVICE_CLASSES."""
         return self._device_class
