@@ -167,14 +167,16 @@ async def test_tunneling_setup_for_multiple_found_gateways(hass: HomeAssistant) 
         "homeassistant.components.knx.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        manuel_tunnel_flow = await hass.config_entries.flow.async_configure(
+        manual_tunnel_flow = await hass.config_entries.flow.async_configure(
             manual_tunnel["flow_id"],
             {
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
             },
         )
-        assert manuel_tunnel_flow["data"] == {
+        await hass.async_block_till_done()
+        assert manual_tunnel_flow["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert manual_tunnel_flow["data"] == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
             CONF_HOST: "192.168.0.1",
             CONF_PORT: 3675,
@@ -259,6 +261,7 @@ async def test_import_config_tunneling(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
+        await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "192.168.1.1"
         assert result["data"] == {
@@ -288,6 +291,7 @@ async def test_import_config_routing(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
+        await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == CONF_KNX_ROUTING
         assert result["data"] == {
@@ -315,6 +319,7 @@ async def test_import_config_automatic(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
+        await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == CONF_KNX_AUTOMATIC
         assert result["data"] == {
