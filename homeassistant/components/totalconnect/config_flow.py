@@ -4,7 +4,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_USERCODES, DOMAIN
 
@@ -94,9 +93,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.client.get_number_locations,
             )
             if number_locations < 1:
-                raise HomeAssistantError(
-                    "There are no locations enabled or available for this TotalConnect user."
-                )
+                return self.async_abort(reason="no_locations")
             for location_id in self.client.locations:
                 self.usercodes[location_id] = None
 
