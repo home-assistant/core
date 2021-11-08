@@ -1379,7 +1379,7 @@ uvcclient==0.11.0
 vehicle==0.1.0
 
 # homeassistant.components.velbus
-velbus-aio==2021.11.0
+velbus-aio==2021.11.6
 
 # homeassistant.components.venstar
 venstarcolortouch==0.15
