@@ -135,9 +135,9 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_TIMESTAMP,
         suitable=lambda device: device.has_thermostat
         and device.nextchange_endperiod is not None,
-        native_value=lambda device: str(
-            utc_from_timestamp(device.nextchange_endperiod)
-        ),
+        native_value=lambda device: utc_from_timestamp(
+            device.nextchange_endperiod
+        ).isoformat(),
     ),
     FritzSensorEntityDescription(
         key="nextchange_preset",

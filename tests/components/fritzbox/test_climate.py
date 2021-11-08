@@ -118,7 +118,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
         f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_next_scheduled_change_time"
     )
     assert state
-    assert state.state == "1970-01-01 00:00:00+00:00"
+    assert state.state == "1970-01-01T00:00:00+00:00"
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
         == f"{CONF_FAKE_NAME} Next Scheduled Change Time"
