@@ -9,7 +9,7 @@ import voluptuous as vol
 from xknx import XKNX
 from xknx.devices.climate import SetpointShiftMode
 from xknx.dpt import DPTBase, DPTNumeric
-from xknx.exceptions import CouldNotParseAddress
+from xknx.exceptions import ConversionError, CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
@@ -124,20 +124,47 @@ def numeric_type_validator(value: Any) -> str | int:
     raise vol.Invalid(f"value '{value}' is not a valid numeric sensor type.")
 
 
+def _max_payload_value(payload_length: int) -> int:
+    if payload_length == 0:
+        return 0x3F
+    return int(256 ** payload_length) - 1
+
+
+def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:
+    """Validate a button entity payload configuration."""
+    _payload = entity_config[CONF_PAYLOAD]
+
+    if _type := entity_config.get(CONF_TYPE):
+        if (transcoder := DPTBase.parse_transcoder(_type)) is None:
+            raise vol.Invalid(f"'type: {_type}' is not a valid sensor type.")
+        entity_config[CONF_PAYLOAD_LENGTH] = transcoder.payload_length
+        try:
+            entity_config[CONF_PAYLOAD] = int.from_bytes(
+                transcoder.to_knx(_payload), byteorder="big"
+            )
+        except ConversionError:
+            raise vol.Invalid(f"'payload: {_payload}' not valid for 'type: {_type}'")
+        return entity_config
+
+    _payload_length = entity_config[CONF_PAYLOAD_LENGTH]
+    if _payload > (max_payload := _max_payload_value(_payload_length)):
+        raise vol.Invalid(
+            f"'payload: {_payload}' exceeds possible maximum for "
+            f"payload_length {_payload_length}: {max_payload}"
+        )
+    return entity_config
+
+
 def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     """Validate a select entity options configuration."""
     options_seen = set()
     payloads_seen = set()
     payload_length = entity_config[CONF_PAYLOAD_LENGTH]
-    if payload_length == 0:
-        max_payload = 0x3F
-    else:
-        max_payload = 256 ** payload_length - 1
 
     for opt in entity_config[SelectSchema.CONF_OPTIONS]:
         option = opt[SelectSchema.CONF_OPTION]
         payload = opt[CONF_PAYLOAD]
-        if payload > max_payload:
+        if payload > (max_payload := _max_payload_value(payload_length)):
             raise vol.Invalid(
                 f"'payload: {payload}' for 'option: {option}' exceeds possible"
                 f" maximum of 'payload_length: {payload_length}': {max_payload}"
@@ -291,6 +318,8 @@ class ButtonSchema(KNXPlatformSchema):
             },
             extra=vol.ALLOW_EXTRA,
         ),
+        # calculate raw CONF_PAYLOAD and CONF_PAYLOAD_LENGTH from CONF_TYPE if given
+        button_payload_sub_validator,
     )
 
 
