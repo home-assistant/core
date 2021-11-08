@@ -137,7 +137,7 @@ class OneWireHub:
             device_id = f"{device_family}-{interface.mac_address[2:]}"
             if device_family not in DEVICE_SUPPORT_SYSBUS:
                 _LOGGER.warning(
-                    "Ignoring unknown family (%s) of sensor found for device: %s",
+                    "Ignoring unknown device family (%s) found for device %s",
                     device_family,
                     device_id,
                 )

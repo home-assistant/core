@@ -49,6 +49,7 @@ ATTR_DEVICE_FILE = "device_file"
 ATTR_DEVICE_INFO = "device_info"
 ATTR_INJECT_READS = "inject_reads"
 ATTR_UNIQUE_ID = "unique_id"
+ATTR_UNKNOWN_DEVICE = "unknown_device"
 
 FIXED_ATTRIBUTES = (
     ATTR_DEVICE_CLASS,
@@ -62,7 +63,7 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"",  # read device type
         ],
-        SENSOR_DOMAIN: [],
+        ATTR_UNKNOWN_DEVICE: True,
     },
     "05.111111111111": {
         ATTR_INJECT_READS: [
@@ -879,7 +880,7 @@ MOCK_OWPROXY_DEVICES = {
 
 MOCK_SYSBUS_DEVICES = {
     "00-111111111111": {
-        SENSOR_DOMAIN: [],
+        ATTR_UNKNOWN_DEVICE: True,
     },
     "10-111111111111": {
         ATTR_DEVICE_INFO: {
@@ -900,12 +901,6 @@ MOCK_SYSBUS_DEVICES = {
             },
         ],
     },
-    "12-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
-    "1D-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
     "22-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "22-111111111111")},
@@ -913,7 +908,7 @@ MOCK_SYSBUS_DEVICES = {
             ATTR_MODEL: "22",
             ATTR_NAME: "22-111111111111",
         },
-        "sensor": [
+        SENSOR_DOMAIN: [
             {
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.22_111111111111_temperature",
@@ -924,9 +919,6 @@ MOCK_SYSBUS_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
         ],
-    },
-    "26-111111111111": {
-        SENSOR_DOMAIN: [],
     },
     "28-111111111111": {
         ATTR_DEVICE_INFO: {
@@ -946,12 +938,6 @@ MOCK_SYSBUS_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
         ],
-    },
-    "29-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
-    "3A-111111111111": {
-        SENSOR_DOMAIN: [],
     },
     "3B-111111111111": {
         ATTR_DEVICE_INFO: {
@@ -1028,11 +1014,5 @@ MOCK_SYSBUS_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
         ],
-    },
-    "EF-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
-    "EF-111111111112": {
-        SENSOR_DOMAIN: [],
     },
 }
