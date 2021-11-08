@@ -84,9 +84,9 @@ class NanoleafLight(LightEntity):
         self._attr_name = self._nanoleaf.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._nanoleaf.serial_no)},
-            name=self._nanoleaf.name,
             manufacturer=self._nanoleaf.manufacturer,
             model=self._nanoleaf.model,
+            name=self._nanoleaf.name,
             sw_version=self._nanoleaf.firmware_version,
         )
         self._attr_min_mireds = math.ceil(
@@ -182,8 +182,8 @@ class NanoleafLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        transition = kwargs.get(ATTR_TRANSITION)
-        await self._nanoleaf.turn_off(transition)
+        transition: float | None = kwargs.get(ATTR_TRANSITION)
+        await self._nanoleaf.turn_off(None if transition is None else int(transition))
 
     async def async_update(self) -> None:
         """Fetch new state data for this light."""

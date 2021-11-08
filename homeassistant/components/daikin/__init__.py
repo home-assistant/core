@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
 
 from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
@@ -64,7 +65,7 @@ async def daikin_api_setup(hass, host, key, uuid, password):
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
-        with timeout(TIMEOUT):
+        async with timeout(TIMEOUT):
             device = await Appliance.factory(
                 host, session, key=key, uuid=uuid, password=password
             )
@@ -109,13 +110,13 @@ class DaikinApi:
         return self._available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         info = self.device.values
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "manufacturer": "Daikin",
-            "model": info.get("model"),
-            "name": info.get("name"),
-            "sw_version": info.get("ver", "").replace("_", "."),
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            manufacturer="Daikin",
+            model=info.get("model"),
+            name=info.get("name"),
+            sw_version=info.get("ver", "").replace("_", "."),
+        )

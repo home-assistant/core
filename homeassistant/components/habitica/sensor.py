@@ -1,12 +1,13 @@
 """Support for Habitica sensors."""
 from collections import namedtuple
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiohttp import ClientResponseError
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME, HTTP_TOO_MANY_REQUESTS
+from homeassistant.const import CONF_NAME
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -94,7 +95,7 @@ class HabitipyData:
         try:
             self.data = await self.api.user.get()
         except ClientResponseError as error:
-            if error.status == HTTP_TOO_MANY_REQUESTS:
+            if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                 _LOGGER.warning(
                     "Sensor data update for %s has too many API requests;"
                     " Skipping the update",
@@ -111,7 +112,7 @@ class HabitipyData:
             try:
                 self.tasks[task_type] = await self.api.tasks.user.get(type=task_type)
             except ClientResponseError as error:
-                if error.status == HTTP_TOO_MANY_REQUESTS:
+                if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                     _LOGGER.warning(
                         "Sensor data update for %s has too many API requests;"
                         " Skipping the update",
@@ -213,8 +214,7 @@ class HabitipyTaskSensor(SensorEntity):
                 task_id = received_task[TASKS_MAP_ID]
                 task = {}
                 for map_key, map_value in TASKS_MAP.items():
-                    value = received_task.get(map_value)
-                    if value:
+                    if value := received_task.get(map_value):
                         task[map_key] = value
                 attrs[task_id] = task
             return attrs

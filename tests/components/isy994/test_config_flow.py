@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pyisy import ISYConnectionError, ISYInvalidAuthError
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp, ssdp
 from homeassistant.components.isy994.const import (
     CONF_IGNORE_STRING,
@@ -92,7 +92,7 @@ PATCH_ASYNC_SETUP_ENTRY = f"{INTEGRATION}.async_setup_entry"
 
 async def test_form(hass: HomeAssistant):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -233,7 +233,7 @@ async def test_form_no_name_in_response(hass: HomeAssistant):
 async def test_form_existing_config_entry(hass: HomeAssistant):
     """Test if config entry already exists."""
     MockConfigEntry(domain=DOMAIN, unique_id=MOCK_UUID).add_to_hass(hass)
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -316,7 +316,6 @@ async def test_import_flow_all_fields(hass: HomeAssistant) -> None:
 
 async def test_form_ssdp_already_configured(hass: HomeAssistant) -> None:
     """Test ssdp abort when the serial number is already configured."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     MockConfigEntry(
         domain=DOMAIN,
@@ -338,7 +337,6 @@ async def test_form_ssdp_already_configured(hass: HomeAssistant) -> None:
 
 async def test_form_ssdp(hass: HomeAssistant):
     """Test we can setup from ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -375,7 +373,7 @@ async def test_form_ssdp(hass: HomeAssistant):
 
 async def test_form_ssdp_existing_entry(hass: HomeAssistant):
     """Test we update the ip of an existing entry from ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}"},
@@ -402,7 +400,7 @@ async def test_form_ssdp_existing_entry(hass: HomeAssistant):
 
 async def test_form_ssdp_existing_entry_with_no_port(hass: HomeAssistant):
     """Test we update the ip of an existing entry from ssdp with no port."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: f"http://{MOCK_HOSTNAME}:1443/{ISY_URL_POSTFIX}"},
@@ -429,7 +427,7 @@ async def test_form_ssdp_existing_entry_with_no_port(hass: HomeAssistant):
 
 async def test_form_ssdp_existing_entry_with_alternate_port(hass: HomeAssistant):
     """Test we update the ip of an existing entry from ssdp with an alternate port."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: f"http://{MOCK_HOSTNAME}:1443/{ISY_URL_POSTFIX}"},
@@ -456,7 +454,7 @@ async def test_form_ssdp_existing_entry_with_alternate_port(hass: HomeAssistant)
 
 async def test_form_ssdp_existing_entry_no_port_https(hass: HomeAssistant):
     """Test we update the ip of an existing entry from ssdp with no port and https."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: f"https://{MOCK_HOSTNAME}/{ISY_URL_POSTFIX}"},
@@ -483,7 +481,6 @@ async def test_form_ssdp_existing_entry_no_port_https(hass: HomeAssistant):
 
 async def test_form_dhcp(hass: HomeAssistant):
     """Test we can setup from dhcp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -520,7 +517,7 @@ async def test_form_dhcp(hass: HomeAssistant):
 
 async def test_form_dhcp_existing_entry(hass: HomeAssistant):
     """Test we update the ip of an existing entry from dhcp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}"},
@@ -547,7 +544,7 @@ async def test_form_dhcp_existing_entry(hass: HomeAssistant):
 
 async def test_form_dhcp_existing_entry_preserves_port(hass: HomeAssistant):
     """Test we update the ip of an existing entry from dhcp preserves port."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

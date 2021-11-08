@@ -12,7 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -63,7 +63,7 @@ async def async_setup_entry(
         ]
     )
 
-    async def _async_on_hass_stop(self) -> None:
+    async def _async_on_hass_stop(event: Event) -> None:
         """HA is shutting down, close modem port."""
         if hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]:
             await hass.data[DOMAIN][entry.entry_id][DATA_KEY_API].close()
@@ -104,20 +104,15 @@ class ModemCalleridSensor(SensorEntity):
         await super().async_added_to_hass()
 
     @callback
-    def _async_incoming_call(self, new_state) -> None:
+    def _async_incoming_call(self, new_state: str) -> None:
         """Handle new states."""
-        if new_state == PhoneModem.STATE_RING:
-            if self.native_value == PhoneModem.STATE_IDLE:
-                self._attr_extra_state_attributes = {
-                    CID.CID_NUMBER: "",
-                    CID.CID_NAME: "",
-                }
-        elif new_state == PhoneModem.STATE_CALLERID:
-            self._attr_extra_state_attributes = {
-                CID.CID_NUMBER: self.api.cid_number,
-                CID.CID_NAME: self.api.cid_name,
-            }
-        self._attr_extra_state_attributes[CID.CID_TIME] = self.api.cid_time
+        self._attr_extra_state_attributes = {}
+        if self.api.cid_name:
+            self._attr_extra_state_attributes[CID.CID_NAME] = self.api.cid_name
+        if self.api.cid_number:
+            self._attr_extra_state_attributes[CID.CID_NUMBER] = self.api.cid_number
+        if self.api.cid_time:
+            self._attr_extra_state_attributes[CID.CID_TIME] = self.api.cid_time
         self._attr_native_value = self.api.state
         self.async_write_ha_state()
 

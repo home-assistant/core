@@ -10,11 +10,20 @@
         },
         "flow_title": "Configuration Tuya",
         "step": {
+            "login": {
+                "data": {
+                    "tuya_app_type": "Application mobile",
+                    "username": "Compte"
+                },
+                "description": "Entrez votre identifiant Tuya",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
                     "country_code": "Le code de pays de votre compte (par exemple, 1 pour les \u00c9tats-Unis ou 86 pour la Chine)",
                     "password": "Mot de passe",
                     "platform": "L'application dans laquelle votre compte est enregistr\u00e9",
+                    "region": "R\u00e9gion",
                     "username": "Nom d'utilisateur"
                 },
                 "description": "Saisissez vos informations d'identification Tuya.",

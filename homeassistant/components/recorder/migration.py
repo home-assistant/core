@@ -12,6 +12,7 @@ from sqlalchemy.exc import (
     SQLAlchemyError,
 )
 from sqlalchemy.schema import AddConstraint, DropConstraint
+from sqlalchemy.sql.expression import true
 
 from .models import (
     SCHEMA_VERSION,
@@ -24,7 +25,7 @@ from .models import (
     StatisticsShortTerm,
     process_timestamp,
 )
-from .statistics import get_metadata_with_session, get_start_time
+from .statistics import get_start_time
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -470,17 +471,20 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
     elif new_version == 18:
         # Recreate the statistics and statistics meta tables.
         #
-        # Order matters! Statistics has a relation with StatisticsMeta,
-        # so statistics need to be deleted before meta (or in pair depending
-        # on the SQL backend); and meta needs to be created before statistics.
-        if sqlalchemy.inspect(engine).has_table(
-            StatisticsMeta.__tablename__
-        ) or sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
-            Base.metadata.drop_all(
-                bind=engine, tables=[Statistics.__table__, StatisticsMeta.__table__]
-            )
+        # Order matters! Statistics and StatisticsShortTerm have a relation with
+        # StatisticsMeta, so statistics need to be deleted before meta (or in pair
+        # depending on the SQL backend); and meta needs to be created before statistics.
+        Base.metadata.drop_all(
+            bind=engine,
+            tables=[
+                StatisticsShortTerm.__table__,
+                Statistics.__table__,
+                StatisticsMeta.__table__,
+            ],
+        )
 
         StatisticsMeta.__table__.create(engine)
+        StatisticsShortTerm.__table__.create(engine)
         Statistics.__table__.create(engine)
     elif new_version == 19:
         # This adds the statistic runs table, insert a fake run to prevent duplicating
@@ -527,23 +531,15 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
         # so statistics need to be deleted before meta (or in pair depending
         # on the SQL backend); and meta needs to be created before statistics.
         if engine.dialect.name == "oracle":
-            if (
-                sqlalchemy.inspect(engine).has_table(StatisticsMeta.__tablename__)
-                or sqlalchemy.inspect(engine).has_table(Statistics.__tablename__)
-                or sqlalchemy.inspect(engine).has_table(StatisticsRuns.__tablename__)
-                or sqlalchemy.inspect(engine).has_table(
-                    StatisticsShortTerm.__tablename__
-                )
-            ):
-                Base.metadata.drop_all(
-                    bind=engine,
-                    tables=[
-                        StatisticsShortTerm.__table__,
-                        Statistics.__table__,
-                        StatisticsMeta.__table__,
-                        StatisticsRuns.__table__,
-                    ],
-                )
+            Base.metadata.drop_all(
+                bind=engine,
+                tables=[
+                    StatisticsShortTerm.__table__,
+                    Statistics.__table__,
+                    StatisticsMeta.__table__,
+                    StatisticsRuns.__table__,
+                ],
+            )
 
             StatisticsRuns.__table__.create(engine)
             StatisticsMeta.__table__.create(engine)
@@ -563,27 +559,35 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
                     session.add(StatisticsRuns(start=fake_start_time))
                     fake_start_time += timedelta(minutes=5)
 
-        # Copy last hourly statistic to the newly created 5-minute statistics table
-        sum_statistics = get_metadata_with_session(
-            instance.hass, session, None, statistic_type="sum"
-        )
-        for metadata_id, _ in sum_statistics.values():
+        # When querying the database, be careful to only explicitly query for columns
+        # which were present in schema version 21. If querying the table, SQLAlchemy
+        # will refer to future columns.
+        for sum_statistic in session.query(StatisticsMeta.id).filter_by(has_sum=true()):
             last_statistic = (
-                session.query(Statistics)
-                .filter_by(metadata_id=metadata_id)
+                session.query(
+                    Statistics.start,
+                    Statistics.last_reset,
+                    Statistics.state,
+                    Statistics.sum,
+                )
+                .filter_by(metadata_id=sum_statistic.id)
                 .order_by(Statistics.start.desc())
                 .first()
             )
             if last_statistic:
                 session.add(
                     StatisticsShortTerm(
-                        metadata_id=last_statistic.metadata_id,
+                        metadata_id=sum_statistic.id,
                         start=last_statistic.start,
                         last_reset=last_statistic.last_reset,
                         state=last_statistic.state,
                         sum=last_statistic.sum,
                     )
                 )
+    elif new_version == 23:
+        # Add name column to StatisticsMeta
+        _add_columns(session, "statistics_meta", ["name VARCHAR(255)"])
+
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

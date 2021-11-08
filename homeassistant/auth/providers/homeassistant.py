@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from collections import OrderedDict
 from collections.abc import Mapping
 import logging
 from typing import Any, cast
@@ -335,10 +334,13 @@ class HassLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema: dict[str, type] = OrderedDict()
-        schema["username"] = str
-        schema["password"] = str
-
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(schema), errors=errors
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("username"): str,
+                    vol.Required("password"): str,
+                }
+            ),
+            errors=errors,
         )

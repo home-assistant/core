@@ -408,7 +408,7 @@ class ZWaveServices:
     async def async_set_value(self, service: ServiceCall) -> None:
         """Set a value on a node."""
         # pylint: disable=no-self-use
-        nodes = service.data[const.ATTR_NODES]
+        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
         command_class = service.data[const.ATTR_COMMAND_CLASS]
         property_ = service.data[const.ATTR_PROPERTY]
         property_key = service.data.get(const.ATTR_PROPERTY_KEY)
@@ -418,15 +418,27 @@ class ZWaveServices:
         options = service.data.get(const.ATTR_OPTIONS)
 
         for node in nodes:
+            value_id = get_value_id(
+                node,
+                command_class,
+                property_,
+                endpoint=endpoint,
+                property_key=property_key,
+            )
+            # If value has a string type but the new value is not a string, we need to
+            # convert it to one. We use new variable `new_value_` to convert the data
+            # so we can preserve the original `new_value` for every node.
+            if (
+                value_id in node.values
+                and node.values[value_id].metadata.type == "string"
+                and not isinstance(new_value, str)
+            ):
+                new_value_ = str(new_value)
+            else:
+                new_value_ = new_value
             success = await node.async_set_value(
-                get_value_id(
-                    node,
-                    command_class,
-                    property_,
-                    endpoint=endpoint,
-                    property_key=property_key,
-                ),
-                new_value,
+                value_id,
+                new_value_,
                 options=options,
                 wait_for_result=wait_for_result,
             )
@@ -452,11 +464,16 @@ class ZWaveServices:
             await self.async_set_value(service)
             return
 
+        command_class = service.data[const.ATTR_COMMAND_CLASS]
+        property_ = service.data[const.ATTR_PROPERTY]
+        property_key = service.data.get(const.ATTR_PROPERTY_KEY)
+        endpoint = service.data.get(const.ATTR_ENDPOINT)
+
         value = {
-            "commandClass": service.data[const.ATTR_COMMAND_CLASS],
-            "property": service.data[const.ATTR_PROPERTY],
-            "propertyKey": service.data.get(const.ATTR_PROPERTY_KEY),
-            "endpoint": service.data.get(const.ATTR_ENDPOINT),
+            "commandClass": command_class,
+            "property": property_,
+            "propertyKey": property_key,
+            "endpoint": endpoint,
         }
         new_value = service.data[const.ATTR_VALUE]
 
@@ -464,12 +481,30 @@ class ZWaveServices:
         # schema validation and can use that to get the client, otherwise we can just
         # get the client from the node.
         client: ZwaveClient = None
-        first_node = next((node for node in nodes), None)
+        first_node: ZwaveNode = next((node for node in nodes), None)
         if first_node:
             client = first_node.client
         else:
             entry_id = self._hass.config_entries.async_entries(const.DOMAIN)[0].entry_id
             client = self._hass.data[const.DOMAIN][entry_id][const.DATA_CLIENT]
+            first_node = next(
+                node
+                for node in client.driver.controller.nodes.values()
+                if get_value_id(node, command_class, property_, endpoint, property_key)
+                in node.values
+            )
+
+        # If value has a string type but the new value is not a string, we need to
+        # convert it to one
+        value_id = get_value_id(
+            first_node, command_class, property_, endpoint, property_key
+        )
+        if (
+            value_id in first_node.values
+            and first_node.values[value_id].metadata.type == "string"
+            and not isinstance(new_value, str)
+        ):
+            new_value = str(new_value)
 
         success = await async_multicast_set_value(
             client=client,

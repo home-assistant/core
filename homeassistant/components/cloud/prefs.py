@@ -54,9 +54,7 @@ class CloudPreferences:
 
     async def async_initialize(self):
         """Finish initializing the preferences."""
-        prefs = await self._store.async_load()
-
-        if prefs is None:
+        if (prefs := await self._store.async_load()) is None:
             prefs = self._empty_config("")
 
         self._prefs = prefs
@@ -216,9 +214,7 @@ class CloudPreferences:
     @property
     def remote_enabled(self):
         """Return if remote is enabled on start."""
-        enabled = self._prefs.get(PREF_ENABLE_REMOTE, False)
-
-        if not enabled:
+        if not self._prefs.get(PREF_ENABLE_REMOTE, False):
             return False
 
         if self._has_local_trusted_network or self._has_local_trusted_proxies:
@@ -307,9 +303,7 @@ class CloudPreferences:
 
     async def _load_cloud_user(self) -> User | None:
         """Load cloud user if available."""
-        user_id = self._prefs.get(PREF_CLOUD_USER)
-
-        if user_id is None:
+        if (user_id := self._prefs.get(PREF_CLOUD_USER)) is None:
             return None
 
         # Fetch the user. It can happen that the user no longer exists if

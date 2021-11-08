@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import suppress
 from functools import wraps
+from http import HTTPStatus
 import logging
 import secrets
 
@@ -21,7 +22,10 @@ from homeassistant.components.device_tracker import (
     ATTR_LOCATION_NAME,
 )
 from homeassistant.components.frontend import MANIFEST_JSON
-from homeassistant.components.sensor import DEVICE_CLASSES as SENSOR_CLASSES
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES as SENSOR_CLASSES,
+    STATE_CLASSES as SENSOSR_STATE_CLASSES,
+)
 from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -30,8 +34,6 @@ from homeassistant.const import (
     ATTR_SERVICE_DATA,
     ATTR_SUPPORTED_FEATURES,
     CONF_WEBHOOK_ID,
-    HTTP_BAD_REQUEST,
-    HTTP_CREATED,
 )
 from homeassistant.core import EventOrigin, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
@@ -42,6 +44,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -58,9 +61,11 @@ from .const import (
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
+    ATTR_SENSOR_ENTITY_CATEGORY,
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_NAME,
     ATTR_SENSOR_STATE,
+    ATTR_SENSOR_STATE_CLASS,
     ATTR_SENSOR_TYPE,
     ATTR_SENSOR_TYPE_BINARY_SENSOR,
     ATTR_SENSOR_TYPE_SENSOR,
@@ -158,7 +163,7 @@ async def handle_webhook(
         req_data = await request.json()
     except ValueError:
         _LOGGER.warning("Received invalid JSON from mobile_app device: %s", device_name)
-        return empty_okay_response(status=HTTP_BAD_REQUEST)
+        return empty_okay_response(status=HTTPStatus.BAD_REQUEST)
 
     if (
         ATTR_WEBHOOK_ENCRYPTED not in req_data
@@ -259,13 +264,11 @@ async def webhook_fire_event(hass, config_entry, data):
 @validate_schema({vol.Required(ATTR_CAMERA_ENTITY_ID): cv.string})
 async def webhook_stream_camera(hass, config_entry, data):
     """Handle a request to HLS-stream a camera."""
-    camera = hass.states.get(data[ATTR_CAMERA_ENTITY_ID])
-
-    if camera is None:
+    if (camera := hass.states.get(data[ATTR_CAMERA_ENTITY_ID])) is None:
         return webhook_response(
             {"success": False},
             registration=config_entry.data,
-            status=HTTP_BAD_REQUEST,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera.entity_id}"}
@@ -341,7 +344,7 @@ async def webhook_update_registration(hass, config_entry, data):
     """Handle an update registration webhook."""
     new_registration = {**config_entry.data, **data}
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -390,22 +393,38 @@ async def webhook_enable_encryption(hass, config_entry, data):
     return json_response({"secret": secret})
 
 
+def _validate_state_class_sensor(value: dict):
+    """Validate we only set state class for sensors."""
+    if (
+        ATTR_SENSOR_STATE_CLASS in value
+        and value[ATTR_SENSOR_TYPE] != ATTR_SENSOR_TYPE_SENSOR
+    ):
+        raise vol.Invalid("state_class only allowed for sensors")
+
+    return value
+
+
 @WEBHOOK_COMMANDS.register("register_sensor")
 @validate_schema(
-    {
-        vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-        vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.All(
-            vol.Lower, vol.In(COMBINED_CLASSES)
-        ),
-        vol.Required(ATTR_SENSOR_NAME): cv.string,
-        vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-        vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-        vol.Optional(ATTR_SENSOR_UOM): cv.string,
-        vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
-            None, bool, str, int, float
-        ),
-        vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
-    }
+    vol.All(
+        {
+            vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+            vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.All(
+                vol.Lower, vol.In(COMBINED_CLASSES)
+            ),
+            vol.Required(ATTR_SENSOR_NAME): cv.string,
+            vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+            vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+            vol.Optional(ATTR_SENSOR_UOM): cv.string,
+            vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
+                None, bool, str, int, float
+            ),
+            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
+            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSOSR_STATE_CLASSES),
+        },
+        _validate_state_class_sensor,
+    )
 )
 async def webhook_register_sensor(hass, config_entry, data):
     """Handle a register sensor webhook."""
@@ -414,7 +433,7 @@ async def webhook_register_sensor(hass, config_entry, data):
     device_name = config_entry.data[ATTR_DEVICE_NAME]
 
     unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     existing_sensor = entity_registry.async_get_entity_id(
         entity_type, DOMAIN, unique_store_key
     )
@@ -427,6 +446,26 @@ async def webhook_register_sensor(hass, config_entry, data):
             "Re-register for %s of existing sensor %s", device_name, unique_id
         )
 
+        entry = entity_registry.async_get(existing_sensor)
+        changes = {}
+
+        if (
+            new_name := f"{device_name} {data[ATTR_SENSOR_NAME]}"
+        ) != entry.original_name:
+            changes["original_name"] = new_name
+
+        for ent_reg_key, data_key in (
+            ("device_class", ATTR_SENSOR_DEVICE_CLASS),
+            ("unit_of_measurement", ATTR_SENSOR_UOM),
+            ("entity_category", ATTR_SENSOR_ENTITY_CATEGORY),
+            ("original_icon", ATTR_SENSOR_ICON),
+        ):
+            if data_key in data and getattr(entry, ent_reg_key) != data[data_key]:
+                changes[ent_reg_key] = data[data_key]
+
+        if changes:
+            entity_registry.async_update_entity(existing_sensor, **changes)
+
         async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, data)
     else:
         register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
@@ -435,7 +474,7 @@ async def webhook_register_sensor(hass, config_entry, data):
     return webhook_response(
         {"success": True},
         registration=config_entry.data,
-        status=HTTP_CREATED,
+        status=HTTPStatus.CREATED,
     )
 
 
@@ -479,7 +518,7 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
         unique_store_key = f"{config_entry.data[CONF_WEBHOOK_ID]}_{unique_id}"
 
-        entity_registry = await er.async_get_registry(hass)
+        entity_registry = er.async_get(hass)
         if not entity_registry.async_get_entity_id(
             entity_type, DOMAIN, unique_store_key
         ):

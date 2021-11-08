@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
+    ATTR_VIA_DEVICE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -25,7 +26,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import (
@@ -1301,21 +1302,21 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
         identifier, name = node_device_id_and_name(
             self.node, self.values.primary.instance
         )
-        info = {
-            "name": name,
-            "identifiers": {identifier},
-            "manufacturer": self.node.manufacturer_name,
-            "model": self.node.product_name,
-        }
+        info = DeviceInfo(
+            name=name,
+            identifiers={identifier},
+            manufacturer=self.node.manufacturer_name,
+            model=self.node.product_name,
+        )
         if self.values.primary.instance > 1:
-            info["via_device"] = (DOMAIN, self.node_id)
+            info[ATTR_VIA_DEVICE] = (DOMAIN, self.node_id)
         elif self.node_id > 1:
-            info["via_device"] = (DOMAIN, 1)
+            info[ATTR_VIA_DEVICE] = (DOMAIN, 1)
         return info
 
     @property

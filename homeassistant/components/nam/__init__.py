@@ -100,7 +100,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
             # Device firmware uses synchronous code and doesn't respond to http queries
             # when reading data from sensors. The nettigo-air-quality library tries to
             # get the data 4 times, so we use a longer than usual timeout here.
-            with async_timeout.timeout(30):
+            async with async_timeout.timeout(30):
                 data = await self.nam.async_update()
         except (ApiError, ClientConnectorError, InvalidSensorData) as error:
             raise UpdateFailed(error) from error
@@ -115,9 +115,10 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, cast(str, self._unique_id))},
-            "name": DEFAULT_NAME,
-            "sw_version": self.nam.software_version,
-            "manufacturer": MANUFACTURER,
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, cast(str, self._unique_id))},
+            name=DEFAULT_NAME,
+            sw_version=self.nam.software_version,
+            manufacturer=MANUFACTURER,
+            configuration_url=f"http://{self.host}/",
+        )

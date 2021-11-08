@@ -17,6 +17,7 @@ from .const import (
     ATTR_TARIFF,
     CONF_CRON_PATTERN,
     CONF_METER,
+    CONF_METER_DELTA_VALUES,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
     CONF_METER_TYPE,
@@ -65,6 +66,16 @@ def period_or_cron(config):
     return config
 
 
+def max_28_days(config):
+    """Check that time period does not include more then 28 days."""
+    if config.days >= 28:
+        raise vol.Invalid(
+            "Unsupported offset of more then 28 days, please use a cron pattern."
+        )
+
+    return config
+
+
 METER_CONFIG_SCHEMA = vol.Schema(
     vol.All(
         {
@@ -72,8 +83,9 @@ METER_CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
             vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
-                cv.time_period, cv.positive_timedelta
+                cv.time_period, cv.positive_timedelta, max_28_days
             ),
+            vol.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
             vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
             vol.Optional(CONF_TARIFFS, default=[]): vol.All(
                 cv.ensure_list, [cv.string]

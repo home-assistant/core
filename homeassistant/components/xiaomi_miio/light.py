@@ -26,6 +26,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import color, dt
 
 from .const import (
@@ -194,8 +195,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 for key, value in service.data.items()
                 if key != ATTR_ENTITY_ID
             }
-            entity_ids = service.data.get(ATTR_ENTITY_ID)
-            if entity_ids:
+            if entity_ids := service.data.get(ATTR_ENTITY_ID):
                 target_devices = [
                     dev
                     for dev in hass.data[DATA_KEY].values()
@@ -945,11 +945,11 @@ class XiaomiGatewayLight(LightEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info of the gateway."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway_device_id)},
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._gateway_device_id)},
+        )
 
     @property
     def name(self):

@@ -5,13 +5,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
     DOMAIN,
-    MODE_AUTO,
     MODE_RGB,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
@@ -248,7 +247,7 @@ async def test_import(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_manual(hass: HomeAssistant):
+async def test_manual_working_discovery(hass: HomeAssistant):
     """Test manually setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -277,8 +276,8 @@ async def test_manual(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
     assert result4["type"] == "create_entry"
-    assert result4["title"] == IP_ADDRESS
-    assert result4["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: IP_ADDRESS}
+    assert result4["title"] == DEFAULT_ENTRY_TITLE
+    assert result4["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
@@ -317,7 +316,6 @@ async def test_manual_no_discovery_data(hass: HomeAssistant):
 
 async def test_discovered_by_discovery_and_dhcp(hass):
     """Test we get the form with discovery and abort for dhcp source when we get both."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with _patch_discovery(), _patch_wifibulb():
         result = await hass.config_entries.flow.async_init(
@@ -364,8 +362,6 @@ async def test_discovered_by_discovery_and_dhcp(hass):
 async def test_discovered_by_dhcp_or_discovery(hass, source, data):
     """Test we can setup when discovered from dhcp or discovery."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     with _patch_discovery(), _patch_wifibulb():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
@@ -402,7 +398,6 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     """Test we can setup when discovered from dhcp or discovery."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: IP_ADDRESS})
     config_entry.add_to_hass(hass)
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with _patch_discovery(), _patch_wifibulb():
         result = await hass.config_entries.flow.async_init(
@@ -440,7 +435,6 @@ async def test_options(hass: HomeAssistant):
     assert result["step_id"] == "init"
 
     user_input = {
-        CONF_MODE: MODE_AUTO,
         CONF_CUSTOM_EFFECT_COLORS: "[0,0,255], [255,0,0]",
         CONF_CUSTOM_EFFECT_SPEED_PCT: 50,
         CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_JUMP,

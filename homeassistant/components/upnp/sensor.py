@@ -15,6 +15,7 @@ from .const import (
     DATA_RATE_PACKETS_PER_SECOND,
     DOMAIN,
     KIBIBYTE,
+    LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     ROUTER_IP,
@@ -74,28 +75,32 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
 
 DERIVED_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
     UpnpSensorEntityDescription(
-        key="KiB/sec_received",
+        key=BYTES_RECEIVED,
+        unique_id="KiB/sec_received",
         name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} received",
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
         format=".1f",
     ),
     UpnpSensorEntityDescription(
-        key="KiB/sent",
+        key=BYTES_SENT,
+        unique_id="KiB/sec_sent",
         name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} sent",
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
         format=".1f",
     ),
     UpnpSensorEntityDescription(
-        key="packets/sec_received",
+        key=PACKETS_RECEIVED,
+        unique_id="packets/sec_received",
         name=f"{DATA_RATE_PACKETS_PER_SECOND} received",
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
         format=".1f",
     ),
     UpnpSensorEntityDescription(
-        key="packets/sent",
+        key=PACKETS_SENT,
+        unique_id="packets/sec_sent",
         name=f"{DATA_RATE_PACKETS_PER_SECOND} sent",
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
@@ -131,6 +136,7 @@ async def async_setup_entry(
         ]
     )
 
+    LOGGER.debug("Adding entities: %s", entities)
     async_add_entities(entities)
 
 
@@ -184,7 +190,10 @@ class DerivedUpnpSensor(UpnpSensor):
 
         # Calculate derivative.
         delta_value = current_value - self._last_value
-        if self.entity_description.native_unit_of_measurement == DATA_BYTES:
+        if (
+            self.entity_description.native_unit_of_measurement
+            == DATA_RATE_KIBIBYTES_PER_SECOND
+        ):
             delta_value /= KIBIBYTE
         delta_time = current_timestamp - self._last_timestamp
         if delta_time.total_seconds() == 0:
