@@ -1,6 +1,11 @@
 {
     "config": {
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Has\u0142o"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Has\u0142o",

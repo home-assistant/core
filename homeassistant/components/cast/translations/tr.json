@@ -3,11 +3,15 @@
         "abort": {
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
         },
+        "error": {
+            "invalid_known_hosts": "Bilinen ana bilgisayarlar, virg\u00fclle ayr\u0131lm\u0131\u015f bir ana bilgisayar listesi olmal\u0131d\u0131r."
+        },
         "step": {
             "config": {
                 "data": {
                     "known_hosts": "Bilinen ana bilgisayarlar"
                 },
+                "description": "Bilinen Ana Bilgisayarlar - Yay\u0131n cihazlar\u0131n\u0131n ana bilgisayar adlar\u0131n\u0131n veya IP adreslerinin virg\u00fclle ayr\u0131lm\u0131\u015f listesi, mDNS ke\u015ffi \u00e7al\u0131\u015fm\u0131yorsa kullan\u0131n.",
                 "title": "Google Cast yap\u0131land\u0131rmas\u0131"
             },
             "confirm": {
@@ -16,8 +20,16 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_known_hosts": "Bilinen ana bilgisayarlar, virg\u00fclle ayr\u0131lm\u0131\u015f bir ana bilgisayar listesi olmal\u0131d\u0131r."
+        },
         "step": {
             "advanced_options": {
+                "data": {
+                    "ignore_cec": "CEC'yi yoksay",
+                    "uuid": "\u0130zin verilen UUID'ler"
+                },
+                "description": "\u0130zin Verilen UUID'ler - Home Asistan\u0131'na eklenecek Cast cihazlar\u0131n\u0131n UUID'lerinin virg\u00fclle ayr\u0131lm\u0131\u015f listesi. Yaln\u0131zca mevcut t\u00fcm yay\u0131n cihazlar\u0131n\u0131 eklemek istemiyorsan\u0131z kullan\u0131n.\n CEC'yi Yoksay - Etkin giri\u015fi belirlemek i\u00e7in CEC verilerini yoksaymas\u0131 gereken virg\u00fclle ayr\u0131lm\u0131\u015f bir Chromecast listesi. Bu, pychromecast.IGNORE_CEC'e iletilecektir.",
                 "title": "Geli\u015fmi\u015f Google Cast yap\u0131land\u0131rmas\u0131"
             },
             "basic_options": {

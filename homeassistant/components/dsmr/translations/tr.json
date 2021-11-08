@@ -1,12 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_communicate": "\u0130leti\u015fim kurulamad\u0131",
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "error": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_communicate": "\u0130leti\u015fim kurulamad\u0131",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "one": "Bo\u015f",
+            "other": "Bo\u015f"
         },
         "step": {
+            "one": "Bo\u015f",
+            "other": "Bo\u015f",
             "setup_network": {
                 "data": {
-                    "dsmr_version": "DSMR s\u00fcr\u00fcm\u00fcn\u00fc se\u00e7in"
+                    "dsmr_version": "DSMR s\u00fcr\u00fcm\u00fcn\u00fc se\u00e7in",
+                    "host": "Ana bilgisayar",
+                    "port": "Port"
                 },
                 "title": "Ba\u011flant\u0131 adresini se\u00e7in"
             },
@@ -18,6 +31,9 @@
                 "title": "Cihaz"
             },
             "setup_serial_manual_path": {
+                "data": {
+                    "port": "USB Cihaz Yolu"
+                },
                 "title": "Yol"
             },
             "user": {

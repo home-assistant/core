@@ -16,7 +16,8 @@
                     "serial_number": "Termostat\u0131n seri numaras\u0131.",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
-                "description": "https://MyNuHeat.com'da oturum a\u00e7\u0131p termostat(lar)\u0131n\u0131z\u0131 se\u00e7erek termostat\u0131n\u0131z\u0131n say\u0131sal seri numaras\u0131n\u0131 veya kimli\u011fini alman\u0131z gerekecektir."
+                "description": "https://MyNuHeat.com'da oturum a\u00e7\u0131p termostat(lar)\u0131n\u0131z\u0131 se\u00e7erek termostat\u0131n\u0131z\u0131n say\u0131sal seri numaras\u0131n\u0131 veya kimli\u011fini alman\u0131z gerekecektir.",
+                "title": "NuHeat'e ba\u011flan\u0131n"
             }
         }
     }
