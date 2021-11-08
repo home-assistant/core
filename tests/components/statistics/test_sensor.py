@@ -129,8 +129,8 @@ class TestStatisticsSensor(unittest.TestCase):
         new_state = self.hass.states.get("sensor.test")
         assert state == new_state
 
-        # Source sensor has the state None, unit and state should not change
-        self.hass.states.set("sensor.test_monitored", None, {})
+        # Source sensor is removed, unit and state should not change
+        self.hass.states.remove("sensor.test_monitored")
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
         assert state == new_state
