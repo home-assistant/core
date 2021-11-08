@@ -12,26 +12,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    ATTR_ENTRY_TYPE,
-    CONF_PROVINCE,
-    DOMAIN,
-    ENTRY_TYPE_SERVICE,
-    LOGGER,
-    PROVINCES,
-)
+from .const import CONF_PROVINCE, DOMAIN, ENTRY_TYPE_SERVICE, LOGGER, PROVINCES
 
 DEFAULT_NAME = "Stookalert"
 ATTRIBUTION = "Data provided by rivm.nl"
@@ -90,13 +78,14 @@ class StookalertBinarySensor(BinarySensorEntity):
         self._client = client
         self._attr_name = f"Stookalert {entry.data[CONF_PROVINCE]}"
         self._attr_unique_id = entry.unique_id
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, f"{entry.entry_id}")},
-            ATTR_NAME: entry.data[CONF_PROVINCE],
-            ATTR_MANUFACTURER: "RIVM",
-            ATTR_MODEL: "Stookalert",
-            ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.entry_id}")},
+            name=entry.data[CONF_PROVINCE],
+            manufacturer="RIVM",
+            model="Stookalert",
+            entry_type=ENTRY_TYPE_SERVICE,
+            configuration_url="https://www.rivm.nl/stookalert",
+        )
 
     def update(self) -> None:
         """Update the data from the Stookalert handler."""

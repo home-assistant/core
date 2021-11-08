@@ -1,13 +1,18 @@
 """The Environment Canada (EC) component."""
-from functools import partial
+from datetime import timedelta
 import logging
+import xml.etree.ElementTree as et
 
-from env_canada import ECData, ECRadar
+from env_canada import ECRadar, ECWeather, ec_exc
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
+
+DEFAULT_RADAR_UPDATE_INTERVAL = timedelta(minutes=5)
+DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
 
 PLATFORMS = ["camera", "sensor", "weather"]
 
@@ -21,21 +26,26 @@ async def async_setup_entry(hass, config_entry):
     station = config_entry.data.get(CONF_STATION)
     lang = config_entry.data.get(CONF_LANGUAGE, "English")
 
-    weather_api = {}
+    coordinators = {}
 
-    weather_init = partial(
-        ECData, station_id=station, coordinates=(lat, lon), language=lang.lower()
+    weather_data = ECWeather(
+        station_id=station,
+        coordinates=(lat, lon),
+        language=lang.lower(),
     )
-    weather_data = await hass.async_add_executor_job(weather_init)
-    weather_api["weather_data"] = weather_data
+    coordinators["weather_coordinator"] = ECDataUpdateCoordinator(
+        hass, weather_data, "weather", DEFAULT_WEATHER_UPDATE_INTERVAL
+    )
+    await coordinators["weather_coordinator"].async_config_entry_first_refresh()
 
-    radar_init = partial(ECRadar, coordinates=(lat, lon))
-    radar_data = await hass.async_add_executor_job(radar_init)
-    weather_api["radar_data"] = radar_data
-    await hass.async_add_executor_job(radar_data.get_loop)
+    radar_data = ECRadar(coordinates=(lat, lon))
+    coordinators["radar_coordinator"] = ECDataUpdateCoordinator(
+        hass, radar_data, "radar", DEFAULT_RADAR_UPDATE_INTERVAL
+    )
+    await coordinators["radar_coordinator"].async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = weather_api
+    hass.data[DOMAIN][config_entry.entry_id] = coordinators
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
@@ -77,3 +87,22 @@ def trigger_import(hass, config):
             DOMAIN, context={"source": SOURCE_IMPORT}, data=data
         )
     )
+
+
+class ECDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching EC data."""
+
+    def __init__(self, hass, ec_data, name, update_interval):
+        """Initialize global EC data updater."""
+        super().__init__(
+            hass, _LOGGER, name=f"{DOMAIN} {name}", update_interval=update_interval
+        )
+        self.ec_data = ec_data
+
+    async def _async_update_data(self):
+        """Fetch data from EC."""
+        try:
+            await self.ec_data.update()
+        except (et.ParseError, ec_exc.UnknownStationId) as ex:
+            raise UpdateFailed(f"Error fetching {self.name} data: {ex}") from ex
+        return self.ec_data

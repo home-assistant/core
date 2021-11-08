@@ -1,12 +1,14 @@
 """deCONZ services."""
 
-import asyncio
-
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
@@ -143,10 +145,8 @@ async def async_refresh_devices_service(gateway):
 
 async def async_remove_orphaned_entries_service(gateway):
     """Remove orphaned deCONZ entries from device and entity registries."""
-    device_registry, entity_registry = await asyncio.gather(
-        gateway.hass.helpers.device_registry.async_get_registry(),
-        gateway.hass.helpers.entity_registry.async_get_registry(),
-    )
+    device_registry = dr.async_get(gateway.hass)
+    entity_registry = er.async_get(gateway.hass)
 
     entity_entries = async_entries_for_config_entry(
         entity_registry, gateway.config_entry.entry_id

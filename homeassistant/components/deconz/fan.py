@@ -159,11 +159,11 @@ class DeconzFan(DeconzDevice, FanEntity):
         return self._attr_supported_features
 
     @callback
-    def async_update_callback(self, force_update=False) -> None:
+    def async_update_callback(self) -> None:
         """Store latest configured speed from the device."""
         if self._device.speed in ORDERED_NAMED_FAN_SPEEDS:
             self._default_on_speed = self._device.speed
-        super().async_update_callback(force_update)
+        super().async_update_callback()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""

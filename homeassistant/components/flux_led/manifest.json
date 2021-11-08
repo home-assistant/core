@@ -3,9 +3,10 @@
   "name": "Flux LED/MagicHome",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flux_led",
-  "requirements": ["flux_led==0.24.4"],
+  "requirements": ["flux_led==0.24.18"],
+  "quality_scale": "platinum",
   "codeowners": ["@icemanch"],
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "dhcp": [
   {
     "macaddress": "18B905*",
@@ -28,12 +29,43 @@
     "hostname": "lwip*"
   },
   {
-    "macaddress": "2462AB*",
-    "hostname": "zengge_35*"
+    "hostname": "zengge_0[6789b]_*"
   },
   {
-    "macaddress": "70039F*",
-    "hostname": "zengge_0e*"
+    "hostname": "zengge_1[06789abc]_*"
+  },  
+  {
+    "hostname": "zengge_2[15]_*"
+  },
+  {
+    "hostname": "zengge_3[35]_*"
+  },
+  {
+    "hostname": "zengge_4[14]_*"
+  },
+  {
+    "hostname": "zengge_5[24]_*"
+  }, 
+  {
+    "hostname": "zengge_62_*"
+  },   
+  {
+    "hostname": "zengge_81_*"
+  },
+  {
+    "hostname": "zengge_0[0e]_*"
+  },
+  {
+    "hostname": "zengge_9[34567]_*"
+  },
+  {
+    "hostname": "zengge_a[123]_*"
+  },
+  {
+    "hostname": "zengge_d1_*"
+  },
+  {
+    "hostname": "zengge_e[12]_*"
   },
   {
     "macaddress": "C82E47*",

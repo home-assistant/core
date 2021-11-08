@@ -206,8 +206,7 @@ class ProbeEndpoint:
     def initialize(self, hass: HomeAssistant) -> None:
         """Update device overrides config."""
         zha_config = hass.data[zha_const.DATA_ZHA].get(zha_const.DATA_ZHA_CONFIG, {})
-        overrides = zha_config.get(zha_const.CONF_DEVICE_CONFIG)
-        if overrides:
+        if overrides := zha_config.get(zha_const.CONF_DEVICE_CONFIG):
             self._device_configs.update(overrides)
 
 
@@ -237,8 +236,7 @@ class GroupProbe:
     def _reprobe_group(self, group_id: int) -> None:
         """Reprobe a group for entities after its members change."""
         zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
-        zha_group = zha_gateway.groups.get(group_id)
-        if zha_group is None:
+        if (zha_group := zha_gateway.groups.get(group_id)) is None:
             return
         self.discover_group_entities(zha_group)
 

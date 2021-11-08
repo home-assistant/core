@@ -270,9 +270,7 @@ class TokenView(HomeAssistantView):
         # 2.2 The authorization server responds with HTTP status code 200
         # if the token has been revoked successfully or if the client
         # submitted an invalid token.
-        token = data.get("token")
-
-        if token is None:
+        if (token := data.get("token")) is None:
             return web.Response(status=HTTPStatus.OK)
 
         refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
@@ -292,9 +290,7 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        code = data.get("code")
-
-        if code is None:
+        if (code := data.get("code")) is None:
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid code"},
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -349,9 +345,7 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        token = data.get("refresh_token")
-
-        if token is None:
+        if (token := data.get("refresh_token")) is None:
             return self.json(
                 {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
             )

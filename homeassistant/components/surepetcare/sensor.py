@@ -1,7 +1,6 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
 from __future__ import annotations
 
-import logging
 from typing import cast
 
 from surepy.entities import SurepyEntity
@@ -13,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
     DEVICE_CLASS_BATTERY,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     VOLUME_MILLILITERS,
 )
@@ -22,8 +22,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import SurePetcareDataCoordinator
 from .const import DOMAIN, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW
 from .entity import SurePetcareEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -52,9 +50,10 @@ async def async_setup_entry(
 
 
 class SureBattery(SurePetcareEntity, SensorEntity):
-    """A sensor implementation for Sure Petcare Entities."""
+    """A sensor implementation for Sure Petcare batteries."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(

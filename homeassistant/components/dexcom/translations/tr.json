@@ -12,8 +12,11 @@
             "user": {
                 "data": {
                     "password": "Parola",
+                    "server": "Sunucu",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "description": "Dexcom Share kimlik bilgilerini girin",
+                "title": "Dexcom entegrasyonunu kurun"
             }
         }
     },

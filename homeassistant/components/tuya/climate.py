@@ -31,12 +31,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
-from .base import EnumTypeData, IntegerTypeData, TuyaHaEntity
+from .base import EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
 TUYA_HVAC_TO_HA = {
     "auto": HVAC_MODE_HEAT_COOL,
     "cold": HVAC_MODE_COOL,
+    "freeze": HVAC_MODE_COOL,
     "heat": HVAC_MODE_HEAT,
     "hot": HVAC_MODE_HEAT,
     "manual": HVAC_MODE_HEAT_COOL,
@@ -110,7 +111,7 @@ async def async_setup_entry(
     )
 
 
-class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
+class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     """Tuya Climate Device."""
 
     _current_humidity_dpcode: DPCode | None = None
@@ -188,11 +189,9 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
             )
             self._attr_supported_features |= SUPPORT_TARGET_TEMPERATURE
             self._set_temperature_type = type_data
-            self._attr_max_temp = self.scale(type_data.max, type_data.scale)
-            self._attr_min_temp = self.scale(type_data.min, type_data.scale)
-            self._attr_target_temperature_step = self.scale(
-                type_data.step, type_data.scale
-            )
+            self._attr_max_temp = type_data.max_scaled
+            self._attr_min_temp = type_data.min_scaled
+            self._attr_target_temperature_step = type_data.step_scaled
 
         # Determine dpcode to use for getting the current temperature
         if all(
@@ -243,8 +242,8 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
                 device.status_range[DPCode.HUMIDITY_SET].values
             )
             self._set_humidity_type = type_data
-            self._attr_min_humidity = int(self.scale(type_data.max, type_data.scale))
-            self._attr_max_humidity = int(self.scale(type_data.min, type_data.scale))
+            self._attr_min_humidity = int(type_data.min_scaled)
+            self._attr_max_humidity = int(type_data.max_scaled)
 
         # Determine dpcode to use for getting the current humidity
         if (
@@ -253,7 +252,7 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
         ):
             self._current_humidity_dpcode = DPCode.HUMIDITY_CURRENT
             self._current_humidity_type = IntegerTypeData.from_json(
-                self.tuya_device.status_range[DPCode.HUMIDITY_CURRENT].values
+                device.status_range[DPCode.HUMIDITY_CURRENT].values
             )
 
         # Determine dpcode to use for getting the current humidity
@@ -263,7 +262,7 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
         ):
             self._current_humidity_dpcode = DPCode.HUMIDITY_CURRENT
             self._current_humidity_type = IntegerTypeData.from_json(
-                self.tuya_device.status_range[DPCode.HUMIDITY_CURRENT].values
+                device.status_range[DPCode.HUMIDITY_CURRENT].values
             )
 
         # Determine fan modes
@@ -273,12 +272,12 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
         ):
             self._attr_supported_features |= SUPPORT_FAN_MODE
             self._attr_fan_modes = EnumTypeData.from_json(
-                self.tuya_device.status_range[DPCode.FAN_SPEED_ENUM].values
+                device.status_range[DPCode.FAN_SPEED_ENUM].values
             ).range
 
         # Determine swing modes
         if any(
-            dpcode in self.tuya_device.function
+            dpcode in device.function
             for dpcode in (
                 DPCode.SHAKE,
                 DPCode.SWING,
@@ -289,15 +288,14 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
             self._attr_supported_features |= SUPPORT_SWING_MODE
             self._attr_swing_modes = [SWING_OFF]
             if any(
-                dpcode in self.tuya_device.function
-                for dpcode in (DPCode.SHAKE, DPCode.SWING)
+                dpcode in device.function for dpcode in (DPCode.SHAKE, DPCode.SWING)
             ):
                 self._attr_swing_modes.append(SWING_ON)
 
-            if DPCode.SWITCH_HORIZONTAL in self.tuya_device.function:
+            if DPCode.SWITCH_HORIZONTAL in device.function:
                 self._attr_swing_modes.append(SWING_HORIZONTAL)
 
-            if DPCode.SWITCH_VERTICAL in self.tuya_device.function:
+            if DPCode.SWITCH_VERTICAL in device.function:
                 self._attr_swing_modes.append(SWING_VERTICAL)
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
@@ -324,7 +322,7 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
             [
                 {
                     "code": self._set_humidity_dpcode,
-                    "value": self.scale(humidity, self._set_humidity_type.scale),
+                    "value": self._set_humidity_type.scale_value(humidity),
                 }
             ]
         )
@@ -366,9 +364,7 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
                 {
                     "code": self._set_temperature_dpcode,
                     "value": round(
-                        self.scale(
-                            kwargs["temperature"], self._set_temperature_type.scale
-                        )
+                        self._set_temperature_type.scale_value(kwargs["temperature"])
                     ),
                 }
             ]
@@ -383,11 +379,11 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
         ):
             return None
 
-        temperature = self.tuya_device.status.get(self._current_temperature_dpcode)
+        temperature = self.device.status.get(self._current_temperature_dpcode)
         if temperature is None:
             return None
 
-        return self.scale(temperature, self._current_temperature_type.scale)
+        return self._current_temperature_type.scale_value(temperature)
 
     @property
     def current_humidity(self) -> int | None:
@@ -395,11 +391,11 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
         if self._current_humidity_dpcode is None or self._current_humidity_type is None:
             return None
 
-        humidity = self.tuya_device.status.get(self._current_humidity_dpcode)
+        humidity = self.device.status.get(self._current_humidity_dpcode)
         if humidity is None:
             return None
 
-        return round(self.scale(humidity, self._current_humidity_type.scale))
+        return round(self._current_humidity_type.scale_value(humidity))
 
     @property
     def target_temperature(self) -> float | None:
@@ -407,11 +403,11 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
         if self._set_temperature_dpcode is None or self._set_temperature_type is None:
             return None
 
-        temperature = self.tuya_device.status.get(self._set_temperature_dpcode)
+        temperature = self.device.status.get(self._set_temperature_dpcode)
         if temperature is None:
             return None
 
-        return self.scale(temperature, self._set_temperature_type.scale)
+        return self._set_temperature_type.scale_value(temperature)
 
     @property
     def target_humidity(self) -> int | None:
@@ -419,45 +415,44 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
         if self._set_humidity_dpcode is None or self._set_humidity_type is None:
             return None
 
-        humidity = self.tuya_device.status.get(self._set_humidity_dpcode)
+        humidity = self.device.status.get(self._set_humidity_dpcode)
         if humidity is None:
             return None
 
-        return round(self.scale(humidity, self._set_humidity_type.scale))
+        return round(self._set_humidity_type.scale_value(humidity))
 
     @property
     def hvac_mode(self) -> str:
         """Return hvac mode."""
         # If the switch off, hvac mode is off as well. Unless the switch
         # the switch is on or doesn't exists of course...
-        if not self.tuya_device.status.get(DPCode.SWITCH, True):
+        if not self.device.status.get(DPCode.SWITCH, True):
             return HVAC_MODE_OFF
 
-        if DPCode.MODE not in self.tuya_device.function:
-            if self.tuya_device.status.get(DPCode.SWITCH, False):
+        if DPCode.MODE not in self.device.function:
+            if self.device.status.get(DPCode.SWITCH, False):
                 return self.entity_description.switch_only_hvac_mode
             return HVAC_MODE_OFF
 
-        if self.tuya_device.status.get(DPCode.MODE) is not None:
-            return TUYA_HVAC_TO_HA[self.tuya_device.status[DPCode.MODE]]
+        if self.device.status.get(DPCode.MODE) is not None:
+            return TUYA_HVAC_TO_HA[self.device.status[DPCode.MODE]]
         return HVAC_MODE_OFF
 
     @property
     def fan_mode(self) -> str | None:
         """Return fan mode."""
-        return self.tuya_device.status.get(DPCode.FAN_SPEED_ENUM)
+        return self.device.status.get(DPCode.FAN_SPEED_ENUM)
 
     @property
     def swing_mode(self) -> str:
         """Return swing mode."""
         if any(
-            self.tuya_device.status.get(dpcode)
-            for dpcode in (DPCode.SHAKE, DPCode.SWING)
+            self.device.status.get(dpcode) for dpcode in (DPCode.SHAKE, DPCode.SWING)
         ):
             return SWING_ON
 
-        horizontal = self.tuya_device.status.get(DPCode.SWITCH_HORIZONTAL)
-        vertical = self.tuya_device.status.get(DPCode.SWITCH_VERTICAL)
+        horizontal = self.device.status.get(DPCode.SWITCH_HORIZONTAL)
+        vertical = self.device.status.get(DPCode.SWITCH_VERTICAL)
         if horizontal and vertical:
             return SWING_BOTH
         if horizontal:
@@ -469,7 +464,7 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
 
     def turn_on(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        if DPCode.SWITCH in self.tuya_device.function:
+        if DPCode.SWITCH in self.device.function:
             self._send_command([{"code": DPCode.SWITCH, "value": True}])
             return
 
@@ -482,7 +477,7 @@ class TuyaClimateEntity(TuyaHaEntity, ClimateEntity):
 
     def turn_off(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
-        if DPCode.SWITCH in self.tuya_device.function:
+        if DPCode.SWITCH in self.device.function:
             self._send_command([{"code": DPCode.SWITCH, "value": False}])
             return
 

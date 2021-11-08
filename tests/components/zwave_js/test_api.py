@@ -1,5 +1,6 @@
 """Test the Z-Wave JS Websocket API."""
 from copy import deepcopy
+from http import HTTPStatus
 import json
 from unittest.mock import patch
 
@@ -1976,7 +1977,7 @@ async def test_dump_view(integration, hass_client):
         return_value=[{"hello": "world"}, {"second": "msg"}],
     ):
         resp = await client.get(f"/api/zwave_js/dump/{integration.entry_id}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert json.loads(await resp.text()) == [{"hello": "world"}, {"second": "msg"}]
 
 
@@ -2060,7 +2061,7 @@ async def test_firmware_upload_view_failed_command(
             f"/api/zwave_js/firmware/upload/{integration.entry_id}/{multisensor_6.node_id}",
             data={"file": firmware_file},
         )
-        assert resp.status == 400
+        assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_firmware_upload_view_invalid_payload(
@@ -2072,7 +2073,7 @@ async def test_firmware_upload_view_invalid_payload(
         f"/api/zwave_js/firmware/upload/{integration.entry_id}/{multisensor_6.node_id}",
         data={"wrong_key": bytes(10)},
     )
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.parametrize(
@@ -2087,7 +2088,7 @@ async def test_view_non_admin_user(
     # Verify we require admin user
     hass_admin_user.groups = []
     resp = await client.request(method, url.format(integration.entry_id))
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 @pytest.mark.parametrize(
@@ -2104,7 +2105,7 @@ async def test_node_view_non_admin_user(
     resp = await client.request(
         method, url.format(integration.entry_id, multisensor_6.node_id)
     )
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 @pytest.mark.parametrize(
@@ -2118,7 +2119,7 @@ async def test_view_invalid_entry_id(integration, hass_client, method, url):
     """Test an invalid config entry id parameter."""
     client = await hass_client()
     resp = await client.request(method, url)
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.parametrize(
@@ -2129,7 +2130,7 @@ async def test_view_invalid_node_id(integration, hass_client, method, url):
     """Test an invalid config entry id parameter."""
     client = await hass_client()
     resp = await client.request(method, url.format(integration.entry_id))
-    assert resp.status == 404
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_subscribe_log_updates(hass, integration, client, hass_ws_client):

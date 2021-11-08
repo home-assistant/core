@@ -112,8 +112,7 @@ class CoverGroup(GroupEntity, CoverEntity):
 
     async def _update_supported_features_event(self, event: Event) -> None:
         self.async_set_context(event.context)
-        entity = event.data.get("entity_id")
-        if entity is not None:
+        if (entity := event.data.get("entity_id")) is not None:
             await self.async_update_supported_features(
                 entity, event.data.get("new_state")
             )
@@ -168,8 +167,7 @@ class CoverGroup(GroupEntity, CoverEntity):
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
         for entity_id in self._entities:
-            new_state = self.hass.states.get(entity_id)
-            if new_state is None:
+            if (new_state := self.hass.states.get(entity_id)) is None:
                 continue
             await self.async_update_supported_features(
                 entity_id, new_state, update_state=False
@@ -264,8 +262,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_is_opening = False
         has_valid_state = False
         for entity_id in self._entities:
-            state = self.hass.states.get(entity_id)
-            if not state:
+            if not (state := self.hass.states.get(entity_id)):
                 continue
             if state.state == STATE_OPEN:
                 self._attr_is_closed = False
@@ -322,8 +319,7 @@ class CoverGroup(GroupEntity, CoverEntity):
 
         if not self._attr_assumed_state:
             for entity_id in self._entities:
-                state = self.hass.states.get(entity_id)
-                if state is None:
+                if (state := self.hass.states.get(entity_id)) is None:
                     continue
                 if state and state.attributes.get(ATTR_ASSUMED_STATE):
                     self._attr_assumed_state = True

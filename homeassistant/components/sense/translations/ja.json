@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "timeout": "\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8"
+                }
+            }
+        }
+    }
+}

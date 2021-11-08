@@ -15,6 +15,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import Event, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -34,6 +35,7 @@ from .const import (
     GROUPS,
     KEY_API,
     PLATFORMS,
+    SIGNAL_GW,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,9 +60,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tradfri component."""
-    conf = config.get(DOMAIN)
-
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         return True
 
     configured_hosts = [
@@ -139,10 +139,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if hass.is_stopping:
             return
 
+        gw_status = True
         try:
             await api(gateway.get_gateway_info())
         except RequestError:
             _LOGGER.error("Keep-alive failed")
+            gw_status = False
+
+        async_dispatcher_send(hass, SIGNAL_GW, gw_status)
 
     listeners.append(
         async_track_time_interval(hass, async_keep_alive, timedelta(seconds=60))

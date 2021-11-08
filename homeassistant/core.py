@@ -25,7 +25,7 @@ import attr
 import voluptuous as vol
 import yarl
 
-from homeassistant import block_async_io, loader, util
+from homeassistant import async_timeout_backcompat, block_async_io, loader, util
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -82,7 +82,7 @@ STAGE_1_SHUTDOWN_TIMEOUT = 100
 STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
-
+async_timeout_backcompat.enable()
 block_async_io.enable()
 
 T = TypeVar("T")
@@ -833,6 +833,10 @@ class EventBus:
             assert filterable_job is not None
             self._async_remove_listener(event_type, filterable_job)
             self._hass.async_run_job(listener, event)
+
+        functools.update_wrapper(
+            _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
+        )
 
         filterable_job = (HassJob(_onetime_listener), None)
 

@@ -239,6 +239,7 @@ class SystemBridgeEntity(CoordinatorEntity):
         bridge: Bridge = coordinator.data
         self._key = f"{bridge.information.host}_{key}"
         self._name = f"{bridge.information.host} {name}"
+        self._configuration_url = bridge.get_configuration_url()
         self._hostname = bridge.information.host
         self._mac = bridge.information.mac
         self._manufacturer = bridge.system.system.manufacturer
@@ -262,10 +263,11 @@ class SystemBridgeDeviceEntity(SystemBridgeEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this System Bridge instance."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "manufacturer": self._manufacturer,
-            "model": self._model,
-            "name": self._hostname,
-            "sw_version": self._version,
-        }
+        return DeviceInfo(
+            configuration_url=self._configuration_url,
+            connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
+            manufacturer=self._manufacturer,
+            model=self._model,
+            name=self._hostname,
+            sw_version=self._version,
+        )
