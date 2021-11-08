@@ -261,6 +261,7 @@ async def test_import_config_tunneling(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
+        await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "192.168.1.1"
         assert result["data"] == {
@@ -290,6 +291,7 @@ async def test_import_config_routing(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
+        await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == CONF_KNX_ROUTING
         assert result["data"] == {
@@ -317,6 +319,7 @@ async def test_import_config_automatic(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
+        await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == CONF_KNX_AUTOMATIC
         assert result["data"] == {
