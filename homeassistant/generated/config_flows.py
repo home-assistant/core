@@ -235,6 +235,7 @@ FLOWS = [
     "rachio",
     "rainforest_eagle",
     "rainmachine",
+    "rdw",
     "recollect_waste",
     "renault",
     "rfxtrx",
