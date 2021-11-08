@@ -134,7 +134,6 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
-        self.mode_result: dict[str, Any] | None = None
         self._supported_color_modes: set[str] = set()
         self._supported_features: int = 0
         self._min_kelvin: int = KELVIN_MIN_VALUE_WHITE
@@ -183,8 +182,8 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def mode(self) -> str:
         """Return the color mode of the light."""
-        if self.mode_result:
-            return cast(str, self.mode_result["mode"])
+        if self.control_result and self.control_result.get("mode"):
+            return cast(str, self.control_result["mode"])
 
         if hasattr(self.block, "mode"):
             return cast(str, self.block.mode)
@@ -390,7 +389,6 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     def _update_callback(self) -> None:
         """When device updates, clear control & mode result that overrides state."""
         self.control_result = None
-        self.mode_result = None
         super()._update_callback()
 
 
