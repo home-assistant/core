@@ -94,11 +94,9 @@ class HomeAssistantView:
             for url in urls:
                 routes.append(router.add_route(method, url, handler))
 
-        if not self.cors_allowed:
-            return
-
+        add_cors = app["allow_cors"] if self.cors_allowed else app["add_cors"]
         for route in routes:
-            app["allow_cors"](route)
+            add_cors(route)
 
 
 def request_handler_factory(
