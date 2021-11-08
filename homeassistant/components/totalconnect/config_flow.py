@@ -1,5 +1,6 @@
 """Config flow for the Total Connect component."""
 from total_connect_client.client import TotalConnectClient
+from total_connect_client.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -27,6 +28,9 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
+        data_schema = vol.Schema(
+            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+        )
 
         if user_input is not None:
             # Validate user input
@@ -36,22 +40,21 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(username)
             self._abort_if_unique_id_configured()
 
-            client = await self.hass.async_add_executor_job(
-                TotalConnectClient, username, password, None
-            )
+            try:
+                client = await self.hass.async_add_executor_job(
+                    TotalConnectClient, username, password, None
+                )
+            except AuthenticationError:
+                errors["base"] = "invalid_auth"
+                return self.async_show_form(
+                    step_id="user", data_schema=data_schema, errors=errors
+                )
 
-            if client.is_logged_in():
-                # username/password valid so show user locations
-                self.username = username
-                self.password = password
-                self.client = client
-                return await self.async_step_locations()
-            # authentication failed / invalid
-            errors["base"] = "invalid_auth"
-
-        data_schema = vol.Schema(
-            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-        )
+            # username/password valid so show user locations
+            self.username = username
+            self.password = password
+            self.client = client
+            return await self.async_step_locations()
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
