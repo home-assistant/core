@@ -1,7 +1,10 @@
 """Support for Brunt Blind Engine covers."""
+from __future__ import annotations
 
+from collections.abc import MutableMapping
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError, ServerDisconnectedError
 import async_timeout
@@ -9,15 +12,18 @@ from brunt import BruntClientAsync, Thing
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_WINDOW,
+    DEVICE_CLASS_SHADE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     CoverEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -39,7 +45,29 @@ REGULAR_INTERVAL = timedelta(seconds=20)
 FAST_INTERVAL = timedelta(seconds=1)
 
 
-async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Component setup, run import config flow for each entry in config."""
+    _LOGGER.warning(
+        "Loading brunt via platform config is deprecated; The configuration has been migrated to a config entry and can be safely removed from configuration.yaml"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the brunt platform."""
     bapi: BruntClientAsync = hass.data[DOMAIN][entry.entry_id]
 
@@ -72,7 +100,6 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
         BruntDevice(coordinator, serial, thing, bapi, entry.entry_id)
         for serial, thing in coordinator.data.items()
     )
-    return True
 
 
 class BruntDevice(CoordinatorEntity, CoverEntity):
@@ -89,14 +116,28 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         thing: Thing,
         bapi: BruntClientAsync,
         entry_id: str,
-    ):
+    ) -> None:
         """Init the Brunt device."""
         super().__init__(coordinator)
-        self._unique_id = serial
+        self._attr_unique_id = serial
         self._bapi = bapi
         self._thing = thing
         self._entry_id = entry_id
+
         self._remove_update_listener = None
+
+        self._attr_name = self._thing.NAME
+        self._attr_device_class = DEVICE_CLASS_SHADE
+        self._attr_supported_features = COVER_FEATURES
+        self._attr_attribution = ATTRIBUTION
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=self._attr_name,
+            via_device=(DOMAIN, self._entry_id),
+            manufacturer="Brunt",
+            sw_version=self._thing.FW_VERSION,
+            model=self._thing.MODEL,
+        )
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -106,23 +147,13 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         )
 
     @property
-    def unique_id(self) -> str:
-        """Get unique_id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the device as reported by tellcore."""
-        return self._thing.NAME
-
-    @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """
         Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pos = self.coordinator.data[self._unique_id].currentPosition
+        pos = self.coordinator.data[self._attr_unique_id].currentPosition
         return int(pos) if pos else None
 
     @property
@@ -134,8 +165,8 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         to Brunt, at times there is a diff of 1 to current
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pos = self.coordinator.data[self._unique_id].requestPosition
-        return int(pos) if pos else None
+        pos = self.coordinator.data[self._attr_unique_id].requestPosition
+        return int(pos) if pos is not None else None
 
     @property
     def move_state(self) -> int | None:
@@ -144,68 +175,58 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         None is unknown, 0 when stopped, 1 when opening, 2 when closing
         """
-        mov = self.coordinator.data[self._unique_id].moveState
-        return int(mov) if mov else None
+        mov = self.coordinator.data[self._attr_unique_id].moveState
+        return int(mov) if mov is not None else None
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self.move_state == 1
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self.move_state == 2
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> MutableMapping[str, Any]:
         """Return the detailed device state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_REQUEST_POSITION: self.request_cover_position,
         }
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_WINDOW
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return COVER_FEATURES
-
-    @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return true if cover is closed, else False."""
         return self.current_cover_position == CLOSED_POSITION
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs) -> None:
         """Set the cover to the open position."""
         await self._async_update_cover(OPEN_POSITION)
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs) -> None:
         """Set the cover to the closed position."""
         await self._async_update_cover(CLOSED_POSITION)
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs) -> None:
         """Set the cover to a specific position."""
-        await self._async_update_cover(kwargs[ATTR_POSITION])
+        await self._async_update_cover(int(kwargs[ATTR_POSITION]))
 
-    async def _async_update_cover(self, position):
+    async def _async_update_cover(self, position: int) -> None:
         """Set the cover to the new position and wait for the update to be reflected."""
         try:
             await self._bapi.async_change_request_position(
                 position, thingUri=self._thing.thingUri
             )
-        except ClientResponseError:
-            _LOGGER.warning("Unable to reposition %s", self._thing.NAME)
-            return
+        except ClientResponseError as exc:
+            raise HomeAssistantError(
+                f"Unable to reposition {self._thing.NAME}"
+            ) from exc
         self.coordinator.update_interval = FAST_INTERVAL
         await self.coordinator.async_request_refresh()
 
     @callback
-    def _brunt_update_listener(self):
+    def _brunt_update_listener(self) -> None:
         """Update the update interval after each refresh."""
         if (
             self.request_cover_position
@@ -215,15 +236,3 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
             self.coordinator.update_interval = REGULAR_INTERVAL
         else:
             self.coordinator.update_interval = FAST_INTERVAL
-
-    @property
-    def device_info(self) -> dict:
-        """Return the device_info."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "via_device": (DOMAIN, self._entry_id),
-            "manufacturer": "Brunt",
-            "sw_version": self._thing.FW_VERSION,
-            "model": self._thing.MODEL,
-        }

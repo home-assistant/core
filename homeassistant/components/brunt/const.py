@@ -4,6 +4,7 @@ ATTR_REQUEST_POSITION = "request_position"
 NOTIFICATION_ID = "brunt_notification"
 NOTIFICATION_TITLE = "Brunt Cover Setup"
 ATTRIBUTION = "Based on an unofficial Brunt SDK."
+PLATFORMS = ["cover"]
 
 CLOSED_POSITION = 0
 OPEN_POSITION = 100

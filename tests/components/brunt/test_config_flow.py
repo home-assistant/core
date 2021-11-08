@@ -1,10 +1,9 @@
 """Test the Brunt config flow."""
 from unittest.mock import patch
 
-from aiohttp import ClientResponseError
-from aiohttp.client_exceptions import ServerDisconnectedError
+import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.brunt.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -13,24 +12,24 @@ from tests.common import MockConfigEntry
 CONF = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
 
 
-async def _flow_submit(hass):
+async def _flow_submit(hass, context={"source": config_entries.SOURCE_USER}, data=CONF):
+    """Submit a flow to hass."""
     return await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=CONF,
+        context=context,
+        data=data,
     )
 
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await _flow_submit(hass, data=None)
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch("brunt.BruntClientAsync.async_login", return_value=True), patch(
+    with patch(
+        "homeassistant.components.brunt.config_flow.validate_input", return_value=None
+    ), patch(
         "homeassistant.components.brunt.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -48,17 +47,14 @@ async def test_form(hass):
 
 async def test_import(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
-    with patch("brunt.BruntClientAsync.async_login", return_value=True), patch(
+    with patch(
+        "homeassistant.components.brunt.config_flow.validate_input", return_value=None
+    ), patch(
         "homeassistant.components.brunt.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=CONF,
-        )
+        result = await _flow_submit(hass, {"source": config_entries.SOURCE_IMPORT})
         await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -75,25 +71,19 @@ async def test_import_duplicate_login(hass):
         title="test-username",
         unique_id="test-username",
     )
-    with patch("brunt.BruntClientAsync.async_login", return_value=True), patch(
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.brunt.config_flow.validate_input", return_value=None
+    ), patch(
         "homeassistant.components.brunt.async_setup_entry",
         return_value=True,
     ):
-        entry.add_to_hass(hass)
-        # with patch("brunt.BruntClientAsync.async_login", return_value=True)
-        # , patch(
-        #     "homeassistant.components.brunt.async_setup_entry",
-        #     return_value=True,
-        # ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=CONF,
-        )
+        result = await _flow_submit(hass, {"source": config_entries.SOURCE_IMPORT})
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
+        assert result["reason"] == "already_configured_account"
 
 
 async def test_form_duplicate_login(hass):
@@ -104,95 +94,61 @@ async def test_form_duplicate_login(hass):
         title="test-username",
         unique_id="test-username",
     )
-    with patch("brunt.BruntClientAsync.async_login", return_value=True):
-        entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.brunt.config_flow.validate_input", return_value=None
+    ):
         result = await _flow_submit(hass)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
 
 
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
-    with patch(
-        "brunt.BruntClientAsync.async_login",
-        side_effect=ClientResponseError(None, None, status=403),
-    ):
-        result = await _flow_submit(hass)
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass):
+@pytest.mark.parametrize("side_effect", ["cannot_connect", "invalid_auth", "unknown"])
+async def test_form_error(hass, side_effect):
     """Test we handle cannot connect."""
     with patch(
-        "brunt.BruntClientAsync.async_login",
-        side_effect=ServerDisconnectedError,
+        "homeassistant.components.brunt.config_flow.validate_input",
+        return_value={"base": side_effect},
     ):
         result = await _flow_submit(hass)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == {"base": side_effect}
 
 
-async def test_form_client_response_unknown(hass):
-    """Test we handle invalid auth."""
-    with patch(
-        "brunt.BruntClientAsync.async_login",
-        side_effect=ClientResponseError(None, None, status=401),
-    ), patch(
-        "aiohttp.client_exceptions.ClientResponseError.__str__",
-        return_value="ClientResponseError",
-    ):
-        result = await _flow_submit(hass)
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "unknown"}
-
-
-async def test_form_generic_exception(hass):
-    """Test we handle cannot connect error."""
-    with patch(
-        "brunt.BruntClientAsync.async_login",
-        side_effect=Exception,
-    ):
-        result = await _flow_submit(hass)
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "unknown"}
-
-
-async def test_reauth(hass):
+@pytest.mark.parametrize("user_in", [CONF, None])
+async def test_reauth(hass, user_in):
     """Test uniqueness of username."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONF,
         title="test-username",
         unique_id="test-username",
     )
+    entry.add_to_hass(hass)
     with patch(
-        "brunt.BruntClientAsync.async_login",
-        side_effect=ClientResponseError(None, None, status=403),
+        "homeassistant.components.brunt.config_flow.validate_input",
+        return_value={"errors": "invalid_auth"},
     ):
-        entry.add_to_hass(hass)
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
+        result = await _flow_submit(
+            hass,
+            {
                 "source": config_entries.SOURCE_REAUTH,
                 "unique_id": entry.unique_id,
                 "entry_id": entry.entry_id,
             },
-            data=entry.data,
+            user_in,
         )
-
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-    with patch("brunt.BruntClientAsync.async_login", return_value=True):
+        assert result["step_id"] == "reauth"
+    with patch(
+        "homeassistant.components.brunt.config_flow.validate_input",
+        return_value=None,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"username": "test-username", "password": "test"},
+            user_input={"password": "test"},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
