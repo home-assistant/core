@@ -405,6 +405,8 @@ ATTR_OPTION: Final = "option"
 # The entity has been restored with restore state
 ATTR_RESTORED: Final = "restored"
 
+# Bitfield of supported component features for the entity
+ATTR_SUPPORTED_FEATURES: Final = "supported_features"
 
 # Class of device within its domain
 ATTR_DEVICE_CLASS: Final = "device_class"
