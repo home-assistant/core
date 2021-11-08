@@ -276,7 +276,7 @@ async def get_gateway(
         connection_status=async_connection_status_callback,
     )
     try:
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             await deconz.refresh_state()
         return deconz
 

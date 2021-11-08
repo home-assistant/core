@@ -84,7 +84,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Find / discover bridges
         try:
-            with async_timeout.timeout(5):
+            async with async_timeout.timeout(5):
                 bridges = await discover_nupnp(
                     websession=aiohttp_client.async_get_clientsession(self.hass)
                 )

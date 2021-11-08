@@ -143,6 +143,22 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # IoT Switch?
+    # Note: Undocumented
+    "tdq": (
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            name="Power on Behavior",
+            device_class=DEVICE_CLASS_TUYA_RELAY_STATUS,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            name="Indicator Light Mode",
+            device_class=DEVICE_CLASS_TUYA_LIGHT_MODE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Dimmer Switch
     # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
     "tgkg": (
@@ -173,6 +189,22 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.LED_TYPE_3,
             name="Light 3 Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Dimmer
+    # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
+    "tgq": (
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_1,
+            name="Light Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_2,
+            name="Light 2 Source Type",
             device_class=DEVICE_CLASS_TUYA_LED_TYPE,
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),

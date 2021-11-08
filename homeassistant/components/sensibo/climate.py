@@ -91,7 +91,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     devices = []
     try:
-        with async_timeout.timeout(TIMEOUT):
+        async with async_timeout.timeout(TIMEOUT):
             for dev in await client.async_get_devices(_INITIAL_FETCH_FIELDS):
                 if config[CONF_ID] == ALL or dev["id"] in config[CONF_ID]:
                     devices.append(
@@ -363,7 +363,7 @@ class SensiboClimate(ClimateEntity):
     async def async_update(self):
         """Retrieve latest state."""
         try:
-            with async_timeout.timeout(TIMEOUT):
+            async with async_timeout.timeout(TIMEOUT):
                 data = await self._client.async_get_device(self._id, _FETCH_FIELDS)
         except (
             aiohttp.client_exceptions.ClientError,
@@ -389,7 +389,7 @@ class SensiboClimate(ClimateEntity):
     async def _async_set_ac_state_property(self, name, value, assumed_state=False):
         """Set AC state."""
         try:
-            with async_timeout.timeout(TIMEOUT):
+            async with async_timeout.timeout(TIMEOUT):
                 await self._client.async_set_ac_state_property(
                     self._id, name, value, self._ac_states, assumed_state
                 )

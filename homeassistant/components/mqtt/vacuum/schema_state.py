@@ -4,6 +4,7 @@ import json
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
+    ENTITY_ID_FORMAT,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -149,6 +150,7 @@ async def async_setup_entity_state(
 class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     """Representation of a MQTT-controlled state vacuum."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):

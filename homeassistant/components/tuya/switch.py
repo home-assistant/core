@@ -369,6 +369,31 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # IoT Switch?
+    # Note: Undocumented
+    "tdq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Switch 1",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Switch 2",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            name="Switch 3",
+            device_class=DEVICE_CLASS_OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Solar Light
     # https://developer.tuya.com/en/docs/iot/tynd?id=Kaof8j02e1t98
     "tyndj": (
