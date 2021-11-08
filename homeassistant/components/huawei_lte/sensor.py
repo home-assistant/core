@@ -68,7 +68,7 @@ class SensorMeta(NamedTuple):
 
 SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     KEY_DEVICE_INFORMATION: SensorMeta(
-        include=re.compile(r"^WanIP.*Address$", re.IGNORECASE)
+        include=re.compile(r"^(WanIP.*Address|uptime)$", re.IGNORECASE)
     ),
     (KEY_DEVICE_INFORMATION, "WanIPAddress"): SensorMeta(
         name="WAN IP address",
@@ -79,6 +79,12 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     (KEY_DEVICE_INFORMATION, "WanIPv6Address"): SensorMeta(
         name="WAN IPv6 address",
         icon="mdi:ip",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    (KEY_DEVICE_INFORMATION, "uptime"): SensorMeta(
+        name="Uptime",
+        icon="mdi:timer-outline",
+        unit=TIME_SECONDS,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     (KEY_DEVICE_SIGNAL, "band"): SensorMeta(
