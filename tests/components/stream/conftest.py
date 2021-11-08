@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+from http import HTTPStatus
 import logging
 import threading
 from unittest.mock import patch
@@ -94,13 +95,13 @@ class SaveRecordWorkerSync:
 
     async def get_segments(self):
         """Return the recorded video segments."""
-        with async_timeout.timeout(TEST_TIMEOUT):
+        async with async_timeout.timeout(TEST_TIMEOUT):
             await self._save_event.wait()
         return self._segments
 
     async def join(self):
         """Verify save worker was invoked and block on shutdown."""
-        with async_timeout.timeout(TEST_TIMEOUT):
+        async with async_timeout.timeout(TEST_TIMEOUT):
             await self._save_event.wait()
         self._save_thread.join(timeout=TEST_TIMEOUT)
         assert not self._save_thread.is_alive()
@@ -171,7 +172,7 @@ class HLSSync:
         self.check_requests_ready()
         return self._original_not_found()
 
-    def response(self, body, headers, status=200):
+    def response(self, body, headers, status=HTTPStatus.OK):
         """Intercept the Response call so we know when the web handler is finished."""
         self._num_finished += 1
         self.check_requests_ready()

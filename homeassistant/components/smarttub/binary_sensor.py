@@ -171,10 +171,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-
-        error = self.error
-
-        if error is None:
+        if (error := self.error) is None:
             return {}
 
         return {

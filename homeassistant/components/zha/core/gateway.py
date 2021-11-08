@@ -494,8 +494,7 @@ class ZHAGateway:
         self, zigpy_device: zha_typing.ZigpyDeviceType, restored: bool = False
     ):
         """Get or create a ZHA device."""
-        zha_device = self._devices.get(zigpy_device.ieee)
-        if zha_device is None:
+        if (zha_device := self._devices.get(zigpy_device.ieee)) is None:
             zha_device = ZHADevice.new(self._hass, zigpy_device, self, restored)
             self._devices[zigpy_device.ieee] = zha_device
             device_registry_device = self.ha_device_registry.async_get_or_create(
@@ -649,8 +648,7 @@ class ZHAGateway:
 
     async def async_remove_zigpy_group(self, group_id: int) -> None:
         """Remove a Zigbee group from Zigpy."""
-        group = self.groups.get(group_id)
-        if not group:
+        if not (group := self.groups.get(group_id)):
             _LOGGER.debug("Group: %s:0x%04x could not be found", group.name, group_id)
             return
         if group.members:

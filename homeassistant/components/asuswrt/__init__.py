@@ -73,8 +73,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the AsusWrt integration."""
-    conf = config.get(DOMAIN)
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         return True
 
     # save the options from config yaml
@@ -93,8 +92,7 @@ async def async_setup(hass, config):
         return True
 
     # remove not required config keys
-    pub_key = conf.pop(CONF_PUB_KEY, "")
-    if pub_key:
+    if pub_key := conf.pop(CONF_PUB_KEY, ""):
         conf[CONF_SSH_KEY] = pub_key
 
     conf.pop(CONF_REQUIRE_IP, True)

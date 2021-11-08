@@ -3,6 +3,7 @@ from homeassistant.components.goalzero.const import DEFAULT_NAME
 from homeassistant.components.goalzero.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
+    DOMAIN,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
 )
@@ -28,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import async_init_integration
+from . import async_setup_platform
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -37,7 +38,7 @@ async def test_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker)
     """Test we get sensor data."""
     for description in SENSOR_TYPES:
         description.entity_registry_enabled_default = True
-    await async_init_integration(hass, aioclient_mock)
+    await async_setup_platform(hass, aioclient_mock, DOMAIN)
 
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_watts_in")
     assert state.state == "0.0"

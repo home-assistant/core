@@ -9,13 +9,17 @@
             "invalid_host": "Ana bilgisayar giri\u015fi tam URL bi\u00e7iminde de\u011fildi, \u00f6r. http://192.168.10.100:80",
             "unknown": "Beklenmeyen hata"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "URL",
                     "password": "Parola",
+                    "tls": "ISY denetleyicisinin TLS s\u00fcr\u00fcm\u00fc.",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "description": "Ana bilgisayar giri\u015fi tam URL bi\u00e7iminde olmal\u0131d\u0131r, \u00f6r. http://192.168.10.100:80",
+                "title": "ISY994'\u00fcn\u00fcze ba\u011flan\u0131n"
             }
         }
     },
@@ -23,10 +27,22 @@
         "step": {
             "init": {
                 "data": {
+                    "ignore_string": "Dizeyi Yoksay",
+                    "restore_light_state": "I\u015f\u0131k Parlakl\u0131\u011f\u0131n\u0131 Geri Y\u00fckle",
+                    "sensor_string": "D\u00fc\u011f\u00fcm Sens\u00f6r\u00fc Dizisi",
                     "variable_sensor_string": "De\u011fi\u015fken Sens\u00f6r Dizesi"
                 },
-                "description": "ISY Entegrasyonu i\u00e7in se\u00e7enekleri ayarlay\u0131n:\n  \u2022 D\u00fc\u011f\u00fcm Sens\u00f6r\u00fc Dizisi: Ad\u0131nda 'D\u00fc\u011f\u00fcm Sens\u00f6r\u00fc Dizisi' i\u00e7eren herhangi bir cihaz veya klas\u00f6r, bir sens\u00f6r veya ikili sens\u00f6r olarak ele al\u0131nacakt\u0131r.\n  \u2022 Ignore String: Ad\u0131nda 'Ignore String' olan herhangi bir cihaz yoksay\u0131lacakt\u0131r.\n  \u2022 De\u011fi\u015fken Sens\u00f6r Dizisi: 'De\u011fi\u015fken Sens\u00f6r Dizisi' i\u00e7eren herhangi bir de\u011fi\u015fken sens\u00f6r olarak eklenecektir.\n  \u2022 I\u015f\u0131k Parlakl\u0131\u011f\u0131n\u0131 Geri Y\u00fckle: Etkinle\u015ftirilirse, bir \u0131\u015f\u0131k a\u00e7\u0131ld\u0131\u011f\u0131nda cihaz\u0131n yerle\u015fik On-Level yerine \u00f6nceki parlakl\u0131k geri y\u00fcklenir."
+                "description": "ISY Entegrasyonu i\u00e7in se\u00e7enekleri ayarlay\u0131n:\n  \u2022 D\u00fc\u011f\u00fcm Sens\u00f6r\u00fc Dizisi: Ad\u0131nda 'D\u00fc\u011f\u00fcm Sens\u00f6r\u00fc Dizisi' i\u00e7eren herhangi bir cihaz veya klas\u00f6r, bir sens\u00f6r veya ikili sens\u00f6r olarak ele al\u0131nacakt\u0131r.\n  \u2022 Ignore String: Ad\u0131nda 'Ignore String' olan herhangi bir cihaz yoksay\u0131lacakt\u0131r.\n  \u2022 De\u011fi\u015fken Sens\u00f6r Dizisi: 'De\u011fi\u015fken Sens\u00f6r Dizisi' i\u00e7eren herhangi bir de\u011fi\u015fken sens\u00f6r olarak eklenecektir.\n  \u2022 I\u015f\u0131k Parlakl\u0131\u011f\u0131n\u0131 Geri Y\u00fckle: Etkinle\u015ftirilirse, bir \u0131\u015f\u0131k a\u00e7\u0131ld\u0131\u011f\u0131nda cihaz\u0131n yerle\u015fik On-Level yerine \u00f6nceki parlakl\u0131k geri y\u00fcklenir.",
+                "title": "ISY994 Se\u00e7enekleri"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "ISY Ba\u011fl\u0131",
+            "host_reachable": "Ana Bilgisayara Ula\u015f\u0131labilir",
+            "last_heartbeat": "Son Kalp At\u0131\u015f\u0131 Zaman\u0131",
+            "websocket_status": "Olay Soketi Durumu"
         }
     }
 }

@@ -16,7 +16,7 @@ async def async_setup_entry(hass, entry):
         return False
 
     hass.data[DOMAIN][entry.entry_id] = roonserver
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},

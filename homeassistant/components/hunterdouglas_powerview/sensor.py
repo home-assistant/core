@@ -2,7 +2,11 @@
 from aiopvapi.resources.shade import factory as PvShade
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    PERCENTAGE,
+)
 from homeassistant.core import callback
 
 from .const import (
@@ -48,6 +52,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     """Representation of an shade battery charge sensor."""
+
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @property
     def native_unit_of_measurement(self):

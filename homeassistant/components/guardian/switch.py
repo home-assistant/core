@@ -81,8 +81,8 @@ async def async_setup_entry(
         [
             ValveControllerSwitch(
                 entry,
-                hass.data[DOMAIN][DATA_CLIENT][entry.entry_id],
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
+                hass.data[DOMAIN][entry.entry_id][DATA_CLIENT],
+                hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR],
             )
         ]
     )
@@ -160,8 +160,8 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while adding paired sensor: %s", err)
             return
 
-        await self.hass.data[DOMAIN][DATA_PAIRED_SENSOR_MANAGER][
-            self._entry.entry_id
+        await self.hass.data[DOMAIN][self._entry.entry_id][
+            DATA_PAIRED_SENSOR_MANAGER
         ].async_pair_sensor(uid)
 
     async def async_reboot(self) -> None:
@@ -189,8 +189,8 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while removing paired sensor: %s", err)
             return
 
-        await self.hass.data[DOMAIN][DATA_PAIRED_SENSOR_MANAGER][
-            self._entry.entry_id
+        await self.hass.data[DOMAIN][self._entry.entry_id][
+            DATA_PAIRED_SENSOR_MANAGER
         ].async_unpair_sensor(uid)
 
     async def async_upgrade_firmware(

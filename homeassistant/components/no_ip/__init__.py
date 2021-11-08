@@ -96,7 +96,7 @@ async def _update_no_ip(
     }
 
     try:
-        with async_timeout.timeout(timeout):
+        async with async_timeout.timeout(timeout):
             resp = await session.get(url, params=params, headers=headers)
             body = await resp.text()
 

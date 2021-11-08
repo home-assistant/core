@@ -294,9 +294,7 @@ def get_media_player_features(state):
 
 def validate_media_player_features(state, feature_list):
     """Validate features for media players."""
-    supported_modes = get_media_player_features(state)
-
-    if not supported_modes:
+    if not (supported_modes := get_media_player_features(state)):
         _LOGGER.error("%s does not support any media_player features", state.entity_id)
         return False
 

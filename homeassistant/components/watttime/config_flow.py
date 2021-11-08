@@ -8,6 +8,7 @@ from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -22,6 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_BALANCING_AUTHORITY,
     CONF_BALANCING_AUTHORITY_ABBREV,
+    CONF_SHOW_ON_MAP,
     DOMAIN,
     LOGGER,
 )
@@ -117,6 +119,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data[CONF_USERNAME] = username
         self._data[CONF_PASSWORD] = password
         return await self.async_step_location()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Define the config flow to handle options."""
+        return WattTimeOptionsFlowHandler(config_entry)
 
     async def async_step_coordinates(
         self, user_input: dict[str, Any] | None = None
@@ -221,4 +229,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_PASSWORD],
             "user",
             STEP_USER_DATA_SCHEMA,
+        )
+
+
+class WattTimeOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a WattTime options flow."""
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize."""
+        self.entry = entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_SHOW_ON_MAP,
+                        default=self.entry.options.get(CONF_SHOW_ON_MAP, True),
+                    ): bool
+                }
+            ),
         )

@@ -1,6 +1,6 @@
 """Switch tests for the Goalzero integration."""
 from homeassistant.components.goalzero.const import DEFAULT_NAME
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -10,7 +10,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import async_init_integration
+from . import async_setup_platform
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -24,13 +24,13 @@ async def test_switches_states(
         "http://1.2.3.4/state",
         text=load_fixture("goalzero/state_data.json"),
     )
-    await async_init_integration(hass, aioclient_mock)
+    await async_setup_platform(hass, aioclient_mock, DOMAIN)
 
     entity_id = f"switch.{DEFAULT_NAME}_12v_port_status"
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
@@ -42,7 +42,7 @@ async def test_switches_states(
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,

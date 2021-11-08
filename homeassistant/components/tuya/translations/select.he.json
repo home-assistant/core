@@ -1,0 +1,20 @@
+{
+    "state": {
+        "tuya__basic_nightvision": {
+            "1": "\u05db\u05d1\u05d5\u05d9",
+            "2": "\u05de\u05d5\u05e4\u05e2\u05dc"
+        },
+        "tuya__led_type": {
+            "led": "\u05dc\u05d3"
+        },
+        "tuya__light_mode": {
+            "none": "\u05db\u05d1\u05d5\u05d9"
+        },
+        "tuya__relay_status": {
+            "off": "\u05db\u05d1\u05d5\u05d9",
+            "on": "\u05de\u05d5\u05e4\u05e2\u05dc",
+            "power_off": "\u05db\u05d1\u05d5\u05d9",
+            "power_on": "\u05de\u05d5\u05e4\u05e2\u05dc"
+        }
+    }
+}

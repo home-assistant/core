@@ -16,8 +16,8 @@
     },
     "state": {
         "_": {
-            "off": "OFF",
-            "on": "ON"
+            "off": "off",
+            "on": "on"
         }
     },
     "title": "Interruptor"

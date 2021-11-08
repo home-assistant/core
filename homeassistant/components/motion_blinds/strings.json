@@ -12,7 +12,8 @@
         "title": "Motion Blinds",
         "description": "You will need the 16 character API Key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key for instructions",
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "interface": "The network interface to use"
         }
       },
       "select": {
@@ -24,12 +25,24 @@
       }
     },
     "error": {
-      "discovery_error": "Failed to discover a Motion Gateway"
+      "discovery_error": "Failed to discover a Motion Gateway",
+      "invalid_interface": "Invalid network interface"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Motion Blinds",
+        "description": "Specify optional settings",
+        "data": {
+          "wait_for_push": "Wait for multicast push on update"
+        }
+      }
     }
   }
 }

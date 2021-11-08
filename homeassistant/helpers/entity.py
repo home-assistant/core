@@ -26,8 +26,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORIES,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -39,7 +38,6 @@ from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import StateType
 from homeassistant.loader import bind_hass
@@ -55,11 +53,6 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
-
-ENTITY_CATEGORIES: Final[list[str]] = [
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-]
 
 ENTITY_CATEGORIES_SCHEMA: Final = vol.In(ENTITY_CATEGORIES)
 
@@ -193,7 +186,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    entity_category: Literal["config", "diagnostic"] | None = None
+    entity_category: Literal["config", "diagnostic", "system"] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -233,7 +226,7 @@ class Entity(ABC):
     parallel_updates: asyncio.Semaphore | None = None
 
     # Entry in the entity registry
-    registry_entry: RegistryEntry | None = None
+    registry_entry: er.RegistryEntry | None = None
 
     # Hold list for functions to call on remove.
     _on_remove: list[CALLBACK_TYPE] | None = None
@@ -812,7 +805,7 @@ class Entity(ABC):
         if data["action"] != "update":
             return
 
-        ent_reg = await self.hass.helpers.entity_registry.async_get_registry()
+        ent_reg = er.async_get(self.hass)
         old = self.registry_entry
         self.registry_entry = ent_reg.async_get(data["entity_id"])
         assert self.registry_entry is not None

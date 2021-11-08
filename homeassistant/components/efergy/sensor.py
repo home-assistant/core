@@ -143,7 +143,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Efergy sensor from yaml."""
     hass.async_create_task(
@@ -194,8 +194,8 @@ class EfergySensor(EfergyEntity, SensorEntity):
         api: Efergy,
         description: SensorEntityDescription,
         server_unique_id: str,
-        period: str = None,
-        currency: str = None,
+        period: str | None = None,
+        currency: str | None = None,
         sid: str = "",
     ) -> None:
         """Initialize the sensor."""

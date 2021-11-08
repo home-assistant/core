@@ -106,8 +106,7 @@ class RepetierSensor(SensorEntity):
 
     def update(self):
         """Update the sensor."""
-        data = self._get_data()
-        if data is None:
+        if (data := self._get_data()) is None:
             return
         state = data.pop("state")
         _LOGGER.debug("Printer %s State %s", self.name, state)
@@ -127,8 +126,7 @@ class RepetierTempSensor(RepetierSensor):
 
     def update(self):
         """Update the sensor."""
-        data = self._get_data()
-        if data is None:
+        if (data := self._get_data()) is None:
             return
         state = data.pop("state")
         temp_set = data["temp_set"]
@@ -155,8 +153,7 @@ class RepetierJobEndSensor(RepetierSensor):
 
     def update(self):
         """Update the sensor."""
-        data = self._get_data()
-        if data is None:
+        if (data := self._get_data()) is None:
             return
         job_name = data["job_name"]
         start = data["start"]
@@ -180,8 +177,7 @@ class RepetierJobStartSensor(RepetierSensor):
 
     def update(self):
         """Update the sensor."""
-        data = self._get_data()
-        if data is None:
+        if (data := self._get_data()) is None:
             return
         job_name = data["job_name"]
         start = data["start"]
