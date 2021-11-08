@@ -195,7 +195,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
             raise InvalidAuthError("Can't allow access from a proxy server")
 
         if "cloud" in self.hass.config.components:
-            from hass_nabucasa import remote
+            from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
 
             if remote.is_cloud_request.get():
                 raise InvalidAuthError("Can't allow access from Home Assistant Cloud")
