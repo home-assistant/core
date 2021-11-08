@@ -299,8 +299,9 @@ class EDL21:
                 async_dispatcher_send(
                     self._hass, SIGNAL_EDL21_TELEGRAM, electricity_id, telegram
                 )
-            else:         
-                if entity_description := self._OBIS_SENSOR_ENTITY_DESCRIPTIONS.get(obis) and entity_description.name:
+            else:
+                entity_description = self._OBIS_SENSOR_ENTITY_DESCRIPTIONS.get(obis)
+                if entity_description and entity_description.name:
                     if self._name:
                         name = f"{self._name}: {entity_description.name}"
                     new_entities.append(
