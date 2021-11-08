@@ -21,6 +21,7 @@ DOMAIN = "tradfri"
 KEY_API = "tradfri_api"
 DEVICES = "tradfri_devices"
 GROUPS = "tradfri_groups"
+SIGNAL_GW = "tradfri.gw_status"
 KEY_SECURITY_CODE = "security_code"
 SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
