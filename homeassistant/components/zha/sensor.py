@@ -61,9 +61,11 @@ from .core.const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
+    CHANNEL_LEAF_WETNESS,
     CHANNEL_POWER_CONFIGURATION,
     CHANNEL_PRESSURE,
     CHANNEL_SMARTENERGY_METERING,
+    CHANNEL_SOIL_MOISTURE,
     CHANNEL_TEMPERATURE,
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
@@ -345,6 +347,28 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
 @STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)
 class Humidity(Sensor):
     """Humidity sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_HUMIDITY
+    _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
+    _unit = PERCENTAGE
+
+
+@STRICT_MATCH(channel_names=CHANNEL_SOIL_MOISTURE)
+class SoilMoisture(Sensor):
+    """Soil Moisture sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_HUMIDITY
+    _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
+    _unit = PERCENTAGE
+
+
+@STRICT_MATCH(channel_names=CHANNEL_LEAF_WETNESS)
+class LeafWetness(Sensor):
+    """Leaf Wetness sensor."""
 
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
