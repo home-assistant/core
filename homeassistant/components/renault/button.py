@@ -61,17 +61,11 @@ class RenaultButtonEntity(RenaultEntity, ButtonEntity):
 
 async def _start_charge(entity: RenaultButtonEntity) -> None:
     """Return the icon of this entity."""
-    entity.hass.components.persistent_notification.async_create(
-        "Button pressed", title="set_charge_start"
-    )
     await entity.vehicle.vehicle.set_charge_start()
 
 
 async def _start_air_conditioner(entity: RenaultButtonEntity) -> None:
     """Return the icon of this entity."""
-    entity.hass.components.persistent_notification.async_create(
-        "Button pressed", title="set_ac_start"
-    )
     await entity.vehicle.vehicle.set_ac_start(21)
 
 
