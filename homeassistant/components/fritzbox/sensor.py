@@ -30,7 +30,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utc_from_timestamp
 
 from . import FritzBoxEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
@@ -134,9 +135,9 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_TIMESTAMP,
         suitable=lambda device: device.has_thermostat
         and device.nextchange_endperiod is not None,
-        native_value=lambda device: dt.utc_from_timestamp(
-            device.nextchange_endperiod
-        ).isoformat(),
+        native_value=lambda device: str(
+            utc_from_timestamp(device.nextchange_endperiod)
+        ),
     ),
     FritzSensorEntityDescription(
         key="nextchange_preset",
@@ -181,6 +182,6 @@ class FritzBoxSensor(FritzBoxEntity, SensorEntity):
     entity_description: FritzSensorEntityDescription
 
     @property
-    def native_value(self) -> float | int | str | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.native_value(self.device)
