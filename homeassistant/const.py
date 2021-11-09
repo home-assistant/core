@@ -695,7 +695,7 @@ MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"
 TEMPERATURE: Final = "temperature"
-SPEED_MS: Final = "speed_ms"
+SPEED: Final = "speed"
 ILLUMINANCE: Final = "illuminance"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
