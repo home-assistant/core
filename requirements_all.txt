@@ -1384,7 +1384,7 @@ pybotvac==0.0.22
 pycarwings2==2.12
 
 # homeassistant.components.cloudflare
-pycfdns==1.2.1
+pycfdns==1.2.2
 
 # homeassistant.components.channels
 pychannels==1.0.0
