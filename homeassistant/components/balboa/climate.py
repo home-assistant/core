@@ -26,7 +26,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 
-from . import BalboaEntity
+from .balboa_entity import BalboaEntity
 from .const import CLIMATE, CLIMATE_SUPPORTED_FANSTATES, CLIMATE_SUPPORTED_MODES
 
 

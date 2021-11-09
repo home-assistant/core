@@ -91,6 +91,7 @@ omit =
     homeassistant/components/azure_service_bus/*
     homeassistant/components/baidu/tts.py
     homeassistant/components/balboa/__init__.py
+    homeassistant/components/balboa/balboa_entity.py
     homeassistant/components/balboa/climate.py
     homeassistant/components/beewi_smartclim/sensor.py
     homeassistant/components/bbb_gpio/*
