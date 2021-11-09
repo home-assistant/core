@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Id. de cliente (opcional)",
+                    "client_secret": "Secreto de cliente (opcional)"
+                },
+                "title": "Credenciales de acceso a Flick"
+            }
+        }
+    }
+}

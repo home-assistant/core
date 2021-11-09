@@ -7,16 +7,27 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "general_error": "Unexpected error",
-            "invalid_api_key": "Invalid API key"
+            "invalid_api_key": "Invalid API key",
+            "location_not_found": "Location not found"
         },
         "step": {
-            "geography": {
+            "geography_by_coords": {
                 "data": {
                     "api_key": "API Key",
                     "latitude": "Latitude",
                     "longitude": "Longitude"
                 },
-                "description": "Use the AirVisual cloud API to monitor a geographical location.",
+                "description": "Use the AirVisual cloud API to monitor a latitude/longitude.",
+                "title": "Configure a Geography"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API Key",
+                    "city": "City",
+                    "country": "Country",
+                    "state": "state"
+                },
+                "description": "Use the AirVisual cloud API to monitor a city/state/country.",
                 "title": "Configure a Geography"
             },
             "node_pro": {
@@ -34,11 +45,6 @@
                 "title": "Re-authenticate AirVisual"
             },
             "user": {
-                "data": {
-                    "cloud_api": "Geographical Location",
-                    "node_pro": "AirVisual Node Pro",
-                    "type": "Integration Type"
-                },
                 "description": "Pick what type of AirVisual data you want to monitor.",
                 "title": "Configure AirVisual"
             }

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "IP Adresini Tan\u0131t",
+                    "advertise_port": "Ba\u011flant\u0131 Noktas\u0131n\u0131 Tan\u0131t",
+                    "host_ip": "Ana Bilgisayar IP Adresi",
+                    "listen_port": "Ba\u011flant\u0131 Noktas\u0131n\u0131 Dinle",
+                    "name": "Ad",
+                    "upnp_bind_multicast": "\u00c7ok noktaya yay\u0131n\u0131 ba\u011fla (Do\u011fru/Yanl\u0131\u015f)"
+                },
+                "title": "Sunucu yap\u0131land\u0131rmas\u0131n\u0131 tan\u0131mlay\u0131n"
+            }
+        }
+    },
+    "title": "Emulated Roku"
+}

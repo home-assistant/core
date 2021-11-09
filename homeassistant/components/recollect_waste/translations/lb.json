@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "invalid_place_or_service_id": "Ong\u00eblteg Place oder Service ID"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "Place ID",
+                    "service_id": "Service ID"
+                }
+            }
+        }
+    }
+}

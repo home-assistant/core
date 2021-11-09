@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "\u96fb\u5b50\u90f5\u4ef6",
-                    "password": "\u5bc6\u78bc"
+                    "password": "\u5bc6\u78bc",
+                    "timeout": "\u903e\u6642"
                 },
                 "title": "\u9023\u7dda\u81f3 Sense \u80fd\u6e90\u76e3\u63a7"
             }

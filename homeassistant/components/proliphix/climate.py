@@ -84,7 +84,7 @@ class ProliphixThermostat(ClimateEntity):
         return PRECISION_TENTHS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         return {ATTR_FAN: self._pdp.fan_state}
 
@@ -131,7 +131,6 @@ class ProliphixThermostat(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         self._pdp.setback = temperature

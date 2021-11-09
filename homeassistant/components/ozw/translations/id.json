@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "addon_info_failed": "Gagal mendapatkan info add-on OpenZWave.",
+            "addon_install_failed": "Gagal menginstal add-on OpenZWave.",
+            "addon_set_config_failed": "Gagal menyetel konfigurasi OpenZWave.",
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "mqtt_required": "Integrasi MQTT belum disiapkan",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "addon_start_failed": "Gagal memulai add-on OpenZWave. Periksa konfigurasi."
+        },
+        "progress": {
+            "install_addon": "Harap tunggu hingga penginstalan add-on OpenZWave selesai. Ini bisa memakan waktu beberapa saat."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "Siapkan integrasi OpenZWave dengan add-on OpenZWave"
+            },
+            "install_addon": {
+                "title": "Instalasi add-on OpenZWave telah dimulai"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Gunakan add-on Supervisor OpenZWave"
+                },
+                "description": "Ingin menggunakan add-on Supervisor OpenZWave?",
+                "title": "Pilih metode koneksi"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "Kunci Jaringan",
+                    "usb_path": "Jalur Perangkat USB"
+                },
+                "title": "Masukkan konfigurasi add-on OpenZWave"
+            }
+        }
+    }
+}

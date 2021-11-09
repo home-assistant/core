@@ -2,7 +2,7 @@
 import aiohttp
 
 from homeassistant.components.elgato.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.components.elgato import init_integration
@@ -14,11 +14,11 @@ async def test_config_entry_not_ready(
 ) -> None:
     """Test the Elgato Key Light configuration entry not ready."""
     aioclient_mock.get(
-        "http://1.2.3.4:9123/elgato/accessory-info", exc=aiohttp.ClientError
+        "http://127.0.0.1:9123/elgato/accessory-info", exc=aiohttp.ClientError
     )
 
     entry = await init_integration(hass, aioclient_mock)
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_config_entry(

@@ -6,11 +6,10 @@ from time import mktime
 import steam
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -71,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     track_time_interval(hass, do_update, BASE_INTERVAL)
 
 
-class SteamSensor(Entity):
+class SteamSensor(SensorEntity):
     """A class for the Steam account."""
 
     def __init__(self, account, steamod):
@@ -100,7 +99,7 @@ class SteamSensor(Entity):
         return f"sensor.steam_{self._account}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -146,13 +145,10 @@ class SteamSensor(Entity):
 
     def _get_current_game(self):
         """Gather current game name from APP ID."""
-        game_id = self._profile.current_game[0]
-        game_extra_info = self._profile.current_game[2]
-
-        if game_extra_info:
+        if game_extra_info := self._profile.current_game[2]:
             return game_extra_info
 
-        if not game_id:
+        if not (game_id := self._profile.current_game[0]):
             return None
 
         app_list = self.hass.data[APP_LIST_KEY]
@@ -175,8 +171,7 @@ class SteamSensor(Entity):
         return repr(game_id)
 
     def _get_game_info(self):
-        game_id = self._profile.current_game[0]
-        if game_id is not None:
+        if (game_id := self._profile.current_game[0]) is not None:
 
             for game in self._owned_games["response"]["games"]:
                 if game["appid"] == game_id:
@@ -194,7 +189,7 @@ class SteamSensor(Entity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attr = {}
         if self._game is not None:

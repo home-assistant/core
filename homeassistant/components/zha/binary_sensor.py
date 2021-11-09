@@ -1,6 +1,5 @@
 """Binary sensors on Zigbee Home Automation networks."""
 import functools
-import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_GAS,
@@ -21,6 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core import discovery
 from .core.const import (
     CHANNEL_ACCELEROMETER,
+    CHANNEL_BINARY_INPUT,
     CHANNEL_OCCUPANCY,
     CHANNEL_ON_OFF,
     CHANNEL_ZONE,
@@ -31,8 +31,6 @@ from .core.const import (
 )
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 # Zigbee Cluster Library Zone Type to Home Assistant device class
 CLASS_MAPPING = {
@@ -137,6 +135,13 @@ class Opening(BinarySensor):
 
     SENSOR_ATTR = "on_off"
     DEVICE_CLASS = DEVICE_CLASS_OPENING
+
+
+@STRICT_MATCH(channel_names=CHANNEL_BINARY_INPUT)
+class BinaryInput(BinarySensor):
+    """ZHA BinarySensor."""
+
+    SENSOR_ATTR = "present_value"
 
 
 @STRICT_MATCH(

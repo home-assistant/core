@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Universal Devices ISY994 {name} ({host})",
+    "flow_title": "{name} ({host})",
     "step": {
       "user": {
         "data": {
@@ -35,6 +35,14 @@
           "restore_light_state": "Restore Light Brightness"
         }
       }
+    }
+  },
+  "system_health": {
+    "info": {
+      "host_reachable": "Host Reachable",
+      "device_connected": "ISY Connected",
+      "last_heartbeat": "Last Heartbeat Time",
+      "websocket_status": "Event Socket Status"
     }
   }
 }

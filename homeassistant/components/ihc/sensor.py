@@ -1,6 +1,7 @@
 """Support for IHC sensors."""
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, DEVICE_CLASS_TEMPERATURE
+from homeassistant.util.unit_system import TEMPERATURE_UNITS
 
 from . import IHC_CONTROLLER, IHC_INFO
 from .ihcdevice import IHCDevice
@@ -26,7 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class IHCSensor(IHCDevice, Entity):
+class IHCSensor(IHCDevice, SensorEntity):
     """Implementation of the IHC sensor."""
 
     def __init__(
@@ -38,12 +39,21 @@ class IHCSensor(IHCDevice, Entity):
         self._unit_of_measurement = unit
 
     @property
-    def state(self):
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return (
+            DEVICE_CLASS_TEMPERATURE
+            if self._unit_of_measurement in TEMPERATURE_UNITS
+            else None
+        )
+
+    @property
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

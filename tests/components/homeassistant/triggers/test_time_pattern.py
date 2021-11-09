@@ -1,5 +1,6 @@
 """The tests for the time_pattern automation."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -10,7 +11,6 @@ from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_O
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, async_mock_service, mock_component
 
 
@@ -46,7 +46,10 @@ async def test_if_fires_when_hour_matches(hass, calls):
                         "minutes": "*",
                         "seconds": "*",
                     },
-                    "action": {"service": "test.automation"},
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"id": "{{ trigger.id}}"},
+                    },
                 }
             },
         )
@@ -65,6 +68,7 @@ async def test_if_fires_when_hour_matches(hass, calls):
     async_fire_time_changed(hass, now.replace(year=now.year + 1, hour=0))
     await hass.async_block_till_done()
     assert len(calls) == 1
+    assert calls[0].data["id"] == 0
 
 
 async def test_if_fires_when_minute_matches(hass, calls):

@@ -36,25 +36,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     """Advantage Air Cover Class."""
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._zone["name"]}'
+    _attr_device_class = DEVICE_CLASS_DAMPER
+    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}'
-
-    @property
-    def device_class(self):
-        """Return the device class of the vent."""
-        return DEVICE_CLASS_DAMPER
-
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize an Advantage Air Cover Class."""
+        super().__init__(instance, ac_key, zone_key)
+        self._attr_name = f'{self._zone["name"]}'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
+        )
 
     @property
     def is_closed(self):

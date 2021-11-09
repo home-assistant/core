@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nimi"
+                },
+                "description": "Seadista P1 -monitor Home Assistantiga sidumiseks."
+            }
+        }
+    }
+}

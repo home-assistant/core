@@ -2,6 +2,7 @@
   "domain": "aws",
   "name": "Amazon Web Services (AWS)",
   "documentation": "https://www.home-assistant.io/integrations/aws",
-  "requirements": ["aiobotocore==0.11.1"],
-  "codeowners": ["@awarecan"]
+  "requirements": ["aiobotocore==1.2.2"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

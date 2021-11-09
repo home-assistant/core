@@ -1,6 +1,7 @@
 """Test state helpers."""
 import asyncio
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -21,11 +22,10 @@ import homeassistant.core as ha
 from homeassistant.helpers import state
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 
-async def test_async_track_states(hass):
+async def test_async_track_states(hass, mock_integration_frame):
     """Test AsyncTrackStates context manager."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=5)
@@ -82,7 +82,7 @@ async def test_call_to_component(hass):
             )
 
 
-async def test_get_changed_since(hass):
+async def test_get_changed_since(hass, mock_integration_frame):
     """Test get_changed_since."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=5)

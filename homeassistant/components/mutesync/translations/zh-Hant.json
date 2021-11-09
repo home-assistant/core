@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u65bc m\u00fctesync \u7cfb\u7d71\u504f\u597d\u8a2d\u5b9a > \u8a8d\u8b49\u4e2d\u958b\u555f\u8a8d\u8b49",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                }
+            }
+        }
+    }
+}

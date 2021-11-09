@@ -25,11 +25,11 @@ import homeassistant.util.dt as dt_util
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
-    vol.All(str, cv.entity_domain(("input_datetime", "sensor"))),
+    vol.All(str, cv.entity_domain(["input_datetime", "sensor"])),
     msg="Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'",
 )
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "time",
         vol.Required(CONF_AT): vol.All(cv.ensure_list, [_TIME_TRIGGER_SCHEMA]),
@@ -39,6 +39,7 @@ TRIGGER_SCHEMA = vol.Schema(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
+    trigger_data = automation_info["trigger_data"]
     entities = {}
     removes = []
     job = HassJob(action)
@@ -50,6 +51,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
             job,
             {
                 "trigger": {
+                    **trigger_data,
                     "platform": "time",
                     "now": now,
                     "description": description,
@@ -67,8 +69,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     def update_entity_trigger(entity_id, new_state=None):
         """Update the entity trigger for the entity_id."""
         # If a listener was already set up for entity, remove it.
-        remove = entities.pop(entity_id, None)
-        if remove:
+        if remove := entities.pop(entity_id, None):
             remove()
             remove = None
 
@@ -77,13 +78,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
         # Check state of entity. If valid, set up a listener.
         if new_state.domain == "input_datetime":
-            has_date = new_state.attributes["has_date"]
-            if has_date:
+            if has_date := new_state.attributes["has_date"]:
                 year = new_state.attributes["year"]
                 month = new_state.attributes["month"]
                 day = new_state.attributes["day"]
-            has_time = new_state.attributes["has_time"]
-            if has_time:
+            if has_time := new_state.attributes["has_time"]:
                 hour = new_state.attributes["hour"]
                 minute = new_state.attributes["minute"]
                 second = new_state.attributes["second"]
@@ -93,8 +92,14 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
             if has_date:
                 # If input_datetime has date, then track point in time.
-                trigger_dt = dt_util.DEFAULT_TIME_ZONE.localize(
-                    datetime(year, month, day, hour, minute, second)
+                trigger_dt = datetime(
+                    year,
+                    month,
+                    day,
+                    hour,
+                    minute,
+                    second,
+                    tzinfo=dt_util.DEFAULT_TIME_ZONE,
                 )
                 # Only set up listener if time is now or in the future.
                 if trigger_dt >= dt_util.now():

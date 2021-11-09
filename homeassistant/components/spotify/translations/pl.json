@@ -21,7 +21,7 @@
     },
     "system_health": {
         "info": {
-            "api_endpoint_reachable": "Dost\u0119pno\u015b\u0107 punktu ko\u0144cowego API Spotify"
+            "api_endpoint_reachable": "Punkt ko\u0144cowy Spotify API osi\u0105galny"
         }
     }
 }

@@ -13,13 +13,7 @@ from requests import Session
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_VIDEO,
-)
+from homeassistant.components.media_player.const import MEDIA_TYPE_PLAYLIST
 from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
@@ -34,6 +28,7 @@ from .const import (
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    GDM_DEBOUNCER,
     GDM_SCANNER,
     PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
@@ -46,13 +41,8 @@ from .const import (
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
-from .errors import (
-    MediaNotFound,
-    NoServersFound,
-    ServerNotSpecified,
-    ShouldUpdateConfigEntry,
-)
-from .media_search import lookup_movie, lookup_music, lookup_tv
+from .errors import NoServersFound, ServerNotSpecified, ShouldUpdateConfigEntry
+from .media_search import search_media
 from .models import PlexSession
 
 _LOGGER = logging.getLogger(__name__)
@@ -143,11 +133,11 @@ class PlexServer:
         config_entry_update_needed = False
 
         def _connect_with_token():
-            available_servers = [
-                (x.name, x.clientIdentifier)
-                for x in self.account.resources()
-                if "server" in x.provides
+            all_servers = [
+                x for x in self.account.resources() if "server" in x.provides
             ]
+            servers = [x for x in all_servers if x.presence] or all_servers
+            available_servers = [(x.name, x.clientIdentifier) for x in servers]
 
             if not available_servers:
                 raise NoServersFound
@@ -189,7 +179,7 @@ class PlexServer:
                 _connect_with_url()
             except requests.exceptions.SSLError as error:
                 while error and not isinstance(error, ssl.SSLCertVerificationError):
-                    error = error.__context__  # pylint: disable=no-member
+                    error = error.__context__
                 if isinstance(error, ssl.SSLCertVerificationError):
                     domain = urlparse(self._url).netloc.split(":")[0]
                     if domain.endswith("plex.direct") and error.args[0].startswith(
@@ -213,21 +203,27 @@ class PlexServer:
 
         try:
             system_accounts = self._plex_server.systemAccounts()
+            shared_users = self.account.users() if self.account else []
         except Unauthorized:
             _LOGGER.warning(
                 "Plex account has limited permissions, shared account filtering will not be available"
             )
         else:
-            self._accounts = [
-                account.name for account in system_accounts if account.name
-            ]
+            self._accounts = []
+            for user in shared_users:
+                for shared_server in user.servers:
+                    if shared_server.machineIdentifier == self.machine_identifier:
+                        self._accounts.append(user.title)
+
             _LOGGER.debug("Linked accounts: %s", self.accounts)
 
-            owner_account = [
-                account.name for account in system_accounts if account.accountID == 1
-            ]
+            owner_account = next(
+                (account.name for account in system_accounts if account.accountID == 1),
+                None,
+            )
             if owner_account:
-                self._owner_username = owner_account[0]
+                self._owner_username = owner_account
+                self._accounts.append(owner_account)
                 _LOGGER.debug("Server owner found: '%s'", self._owner_username)
 
         self._version = self._plex_server.version
@@ -250,14 +246,9 @@ class PlexServer:
 
     async def async_update_session(self, payload):
         """Process a session payload received from a websocket callback."""
-        try:
-            session_payload = payload["PlaySessionStateNotification"][0]
-        except KeyError:
-            await self.async_update_platforms()
-            return
+        session_payload = payload["PlaySessionStateNotification"][0]
 
-        state = session_payload["state"]
-        if state == "buffering":
+        if (state := session_payload["state"]) == "buffering":
             return
 
         session_key = int(session_payload["sessionKey"])
@@ -288,10 +279,10 @@ class PlexServer:
             media = self.fetch_item(rating_key)
             active_session.update_media(media)
 
-        if active_session.media_content_id != rating_key and state in [
+        if active_session.media_content_id != rating_key and state in (
             "playing",
             "paused",
-        ]:
+        ):
             await self.hass.async_add_executor_job(update_with_new_media)
 
         async_dispatcher_send(
@@ -313,9 +304,11 @@ class PlexServer:
             self.plextv_clients(),
         )
 
-    async def _async_update_platforms(self):
+    async def _async_update_platforms(self):  # noqa: C901
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
+
+        await self.hass.data[DOMAIN][GDM_DEBOUNCER]()
 
         available_clients = {}
         ignored_clients = set()
@@ -360,17 +353,20 @@ class PlexServer:
                 PLAYER_SOURCE, source
             )
 
-            if device.machineIdentifier not in ignored_clients:
-                if self.option_ignore_plexweb_clients and device.product == "Plex Web":
-                    ignored_clients.add(device.machineIdentifier)
-                    if device.machineIdentifier not in self._known_clients:
-                        _LOGGER.debug(
-                            "Ignoring %s %s: %s",
-                            "Plex Web",
-                            source,
-                            device.machineIdentifier,
-                        )
-                    return
+            if (
+                device.machineIdentifier not in ignored_clients
+                and self.option_ignore_plexweb_clients
+                and device.product == "Plex Web"
+            ):
+                ignored_clients.add(device.machineIdentifier)
+                if device.machineIdentifier not in self._known_clients:
+                    _LOGGER.debug(
+                        "Ignoring %s %s: %s",
+                        "Plex Web",
+                        source,
+                        device.machineIdentifier,
+                    )
+                return
 
             if device.machineIdentifier not in (
                 self._created_clients | ignored_clients | new_clients
@@ -389,9 +385,10 @@ class PlexServer:
                 client = PlexClient(
                     server=self._plex_server,
                     baseurl=baseurl,
+                    identifier=machine_identifier,
                     token=self._plex_server.createToken(),
                 )
-            except requests.exceptions.ConnectionError:
+            except (NotFound, requests.exceptions.ConnectionError):
                 _LOGGER.error(
                     "Direct client connection failed, will try again: %s (%s)",
                     name,
@@ -412,9 +409,11 @@ class PlexServer:
             """Connect to a plex.tv resource and return a Plex client."""
             try:
                 client = resource.connect(timeout=3)
-                _LOGGER.debug("plex.tv resource connection successful: %s", client)
+                _LOGGER.debug("Resource connection successful to plex.tv: %s", client)
             except NotFound:
-                _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
+                _LOGGER.error(
+                    "Resource connection failed to plex.tv: %s", resource.name
+                )
             else:
                 client.proxyThroughServer(value=False, server=self._plex_server)
                 self._client_device_cache[client.machineIdentifier] = client
@@ -455,7 +454,7 @@ class PlexServer:
                     _LOGGER.debug("Photo session detected, skipping: %s", session)
                     continue
 
-                session_username = session.usernames[0]
+                session_username = next(iter(session.usernames), None)
                 for player in session.players:
                     unique_id = f"{self.machine_identifier}:{player.machineIdentifier}"
                     if unique_id not in self.active_sessions:
@@ -527,6 +526,11 @@ class PlexServer:
         return self._plex_server
 
     @property
+    def has_token(self):
+        """Return if a token is used to connect to this Plex server."""
+        return self._token is not None
+
+    @property
     def accounts(self):
         """Return accounts associated with the Plex server."""
         return set(self._accounts)
@@ -593,6 +597,10 @@ class PlexServer:
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
 
+    def get_playqueue(self, playqueue_id):
+        """Retrieve existing playqueue from Plex server."""
+        return plexapi.playqueue.PlayQueue.get(self._plex_server, playqueue_id)
+
     def fetch_item(self, item):
         """Fetch item from Plex server."""
         return self._plex_server.fetchItem(item)
@@ -633,26 +641,7 @@ class PlexServer:
             _LOGGER.error("Library '%s' not found", library_name)
             return None
 
-        try:
-            if media_type == MEDIA_TYPE_EPISODE:
-                return lookup_tv(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_MOVIE:
-                return lookup_movie(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_MUSIC:
-                return lookup_music(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_VIDEO:
-                # Legacy method for compatibility
-                try:
-                    video_name = kwargs["video_name"]
-                    return library_section.get(video_name)
-                except KeyError:
-                    _LOGGER.error("Must specify 'video_name' for this search")
-                    return None
-                except NotFound as err:
-                    raise MediaNotFound(f"Video {video_name}") from err
-        except MediaNotFound as failed_item:
-            _LOGGER.error("%s not found in %s", failed_item, library_name)
-            return None
+        return search_media(media_type, library_section, **kwargs)
 
     @property
     def sensor_attributes(self):

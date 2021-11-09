@@ -1,5 +1,7 @@
 """The sensor tests for the griddy platform."""
 
+from unittest.mock import patch
+
 from pydexcom import SessionError
 
 from homeassistant.components.dexcom.const import MMOL_L
@@ -9,7 +11,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 
-from tests.async_mock import patch
 from tests.components.dexcom import GLUCOSE_READING, init_integration
 
 

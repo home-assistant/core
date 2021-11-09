@@ -1,8 +1,11 @@
 """Support for Google Play Music Desktop Player."""
+from __future__ import annotations
+
 import json
 import logging
 import socket
 import time
+from typing import Any
 
 import voluptuous as vol
 from websocket import _exceptions, create_connection
@@ -28,7 +31,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-_CONFIGURING = {}
+_CONFIGURING: dict[str, Any] = {}
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "localhost"
@@ -106,8 +109,7 @@ def request_configuration(hass, config, url, add_entities_callback):
                     "the desktop player and try again"
                 )
                 break
-            code = tmpmsg["payload"]
-            if code == "CODE_REQUIRED":
+            if (code := tmpmsg["payload"]) == "CODE_REQUIRED":
                 continue
             setup_gpmdp(hass, config, code, add_entities_callback)
             save_json(hass.config.path(GPMDP_CONFIG_FILE), {"CODE": code})
@@ -209,8 +211,7 @@ class GPMDP(MediaPlayerEntity):
         """Send ws messages to GPMDP and verify request id in response."""
 
         try:
-            websocket = self.get_ws()
-            if websocket is None:
+            if (websocket := self.get_ws()) is None:
                 self._status = STATE_OFF
                 return
             self._request_id += 1
@@ -227,9 +228,8 @@ class GPMDP(MediaPlayerEntity):
                 return
             while True:
                 msg = json.loads(websocket.recv())
-                if "requestID" in msg:
-                    if msg["requestID"] == self._request_id:
-                        return msg
+                if "requestID" in msg and msg["requestID"] == self._request_id:
+                    return msg
         except (
             ConnectionRefusedError,
             ConnectionResetError,
@@ -341,8 +341,7 @@ class GPMDP(MediaPlayerEntity):
 
     def media_seek(self, position):
         """Send media_seek command to media player."""
-        websocket = self.get_ws()
-        if websocket is None:
+        if (websocket := self.get_ws()) is None:
             return
         websocket.send(
             json.dumps(
@@ -357,24 +356,21 @@ class GPMDP(MediaPlayerEntity):
 
     def volume_up(self):
         """Send volume_up command to media player."""
-        websocket = self.get_ws()
-        if websocket is None:
+        if (websocket := self.get_ws()) is None:
             return
         websocket.send('{"namespace": "volume", "method": "increaseVolume"}')
         self.schedule_update_ha_state()
 
     def volume_down(self):
         """Send volume_down command to media player."""
-        websocket = self.get_ws()
-        if websocket is None:
+        if (websocket := self.get_ws()) is None:
             return
         websocket.send('{"namespace": "volume", "method": "decreaseVolume"}')
         self.schedule_update_ha_state()
 
     def set_volume_level(self, volume):
         """Set volume on media player, range(0..1)."""
-        websocket = self.get_ws()
-        if websocket is None:
+        if (websocket := self.get_ws()) is None:
             return
         websocket.send(
             json.dumps(

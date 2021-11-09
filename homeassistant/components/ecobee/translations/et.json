@@ -9,7 +9,7 @@
         },
         "step": {
             "authorize": {
-                "description": "Tuvasta see rakendus aadressil https://www.ecobee.com/consumerportal/index.html koos PIN-koodiga:\n\n {pin}\n\n Seej\u00e4rel vajuta Esita.",
+                "description": "kinnita see rakendus aadressil https://www.ecobee.com/consumerportal/index.html PIN koodiga:\n\n {pin}\n\n Seej\u00e4rel vajuta Esita.",
                 "title": "Rakenduse tuvastamine saidil ecobee.com"
             },
             "user": {

@@ -15,6 +15,7 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_CODE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -28,7 +29,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    CONF_CODE,
     CONF_PANIC,
     CONF_PARTITIONNAME,
     DATA_EVL,

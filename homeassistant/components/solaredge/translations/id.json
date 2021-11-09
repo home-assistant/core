@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "could_not_connect": "Tidak dapat terhubung ke API solaredge",
+            "invalid_api_key": "Kunci API tidak valid",
+            "site_not_active": "Situs tidak aktif"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kunci API",
+                    "name": "Nama instalasi ini",
+                    "site_id": "Nilai site_id SolarEdge"
+                },
+                "title": "Tentukan parameter API untuk instalasi ini"
+            }
+        }
+    }
+}

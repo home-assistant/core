@@ -3,5 +3,6 @@
   "name": "Bosch BME680 Environmental Sensor",
   "documentation": "https://www.home-assistant.io/integrations/bme680",
   "requirements": ["bme680==1.0.5", "smbus-cffi==0.5.1"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_push"
 }

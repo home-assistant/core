@@ -1,17 +1,16 @@
 """Test the Firmata config flow."""
+from unittest.mock import patch
+
 from pymata_express.pymata_express_serial import serial
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.firmata.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
-
 
 async def test_import_cannot_connect_pymata(hass: HomeAssistant) -> None:
     """Test we fail with an invalid board."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.firmata.board.PymataExpress.start_aio",
@@ -29,7 +28,6 @@ async def test_import_cannot_connect_pymata(hass: HomeAssistant) -> None:
 
 async def test_import_cannot_connect_serial(hass: HomeAssistant) -> None:
     """Test we fail with an invalid board."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.firmata.board.PymataExpress.start_aio",
@@ -47,7 +45,6 @@ async def test_import_cannot_connect_serial(hass: HomeAssistant) -> None:
 
 async def test_import_cannot_connect_serial_timeout(hass: HomeAssistant) -> None:
     """Test we fail with an invalid board."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.firmata.board.PymataExpress.start_aio",
@@ -65,7 +62,6 @@ async def test_import_cannot_connect_serial_timeout(hass: HomeAssistant) -> None
 
 async def test_import(hass: HomeAssistant) -> None:
     """Test we create an entry from config."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.firmata.board.PymataExpress", autospec=True

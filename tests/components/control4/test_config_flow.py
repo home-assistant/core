@@ -1,11 +1,12 @@
 """Test the Control4 config flow."""
 import datetime
+from unittest.mock import AsyncMock, patch
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import Unauthorized
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.control4.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -13,8 +14,8 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.data_entry_flow import STEP_ID_INIT
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -46,7 +47,7 @@ def _get_mock_c4_director(getAllItemInfo={}):
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -62,8 +63,6 @@ async def test_form(hass):
         "homeassistant.components.control4.config_flow.C4Director",
         return_value=c4_director,
     ), patch(
-        "homeassistant.components.control4.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.control4.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -85,7 +84,6 @@ async def test_form(hass):
         CONF_PASSWORD: "test-password",
         "controller_unique_id": "control4_model_00AA00AA00AA",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -169,7 +167,7 @@ async def test_option_flow(hass):
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
-    assert result["step_id"] == "init"
+    assert result["step_id"] == STEP_ID_INIT
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -189,7 +187,7 @@ async def test_option_flow_defaults(hass):
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
-    assert result["step_id"] == "init"
+    assert result["step_id"] == STEP_ID_INIT
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}

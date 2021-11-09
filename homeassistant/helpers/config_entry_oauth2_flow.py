@@ -5,12 +5,15 @@ This module exists of the following parts:
  - OAuth2 implementation that works with local provided client ID/secret
 
 """
+from __future__ import annotations
+
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
+from collections.abc import Awaitable, Callable
 import logging
 import secrets
 import time
-from typing import Any, Awaitable, Callable, Dict, Optional, cast
+from typing import Any, Dict, cast
 
 from aiohttp import client, web
 import async_timeout
@@ -21,6 +24,7 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.network import NoURLAvailableError
 
 from .aiohttp_client import async_get_clientsession
@@ -103,7 +107,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         client_secret: str,
         authorize_url: str,
         token_url: str,
-    ):
+    ) -> None:
         """Initialize local auth implementation."""
         self.hass = hass
         self._domain = domain
@@ -125,14 +129,10 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        req = http.current_request.get()
-
-        if req is None:
+        if (req := http.current_request.get()) is None:
             raise RuntimeError("No current request in context")
 
-        ha_host = req.headers.get(HEADER_FRONTEND_BASE)
-
-        if ha_host is None:
+        if (ha_host := req.headers.get(HEADER_FRONTEND_BASE)) is None:
             raise RuntimeError("No header in request")
 
         return f"{ha_host}{AUTH_CALLBACK_PATH}"
@@ -208,7 +208,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     DOMAIN = ""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
 
     def __init__(self) -> None:
         """Instantiate config flow."""
@@ -231,10 +230,9 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         return {}
 
     async def async_step_pick_implementation(
-        self, user_input: Optional[dict] = None
-    ) -> dict:
+        self, user_input: dict | None = None
+    ) -> FlowResult:
         """Handle a flow start."""
-        assert self.hass
         implementations = await async_get_implementations(self.hass, self.DOMAIN)
 
         if user_input is not None:
@@ -244,8 +242,10 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         if not implementations:
             return self.async_abort(reason="missing_configuration")
 
-        if len(implementations) == 1:
-            # Pick first implementation as we have only one.
+        req = http.current_request.get()
+        if len(implementations) == 1 and req is not None:
+            # Pick first implementation if we have only one, but only
+            # if this is triggered by a user interaction (request).
             self.flow_impl = list(implementations.values())[0]
             return await self.async_step_auth()
 
@@ -261,8 +261,8 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         )
 
     async def async_step_auth(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Create an entry for auth."""
         # Flow has been triggered by external data
         if user_input:
@@ -270,7 +270,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return self.async_external_step_done(next_step_id="creation")
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 url = await self.flow_impl.async_generate_authorize_url(self.flow_id)
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
@@ -287,8 +287,8 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         return self.async_external_step(step_id="auth", url=url)
 
     async def async_step_creation(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Create config entry from external data."""
         token = await self.flow_impl.async_resolve_external_data(self.external_data)
         # Force int for non-compliant oauth2 providers
@@ -305,30 +305,18 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             {"auth_implementation": self.flow_impl.domain, "token": token}
         )
 
-    async def async_oauth_create_entry(self, data: dict) -> dict:
+    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
         """Create an entry for the flow.
 
         Ok to override if you want to fetch extra info or even add another step.
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
-    async def async_step_discovery(
-        self, discovery_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Handle a flow initialized by discovery."""
-        await self.async_set_unique_id(self.DOMAIN)
-
-        assert self.hass is not None
-        if self.hass.config_entries.async_entries(self.DOMAIN):
-            return self.async_abort(reason="already_configured")
-
-        return await self.async_step_pick_implementation()
-
-    async_step_user = async_step_pick_implementation
-    async_step_mqtt = async_step_discovery
-    async_step_ssdp = async_step_discovery
-    async_step_zeroconf = async_step_discovery
-    async_step_homekit = async_step_discovery
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow start."""
+        return await self.async_step_pick_implementation(user_input)
 
     @classmethod
     def async_register_implementation(
@@ -346,7 +334,7 @@ def async_register_implementation(
     if isinstance(implementation, LocalOAuth2Implementation) and not hass.data.get(
         DATA_VIEW_REGISTERED, False
     ):
-        hass.http.register_view(OAuth2AuthorizeCallbackView())  # type: ignore
+        hass.http.register_view(OAuth2AuthorizeCallbackView())
         hass.data[DATA_VIEW_REGISTERED] = True
 
     implementations = hass.data.setdefault(DATA_IMPLEMENTATIONS, {})
@@ -355,7 +343,7 @@ def async_register_implementation(
 
 async def async_get_implementations(
     hass: HomeAssistant, domain: str
-) -> Dict[str, AbstractOAuth2Implementation]:
+) -> dict[str, AbstractOAuth2Implementation]:
     """Return OAuth2 implementations for specified domain."""
     registered = cast(
         Dict[str, AbstractOAuth2Implementation],
@@ -368,8 +356,7 @@ async def async_get_implementations(
     registered = dict(registered)
 
     for provider_domain, get_impl in hass.data[DATA_PROVIDERS].items():
-        implementation = await get_impl(hass, domain)
-        if implementation is not None:
+        if (implementation := await get_impl(hass, domain)) is not None:
             registered[provider_domain] = implementation
 
     return registered
@@ -393,7 +380,7 @@ def async_add_implementation_provider(
     hass: HomeAssistant,
     provider_domain: str,
     async_provide_implementation: Callable[
-        [HomeAssistant, str], Awaitable[Optional[AbstractOAuth2Implementation]]
+        [HomeAssistant, str], Awaitable[AbstractOAuth2Implementation | None]
     ],
 ) -> None:
     """Add an implementation provider.
@@ -414,6 +401,7 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Receive authorization code."""
+        # pylint: disable=no-self-use
         if "code" not in request.query or "state" not in request.query:
             return web.Response(
                 text=f"Missing code or state parameter in {request.url}"
@@ -445,7 +433,7 @@ class OAuth2Session:
         hass: HomeAssistant,
         config_entry: config_entries.ConfigEntry,
         implementation: AbstractOAuth2Implementation,
-    ):
+    ) -> None:
         """Initialize an OAuth2 session."""
         self.hass = hass
         self.config_entry = config_entry
@@ -508,16 +496,14 @@ async def async_oauth2_request(
 @callback
 def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
     """JWT encode data."""
-    secret = hass.data.get(DATA_JWT_SECRET)
-
-    if secret is None:
+    if (secret := hass.data.get(DATA_JWT_SECRET)) is None:
         secret = hass.data[DATA_JWT_SECRET] = secrets.token_hex()
 
-    return jwt.encode(data, secret, algorithm="HS256").decode()
+    return jwt.encode(data, secret, algorithm="HS256")
 
 
 @callback
-def _decode_jwt(hass: HomeAssistant, encoded: str) -> Optional[dict]:
+def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict | None:
     """JWT encode data."""
     secret = cast(str, hass.data.get(DATA_JWT_SECRET))
 

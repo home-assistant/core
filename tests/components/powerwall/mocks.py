@@ -2,6 +2,7 @@
 
 import json
 import os
+from unittest.mock import MagicMock, Mock
 
 from tesla_powerwall import (
     DeviceType,
@@ -13,10 +14,6 @@ from tesla_powerwall import (
     SiteMaster,
 )
 
-from homeassistant.components.powerwall.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
-
-from tests.async_mock import MagicMock, Mock
 from tests.common import load_fixture
 
 
@@ -33,6 +30,7 @@ async def _mock_powerwall_with_fixtures(hass):
         charge=47.34587394586,
         sitemaster=SiteMaster(sitemaster),
         meters=MetersAggregates(meters),
+        grid_services_active=True,
         grid_status=GridStatus.CONNECTED,
         status=PowerwallStatus(status),
         device_type=DeviceType(device_type["device_type"]),
@@ -45,6 +43,7 @@ def _mock_powerwall_return_value(
     charge=None,
     sitemaster=None,
     meters=None,
+    grid_services_active=None,
     grid_status=None,
     status=None,
     device_type=None,
@@ -59,6 +58,7 @@ def _mock_powerwall_return_value(
     powerwall_mock.get_status = Mock(return_value=status)
     powerwall_mock.get_device_type = Mock(return_value=device_type)
     powerwall_mock.get_serial_numbers = Mock(return_value=serial_numbers)
+    powerwall_mock.is_grid_services_active = Mock(return_value=grid_services_active)
 
     return powerwall_mock
 
@@ -85,8 +85,3 @@ async def _async_load_json_fixture(hass, path):
         load_fixture, os.path.join("powerwall", path)
     )
     return json.loads(fixture)
-
-
-def _mock_get_config():
-    """Return a default powerwall config."""
-    return {DOMAIN: {CONF_IP_ADDRESS: "1.2.3.4"}}

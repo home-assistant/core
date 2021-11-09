@@ -119,23 +119,12 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         self.data = WebDavCalendarData(calendar, days, all_day, search)
         self.entity_id = entity_id
         self._event = None
-        self._name = name
-        self._offset_reached = False
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        return {"offset_reached": self._offset_reached}
+        self._attr_name = name
 
     @property
     def event(self):
         """Return the next upcoming event."""
         return self._event
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
 
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
@@ -149,8 +138,8 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
             self._event = event
             return
         event = calculate_offset(event, OFFSET)
-        self._offset_reached = is_offset_reached(event)
         self._event = event
+        self._attr_extra_state_attributes = {"offset_reached": is_offset_reached(event)}
 
 
 class WebDavCalendarData:
@@ -173,6 +162,8 @@ class WebDavCalendarData:
         event_list = []
         for event in vevent_list:
             vevent = event.instance.vevent
+            if not self.is_matching(vevent, self.search):
+                continue
             uid = None
             if hasattr(vevent, "uid"):
                 uid = vevent.uid.value
@@ -308,7 +299,9 @@ class WebDavCalendarData:
                 # represent same time regardless of which time zone is currently being observed
                 return obj.replace(tzinfo=dt.DEFAULT_TIME_ZONE)
             return obj
-        return dt.as_local(dt.dt.datetime.combine(obj, dt.dt.time.min))
+        return dt.dt.datetime.combine(obj, dt.dt.time.min).replace(
+            tzinfo=dt.DEFAULT_TIME_ZONE
+        )
 
     @staticmethod
     def get_attr_value(obj, attribute):

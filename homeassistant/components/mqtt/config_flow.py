@@ -1,12 +1,12 @@
 """Config flow for MQTT."""
 from collections import OrderedDict
-import logging
 import queue
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    CONF_DISCOVERY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PAYLOAD,
@@ -22,24 +22,20 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
-    CONF_DISCOVERY,
     CONF_WILL_MESSAGE,
     DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_WILL,
+    DOMAIN,
 )
 from .util import MQTT_WILL_BIRTH_SCHEMA
 
-_LOGGER = logging.getLogger(__name__)
 
-
-@config_entries.HANDLERS.register("mqtt")
-class FlowHandler(config_entries.ConfigFlow):
+class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     _hassio_discovery = None
 
@@ -69,6 +65,7 @@ class FlowHandler(config_entries.ConfigFlow):
             )
 
             if can_connect:
+                user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
                 return self.async_create_entry(
                     title=user_input[CONF_BROKER], data=user_input
                 )
@@ -80,7 +77,6 @@ class FlowHandler(config_entries.ConfigFlow):
         fields[vol.Required(CONF_PORT, default=1883)] = vol.Coerce(int)
         fields[vol.Optional(CONF_USERNAME)] = str
         fields[vol.Optional(CONF_PASSWORD)] = str
-        fields[vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY)] = bool
 
         return self.async_show_form(
             step_id="broker", data_schema=vol.Schema(fields), errors=errors
@@ -99,8 +95,7 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_hassio(self, discovery_info):
         """Receive a Hass.io discovery."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        await self._async_handle_discovery_without_unique_id()
 
         self._hassio_discovery = discovery_info
 
@@ -130,7 +125,7 @@ class FlowHandler(config_entries.ConfigFlow):
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
                         CONF_PROTOCOL: data.get(CONF_PROTOCOL),
-                        CONF_DISCOVERY: user_input[CONF_DISCOVERY],
+                        CONF_DISCOVERY: DEFAULT_DISCOVERY,
                     },
                 )
 
@@ -139,9 +134,6 @@ class FlowHandler(config_entries.ConfigFlow):
         return self.async_show_form(
             step_id="hassio_confirm",
             description_placeholders={"addon": self._hassio_discovery["addon"]},
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): bool}
-            ),
             errors=errors,
         )
 
@@ -160,7 +152,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_broker()
 
     async def async_step_broker(self, user_input=None):
-        """Manage the MQTT options."""
+        """Manage the MQTT broker configuration."""
         errors = {}
         current_config = self.config_entry.data
         yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
@@ -203,6 +195,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="broker",
             data_schema=vol.Schema(fields),
             errors=errors,
+            last_step=False,
         )
 
     async def async_step_options(self, user_input=None):
@@ -323,6 +316,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="options",
             data_schema=vol.Schema(fields),
             errors=errors,
+            last_step=True,
         )
 
 

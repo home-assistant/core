@@ -1,4 +1,6 @@
 """Camera platform that receives images through HTTP POST."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 from datetime import timedelta
@@ -70,7 +72,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook POST with image files."""
     try:
-        with async_timeout.timeout(5):
+        async with async_timeout.timeout(5):
             data = dict(await request.post())
     except (asyncio.TimeoutError, aiohttp.web.HTTPException) as error:
         _LOGGER.error("Could not get information from POST <%s>", error)
@@ -155,7 +157,9 @@ class PushCamera(Camera):
 
         self.async_write_ha_state()
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response."""
         if self.queue:
             if self._state == STATE_IDLE:
@@ -175,7 +179,7 @@ class PushCamera(Camera):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             name: value

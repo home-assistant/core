@@ -1,7 +1,11 @@
 # Describes the format for available component services
 process:
+  name: Process
   description: Launch a conversation from a transcribed text.
   fields:
     text:
+      name: Text
       description: Transcribed text
       example: Turn all lights on
+      selector:
+        text:

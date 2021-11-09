@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "single_instance_allowed": "Ya configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "unknown": "Error inesperado"
         },
@@ -11,6 +12,12 @@
         },
         "flow_title": "Cloudflare: {name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "Token API",
+                    "description": "Vuelva a autenticarse con su cuenta de Cloudflare."
+                }
+            },
             "records": {
                 "data": {
                     "records": "Registros"

@@ -1,5 +1,8 @@
 """Binary sensor support for the Skybell HD Doorbell."""
+from __future__ import annotations
+
 from datetime import timedelta
+from typing import Any
 
 import voluptuous as vol
 
@@ -8,19 +11,29 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
 from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 
-# Sensor types: Name, device_class, event
-SENSOR_TYPES = {
-    "button": ["Button", DEVICE_CLASS_OCCUPANCY, "device:sensor:button"],
-    "motion": ["Motion", DEVICE_CLASS_MOTION, "device:sensor:motion"],
+
+BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
+    "button": BinarySensorEntityDescription(
+        key="device:sensor:button",
+        name="Button",
+        device_class=DEVICE_CLASS_OCCUPANCY,
+    ),
+    "motion": BinarySensorEntityDescription(
+        key="device:sensor:motion",
+        name="Motion",
+        device_class=DEVICE_CLASS_MOTION,
+    ),
 }
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -28,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE
         ): cv.string,
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(BINARY_SENSOR_TYPES)]
         ),
     }
 )
@@ -38,47 +51,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform for a Skybell device."""
     skybell = hass.data.get(SKYBELL_DOMAIN)
 
-    sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in skybell.get_devices():
-            sensors.append(SkybellBinarySensor(device, sensor_type))
+    binary_sensors = [
+        SkybellBinarySensor(device, BINARY_SENSOR_TYPES[sensor_type])
+        for device in skybell.get_devices()
+        for sensor_type in config[CONF_MONITORED_CONDITIONS]
+    ]
 
-    add_entities(sensors, True)
+    add_entities(binary_sensors, True)
 
 
 class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
     """A binary sensor implementation for Skybell devices."""
 
-    def __init__(self, device, sensor_type):
+    def __init__(
+        self,
+        device,
+        description: BinarySensorEntityDescription,
+    ):
         """Initialize a binary sensor for a Skybell device."""
         super().__init__(device)
-        self._sensor_type = sensor_type
-        self._name = "{} {}".format(
-            self._device.name, SENSOR_TYPES[self._sensor_type][0]
-        )
-        self._device_class = SENSOR_TYPES[self._sensor_type][1]
-        self._event = {}
-        self._state = None
+        self.entity_description = description
+        self._attr_name = f"{self._device.name} {description.name}"
+        self._event: dict[Any, Any] = {}
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of the binary sensor."""
-        return self._device_class
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().device_state_attributes
+        attrs = super().extra_state_attributes
 
         attrs["event_date"] = self._event.get("createdAt")
 
@@ -88,8 +87,8 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
         """Get the latest data and updates the state."""
         super().update()
 
-        event = self._device.latest(SENSOR_TYPES[self._sensor_type][2])
+        event = self._device.latest(self.entity_description.key)
 
-        self._state = bool(event and event.get("id") != self._event.get("id"))
+        self._attr_is_on = bool(event and event.get("id") != self._event.get("id"))
 
         self._event = event or {}

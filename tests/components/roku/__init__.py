@@ -1,4 +1,5 @@
 """Tests for the Roku component."""
+from http import HTTPStatus
 import re
 from socket import gaierror as SocketGIAError
 
@@ -9,7 +10,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_SERIAL,
 )
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -150,19 +151,33 @@ def mock_connection_server_error(
     """Mock the Roku server error."""
     roku_url = f"http://{host}:8060"
 
-    aioclient_mock.get(f"{roku_url}/query/device-info", status=500)
-    aioclient_mock.get(f"{roku_url}/query/apps", status=500)
-    aioclient_mock.get(f"{roku_url}/query/active-app", status=500)
-    aioclient_mock.get(f"{roku_url}/query/tv-active-channel", status=500)
-    aioclient_mock.get(f"{roku_url}/query/tv-channels", status=500)
+    aioclient_mock.get(
+        f"{roku_url}/query/device-info", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{roku_url}/query/apps", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{roku_url}/query/active-app", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{roku_url}/query/tv-active-channel", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{roku_url}/query/tv-channels", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
 
-    aioclient_mock.post(re.compile(f"{roku_url}/keypress/.*"), status=500)
-    aioclient_mock.post(re.compile(f"{roku_url}/launch/.*"), status=500)
-    aioclient_mock.post(f"{roku_url}/search", status=500)
+    aioclient_mock.post(
+        re.compile(f"{roku_url}/keypress/.*"), status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.post(
+        re.compile(f"{roku_url}/launch/.*"), status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.post(f"{roku_url}/search", status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
 async def setup_integration(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     device: str = "roku3",
     app: str = "roku",

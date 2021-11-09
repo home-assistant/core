@@ -5,11 +5,10 @@ import logging
 import voluptuous as vol
 from xboxapi import Client
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,8 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     interval = config.get(CONF_SCAN_INTERVAL, interval)
 
     for xuid in users:
-        gamercard = get_user_gamercard(api, xuid)
-        if gamercard is None:
+        if (gamercard := get_user_gamercard(api, xuid)) is None:
             continue
         entities.append(XboxSensor(api, xuid, gamercard, interval))
 
@@ -73,7 +71,7 @@ def get_user_gamercard(api, xuid):
     return None
 
 
-class XboxSensor(Entity):
+class XboxSensor(SensorEntity):
     """A class for the Xbox account."""
 
     def __init__(self, api, xuid, gamercard, interval):
@@ -99,12 +97,12 @@ class XboxSensor(Entity):
         return False
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attributes = {"gamerscore": self._gamerscore, "tier": self._tier}
 

@@ -1,5 +1,7 @@
 """The tests for the Xiaomi router device tracker platform."""
+from http import HTTPStatus
 import logging
+from unittest.mock import MagicMock, call, patch
 
 import requests
 
@@ -7,8 +9,6 @@ from homeassistant.components.device_tracker import DOMAIN
 import homeassistant.components.xiaomi.device_tracker as xiaomi
 from homeassistant.components.xiaomi.device_tracker import get_scanner
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
-
-from tests.async_mock import MagicMock, call, patch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +41,8 @@ def mocked_requests(*args, **kwargs):
             return self.json()
 
         def raise_for_status(self):
-            """Raise an HTTPError if status is not 200."""
-            if self.status_code != 200:
+            """Raise an HTTPError if status is not OK."""
+            if self.status_code != HTTPStatus.OK:
                 raise requests.HTTPError(self.status_code)
 
     data = kwargs.get("data")
@@ -227,9 +227,9 @@ async def test_valid_credential(mock_get, mock_post, hass):
     }
     scanner = get_scanner(hass, config)
     assert scanner is not None
-    assert 2 == len(scanner.scan_devices())
-    assert "Device1" == scanner.get_device_name("23:83:BF:F6:38:A0")
-    assert "Device2" == scanner.get_device_name("1D:98:EC:5E:D5:A6")
+    assert len(scanner.scan_devices()) == 2
+    assert scanner.get_device_name("23:83:BF:F6:38:A0") == "Device1"
+    assert scanner.get_device_name("1D:98:EC:5E:D5:A6") == "Device2"
 
 
 @patch("requests.get", side_effect=mocked_requests)
@@ -251,6 +251,6 @@ async def test_token_timed_out(mock_get, mock_post, hass):
     }
     scanner = get_scanner(hass, config)
     assert scanner is not None
-    assert 2 == len(scanner.scan_devices())
-    assert "Device1" == scanner.get_device_name("23:83:BF:F6:38:A0")
-    assert "Device2" == scanner.get_device_name("1D:98:EC:5E:D5:A6")
+    assert len(scanner.scan_devices()) == 2
+    assert scanner.get_device_name("23:83:BF:F6:38:A0") == "Device1"
+    assert scanner.get_device_name("1D:98:EC:5E:D5:A6") == "Device2"

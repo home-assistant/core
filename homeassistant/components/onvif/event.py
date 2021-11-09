@@ -1,7 +1,10 @@
 """ONVIF event abstraction."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
+from contextlib import suppress
 import datetime as dt
-from typing import Callable, Dict, List, Optional, Set
 
 from httpx import RemoteProtocolError, TransportError
 from onvif import ONVIFCamera, ONVIFService
@@ -26,7 +29,9 @@ SUBSCRIPTION_ERRORS = (
 class EventManager:
     """ONVIF Event Manager."""
 
-    def __init__(self, hass: HomeAssistant, device: ONVIFCamera, unique_id: str):
+    def __init__(
+        self, hass: HomeAssistant, device: ONVIFCamera, unique_id: str
+    ) -> None:
         """Initialize event manager."""
         self.hass: HomeAssistant = hass
         self.device: ONVIFCamera = device
@@ -34,14 +39,14 @@ class EventManager:
         self.started: bool = False
 
         self._subscription: ONVIFService = None
-        self._events: Dict[str, Event] = {}
-        self._listeners: List[CALLBACK_TYPE] = []
-        self._unsub_refresh: Optional[CALLBACK_TYPE] = None
+        self._events: dict[str, Event] = {}
+        self._listeners: list[CALLBACK_TYPE] = []
+        self._unsub_refresh: CALLBACK_TYPE | None = None
 
         super().__init__()
 
     @property
-    def platforms(self) -> Set[str]:
+    def platforms(self) -> set[str]:
         """Return platforms to setup."""
         return {event.platform for event in self._events.values()}
 
@@ -84,10 +89,8 @@ class EventManager:
 
             # Initialize events
             pullpoint = self.device.create_pullpoint_service()
-            try:
+            with suppress(*SUBSCRIPTION_ERRORS):
                 await pullpoint.SetSynchronizationPoint()
-            except SUBSCRIPTION_ERRORS:
-                pass
             response = await pullpoint.PullMessages(
                 {"MessageLimit": 100, "Timeout": dt.timedelta(seconds=5)}
             )
@@ -117,10 +120,9 @@ class EventManager:
             return
 
         if self._subscription:
-            try:
+            # Suppressed. The subscription may no longer exist.
+            with suppress(*SUBSCRIPTION_ERRORS):
                 await self._subscription.Unsubscribe()
-            except SUBSCRIPTION_ERRORS:
-                pass  # Ignored. The subscription may no longer exist.
             self._subscription = None
 
         try:
@@ -130,7 +132,7 @@ class EventManager:
 
         if not restarted:
             LOGGER.warning(
-                "Failed to restart ONVIF PullPoint subscription for '%s'. Retrying...",
+                "Failed to restart ONVIF PullPoint subscription for '%s'. Retrying",
                 self.unique_id,
             )
             # Try again in a minute
@@ -206,8 +208,7 @@ class EventManager:
                 continue
 
             topic = msg.Topic._value_1
-            parser = PARSERS.get(topic)
-            if not parser:
+            if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:
                     LOGGER.info(
                         "No registered handler for event from %s: %s",
@@ -229,6 +230,6 @@ class EventManager:
         """Retrieve event for given id."""
         return self._events[uid]
 
-    def get_platform(self, platform) -> List[Event]:
+    def get_platform(self, platform) -> list[Event]:
         """Retrieve events for given platform."""
         return [event for event in self._events.values() if event.platform == platform]

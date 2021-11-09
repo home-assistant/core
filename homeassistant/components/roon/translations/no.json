@@ -4,7 +4,6 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "duplicate_entry": "Denne verten er allerede lagt til.",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
@@ -17,7 +16,7 @@
                 "data": {
                     "host": "Vert"
                 },
-                "description": "Vennligst skriv inn Roon-serverens vertsnavn eller IP."
+                "description": "Kunne ikke oppdage Roon-serveren. Angi vertsnavnet eller IP-adressen."
             }
         }
     }

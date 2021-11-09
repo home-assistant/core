@@ -1,15 +1,14 @@
-"""The tests for Home Assistant ffmpeg."""
+"""The tests for Kira."""
 
 import os
 import shutil
 import tempfile
+from unittest.mock import patch
 
 import pytest
 
 import homeassistant.components.kira as kira
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, patch
 
 TEST_CONFIG = {
     kira.DOMAIN: {
@@ -34,13 +33,8 @@ KIRA_CODES = """
 @pytest.fixture(autouse=True)
 def setup_comp():
     """Set up things to be run when tests are started."""
-    _base_mock = MagicMock()
-    pykira = _base_mock.pykira
-    pykira.__file__ = "test"
-    _module_patcher = patch.dict("sys.modules", {"pykira": pykira})
-    _module_patcher.start()
-    yield
-    _module_patcher.stop()
+    with patch("homeassistant.components.kira.pykira.KiraReceiver"):
+        yield
 
 
 @pytest.fixture(scope="module")

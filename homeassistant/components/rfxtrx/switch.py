@@ -8,8 +8,6 @@ from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.core import callback
 
 from . import (
-    CONF_DATA_BITS,
-    CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
     RfxtrxCommandEntity,
@@ -17,7 +15,12 @@ from . import (
     get_device_id,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
+from .const import (
+    COMMAND_OFF_LIST,
+    COMMAND_ON_LIST,
+    CONF_DATA_BITS,
+    CONF_SIGNAL_REPETITIONS,
+)
 
 DATA_SWITCH = f"{DOMAIN}_switch"
 
@@ -46,8 +49,7 @@ async def async_setup_entry(
     # Add switch from config file
     entities = []
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
-        event = get_rfx_object(packet_id)
-        if event is None:
+        if (event := get_rfx_object(packet_id)) is None:
             _LOGGER.error("Invalid device: %s", packet_id)
             continue
         if not supported(event):
@@ -61,7 +63,7 @@ async def async_setup_entry(
         device_ids.add(device_id)
 
         entity = RfxtrxSwitch(
-            event.device, device_id, entity_info[CONF_SIGNAL_REPETITIONS]
+            event.device, device_id, entity_info.get(CONF_SIGNAL_REPETITIONS, 1)
         )
         entities.append(entity)
 
@@ -117,12 +119,10 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
     @callback
     def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
-        if device_id != self._device_id:
-            return
+        if self._event_applies(event, device_id):
+            self._apply_event(event)
 
-        self._apply_event(event)
-
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
     @property
     def is_on(self):

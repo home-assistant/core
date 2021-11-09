@@ -1,5 +1,5 @@
 """Provide the device automations for Vacuum."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -30,7 +30,7 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions for Vacuum devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []
@@ -40,24 +40,14 @@ async def async_get_conditions(
         if entry.domain != DOMAIN:
             continue
 
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_cleaning",
-            }
-        )
-        conditions.append(
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_docked",
-            }
-        )
+        base_condition = {
+            CONF_CONDITION: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
+        conditions += [{**base_condition, CONF_TYPE: cond} for cond in CONDITION_TYPES]
 
     return conditions
 

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "region": "Regi\u00f3 de ConnectedDrive",
+                    "username": "Nom d'usuari"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "account_options": {
+                "data": {
+                    "read_only": "Nom\u00e9s de lectura (nom\u00e9s sensors i notificacions, sense execuci\u00f3 de serveis, sense bloqueig)",
+                    "use_location": "Utilitza la ubicaci\u00f3 de Home Assistant per a les crides de localitzaci\u00f3 del cotxe (obligatori per a vehicles que no siguin i3/i8 produ\u00efts abans del 7/2014)"
+                }
+            }
+        }
+    }
+}

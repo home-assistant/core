@@ -1,12 +1,11 @@
 """Test blueprint models."""
 import logging
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.blueprint import errors, models
 from homeassistant.util.yaml import Input
-
-from tests.async_mock import patch
 
 
 @pytest.fixture

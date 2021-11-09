@@ -1,5 +1,6 @@
 """Support for statistics for sensor values."""
 from collections import deque
+import contextlib
 import logging
 import statistics
 
@@ -7,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
@@ -18,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change_event,
@@ -40,6 +40,7 @@ ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
 ATTR_MIN_AGE = "min_age"
 ATTR_MIN_VALUE = "min_value"
+ATTR_QUANTILES = "quantiles"
 ATTR_SAMPLING_SIZE = "sampling_size"
 ATTR_STANDARD_DEVIATION = "standard_deviation"
 ATTR_TOTAL = "total"
@@ -48,10 +49,14 @@ ATTR_VARIANCE = "variance"
 CONF_SAMPLING_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
 CONF_PRECISION = "precision"
+CONF_QUANTILE_INTERVALS = "quantile_intervals"
+CONF_QUANTILE_METHOD = "quantile_method"
 
 DEFAULT_NAME = "Stats"
 DEFAULT_SIZE = 20
 DEFAULT_PRECISION = 2
+DEFAULT_QUANTILE_INTERVALS = 4
+DEFAULT_QUANTILE_METHOD = "exclusive"
 ICON = "mdi:calculator"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -63,6 +68,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
+        vol.Optional(
+            CONF_QUANTILE_INTERVALS, default=DEFAULT_QUANTILE_INTERVALS
+        ): vol.All(vol.Coerce(int), vol.Range(min=2)),
+        vol.Optional(CONF_QUANTILE_METHOD, default=DEFAULT_QUANTILE_METHOD): vol.In(
+            ["exclusive", "inclusive"]
+        ),
     }
 )
 
@@ -77,18 +88,40 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sampling_size = config.get(CONF_SAMPLING_SIZE)
     max_age = config.get(CONF_MAX_AGE)
     precision = config.get(CONF_PRECISION)
+    quantile_intervals = config.get(CONF_QUANTILE_INTERVALS)
+    quantile_method = config.get(CONF_QUANTILE_METHOD)
 
     async_add_entities(
-        [StatisticsSensor(entity_id, name, sampling_size, max_age, precision)], True
+        [
+            StatisticsSensor(
+                entity_id,
+                name,
+                sampling_size,
+                max_age,
+                precision,
+                quantile_intervals,
+                quantile_method,
+            )
+        ],
+        True,
     )
 
     return True
 
 
-class StatisticsSensor(Entity):
+class StatisticsSensor(SensorEntity):
     """Representation of a Statistics sensor."""
 
-    def __init__(self, entity_id, name, sampling_size, max_age, precision):
+    def __init__(
+        self,
+        entity_id,
+        name,
+        sampling_size,
+        max_age,
+        precision,
+        quantile_intervals,
+        quantile_method,
+    ):
         """Initialize the Statistics sensor."""
         self._entity_id = entity_id
         self.is_binary = self._entity_id.split(".")[0] == "binary_sensor"
@@ -96,12 +129,14 @@ class StatisticsSensor(Entity):
         self._sampling_size = sampling_size
         self._max_age = max_age
         self._precision = precision
+        self._quantile_intervals = quantile_intervals
+        self._quantile_method = quantile_method
         self._unit_of_measurement = None
         self.states = deque(maxlen=self._sampling_size)
         self.ages = deque(maxlen=self._sampling_size)
 
         self.count = 0
-        self.mean = self.median = self.stdev = self.variance = None
+        self.mean = self.median = self.quantiles = self.stdev = self.variance = None
         self.total = self.min = self.max = None
         self.min_age = self.max_age = None
         self.change = self.average_change = self.change_rate = None
@@ -113,13 +148,8 @@ class StatisticsSensor(Entity):
         @callback
         def async_stats_sensor_state_listener(event):
             """Handle the sensor state changes."""
-            new_state = event.data.get("new_state")
-            if new_state is None:
+            if (new_state := event.data.get("new_state")) is None:
                 return
-
-            self._unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
-            )
 
             self._add_state_to_queue(new_state)
 
@@ -138,7 +168,7 @@ class StatisticsSensor(Entity):
 
             if "recorder" in self.hass.config.components:
                 # Only use the database if it's configured
-                self.hass.async_create_task(self._async_initialize_from_database())
+                self.hass.async_create_task(self._initialize_from_database())
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, async_stats_sensor_startup
@@ -146,7 +176,7 @@ class StatisticsSensor(Entity):
 
     def _add_state_to_queue(self, new_state):
         """Add the state to the queue."""
-        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE, None):
             return
 
         try:
@@ -162,6 +192,9 @@ class StatisticsSensor(Entity):
                 self.entity_id,
                 new_state.state,
             )
+            return
+
+        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     @property
     def name(self):
@@ -169,12 +202,17 @@ class StatisticsSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
-        return self.mean if not self.is_binary else self.count
+        if self.is_binary:
+            return self.count
+        if self._precision == 0:
+            with contextlib.suppress(TypeError, ValueError):
+                return int(self.mean)
+        return self.mean
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement if not self.is_binary else None
 
@@ -184,7 +222,7 @@ class StatisticsSensor(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if not self.is_binary:
             return {
@@ -192,6 +230,7 @@ class StatisticsSensor(Entity):
                 ATTR_COUNT: self.count,
                 ATTR_MEAN: self.mean,
                 ATTR_MEDIAN: self.median,
+                ATTR_QUANTILES: self.quantiles,
                 ATTR_STANDARD_DEVIATION: self.stdev,
                 ATTR_VARIANCE: self.variance,
                 ATTR_TOTAL: self.total,
@@ -258,9 +297,18 @@ class StatisticsSensor(Entity):
             try:  # require at least two data points
                 self.stdev = round(statistics.stdev(self.states), self._precision)
                 self.variance = round(statistics.variance(self.states), self._precision)
+                if self._quantile_intervals < self.count:
+                    self.quantiles = [
+                        round(quantile, self._precision)
+                        for quantile in statistics.quantiles(
+                            self.states,
+                            n=self._quantile_intervals,
+                            method=self._quantile_method,
+                        )
+                    ]
             except statistics.StatisticsError as err:
                 _LOGGER.debug("%s: %s", self.entity_id, err)
-                self.stdev = self.variance = STATE_UNKNOWN
+                self.stdev = self.variance = self.quantiles = STATE_UNKNOWN
 
             if self.states:
                 self.total = round(sum(self.states), self._precision)
@@ -312,7 +360,7 @@ class StatisticsSensor(Entity):
                 self.hass, _scheduled_update, next_to_purge_timestamp
             )
 
-    async def _async_initialize_from_database(self):
+    async def _initialize_from_database(self):
         """Initialize the list of states from the database.
 
         The query will get the list of states in DESCENDING order so that we

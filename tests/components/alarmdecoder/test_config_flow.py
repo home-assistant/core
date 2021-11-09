@@ -1,4 +1,6 @@
 """Test the AlarmDecoder config flow."""
+from unittest.mock import patch
+
 from alarmdecoder.util import NoDeviceError
 import pytest
 
@@ -29,7 +31,6 @@ from homeassistant.components.binary_sensor import DEVICE_CLASS_WINDOW
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -75,8 +76,6 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title):
     with patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"), patch(
         "homeassistant.components.alarmdecoder.config_flow.AdExt.close"
     ), patch(
-        "homeassistant.components.alarmdecoder.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.alarmdecoder.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -91,7 +90,6 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title):
         }
         await hass.async_block_till_done()
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -127,6 +125,16 @@ async def test_setup_connection_error(hass: HomeAssistant):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
+        side_effect=Exception,
+    ), patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], connection_settings
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "unknown"}
 
 
 async def test_options_arm_flow(hass: HomeAssistant):

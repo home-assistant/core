@@ -33,16 +33,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Digital Ocean droplet switch."""
-    digital = hass.data.get(DATA_DIGITAL_OCEAN)
-    if not digital:
+    if not (digital := hass.data.get(DATA_DIGITAL_OCEAN)):
         return False
 
     droplets = config[CONF_DROPLETS]
 
     dev = []
     for droplet in droplets:
-        droplet_id = digital.get_droplet_id(droplet)
-        if droplet_id is None:
+        if (droplet_id := digital.get_droplet_id(droplet)) is None:
             _LOGGER.error("Droplet %s is not available", droplet)
             return False
         dev.append(DigitalOceanSwitch(digital, droplet_id))
@@ -71,7 +69,7 @@ class DigitalOceanSwitch(SwitchEntity):
         return self.data.status == "active"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the Digital Ocean droplet."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

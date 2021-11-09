@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten har redan konfigurerats"
+        },
         "error": {
+            "cannot_connect": "Anslutningen misslyckades",
             "invalid_auth": "Ogiltig autentisering",
             "unknown": "Ov\u00e4ntat fel"
         },
@@ -9,7 +13,8 @@
                 "data": {
                     "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
-                }
+                },
+                "title": "Anslut till MyQ Gateway"
             }
         }
     }

@@ -10,11 +10,16 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# These are normalized to ATTR_IP and ATTR_MAC to conform
+# to device_tracker
+FILTER_ATTRS = ("ip_address", "mac_address")
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -94,6 +99,21 @@ class MikrotikHubTracker(ScannerEntity):
         return self.device.name
 
     @property
+    def hostname(self) -> str:
+        """Return the hostname of the client."""
+        return self.device.name
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the client."""
+        return self.device.mac
+
+    @property
+    def ip_address(self) -> str:
+        """Return the mac address of the client."""
+        return self.device.ip_address
+
+    @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
         return self.device.mac
@@ -104,23 +124,22 @@ class MikrotikHubTracker(ScannerEntity):
         return self.hub.available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if self.is_connected:
-            return self.device.attrs
+            return {k: v for k, v in self.device.attrs.items() if k not in FILTER_ATTRS}
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a client description for device registry."""
-        info = {
-            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "identifiers": {(DOMAIN, self.device.mac)},
-            # We only get generic info from device discovery and so don't want
-            # to override API specific info that integrations can provide
-            "default_name": self.name,
-        }
-        return info
+        # We only get generic info from device discovery and so don't want
+        # to override API specific info that integrations can provide
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            default_name=self.name,
+            identifiers={(DOMAIN, self.device.mac)},
+        )
 
     async def async_added_to_hass(self):
         """Client entity created."""

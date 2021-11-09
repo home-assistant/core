@@ -17,11 +17,12 @@ async def system_health_info(hass):
     info = await system_info.async_get_system_info(hass)
 
     return {
-        "version": info.get("version"),
+        "version": f"core-{info.get('version')}",
         "installation_type": info.get("installation_type"),
         "dev": info.get("dev"),
         "hassio": info.get("hassio"),
         "docker": info.get("docker"),
+        "user": info.get("user"),
         "virtualenv": info.get("virtualenv"),
         "python_version": info.get("python_version"),
         "os_name": info.get("os_name"),

@@ -3,5 +3,6 @@
   "name": "Google Cloud Platform",
   "documentation": "https://www.home-assistant.io/integrations/google_cloud",
   "requirements": ["google-cloud-texttospeech==0.4.0"],
-  "codeowners": ["@lufton"]
+  "codeowners": ["@lufton"],
+  "iot_class": "cloud_push"
 }

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "server": "Servidor"
+                },
+                "description": "Ingrese las credenciales de Dexcom Share",
+                "title": "Configurar la integraci\u00f3n de Dexcom"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Unidad de medida"
+                }
+            }
+        }
+    }
+}

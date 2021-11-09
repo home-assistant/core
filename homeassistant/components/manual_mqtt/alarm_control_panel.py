@@ -415,7 +415,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         return check
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.state != STATE_ALARM_PENDING:
             return {}
@@ -450,9 +450,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     async def _async_state_changed_listener(self, event):
         """Publish state change to MQTT."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass, self._state_topic, new_state.state, self._qos, True
         )

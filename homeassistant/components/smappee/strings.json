@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Smappee: {name}",
+    "flow_title": "{name}",
     "step": {
       "environment": {
         "description": "Set up your Smappee to integrate with Home Assistant.",

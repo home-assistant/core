@@ -5,6 +5,7 @@ import pyombi
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_NAME,
     CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
@@ -15,7 +16,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    ATTR_NAME,
     ATTR_SEASON,
     CONF_URLBASE,
     DEFAULT_PORT,

@@ -1,11 +1,10 @@
 """Test websocket API."""
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock, patch
 
 
 @pytest.fixture(autouse=True)

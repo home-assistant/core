@@ -1,0 +1,68 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "no_h264": "Tidak ada aliran H264 yang tersedia. Periksa konfigurasi profil di perangkat Anda.",
+            "no_mac": "Tidak dapat mengonfigurasi ID unik untuk perangkat ONVIF.",
+            "onvif_error": "Terjadi kesalahan saat menyiapkan perangkat ONVIF. Periksa log untuk informasi lebih lanjut."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "title": "Konfigurasikan autentikasi"
+            },
+            "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nama",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "username": "Nama Pengguna"
+                }
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Buat entitas kamera"
+                },
+                "description": "Buat entitas kamera untuk {profile} dengan {resolution}?",
+                "title": "Konfigurasikan Profil"
+            },
+            "device": {
+                "data": {
+                    "host": "Pilih perangkat ONVIF yang ditemukan"
+                },
+                "title": "Pilih perangkat ONVIF"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nama",
+                    "port": "Port"
+                },
+                "title": "Konfigurasikan perangkat ONVIF"
+            },
+            "user": {
+                "description": "Dengan mengklik kirim, kami akan mencari perangkat ONVIF pada jaringan Anda yang mendukung Profil S.\n\nBeberapa produsen mulai menonaktifkan ONVIF secara default. Pastikan ONVIF diaktifkan dalam konfigurasi kamera Anda.",
+                "title": "Penyiapan perangkat ONVIF"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "onvif_devices": {
+                "data": {
+                    "extra_arguments": "Argumen FFMPEG ekstra",
+                    "rtsp_transport": "Mekanisme transport RTSP"
+                },
+                "title": "Opsi Perangkat ONVIF"
+            }
+        }
+    }
+}

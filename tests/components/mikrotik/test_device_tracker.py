@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from homeassistant.components import mikrotik
 import homeassistant.components.device_tracker as device_tracker
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -48,6 +48,11 @@ async def test_device_trackers(hass, legacy_patchable_time):
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1 is not None
     assert device_1.state == "home"
+    assert device_1.attributes["ip"] == "0.0.0.1"
+    assert "ip_address" not in device_1.attributes
+    assert device_1.attributes["mac"] == "00:00:00:00:00:01"
+    assert device_1.attributes["host_name"] == "Device_1"
+    assert "mac_address" not in device_1.attributes
     device_2 = hass.states.get("device_tracker.device_2")
     assert device_2 is None
 
@@ -61,6 +66,11 @@ async def test_device_trackers(hass, legacy_patchable_time):
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2 is not None
         assert device_2.state == "home"
+        assert device_2.attributes["ip"] == "0.0.0.2"
+        assert "ip_address" not in device_2.attributes
+        assert device_2.attributes["mac"] == "00:00:00:00:00:02"
+        assert "mac_address" not in device_2.attributes
+        assert device_2.attributes["host_name"] == "Device_2"
 
         # test state remains home if last_seen  consider_home_interval
         del WIRELESS_DATA[1]  # device 2 is removed from wireless list
@@ -91,7 +101,7 @@ async def test_restoring_devices(hass):
     )
     config_entry.add_to_hass(hass)
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     registry.async_get_or_create(
         device_tracker.DOMAIN,
         mikrotik.DOMAIN,

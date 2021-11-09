@@ -3,8 +3,8 @@ import logging
 
 from numato_gpio import NumatoGpioError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_SENSORS
-from homeassistant.helpers.entity import Entity
 
 from . import (
     CONF_DEVICES,
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class NumatoGpioAdc(Entity):
+class NumatoGpioAdc(SensorEntity):
     """Represents an ADC port of a Numato USB GPIO expander."""
 
     def __init__(self, name, device_id, port, src_range, dst_range, dst_unit, api):
@@ -78,12 +78,12 @@ class NumatoGpioAdc(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 

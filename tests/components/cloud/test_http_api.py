@@ -1,9 +1,11 @@
 """Tests for the HTTP API for the cloud component."""
 import asyncio
+from http import HTTPStatus
 from ipaddress import ip_network
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
-from hass_nabucasa import thingtalk
+from hass_nabucasa import thingtalk, voice
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
 from jose import jwt
@@ -14,12 +16,10 @@ from homeassistant.components.alexa import errors as alexa_errors
 from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.cloud.const import DOMAIN, RequireRelink
 from homeassistant.components.google_assistant.helpers import GoogleEntity
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.core import State
 
 from . import mock_cloud, mock_cloud_prefs
 
-from tests.async_mock import AsyncMock, MagicMock, Mock, patch
 from tests.components.google_assistant import MockConfig
 
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"
@@ -71,7 +71,7 @@ def setup_api_fixture(hass, aioclient_mock):
 @pytest.fixture(name="cloud_client")
 def cloud_client_fixture(hass, hass_client):
     """Fixture that can fetch from the cloud client."""
-    with patch("hass_nabucasa.Cloud.write_user_info"):
+    with patch("hass_nabucasa.Cloud._write_user_info"):
         yield hass.loop.run_until_complete(hass_client())
 
 
@@ -89,7 +89,7 @@ async def test_google_actions_sync(mock_cognito, mock_cloud_login, cloud_client)
         return_value=Mock(status=200),
     ) as mock_request_sync:
         req = await cloud_client.post("/api/cloud/google_actions/sync")
-        assert req.status == 200
+        assert req.status == HTTPStatus.OK
         assert len(mock_request_sync.mock_calls) == 1
 
 
@@ -97,10 +97,10 @@ async def test_google_actions_sync_fails(mock_cognito, mock_cloud_login, cloud_c
     """Test syncing Google Actions gone bad."""
     with patch(
         "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=HTTP_INTERNAL_SERVER_ERROR),
+        return_value=Mock(status=HTTPStatus.INTERNAL_SERVER_ERROR),
     ) as mock_request_sync:
         req = await cloud_client.post("/api/cloud/google_actions/sync")
-        assert req.status == HTTP_INTERNAL_SERVER_ERROR
+        assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
         assert len(mock_request_sync.mock_calls) == 1
 
 
@@ -112,18 +112,18 @@ async def test_login_view(hass, cloud_client):
         "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
     )
 
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     result = await req.json()
     assert result == {"success": True}
 
 
 async def test_login_view_random_exception(cloud_client):
     """Try logging in with invalid JSON."""
-    with patch("async_timeout.timeout", side_effect=ValueError("Boom")):
+    with patch("hass_nabucasa.Cloud.login", side_effect=ValueError("Boom")):
         req = await cloud_client.post(
             "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
         )
-    assert req.status == 502
+    assert req.status == HTTPStatus.BAD_GATEWAY
     resp = await req.json()
     assert resp == {"code": "valueerror", "message": "Unexpected error: Boom"}
 
@@ -132,7 +132,7 @@ async def test_login_view_invalid_json(cloud_client):
     """Try logging in with invalid JSON."""
     with patch("hass_nabucasa.auth.CognitoAuth.async_login") as mock_login:
         req = await cloud_client.post("/api/cloud/login", data="Not JSON")
-    assert req.status == 400
+    assert req.status == HTTPStatus.BAD_REQUEST
     assert len(mock_login.mock_calls) == 0
 
 
@@ -140,7 +140,7 @@ async def test_login_view_invalid_schema(cloud_client):
     """Try logging in with invalid schema."""
     with patch("hass_nabucasa.auth.CognitoAuth.async_login") as mock_login:
         req = await cloud_client.post("/api/cloud/login", json={"invalid": "schema"})
-    assert req.status == 400
+    assert req.status == HTTPStatus.BAD_REQUEST
     assert len(mock_login.mock_calls) == 0
 
 
@@ -153,7 +153,7 @@ async def test_login_view_request_timeout(cloud_client):
             "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
         )
 
-    assert req.status == 502
+    assert req.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_login_view_invalid_credentials(cloud_client):
@@ -165,7 +165,7 @@ async def test_login_view_invalid_credentials(cloud_client):
             "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
         )
 
-    assert req.status == 401
+    assert req.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_login_view_unknown_error(cloud_client):
@@ -175,7 +175,7 @@ async def test_login_view_unknown_error(cloud_client):
             "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
         )
 
-    assert req.status == 502
+    assert req.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_logout_view(hass, cloud_client):
@@ -183,7 +183,7 @@ async def test_logout_view(hass, cloud_client):
     cloud = hass.data["cloud"] = MagicMock()
     cloud.logout = AsyncMock(return_value=None)
     req = await cloud_client.post("/api/cloud/logout")
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     data = await req.json()
     assert data == {"message": "ok"}
     assert len(cloud.logout.mock_calls) == 1
@@ -194,7 +194,7 @@ async def test_logout_view_request_timeout(hass, cloud_client):
     cloud = hass.data["cloud"] = MagicMock()
     cloud.logout.side_effect = asyncio.TimeoutError
     req = await cloud_client.post("/api/cloud/logout")
-    assert req.status == 502
+    assert req.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_logout_view_unknown_error(hass, cloud_client):
@@ -202,7 +202,7 @@ async def test_logout_view_unknown_error(hass, cloud_client):
     cloud = hass.data["cloud"] = MagicMock()
     cloud.logout.side_effect = UnknownError
     req = await cloud_client.post("/api/cloud/logout")
-    assert req.status == 502
+    assert req.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_register_view(mock_cognito, cloud_client):
@@ -210,7 +210,7 @@ async def test_register_view(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/register", json={"email": "hello@bla.com", "password": "falcon42"}
     )
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert len(mock_cognito.register.mock_calls) == 1
     result_email, result_pass = mock_cognito.register.mock_calls[0][1]
     assert result_email == "hello@bla.com"
@@ -222,7 +222,7 @@ async def test_register_view_bad_data(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/register", json={"email": "hello@bla.com", "not_password": "falcon"}
     )
-    assert req.status == 400
+    assert req.status == HTTPStatus.BAD_REQUEST
     assert len(mock_cognito.logout.mock_calls) == 0
 
 
@@ -232,7 +232,7 @@ async def test_register_view_request_timeout(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/register", json={"email": "hello@bla.com", "password": "falcon42"}
     )
-    assert req.status == 502
+    assert req.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_register_view_unknown_error(mock_cognito, cloud_client):
@@ -241,7 +241,7 @@ async def test_register_view_unknown_error(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/register", json={"email": "hello@bla.com", "password": "falcon42"}
     )
-    assert req.status == 502
+    assert req.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_forgot_password_view(mock_cognito, cloud_client):
@@ -249,7 +249,7 @@ async def test_forgot_password_view(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/forgot_password", json={"email": "hello@bla.com"}
     )
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert len(mock_cognito.initiate_forgot_password.mock_calls) == 1
 
 
@@ -258,7 +258,7 @@ async def test_forgot_password_view_bad_data(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/forgot_password", json={"not_email": "hello@bla.com"}
     )
-    assert req.status == 400
+    assert req.status == HTTPStatus.BAD_REQUEST
     assert len(mock_cognito.initiate_forgot_password.mock_calls) == 0
 
 
@@ -268,7 +268,7 @@ async def test_forgot_password_view_request_timeout(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/forgot_password", json={"email": "hello@bla.com"}
     )
-    assert req.status == 502
+    assert req.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_forgot_password_view_unknown_error(mock_cognito, cloud_client):
@@ -277,7 +277,7 @@ async def test_forgot_password_view_unknown_error(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/forgot_password", json={"email": "hello@bla.com"}
     )
-    assert req.status == 502
+    assert req.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_forgot_password_view_aiohttp_error(mock_cognito, cloud_client):
@@ -288,7 +288,7 @@ async def test_forgot_password_view_aiohttp_error(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/forgot_password", json={"email": "hello@bla.com"}
     )
-    assert req.status == 500
+    assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 async def test_resend_confirm_view(mock_cognito, cloud_client):
@@ -296,7 +296,7 @@ async def test_resend_confirm_view(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/resend_confirm", json={"email": "hello@bla.com"}
     )
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert len(mock_cognito.client.resend_confirmation_code.mock_calls) == 1
 
 
@@ -305,7 +305,7 @@ async def test_resend_confirm_view_bad_data(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/resend_confirm", json={"not_email": "hello@bla.com"}
     )
-    assert req.status == 400
+    assert req.status == HTTPStatus.BAD_REQUEST
     assert len(mock_cognito.client.resend_confirmation_code.mock_calls) == 0
 
 
@@ -315,7 +315,7 @@ async def test_resend_confirm_view_request_timeout(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/resend_confirm", json={"email": "hello@bla.com"}
     )
-    assert req.status == 502
+    assert req.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_resend_confirm_view_unknown_error(mock_cognito, cloud_client):
@@ -324,7 +324,7 @@ async def test_resend_confirm_view_unknown_error(mock_cognito, cloud_client):
     req = await cloud_client.post(
         "/api/cloud/resend_confirm", json={"email": "hello@bla.com"}
     )
-    assert req.status == 502
+    assert req.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_websocket_status(
@@ -361,6 +361,7 @@ async def test_websocket_status(
             "alexa_report_state": False,
             "google_report_state": False,
             "remote_enabled": False,
+            "tts_default_voice": ["en-US", "female"],
         },
         "alexa_entities": {
             "include_domains": [],
@@ -378,6 +379,7 @@ async def test_websocket_status(
             "exclude_entity_globs": [],
             "exclude_entities": [],
         },
+        "google_registered": False,
         "remote_domain": None,
         "remote_connected": False,
         "remote_certificate": None,
@@ -392,66 +394,25 @@ async def test_websocket_status_not_logged_in(hass, hass_ws_client):
     assert response["result"] == {"logged_in": False, "cloud": "disconnected"}
 
 
-async def test_websocket_subscription_reconnect(
+async def test_websocket_subscription_info(
     hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
 ):
     """Test querying the status and connecting because valid account."""
     aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={"provider": "stripe"})
     client = await hass_ws_client(hass)
 
-    with patch(
-        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
-    ) as mock_renew, patch("hass_nabucasa.iot.CloudIoT.connect") as mock_connect:
+    with patch("hass_nabucasa.auth.CognitoAuth.async_renew_access_token") as mock_renew:
         await client.send_json({"id": 5, "type": "cloud/subscription"})
         response = await client.receive_json()
-
     assert response["result"] == {"provider": "stripe"}
     assert len(mock_renew.mock_calls) == 1
-    assert len(mock_connect.mock_calls) == 1
-
-
-async def test_websocket_subscription_no_reconnect_if_connected(
-    hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
-):
-    """Test querying the status and not reconnecting because still expired."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={"provider": "stripe"})
-    hass.data[DOMAIN].iot.state = STATE_CONNECTED
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
-    ) as mock_renew, patch("hass_nabucasa.iot.CloudIoT.connect") as mock_connect:
-        await client.send_json({"id": 5, "type": "cloud/subscription"})
-        response = await client.receive_json()
-
-    assert response["result"] == {"provider": "stripe"}
-    assert len(mock_renew.mock_calls) == 0
-    assert len(mock_connect.mock_calls) == 0
-
-
-async def test_websocket_subscription_no_reconnect_if_expired(
-    hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
-):
-    """Test querying the status and not reconnecting because still expired."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={"provider": "stripe"})
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
-    ) as mock_renew, patch("hass_nabucasa.iot.CloudIoT.connect") as mock_connect:
-        await client.send_json({"id": 5, "type": "cloud/subscription"})
-        response = await client.receive_json()
-
-    assert response["result"] == {"provider": "stripe"}
-    assert len(mock_renew.mock_calls) == 1
-    assert len(mock_connect.mock_calls) == 1
 
 
 async def test_websocket_subscription_fail(
     hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
 ):
     """Test querying the status."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=HTTP_INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=HTTPStatus.INTERNAL_SERVER_ERROR)
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/subscription"})
     response = await client.receive_json()
@@ -464,7 +425,7 @@ async def test_websocket_subscription_not_logged_in(hass, hass_ws_client):
     """Test querying the status."""
     client = await hass_ws_client(hass)
     with patch(
-        "hass_nabucasa.Cloud.fetch_subscription_info",
+        "hass_nabucasa.cloud_api.async_subscription_info",
         return_value={"return": "value"},
     ):
         await client.send_json({"id": 5, "type": "cloud/subscription"})
@@ -491,6 +452,7 @@ async def test_websocket_update_preferences(
             "google_secure_devices_pin": "1234",
             "google_default_expose": ["light", "switch"],
             "alexa_default_expose": ["sensor", "media_player"],
+            "tts_default_voice": ["en-GB", "male"],
         }
     )
     response = await client.receive_json()
@@ -501,6 +463,7 @@ async def test_websocket_update_preferences(
     assert setup_api.google_secure_devices_pin == "1234"
     assert setup_api.google_default_expose == ["light", "switch"]
     assert setup_api.alexa_default_expose == ["sensor", "media_player"]
+    assert setup_api.tts_default_voice == ("en-GB", "male")
 
 
 async def test_websocket_update_preferences_require_relink(
@@ -586,14 +549,8 @@ async def test_enabling_remote(hass, hass_ws_client, setup_api, mock_cloud_login
 
     assert len(mock_connect.mock_calls) == 1
 
-
-async def test_disabling_remote(hass, hass_ws_client, setup_api, mock_cloud_login):
-    """Test we call right code to disable remote UI."""
-    client = await hass_ws_client(hass)
-    cloud = hass.data[DOMAIN]
-
     with patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect:
-        await client.send_json({"id": 5, "type": "cloud/remote/disconnect"})
+        await client.send_json({"id": 6, "type": "cloud/remote/disconnect"})
         response = await client.receive_json()
     assert response["success"]
     assert not cloud.client.remote_autostart
@@ -625,7 +582,7 @@ async def test_enabling_remote_trusted_networks_local4(
         response = await client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == HTTP_INTERNAL_SERVER_ERROR
+    assert response["error"]["code"] == HTTPStatus.INTERNAL_SERVER_ERROR
     assert (
         response["error"]["message"]
         == "Remote UI not compatible with 127.0.0.1/::1 as a trusted network."
@@ -658,7 +615,7 @@ async def test_enabling_remote_trusted_networks_local6(
         response = await client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == HTTP_INTERNAL_SERVER_ERROR
+    assert response["error"]["code"] == HTTPStatus.INTERNAL_SERVER_ERROR
     assert (
         response["error"]["message"]
         == "Remote UI not compatible with 127.0.0.1/::1 as a trusted network."
@@ -787,7 +744,7 @@ async def test_enabling_remote_trusted_proxies_local4(
         response = await client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == HTTP_INTERNAL_SERVER_ERROR
+    assert response["error"]["code"] == HTTPStatus.INTERNAL_SERVER_ERROR
     assert (
         response["error"]["message"]
         == "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies."
@@ -811,7 +768,7 @@ async def test_enabling_remote_trusted_proxies_local6(
         response = await client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == HTTP_INTERNAL_SERVER_ERROR
+    assert response["error"]["code"] == HTTPStatus.INTERNAL_SERVER_ERROR
     assert (
         response["error"]["message"]
         == "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies."
@@ -975,3 +932,25 @@ async def test_thingtalk_convert_internal(hass, hass_ws_client, setup_api):
     assert not response["success"]
     assert response["error"]["code"] == "unknown_error"
     assert response["error"]["message"] == "Did not understand"
+
+
+async def test_tts_info(hass, hass_ws_client, setup_api):
+    """Test that we can get TTS info."""
+    # Verify the format is as expected
+    assert voice.MAP_VOICE[("en-US", voice.Gender.FEMALE)] == "JennyNeural"
+
+    client = await hass_ws_client(hass)
+
+    with patch.dict(
+        "homeassistant.components.cloud.http_api.MAP_VOICE",
+        {
+            ("en-US", voice.Gender.MALE): "GuyNeural",
+            ("en-US", voice.Gender.FEMALE): "JennyNeural",
+        },
+        clear=True,
+    ):
+        await client.send_json({"id": 5, "type": "cloud/tts/info"})
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"languages": [["en-US", "male"], ["en-US", "female"]]}

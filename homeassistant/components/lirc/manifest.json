@@ -3,5 +3,6 @@
   "name": "LIRC",
   "documentation": "https://www.home-assistant.io/integrations/lirc",
   "requirements": ["python-lirc==1.2.3"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_push"
 }

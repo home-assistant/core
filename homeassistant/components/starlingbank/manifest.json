@@ -3,5 +3,6 @@
   "name": "Starling Bank",
   "documentation": "https://www.home-assistant.io/integrations/starlingbank",
   "requirements": ["starlingbank==3.2"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

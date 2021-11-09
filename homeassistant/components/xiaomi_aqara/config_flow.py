@@ -6,15 +6,13 @@ import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
-# pylint: disable=unused-import
 from .const import (
     CONF_INTERFACE,
     CONF_KEY,
-    CONF_PROTOCOL,
     CONF_SID,
     DEFAULT_DISCOVERY_RETRY,
     DOMAIN,
@@ -48,7 +46,6 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Xiaomi Aqara config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize."""
@@ -79,10 +76,8 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.host is None:
             self.host = user_input.get(CONF_HOST)
         if self.sid is None:
-            mac_address = user_input.get(CONF_MAC)
-
             # format sid from mac_address
-            if mac_address is not None:
+            if (mac_address := user_input.get(CONF_MAC)) is not None:
                 self.sid = format_mac(mac_address).replace(":", "")
 
         # if host is already known by zeroconf discovery or manual optional settings
@@ -181,7 +176,6 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {CONF_HOST: self.host, CONF_MAC: mac_address}
         )
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": self.host}})
 
         return await self.async_step_user()

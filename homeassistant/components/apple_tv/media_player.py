@@ -1,22 +1,36 @@
 """Support for Apple TV media player."""
 import logging
 
-from pyatv.const import DeviceState, FeatureName, FeatureState, MediaType
+from pyatv.const import (
+    DeviceState,
+    FeatureName,
+    FeatureState,
+    MediaType,
+    PowerState,
+    RepeatState,
+    ShuffleState,
+)
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
+    REPEAT_MODE_ALL,
+    REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
+    SUPPORT_SHUFFLE_SET,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
     CONF_NAME,
@@ -46,6 +60,9 @@ SUPPORT_APPLE_TV = (
     | SUPPORT_STOP
     | SUPPORT_NEXT_TRACK
     | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_REPEAT_SET
+    | SUPPORT_SHUFFLE_SET
 )
 
 
@@ -59,6 +76,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     """Representation of an Apple TV media player."""
 
+    _attr_supported_features = SUPPORT_APPLE_TV
+
     def __init__(self, name, identifier, manager, **kwargs):
         """Initialize the Apple TV media player."""
         super().__init__(name, identifier, manager, **kwargs)
@@ -69,12 +88,14 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Handle when connection is made to device."""
         self.atv.push_updater.listener = self
         self.atv.push_updater.start()
+        self.atv.power.listener = self
 
     @callback
     def async_device_disconnected(self):
         """Handle when connection was lost to device."""
         self.atv.push_updater.stop()
         self.atv.push_updater.listener = None
+        self.atv.power.listener = None
 
     @property
     def state(self):
@@ -83,6 +104,11 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             return None
         if self.atv is None:
             return STATE_OFF
+        if (
+            self._is_feature_available(FeatureName.PowerState)
+            and self.atv.power.power_state == PowerState.Off
+        ):
+            return STATE_STANDBY
         if self._playing:
             state = self._playing.device_state
             if state in (DeviceState.Idle, DeviceState.Loading):
@@ -107,20 +133,23 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         self._playing = None
         self.async_write_ha_state()
 
+    @callback
+    def powerstate_update(self, old_state: PowerState, new_state: PowerState):
+        """Update power state when it changes."""
+        self.async_write_ha_state()
+
     @property
     def app_id(self):
         """ID of the current running app."""
-        if self.atv:
-            if self.atv.features.in_state(FeatureState.Available, FeatureName.App):
-                return self.atv.metadata.app.identifier
+        if self._is_feature_available(FeatureName.App):
+            return self.atv.metadata.app.identifier
         return None
 
     @property
     def app_name(self):
         """Name of the current running app."""
-        if self.atv:
-            if self.atv.features.in_state(FeatureState.Available, FeatureName.App):
-                return self.atv.metadata.app.name
+        if self._is_feature_available(FeatureName.App):
+            return self.atv.metadata.app.name
         return None
 
     @property
@@ -199,9 +228,21 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         return None
 
     @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_APPLE_TV
+    def repeat(self):
+        """Return current repeat mode."""
+        if self._is_feature_available(FeatureName.Repeat):
+            return {
+                RepeatState.Track: REPEAT_MODE_ONE,
+                RepeatState.All: REPEAT_MODE_ALL,
+            }.get(self._playing.repeat, REPEAT_MODE_OFF)
+        return None
+
+    @property
+    def shuffle(self):
+        """Boolean if shuffle is enabled."""
+        if self._is_feature_available(FeatureName.Shuffle):
+            return self._playing.shuffle != ShuffleState.Off
+        return None
 
     def _is_feature_available(self, feature):
         """Return if a feature is available."""
@@ -211,49 +252,75 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
 
     async def async_turn_on(self):
         """Turn the media player on."""
-        await self.manager.connect()
+        if self._is_feature_available(FeatureName.TurnOn):
+            await self.atv.power.turn_on()
 
     async def async_turn_off(self):
         """Turn the media player off."""
-        self._playing = None
-        await self.manager.disconnect()
+        if (self._is_feature_available(FeatureName.TurnOff)) and (
+            not self._is_feature_available(FeatureName.PowerState)
+            or self.atv.power.power_state == PowerState.On
+        ):
+            await self.atv.power.turn_off()
 
     async def async_media_play_pause(self):
         """Pause media on media player."""
         if self._playing:
-            state = self.state
-            if state == STATE_PAUSED:
-                await self.atv.remote_control.play()
-            elif state == STATE_PLAYING:
-                await self.atv.remote_control.pause()
+            await self.atv.remote_control.play_pause()
         return None
 
     async def async_media_play(self):
         """Play media."""
-        if self._playing:
+        if self.atv:
             await self.atv.remote_control.play()
 
     async def async_media_stop(self):
         """Stop the media player."""
-        if self._playing:
+        if self.atv:
             await self.atv.remote_control.stop()
 
     async def async_media_pause(self):
         """Pause the media player."""
-        if self._playing:
+        if self.atv:
             await self.atv.remote_control.pause()
 
     async def async_media_next_track(self):
         """Send next track command."""
-        if self._playing:
+        if self.atv:
             await self.atv.remote_control.next()
 
     async def async_media_previous_track(self):
         """Send previous track command."""
-        if self._playing:
+        if self.atv:
             await self.atv.remote_control.previous()
 
     async def async_media_seek(self, position):
         """Send seek command."""
-        if self._playing:
+        if self.atv:
             await self.atv.remote_control.set_position(position)
+
+    async def async_volume_up(self):
+        """Turn volume up for media player."""
+        if self.atv:
+            await self.atv.remote_control.volume_up()
+
+    async def async_volume_down(self):
+        """Turn volume down for media player."""
+        if self.atv:
+            await self.atv.remote_control.volume_down()
+
+    async def async_set_repeat(self, repeat):
+        """Set repeat mode."""
+        if self.atv:
+            mode = {
+                REPEAT_MODE_ONE: RepeatState.Track,
+                REPEAT_MODE_ALL: RepeatState.All,
+            }.get(repeat, RepeatState.Off)
+            await self.atv.remote_control.set_repeat(mode)
+
+    async def async_set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
+        if self.atv:
+            await self.atv.remote_control.set_shuffle(
+                ShuffleState.Songs if shuffle else ShuffleState.Off
+            )

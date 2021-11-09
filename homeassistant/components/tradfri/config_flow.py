@@ -1,5 +1,8 @@
 """Config flow for Tradfri."""
+from __future__ import annotations
+
 import asyncio
+from typing import Any
 from uuid import uuid4
 
 import async_timeout
@@ -8,6 +11,9 @@ from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_GATEWAY_ID,
@@ -15,6 +21,7 @@ from .const import (
     CONF_IDENTITY,
     CONF_IMPORT_GROUPS,
     CONF_KEY,
+    DOMAIN,
     KEY_SECURITY_CODE,
 )
 
@@ -22,30 +29,33 @@ from .const import (
 class AuthError(Exception):
     """Exception if authentication occurs."""
 
-    def __init__(self, code):
+    def __init__(self, code: str) -> None:
         """Initialize exception."""
         super().__init__()
         self.code = code
 
 
-@config_entries.HANDLERS.register("tradfri")
-class FlowHandler(config_entries.ConfigFlow):
+class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._host = None
         self._import_groups = False
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_auth()
 
-    async def async_step_auth(self, user_input=None):
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the authentication with a gateway."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             host = user_input.get(CONF_HOST, self._host)
@@ -82,7 +92,7 @@ class FlowHandler(config_entries.ConfigFlow):
             step_id="auth", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle homekit discovery."""
         await self.async_set_unique_id(discovery_info["properties"]["id"])
         self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
@@ -104,11 +114,9 @@ class FlowHandler(config_entries.ConfigFlow):
         self._host = host
         return await self.async_step_auth()
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == user_input["host"]:
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: user_input["host"]})
 
         # Happens if user has host directly in configuration.yaml
         if "key" not in user_input:
@@ -133,7 +141,7 @@ class FlowHandler(config_entries.ConfigFlow):
             self._host = user_input["host"]
             return await self.async_step_auth()
 
-    async def _entry_from_data(self, data):
+    async def _entry_from_data(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry from data."""
         host = data[CONF_HOST]
         gateway_id = data[CONF_GATEWAY_ID]
@@ -156,7 +164,9 @@ class FlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(title=host, data=data)
 
 
-async def authenticate(hass, host, security_code):
+async def authenticate(
+    hass: HomeAssistant, host: str, security_code: str
+) -> dict[str, str | bool]:
     """Authenticate with a Tradfri hub."""
 
     identity = uuid4().hex
@@ -164,7 +174,7 @@ async def authenticate(hass, host, security_code):
     api_factory = await APIFactory.init(host, psk_id=identity)
 
     try:
-        with async_timeout.timeout(5):
+        async with async_timeout.timeout(5):
             key = await api_factory.generate_psk(security_code)
     except RequestError as err:
         raise AuthError("invalid_security_code") from err
@@ -172,11 +182,14 @@ async def authenticate(hass, host, security_code):
         raise AuthError("timeout") from err
     finally:
         await api_factory.shutdown()
-
+    if key is None:
+        raise AuthError("cannot_authenticate")
     return await get_gateway_info(hass, host, identity, key)
 
 
-async def get_gateway_info(hass, host, identity, key):
+async def get_gateway_info(
+    hass: HomeAssistant, host: str, identity: str, key: str
+) -> dict[str, str | bool]:
     """Return info for the gateway."""
 
     try:

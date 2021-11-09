@@ -23,8 +23,11 @@ CONF_PROFILES = "profiles"
 CONF_TEXT_TYPE = "text_type"
 
 SUPPORTED_LANGUAGES = [
+    "af-ZA",
     "ar-XA",
+    "bg-BG",
     "bn-IN",
+    "ca-ES",
     "cmn-CN",
     "cmn-TW",
     "cs-CZ",
@@ -36,6 +39,7 @@ SUPPORTED_LANGUAGES = [
     "en-IN",
     "en-US",
     "es-ES",
+    "es-US",
     "fi-FI",
     "fil-PH",
     "fr-CA",
@@ -44,18 +48,25 @@ SUPPORTED_LANGUAGES = [
     "hi-IN",
     "hu-HU",
     "id-ID",
+    "is-IS",
     "it-IT",
     "ja-JP",
     "kn-IN",
     "ko-KR",
+    "lv-LV",
     "ml-IN",
+    "ms-MY",
     "nb-NO",
+    "nl-BE",
     "nl-NL",
+    "pa-IN",
     "pl-PL",
     "pt-BR",
     "pt-PT",
+    "ro-RO",
     "ru-RU",
     "sk-SK",
+    "sr-RS",
     "sv-SE",
     "ta-IN",
     "te-IN",
@@ -63,6 +74,7 @@ SUPPORTED_LANGUAGES = [
     "tr-TR",
     "uk-UA",
     "vi-VN",
+    "yue-HK",
 ]
 DEFAULT_LANG = "en-US"
 
@@ -141,8 +153,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_get_engine(hass, config, discovery_info=None):
     """Set up Google Cloud TTS component."""
-    key_file = config.get(CONF_KEY_FILE)
-    if key_file:
+    if key_file := config.get(CONF_KEY_FILE):
         key_file = hass.config.path(key_file)
         if not os.path.isfile(key_file):
             _LOGGER.error("File %s doesn't exist", key_file)
@@ -270,7 +281,7 @@ class GoogleCloudTTSProvider(Provider):
             )
             # pylint: enable=no-member
 
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            async with async_timeout.timeout(10):
                 response = await self.hass.async_add_executor_job(
                     self._client.synthesize_speech, synthesis_input, voice, audio_config
                 )

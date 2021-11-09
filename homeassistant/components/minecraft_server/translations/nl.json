@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host is al geconfigureerd."
+            "already_configured": "Service is al geconfigureerd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken met de server. Controleer de host en de poort en probeer het opnieuw. Zorg er ook voor dat u minimaal Minecraft versie 1.7 op uw server uitvoert.",

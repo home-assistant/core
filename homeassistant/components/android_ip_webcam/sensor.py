@@ -1,4 +1,5 @@
 """Support for Android IP Webcam sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import (
@@ -30,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(all_sensors, True)
 
 
-class IPWebcamSensor(AndroidIPCamEntity):
+class IPWebcamSensor(AndroidIPCamEntity, SensorEntity):
     """Representation of a IP Webcam sensor."""
 
     def __init__(self, name, host, ipcam, sensor):
@@ -49,12 +50,12 @@ class IPWebcamSensor(AndroidIPCamEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

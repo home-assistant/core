@@ -4,6 +4,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DATA_COORDINATOR, DOMAIN
 from .entity import RiscoEntity, binary_sensor_unique_id
@@ -14,7 +15,7 @@ SERVICE_UNBYPASS_ZONE = "unbypass_zone"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Risco alarm control panel."""
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SERVICE_BYPASS_ZONE, {}, "async_bypass_zone")
     platform.async_register_entity_service(
         SERVICE_UNBYPASS_ZONE, {}, "async_unbypass_zone"
@@ -41,13 +42,13 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
         self._zone = self.coordinator.data.zones[self._zone_id]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Risco",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Risco",
+            name=self.name,
+        )
 
     @property
     def name(self):
@@ -60,7 +61,7 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
         return binary_sensor_unique_id(self._risco, self._zone_id)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"zone_id": self._zone_id, "bypassed": self._zone.bypassed}
 

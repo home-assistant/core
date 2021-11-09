@@ -9,12 +9,6 @@ import async_timeout
 from colorthief import ColorThief
 import voluptuous as vol
 
-from homeassistant.components.color_extractor.const import (
-    ATTR_PATH,
-    ATTR_URL,
-    DOMAIN,
-    SERVICE_TURN_ON,
-)
 from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
@@ -23,6 +17,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
+
+from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,7 +113,7 @@ async def async_setup(hass, hass_config):
         try:
             session = aiohttp_client.async_get_clientsession(hass)
 
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 response = await session.get(url)
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:

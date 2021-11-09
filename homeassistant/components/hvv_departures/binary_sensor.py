@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -92,7 +93,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             raise UpdateFailed(f"Authentication failed: {err}") from err
         except ClientConnectorError as err:
             raise UpdateFailed(f"Network not available: {err}") from err
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             raise UpdateFailed(f"Error occurred while fetching data: {err}") from err
 
     coordinator = DataUpdateCoordinator(
@@ -145,8 +146,8 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_info(self):
         """Return the device info for this sensor."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (
                     DOMAIN,
                     self.config_entry.entry_id,
@@ -154,9 +155,9 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
                     self.config_entry.data[CONF_STATION]["type"],
                 )
             },
-            "name": f"Departures at {self.config_entry.data[CONF_STATION]['name']}",
-            "manufacturer": MANUFACTURER,
-        }
+            manufacturer=MANUFACTURER,
+            name=f"Departures at {self.config_entry.data[CONF_STATION]['name']}",
+        )
 
     @property
     def name(self):
@@ -174,7 +175,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return DEVICE_CLASS_PROBLEM
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if not (
             self.coordinator.last_update_success

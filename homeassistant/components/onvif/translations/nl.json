@@ -18,6 +18,16 @@
                 },
                 "title": "Configureer authenticatie"
             },
+            "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Configureer ONVIF-apparaat"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Cameraentiteit maken"
@@ -40,6 +50,9 @@
                 "title": "Configureer ONVIF-apparaat"
             },
             "user": {
+                "data": {
+                    "auto": "Automatisch zoeken"
+                },
                 "description": "Door op verzenden te klikken, zoeken we in uw netwerk naar ONVIF-apparaten die Profiel S ondersteunen. \n\nSommige fabrikanten zijn begonnen ONVIF standaard uit te schakelen. Zorg ervoor dat ONVIF is ingeschakeld in de configuratie van uw camera.",
                 "title": "ONVIF-apparaat instellen"
             }
@@ -52,7 +65,7 @@
                     "extra_arguments": "Extra FFMPEG argumenten",
                     "rtsp_transport": "RTSP-transportmechanisme"
                 },
-                "title": "[%%] Apparaatopties"
+                "title": "ONVIF-apparaatopties"
             }
         }
     }

@@ -47,11 +47,11 @@
             "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
-            "remote_button_long_release": "\"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
-            "remote_button_short_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty",
-            "remote_button_short_release": "\"{subtype}\" zostanie zwolniony",
-            "remote_double_button_long_press": "oba \"{subtype}\" zostan\u0105 zwolnione po d\u0142ugim naci\u015bni\u0119ciu",
-            "remote_double_button_short_press": "oba \"{subtype}\" zostan\u0105 zwolnione"
+            "remote_button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "remote_double_button_long_press": "oba przyciski \"{subtype}\" zostan\u0105 zwolnione po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_double_button_short_press": "oba przyciski \"{subtype}\" zostan\u0105 zwolnione"
         }
     },
     "options": {

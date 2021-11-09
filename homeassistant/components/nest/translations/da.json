@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "authorize_url_fail": "Ukendt fejl ved generering af en autoriseret url.",
             "authorize_url_timeout": "Timeout ved generering af autoriseret url."
         },
         "error": {
@@ -15,7 +14,7 @@
                     "flow_impl": "Udbyder"
                 },
                 "description": "V\u00e6lg hvilken godkendelsesudbyder du vil godkende med Nest.",
-                "title": "Godkendelsesudbyder"
+                "title": "Identitetsudbyder"
             },
             "link": {
                 "data": {

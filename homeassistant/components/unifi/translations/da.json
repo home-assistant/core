@@ -7,6 +7,7 @@
             "faulty_credentials": "Ugyldige legitimationsoplysninger",
             "service_unavailable": "Service utilg\u00e6ngelig"
         },
+        "flow_title": "UniFi-netv\u00e6rket {site} ({host})",
         "step": {
             "user": {
                 "data": {

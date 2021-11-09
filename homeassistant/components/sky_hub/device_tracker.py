@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
 
 
 async def async_get_scanner(hass, config):
@@ -68,9 +68,7 @@ class SkyHubDeviceScanner(DeviceScanner):
         """Ensure the information from the Sky Hub is up to date."""
         _LOGGER.debug("Scanning")
 
-        data = await self._hub.async_get_skyhub_data()
-
-        if not data:
+        if not (data := await self._hub.async_get_skyhub_data()):
             return
 
         self.last_results = data

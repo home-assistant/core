@@ -2,8 +2,9 @@
   "domain": "canary",
   "name": "Canary",
   "documentation": "https://www.home-assistant.io/integrations/canary",
-  "requirements": ["py-canary==0.5.0"],
+  "requirements": ["py-canary==0.5.1"],
   "dependencies": ["ffmpeg"],
   "codeowners": [],
-  "config_flow": true
+  "config_flow": true,
+  "iot_class": "cloud_polling"
 }

@@ -1,7 +1,7 @@
 """Arcam media player."""
 import logging
 
-from arcam.fmj import DecodeMode2CH, DecodeModeMCH, IncomingAudioFormat, SourceCodes
+from arcam.fmj import SourceCodes
 from arcam.fmj.state import State
 
 from homeassistant import config_entries
@@ -22,8 +22,8 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 
 from .config_flow import get_entry_client
 from .const import (
@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
     async_add_entities,
 ):
@@ -53,7 +53,7 @@ async def async_setup_entry(
                 State(client, zone),
                 config_entry.unique_id or config_entry.entry_id,
             )
-            for zone in [1, 2]
+            for zone in (1, 2)
         ],
         True,
     )
@@ -64,6 +64,8 @@ async def async_setup_entry(
 class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         device_name,
@@ -73,9 +75,9 @@ class ArcamFmj(MediaPlayerEntity):
         """Initialize device."""
         self._state = state
         self._device_name = device_name
-        self._name = f"{device_name} - Zone: {state.zn}"
+        self._attr_name = f"{device_name} - Zone: {state.zn}"
         self._uuid = uuid
-        self._support = (
+        self._attr_supported_features = (
             SUPPORT_SELECT_SOURCE
             | SUPPORT_PLAY_MEDIA
             | SUPPORT_BROWSE_MEDIA
@@ -86,53 +88,9 @@ class ArcamFmj(MediaPlayerEntity):
             | SUPPORT_TURN_ON
         )
         if state.zn == 1:
-            self._support |= SUPPORT_SELECT_SOUND_MODE
-
-    def _get_2ch(self):
-        """Return if source is 2 channel or not."""
-        audio_format, _ = self._state.get_incoming_audio_format()
-        return bool(
-            audio_format
-            in (
-                IncomingAudioFormat.PCM,
-                IncomingAudioFormat.ANALOGUE_DIRECT,
-                IncomingAudioFormat.UNDETECTED,
-                None,
-            )
-        )
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._state.zn == 1
-
-    @property
-    def unique_id(self):
-        """Return unique identifier if known."""
-        return f"{self._uuid}-{self._state.zn}"
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {
-            "name": self._device_name,
-            "identifiers": {
-                (DOMAIN, self._uuid),
-                (DOMAIN, self._state.client.host, self._state.client.port),
-            },
-            "model": "Arcam FMJ AVR",
-            "manufacturer": "Arcam",
-        }
-
-    @property
-    def should_poll(self) -> bool:
-        """No need to poll."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the controlled device."""
-        return self._name
+            self._attr_supported_features |= SUPPORT_SELECT_SOUND_MODE
+        self._attr_unique_id = f"{uuid}-{state.zn}"
+        self._attr_entity_registry_enabled_default = state.zn == 1
 
     @property
     def state(self):
@@ -142,13 +100,22 @@ class ArcamFmj(MediaPlayerEntity):
         return STATE_OFF
 
     @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return self._support
+    def device_info(self):
+        """Return a device description for device registry."""
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, self._uuid),
+                (DOMAIN, self._state.client.host, self._state.client.port),
+            },
+            manufacturer="Arcam",
+            model="Arcam FMJ AVR",
+            name=self._device_name,
+        )
 
     async def async_added_to_hass(self):
         """Once registered, add listener for events."""
         await self._state.start()
+        await self._state.update()
 
         @callback
         def _data(host):
@@ -207,11 +174,8 @@ class ArcamFmj(MediaPlayerEntity):
     async def async_select_sound_mode(self, sound_mode):
         """Select a specific source."""
         try:
-            if self._get_2ch():
-                await self._state.set_decode_mode_2ch(DecodeMode2CH[sound_mode])
-            else:
-                await self._state.set_decode_mode_mch(DecodeModeMCH[sound_mode])
-        except KeyError:
+            await self._state.set_decode_mode(sound_mode)
+        except (KeyError, ValueError):
             _LOGGER.error("Unsupported sound_mode %s", sound_mode)
             return
 
@@ -291,8 +255,7 @@ class ArcamFmj(MediaPlayerEntity):
     @property
     def source(self):
         """Return the current input source."""
-        value = self._state.get_source()
-        if value is None:
+        if (value := self._state.get_source()) is None:
             return None
         return value.name
 
@@ -304,40 +267,28 @@ class ArcamFmj(MediaPlayerEntity):
     @property
     def sound_mode(self):
         """Name of the current sound mode."""
-        if self._state.zn != 1:
+        if (value := self._state.get_decode_mode()) is None:
             return None
-
-        if self._get_2ch():
-            value = self._state.get_decode_mode_2ch()
-        else:
-            value = self._state.get_decode_mode_mch()
-        if value:
-            return value.name
-        return None
+        return value.name
 
     @property
     def sound_mode_list(self):
         """List of available sound modes."""
-        if self._state.zn != 1:
+        if (values := self._state.get_decode_modes()) is None:
             return None
-
-        if self._get_2ch():
-            return [x.name for x in DecodeMode2CH]
-        return [x.name for x in DecodeModeMCH]
+        return [x.name for x in values]
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        value = self._state.get_mute()
-        if value is None:
+        if (value := self._state.get_mute()) is None:
             return None
         return value
 
     @property
     def volume_level(self):
         """Volume level of device."""
-        value = self._state.get_volume()
-        if value is None:
+        if (value := self._state.get_volume()) is None:
             return None
         return value / 99.0
 
@@ -358,8 +309,7 @@ class ArcamFmj(MediaPlayerEntity):
         """Content type of current playing media."""
         source = self._state.get_source()
         if source in (SourceCodes.DAB, SourceCodes.FM):
-            preset = self._state.get_tuner_preset()
-            if preset:
+            if preset := self._state.get_tuner_preset():
                 value = f"preset:{preset}"
             else:
                 value = None
@@ -383,8 +333,7 @@ class ArcamFmj(MediaPlayerEntity):
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        source = self._state.get_source()
-        if source == SourceCodes.DAB:
+        if self._state.get_source() == SourceCodes.DAB:
             value = self._state.get_dls_pdt()
         else:
             value = None
@@ -393,13 +342,10 @@ class ArcamFmj(MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        source = self._state.get_source()
-        if source is None:
+        if (source := self._state.get_source()) is None:
             return None
 
-        channel = self.media_channel
-
-        if channel:
+        if channel := self.media_channel:
             value = f"{source.name} - {channel}"
         else:
             value = source.name

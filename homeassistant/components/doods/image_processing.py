@@ -16,7 +16,7 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import CONF_TIMEOUT
+from homeassistant.const import CONF_COVERS, CONF_TIMEOUT, CONF_URL
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -29,12 +29,10 @@ ATTR_SUMMARY = "summary"
 ATTR_TOTAL_MATCHES = "total_matches"
 ATTR_PROCESS_TIME = "process_time"
 
-CONF_URL = "url"
 CONF_AUTH_KEY = "auth_key"
 CONF_DETECTOR = "detector"
 CONF_LABELS = "labels"
 CONF_AREA = "area"
-CONF_COVERS = "covers"
 CONF_TOP = "top"
 CONF_BOTTOM = "bottom"
 CONF_RIGHT = "right"
@@ -156,8 +154,7 @@ class Doods(ImageProcessingEntity):
                     continue
 
                 # If label confidence is not specified, use global confidence
-                label_confidence = label.get(CONF_CONFIDENCE)
-                if not label_confidence:
+                if not (label_confidence := label.get(CONF_CONFIDENCE)):
                     label_confidence = confidence
                 if label_name not in dconfig or dconfig[label_name] > label_confidence:
                     dconfig[label_name] = label_confidence
@@ -189,8 +186,7 @@ class Doods(ImageProcessingEntity):
         # Handle global detection area
         self._area = [0, 0, 1, 1]
         self._covers = True
-        area_config = config.get(CONF_AREA)
-        if area_config:
+        if area_config := config.get(CONF_AREA):
             self._area = [
                 area_config[CONF_TOP],
                 area_config[CONF_LEFT],
@@ -223,7 +219,7 @@ class Doods(ImageProcessingEntity):
         return self._total_matches
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_MATCHES: self._matches,

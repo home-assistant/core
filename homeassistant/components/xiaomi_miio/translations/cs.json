@@ -10,6 +10,12 @@
         },
         "flow_title": "Xiaomi Miio: {name}",
         "step": {
+            "device": {
+                "data": {
+                    "host": "IP adresa",
+                    "token": "API token"
+                }
+            },
             "gateway": {
                 "data": {
                     "host": "IP adresa",

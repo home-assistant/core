@@ -2,10 +2,15 @@
 # pylint: disable=import-outside-toplevel
 from itertools import count
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_WAKEUP
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_ENTITY_ID,
+    ATTR_VIA_DEVICE,
+    ATTR_WAKEUP,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_registry import async_get_registry
 
 from .const import (
@@ -95,7 +100,7 @@ class ZWaveBaseEntity(Entity):
         """Remove this entity and add it back."""
 
         async def _async_remove_and_add():
-            await self.async_remove()
+            await self.async_remove(force_remove=True)
             self.entity_id = None
             await self.platform.async_add_entities([self])
 
@@ -104,7 +109,7 @@ class ZWaveBaseEntity(Entity):
 
     async def node_removed(self):
         """Call when a node is removed from the Z-Wave network."""
-        await self.async_remove()
+        await self.async_remove(force_remove=True)
 
         registry = await async_get_registry(self.hass)
         if self.entity_id not in registry.entities:
@@ -118,7 +123,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def __init__(self, node, network):
         """Initialize node."""
-        # pylint: disable=import-error
         super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
@@ -152,17 +156,17 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
         identifier, name = node_device_id_and_name(self.node)
-        info = {
-            "identifiers": {identifier},
-            "manufacturer": self.node.manufacturer_name,
-            "model": self.node.product_name,
-            "name": name,
-        }
+        info = DeviceInfo(
+            identifiers={identifier},
+            manufacturer=self.node.manufacturer_name,
+            model=self.node.product_name,
+            name=name,
+        )
         if self.node_id > 1:
-            info["via_device"] = (DOMAIN, 1)
+            info[ATTR_VIA_DEVICE] = (DOMAIN, 1)
         return info
 
     def maybe_update_application_version(self, value):
@@ -246,14 +250,12 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         # Set the name in the devices. If they're customised
         # the customisation will not be stored as name and will stick.
         dev_reg = await get_dev_reg(self.hass)
-        device = dev_reg.async_get_device(identifiers={identifier}, connections=set())
+        device = dev_reg.async_get_device(identifiers={identifier})
         dev_reg.async_update_device(device.id, name=self._name)
         # update sub-devices too
         for i in count(2):
             identifier, new_name = node_device_id_and_name(self.node, i)
-            device = dev_reg.async_get_device(
-                identifiers={identifier}, connections=set()
-            )
+            device = dev_reg.async_get_device(identifiers={identifier})
             if not device:
                 break
             dev_reg.async_update_device(device.id, name=new_name)
@@ -354,7 +356,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {
             ATTR_NODE_ID: self.node_id,

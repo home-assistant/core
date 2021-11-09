@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "not_supported_device": "Perangkat WiLight ini saat ini tidak didukung.",
+            "not_wilight_device": "Perangkat ini bukan perangkat WiLight"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Apakah Anda ingin menyiapkan WiLight {name}?\n\nIni mendukung: {components}",
+                "title": "WiLight"
+            }
+        }
+    }
+}

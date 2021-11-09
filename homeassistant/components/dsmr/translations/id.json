@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung"
+        },
+        "error": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "port": "Jalur Perangkat USB"
+                },
+                "title": "Jalur"
+            },
+            "user": {
+                "data": {
+                    "type": "Jenis koneksi"
+                },
+                "title": "Pilih jenis koneksi"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Interval minimum pembaruan entitas (dalam detik)"
+                },
+                "title": "Opsi DSMR"
+            }
+        }
+    }
+}

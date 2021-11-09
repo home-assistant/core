@@ -1,7 +1,7 @@
 """Configure iCloud tests."""
-import pytest
+from unittest.mock import patch
 
-from tests.async_mock import patch
+import pytest
 
 
 @pytest.fixture(name="icloud_bypass_setup", autouse=True)

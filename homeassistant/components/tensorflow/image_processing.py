@@ -218,7 +218,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "TensorFlow {}".format(split_entity_id(camera_entity)[1])
+            self._name = f"TensorFlow {split_entity_id(camera_entity)[1]}"
         self._category_index = category_index
         self._min_confidence = config.get(CONF_CONFIDENCE)
         self._file_out = config.get(CONF_FILE_OUT)
@@ -247,8 +247,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         # Handle global detection area
         self._area = [0, 0, 1, 1]
-        area_config = model_config.get(CONF_AREA)
-        if area_config:
+        if area_config := model_config.get(CONF_AREA):
             self._area = [
                 area_config.get(CONF_TOP),
                 area_config.get(CONF_LEFT),
@@ -279,7 +278,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         return self._total_matches
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_MATCHES: self._matches,
@@ -334,16 +333,14 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        model = self.hass.data[DOMAIN][CONF_MODEL]
-        if not model:
-            _LOGGER.debug("Model not yet ready.")
+        if not (model := self.hass.data[DOMAIN][CONF_MODEL]):
+            _LOGGER.debug("Model not yet ready")
             return
 
         start = time.perf_counter()
         try:
-            import cv2  # pylint: disable=import-error, import-outside-toplevel
+            import cv2  # pylint: disable=import-outside-toplevel
 
-            # pylint: disable=no-member
             img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)

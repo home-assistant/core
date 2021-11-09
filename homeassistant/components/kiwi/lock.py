@@ -39,8 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except KiwiException as exc:
         _LOGGER.error(exc)
         return
-    available_locks = kiwi.get_locks()
-    if not available_locks:
+    if not (available_locks := kiwi.get_locks()):
         # No locks found; abort setup routine.
         _LOGGER.info("No KIWI locks found in your account")
         return
@@ -86,7 +85,7 @@ class KiwiLock(LockEntity):
         return self._state == STATE_LOCKED
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         return self._device_attrs
 
@@ -102,7 +101,7 @@ class KiwiLock(LockEntity):
         try:
             self._client.open_door(self.lock_id)
         except KiwiException:
-            _LOGGER.error("failed to open door")
+            _LOGGER.error("Failed to open door")
         else:
             self._state = STATE_UNLOCKED
             self.hass.add_job(

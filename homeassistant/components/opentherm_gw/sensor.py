@@ -2,11 +2,11 @@
 import logging
 from pprint import pformat
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
 from homeassistant.const import CONF_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
 from homeassistant.helpers.entity_registry import async_get_registry
 
 from . import DOMAIN
@@ -77,7 +77,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class OpenThermSensor(Entity):
+class OpenThermSensor(SensorEntity):
     """Representation of an OpenTherm Gateway sensor."""
 
     def __init__(self, gw_dev, var, source, device_class, unit, friendly_name_format):
@@ -135,15 +135,15 @@ class OpenThermSensor(Entity):
         return self._friendly_name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway.gw_id)},
-            "name": self._gateway.name,
-            "manufacturer": "Schelte Bron",
-            "model": "OpenTherm Gateway",
-            "sw_version": self._gateway.gw_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._gateway.gw_id)},
+            manufacturer="Schelte Bron",
+            model="OpenTherm Gateway",
+            name=self._gateway.name,
+            sw_version=self._gateway.gw_version,
+        )
 
     @property
     def unique_id(self):
@@ -156,12 +156,12 @@ class OpenThermSensor(Entity):
         return self._device_class
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 

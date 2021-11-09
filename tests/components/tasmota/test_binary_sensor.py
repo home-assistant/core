@@ -2,6 +2,7 @@
 import copy
 from datetime import timedelta
 import json
+from unittest.mock import patch
 
 from hatasmota.utils import (
     get_topic_stat_result,
@@ -34,7 +35,6 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 
@@ -56,6 +56,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
     assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -95,6 +96,12 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
     assert state.state == STATE_OFF
 
+    # Test force update flag
+    entity = hass.data["entity_components"]["binary_sensor"].get_entity(
+        "binary_sensor.tasmota_binary_sensor_1"
+    )
+    assert entity.force_update
+
 
 async def test_controlling_state_via_mqtt_switchname(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
@@ -115,6 +122,7 @@ async def test_controlling_state_via_mqtt_switchname(hass, mqtt_mock, setup_tasm
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.custom_name")
     assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -173,6 +181,7 @@ async def test_pushon_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota)
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
     assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)

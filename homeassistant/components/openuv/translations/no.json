@@ -17,5 +17,16 @@
                 "title": "Fyll ut informasjonen din"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Starter UV -indeks for beskyttelsesvinduet",
+                    "to_window": "Avsluttende UV -indeks for beskyttelsesvinduet"
+                },
+                "title": "Konfigurer OpenUV"
+            }
+        }
     }
 }

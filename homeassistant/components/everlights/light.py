@@ -1,7 +1,8 @@
 """Support for EverLights lights."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Tuple
 
 import pyeverlights
 import voluptuous as vol
@@ -38,7 +39,7 @@ def color_rgb_to_int(red: int, green: int, blue: int) -> int:
     return red * 256 * 256 + green * 256 + blue
 
 
-def color_int_to_rgb(value: int) -> Tuple[int, int, int]:
+def color_int_to_rgb(value: int) -> tuple[int, int, int]:
     """Return an RGB tuple from an integer."""
     return (value >> 16, (value >> 8) & 0xFF, value & 0xFF)
 

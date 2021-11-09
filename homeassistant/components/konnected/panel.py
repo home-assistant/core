@@ -10,11 +10,13 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_BINARY_SENSORS,
     CONF_DEVICES,
+    CONF_DISCOVERY,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
     CONF_PIN,
     CONF_PORT,
+    CONF_REPEAT,
     CONF_SENSORS,
     CONF_SWITCHES,
     CONF_TYPE,
@@ -31,13 +33,11 @@ from .const import (
     CONF_BLINK,
     CONF_DEFAULT_OPTIONS,
     CONF_DHT_SENSORS,
-    CONF_DISCOVERY,
     CONF_DS18B20_SENSORS,
     CONF_INVERSE,
     CONF_MOMENTARY,
     CONF_PAUSE,
     CONF_POLL_INTERVAL,
-    CONF_REPEAT,
     DOMAIN,
     ENDPOINT_ROOT,
     STATE_LOW,
@@ -151,7 +151,7 @@ class AlarmPanel:
             self.port,
         )
 
-        device_registry = await dr.async_get_registry(self.hass)
+        device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, self.status.get("mac"))},
@@ -347,9 +347,7 @@ class AlarmPanel:
     @callback
     def async_current_settings_payload(self):
         """Return a dict of configuration currently stored on the device."""
-        settings = self.status["settings"]
-        if not settings:
-            settings = {}
+        settings = self.status["settings"] or {}
 
         return {
             "sensors": [
@@ -376,7 +374,7 @@ class AlarmPanel:
             self.async_desired_settings_payload()
             != self.async_current_settings_payload()
         ):
-            _LOGGER.info("pushing settings to device %s", self.device_id)
+            _LOGGER.info("Pushing settings to device %s", self.device_id)
             await self.client.put_settings(**self.async_desired_settings_payload())
 
 

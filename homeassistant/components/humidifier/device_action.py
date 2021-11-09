@@ -1,22 +1,25 @@
 """Provides device actions for Humidifier."""
-from typing import List, Optional
+from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
+    ATTR_MODE,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import get_capability, get_supported_features
 
 from . import DOMAIN, const
+
+# mypy: disallow-any-generics
 
 SET_HUMIDITY_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
@@ -30,7 +33,7 @@ SET_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): "set_mode",
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
-        vol.Required(const.ATTR_MODE): cv.string,
+        vol.Required(ATTR_MODE): cv.string,
     }
 )
 
@@ -39,7 +42,9 @@ ONOFF_SCHEMA = toggle_entity.ACTION_SCHEMA.extend({vol.Required(CONF_DOMAIN): DO
 ACTION_SCHEMA = vol.Any(SET_HUMIDITY_SCHEMA, SET_MODE_SCHEMA, ONOFF_SCHEMA)
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions for Humidifier devices."""
     registry = await entity_registry.async_get_registry(hass)
     actions = await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
@@ -49,40 +54,25 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
+        supported_features = get_supported_features(hass, entry.entity_id)
 
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "set_humidity",
-            }
-        )
+        base_action = {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+        actions.append({**base_action, CONF_TYPE: "set_humidity"})
 
-        # We need a state or else we can't populate the available modes.
-        if state is None:
-            continue
-
-        if state.attributes[ATTR_SUPPORTED_FEATURES] & const.SUPPORT_MODES:
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "set_mode",
-                }
-            )
+        if supported_features & const.SUPPORT_MODES:
+            actions.append({**base_action, CONF_TYPE: "set_mode"})
 
     return actions
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Optional[Context]
+    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
-    config = ACTION_SCHEMA(config)
-
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "set_humidity":
@@ -90,7 +80,7 @@ async def async_call_action_from_config(
         service_data[const.ATTR_HUMIDITY] = config[const.ATTR_HUMIDITY]
     elif config[CONF_TYPE] == "set_mode":
         service = const.SERVICE_SET_MODE
-        service_data[const.ATTR_MODE] = config[const.ATTR_MODE]
+        service_data[ATTR_MODE] = config[ATTR_MODE]
     else:
         return await toggle_entity.async_call_action_from_config(
             hass, config, variables, context, DOMAIN
@@ -103,7 +93,6 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(hass, config):
     """List action capabilities."""
-    state = hass.states.get(config[CONF_ENTITY_ID])
     action_type = config[CONF_TYPE]
 
     fields = {}
@@ -111,11 +100,14 @@ async def async_get_action_capabilities(hass, config):
     if action_type == "set_humidity":
         fields[vol.Required(const.ATTR_HUMIDITY)] = vol.Coerce(int)
     elif action_type == "set_mode":
-        if state:
-            available_modes = state.attributes.get(const.ATTR_AVAILABLE_MODES, [])
-        else:
+        try:
+            available_modes = (
+                get_capability(hass, config[ATTR_ENTITY_ID], const.ATTR_AVAILABLE_MODES)
+                or []
+            )
+        except HomeAssistantError:
             available_modes = []
-        fields[vol.Required(const.ATTR_MODE)] = vol.In(available_modes)
+        fields[vol.Required(ATTR_MODE)] = vol.In(available_modes)
     else:
         return {}
 

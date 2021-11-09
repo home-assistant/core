@@ -15,10 +15,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BleBoxSwitchEntity(BleBoxEntity, SwitchEntity):
     """Representation of a BleBox switch feature."""
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return BLEBOX_TO_HASS_DEVICE_CLASSES[self._feature.device_class]
+    def __init__(self, feature):
+        """Initialize a BleBox switch feature."""
+        super().__init__(feature)
+        self._attr_device_class = BLEBOX_TO_HASS_DEVICE_CLASSES[feature.device_class]
 
     @property
     def is_on(self):

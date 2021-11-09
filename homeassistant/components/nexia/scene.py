@@ -5,7 +5,8 @@ from typing import Any
 from homeassistant.components.scene import Scene
 from homeassistant.helpers.event import async_call_later
 
-from .const import ATTR_DESCRIPTION, DOMAIN, NEXIA_DEVICE, UPDATE_COORDINATOR
+from .const import ATTR_DESCRIPTION, DOMAIN
+from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaEntity
 
 SCENE_ACTIVATION_TIME = 5
@@ -13,10 +14,9 @@ SCENE_ACTIVATION_TIME = 5
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up automations for a Nexia device."""
+    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    nexia_home = coordinator.nexia_home
 
-    nexia_data = hass.data[DOMAIN][config_entry.entry_id]
-    nexia_home = nexia_data[NEXIA_DEVICE]
-    coordinator = nexia_data[UPDATE_COORDINATOR]
     entities = []
 
     # Automation switches
@@ -41,9 +41,9 @@ class NexiaAutomationScene(NexiaEntity, Scene):
         self._automation = automation
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the scene specific state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
         data[ATTR_DESCRIPTION] = self._automation.description
         return data
 

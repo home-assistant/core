@@ -1,19 +1,24 @@
 """The aurora component."""
 
-import asyncio
 from datetime import timedelta
 import logging
 
+from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
+    ATTRIBUTION,
     AURORA_API,
     CONF_THRESHOLD,
     COORDINATOR,
@@ -24,17 +29,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = ["binary_sensor", "sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Aurora component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aurora from a config entry."""
 
     conf = entry.data
@@ -59,34 +57,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         threshold=threshold,
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
-
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         AURORA_API: api,
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -105,7 +92,7 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
         latitude: float,
         longitude: float,
         threshold: float,
-    ):
+    ) -> None:
         """Initialize the data updater."""
 
         super().__init__(
@@ -126,5 +113,36 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             return await self.api.get_forecast_data(self.longitude, self.latitude)
-        except ConnectionError as error:
+        except ClientError as error:
             raise UpdateFailed(f"Error updating from NOAA: {error}") from error
+
+
+class AuroraEntity(CoordinatorEntity):
+    """Implementation of the base Aurora Entity."""
+
+    _attr_extra_state_attributes = {"attribution": ATTRIBUTION}
+
+    def __init__(
+        self,
+        coordinator: AuroraDataUpdateCoordinator,
+        name: str,
+        icon: str,
+    ) -> None:
+        """Initialize the Aurora Entity."""
+
+        super().__init__(coordinator=coordinator)
+
+        self._attr_name = name
+        self._attr_unique_id = f"{coordinator.latitude}_{coordinator.longitude}"
+        self._attr_icon = icon
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Define the device based on name."""
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, str(self.unique_id))},
+            manufacturer="NOAA",
+            model="Aurora Visibility Sensor",
+            name=self.coordinator.name,
+        )

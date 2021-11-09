@@ -1,5 +1,7 @@
 """Support for Vera thermostats."""
-from typing import Any, Callable, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 import pyvera as veraApi
 
@@ -21,7 +23,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
 from . import VeraDevice
@@ -36,7 +38,7 @@ SUPPORT_HVAC = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, HVAC_MODE_O
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
@@ -44,7 +46,8 @@ async def async_setup_entry(
         [
             VeraThermostat(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 
@@ -53,13 +56,13 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
 
     def __init__(
         self, vera_device: veraApi.VeraThermostat, controller_data: ControllerData
-    ):
+    ) -> None:
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def supported_features(self) -> Optional[int]:
+    def supported_features(self) -> int | None:
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
@@ -79,7 +82,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         return HVAC_MODE_OFF
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
@@ -87,15 +90,14 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         return SUPPORT_HVAC
 
     @property
-    def fan_mode(self) -> Optional[str]:
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        mode = self.vera_device.get_fan_mode()
-        if mode == "ContinuousOn":
+        if self.vera_device.get_fan_mode() == "ContinuousOn":
             return FAN_ON
         return FAN_AUTO
 
     @property
-    def fan_modes(self) -> Optional[List[str]]:
+    def fan_modes(self) -> list[str] | None:
         """Return a list of available fan modes."""
         return FAN_OPERATION_LIST
 
@@ -109,11 +111,11 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         self.schedule_update_ha_state()
 
     @property
-    def current_power_w(self) -> Optional[float]:
+    def current_power_w(self) -> float | None:
         """Return the current power usage in W."""
-        power = self.vera_device.power
-        if power:
+        if power := self.vera_device.power:
             return convert(power, float, 0.0)
+        return None
 
     @property
     def temperature_unit(self) -> str:
@@ -126,7 +128,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.vera_device.get_current_temperature()
 
@@ -136,7 +138,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         return self.vera_device.get_hvac_mode()
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.vera_device.get_current_goal_temperature()
 

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autentificare nereu\u0219it\u0103"
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Utilizator"
+                },
+                "title": "Camera Ezviz a fost descoperit\u0103"
+            },
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "url": "URL",
+                    "username": "Utilizator"
+                }
+            },
+            "user_custom_url": {
+                "data": {
+                    "password": "Parola",
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

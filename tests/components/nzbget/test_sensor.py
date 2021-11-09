@@ -1,5 +1,6 @@
 """Test the NZBGet sensors."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -7,11 +8,10 @@ from homeassistant.const import (
     DATA_RATE_MEGABYTES_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
-
-from tests.async_mock import patch
 
 
 async def test_sensors(hass, nzbget_api) -> None:
@@ -20,7 +20,7 @@ async def test_sensors(hass, nzbget_api) -> None:
     with patch("homeassistant.components.nzbget.sensor.utcnow", return_value=now):
         entry = await init_integration(hass)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     uptime = now - timedelta(seconds=600)
 

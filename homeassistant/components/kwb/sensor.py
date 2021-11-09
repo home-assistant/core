@@ -2,16 +2,16 @@
 from pykwb import kwb
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 DEFAULT_RAW = False
 DEFAULT_NAME = "KWB"
@@ -19,7 +19,6 @@ DEFAULT_NAME = "KWB"
 MODE_SERIAL = 0
 MODE_TCP = 1
 
-CONF_TYPE = "type"
 CONF_RAW = "raw"
 
 SERIAL_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -74,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class KWBSensor(Entity):
+class KWBSensor(SensorEntity):
     """Representation of a KWB Easyfire sensor."""
 
     def __init__(self, easyfire, sensor, client_name):
@@ -95,13 +94,13 @@ class KWBSensor(Entity):
         return self._sensor.available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of value."""
         if self._sensor.value is not None and self._sensor.available:
             return self._sensor.value
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._sensor.unit_of_measurement

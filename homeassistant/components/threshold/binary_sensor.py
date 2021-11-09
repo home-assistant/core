@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_NAME,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
@@ -94,13 +95,14 @@ class ThresholdSensor(BinarySensorEntity):
         @callback
         def async_threshold_sensor_state_listener(event):
             """Handle sensor state changes."""
-            new_state = event.data.get("new_state")
-            if new_state is None:
+            if (new_state := event.data.get("new_state")) is None:
                 return
 
             try:
                 self.sensor_value = (
-                    None if new_state.state == STATE_UNKNOWN else float(new_state.state)
+                    None
+                    if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                    else float(new_state.state)
                 )
             except (ValueError, TypeError):
                 self.sensor_value = None
@@ -144,7 +146,7 @@ class ThresholdSensor(BinarySensorEntity):
             return TYPE_UPPER
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,

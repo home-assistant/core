@@ -6,6 +6,8 @@
     "automation",
     "cloud",
     "counter",
+    "dhcp",
+    "energy",
     "frontend",
     "history",
     "input_boolean",
@@ -17,6 +19,8 @@
     "map",
     "media_source",
     "mobile_app",
+    "my",
+    "network",
     "person",
     "scene",
     "script",
@@ -25,10 +29,12 @@
     "system_health",
     "tag",
     "timer",
+    "usb",
     "updater",
     "webhook",
     "zeroconf",
     "zone"
   ],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

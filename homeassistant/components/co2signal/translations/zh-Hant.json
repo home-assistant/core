@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "api_ratelimit": "\u8d85\u904e API \u5b58\u53d6\u9650\u5236",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "error": {
+            "api_ratelimit": "\u8d85\u904e API \u5b58\u53d6\u9650\u5236",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6"
+                }
+            },
+            "country": {
+                "data": {
+                    "country_code": "\u570b\u78bc"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "\u5b58\u53d6\u6b0a\u6756",
+                    "location": "\u53d6\u5f97\u8cc7\u6599\uff1a"
+                },
+                "description": "\u700f\u89bd https://co2signal.com/ \u4ee5\u7372\u5f97\u6b0a\u6756\u3002"
+            }
+        }
+    }
+}

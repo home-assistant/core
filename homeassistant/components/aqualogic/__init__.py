@@ -82,7 +82,7 @@ class AquaLogicProcessor(threading.Thread):
                 return
 
             _LOGGER.error("Connection to %s:%d lost", self._host, self._port)
-            time.sleep(RECONNECT_INTERVAL.seconds)
+            time.sleep(RECONNECT_INTERVAL.total_seconds())
 
     @property
     def panel(self):

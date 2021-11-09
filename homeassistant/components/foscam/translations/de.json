@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_response": "Ung\u00fcltige Antwort vom Ger\u00e4t",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "rtsp_port": "RTSP-Port",
+                    "stream": "Stream",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    },
+    "title": "Foscam"
+}

@@ -48,6 +48,21 @@ CONF_FALLBACK = "fallback"
 DATA = "data"
 UPDATE_TRACK = "update_track"
 
+# Weather
+CONDITIONS_MAP = {
+    "clear-night": {"NIGHT_CLEAR"},
+    "cloudy": {"CLOUDY", "CLOUDY_MOSTLY", "NIGHT_CLOUDY"},
+    "fog": {"FOGGY"},
+    "hail": {"HAIL", "RAIN_HAIL"},
+    "lightning": {"THUNDERSTORM"},
+    "partlycloudy": {"CLOUDY_PARTLY"},
+    "rainy": {"DRIZZLE", "RAIN", "SCATTERED_RAIN"},
+    "snowy": {"FREEZING", "SCATTERED_SNOW", "SNOW"},
+    "snowy-rainy": {"RAIN_SNOW", "SCATTERED_RAIN_SNOW"},
+    "sunny": {"SUN"},
+    "windy": {"WIND"},
+}
+
 # Types
 TYPE_AIR_CONDITIONING = "AIR_CONDITIONING"
 TYPE_HEATING = "HEATING"
@@ -149,6 +164,19 @@ UNIQUE_ID = "unique_id"
 
 DEFAULT_NAME = "Tado"
 
+TADO_HOME = "Home"
 TADO_ZONE = "Zone"
 
 UPDATE_LISTENER = "update_listener"
+
+# Constants for Temperature Offset
+INSIDE_TEMPERATURE_MEASUREMENT = "INSIDE_TEMPERATURE_MEASUREMENT"
+TEMP_OFFSET = "temperatureOffset"
+TADO_OFFSET_CELSIUS = "celsius"
+HA_OFFSET_CELSIUS = "offset_celsius"
+TADO_OFFSET_FAHRENHEIT = "fahrenheit"
+HA_OFFSET_FAHRENHEIT = "offset_fahrenheit"
+TADO_TO_HA_OFFSET_MAP = {
+    TADO_OFFSET_CELSIUS: HA_OFFSET_CELSIUS,
+    TADO_OFFSET_FAHRENHEIT: HA_OFFSET_FAHRENHEIT,
+}

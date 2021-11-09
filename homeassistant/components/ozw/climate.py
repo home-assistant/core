@@ -1,7 +1,8 @@
 """Support for Z-Wave climate devices."""
+from __future__ import annotations
+
 from enum import IntEnum
 import logging
-from typing import Optional, Tuple
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
@@ -239,12 +240,12 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         return self._current_mode_setpoint_values[0].value
 
     @property
-    def target_temperature_low(self) -> Optional[float]:
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._current_mode_setpoint_values[0].value
 
     @property
-    def target_temperature_high(self) -> Optional[float]:
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._current_mode_setpoint_values[1].value
 
@@ -253,9 +254,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
         Must know if single or double setpoint.
         """
-        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-
-        if hvac_mode is not None:
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(hvac_mode)
 
         if len(self._current_mode_setpoint_values) == 1:
@@ -289,8 +288,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
                 "Thermostat %s does not support setting a mode", self.entity_id
             )
             return
-        hvac_mode_value = self._hvac_modes.get(hvac_mode)
-        if hvac_mode_value is None:
+        if (hvac_mode_value := self._hvac_modes.get(hvac_mode)) is None:
             _LOGGER.warning("Received an invalid hvac mode: %s", hvac_mode)
             return
         self.values.mode.send_value(hvac_mode_value)
@@ -308,9 +306,9 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         self.values.mode.send_value(preset_mode_value)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
         if self.values.fan_action:
             data[ATTR_FAN_ACTION] = self.values.fan_action.value
         if self.values.valve_position:
@@ -333,7 +331,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             support |= SUPPORT_PRESET_MODE
         return support
 
-    def _get_current_mode_setpoint_values(self) -> Tuple:
+    def _get_current_mode_setpoint_values(self) -> tuple:
         """Return a tuple of current setpoint Z-Wave value(s)."""
         if not self.values.mode:
             setpoint_names = ("setpoint_heating",)

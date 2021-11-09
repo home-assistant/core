@@ -1,6 +1,6 @@
 """The test for the bayesian sensor platform."""
 import json
-from os import path
+from unittest.mock import patch
 
 from homeassistant import config as hass_config
 from homeassistant.components.bayesian import DOMAIN, binary_sensor as bayesian
@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, callback
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
+from tests.common import get_fixture_path
 
 
 async def test_load_values_when_added_to_hass(hass):
@@ -120,7 +120,7 @@ async def test_sensor_numeric_state(hass):
     state = hass.states.get("binary_sensor.test_binary")
 
     assert [] == state.attributes.get("observations")
-    assert 0.2 == state.attributes.get("probability")
+    assert state.attributes.get("probability") == 0.2
 
     assert state.state == "off"
 
@@ -147,7 +147,7 @@ async def test_sensor_numeric_state(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_binary")
-    assert 0.2 == state.attributes.get("probability")
+    assert state.attributes.get("probability") == 0.2
 
     assert state.state == "off"
 
@@ -187,7 +187,7 @@ async def test_sensor_state(hass):
     state = hass.states.get("binary_sensor.test_binary")
 
     assert [] == state.attributes.get("observations")
-    assert 0.2 == state.attributes.get("probability")
+    assert state.attributes.get("probability") == 0.2
 
     assert state.state == "off"
 
@@ -243,7 +243,7 @@ async def test_sensor_value_template(hass):
     state = hass.states.get("binary_sensor.test_binary")
 
     assert [] == state.attributes.get("observations")
-    assert 0.2 == state.attributes.get("probability")
+    assert state.attributes.get("probability") == 0.2
 
     assert state.state == "off"
 
@@ -340,7 +340,7 @@ async def test_multiple_observations(hass):
     for key, attrs in state.attributes.items():
         json.dumps(attrs)
     assert [] == state.attributes.get("observations")
-    assert 0.2 == state.attributes.get("probability")
+    assert state.attributes.get("probability") == 0.2
 
     assert state.state == "off"
 
@@ -667,11 +667,8 @@ async def test_reload(hass):
 
     assert hass.states.get("binary_sensor.test")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "bayesian/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "bayesian")
+
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -685,10 +682,6 @@ async def test_reload(hass):
 
     assert hass.states.get("binary_sensor.test") is None
     assert hass.states.get("binary_sensor.test2")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))
 
 
 async def test_template_triggers(hass):

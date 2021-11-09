@@ -1,4 +1,6 @@
 """Support for monitoring a GreenEye Monitor energy monitor."""
+from __future__ import annotations
+
 import logging
 
 from greeneye import Monitors
@@ -7,14 +9,18 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
+    CONF_SENSOR_TYPE,
+    CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_STOP,
     TIME_HOURS,
     TIME_MINUTES,
     TIME_SECONDS,
 )
+from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +33,6 @@ CONF_NET_METERING = "net_metering"
 CONF_NUMBER = "number"
 CONF_PULSE_COUNTERS = "pulse_counters"
 CONF_SERIAL_NUMBER = "serial_number"
-CONF_SENSORS = "sensors"
-CONF_SENSOR_TYPE = "sensor_type"
 CONF_TEMPERATURE_SENSORS = "temperature_sensors"
 CONF_TIME_UNIT = "time_unit"
 CONF_VOLTAGE_SENSORS = "voltage"
@@ -117,16 +121,15 @@ COMPONENT_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema({DOMAIN: COMPONENT_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the GreenEye Monitor component."""
-
     monitors = Monitors()
     hass.data[DATA_GREENEYE_MONITOR] = monitors
 
     server_config = config[DOMAIN]
     server = await monitors.start_server(server_config[CONF_PORT])
 
-    async def close_server(*args):
+    async def close_server(event: Event) -> None:
         """Close the monitoring server."""
         await server.close()
 
@@ -158,8 +161,7 @@ async def async_setup(hass, config):
                 }
             )
 
-        sensor_configs = monitor_config[CONF_TEMPERATURE_SENSORS]
-        if sensor_configs:
+        if sensor_configs := monitor_config[CONF_TEMPERATURE_SENSORS]:
             temperature_unit = {
                 CONF_TEMPERATURE_UNIT: sensor_configs[CONF_TEMPERATURE_UNIT]
             }
@@ -191,7 +193,7 @@ async def async_setup(hass, config):
         return False
 
     hass.async_create_task(
-        async_load_platform(hass, "sensor", DOMAIN, all_sensors, config)
+        async_load_platform(hass, "sensor", DOMAIN, {CONF_SENSORS: all_sensors}, config)
     )
 
     return True

@@ -5,5 +5,9 @@
   "codeowners": [
     "@danielhiversen"
   ],
-  "requirements": ["open-garage==0.1.4"]
+  "requirements": [
+    "open-garage==0.1.6"
+  ],
+  "iot_class": "local_polling",
+  "config_flow": true
 }

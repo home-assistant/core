@@ -14,7 +14,6 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_NIGHT,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -36,18 +35,15 @@ from .const import (
     ELK_USER_CODE_SERVICE_SCHEMA,
 )
 
-DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-        vol.Optional("clear", default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
-        vol.Optional("beep", default=False): cv.boolean,
-        vol.Optional("timeout", default=0): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=65535)
-        ),
-        vol.Optional("line1", default=""): cv.string,
-        vol.Optional("line2", default=""): cv.string,
-    }
-)
+DISPLAY_MESSAGE_SERVICE_SCHEMA = {
+    vol.Optional("clear", default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
+    vol.Optional("beep", default=False): cv.boolean,
+    vol.Optional("timeout", default=0): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=65535)
+    ),
+    vol.Optional("line1", default=""): cv.string,
+    vol.Optional("line2", default=""): cv.string,
+}
 
 SERVICE_ALARM_DISPLAY_MESSAGE = "alarm_display_message"
 SERVICE_ALARM_ARM_VACATION = "alarm_arm_vacation"
@@ -65,7 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities, True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_VACATION,
@@ -121,8 +117,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         self._element.add_callback(self._watch_area)
 
         # We do not get changed_by back from resync.
-        last_state = await self.async_get_last_state()
-        if not last_state:
+        if not (last_state := await self.async_get_last_state()):
             return
 
         if ATTR_CHANGED_BY_KEYPAD in last_state.attributes:
@@ -145,8 +140,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             self.async_write_ha_state()
 
     def _watch_area(self, area, changeset):
-        last_log = changeset.get("last_log")
-        if not last_log:
+        if not (last_log := changeset.get("last_log")):
             return
         # user_number only set for arm/disarm logs
         if not last_log.get("user_number"):
@@ -173,7 +167,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Attributes of the area."""
         attrs = self.initial_attrs()
         elmt = self._element

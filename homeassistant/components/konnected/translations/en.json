@@ -32,7 +32,7 @@
             "not_konn_panel": "Not a recognized Konnected.io device"
         },
         "error": {
-            "bad_host": "Invalid Override API host url"
+            "bad_host": "Invalid Override API host URL"
         },
         "step": {
             "options_binary": {

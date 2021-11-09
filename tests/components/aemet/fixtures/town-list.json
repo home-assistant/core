@@ -1,0 +1,43 @@
+[ {
+  "latitud" : "40�18'14.535144\"",
+  "id_old" : "28325",
+  "url" : "getafe-id28065",
+  "latitud_dec" : "40.30403754",
+  "altitud" : "622",
+  "capital" : "Getafe",
+  "num_hab" : "173057",
+  "zona_comarcal" : "722802",
+  "destacada" : "1",
+  "nombre" : "Getafe",
+  "longitud_dec" : "-3.72935236",
+  "id" : "id28065",
+  "longitud" : "-3�43'45.668496\""
+}, {
+  "latitud" : "40�19'54.277752\"",
+  "id_old" : "28370",
+  "url" : "leganes-id28074",
+  "latitud_dec" : "40.33174382",
+  "altitud" : "667",
+  "capital" : "Legan�s",
+  "num_hab" : "186696",
+  "zona_comarcal" : "722802",
+  "destacada" : "1",
+  "nombre" : "Legan�s",
+  "longitud_dec" : "-3.76655557",
+  "id" : "id28074",
+  "longitud" : "-3�45'59.600052\""
+}, {
+  "latitud" : "40�24'30.282876\"",
+  "id_old" : "28001",
+  "url" : "madrid-id28079",
+  "latitud_dec" : "40.40841191",
+  "altitud" : "657",
+  "capital" : "Madrid",
+  "num_hab" : "3165235",
+  "zona_comarcal" : "722802",
+  "destacada" : "1",
+  "nombre" : "Madrid",
+  "longitud_dec" : "-3.68760088",
+  "id" : "id28079",
+  "longitud" : "-3�41'15.363168\""
+} ]

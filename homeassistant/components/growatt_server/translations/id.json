@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nama",
+                    "password": "Kata Sandi",
+                    "url": "URL",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    }
+}

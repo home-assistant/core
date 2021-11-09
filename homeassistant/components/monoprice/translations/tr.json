@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port",
+                    "source_1": "Kaynak #1 ad\u0131",
+                    "source_2": "Kaynak #2 ad\u0131",
+                    "source_3": "Kaynak #3 ad\u0131",
+                    "source_4": "Kaynak #4 ad\u0131",
+                    "source_5": "Kaynak #5 ad\u0131",
+                    "source_6": "Kaynak #6 ad\u0131"
+                },
+                "title": "Cihaza ba\u011flan\u0131n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "Kaynak #1 ad\u0131",
+                    "source_2": "Kaynak #2 ad\u0131",
+                    "source_3": "Kaynak #3 ad\u0131",
+                    "source_4": "Kaynak #4 ad\u0131",
+                    "source_5": "Kaynak #5 ad\u0131",
+                    "source_6": "Kaynak #6 ad\u0131"
+                },
+                "title": "Kaynaklar\u0131 yap\u0131land\u0131r"
+            }
+        }
+    }
+}

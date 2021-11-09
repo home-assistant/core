@@ -1,5 +1,6 @@
 """The tests for the Ring light platform."""
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
@@ -9,7 +10,7 @@ from tests.common import load_fixture
 async def test_entity_registry(hass, requests_mock):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, LIGHT_DOMAIN)
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("light.front_light")
     assert entry.unique_id == 765432
@@ -43,7 +44,7 @@ async def test_light_can_be_turned_on(hass, requests_mock):
     # Mocks the response for turning a light on
     requests_mock.put(
         "https://api.ring.com/clients_api/doorbots/765432/floodlight_light_on",
-        text=load_fixture("ring_doorbot_siren_on_response.json"),
+        text=load_fixture("doorbot_siren_on_response.json", "ring"),
     )
 
     state = hass.states.get("light.front_light")
@@ -66,7 +67,7 @@ async def test_updates_work(hass, requests_mock):
     # Changes the return to indicate that the light is now on.
     requests_mock.get(
         "https://api.ring.com/clients_api/ring_devices",
-        text=load_fixture("ring_devices_updated.json"),
+        text=load_fixture("devices_updated.json", "ring"),
     )
 
     await hass.services.async_call("ring", "update", {}, blocking=True)

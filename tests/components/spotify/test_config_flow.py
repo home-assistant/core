@@ -1,13 +1,15 @@
 """Tests for the Spotify config flow."""
+from http import HTTPStatus
+from unittest.mock import patch
+
 from spotipy import SpotifyException
 
 from homeassistant import data_entry_flow, setup
 from homeassistant.components.spotify.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -41,7 +43,7 @@ async def test_zeroconf_abort_if_existing_entry(hass):
 
 
 async def test_full_flow(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Check a full flow."""
     assert await setup.async_setup_component(
@@ -77,9 +79,9 @@ async def test_full_flow(
         "user-top-read,user-read-playback-position,user-read-recently-played,user-follow-read"
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(
@@ -92,7 +94,9 @@ async def test_full_flow(
         },
     )
 
-    with patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock:
+    with patch(
+        "homeassistant.components.spotify.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock:
         spotify_mock.return_value.current_user.return_value = {
             "id": "fake_id",
             "display_name": "frenck",
@@ -111,7 +115,7 @@ async def test_full_flow(
 
 
 async def test_abort_if_spotify_error(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Check Spotify errors causes flow to abort."""
     await setup.async_setup_component(
@@ -135,7 +139,7 @@ async def test_abort_if_spotify_error(
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
 
     aioclient_mock.post(
@@ -159,7 +163,7 @@ async def test_abort_if_spotify_error(
 
 
 async def test_reauthentication(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Test Spotify reauthentication."""
     await setup.async_setup_component(
@@ -180,7 +184,7 @@ async def test_reauthentication(
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=old_entry.data
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=old_entry.data
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -196,7 +200,7 @@ async def test_reauthentication(
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
 
     aioclient_mock.post(
@@ -209,7 +213,9 @@ async def test_reauthentication(
         },
     )
 
-    with patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock:
+    with patch(
+        "homeassistant.components.spotify.async_setup_entry", return_value=True
+    ), patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock:
         spotify_mock.return_value.current_user.return_value = {"id": "frenck"}
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -224,7 +230,7 @@ async def test_reauthentication(
 
 
 async def test_reauth_account_mismatch(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Test Spotify reauthentication with different account."""
     await setup.async_setup_component(
@@ -245,7 +251,7 @@ async def test_reauth_account_mismatch(
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=old_entry.data
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=old_entry.data
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -259,7 +265,7 @@ async def test_reauth_account_mismatch(
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
 
     aioclient_mock.post(

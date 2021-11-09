@@ -1,4 +1,6 @@
 """Config flow for the Abode Security System component."""
+from http import HTTPStatus
+
 from abodepy import Abode
 from abodepy.exceptions import AbodeAuthenticationException, AbodeException
 from abodepy.helpers.errors import MFA_CODE_REQUIRED
@@ -6,9 +8,9 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_BAD_REQUEST
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DEFAULT_CACHEDB, DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DEFAULT_CACHEDB, DOMAIN, LOGGER
 
 CONF_MFA = "mfa_code"
 CONF_POLLING = "polling"
@@ -18,7 +20,6 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Abode."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
@@ -52,7 +53,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             LOGGER.error("Unable to connect to Abode: %s", ex)
 
-            if ex.errcode == HTTP_BAD_REQUEST:
+            if ex.errcode == HTTPStatus.BAD_REQUEST:
                 errors = {"base": "invalid_auth"}
 
             else:
@@ -159,13 +160,3 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
 
         return await self._async_abode_login(step_id="reauth_confirm")
-
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        if self._async_current_entries():
-            LOGGER.warning("Already configured. Only a single configuration possible.")
-            return self.async_abort(reason="single_instance_allowed")
-
-        self._polling = import_config.get(CONF_POLLING, False)
-
-        return await self.async_step_user(import_config)

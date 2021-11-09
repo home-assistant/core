@@ -27,7 +27,7 @@
                     "armed_home": "Valves kodus",
                     "armed_night": "Valves \u00f6ine"
                 },
-                "description": "Valige millisesse olekusse l\u00fcltub Risco alarm kui valvestada Home Assistant",
+                "description": "Vali millisesse olekusse l\u00fcltub Risco alarm kui valvestada Home Assistant",
                 "title": "Lisa Risco olekud Home Assistanti olekutesse"
             },
             "init": {

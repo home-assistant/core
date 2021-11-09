@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc7a5\uce58\ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328",
-            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc5d0\ub7ec"
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "relay_modes": {
@@ -27,14 +27,14 @@
                     "relay_8": "\ub9b4\ub808\uc774 8",
                     "relay_9": "\ub9b4\ub808\uc774 9"
                 },
-                "title": "\ub9b4\ub808\uc774 \uc124\uc815"
+                "title": "\ub9b4\ub808\uc774 \uc124\uc815\ud558\uae30"
             },
             "user": {
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8",
                     "port": "\ud3ec\ud2b8"
                 },
-                "title": "\ubcf4\ub4dc \uc124\uc815"
+                "title": "\ubcf4\ub4dc \uc124\uc815\ud558\uae30"
             }
         }
     }

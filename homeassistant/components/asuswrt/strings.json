@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "AsusWRT",
+        "description": "Set required parameter to connect to your router",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssh_key": "Path to your SSH key file (instead of password)",
+          "protocol": "Communication protocol to use",
+          "port": "[%key:common::config_flow::data::port%]",
+          "mode": "[%key:common::config_flow::data::mode%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "pwd_and_ssh": "Only provide password or SSH key file",
+      "pwd_or_ssh": "Please provide password or SSH key file",
+      "ssh_not_file": "SSH key file not found",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "AsusWRT Options",
+        "data": {
+          "consider_home": "Seconds to wait before considering a device away",
+          "track_unknown": "Track unknown / unamed devices",
+          "interface": "The interface that you want statistics from (e.g. eth0,eth1 etc)",
+          "dnsmasq": "The location in the router of the dnsmasq.leases files",
+          "require_ip": "Devices must have IP (for access point mode)"
+        }
+      }
+    }
+  }
+}

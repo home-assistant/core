@@ -43,6 +43,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "wy\u015blij polecenie: {subtype}",
+            "send_status": "wy\u015blij aktualizacj\u0119 statusu: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Otrzymane polecenie: {subtype}",
+            "status": "otrzymany status: {subtype}"
+        }
+    },
     "few": "kilka",
     "many": "wiele",
     "one": "jeden",
@@ -75,7 +85,8 @@
                     "off_delay": "Op\u00f3\u017anienie stanu \"off\"",
                     "off_delay_enabled": "W\u0142\u0105cz op\u00f3\u017anienie stanu \"off\"",
                     "replace_device": "Wybierz urz\u0105dzenie do zast\u0105pienia",
-                    "signal_repetitions": "Liczba powt\u00f3rze\u0144 sygna\u0142u"
+                    "signal_repetitions": "Liczba powt\u00f3rze\u0144 sygna\u0142u",
+                    "venetian_blind_mode": "Tryb \u017caluzji weneckich"
                 },
                 "title": "Konfiguracja opcji urz\u0105dzenia"
             }

@@ -1,4 +1,6 @@
 """The tests for the GDACS Feed integration."""
+from unittest.mock import patch
+
 from homeassistant.components import gdacs
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.gdacs.sensor import (
@@ -18,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.gdacs import _generate_mock_feed_entry
 
@@ -60,9 +61,12 @@ async def test_setup(hass, legacy_patchable_time):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
         # 3 geolocation and 1 sensor entities
-        assert len(all_states) == 4
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
 
         state = hass.states.get("sensor.gdacs_32_87336_117_22743")
         assert state is not None
@@ -82,8 +86,11 @@ async def test_setup(hass, legacy_patchable_time):
         async_fire_time_changed(hass, utcnow + DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 4
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
 
         state = hass.states.get("sensor.gdacs_32_87336_117_22743")
         attributes = state.attributes
@@ -97,16 +104,22 @@ async def test_setup(hass, legacy_patchable_time):
         async_fire_time_changed(hass, utcnow + 2 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 4
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
 
         # Simulate an update - empty data, removes all entities
         mock_feed_update.return_value = "ERROR", None
         async_fire_time_changed(hass, utcnow + 3 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 1
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 1
+        )
 
         state = hass.states.get("sensor.gdacs_32_87336_117_22743")
         attributes = state.attributes

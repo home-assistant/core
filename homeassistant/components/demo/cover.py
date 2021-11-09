@@ -3,10 +3,15 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
+    SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP_TILT,
     CoverEntity,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_utc_time_change
 
 from . import DOMAIN
@@ -25,6 +30,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Garage Door",
                 device_class="garage",
                 supported_features=(SUPPORT_OPEN | SUPPORT_CLOSE),
+            ),
+            DemoCover(
+                hass,
+                "cover_5",
+                "Pergola Roof",
+                tilt_position=60,
+                supported_features=(
+                    SUPPORT_OPEN_TILT
+                    | SUPPORT_STOP_TILT
+                    | SUPPORT_CLOSE_TILT
+                    | SUPPORT_SET_TILT_POSITION
+                ),
             ),
         ]
     )
@@ -70,15 +87,15 @@ class DemoCover(CoverEntity):
             self._closed = self.current_cover_position <= 0
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            "name": self.name,
-        }
+            name=self.name,
+        )
 
     @property
     def unique_id(self):

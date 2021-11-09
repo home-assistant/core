@@ -16,6 +16,9 @@ class MockScannerEntity(ScannerEntity):
     def __init__(self):
         """Init."""
         self.connected = False
+        self._hostname = "test.hostname.org"
+        self._ip_address = "0.0.0.0"
+        self._mac_address = "ad:de:ef:be:ed:fe:"
 
     @property
     def source_type(self):
@@ -29,6 +32,21 @@ class MockScannerEntity(ScannerEntity):
         Percentage from 0-100.
         """
         return 100
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self._ip_address
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._mac_address
+
+    @property
+    def hostname(self) -> str:
+        """Return hostname of the device."""
+        return self._hostname
 
     @property
     def is_connected(self):

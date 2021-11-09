@@ -1,0 +1,145 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Kunne ikke hente oppdagelsesinformasjon om Z-Wave JS-tillegg",
+            "addon_info_failed": "Kunne ikke hente informasjon om Z-Wave JS-tillegg",
+            "addon_install_failed": "Kunne ikke installere Z-Wave JS-tillegg",
+            "addon_set_config_failed": "Kunne ikke angi Z-Wave JS-konfigurasjon",
+            "addon_start_failed": "Kunne ikke starte Z-Wave JS-tillegget.",
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "cannot_connect": "Tilkobling mislyktes",
+            "discovery_requires_supervisor": "Oppdagelsen krever veilederen.",
+            "not_zwave_device": "Oppdaget enhet er ikke en Z-Wave-enhet."
+        },
+        "error": {
+            "addon_start_failed": "Kunne ikke starte Z-Wave JS-tillegg. Sjekk konfigurasjonen.",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_ws_url": "Ugyldig websocket URL",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "install_addon": "Vent mens installasjonen av Z-Wave JS-tillegg er ferdig. Dette kan ta flere minutter.",
+            "start_addon": "Vent mens Z-Wave JS-tillegget er ferdig startet. Dette kan ta noen sekunder."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "Nettverksn\u00f8kkel",
+                    "s0_legacy_key": "S0-n\u00f8kkel (eldre)",
+                    "s2_access_control_key": "N\u00f8kkel for S2-tilgangskontroll",
+                    "s2_authenticated_key": "S2 Autentisert n\u00f8kkel",
+                    "s2_unauthenticated_key": "S2 Uautentisert n\u00f8kkel",
+                    "usb_path": "USB enhetsbane"
+                },
+                "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
+            },
+            "hassio_confirm": {
+                "title": "Sett opp Z-Wave JS-integrasjon med Z-Wave JS-tillegg"
+            },
+            "install_addon": {
+                "title": "Installasjon av Z-Wave JS-tillegg har startet"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Bruk Z-Wave JS Supervisor-tillegg"
+                },
+                "description": "Vil du bruke Z-Wave JS Supervisor-tillegg?",
+                "title": "Velg tilkoblingsmetode"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS-tillegget starter"
+            },
+            "usb_confirm": {
+                "description": "Vil du konfigurere {name} med Z-Wave JS-tillegget?"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Fjern brukerkoden p\u00e5 {entity_name}",
+            "ping": "Ping -enhet",
+            "refresh_value": "Oppdater verdien (e) for {entity_name}",
+            "reset_meter": "Tilbakestill m\u00e5lere p\u00e5 {subtype}",
+            "set_config_parameter": "Angi verdien til konfigurasjonsparameteren {subtype}",
+            "set_lock_usercode": "Angi en brukerkode p\u00e5 {entity_name}",
+            "set_value": "Angi verdien for en Z-Wave-verdi"
+        },
+        "condition_type": {
+            "config_parameter": "Konfigurer parameter {subtype} verdi",
+            "node_status": "Nodestatus",
+            "value": "Gjeldende verdi for en Z-Wave-verdi"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Sendte et varsel om oppf\u00f8ringskontroll",
+            "event.notification.notification": "Sendte et varsel",
+            "event.value_notification.basic": "Grunnleggende CC -hendelse p\u00e5 {subtype}",
+            "event.value_notification.central_scene": "Sentral scenehandling p\u00e5 {subtype}",
+            "event.value_notification.scene_activation": "Sceneaktivering p\u00e5 {subtype}",
+            "state.node_status": "Nodestatus endret",
+            "zwave_js.value_updated.config_parameter": "Verdiendring p\u00e5 konfigurasjonsparameteren {subtype}",
+            "zwave_js.value_updated.value": "Verdiendring p\u00e5 en Z-Wave JS-verdi"
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Kunne ikke hente oppdagelsesinformasjon om Z-Wave JS-tillegg",
+            "addon_info_failed": "Kunne ikke hente informasjon om Z-Wave JS-tillegg",
+            "addon_install_failed": "Kunne ikke installere Z-Wave JS-tillegg",
+            "addon_set_config_failed": "Kunne ikke angi Z-Wave JS-konfigurasjon",
+            "addon_start_failed": "Kunne ikke starte Z-Wave JS-tillegget.",
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "different_device": "Den tilkoblede USB-enheten er ikke den samme som tidligere konfigurert for denne konfigurasjonsoppf\u00f8ringen. Opprett i stedet en ny konfigurasjonsoppf\u00f8ring for den nye enheten."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_ws_url": "Ugyldig URL-adresse for websocket",
+            "unknown": "Uventet feil"
+        },
+        "progress": {
+            "install_addon": "Vent mens installasjonen av Z-Wave JS-tillegg er ferdig. Dette kan ta flere minutter.",
+            "start_addon": "Vent mens Z-Wave JS-tillegget er ferdig startet. Dette kan ta noen sekunder."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Emuler maskinvare",
+                    "log_level": "Loggniv\u00e5",
+                    "network_key": "Nettverksn\u00f8kkel",
+                    "s0_legacy_key": "S0-n\u00f8kkel (eldre)",
+                    "s2_access_control_key": "N\u00f8kkel for S2-tilgangskontroll",
+                    "s2_authenticated_key": "S2 Autentisert n\u00f8kkel",
+                    "s2_unauthenticated_key": "S2 Uautentisert n\u00f8kkel",
+                    "usb_path": "USB enhetsbane"
+                },
+                "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
+            },
+            "install_addon": {
+                "title": "Installasjon av Z-Wave JS-tillegg har startet"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Bruk Z-Wave JS Supervisor-tillegg"
+                },
+                "description": "Vil du bruke Z-Wave JS Supervisor-tillegg?",
+                "title": "Velg tilkoblingsmetode"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS-tillegget starter"
+            }
+        }
+    },
+    "title": ""
+}

@@ -1,15 +1,15 @@
 """Test system log component."""
 import asyncio
+from http import HTTPStatus
 import logging
 import queue
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
 from homeassistant.core import callback
-
-from tests.async_mock import MagicMock, patch
 
 _LOGGER = logging.getLogger("test_logger")
 BASIC_CONFIG = {"system_log": {"max_entries": 2}}
@@ -41,7 +41,7 @@ async def get_error_log(hass, hass_client, expected_count):
 
     client = await hass_client()
     resp = await client.get("/api/error/all")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     data = await resp.json()
 
@@ -292,20 +292,19 @@ async def async_log_error_from_test_path(hass, path, sq):
     call_path = "internal_path.py"
     with patch.object(
         _LOGGER, "findCaller", MagicMock(return_value=(call_path, 0, None, None))
+    ), patch(
+        "traceback.extract_stack",
+        MagicMock(
+            return_value=[
+                get_frame("main_path/main.py"),
+                get_frame(path),
+                get_frame(call_path),
+                get_frame("venv_path/logging/log.py"),
+            ]
+        ),
     ):
-        with patch(
-            "traceback.extract_stack",
-            MagicMock(
-                return_value=[
-                    get_frame("main_path/main.py"),
-                    get_frame(path),
-                    get_frame(call_path),
-                    get_frame("venv_path/logging/log.py"),
-                ]
-            ),
-        ):
-            _LOGGER.error("error message")
-            await _async_block_until_queue_empty(hass, sq)
+        _LOGGER.error("error message")
+        await _async_block_until_queue_empty(hass, sq)
 
 
 async def test_homeassistant_path(hass, simple_queue, hass_client):

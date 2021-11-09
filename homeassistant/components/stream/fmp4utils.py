@@ -1,63 +1,50 @@
 """Utilities to help convert mp4s to fmp4s."""
-import io
+from __future__ import annotations
+
+from collections.abc import Generator
 
 
-def find_box(segment: io.BytesIO, target_type: bytes, box_start: int = 0) -> int:
+def find_box(
+    mp4_bytes: bytes, target_type: bytes, box_start: int = 0
+) -> Generator[int, None, None]:
     """Find location of first box (or sub_box if box_start provided) of given type."""
     if box_start == 0:
-        box_end = segment.seek(0, io.SEEK_END)
-        segment.seek(0)
         index = 0
+        box_end = len(mp4_bytes)
     else:
-        segment.seek(box_start)
-        box_end = box_start + int.from_bytes(segment.read(4), byteorder="big")
+        box_end = box_start + int.from_bytes(
+            mp4_bytes[box_start : box_start + 4], byteorder="big"
+        )
         index = box_start + 8
     while 1:
         if index > box_end - 8:  # End of box, not found
             break
-        segment.seek(index)
-        box_header = segment.read(8)
+        box_header = mp4_bytes[index : index + 8]
         if box_header[4:8] == target_type:
             yield index
-            segment.seek(index)
         index += int.from_bytes(box_header[0:4], byteorder="big")
 
 
-def get_init(segment: io.BytesIO) -> bytes:
-    """Get init section from fragmented mp4."""
-    moof_location = next(find_box(segment, b"moof"))
-    segment.seek(0)
-    return segment.read(moof_location)
-
-
-def get_m4s(segment: io.BytesIO, sequence: int) -> bytes:
-    """Get m4s section from fragmented mp4."""
-    moof_location = next(find_box(segment, b"moof"))
-    mfra_location = next(find_box(segment, b"mfra"))
-    segment.seek(moof_location)
-    return segment.read(mfra_location - moof_location)
-
-
-def get_codec_string(segment: io.BytesIO) -> str:
+def get_codec_string(mp4_bytes: bytes) -> str:
     """Get RFC 6381 codec string."""
     codecs = []
 
     # Find moov
-    moov_location = next(find_box(segment, b"moov"))
+    moov_location = next(find_box(mp4_bytes, b"moov"))
 
     # Find tracks
-    for trak_location in find_box(segment, b"trak", moov_location):
+    for trak_location in find_box(mp4_bytes, b"trak", moov_location):
         # Drill down to media info
-        mdia_location = next(find_box(segment, b"mdia", trak_location))
-        minf_location = next(find_box(segment, b"minf", mdia_location))
-        stbl_location = next(find_box(segment, b"stbl", minf_location))
-        stsd_location = next(find_box(segment, b"stsd", stbl_location))
+        mdia_location = next(find_box(mp4_bytes, b"mdia", trak_location))
+        minf_location = next(find_box(mp4_bytes, b"minf", mdia_location))
+        stbl_location = next(find_box(mp4_bytes, b"stbl", minf_location))
+        stsd_location = next(find_box(mp4_bytes, b"stsd", stbl_location))
 
         # Get stsd box
-        segment.seek(stsd_location)
-        stsd_length = int.from_bytes(segment.read(4), byteorder="big")
-        segment.seek(stsd_location)
-        stsd_box = segment.read(stsd_length)
+        stsd_length = int.from_bytes(
+            mp4_bytes[stsd_location : stsd_location + 4], byteorder="big"
+        )
+        stsd_box = mp4_bytes[stsd_location : stsd_location + stsd_length]
 
         # Base Codec
         codec = stsd_box[20:24].decode("utf-8")

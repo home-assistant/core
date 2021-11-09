@@ -1,12 +1,12 @@
 """The test for the fido sensor platform."""
 import logging
+from unittest.mock import MagicMock, patch
 
 from pyfido.client import PyFidoError
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.fido import sensor as fido
 
-from tests.async_mock import MagicMock, patch
 from tests.common import assert_setup_component
 
 CONTRACT = "123456789"
@@ -66,7 +66,13 @@ async def test_error(hass, caplog):
     """Test the Fido sensor errors."""
     caplog.set_level(logging.ERROR)
 
-    config = {}
+    config = {
+        "platform": "fido",
+        "name": "fido",
+        "username": "myusername",
+        "password": "password",
+        "monitored_variables": ["balance", "data_remaining"],
+    }
     fake_async_add_entities = MagicMock()
     with patch("homeassistant.components.fido.sensor.FidoClient", FidoClientMockError):
         await fido.async_setup_platform(hass, config, fake_async_add_entities)

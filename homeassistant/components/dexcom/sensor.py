@@ -1,4 +1,5 @@
 """Support for Dexcom sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -16,7 +17,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, False)
 
 
-class DexcomGlucoseValueSensor(CoordinatorEntity):
+class DexcomGlucoseValueSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Dexcom glucose value sensor."""
 
     def __init__(self, coordinator, username, unit_of_measurement):
@@ -41,12 +42,12 @@ class DexcomGlucoseValueSensor(CoordinatorEntity):
         return GLUCOSE_VALUE_ICON
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of the device."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
             return getattr(self.coordinator.data, self._attribute_unit_of_measurement)
@@ -58,7 +59,7 @@ class DexcomGlucoseValueSensor(CoordinatorEntity):
         return self._unique_id
 
 
-class DexcomGlucoseTrendSensor(CoordinatorEntity):
+class DexcomGlucoseTrendSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Dexcom glucose trend sensor."""
 
     def __init__(self, coordinator, username):
@@ -81,7 +82,7 @@ class DexcomGlucoseTrendSensor(CoordinatorEntity):
         return GLUCOSE_TREND_ICON[0]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
             return self.coordinator.data.trend_description

@@ -1,0 +1,17 @@
+{
+    "system_health": {
+        "info": {
+            "arch": "CPU \uc544\ud0a4\ud14d\ucc98",
+            "dev": "\uac1c\ubc1c\uc790 \ubaa8\ub4dc",
+            "docker": "Docker",
+            "hassio": "Supervisor",
+            "installation_type": "\uc124\uce58 \uc720\ud615",
+            "os_name": "\uc6b4\uc601 \uccb4\uc81c \uc81c\ud488\uad70",
+            "os_version": "\uc6b4\uc601 \uccb4\uc81c \ubc84\uc804",
+            "python_version": "Python \ubc84\uc804",
+            "timezone": "\uc2dc\uac04\ub300",
+            "version": "\ubc84\uc804",
+            "virtualenv": "\uac00\uc0c1 \ud658\uacbd"
+        }
+    }
+}

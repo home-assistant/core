@@ -27,7 +27,7 @@
                 "data": {
                     "forecast": "Previsi\u00f3 meteorol\u00f2gica"
                 },
-                "description": "Per culpa de les limitacions de la versi\u00f3 gratu\u00efta l'API d'AccuWeather, quan habilitis la previsi\u00f3 meteorol\u00f2gica, les actualitzacions es realitzaran cada 64 minuts en comptes de 32.",
+                "description": "Per culpa de les limitacions de la versi\u00f3 gratu\u00efta l'API d'AccuWeather, quan habilitis la previsi\u00f3 meteorol\u00f2gica, les actualitzacions de dades es faran cada 80 minuts en comptes de cada 40.",
                 "title": "Opcions d'AccuWeather"
             }
         }

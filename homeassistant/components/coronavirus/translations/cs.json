@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "user": {

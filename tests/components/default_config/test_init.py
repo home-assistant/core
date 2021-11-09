@@ -1,10 +1,11 @@
 """Test the default_config init."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture(autouse=True)
@@ -28,6 +29,6 @@ def recorder_url_mock():
         yield
 
 
-async def test_setup(hass, mock_zeroconf):
+async def test_setup(hass, mock_zeroconf, mock_get_source_ip):
     """Test setup."""
     assert await async_setup_component(hass, "default_config", {"foo": "bar"})

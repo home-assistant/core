@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "\uc704\ub3c4",
+                    "longitude": "\uacbd\ub3c4",
+                    "name": "\uc774\ub984"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "\uc784\uacc4\uac12 (%)"
+                }
+            }
+        }
+    },
+    "title": "NOAA Aurora \uc13c\uc11c"
+}

@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "Konto jest ju\u017c skonfigurowane",
+            "ezviz_cloud_account_missing": "Brak konta Ezviz. Skonfiguruj ponownie konto Ezviz.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP"
+        },
+        "flow_title": "{serial}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wpisz dane logowania RTSP dla kamery Ezviz {serial} z IP {ip_address}",
+                "title": "Wykryto kamer\u0119 Ezviz"
+            },
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "url": "URL",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Po\u0142\u0105czenie z chmur\u0105 Ezviz"
+            },
+            "user_custom_url": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "url": "URL",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "R\u0119cznie okre\u015bl adres URL dla swojego regionu",
+                "title": "Po\u0142\u0105czenie z niestandardowym adresem URL Ezviz"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Argumenty przekazane do ffmpeg dla kamer",
+                    "timeout": "Limit czasu \u017c\u0105dania (w sekundach)"
+                }
+            }
+        }
+    }
+}

@@ -1,9 +1,9 @@
 {
     "state": {
         "_": {
-            "ok": "OK",
-            "problem": "Masalah"
+            "ok": "Oke",
+            "problem": "Bermasalah"
         }
     },
-    "title": "Tanaman"
+    "title": "Monitor Tanaman"
 }

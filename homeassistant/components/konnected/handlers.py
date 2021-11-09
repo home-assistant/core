@@ -18,7 +18,7 @@ HANDLERS = decorator.Registry()
 
 @HANDLERS.register("state")
 async def async_handle_state_update(hass, context, msg):
-    """Handle a binary sensor state update."""
+    """Handle a binary sensor or switch state update."""
     _LOGGER.debug("[state handler] context: %s  msg: %s", context, msg)
     entity_id = context.get(ATTR_ENTITY_ID)
     state = bool(int(msg.get(ATTR_STATE)))
@@ -51,8 +51,7 @@ async def async_handle_addr_update(hass, context, msg):
     """Handle an addressable sensor update."""
     _LOGGER.debug("[addr handler] context: %s  msg: %s", context, msg)
     addr, temp = msg.get("addr"), msg.get("temp")
-    entity_id = context.get(addr)
-    if entity_id:
+    if entity_id := context.get(addr):
         async_dispatcher_send(hass, f"konnected.{entity_id}.update", temp)
     else:
         msg["device_id"] = context.get("device_id")

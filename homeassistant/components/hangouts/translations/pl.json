@@ -12,7 +12,7 @@
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "PIN"
+                    "2fa": "Kod uwierzytelniania dwusk\u0142adnikowego"
                 },
                 "description": "Pusty",
                 "title": "Uwierzytelnianie dwusk\u0142adnikowe"

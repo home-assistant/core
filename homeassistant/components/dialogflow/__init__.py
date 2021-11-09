@@ -24,11 +24,6 @@ class DialogFlowError(HomeAssistantError):
     """Raised when a DialogFlow error happens."""
 
 
-async def async_setup(hass, config):
-    """Set up the Dialogflow component."""
-    return True
-
-
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook with Dialogflow requests."""
     message = await request.json()
@@ -111,8 +106,7 @@ async def async_handle_message(hass, message):
             "Dialogflow V1 API will be removed on October 23, 2019. Please change your DialogFlow settings to use the V2 api"
         )
         req = message.get("result")
-        action_incomplete = req.get("actionIncomplete", True)
-        if action_incomplete:
+        if req.get("actionIncomplete", True):
             return
 
     elif _api_version is V2:

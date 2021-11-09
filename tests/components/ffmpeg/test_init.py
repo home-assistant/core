@@ -1,5 +1,7 @@
 """The tests for Home Assistant ffmpeg."""
-import homeassistant.components.ffmpeg as ffmpeg
+from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
+
+from homeassistant.components import ffmpeg
 from homeassistant.components.ffmpeg import (
     DOMAIN,
     SERVICE_RESTART,
@@ -10,7 +12,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component, setup_component
 
-from tests.async_mock import MagicMock
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
@@ -180,3 +181,58 @@ async def test_setup_component_test_service_start_with_entity(hass):
 
     assert ffmpeg_dev.called_start
     assert ffmpeg_dev.called_entities == ["test.ffmpeg_device"]
+
+
+async def test_async_get_image_with_width_height(hass):
+    """Test fetching an image with a specific width and height."""
+    with assert_setup_component(1):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+
+    get_image_mock = AsyncMock()
+    with patch(
+        "homeassistant.components.ffmpeg.ImageFrame",
+        return_value=Mock(get_image=get_image_mock),
+    ):
+        await ffmpeg.async_get_image(hass, "rtsp://fake", width=640, height=480)
+
+    assert get_image_mock.call_args_list == [
+        call("rtsp://fake", output_format="mjpeg", extra_cmd="-s 640x480")
+    ]
+
+
+async def test_async_get_image_with_extra_cmd_overlapping_width_height(hass):
+    """Test fetching an image with and extra_cmd with width and height and a specific width and height."""
+    with assert_setup_component(1):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+
+    get_image_mock = AsyncMock()
+    with patch(
+        "homeassistant.components.ffmpeg.ImageFrame",
+        return_value=Mock(get_image=get_image_mock),
+    ):
+        await ffmpeg.async_get_image(
+            hass, "rtsp://fake", extra_cmd="-s 1024x768", width=640, height=480
+        )
+
+    assert get_image_mock.call_args_list == [
+        call("rtsp://fake", output_format="mjpeg", extra_cmd="-s 1024x768")
+    ]
+
+
+async def test_async_get_image_with_extra_cmd_width_height(hass):
+    """Test fetching an image with and extra_cmd and a specific width and height."""
+    with assert_setup_component(1):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+
+    get_image_mock = AsyncMock()
+    with patch(
+        "homeassistant.components.ffmpeg.ImageFrame",
+        return_value=Mock(get_image=get_image_mock),
+    ):
+        await ffmpeg.async_get_image(
+            hass, "rtsp://fake", extra_cmd="-vf any", width=640, height=480
+        )
+
+    assert get_image_mock.call_args_list == [
+        call("rtsp://fake", output_format="mjpeg", extra_cmd="-vf any -s 640x480")
+    ]

@@ -1,11 +1,5 @@
 {
     "config": {
-        "abort": {
-            "site_exists": "Denna site_id \u00e4r redan konfigurerad"
-        },
-        "error": {
-            "site_exists": "Denna site_id \u00e4r redan konfigurerad"
-        },
         "step": {
             "user": {
                 "data": {

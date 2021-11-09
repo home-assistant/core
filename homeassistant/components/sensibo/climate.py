@@ -40,7 +40,7 @@ from .const import DOMAIN as SENSIBO_DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 ALL = ["all"]
-TIMEOUT = 10
+TIMEOUT = 8
 
 SERVICE_ASSUME_STATE = "assume_state"
 
@@ -91,17 +91,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     devices = []
     try:
-        for dev in await client.async_get_devices(_INITIAL_FETCH_FIELDS):
-            if config[CONF_ID] == ALL or dev["id"] in config[CONF_ID]:
-                devices.append(
-                    SensiboClimate(client, dev, hass.config.units.temperature_unit)
-                )
+        async with async_timeout.timeout(TIMEOUT):
+            for dev in await client.async_get_devices(_INITIAL_FETCH_FIELDS):
+                if config[CONF_ID] == ALL or dev["id"] in config[CONF_ID]:
+                    devices.append(
+                        SensiboClimate(client, dev, hass.config.units.temperature_unit)
+                    )
     except (
         aiohttp.client_exceptions.ClientConnectorError,
         asyncio.TimeoutError,
         pysensibo.SensiboError,
     ) as err:
-        _LOGGER.exception("Failed to connect to Sensibo servers")
+        _LOGGER.error("Failed to get devices from Sensibo servers")
         raise PlatformNotReady from err
 
     if not devices:
@@ -111,8 +112,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_assume_state(service):
         """Set state according to external service call.."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
+        if entity_ids := service.data.get(ATTR_ENTITY_ID):
             target_climate = [
                 device for device in devices if device.entity_id in entity_ids
             ]
@@ -150,6 +150,7 @@ class SensiboClimate(ClimateEntity):
         self._units = units
         self._available = False
         self._do_update(data)
+        self._failed_update = False
 
     @property
     def supported_features(self):
@@ -191,7 +192,7 @@ class SensiboClimate(ClimateEntity):
         return self._external_state or super().state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"battery": self.current_battery}
 
@@ -297,8 +298,7 @@ class SensiboClimate(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         temperature = int(temperature)
         if temperature not in self._temperatures_list:
@@ -316,59 +316,35 @@ class SensiboClimate(ClimateEntity):
             else:
                 return
 
-        with async_timeout.timeout(TIMEOUT):
-            await self._client.async_set_ac_state_property(
-                self._id, "targetTemperature", temperature, self._ac_states
-            )
+        await self._async_set_ac_state_property("targetTemperature", temperature)
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        with async_timeout.timeout(TIMEOUT):
-            await self._client.async_set_ac_state_property(
-                self._id, "fanLevel", fan_mode, self._ac_states
-            )
+        await self._async_set_ac_state_property("fanLevel", fan_mode)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         if hvac_mode == HVAC_MODE_OFF:
-            with async_timeout.timeout(TIMEOUT):
-                await self._client.async_set_ac_state_property(
-                    self._id, "on", False, self._ac_states
-                )
+            await self._async_set_ac_state_property("on", False)
             return
 
         # Turn on if not currently on.
         if not self._ac_states["on"]:
-            with async_timeout.timeout(TIMEOUT):
-                await self._client.async_set_ac_state_property(
-                    self._id, "on", True, self._ac_states
-                )
+            await self._async_set_ac_state_property("on", True)
 
-        with async_timeout.timeout(TIMEOUT):
-            await self._client.async_set_ac_state_property(
-                self._id, "mode", HA_TO_SENSIBO[hvac_mode], self._ac_states
-            )
+        await self._async_set_ac_state_property("mode", HA_TO_SENSIBO[hvac_mode])
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
-        with async_timeout.timeout(TIMEOUT):
-            await self._client.async_set_ac_state_property(
-                self._id, "swing", swing_mode, self._ac_states
-            )
+        await self._async_set_ac_state_property("swing", swing_mode)
 
     async def async_turn_on(self):
         """Turn Sensibo unit on."""
-        with async_timeout.timeout(TIMEOUT):
-            await self._client.async_set_ac_state_property(
-                self._id, "on", True, self._ac_states
-            )
+        await self._async_set_ac_state_property("on", True)
 
     async def async_turn_off(self):
         """Turn Sensibo unit on."""
-        with async_timeout.timeout(TIMEOUT):
-            await self._client.async_set_ac_state_property(
-                self._id, "on", False, self._ac_states
-            )
+        await self._async_set_ac_state_property("on", False)
 
     async def async_assume_state(self, state):
         """Set external state."""
@@ -377,16 +353,9 @@ class SensiboClimate(ClimateEntity):
         )
 
         if change_needed:
-            with async_timeout.timeout(TIMEOUT):
-                await self._client.async_set_ac_state_property(
-                    self._id,
-                    "on",
-                    state != HVAC_MODE_OFF,  # value
-                    self._ac_states,
-                    True,  # assumed_state
-                )
+            await self._async_set_ac_state_property("on", state != HVAC_MODE_OFF, True)
 
-        if state in [STATE_ON, HVAC_MODE_OFF]:
+        if state in (STATE_ON, HVAC_MODE_OFF):
             self._external_state = None
         else:
             self._external_state = state
@@ -394,9 +363,43 @@ class SensiboClimate(ClimateEntity):
     async def async_update(self):
         """Retrieve latest state."""
         try:
-            with async_timeout.timeout(TIMEOUT):
+            async with async_timeout.timeout(TIMEOUT):
                 data = await self._client.async_get_device(self._id, _FETCH_FIELDS)
-                self._do_update(data)
-        except (aiohttp.client_exceptions.ClientError, pysensibo.SensiboError):
-            _LOGGER.warning("Failed to connect to Sensibo servers")
+        except (
+            aiohttp.client_exceptions.ClientError,
+            asyncio.TimeoutError,
+            pysensibo.SensiboError,
+        ):
+            if self._failed_update:
+                _LOGGER.warning(
+                    "Failed to update data for device '%s' from Sensibo servers",
+                    self.name,
+                )
+                self._available = False
+                self.async_write_ha_state()
+                return
+
+            _LOGGER.debug("First failed update data for device '%s'", self.name)
+            self._failed_update = True
+            return
+
+        self._failed_update = False
+        self._do_update(data)
+
+    async def _async_set_ac_state_property(self, name, value, assumed_state=False):
+        """Set AC state."""
+        try:
+            async with async_timeout.timeout(TIMEOUT):
+                await self._client.async_set_ac_state_property(
+                    self._id, name, value, self._ac_states, assumed_state
+                )
+        except (
+            aiohttp.client_exceptions.ClientError,
+            asyncio.TimeoutError,
+            pysensibo.SensiboError,
+        ) as err:
             self._available = False
+            self.async_write_ha_state()
+            raise Exception(
+                f"Failed to set AC state for device {self.name} to Sensibo servers"
+            ) from err

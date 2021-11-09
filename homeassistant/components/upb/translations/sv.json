@@ -3,7 +3,7 @@
         "error": {
             "cannot_connect": "Det gick inte att ansluta till UPB PIM, f\u00f6rs\u00f6k igen.",
             "invalid_upb_file": "Saknar eller ogiltig UPB UPStart-exportfil, kontrollera filens namn och s\u00f6kv\u00e4g.",
-            "unknown": "Ov\u00e4ntat fel."
+            "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
             "user": {

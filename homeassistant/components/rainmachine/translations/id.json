@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "flow_title": "{ip}",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Nama Host atau Alamat IP",
+                    "password": "Kata Sandi",
+                    "port": "Port"
+                },
+                "title": "Isi informasi Anda"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Waktu berjalan zona default (dalam detik)"
+                },
+                "title": "Konfigurasikan RainMachine"
+            }
+        }
+    }
+}

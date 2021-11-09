@@ -1,6 +1,8 @@
 """Permissions for Home Assistant."""
-import logging
-from typing import Any, Callable, Optional
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
 
 import voluptuous as vol
 
@@ -13,13 +15,11 @@ from .util import test_all
 
 POLICY_SCHEMA = vol.Schema({vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA})
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class AbstractPermissions:
     """Default permissions class."""
 
-    _cached_entity_func: Optional[Callable[[str, str], bool]] = None
+    _cached_entity_func: Callable[[str, str], bool] | None = None
 
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""
@@ -31,9 +31,7 @@ class AbstractPermissions:
 
     def check_entity(self, entity_id: str, key: str) -> bool:
         """Check if we can access entity."""
-        entity_func = self._cached_entity_func
-
-        if entity_func is None:
+        if (entity_func := self._cached_entity_func) is None:
             entity_func = self._cached_entity_func = self._entity_func()
 
         return entity_func(entity_id, key)

@@ -1,5 +1,7 @@
 """Test the ProgettiHWSW Automation config flow."""
-from homeassistant import config_entries, setup
+from unittest.mock import patch
+
+from homeassistant import config_entries
 from homeassistant.components.progettihwsw.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import (
@@ -8,7 +10,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 mock_value_step_user = {
@@ -21,7 +22,7 @@ mock_value_step_user = {
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -47,9 +48,6 @@ async def test_form(hass):
     assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.progettihwsw.async_setup",
-        return_value=True,
-    ), patch(
         "homeassistant.components.progettihwsw.async_setup_entry",
         return_value=True,
     ):

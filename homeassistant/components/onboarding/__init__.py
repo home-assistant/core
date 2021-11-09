@@ -4,10 +4,17 @@ from homeassistant.helpers.storage import Store
 from homeassistant.loader import bind_hass
 
 from . import views
-from .const import DOMAIN, STEP_CORE_CONFIG, STEP_INTEGRATION, STEP_USER, STEPS
+from .const import (
+    DOMAIN,
+    STEP_ANALYTICS,
+    STEP_CORE_CONFIG,
+    STEP_INTEGRATION,
+    STEP_USER,
+    STEPS,
+)
 
 STORAGE_KEY = DOMAIN
-STORAGE_VERSION = 3
+STORAGE_VERSION = 4
 
 
 class OnboadingStorage(Store):
@@ -20,6 +27,8 @@ class OnboadingStorage(Store):
             old_data["done"].append(STEP_INTEGRATION)
         if old_version < 3:
             old_data["done"].append(STEP_CORE_CONFIG)
+        if old_version < 4:
+            old_data["done"].append(STEP_ANALYTICS)
         return old_data
 
 
@@ -41,9 +50,7 @@ def async_is_user_onboarded(hass):
 async def async_setup(hass, config):
     """Set up the onboarding component."""
     store = OnboadingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
-    data = await store.async_load()
-
-    if data is None:
+    if (data := await store.async_load()) is None:
         data = {"done": []}
 
     if STEP_USER not in data["done"]:

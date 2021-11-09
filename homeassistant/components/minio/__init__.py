@@ -1,9 +1,10 @@
 """Minio component."""
+from __future__ import annotations
+
 import logging
 import os
 from queue import Queue
 import threading
-from typing import List
 
 import voluptuous as vol
 
@@ -182,8 +183,7 @@ class QueueListener(threading.Thread):
         """Listen to queue events, and forward them to Home Assistant event bus."""
         _LOGGER.info("Running QueueListener")
         while True:
-            event = self._queue.get()
-            if event is None:
+            if (event := self._queue.get()) is None:
                 break
 
             _, file_name = os.path.split(event[ATTR_KEY])
@@ -230,8 +230,8 @@ class MinioListener:
         bucket_name: str,
         prefix: str,
         suffix: str,
-        events: List[str],
-    ):
+        events: list[str],
+    ) -> None:
         """Create Listener."""
         self._queue = queue
         self._endpoint = endpoint

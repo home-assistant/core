@@ -16,9 +16,14 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
-
+ATTR_EMBED = "embed"
+ATTR_EMBED_AUTHOR = "author"
+ATTR_EMBED_FIELDS = "fields"
+ATTR_EMBED_FOOTER = "footer"
+ATTR_EMBED_THUMBNAIL = "thumbnail"
 ATTR_IMAGES = "images"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
 
 
 def get_service(hass, config, discovery_info=None):
@@ -43,15 +48,32 @@ class DiscordNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message, **kwargs):
         """Login to Discord, send message to channel(s) and log out."""
-
         discord.VoiceClient.warn_nacl = False
         discord_bot = discord.Client()
         images = None
+        embedding = None
 
         if ATTR_TARGET not in kwargs:
             _LOGGER.error("No target specified")
             return None
+
         data = kwargs.get(ATTR_DATA) or {}
+
+        embed = None
+        if ATTR_EMBED in data:
+            embedding = data[ATTR_EMBED]
+            fields = embedding.get(ATTR_EMBED_FIELDS)
+
+            if embedding:
+                embed = discord.Embed(**embedding)
+                for field in fields:
+                    embed.add_field(**field)
+                if ATTR_EMBED_FOOTER in embedding:
+                    embed.set_footer(**embedding[ATTR_EMBED_FOOTER])
+                if ATTR_EMBED_AUTHOR in embedding:
+                    embed.set_author(**embedding[ATTR_EMBED_AUTHOR])
+                if ATTR_EMBED_THUMBNAIL in embedding:
+                    embed.set_thumbnail(**embedding[ATTR_EMBED_THUMBNAIL])
 
         if ATTR_IMAGES in data:
             images = []
@@ -66,31 +88,21 @@ class DiscordNotificationService(BaseNotificationService):
                 else:
                     _LOGGER.warning("Image not found: %s", image)
 
-        # pylint: disable=unused-variable
-        @discord_bot.event
-        async def on_ready():
-            """Send the messages when the bot is ready."""
-            try:
-                for channelid in kwargs[ATTR_TARGET]:
-                    channelid = int(channelid)
-                    channel = discord_bot.get_channel(
+        await discord_bot.login(self.token)
+
+        try:
+            for channelid in kwargs[ATTR_TARGET]:
+                channelid = int(channelid)
+                try:
+                    channel = await discord_bot.fetch_channel(
                         channelid
-                    ) or discord_bot.get_user(channelid)
-
-                    if channel is None:
-                        _LOGGER.warning("Channel not found for ID: %s", channelid)
-                        continue
-                    # Must create new instances of File for each channel.
-                    files = None
-                    if images:
-                        files = []
-                        for image in images:
-                            files.append(discord.File(image))
-                    await channel.send(message, files=files)
-            except (discord.errors.HTTPException, discord.errors.NotFound) as error:
-                _LOGGER.warning("Communication error: %s", error)
-            await discord_bot.logout()
-            await discord_bot.close()
-
-        # Using reconnect=False prevents multiple ready events to be fired.
-        await discord_bot.start(self.token, reconnect=False)
+                    ) or await discord_bot.fetch_user(channelid)
+                except discord.NotFound:
+                    _LOGGER.warning("Channel not found for ID: %s", channelid)
+                    continue
+                # Must create new instances of File for each channel.
+                files = [discord.File(image) for image in images] if images else None
+                await channel.send(message, files=files, embed=embed)
+        except (discord.HTTPException, discord.NotFound) as error:
+            _LOGGER.warning("Communication error: %s", error)
+        await discord_bot.close()

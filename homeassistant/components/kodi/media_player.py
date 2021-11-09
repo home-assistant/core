@@ -3,8 +3,10 @@ from datetime import timedelta
 from functools import wraps
 import logging
 import re
+import urllib.parse
 
 import jsonrpc_base
+from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
 import voluptuous as vol
 
@@ -60,10 +62,12 @@ from homeassistant.helpers import (
     device_registry,
     entity_platform,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.network import is_internal_request
 import homeassistant.util.dt as dt_util
 
-from .browse_media import build_item_response, library_payload
+from .browse_media import build_item_response, get_media_info, library_payload
 from .const import (
     CONF_WS_PORT,
     DATA_CONNECTION,
@@ -223,7 +227,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Kodi media player platform."""
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_ADD_MEDIA, KODI_ADD_MEDIA_SCHEMA, "async_add_media_to_playlist"
     )
@@ -235,8 +239,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     connection = data[DATA_CONNECTION]
     kodi = data[DATA_KODI]
     name = config_entry.data[CONF_NAME]
-    uid = config_entry.unique_id
-    if uid is None:
+    if (uid := config_entry.unique_id) is None:
         uid = config_entry.entry_id
 
     entity = KodiEntity(connection, kodi, name, uid)
@@ -343,13 +346,13 @@ class KodiEntity(MediaPlayerEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Kodi",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Kodi",
+            name=self.name,
+        )
 
     @property
     def state(self):
@@ -398,7 +401,7 @@ class KodiEntity(MediaPlayerEntity):
         version = (await self._kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
         dev_reg = await device_registry.async_get_registry(self.hass)
-        device = dev_reg.async_get_device({(DOMAIN, self.unique_id)}, [])
+        device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
         dev_reg.async_update_device(device.id, sw_version=sw_version)
 
         self.async_schedule_update_ha_state(True)
@@ -531,9 +534,7 @@ class KodiEntity(MediaPlayerEntity):
         if self._properties.get("live"):
             return None
 
-        total_time = self._properties.get("totaltime")
-
-        if total_time is None:
+        if (total_time := self._properties.get("totaltime")) is None:
             return None
 
         return (
@@ -545,9 +546,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        time = self._properties.get("time")
-
-        if time is None:
+        if (time := self._properties.get("time")) is None:
             return None
 
         return time["hours"] * 3600 + time["minutes"] * 60 + time["seconds"]
@@ -560,8 +559,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        thumbnail = self._item.get("thumbnail")
-        if thumbnail is None:
+        if (thumbnail := self._item.get("thumbnail")) is None:
             return None
 
         return self._kodi.thumbnail_url(thumbnail)
@@ -596,8 +594,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        artists = self._item.get("artist", [])
-        if artists:
+        if artists := self._item.get("artist"):
             return artists[0]
 
         return None
@@ -605,8 +602,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_album_artist(self):
         """Album artist of current playing media, music track only."""
-        artists = self._item.get("albumartist", [])
-        if artists:
+        if artists := self._item.get("albumartist"):
             return artists[0]
 
         return None
@@ -871,16 +867,50 @@ class KodiEntity(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
+        is_internal = is_internal_request(self.hass)
+
+        async def _get_thumbnail_url(
+            media_content_type,
+            media_content_id,
+            media_image_id=None,
+            thumbnail_url=None,
+        ):
+            if is_internal:
+                return self._kodi.thumbnail_url(thumbnail_url)
+
+            return self.get_browse_image_url(
+                media_content_type,
+                urllib.parse.quote_plus(media_content_id),
+                media_image_id,
+            )
+
         if media_content_type in [None, "library"]:
-            return await self.hass.async_add_executor_job(library_payload, self._kodi)
+            return await library_payload()
 
         payload = {
             "search_type": media_content_type,
             "search_id": media_content_id,
         }
-        response = await build_item_response(self._kodi, payload)
+
+        response = await build_item_response(self._kodi, payload, _get_thumbnail_url)
         if response is None:
             raise BrowseError(
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
         return response
+
+    async def async_get_browse_image(
+        self, media_content_type, media_content_id, media_image_id=None
+    ):
+        """Get media image from kodi server."""
+        try:
+            image_url, _, _ = await get_media_info(
+                self._kodi, media_content_id, media_content_type
+            )
+        except (ProtocolError, TransportError):
+            return (None, None)
+
+        if image_url:
+            return await self._async_fetch_image(image_url)
+
+        return (None, None)

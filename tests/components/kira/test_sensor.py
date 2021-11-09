@@ -1,9 +1,9 @@
 """The tests for Kira sensor platform."""
 import unittest
+from unittest.mock import MagicMock
 
 from homeassistant.components.kira import sensor as kira
 
-from tests.async_mock import MagicMock
 from tests.common import get_test_home_assistant
 
 TEST_CONFIG = {kira.DOMAIN: {"sensors": [{"host": "127.0.0.1", "port": 17324}]}}
@@ -47,4 +47,4 @@ class TestKiraSensor(unittest.TestCase):
         sensor._update_callback(codeTuple)
 
         assert sensor.state == codeName
-        assert sensor.device_state_attributes == {kira.CONF_DEVICE: deviceName}
+        assert sensor.extra_state_attributes == {kira.CONF_DEVICE: deviceName}

@@ -1,6 +1,7 @@
 """Config flow for Nexia integration."""
 import logging
 
+from nexia.const import BRAND_ASAIR, BRAND_NEXIA, BRAND_TRANE
 from nexia.home import NexiaHome
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
@@ -8,12 +9,30 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import (
+    BRAND_ASAIR_NAME,
+    BRAND_NEXIA_NAME,
+    BRAND_TRANE_NAME,
+    CONF_BRAND,
+    DOMAIN,
+)
 from .util import is_invalid_auth_code
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({CONF_USERNAME: str, CONF_PASSWORD: str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_BRAND, default=BRAND_NEXIA): vol.In(
+            {
+                BRAND_NEXIA: BRAND_NEXIA_NAME,
+                BRAND_ASAIR: BRAND_ASAIR_NAME,
+                BRAND_TRANE: BRAND_TRANE_NAME,
+            }
+        ),
+    }
+)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -22,11 +41,14 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
-    state_file = hass.config.path(f"nexia_config_{data[CONF_USERNAME]}.conf")
+    state_file = hass.config.path(
+        f"{data[CONF_BRAND]}_config_{data[CONF_USERNAME]}.conf"
+    )
     try:
         nexia_home = NexiaHome(
             username=data[CONF_USERNAME],
             password=data[CONF_PASSWORD],
+            brand=data[CONF_BRAND],
             auto_login=False,
             auto_update=False,
             device_name=hass.config.location_name,
@@ -54,7 +76,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nexia."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -78,13 +99,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_USERNAME] == user_input[CONF_USERNAME]:
-                return self.async_abort(reason="already_configured")
-        return await self.async_step_user(user_input)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

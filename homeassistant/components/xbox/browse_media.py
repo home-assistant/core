@@ -1,5 +1,7 @@
 """Support for media browsing."""
-from typing import Dict, List, Optional
+from __future__ import annotations
+
+from typing import NamedTuple
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.const import HOME_APP_IDS, SYSTEM_PFN_ID_MAP
@@ -23,15 +25,23 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_GAME,
 )
 
+
+class MediaTypeDetails(NamedTuple):
+    """Details for media type."""
+
+    type: str
+    cls: str
+
+
 TYPE_MAP = {
-    "App": {
-        "type": MEDIA_TYPE_APP,
-        "class": MEDIA_CLASS_APP,
-    },
-    "Game": {
-        "type": MEDIA_TYPE_GAME,
-        "class": MEDIA_CLASS_GAME,
-    },
+    "App": MediaTypeDetails(
+        type=MEDIA_TYPE_APP,
+        cls=MEDIA_CLASS_APP,
+    ),
+    "Game": MediaTypeDetails(
+        type=MEDIA_TYPE_GAME,
+        cls=MEDIA_CLASS_GAME,
+    ),
 }
 
 
@@ -41,11 +51,11 @@ async def build_item_response(
     tv_configured: bool,
     media_content_type: str,
     media_content_id: str,
-) -> Optional[BrowseMedia]:
+) -> BrowseMedia | None:
     """Create response payload for the provided media query."""
     apps: InstalledPackagesList = await client.smartglass.get_installed_apps(device_id)
 
-    if media_content_type in [None, "library"]:
+    if media_content_type in (None, "library"):
         library_info = BrowseMedia(
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="library",
@@ -109,11 +119,11 @@ async def build_item_response(
                 BrowseMedia(
                     media_class=MEDIA_CLASS_DIRECTORY,
                     media_content_id=c_type,
-                    media_content_type=TYPE_MAP[c_type]["type"],
+                    media_content_type=TYPE_MAP[c_type].type,
                     title=f"{c_type}s",
                     can_play=False,
                     can_expand=True,
-                    children_media_class=TYPE_MAP[c_type]["class"],
+                    children_media_class=TYPE_MAP[c_type].cls,
                 )
             )
 
@@ -145,11 +155,11 @@ async def build_item_response(
             for app in apps.result
             if app.content_type == media_content_id and app.one_store_product_id
         ],
-        children_media_class=TYPE_MAP[media_content_id]["class"],
+        children_media_class=TYPE_MAP[media_content_id].cls,
     )
 
 
-def item_payload(item: InstalledPackage, images: Dict[str, List[Image]]):
+def item_payload(item: InstalledPackage, images: dict[str, list[Image]]):
     """Create response payload for a single media item."""
     thumbnail = None
     image = _find_media_image(images.get(item.one_store_product_id, []))
@@ -159,9 +169,9 @@ def item_payload(item: InstalledPackage, images: Dict[str, List[Image]]):
             thumbnail = f"https:{thumbnail}"
 
     return BrowseMedia(
-        media_class=TYPE_MAP[item.content_type]["class"],
+        media_class=TYPE_MAP[item.content_type].cls,
         media_content_id=item.one_store_product_id,
-        media_content_type=TYPE_MAP[item.content_type]["type"],
+        media_content_type=TYPE_MAP[item.content_type].type,
         title=item.name,
         can_play=True,
         can_expand=False,
@@ -169,7 +179,7 @@ def item_payload(item: InstalledPackage, images: Dict[str, List[Image]]):
     )
 
 
-def _find_media_image(images=List[Image]) -> Optional[Image]:
+def _find_media_image(images: list[Image]) -> Image | None:
     purpose_order = ["Poster", "Tile", "Logo", "BoxArt"]
     for purpose in purpose_order:
         for image in images:

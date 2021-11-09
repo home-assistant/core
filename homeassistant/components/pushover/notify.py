@@ -68,13 +68,13 @@ class PushoverNotificationService(BaseNotificationService):
         sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
 
-        image = data.get(ATTR_ATTACHMENT)
         # Check for attachment
-        if image is not None:
+        if (image := data.get(ATTR_ATTACHMENT)) is not None:
             # Only allow attachments from whitelisted paths, check valid path
             if self._hass.config.is_allowed_path(data[ATTR_ATTACHMENT]):
                 # try to open it as a normal file.
                 try:
+                    # pylint: disable=consider-using-with
                     file_handle = open(data[ATTR_ATTACHMENT], "rb")
                     # Replace the attachment identifier with file object.
                     image = file_handle

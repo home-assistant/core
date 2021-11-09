@@ -1,9 +1,12 @@
 """Support for deCONZ locks."""
+
+from pydeconz.light import Lock
+from pydeconz.sensor import DoorLock
+
 from homeassistant.components.lock import DOMAIN, LockEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import LOCKS, NEW_LIGHT
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -14,25 +17,55 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_lock(lights=gateway.api.lights.values()):
+    def async_add_lock_from_light(lights=gateway.api.lights.values()):
         """Add lock from deCONZ."""
         entities = []
 
         for light in lights:
 
-            if light.type in LOCKS and light.uniqueid not in gateway.entities[DOMAIN]:
+            if (
+                isinstance(light, Lock)
+                and light.unique_id not in gateway.entities[DOMAIN]
+            ):
                 entities.append(DeconzLock(light, gateway))
 
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_lock
+            hass,
+            gateway.signal_new_light,
+            async_add_lock_from_light,
         )
     )
 
-    async_add_lock()
+    @callback
+    def async_add_lock_from_sensor(sensors=gateway.api.sensors.values()):
+        """Add lock from deCONZ."""
+        entities = []
+
+        for sensor in sensors:
+
+            if (
+                isinstance(sensor, DoorLock)
+                and sensor.unique_id not in gateway.entities[DOMAIN]
+            ):
+                entities.append(DeconzLock(sensor, gateway))
+
+        if entities:
+            async_add_entities(entities)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            gateway.signal_new_sensor,
+            async_add_lock_from_sensor,
+        )
+    )
+
+    async_add_lock_from_light()
+    async_add_lock_from_sensor()
 
 
 class DeconzLock(DeconzDevice, LockEntity):

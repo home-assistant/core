@@ -1,10 +1,13 @@
 """Support for Ecobee binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
     BinarySensorEntity,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
-from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -49,7 +52,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
                 return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device information for this sensor."""
         identifier = None
         model = None
@@ -67,24 +70,24 @@ class EcobeeBinarySensor(BinarySensorEntity):
                         f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
                     )
                 except KeyError:
-                    _LOGGER.error(
-                        "Model number for ecobee thermostat %s not recognized. "
-                        "Please visit this link and provide the following information: "
-                        "https://github.com/home-assistant/core/issues/27172 "
-                        "Unrecognized model number: %s",
-                        thermostat["name"],
-                        thermostat["modelNumber"],
-                    )
+                    # Ecobee model is not in our list
+                    model = None
             break
 
-        if identifier is not None and model is not None:
-            return {
-                "identifiers": {(DOMAIN, identifier)},
-                "name": self.sensor_name,
-                "manufacturer": MANUFACTURER,
-                "model": model,
-            }
+        if identifier is not None:
+            return DeviceInfo(
+                identifiers={(DOMAIN, identifier)},
+                manufacturer=MANUFACTURER,
+                model=model,
+                name=self.sensor_name,
+            )
         return None
+
+    @property
+    def available(self):
+        """Return true if device is available."""
+        thermostat = self.data.ecobee.get_thermostat(self.index)
+        return thermostat["runtime"]["connected"]
 
     @property
     def is_on(self):

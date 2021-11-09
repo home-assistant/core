@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def to_futurenow_level(level):
     """Convert the given Home Assistant light level (0-255) to FutureNow (0-100)."""
-    return int((level * 100) / 255)
+    return round((level * 100) / 255)
 
 
 def to_hass_level(level):

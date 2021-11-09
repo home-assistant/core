@@ -2,7 +2,7 @@
 import datetime
 import logging
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -34,14 +34,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class EbusdSensor(Entity):
+class EbusdSensor(SensorEntity):
     """Ebusd component sensor methods definition."""
 
     def __init__(self, data, sensor, name):
         """Initialize the sensor."""
         self._state = None
         self._client_name = name
-        self._name, self._unit_of_measurement, self._icon, self._type = sensor
+        (
+            self._name,
+            self._unit_of_measurement,
+            self._icon,
+            self._type,
+            self._device_class,
+        ) = sensor
         self.data = data
 
     @property
@@ -50,12 +56,12 @@ class EbusdSensor(Entity):
         return f"{self._client_name} {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if self._type == 1 and self._state is not None:
             schedule = {
@@ -78,12 +84,17 @@ class EbusdSensor(Entity):
         return None
 
     @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._device_class
+
+    @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 

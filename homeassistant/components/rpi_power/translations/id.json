@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Tidak dapat menemukan kelas sistem yang diperlukan untuk komponen ini, pastikan kernel Anda cukup terbaru dan perangkat kerasnya didukung",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "step": {
+            "confirm": {
+                "description": "Ingin memulai penyiapan?"
+            }
+        }
+    },
+    "title": "Pemeriksa Catu Daya Raspberry Pi"
+}

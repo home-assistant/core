@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "open_failed": "\uc9c0\uc815\ud55c \uc2dc\ub9ac\uc5bc \ud3ec\ud2b8\ub97c \uc5f4 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "\ud3ec\ud2b8"
+                },
+                "description": "LiteJet\uc758 RS232-2 \ud3ec\ud2b8\ub97c \ucef4\ud4e8\ud130\uc5d0 \uc5f0\uacb0\ud558\uace0 \uc2dc\ub9ac\uc5bc \ud3ec\ud2b8 \uc7a5\uce58\uc758 \uacbd\ub85c\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.\n\nLiteJet MCP\ub294 19.2 K \uc804\uc1a1\uc18d\ub3c4, 8 \ub370\uc774\ud130 \ube44\ud2b8, 1 \uc815\uc9c0 \ube44\ud2b8, \ud328\ub9ac\ud2f0 \uc5c6\uc74c\uc73c\ub85c \uad6c\uc131\ub418\uc5b4\uc57c \ud558\uba70 \uac01 \uc751\ub2f5 \ud6c4\uc5d0 'CR'\uc744 \uc804\uc1a1\ud574\uc57c \ud569\ub2c8\ub2e4.",
+                "title": "Litejet\uc5d0 \uc5f0\uacb0\ud558\uae30"
+            }
+        }
+    }
+}

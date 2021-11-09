@@ -5,10 +5,10 @@ from urllib.parse import urlparse
 
 import async_timeout
 from pydeconz.errors import RequestError, ResponseError
+from pydeconz.gateway import DeconzSession
 from pydeconz.utils import (
-    async_discovery,
-    async_get_api_key,
-    async_get_bridge_id,
+    discovery as deconz_discovery,
+    get_bridge_id as deconz_get_bridge_id,
     normalize_bridge_id,
 )
 import voluptuous as vol
@@ -47,7 +47,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a deCONZ config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     _hassio_discovery = None
 
@@ -86,8 +85,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
-            with async_timeout.timeout(10):
-                self.bridges = await async_discovery(session)
+            async with async_timeout.timeout(10):
+                self.bridges = await deconz_discovery(session)
 
         except (asyncio.TimeoutError, ResponseError):
             self.bridges = []
@@ -135,10 +134,15 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             session = aiohttp_client.async_get_clientsession(self.hass)
+            deconz_session = DeconzSession(
+                session,
+                host=self.deconz_config[CONF_HOST],
+                port=self.deconz_config[CONF_PORT],
+            )
 
             try:
-                with async_timeout.timeout(10):
-                    api_key = await async_get_api_key(session, **self.deconz_config)
+                async with async_timeout.timeout(10):
+                    api_key = await deconz_session.get_api_key()
 
             except (ResponseError, RequestError, asyncio.TimeoutError):
                 errors["base"] = "no_key"
@@ -155,8 +159,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             session = aiohttp_client.async_get_clientsession(self.hass)
 
             try:
-                with async_timeout.timeout(10):
-                    self.bridge_id = await async_get_bridge_id(
+                async with async_timeout.timeout(10):
+                    self.bridge_id = await deconz_get_bridge_id(
                         session, **self.deconz_config
                     )
                     await self.async_set_unique_id(self.bridge_id)
@@ -174,6 +178,17 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=self.bridge_id, data=self.deconz_config)
 
+    async def async_step_reauth(self, config: dict):
+        """Trigger a reauthentication flow."""
+        self.context["title_placeholders"] = {CONF_HOST: config[CONF_HOST]}
+
+        self.deconz_config = {
+            CONF_HOST: config[CONF_HOST],
+            CONF_PORT: config[CONF_PORT],
+        }
+
+        return await self.async_step_link()
+
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
         if (
@@ -188,14 +203,13 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
 
         entry = await self.async_set_unique_id(self.bridge_id)
-        if entry and entry.source == "hassio":
+        if entry and entry.source == config_entries.SOURCE_HASSIO:
             return self.async_abort(reason="already_configured")
 
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: parsed_url.hostname, CONF_PORT: parsed_url.port}
         )
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"host": parsed_url.hostname}
 
         self.deconz_config = {

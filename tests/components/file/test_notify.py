@@ -1,5 +1,6 @@
 """The tests for the notify file platform."""
 import os
+from unittest.mock import call, mock_open, patch
 
 import pytest
 
@@ -8,7 +9,6 @@ from homeassistant.components.notify import ATTR_TITLE_DEFAULT
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import call, mock_open, patch
 from tests.common import assert_setup_component
 
 
@@ -63,7 +63,7 @@ async def test_notify_file(hass, timestamp):
 
         full_filename = os.path.join(hass.config.path(), filename)
         assert m_open.call_count == 1
-        assert m_open.call_args == call(full_filename, "a")
+        assert m_open.call_args == call(full_filename, "a", encoding="utf8")
 
         assert m_open.return_value.write.call_count == 2
         if not timestamp:

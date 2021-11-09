@@ -321,7 +321,7 @@ class AndroidIPCamEntity(Entity):
         return self._ipcam.available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state_attr = {ATTR_HOST: self._host}
         if self._ipcam.status_data is None:

@@ -3,6 +3,7 @@ import logging
 
 from pyqwikswitch.qwikswitch import SENSORS
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
 
 from . import DOMAIN as QWIKSWITCH, QSEntity
@@ -21,7 +22,7 @@ async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class QSSensor(QSEntity):
+class QSSensor(QSEntity, SensorEntity):
     """Sensor based on a Qwikswitch relay/dimmer module."""
 
     _val = None
@@ -56,7 +57,7 @@ class QSSensor(QSEntity):
             self.async_write_ha_state()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the value of the sensor."""
         return str(self._val)
 
@@ -66,6 +67,6 @@ class QSSensor(QSEntity):
         return f"qs{self.qsid}:{self.channel}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self.unit

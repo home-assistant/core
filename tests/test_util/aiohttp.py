@@ -1,6 +1,7 @@
 """Aiohttp test utils."""
 import asyncio
 from contextlib import contextmanager
+from http import HTTPStatus
 import json as _json
 import re
 from unittest import mock
@@ -9,6 +10,7 @@ from urllib.parse import parse_qs
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from aiohttp.streams import StreamReader
+from multidict import CIMultiDict
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
@@ -40,7 +42,7 @@ class AiohttpClientMocker:
         url,
         *,
         auth=None,
-        status=200,
+        status=HTTPStatus.OK,
         text=None,
         data=None,
         content=None,
@@ -156,7 +158,7 @@ class AiohttpClientMockResponse:
         self,
         method,
         url,
-        status=200,
+        status=HTTPStatus.OK,
         response=None,
         json=None,
         text=None,
@@ -179,7 +181,7 @@ class AiohttpClientMockResponse:
         self.response = response
         self.exc = exc
         self.side_effect = side_effect
-        self._headers = headers or {}
+        self._headers = CIMultiDict(headers or {})
         self._cookies = {}
 
         if cookies:
@@ -245,9 +247,9 @@ class AiohttpClientMockResponse:
         """Return mock response."""
         return self.response
 
-    async def text(self, encoding="utf-8"):
+    async def text(self, encoding="utf-8", errors="strict"):
         """Return mock response as a string."""
-        return self.response.decode(encoding)
+        return self.response.decode(encoding, errors=errors)
 
     async def json(self, encoding="utf-8", content_type=None):
         """Return mock response as a json."""
@@ -276,7 +278,7 @@ def mock_aiohttp_client():
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 
-    def create_session(hass, *args):
+    def create_session(hass, *args, **kwargs):
         session = mocker.create_session(hass.loop)
 
         async def close_session(event):
@@ -288,7 +290,7 @@ def mock_aiohttp_client():
         return session
 
     with mock.patch(
-        "homeassistant.helpers.aiohttp_client.async_create_clientsession",
+        "homeassistant.helpers.aiohttp_client._async_create_clientsession",
         side_effect=create_session,
     ):
         yield mocker

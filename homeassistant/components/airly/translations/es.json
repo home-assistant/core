@@ -22,7 +22,9 @@
     },
     "system_health": {
         "info": {
-            "can_reach_server": "Alcanzar el servidor Airly"
+            "can_reach_server": "Alcanzar el servidor Airly",
+            "requests_per_day": "Solicitudes permitidas por d\u00eda",
+            "requests_remaining": "Solicitudes permitidas restantes"
         }
     }
 }

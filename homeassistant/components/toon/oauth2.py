@@ -1,5 +1,7 @@
 """OAuth2 implementations for Toon."""
-from typing import Any, Optional, cast
+from __future__ import annotations
+
+from typing import Any, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -55,8 +57,8 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
         client_secret: str,
         name: str,
         tenant_id: str,
-        issuer: Optional[str] = None,
-    ):
+        issuer: str | None = None,
+    ) -> None:
         """Local Toon Oauth Implementation."""
         self._name = name
         self.tenant_id = tenant_id

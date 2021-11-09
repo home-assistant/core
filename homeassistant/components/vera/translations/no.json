@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Kunne ikke koble til kontrolleren med url {base_url}"
+            "cannot_connect": "Kan ikke koble til kontrolleren med URL-adressen {base_url}"
         },
         "step": {
             "user": {
@@ -10,7 +10,7 @@
                     "lights": "Vera bytter enhets ID-er for \u00e5 behandle som lys i Home Assistant",
                     "vera_controller_url": "URL-adresse for kontroller"
                 },
-                "description": "Oppgi en Vera-kontroller-url nedenfor. Det skal se slik ut: http://192.168.1.161:3480.",
+                "description": "Gi en Vera-kontroller-URL nedenfor. Det skal se slik ut: http://192.168.1.161:3480.",
                 "title": "Oppsett Vera-kontroller"
             }
         }

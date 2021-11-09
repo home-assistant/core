@@ -1,8 +1,10 @@
 """Support for the Philips Hue sensor devices."""
+from homeassistant.helpers import entity
+
 from .const import DOMAIN as HUE_DOMAIN
 
 
-class GenericHueDevice:
+class GenericHueDevice(entity.Entity):
     """Representation of a Hue device."""
 
     def __init__(self, sensor, name, bridge, primary_sensor=None):
@@ -38,16 +40,25 @@ class GenericHueDevice:
         return self.primary_sensor.raw.get("swupdate", {}).get("state")
 
     @property
-    def device_info(self):
+    def device_info(self) -> entity.DeviceInfo:
         """Return the device info.
 
         Links individual entities together in the hass device registry.
         """
-        return {
-            "identifiers": {(HUE_DOMAIN, self.device_id)},
-            "name": self.primary_sensor.name,
-            "manufacturer": self.primary_sensor.manufacturername,
-            "model": (self.primary_sensor.productname or self.primary_sensor.modelid),
-            "sw_version": self.primary_sensor.swversion,
-            "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
-        }
+        return entity.DeviceInfo(
+            identifiers={(HUE_DOMAIN, self.device_id)},
+            manufacturer=self.primary_sensor.manufacturername,
+            model=(self.primary_sensor.productname or self.primary_sensor.modelid),
+            name=self.primary_sensor.name,
+            sw_version=self.primary_sensor.swversion,
+            via_device=(HUE_DOMAIN, self.bridge.api.config.bridgeid),
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity being added to Home Assistant."""
+        self.async_on_remove(
+            self.bridge.listen_updates(
+                self.sensor.ITEM_TYPE, self.sensor.id, self.async_write_ha_state
+            )
+        )
+        await super().async_added_to_hass()

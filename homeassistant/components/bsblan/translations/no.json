@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

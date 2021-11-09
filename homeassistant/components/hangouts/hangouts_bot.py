@@ -1,5 +1,7 @@
 """The Hangouts Bot."""
 import asyncio
+from contextlib import suppress
+from http import HTTPStatus
 import io
 import logging
 
@@ -7,7 +9,6 @@ import aiohttp
 import hangups
 from hangups import ChatMessageEvent, ChatMessageSegment, Client, get_auth, hangouts_pb2
 
-from homeassistant.const import HTTP_OK
 from homeassistant.core import callback
 from homeassistant.helpers import dispatcher, intent
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -103,12 +104,10 @@ class HangoutsBot:
 
                 self._conversation_intents[conv_id][intent_type] = data
 
-        try:
+        with suppress(ValueError):
             self._conversation_list.on_event.remove_observer(
                 self._async_handle_conversation_event
             )
-        except ValueError:
-            pass
         self._conversation_list.on_event.add_observer(
             self._async_handle_conversation_event
         )
@@ -183,9 +182,7 @@ class HangoutsBot:
         """Detect a matching intent."""
         for intent_type, data in intents.items():
             for matcher in data.get(CONF_MATCHERS, []):
-                match = matcher.match(text)
-
-                if not match:
+                if not (match := matcher.match(text)):
                     continue
                 if intent_type == INTENT_HELP:
                     return await self.hass.helpers.intent.async_handle(
@@ -221,7 +218,7 @@ class HangoutsBot:
     async def _on_disconnect(self):
         """Handle disconnecting."""
         if self._connected:
-            _LOGGER.debug("Connection lost! Reconnect...")
+            _LOGGER.debug("Connection lost! Reconnect")
             await self.async_connect()
         else:
             dispatcher.async_dispatcher_send(self.hass, EVENT_HANGOUTS_DISCONNECTED)
@@ -274,7 +271,7 @@ class HangoutsBot:
                 try:
                     websession = async_get_clientsession(self.hass)
                     async with websession.get(uri, timeout=5) as response:
-                        if response.status != HTTP_OK:
+                        if response.status != HTTPStatus.OK:
                             _LOGGER.error(
                                 "Fetch image failed, %s, %s", response.status, response
                             )
@@ -290,6 +287,7 @@ class HangoutsBot:
                 uri = data.get("image_file")
                 if self.hass.config.is_allowed_path(uri):
                     try:
+                        # pylint: disable=consider-using-with
                         image_file = open(uri, "rb")
                     except OSError as error:
                         _LOGGER.error(

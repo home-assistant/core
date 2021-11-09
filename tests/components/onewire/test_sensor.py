@@ -1,155 +1,89 @@
 """Tests for 1-Wire sensor platform."""
-from pyownet.protocol import Error as ProtocolError
+from unittest.mock import MagicMock, patch
+
 import pytest
 
-from homeassistant.components.onewire.const import DEFAULT_SYSBUS_MOUNT_DIR, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.setup import async_setup_component
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_validation import ensure_list
 
-from . import setup_onewire_patched_owserver_integration
+from . import (
+    check_and_enable_disabled_entities,
+    check_device_registry,
+    check_entities,
+    setup_owproxy_mock_devices,
+    setup_sysbus_mock_devices,
+)
+from .const import ATTR_DEVICE_INFO, MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
 
-from tests.async_mock import patch
-from tests.common import assert_setup_component, mock_registry
-
-MOCK_COUPLERS = {
-    "1F.111111111111": {
-        "inject_reads": [
-            b"DS2409",  # read device type
-        ],
-        "branches": {
-            "aux": {},
-            "main": {
-                "1D.111111111111": {
-                    "inject_reads": [
-                        b"DS2423",  # read device type
-                    ],
-                    "device_info": {
-                        "identifiers": {(DOMAIN, "1D.111111111111")},
-                        "manufacturer": "Maxim Integrated",
-                        "model": "DS2423",
-                        "name": "1D.111111111111",
-                    },
-                    SENSOR_DOMAIN: [
-                        {
-                            "entity_id": "sensor.1d_111111111111_counter_a",
-                            "device_file": "/1F.111111111111/main/1D.111111111111/counter.A",
-                            "unique_id": "/1D.111111111111/counter.A",
-                            "injected_value": b"    251123",
-                            "result": "251123",
-                            "unit": "count",
-                            "class": None,
-                        },
-                        {
-                            "entity_id": "sensor.1d_111111111111_counter_b",
-                            "device_file": "/1F.111111111111/main/1D.111111111111/counter.B",
-                            "unique_id": "/1D.111111111111/counter.B",
-                            "injected_value": b"    248125",
-                            "result": "248125",
-                            "unit": "count",
-                            "class": None,
-                        },
-                    ],
-                },
-            },
-        },
-    }
-}
+from tests.common import mock_device_registry, mock_registry
 
 
-async def test_setup_minimum(hass):
-    """Test old platform setup with minimum configuration."""
-    config = {"sensor": {"platform": "onewire"}}
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
+@pytest.fixture(autouse=True)
+def override_platforms():
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.onewire.PLATFORMS", [SENSOR_DOMAIN]):
+        yield
 
 
-async def test_setup_sysbus(hass):
-    """Test old platform setup with SysBus configuration."""
-    config = {
-        "sensor": {
-            "platform": "onewire",
-            "mount_dir": DEFAULT_SYSBUS_MOUNT_DIR,
-        }
-    }
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
+async def test_owserver_sensor(
+    hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock, device_id: str
+):
+    """Test for 1-Wire device.
 
-
-async def test_setup_owserver(hass):
-    """Test old platform setup with OWServer configuration."""
-    config = {"sensor": {"platform": "onewire", "host": "localhost"}}
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-async def test_setup_owserver_with_port(hass):
-    """Test old platform setup with OWServer configuration."""
-    config = {"sensor": {"platform": "onewire", "host": "localhost", "port": "1234"}}
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize("device_id", ["1F.111111111111"])
-@patch("homeassistant.components.onewire.onewirehub.protocol.proxy")
-async def test_sensors_on_owserver_coupler(owproxy, hass, device_id):
-    """Test for 1-Wire sensors connected to DS2409 coupler."""
-    await async_setup_component(hass, "persistent_notification", {})
+    As they would be on a clean setup: all binary-sensors and switches disabled.
+    """
+    device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
 
-    mock_coupler = MOCK_COUPLERS[device_id]
+    mock_device = MOCK_OWPROXY_DEVICES[device_id]
+    expected_entities = mock_device.get(SENSOR_DOMAIN, [])
+    if "branches" in mock_device:
+        for branch_details in mock_device["branches"].values():
+            for sub_device in branch_details.values():
+                expected_entities += sub_device[SENSOR_DOMAIN]
+    expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
 
-    dir_side_effect = []  # List of lists of string
-    read_side_effect = []  # List of byte arrays
+    setup_owproxy_mock_devices(owproxy, SENSOR_DOMAIN, [device_id])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    dir_side_effect.append([f"/{device_id}/"])  # dir on root
-    read_side_effect.append(device_id[0:2].encode())  # read family on root
-    if "inject_reads" in mock_coupler:
-        read_side_effect += mock_coupler["inject_reads"]
+    check_device_registry(device_registry, expected_devices)
+    assert len(entity_registry.entities) == len(expected_entities)
+    check_and_enable_disabled_entities(entity_registry, expected_entities)
 
-    expected_sensors = []
-    for branch, branch_details in mock_coupler["branches"].items():
-        dir_side_effect.append(
-            [  # dir on branch
-                f"/{device_id}/{branch}/{sub_device_id}/"
-                for sub_device_id in branch_details
-            ]
-        )
+    setup_owproxy_mock_devices(owproxy, SENSOR_DOMAIN, [device_id])
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        for sub_device_id, sub_device in branch_details.items():
-            read_side_effect.append(sub_device_id[0:2].encode())
-            if "inject_reads" in sub_device:
-                read_side_effect.extend(sub_device["inject_reads"])
+    check_entities(hass, entity_registry, expected_entities)
 
-            expected_sensors += sub_device[SENSOR_DOMAIN]
-            for expected_sensor in sub_device[SENSOR_DOMAIN]:
-                read_side_effect.append(expected_sensor["injected_value"])
 
-    # Ensure enough read side effect
-    read_side_effect.extend([ProtocolError("Missing injected value")] * 10)
-    owproxy.return_value.dir.side_effect = dir_side_effect
-    owproxy.return_value.read.side_effect = read_side_effect
+@pytest.mark.usefixtures("sysbus")
+@pytest.mark.parametrize("device_id", MOCK_SYSBUS_DEVICES.keys(), indirect=True)
+async def test_onewiredirect_setup_valid_device(
+    hass: HomeAssistant, sysbus_config_entry: ConfigEntry, device_id: str
+):
+    """Test that sysbus config entry works correctly."""
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
 
-    with patch("homeassistant.components.onewire.SUPPORTED_PLATFORMS", [SENSOR_DOMAIN]):
-        await setup_onewire_patched_owserver_integration(hass)
+    glob_result, read_side_effect = setup_sysbus_mock_devices(
+        SENSOR_DOMAIN, [device_id]
+    )
+
+    mock_device = MOCK_SYSBUS_DEVICES[device_id]
+    expected_entities = mock_device.get(SENSOR_DOMAIN, [])
+    expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
+
+    with patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(
+        "pi1wire.OneWire.get_temperature",
+        side_effect=read_side_effect,
+    ):
+        await hass.config_entries.async_setup(sysbus_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert len(entity_registry.entities) == len(expected_sensors)
-
-    for expected_sensor in expected_sensors:
-        entity_id = expected_sensor["entity_id"]
-        registry_entry = entity_registry.entities.get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == expected_sensor["unique_id"]
-        assert registry_entry.unit_of_measurement == expected_sensor["unit"]
-        assert registry_entry.device_class == expected_sensor["class"]
-        assert registry_entry.disabled == expected_sensor.get("disabled", False)
-        state = hass.states.get(entity_id)
-        if registry_entry.disabled:
-            assert state is None
-        else:
-            assert state.state == expected_sensor["result"]
-        assert state.attributes["device_file"] == expected_sensor["device_file"]
+    check_device_registry(device_registry, expected_devices)
+    assert len(entity_registry.entities) == len(expected_entities)
+    check_entities(hass, entity_registry, expected_entities)

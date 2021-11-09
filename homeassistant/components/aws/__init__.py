@@ -7,11 +7,15 @@ import aiobotocore
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_CREDENTIALS, CONF_NAME, CONF_PROFILE_NAME
+from homeassistant.const import (
+    ATTR_CREDENTIALS,
+    CONF_NAME,
+    CONF_PROFILE_NAME,
+    CONF_SERVICE,
+)
 from homeassistant.helpers import config_validation as cv, discovery
 
 # Loading the config flow file will register the flow
-from . import config_flow  # noqa: F401
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_CONTEXT,
@@ -20,7 +24,6 @@ from .const import (
     CONF_NOTIFY,
     CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
-    CONF_SERVICE,
     CONF_VALIDATE,
     DATA_CONFIG,
     DATA_HASS_CONFIG,
@@ -82,8 +85,7 @@ async def async_setup(hass, config):
     """Set up AWS component."""
     hass.data[DATA_HASS_CONFIG] = config
 
-    conf = config.get(DOMAIN)
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         # create a default conf using default profile
         conf = CONFIG_SCHEMA({ATTR_CREDENTIALS: DEFAULT_CREDENTIAL})
 
@@ -152,14 +154,11 @@ async def async_setup_entry(hass, entry):
 
 async def _validate_aws_credentials(hass, credential):
     """Validate AWS credential config."""
-
     aws_config = credential.copy()
     del aws_config[CONF_NAME]
     del aws_config[CONF_VALIDATE]
 
-    profile = aws_config.get(CONF_PROFILE_NAME)
-
-    if profile is not None:
+    if (profile := aws_config.get(CONF_PROFILE_NAME)) is not None:
         session = aiobotocore.AioSession(profile=profile)
         del aws_config[CONF_PROFILE_NAME]
         if CONF_ACCESS_KEY_ID in aws_config:

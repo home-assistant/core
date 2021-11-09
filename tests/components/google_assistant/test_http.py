@@ -1,5 +1,7 @@
 """Test Google http services."""
 from datetime import datetime, timedelta, timezone
+from http import HTTPStatus
+from unittest.mock import ANY, patch
 
 from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
 from homeassistant.components.google_assistant.const import (
@@ -11,8 +13,6 @@ from homeassistant.components.google_assistant.http import (
     _get_homegraph_jwt,
     _get_homegraph_token,
 )
-
-from tests.async_mock import ANY, patch
 
 DUMMY_CONFIG = GOOGLE_ASSISTANT_SCHEMA(
     {
@@ -50,7 +50,7 @@ async def test_get_access_token(hass, aioclient_mock):
 
     aioclient_mock.post(
         HOMEGRAPH_TOKEN_URL,
-        status=200,
+        status=HTTPStatus.OK,
         json={"access_token": "1234", "expires_in": 3600},
     )
 
@@ -107,10 +107,10 @@ async def test_call_homegraph_api(hass, aioclient_mock, hass_storage):
     ) as mock_get_token:
         mock_get_token.return_value = MOCK_TOKEN
 
-        aioclient_mock.post(MOCK_URL, status=200, json={})
+        aioclient_mock.post(MOCK_URL, status=HTTPStatus.OK, json={})
 
         res = await config.async_call_homegraph_api(MOCK_URL, MOCK_JSON)
-        assert res == 200
+        assert res == HTTPStatus.OK
 
         assert mock_get_token.call_count == 1
         assert aioclient_mock.call_count == 1
@@ -130,7 +130,7 @@ async def test_call_homegraph_api_retry(hass, aioclient_mock, hass_storage):
     ) as mock_get_token:
         mock_get_token.return_value = MOCK_TOKEN
 
-        aioclient_mock.post(MOCK_URL, status=401, json={})
+        aioclient_mock.post(MOCK_URL, status=HTTPStatus.UNAUTHORIZED, json={})
 
         await config.async_call_homegraph_api(MOCK_URL, MOCK_JSON)
 
@@ -153,6 +153,10 @@ async def test_report_state(hass, aioclient_mock, hass_storage):
 
     await config.async_connect_agent_user(agent_user_id)
     message = {"devices": {}}
+
+    with patch.object(config, "async_call_homegraph_api"):
+        # Wait for google_assistant.helpers.async_initialize.sync_google to be called
+        await hass.async_block_till_done()
 
     with patch.object(config, "async_call_homegraph_api") as mock_call:
         await config.async_report_state(message, agent_user_id)

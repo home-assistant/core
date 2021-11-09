@@ -2,6 +2,7 @@
 import copy
 from datetime import datetime, timedelta
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -40,7 +41,6 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_CONFIG = {
@@ -679,15 +679,13 @@ async def test_discovery_update_binary_sensor_topic_template(hass, mqtt_mock, ca
         ([("sensor/state2", '{"state2":{"state":"OFF"}}')], "off", None),
     ]
 
-    data1 = json.dumps(config1)
-    data2 = json.dumps(config2)
     await help_test_discovery_update(
         hass,
         mqtt_mock,
         caplog,
         binary_sensor.DOMAIN,
-        data1,
-        data2,
+        config1,
+        config2,
         state_data1=state_data1,
         state_data2=state_data2,
     )
@@ -714,15 +712,13 @@ async def test_discovery_update_binary_sensor_template(hass, mqtt_mock, caplog):
         ([("sensor/state1", '{"state2":{"state":"OFF"}}')], "off", None),
     ]
 
-    data1 = json.dumps(config1)
-    data2 = json.dumps(config2)
     await help_test_discovery_update(
         hass,
         mqtt_mock,
         caplog,
         binary_sensor.DOMAIN,
-        data1,
-        data2,
+        config1,
+        config2,
         state_data1=state_data1,
         state_data2=state_data2,
     )

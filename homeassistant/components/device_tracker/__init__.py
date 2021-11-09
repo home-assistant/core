@@ -1,16 +1,11 @@
 """Provide functionality to keep track of devices."""
-from homeassistant.const import (  # noqa: F401 pylint: disable=unused-import
-    ATTR_GPS_ACCURACY,
-    STATE_HOME,
-)
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME  # noqa: F401
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .config_entry import (  # noqa: F401 pylint: disable=unused-import
-    async_setup_entry,
-    async_unload_entry,
-)
-from .const import (  # noqa: F401 pylint: disable=unused-import
+from .config_entry import async_setup_entry, async_unload_entry  # noqa: F401
+from .const import (  # noqa: F401
     ATTR_ATTRIBUTES,
     ATTR_BATTERY,
     ATTR_DEV_ID,
@@ -24,12 +19,13 @@ from .const import (  # noqa: F401 pylint: disable=unused-import
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
     DOMAIN,
+    ENTITY_ID_FORMAT,
     SOURCE_TYPE_BLUETOOTH,
     SOURCE_TYPE_BLUETOOTH_LE,
     SOURCE_TYPE_GPS,
     SOURCE_TYPE_ROUTER,
 )
-from .legacy import (  # noqa: F401 pylint: disable=unused-import
+from .legacy import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
     SERVICE_SEE,
@@ -42,12 +38,12 @@ from .legacy import (  # noqa: F401 pylint: disable=unused-import
 
 
 @bind_hass
-def is_on(hass: HomeAssistantType, entity_id: str):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return the state if any or a specified device is home."""
     return hass.states.is_state(entity_id, STATE_HOME)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the device tracker."""
     await async_setup_legacy_integration(hass, config)
 

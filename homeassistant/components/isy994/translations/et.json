@@ -9,7 +9,7 @@
             "invalid_host": "Hostikirje ei olnud sobivas URL-vormingus, nt http://192.168.10.100:80",
             "unknown": "Tundmatu viga"
         },
-        "flow_title": "",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -35,6 +35,14 @@
                 "description": "Isy isidumisei suvandite m\u00e4\u00e4ramine: \n \u2022 S\u00f5lme sensor string: iga seade v\u00f5i kaust, mis sisaldab nimes \"Node Sensor String\" k\u00e4sitletakse sensorina v\u00f5i binaarandurina. \n \u2022 Ignoreeri stringi: iga seadet, mille nimes on \"Ignore String\", ignoreeritakse. \n \u2022 Muutuv sensorstring: andurina lisatakse k\u00f5ik muutujad, mis sisaldavad \"Variable Sensor String\". \n \u2022 Valguse heleduse taastamine: kui see on lubatud, taastatakse eelmine heledus, kui l\u00fclitate sisse seadme sisseehitatud taseme asemel valguse.",
                 "title": "ISY994 valikud"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "ISY on \u00fchendatud",
+            "host_reachable": "Host on saadaval",
+            "last_heartbeat": "Viimatise suhtluse aeg",
+            "websocket_status": "S\u00fcndmuse sokli olek"
         }
     }
 }

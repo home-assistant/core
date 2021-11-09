@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
     FORMAT_TEXT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
@@ -54,7 +54,7 @@ DEFAULT_EVENT_DISARM = "alarm_disarm"
 
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_CODE): cv.string,

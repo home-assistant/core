@@ -7,10 +7,11 @@
         "error": {
             "cannot_connect": "Kon niet verbinden"
         },
-        "flow_title": "NZBGet: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
+                    "host": "Host",
                     "name": "Naam",
                     "password": "Wachtwoord",
                     "port": "Poort",

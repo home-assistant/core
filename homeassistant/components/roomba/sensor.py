@@ -1,6 +1,11 @@
 """Sensor for checking the battery level of Roomba."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.vacuum import STATE_DOCKED
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    PERCENTAGE,
+)
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from .const import BLID, DOMAIN, ROOMBA_SESSION
@@ -16,8 +21,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([roomba_vac], True)
 
 
-class RoombaBattery(IRobotEntity):
+class RoombaBattery(IRobotEntity, SensorEntity):
     """Class to hold Roomba Sensor basic info."""
+
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @property
     def name(self):
@@ -35,7 +42,7 @@ class RoombaBattery(IRobotEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
         return PERCENTAGE
 
@@ -49,6 +56,6 @@ class RoombaBattery(IRobotEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._battery_level

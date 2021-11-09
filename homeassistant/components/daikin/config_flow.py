@@ -5,24 +5,25 @@ from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
 from async_timeout import timeout
-from pydaikin.daikin_base import Appliance
+from pydaikin.daikin_base import Appliance, DaikinException
 from pydaikin.discovery import Discovery
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONF_UUID, KEY_IP, KEY_MAC, TIMEOUT
+from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register("daikin")
-class FlowHandler(config_entries.ConfigFlow):
+class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the Daikin config flow."""
@@ -69,7 +70,7 @@ class FlowHandler(config_entries.ConfigFlow):
             password = None
 
         try:
-            with timeout(TIMEOUT):
+            async with timeout(TIMEOUT):
                 device = await Appliance.factory(
                     host,
                     self.hass.helpers.aiohttp_client.async_get_clientsession(),
@@ -77,7 +78,8 @@ class FlowHandler(config_entries.ConfigFlow):
                     uuid=uuid,
                     password=password,
                 )
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, ClientError):
+            self.host = None
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.schema,
@@ -89,8 +91,8 @@ class FlowHandler(config_entries.ConfigFlow):
                 data_schema=self.schema,
                 errors={"base": "invalid_auth"},
             )
-        except ClientError:
-            _LOGGER.exception("ClientError")
+        except DaikinException as daikin_exp:
+            _LOGGER.error(daikin_exp)
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.schema,
@@ -111,39 +113,33 @@ class FlowHandler(config_entries.ConfigFlow):
         """User initiated config flow."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=self.schema)
+        if user_input.get(CONF_API_KEY) and user_input.get(CONF_PASSWORD):
+            self.host = user_input.get(CONF_HOST)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.schema,
+                errors={"base": "api_password"},
+            )
         return await self._create_device(
             user_input[CONF_HOST],
             user_input.get(CONF_API_KEY),
             user_input.get(CONF_PASSWORD),
         )
 
-    async def async_step_import(self, user_input):
-        """Import a config entry."""
-        host = user_input.get(CONF_HOST)
-        if not host:
-            return await self.async_step_user()
-        return await self._create_device(host)
-
-    async def async_step_discovery(self, discovery_info):
-        """Initialize step from discovery."""
-        _LOGGER.debug("Discovered device: %s", discovery_info)
-        await self.async_set_unique_id(discovery_info[KEY_MAC])
-        self._abort_if_unique_id_configured()
-        self.host = discovery_info[KEY_IP]
-        return await self.async_step_user()
-
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
-        devices = Discovery().poll(ip=discovery_info[CONF_HOST])
+        devices = Discovery().poll(ip=discovery_info[zeroconf.ATTR_HOST])
         if not devices:
             _LOGGER.debug(
                 "Could not find MAC-address for %s,"
                 " make sure the required UDP ports are open (see integration documentation)",
-                discovery_info[CONF_HOST],
+                discovery_info[zeroconf.ATTR_HOST],
             )
             return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(next(iter(devices))[KEY_MAC])
         self._abort_if_unique_id_configured()
-        self.host = discovery_info[CONF_HOST]
+        self.host = discovery_info[zeroconf.ATTR_HOST]
         return await self.async_step_user()

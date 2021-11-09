@@ -138,10 +138,12 @@ class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
                 int(self.node.manufacturer_id, 16),
                 int(self.node.product_id, 16),
             )
-            if specific_sensor_key in DEVICE_MAPPINGS:
-                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZW098:
-                    _LOGGER.debug("AEOTEC ZW098 workaround enabled")
-                    self._zw098 = 1
+            if (
+                specific_sensor_key in DEVICE_MAPPINGS
+                and DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZW098
+            ):
+                _LOGGER.debug("AEOTEC ZW098 workaround enabled")
+                self._zw098 = 1
 
         # Used for value change event handling
         self._refreshing = False
@@ -175,7 +177,7 @@ class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
                     self._refreshing = True
                     self.values.primary.refresh()
 
-                if self._timer is not None and self._timer.isAlive():
+                if self._timer is not None and self._timer.is_alive():
                     self._timer.cancel()
 
                 self._timer = Timer(self._delay, _refresh_value)

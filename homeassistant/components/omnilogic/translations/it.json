@@ -21,6 +21,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ph_offset": "Scostamento del pH (positivo o negativo)",
                     "polling_interval": "Intervallo di scansione (in secondi)"
                 }
             }

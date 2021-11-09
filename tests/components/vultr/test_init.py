@@ -2,13 +2,13 @@
 from copy import deepcopy
 import json
 import unittest
+from unittest.mock import patch
 
 import requests_mock
 
 from homeassistant import setup
 import homeassistant.components.vultr as vultr
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant, load_fixture
 
 VALID_CONFIG = {"vultr": {"api_key": "ABCDEFG1234567"}}
@@ -32,7 +32,7 @@ class TestVultr(unittest.TestCase):
         """Test successful setup."""
         with patch(
             "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("vultr_server_list.json")),
+            return_value=json.loads(load_fixture("server_list.json", "vultr")),
         ):
             response = vultr.setup(self.hass, self.config)
         assert response

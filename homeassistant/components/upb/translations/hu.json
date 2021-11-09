@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_upb_file": "Hi\u00e1nyz\u00f3 vagy \u00e9rv\u00e9nytelen UPB UPStart export f\u00e1jl, ellen\u0151rizze a f\u00e1jl nev\u00e9t \u00e9s el\u00e9r\u00e9si \u00fatj\u00e1t.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "C\u00edm (l\u00e1sd a fenti le\u00edr\u00e1st)",
+                    "file_path": "Az UPStart UPB exportf\u00e1jl el\u00e9r\u00e9si \u00fatja \u00e9s neve.",
+                    "protocol": "Protokoll"
+                },
+                "description": "Csatlakoztasson egy univerz\u00e1lis Powerline Bus Powerline Interface modult (UPB PIM). A c\u00edmsornak a \u201etcp\u201d \u201ec\u00edm [: port]\u201d form\u00e1tum\u00fanak kell lennie. A port nem k\u00f6telez\u0151, \u00e9s alap\u00e9rtelmezett \u00e9rt\u00e9ke 2101. P\u00e9lda: '192.168.1.42'. A soros protokollhoz a c\u00edmnek 'tty [: baud]' form\u00e1tum\u00fanak kell lennie. A baud opcion\u00e1lis, \u00e9s alap\u00e9rtelmezett \u00e9rt\u00e9ke 4800. P\u00e9lda: '/dev/ttyS1'.",
+                "title": "Csatlakoz\u00e1s az UPB PIM-hez"
+            }
+        }
+    }
+}

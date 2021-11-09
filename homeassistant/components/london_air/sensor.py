@@ -1,14 +1,13 @@
 """Sensor for checking the status of London air."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import HTTP_OK
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,13 +83,13 @@ class APIData:
     def update(self):
         """Get the latest data from TFL."""
         response = requests.get(URL, timeout=10)
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.warning("Invalid response from API")
         else:
             self.data = parse_api_response(response.json())
 
 
-class AirSensor(Entity):
+class AirSensor(SensorEntity):
     """Single authority air sensor."""
 
     ICON = "mdi:cloud-outline"
@@ -109,7 +108,7 @@ class AirSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -124,7 +123,7 @@ class AirSensor(Entity):
         return self.ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         attrs["updated"] = self._updated

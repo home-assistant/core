@@ -5,7 +5,7 @@
             "not_supported_device": "Questo WiLight non \u00e8 attualmente supportato",
             "not_wilight_device": "Questo dispositivo non \u00e8 WiLight"
         },
-        "flow_title": "WiLight: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Vuoi configurare WiLight {name}? \n\nSupporta: {components}",

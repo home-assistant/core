@@ -1,5 +1,7 @@
 """Support for Nexia / Trane XL thermostats."""
 from nexia.const import (
+    HOLD_PERMANENT,
+    HOLD_RESUME_SCHEDULE,
     OPERATION_MODE_AUTO,
     OPERATION_MODE_COOL,
     OPERATION_MODE_HEAT,
@@ -14,6 +16,7 @@ import voluptuous as vol
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
+    ATTR_HVAC_MODE,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     ATTR_TARGET_TEMP_HIGH,
@@ -34,12 +37,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -50,35 +48,39 @@ from .const import (
     ATTR_DEHUMIDIFY_SUPPORTED,
     ATTR_HUMIDIFY_SETPOINT,
     ATTR_HUMIDIFY_SUPPORTED,
+    ATTR_RUN_MODE,
     ATTR_ZONE_STATUS,
     DOMAIN,
-    NEXIA_DEVICE,
     SIGNAL_THERMOSTAT_UPDATE,
     SIGNAL_ZONE_UPDATE,
-    UPDATE_COORDINATOR,
 )
+from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
 from .util import percent_conv
 
 SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
 SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
+SERVICE_SET_HVAC_RUN_MODE = "set_hvac_run_mode"
 
-SET_AIRCLEANER_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
-    }
+SET_AIRCLEANER_SCHEMA = {
+    vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
+}
+
+SET_HUMIDITY_SCHEMA = {
+    vol.Required(ATTR_HUMIDITY): vol.All(vol.Coerce(int), vol.Range(min=35, max=65)),
+}
+
+SET_HVAC_RUN_MODE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(ATTR_RUN_MODE, ATTR_HVAC_MODE),
+    cv.make_entity_service_schema(
+        {
+            vol.Optional(ATTR_RUN_MODE): vol.In([HOLD_PERMANENT, HOLD_RESUME_SCHEDULE]),
+            vol.Optional(ATTR_HVAC_MODE): vol.In(
+                [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO]
+            ),
+        }
+    ),
 )
-
-SET_HUMIDITY_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_HUMIDITY): vol.All(
-            vol.Coerce(int), vol.Range(min=35, max=65)
-        ),
-    }
-)
-
 
 #
 # Nexia has two bits to determine hvac mode
@@ -103,12 +105,10 @@ NEXIA_TO_HA_HVAC_MODE_MAP = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up climate for a Nexia device."""
+    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    nexia_home = coordinator.nexia_home
 
-    nexia_data = hass.data[DOMAIN][config_entry.entry_id]
-    nexia_home = nexia_data[NEXIA_DEVICE]
-    coordinator = nexia_data[UPDATE_COORDINATOR]
-
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_HUMIDIFY_SETPOINT,
@@ -117,6 +117,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     platform.async_register_entity_service(
         SERVICE_SET_AIRCLEANER_MODE, SET_AIRCLEANER_SCHEMA, SERVICE_SET_AIRCLEANER_MODE
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_HVAC_RUN_MODE, SET_HVAC_RUN_MODE_SCHEMA, SERVICE_SET_HVAC_RUN_MODE
     )
 
     entities = []
@@ -204,6 +207,17 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._thermostat.set_fan_mode(fan_mode)
         self._signal_thermostat_update()
 
+    def set_hvac_run_mode(self, run_mode, hvac_mode):
+        """Set the hvac run mode."""
+        if run_mode is not None:
+            if run_mode == HOLD_PERMANENT:
+                self._zone.call_permanent_hold()
+            else:
+                self._zone.call_return_to_schedule()
+        if hvac_mode is not None:
+            self._zone.set_mode(mode=HA_TO_NEXIA_HVAC_MODE_MAP[hvac_mode])
+        self._signal_thermostat_update()
+
     @property
     def preset_mode(self):
         """Preset that is active."""
@@ -216,7 +230,10 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     def set_humidity(self, humidity):
         """Dehumidify target."""
-        self._thermostat.set_dehumidify_setpoint(humidity / 100.0)
+        if self._thermostat.has_dehumidify_support():
+            self._thermostat.set_dehumidify_setpoint(humidity / 100.0)
+        else:
+            self._thermostat.set_humidify_setpoint(humidity / 100.0)
         self._signal_thermostat_update()
 
     @property
@@ -334,12 +351,19 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             new_cool_temp = min_temp + deadband
 
         # Check that we're within the deadband range, fix it if we're not
-        if new_heat_temp and new_heat_temp != cur_heat_temp:
-            if new_cool_temp - new_heat_temp < deadband:
-                new_cool_temp = new_heat_temp + deadband
-        if new_cool_temp and new_cool_temp != cur_cool_temp:
-            if new_cool_temp - new_heat_temp < deadband:
-                new_heat_temp = new_cool_temp - deadband
+        if (
+            new_heat_temp
+            and new_heat_temp != cur_heat_temp
+            and new_cool_temp - new_heat_temp < deadband
+        ):
+            new_cool_temp = new_heat_temp + deadband
+
+        if (
+            new_cool_temp
+            and new_cool_temp != cur_cool_temp
+            and new_cool_temp - new_heat_temp < deadband
+        ):
+            new_heat_temp = new_cool_temp - deadband
 
         self._zone.set_heat_cool_temp(
             heat_temperature=new_heat_temp,
@@ -354,9 +378,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         return self._thermostat.is_emergency_heat_active()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
 
         data[ATTR_ZONE_STATUS] = self._zone.get_status()
 

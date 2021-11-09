@@ -1,5 +1,7 @@
 """Support for binary sensors through the SmartThings cloud API."""
-from typing import Optional, Sequence
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 from pysmartthings import Attribute, Capability
 
@@ -13,6 +15,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SOUND,
     BinarySensorEntity,
 )
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -39,6 +42,9 @@ ATTRIB_TO_CLASS = {
     Attribute.valve: DEVICE_CLASS_OPENING,
     Attribute.water: DEVICE_CLASS_MOISTURE,
 }
+ATTRIB_TO_ENTTIY_CATEGORY = {
+    Attribute.tamper: ENTITY_CATEGORY_DIAGNOSTIC,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -52,7 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     """Return all capabilities supported if minimum required are present."""
     return [
         capability for capability in CAPABILITY_TO_ATTRIB if capability in capabilities
@@ -86,3 +92,8 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
     def device_class(self):
         """Return the class of this device."""
         return ATTRIB_TO_CLASS[self._attribute]
+
+    @property
+    def entity_category(self):
+        """Return the entity category of this device."""
+        return ATTRIB_TO_ENTTIY_CATEGORY.get(self._attribute)

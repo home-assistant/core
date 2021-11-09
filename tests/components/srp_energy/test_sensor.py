@@ -1,4 +1,7 @@
 """Tests for the srp_energy sensor platform."""
+from unittest.mock import MagicMock
+
+from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING
 from homeassistant.components.srp_energy.const import (
     ATTRIBUTION,
     DEFAULT_NAME,
@@ -8,9 +11,11 @@ from homeassistant.components.srp_energy.const import (
     SRP_ENERGY_DOMAIN,
 )
 from homeassistant.components.srp_energy.sensor import SrpEntity, async_setup_entry
-from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
-
-from tests.async_mock import MagicMock
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
+)
 
 
 async def test_async_setup_entry(hass):
@@ -82,6 +87,7 @@ async def test_srp_entity(hass):
     """Test the SrpEntity."""
     fake_coordinator = MagicMock(data=1.99999999999)
     srp_entity = SrpEntity(fake_coordinator)
+    srp_entity.hass = hass
 
     assert srp_entity is not None
     assert srp_entity.name == f"{DEFAULT_NAME} {SENSOR_NAME}"
@@ -91,8 +97,10 @@ async def test_srp_entity(hass):
     assert srp_entity.icon == ICON
     assert srp_entity.usage == "2.00"
     assert srp_entity.should_poll is False
-    assert srp_entity.device_state_attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
+    assert srp_entity.extra_state_attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
     assert srp_entity.available is not None
+    assert srp_entity.device_class == DEVICE_CLASS_ENERGY
+    assert srp_entity.state_class == STATE_CLASS_TOTAL_INCREASING
 
     await srp_entity.async_added_to_hass()
     assert srp_entity.state is not None
@@ -104,13 +112,15 @@ async def test_srp_entity_no_data(hass):
     """Test the SrpEntity."""
     fake_coordinator = MagicMock(data=False)
     srp_entity = SrpEntity(fake_coordinator)
-    assert srp_entity.device_state_attributes is None
+    srp_entity.hass = hass
+    assert srp_entity.extra_state_attributes is None
 
 
 async def test_srp_entity_no_coord_data(hass):
     """Test the SrpEntity."""
     fake_coordinator = MagicMock(data=False)
     srp_entity = SrpEntity(fake_coordinator)
+    srp_entity.hass = hass
 
     assert srp_entity.usage is None
 
@@ -124,6 +134,7 @@ async def test_srp_entity_async_update(hass):
     MagicMock.__await__ = lambda x: async_magic().__await__()
     fake_coordinator = MagicMock(data=False)
     srp_entity = SrpEntity(fake_coordinator)
+    srp_entity.hass = hass
 
     await srp_entity.async_update()
     assert fake_coordinator.async_request_refresh.called

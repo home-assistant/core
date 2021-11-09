@@ -1,12 +1,13 @@
 """Minio helper methods."""
-from collections.abc import Iterable
+from __future__ import annotations
+
+from collections.abc import Iterable, Iterator
 import json
 import logging
 from queue import Queue
 import re
 import threading
 import time
-from typing import Iterator, List
 from urllib.parse import unquote
 
 from minio import Minio
@@ -21,8 +22,7 @@ def normalize_metadata(metadata: dict) -> dict:
     """Normalize object metadata by stripping the prefix."""
     new_metadata = {}
     for meta_key, meta_value in metadata.items():
-        match = _METADATA_RE.match(meta_key)
-        if not match:
+        if not (match := _METADATA_RE.match(meta_key)):
             continue
 
         new_metadata[match.group(1).lower()] = meta_value
@@ -38,7 +38,7 @@ def create_minio_client(
 
 
 def get_minio_notification_response(
-    minio_client, bucket_name: str, prefix: str, suffix: str, events: List[str]
+    minio_client, bucket_name: str, prefix: str, suffix: str, events: list[str]
 ):
     """Start listening to minio events. Copied from minio-py."""
     query = {"prefix": prefix, "suffix": suffix, "events": events}
@@ -87,8 +87,8 @@ class MinioEventThread(threading.Thread):
         bucket_name: str,
         prefix: str,
         suffix: str,
-        events: List[str],
-    ):
+        events: list[str],
+    ) -> None:
         """Copy over all Minio client options."""
         super().__init__()
         self._queue = queue

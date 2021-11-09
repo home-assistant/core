@@ -16,7 +16,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 AWAY_LATITUDE = 32.881011
 AWAY_LONGITUDE = -117.234758

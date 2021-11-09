@@ -1,8 +1,9 @@
 """Import logic for blueprint."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 import html
 import re
-from typing import Optional
 
 import voluptuous as vol
 import yarl
@@ -58,9 +59,7 @@ def _get_github_import_url(url: str) -> str:
     if url.startswith("https://raw.githubusercontent.com/"):
         return url
 
-    match = GITHUB_FILE_PATTERN.match(url)
-
-    if match is None:
+    if (match := GITHUB_FILE_PATTERN.match(url)) is None:
         raise UnsupportedUrl("Not a GitHub file url")
 
     repo, path = match.groups()
@@ -73,8 +72,7 @@ def _get_community_post_import_url(url: str) -> str:
 
     Async friendly.
     """
-    match = COMMUNITY_TOPIC_PATTERN.match(url)
-    if match is None:
+    if (match := COMMUNITY_TOPIC_PATTERN.match(url)) is None:
         raise UnsupportedUrl("Not a topic url")
 
     _topic, post = match.groups()
@@ -93,7 +91,7 @@ def _get_community_post_import_url(url: str) -> str:
 def _extract_blueprint_from_community_topic(
     url: str,
     topic: dict,
-) -> Optional[ImportedBlueprint]:
+) -> ImportedBlueprint | None:
     """Extract a blueprint from a community post JSON.
 
     Async friendly.
@@ -136,7 +134,7 @@ def _extract_blueprint_from_community_topic(
 
 async def fetch_blueprint_from_community_post(
     hass: HomeAssistant, url: str
-) -> Optional[ImportedBlueprint]:
+) -> ImportedBlueprint | None:
     """Get blueprints from a community post url.
 
     Method can raise aiohttp client exceptions, vol.Invalid.

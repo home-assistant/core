@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "invalid_discovery_topic": "\uac80\uc0c9 \ud1a0\ud53d \uc811\ub450\uc0ac\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "discovery_prefix": "\uac80\uc0c9 \ud1a0\ud53d \uc811\ub450\uc0ac"
+                },
+                "description": "Tasmota \uad6c\uc131\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "Tasmota\ub97c \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?"
+            }
+        }
+    }
+}

@@ -1,0 +1,108 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "not_konn_panel": "Bukan perangkat Konnected.io yang dikenali",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "confirm": {
+                "description": "Model: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nAnda dapat mengonfigurasi IO dan perilaku panel di pengaturan Panel Alarm Konnected.",
+                "title": "Perangkat Konnected Siap"
+            },
+            "import_confirm": {
+                "description": "Panel Alarm Konnected dengan ID {id} telah ditemukan di configuration.yaml. Aliran ini akan memungkinkan Anda mengimpornya menjadi entri konfigurasi.",
+                "title": "Impor Perangkat Konnected"
+            },
+            "user": {
+                "data": {
+                    "host": "Alamat IP",
+                    "port": "Port"
+                },
+                "description": "Masukkan informasi host untuk Panel Konnected Anda."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "not_konn_panel": "Bukan perangkat Konnected.io yang dikenali"
+        },
+        "error": {
+            "bad_host": "URL host API yang Menimpa Tidak Valid"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "Balikkan status buka/tutup",
+                    "name": "Nama (opsional)",
+                    "type": "Jenis Sensor Biner"
+                },
+                "description": "Opsi {zone}",
+                "title": "Konfigurasikan Sensor Biner"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Nama (opsional)",
+                    "poll_interval": "Interval Polling (dalam menit) (opsional)",
+                    "type": "Jenis Sensor"
+                },
+                "description": "Opsi {zone}",
+                "title": "Konfigurasi Sensor Digital"
+            },
+            "options_io": {
+                "data": {
+                    "1": "Zona 1",
+                    "2": "Zona 2",
+                    "3": "Zona 3",
+                    "4": "Zona 4",
+                    "5": "Zona 5",
+                    "6": "Zona 6",
+                    "7": "Zona 7",
+                    "out": "OUT"
+                },
+                "description": "Ditemukan {model} di {host}. Pilih konfigurasi dasar setiap I/O di bawah ini - tergantung pada I/O yang mungkin memungkinkan sensor biner (kontak terbuka/tutup), sensor digital (dht dan ds18b20), atau sakelar output. Anda dapat mengonfigurasi opsi terperinci dalam langkah berikutnya.",
+                "title": "Konfigurasikan I/O"
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "Zona 10",
+                    "11": "Zona 11",
+                    "12": "Zona 12",
+                    "8": "Zona 8",
+                    "9": "Zona 9",
+                    "alarm1": "ALARM1",
+                    "alarm2_out2": "OUT2/ALARM2",
+                    "out1": "OUT1"
+                },
+                "description": "Pilih konfigurasi I/O lainnya di bawah ini. Anda dapat mengonfigurasi detail opsi pada langkah berikutnya.",
+                "title": "Konfigurasikan I/O yang Diperluas"
+            },
+            "options_misc": {
+                "data": {
+                    "api_host": "Ganti URL host API (opsional)",
+                    "blink": "Kedipkan panel LED saat mengirim perubahan status",
+                    "discovery": "Tanggapi permintaan penemuan di jaringan Anda",
+                    "override_api_host": "Timpa URL panel host API Home Assistant bawaan"
+                },
+                "description": "Pilih perilaku yang diinginkan untuk panel Anda",
+                "title": "Konfigurasikan Lainnya"
+            },
+            "options_switch": {
+                "data": {
+                    "activation": "Keluaran saat nyala",
+                    "momentary": "Durasi pulsa (milidetik) (opsional)",
+                    "more_states": "Konfigurasikan status tambahan untuk zona ini",
+                    "name": "Nama (opsional)",
+                    "pause": "Jeda di antara pulsa (milidetik) (opsional)",
+                    "repeat": "Waktu pengulangan (-1 = tak terbatas) (opsional)"
+                },
+                "description": "Opsi {zone}: status {state}",
+                "title": "Konfigurasikan Output yang Dapat Dialihkan"
+            }
+        }
+    }
+}

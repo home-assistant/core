@@ -1,5 +1,4 @@
 """The Ruckus Unleashed integration."""
-import asyncio
 
 from pyruckus import Ruckus
 
@@ -27,12 +26,6 @@ from .const import (
 from .coordinator import RuckusUnleashedDataUpdateCoordinator
 
 
-async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Ruckus Unleashed component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ruckus Unleashed from a config entry."""
     try:
@@ -47,9 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = RuckusUnleashedDataUpdateCoordinator(hass, ruckus=ruckus)
 
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     system_info = await hass.async_add_executor_job(ruckus.system_info)
 
@@ -66,29 +57,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             sw_version=system_info[API_SYSTEM_OVERVIEW][API_VERSION],
         )
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         UNDO_UPDATE_LISTENERS: [],
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         for listener in hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENERS]:
             listener()

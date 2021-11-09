@@ -14,14 +14,19 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 1
+    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
 
-    # we should have 5 entities for the device
+    # we should have 5 entities for the valve
     assert hass.states.get("sensor.current_system_mode").state == "home"
     assert hass.states.get("sensor.today_s_water_usage").state == "3.7"
     assert hass.states.get("sensor.water_flow_rate").state == "0"
     assert hass.states.get("sensor.water_pressure").state == "54.2"
-    assert hass.states.get("sensor.water_temperature").state == "21.1"
+    assert hass.states.get("sensor.water_temperature").state == "21"
+
+    # and 3 entities for the detector
+    assert hass.states.get("sensor.temperature").state == "16"
+    assert hass.states.get("sensor.humidity").state == "43"
+    assert hass.states.get("sensor.battery").state == "100"
 
 
 async def test_manual_update_entity(
@@ -34,7 +39,7 @@ async def test_manual_update_entity(
     )
     await hass.async_block_till_done()
 
-    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 1
+    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
 
     await async_setup_component(hass, "homeassistant", {})
 

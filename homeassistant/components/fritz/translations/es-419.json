@@ -1,0 +1,19 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Configure las herramientas de FRITZ! Box para controlar su FRITZ! Box.\nM\u00ednimo necesario: nombre de usuario, contrase\u00f1a.",
+                "title": "Configurar las herramientas de FRITZ! Box"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Segundos para considerar un dispositivo en 'casa'"
+                }
+            }
+        }
+    }
+}

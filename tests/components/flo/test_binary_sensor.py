@@ -4,6 +4,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
+    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.setup import async_setup_component
@@ -19,12 +20,14 @@ async def test_binary_sensors(hass, config_entry, aioclient_mock_fixture):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 1
+    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
 
-    # we should have 6 entities for the device
-    state = hass.states.get("binary_sensor.pending_system_alerts")
-    assert state.state == STATE_ON
-    assert state.attributes.get("info") == 0
-    assert state.attributes.get("warning") == 2
-    assert state.attributes.get("critical") == 0
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Pending System Alerts"
+    valve_state = hass.states.get("binary_sensor.pending_system_alerts")
+    assert valve_state.state == STATE_ON
+    assert valve_state.attributes.get("info") == 0
+    assert valve_state.attributes.get("warning") == 2
+    assert valve_state.attributes.get("critical") == 0
+    assert valve_state.attributes.get(ATTR_FRIENDLY_NAME) == "Pending System Alerts"
+
+    detector_state = hass.states.get("binary_sensor.water_detected")
+    assert detector_state.state == STATE_OFF

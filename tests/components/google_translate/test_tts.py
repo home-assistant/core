@@ -1,6 +1,7 @@
 """The tests for the Google speech platform."""
 import os
 import shutil
+from unittest.mock import patch
 
 from gtts import gTTSError
 import pytest
@@ -14,7 +15,6 @@ import homeassistant.components.tts as tts
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 from tests.components.tts.test_init import mutagen_mock  # noqa: F401
 

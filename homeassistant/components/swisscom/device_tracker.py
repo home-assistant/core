@@ -1,4 +1,5 @@
 """Support for Swisscom routers (Internet-Box)."""
+from contextlib import suppress
 import logging
 
 from aiohttp.hdrs import CONTENT_TYPE
@@ -7,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
@@ -17,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_IP = "192.168.1.1"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string}
 )
 
@@ -64,8 +65,7 @@ class SwisscomDeviceScanner(DeviceScanner):
             return False
 
         _LOGGER.info("Loading data from Swisscom Internet Box")
-        data = self.get_swisscom_data()
-        if not data:
+        if not (data := self.get_swisscom_data()):
             return False
 
         active_clients = [client for client in data.values() if client["status"]]
@@ -97,13 +97,11 @@ class SwisscomDeviceScanner(DeviceScanner):
             return devices
 
         for device in request.json()["status"]:
-            try:
+            with suppress(KeyError, requests.exceptions.RequestException):
                 devices[device["Key"]] = {
                     "ip": device["IPAddress"],
                     "mac": device["PhysAddress"],
                     "host": device["Name"],
                     "status": device["Active"],
                 }
-            except (KeyError, requests.exceptions.RequestException):
-                pass
         return devices

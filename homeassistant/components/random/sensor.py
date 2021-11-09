@@ -3,7 +3,7 @@ from random import randrange
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MAXIMUM,
     CONF_MINIMUM,
@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 ATTR_MAXIMUM = "maximum"
 ATTR_MINIMUM = "minimum"
@@ -42,7 +41,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([RandomSensor(name, minimum, maximum, unit)], True)
 
 
-class RandomSensor(Entity):
+class RandomSensor(SensorEntity):
     """Representation of a Random number sensor."""
 
     def __init__(self, name, minimum, maximum, unit_of_measurement):
@@ -59,7 +58,7 @@ class RandomSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
@@ -69,12 +68,12 @@ class RandomSensor(Entity):
         return ICON
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the sensor."""
         return {ATTR_MAXIMUM: self._maximum, ATTR_MINIMUM: self._minimum}
 

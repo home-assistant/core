@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "See lennujaam on juba seadistatud."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendumine nurjus",
+            "invalid_airport": "Lennujaama kood ei sobi",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Lennujaam"
+                },
+                "description": "Sisesta USA lennujaama kood IATA vormingus",
+                "title": ""
+            }
+        }
+    }
+}

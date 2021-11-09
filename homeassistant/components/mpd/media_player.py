@@ -1,4 +1,5 @@
 """Support to interact with a Music Player Daemon."""
+from contextlib import suppress
 from datetime import timedelta
 import hashlib
 import logging
@@ -105,7 +106,7 @@ class MpdDevice(MediaPlayerEntity):
         self._currentplaylist = None
         self._is_connected = False
         self._muted = False
-        self._muted_volume = 0
+        self._muted_volume = None
         self._media_position_updated_at = None
         self._media_position = None
         self._commands = None
@@ -129,10 +130,8 @@ class MpdDevice(MediaPlayerEntity):
 
     def _disconnect(self):
         """Disconnect from MPD."""
-        try:
+        with suppress(mpd.ConnectionError):
             self._client.disconnect()
-        except mpd.ConnectionError:
-            pass
         self._is_connected = False
         self._status = None
 
@@ -141,9 +140,7 @@ class MpdDevice(MediaPlayerEntity):
         self._status = await self._client.status()
         self._currentsong = await self._client.currentsong()
 
-        position = self._status.get("elapsed")
-
-        if position is None:
+        if (position := self._status.get("elapsed")) is None:
             position = self._status.get("time")
 
             if isinstance(position, str) and ":" in position:
@@ -168,7 +165,7 @@ class MpdDevice(MediaPlayerEntity):
                 self._commands = list(await self._client.commands())
 
             await self._fetch_status()
-        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError) as error:
+        except (mpd.ConnectionError, OSError, ValueError) as error:
             # Cleanly disconnect in case connection is not in valid state
             _LOGGER.debug("Error updating status: %s", error)
             self._disconnect()
@@ -258,16 +255,14 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def media_image_hash(self):
         """Hash value for media image."""
-        file = self._currentsong.get("file")
-        if file:
+        if file := self._currentsong.get("file"):
             return hashlib.sha256(file.encode("utf-8")).hexdigest()[:16]
 
         return None
 
     async def async_get_media_image(self):
         """Fetch media image of current playing track."""
-        file = self._currentsong.get("file")
-        if not file:
+        if not (file := self._currentsong.get("file")):
             return None, None
 
         # not all MPD implementations and versions support the `albumart` and `fetchpicture` commands
@@ -281,20 +276,22 @@ class MpdDevice(MediaPlayerEntity):
             try:
                 response = await self._client.readpicture(file)
             except mpd.CommandError as error:
-                _LOGGER.warning(
-                    "Retrieving artwork through `readpicture` command failed: %s",
-                    error,
-                )
+                if error.errno is not mpd.FailureResponseCode.NO_EXIST:
+                    _LOGGER.warning(
+                        "Retrieving artwork through `readpicture` command failed: %s",
+                        error,
+                    )
 
         # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if none is embedded
         if can_albumart and not response:
             try:
                 response = await self._client.albumart(file)
             except mpd.CommandError as error:
-                _LOGGER.warning(
-                    "Retrieving artwork through `albumart` command failed: %s",
-                    error,
-                )
+                if error.errno is not mpd.FailureResponseCode.NO_EXIST:
+                    _LOGGER.warning(
+                        "Retrieving artwork through `albumart` command failed: %s",
+                        error,
+                    )
 
         if not response:
             return None, None
@@ -401,7 +398,7 @@ class MpdDevice(MediaPlayerEntity):
             if mute:
                 self._muted_volume = self.volume_level
                 await self.async_set_volume_level(0)
-            else:
+            elif self._muted_volume is not None:
                 await self.async_set_volume_level(self._muted_volume)
             self._muted = mute
 

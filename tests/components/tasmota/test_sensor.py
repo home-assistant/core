@@ -3,6 +3,7 @@ import copy
 import datetime
 from datetime import timedelta
 import json
+from unittest.mock import Mock, patch
 
 import hatasmota
 from hatasmota.utils import (
@@ -16,6 +17,7 @@ from homeassistant import config_entries
 from homeassistant.components import sensor
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
 from .test_common import (
@@ -31,7 +33,6 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.async_mock import Mock, patch
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_SENSOR_CONFIG = {
@@ -42,12 +43,48 @@ DEFAULT_SENSOR_CONFIG = {
     }
 }
 
+BAD_INDEXED_SENSOR_CONFIG_3 = {
+    "sn": {
+        "Time": "2020-09-25T12:47:15",
+        "ENERGY": {
+            "ApparentPower": [7.84, 1.23, 2.34],
+        },
+    }
+}
+
 INDEXED_SENSOR_CONFIG = {
     "sn": {
         "Time": "2020-09-25T12:47:15",
         "ENERGY": {
             "TotalStartTime": "2018-11-23T15:33:47",
             "Total": 0.017,
+            "TotalTariff": [0.000, 0.017],
+            "Yesterday": 0.000,
+            "Today": 0.002,
+            "ExportActive": 0.000,
+            "ExportTariff": [0.000, 0.000],
+            "Period": 0.00,
+            "Power": 0.00,
+            "ApparentPower": 7.84,
+            "ReactivePower": -7.21,
+            "Factor": 0.39,
+            "Frequency": 50.0,
+            "Voltage": 234.31,
+            "Current": 0.039,
+            "ImportActive": 12.580,
+            "ImportReactive": 0.002,
+            "ExportReactive": 39.131,
+            "PhaseAngle": 290.45,
+        },
+    }
+}
+
+INDEXED_SENSOR_CONFIG_2 = {
+    "sn": {
+        "Time": "2020-09-25T12:47:15",
+        "ENERGY": {
+            "TotalStartTime": "2018-11-23T15:33:47",
+            "Total": [0.000, 0.017],
             "TotalTariff": [0.000, 0.017],
             "Yesterday": 0.000,
             "Today": 0.002,
@@ -111,7 +148,14 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
+    entity_reg = er.async_get(hass)
+    entry = entity_reg.async_get("sensor.tasmota_dht11_temperature")
+    assert entry.disabled is False
+    assert entry.disabled_by is None
+    assert entry.entity_category is None
+
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.tasmota_dht11_temperature")
     assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -157,6 +201,7 @@ async def test_nested_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.tasmota_tx23_speed_act")
     assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -202,6 +247,7 @@ async def test_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.tasmota_energy_totaltariff_1")
     assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -223,10 +269,224 @@ async def test_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.state == "7.8"
 
 
+async def test_indexed_sensor_state_via_mqtt2(hass, mqtt_mock, setup_tasmota):
+    """Test state update via MQTT for sensor with last_reset property."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    sensor_config = copy.deepcopy(INDEXED_SENSOR_CONFIG)
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/sensors",
+        json.dumps(sensor_config),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.tasmota_energy_total")
+    assert state.state == "unavailable"
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    assert (
+        state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_TOTAL_INCREASING
+    )
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.tasmota_energy_total")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Test periodic state update
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/tele/SENSOR",
+        '{"ENERGY":{"Total":1.2,"TotalStartTime":"2018-11-23T15:33:47"}}',
+    )
+    state = hass.states.get("sensor.tasmota_energy_total")
+    assert state.state == "1.2"
+
+    # Test polled state update
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"ENERGY":{"Total":5.6,"TotalStartTime":"2018-11-23T16:33:47"}}}',
+    )
+    state = hass.states.get("sensor.tasmota_energy_total")
+    assert state.state == "5.6"
+
+
+async def test_indexed_sensor_state_via_mqtt3(hass, mqtt_mock, setup_tasmota):
+    """Test state update via MQTT for indexed sensor with last_reset property."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    sensor_config = copy.deepcopy(INDEXED_SENSOR_CONFIG_2)
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/sensors",
+        json.dumps(sensor_config),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.tasmota_energy_total_1")
+    assert state.state == "unavailable"
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    assert (
+        state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_TOTAL_INCREASING
+    )
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.tasmota_energy_total_1")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Test periodic state update
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/tele/SENSOR",
+        '{"ENERGY":{"Total":[1.2, 3.4],"TotalStartTime":"2018-11-23T15:33:47"}}',
+    )
+    state = hass.states.get("sensor.tasmota_energy_total_1")
+    assert state.state == "3.4"
+
+    # Test polled state update
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"ENERGY":{"Total":[5.6,7.8],"TotalStartTime":"2018-11-23T16:33:47"}}}',
+    )
+    state = hass.states.get("sensor.tasmota_energy_total_1")
+    assert state.state == "7.8"
+
+
+async def test_bad_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
+    """Test state update via MQTT where sensor is not matching configuration."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    sensor_config = copy.deepcopy(BAD_INDEXED_SENSOR_CONFIG_3)
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/sensors",
+        json.dumps(sensor_config),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_0")
+    assert state.state == "unavailable"
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
+    assert state.state == "unavailable"
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
+    assert state.state == "unavailable"
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_0")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Test periodic state update
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/tele/SENSOR", '{"ENERGY":{"ApparentPower":[1.2,3.4,5.6]}}'
+    )
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_0")
+    assert state.state == "1.2"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
+    assert state.state == "3.4"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
+    assert state.state == "5.6"
+
+    # Test periodic state update with too few values
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/tele/SENSOR", '{"ENERGY":{"ApparentPower":[7.8,9.0]}}'
+    )
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_0")
+    assert state.state == "7.8"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
+    assert state.state == "9.0"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
+    assert state.state == "5.6"
+
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/tele/SENSOR", '{"ENERGY":{"ApparentPower":2.3}}'
+    )
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_0")
+    assert state.state == "2.3"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
+    assert state.state == "9.0"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
+    assert state.state == "5.6"
+
+    # Test polled state update
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"ENERGY":{"ApparentPower":[1.2,3.4,5.6]}}}',
+    )
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_0")
+    assert state.state == "1.2"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
+    assert state.state == "3.4"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
+    assert state.state == "5.6"
+
+    # Test polled state update with too few values
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"ENERGY":{"ApparentPower":[7.8,9.0]}}}',
+    )
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_0")
+    assert state.state == "7.8"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
+    assert state.state == "9.0"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
+    assert state.state == "5.6"
+
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS10",
+        '{"StatusSNS":{"ENERGY":{"ApparentPower":2.3}}}',
+    )
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_0")
+    assert state.state == "2.3"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_1")
+    assert state.state == "9.0"
+    state = hass.states.get("sensor.tasmota_energy_apparentpower_2")
+    assert state.state == "5.6"
+
+
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
@@ -253,6 +513,7 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.tasmota_status")
     assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -275,11 +536,17 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("sensor.tasmota_status")
     assert state.state == "20.0"
 
+    # Test force update flag
+    entity = hass.data["entity_components"]["sensor"].get_entity(
+        "sensor.tasmota_status"
+    )
+    assert entity.force_update
+
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_single_shot_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
@@ -306,6 +573,7 @@ async def test_single_shot_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_t
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.tasmota_status")
     assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -363,7 +631,7 @@ async def test_restart_time_status_sensor_state_via_mqtt(
     hass, mqtt_mock, setup_tasmota
 ):
     """Test state update via MQTT."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
@@ -390,6 +658,7 @@ async def test_restart_time_status_sensor_state_via_mqtt(
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.tasmota_status")
     assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -439,9 +708,9 @@ async def test_attributes(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("unit_of_measurement") == "°C"
 
     state = hass.states.get("sensor.tasmota_beer_CarbonDioxide")
-    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("device_class") == "carbon_dioxide"
     assert state.attributes.get("friendly_name") == "Tasmota Beer CarbonDioxide"
-    assert state.attributes.get("icon") == "mdi:molecule-co2"
+    assert state.attributes.get("icon") is None
     assert state.attributes.get("unit_of_measurement") == "ppm"
 
 
@@ -509,16 +778,55 @@ async def test_indexed_sensor_attributes(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("unit_of_measurement") == "°C"
 
     state = hass.states.get("sensor.tasmota_dummy2_carbondioxide_1")
-    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("device_class") == "carbon_dioxide"
     assert state.attributes.get("friendly_name") == "Tasmota Dummy2 CarbonDioxide 1"
-    assert state.attributes.get("icon") == "mdi:molecule-co2"
+    assert state.attributes.get("icon") is None
     assert state.attributes.get("unit_of_measurement") == "ppm"
+
+
+@pytest.mark.parametrize("status_sensor_disabled", [False])
+@pytest.mark.parametrize(
+    "sensor_name, disabled, disabled_by",
+    [
+        ("tasmota_firmware_version", True, er.DISABLED_INTEGRATION),
+        ("tasmota_ip", True, er.DISABLED_INTEGRATION),
+        ("tasmota_last_restart_time", False, None),
+        ("tasmota_mqtt_connect_count", False, None),
+        ("tasmota_rssi", True, er.DISABLED_INTEGRATION),
+        ("tasmota_signal", True, er.DISABLED_INTEGRATION),
+        ("tasmota_ssid", False, None),
+        ("tasmota_wifi_connect_count", False, None),
+    ],
+)
+async def test_diagnostic_sensors(
+    hass, mqtt_mock, setup_tasmota, sensor_name, disabled, disabled_by
+):
+    """Test properties of diagnostic sensors."""
+    entity_reg = er.async_get(hass)
+
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"sensor.{sensor_name}")
+    assert bool(state) != disabled
+    entry = entity_reg.async_get(f"sensor.{sensor_name}")
+    assert entry.disabled == disabled
+    assert entry.disabled_by == disabled_by
+    assert entry.entity_category == "diagnostic"
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
     """Test enabling status sensor."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
@@ -535,9 +843,9 @@ async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
     assert state is None
     entry = entity_reg.async_get("sensor.tasmota_signal")
     assert entry.disabled
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.DISABLED_INTEGRATION
 
-    # Enable the status sensor
+    # Enable the signal level status sensor
     updated_entry = entity_reg.async_update_entity(
         "sensor.tasmota_signal", disabled_by=None
     )
@@ -564,6 +872,7 @@ async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.tasmota_signal")
     assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)

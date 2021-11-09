@@ -1,16 +1,19 @@
 """Generic entity for the HomematicIP Cloud component."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
 
+from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as HMIPC_DOMAIN
-from .hap import HomematicipHAP
+from .hap import AsyncHome, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +22,6 @@ ATTR_LOW_BATTERY = "low_battery"
 ATTR_CONFIG_PENDING = "config_pending"
 ATTR_CONNECTION_TYPE = "connection_type"
 ATTR_DUTY_CYCLE_REACHED = "duty_cycle_reached"
-ATTR_ID = "id"
 ATTR_IS_GROUP = "is_group"
 # RSSI HAP -> Device
 ATTR_RSSI_DEVICE = "rssi_device"
@@ -74,13 +76,13 @@ class HomematicipGenericEntity(Entity):
         self,
         hap: HomematicipHAP,
         device,
-        post: Optional[str] = None,
-        channel: Optional[int] = None,
-        is_multi_channel: Optional[bool] = False,
+        post: str | None = None,
+        channel: int | None = None,
+        is_multi_channel: bool | None = False,
     ) -> None:
         """Initialize the generic entity."""
         self._hap = hap
-        self._home = hap.home
+        self._home: AsyncHome = hap.home
         self._device = device
         self._post = post
         self._channel = channel
@@ -90,22 +92,22 @@ class HomematicipGenericEntity(Entity):
         _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
-            return {
-                "identifiers": {
+            return DeviceInfo(
+                identifiers={
                     # Serial numbers of Homematic IP device
                     (HMIPC_DOMAIN, self._device.id)
                 },
-                "name": self._device.label,
-                "manufacturer": self._device.oem,
-                "model": self._device.modelType,
-                "sw_version": self._device.firmwareVersion,
+                manufacturer=self._device.oem,
+                model=self._device.modelType,
+                name=self._device.label,
+                sw_version=self._device.firmwareVersion,
                 # Link to the homematic ip access point.
-                "via_device": (HMIPC_DOMAIN, self._device.homeId),
-            }
+                via_device=(HMIPC_DOMAIN, self._device.homeId),
+            )
         return None
 
     async def async_added_to_hass(self) -> None:
@@ -137,13 +139,13 @@ class HomematicipGenericEntity(Entity):
         if self.hmip_device_removed:
             try:
                 del self._hap.hmip_device_by_entity_id[self.entity_id]
-                await self.async_remove_from_registries()
+                self.async_remove_from_registries()
             except KeyError as err:
                 _LOGGER.debug("Error removing HMIP device from registry: %s", err)
 
-    async def async_remove_from_registries(self) -> None:
+    @callback
+    def async_remove_from_registries(self) -> None:
         """Remove entity/device from registry."""
-
         # Remove callback from device.
         self._device.remove_callback(self._async_device_changed)
         self._device.remove_callback(self._async_device_removed)
@@ -151,19 +153,17 @@ class HomematicipGenericEntity(Entity):
         if not self.registry_entry:
             return
 
-        device_id = self.registry_entry.device_id
-        if device_id:
+        if device_id := self.registry_entry.device_id:
             # Remove from device registry.
-            device_registry = await dr.async_get_registry(self.hass)
+            device_registry = dr.async_get(self.hass)
             if device_id in device_registry.devices:
                 # This will also remove associated entities from entity registry.
                 device_registry.async_remove_device(device_id)
         else:
             # Remove from entity registry.
             # Only relevant for entities that do not belong to a device.
-            entity_id = self.registry_entry.entity_id
-            if entity_id:
-                entity_registry = await er.async_get_registry(self.hass)
+            if entity_id := self.registry_entry.entity_id:
+                entity_registry = er.async_get(self.hass)
                 if entity_id in entity_registry.entities:
                     entity_registry.async_remove(entity_id)
 
@@ -172,7 +172,7 @@ class HomematicipGenericEntity(Entity):
         """Handle hmip device removal."""
         # Set marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = True
-        self.hass.async_create_task(self.async_remove())
+        self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @property
     def name(self) -> str:
@@ -223,7 +223,7 @@ class HomematicipGenericEntity(Entity):
         return unique_id
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the icon."""
         for attr, icon in DEVICE_ATTRIBUTE_ICONS.items():
             if getattr(self._device, attr, None):
@@ -232,22 +232,20 @@ class HomematicipGenericEntity(Entity):
         return None
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         state_attr = {}
 
         if isinstance(self._device, AsyncDevice):
             for attr, attr_key in DEVICE_ATTRIBUTES.items():
-                attr_value = getattr(self._device, attr, None)
-                if attr_value:
+                if attr_value := getattr(self._device, attr, None):
                     state_attr[attr_key] = attr_value
 
             state_attr[ATTR_IS_GROUP] = False
 
         if isinstance(self._device, AsyncGroup):
             for attr, attr_key in GROUP_ATTRIBUTES.items():
-                attr_value = getattr(self._device, attr, None)
-                if attr_value:
+                if attr_value := getattr(self._device, attr, None):
                     state_attr[attr_key] = attr_value
 
             state_attr[ATTR_IS_GROUP] = True

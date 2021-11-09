@@ -35,6 +35,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Send command: {subtype}",
+            "send_status": "Send status update: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Received command: {subtype}",
+            "status": "Received status: {subtype}"
+        }
+    },
     "options": {
         "error": {
             "already_configured_device": "Device is already configured",
@@ -64,7 +74,8 @@
                     "off_delay": "Off delay",
                     "off_delay_enabled": "Enable off delay",
                     "replace_device": "Select device to replace",
-                    "signal_repetitions": "Number of signal repetitions"
+                    "signal_repetitions": "Number of signal repetitions",
+                    "venetian_blind_mode": "Venetian blind mode"
                 },
                 "title": "Configure device options"
             }

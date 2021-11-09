@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +74,7 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return self._attributes
@@ -85,10 +86,13 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
 
     def update(self):
         """Update device state."""
-        alert = self._api.get_alert()
-        if alert:
-            self._attributes = alert
-            self._state = True
-        else:
-            self._attributes = {}
-            self._state = False
+        self._attributes = {}
+        self._state = False
+
+        if alert := self._api.get_alert():
+            expiration_date = dt_util.parse_datetime(alert["expires"])
+            now = dt_util.utcnow()
+
+            if expiration_date > now:
+                self._attributes = alert
+                self._state = True

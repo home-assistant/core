@@ -17,7 +17,7 @@
                     "host": "H\u00f4te",
                     "password": "Mot de passe",
                     "port": "Port",
-                    "username": "Username"
+                    "username": "Nom d'utilisateur"
                 },
                 "title": "Modifier les informations de connexion"
             },

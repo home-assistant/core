@@ -24,6 +24,7 @@ from homeassistant.helpers import config_validation as cv
 from .const import ATTR_CONFIG_PARAMETER, ATTR_CONFIG_VALUE, DOMAIN, MANAGER
 from .lock import ATTR_USERCODE
 
+DRY_RUN = "dry_run"
 TYPE = "type"
 ID = "id"
 OZW_INSTANCE = "ozw_instance"
@@ -115,7 +116,7 @@ def _get_config_params(node, *args):
     for param in raw_values:
         schema = {}
 
-        if param["type"] in ["Byte", "Int", "Short"]:
+        if param["type"] in ("Byte", "Int", "Short"):
             schema = vol.Schema(
                 {
                     vol.Required(param["label"], default=param["value"]): vol.All(

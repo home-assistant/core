@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "ip_address": "Alamat IP",
+                    "port": "Port"
+                },
+                "description": "Masukkan informasi ScreenLogic Gateway Anda.",
+                "title": "ScreenLogic"
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": "Gateway"
+                },
+                "description": "Gateway ScreenLogic berikut ini ditemukan. Pilih satu untuk dikonfigurasi, atau pilih untuk mengonfigurasi gateway ScreenLogic secara manual.",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval pemindaian dalam detik"
+                },
+                "description": "Tentukan pengaturan untuk {gateway_name}",
+                "title": "ScreenLogic"
+            }
+        }
+    }
+}

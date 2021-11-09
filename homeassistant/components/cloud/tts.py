@@ -12,16 +12,13 @@ CONF_GENDER = "gender"
 
 SUPPORT_LANGUAGES = list({key[0] for key in MAP_VOICE})
 
-DEFAULT_LANG = "en-US"
-DEFAULT_GENDER = "female"
-
 
 def validate_lang(value):
     """Validate chosen gender or language."""
-    lang = value[CONF_LANG]
-    gender = value.get(CONF_GENDER)
+    if (lang := value.get(CONF_LANG)) is None:
+        return value
 
-    if gender is None:
+    if (gender := value.get(CONF_GENDER)) is None:
         gender = value[CONF_GENDER] = next(
             (chk_gender for chk_lang, chk_gender in MAP_VOICE if chk_lang == lang), None
         )
@@ -35,7 +32,7 @@ def validate_lang(value):
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_LANG, default=DEFAULT_LANG): str,
+            vol.Optional(CONF_LANG): str,
             vol.Optional(CONF_GENDER): str,
         }
     ),
@@ -48,8 +45,8 @@ async def async_get_engine(hass, config, discovery_info=None):
     cloud: Cloud = hass.data[DOMAIN]
 
     if discovery_info is not None:
-        language = DEFAULT_LANG
-        gender = DEFAULT_GENDER
+        language = None
+        gender = None
     else:
         language = config[CONF_LANG]
         gender = config[CONF_GENDER]
@@ -60,12 +57,22 @@ async def async_get_engine(hass, config, discovery_info=None):
 class CloudProvider(Provider):
     """NabuCasa Cloud speech API provider."""
 
-    def __init__(self, cloud: Cloud, language: str, gender: str):
+    def __init__(self, cloud: Cloud, language: str, gender: str) -> None:
         """Initialize cloud provider."""
         self.cloud = cloud
         self.name = "Cloud"
         self._language = language
         self._gender = gender
+
+        if self._language is not None:
+            return
+
+        self._language, self._gender = cloud.client.prefs.tts_default_voice
+        cloud.client.prefs.async_listen_updates(self._sync_prefs)
+
+    async def _sync_prefs(self, prefs):
+        """Sync preferences."""
+        self._language, self._gender = prefs.tts_default_voice
 
     @property
     def default_language(self):

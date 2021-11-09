@@ -1,40 +1,44 @@
 """Config flow to configure Nest.
 
-This configuration flow supports two APIs:
-  - The new Device Access program and the Smart Device Management API
-  - The legacy nest API
+This configuration flow supports the following:
+  - SDM API with Installed app flow where user enters an auth code manually
+  - SDM API with Web OAuth flow with redirect back to Home Assistant
+  - Legacy Nest API auth flow with where user enters an auth code manually
 
 NestFlowHandler is an implementation of AbstractOAuth2FlowHandler with
-some overrides to support the old APIs auth flow.  That is, for the new
-API this class has hardly any special config other than url parameters,
-and everything else custom is for the old api.  When configured with the
-new api via NestFlowHandler.register_sdm_api, the custom methods just
-invoke the AbstractOAuth2FlowHandler methods.
+some overrides to support installed app and old APIs auth flow.
 """
+from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
 import logging
 import os
-from typing import Dict
+from typing import Any
 
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.json import load_json
 
-from .const import DATA_SDM, DOMAIN, SDM_SCOPES
+from .const import DATA_SDM, DOMAIN, OOB_REDIRECT_URI, SDM_SCOPES
 
 DATA_FLOW_IMPL = "nest_flow_implementation"
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def register_flow_implementation(hass, domain, name, gen_authorize_url, convert_code):
+def register_flow_implementation(
+    hass: HomeAssistant,
+    domain: str,
+    name: str,
+    gen_authorize_url: str,
+    convert_code: str,
+) -> None:
     """Register a flow implementation for legacy api.
 
     domain: Domain of the component responsible for the implementation.
@@ -65,7 +69,6 @@ class UnexpectedStateError(HomeAssistantError):
     """Raised when the config flow is invoked in a 'should not happen' case."""
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class NestFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
@@ -73,22 +76,21 @@ class NestFlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize NestFlowHandler."""
         super().__init__()
         # When invoked for reauth, allows updating an existing config entry
         self._reauth = False
 
     @classmethod
-    def register_sdm_api(cls, hass):
+    def register_sdm_api(cls, hass: HomeAssistant) -> None:
         """Configure the flow handler to use the SDM API."""
         if DOMAIN not in hass.data:
             hass.data[DOMAIN] = {}
         hass.data[DOMAIN][DATA_SDM] = {}
 
-    def is_sdm_api(self):
+    def is_sdm_api(self) -> bool:
         """Return true if this flow is setup to use SDM API."""
         return DOMAIN in self.hass.data and DATA_SDM in self.hass.data[DOMAIN]
 
@@ -98,7 +100,7 @@ class NestFlowHandler(
         return logging.getLogger(__name__)
 
     @property
-    def extra_authorize_data(self) -> Dict[str, str]:
+    def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
             "scope": " ".join(SDM_SCOPES),
@@ -107,7 +109,7 @@ class NestFlowHandler(
             "prompt": "consent",
         }
 
-    async def async_oauth_create_entry(self, data: dict) -> dict:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the SDM flow."""
         assert self.is_sdm_api(), "Step only supported for SDM API"
         data[DATA_SDM] = {}
@@ -115,7 +117,7 @@ class NestFlowHandler(
         # Update existing config entry when in the reauth flow.  This
         # integration only supports one config entry so remove any prior entries
         # added before the "single_instance_allowed" check was added
-        existing_entries = self.hass.config_entries.async_entries(DOMAIN)
+        existing_entries = self._async_current_entries()
         if existing_entries:
             updated = False
             for entry in existing_entries:
@@ -131,13 +133,17 @@ class NestFlowHandler(
 
         return await super().async_oauth_create_entry(data)
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         assert self.is_sdm_api(), "Step only supported for SDM API"
         self._reauth = True  # Forces update of existing config entry
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm reauth dialog."""
         assert self.is_sdm_api(), "Step only supported for SDM API"
         if user_input is None:
@@ -145,24 +151,63 @@ class NestFlowHandler(
                 step_id="reauth_confirm",
                 data_schema=vol.Schema({}),
             )
+        existing_entries = self._async_current_entries()
+        if existing_entries:
+            # Pick an existing auth implementation for Reauth if present. Note
+            # only one ConfigEntry is allowed so its safe to pick the first.
+            entry = next(iter(existing_entries))
+            if "auth_implementation" in entry.data:
+                data = {"implementation": entry.data["auth_implementation"]}
+                return await self.async_step_user(data)
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if self.is_sdm_api():
             # Reauth will update an existing entry
-            if self.hass.config_entries.async_entries(DOMAIN) and not self._reauth:
+            if self._async_current_entries() and not self._reauth:
                 return self.async_abort(reason="single_instance_allowed")
             return await super().async_step_user(user_input)
         return await self.async_step_init(user_input)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Create an entry for auth."""
+        if self.flow_impl.domain == "nest.installed":
+            # The default behavior from the parent class is to redirect the
+            # user with an external step. When using installed app auth, we
+            # instead prompt the user to sign in and copy/paste and
+            # authentication code back into this form.
+            # Note: This is similar to the Legacy API flow below, but it is
+            # simpler to reuse the OAuth logic in the parent class than to
+            # reuse SDM code with Legacy API code.
+            if user_input is not None:
+                self.external_data = {
+                    "code": user_input["code"],
+                    "state": {"redirect_uri": OOB_REDIRECT_URI},
+                }
+                return await super().async_step_creation(user_input)
+
+            result = await super().async_step_auth()
+            return self.async_show_form(
+                step_id="auth",
+                description_placeholders={"url": result["url"]},
+                data_schema=vol.Schema({vol.Required("code"): str}),
+            )
+        return await super().async_step_auth(user_input)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow start."""
         assert not self.is_sdm_api(), "Step only supported for legacy API"
 
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         if not flows:
@@ -181,7 +226,9 @@ class NestFlowHandler(
             data_schema=vol.Schema({vol.Required("flow_impl"): vol.In(list(flows))}),
         )
 
-    async def async_step_link(self, user_input=None):
+    async def async_step_link(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Attempt to link with the Nest account.
 
         Route the user to a website to authenticate with Nest. Depending on
@@ -196,7 +243,7 @@ class NestFlowHandler(
 
         if user_input is not None:
             try:
-                with async_timeout.timeout(10):
+                async with async_timeout.timeout(10):
                     tokens = await flow["convert_code"](user_input["code"])
                 return self._entry_from_tokens(
                     f"Nest (via {flow['name']})", flow, tokens
@@ -213,7 +260,7 @@ class NestFlowHandler(
                 _LOGGER.exception("Unexpected error resolving code")
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 url = await flow["gen_authorize_url"](self.flow_id)
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
@@ -228,17 +275,17 @@ class NestFlowHandler(
             errors=errors,
         )
 
-    async def async_step_import(self, info):
+    async def async_step_import(self, info: dict[str, Any]) -> FlowResult:
         """Import existing auth from Nest."""
         assert not self.is_sdm_api(), "Step only supported for legacy API"
 
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         config_path = info["nest_conf_path"]
 
         if not await self.hass.async_add_executor_job(os.path.isfile, config_path):
-            self.flow_impl = DOMAIN
+            self.flow_impl = DOMAIN  # type: ignore
             return await self.async_step_link()
 
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
@@ -249,7 +296,9 @@ class NestFlowHandler(
         )
 
     @callback
-    def _entry_from_tokens(self, title, flow, tokens):
+    def _entry_from_tokens(
+        self, title: str, flow: dict[str, Any], tokens: list[Any] | dict[Any, Any]
+    ) -> FlowResult:
         """Create an entry from tokens."""
         return self.async_create_entry(
             title=title, data={"tokens": tokens, "impl_domain": flow["domain"]}

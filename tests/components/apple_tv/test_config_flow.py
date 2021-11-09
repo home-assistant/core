@@ -1,20 +1,22 @@
 """Test config flow."""
 
+from unittest.mock import patch
+
 from pyatv import exceptions
 from pyatv.const import Protocol
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
-DMAP_SERVICE = {
-    "type": "_touch-able._tcp.local.",
-    "name": "dmapid.something",
-    "properties": {"CtlN": "Apple TV"},
-}
+DMAP_SERVICE = zeroconf.HaServiceInfo(
+    type="_touch-able._tcp.local.",
+    name="dmapid.something",
+    properties={"CtlN": "Apple TV"},
+)
 
 
 @pytest.fixture(autouse=True)
@@ -235,15 +237,15 @@ async def test_user_adds_existing_device(hass, mrp_device):
     assert result2["errors"] == {"base": "already_configured"}
 
 
-async def test_user_adds_unusable_device(hass, airplay_device):
-    """Test that it is not possible to add pure AirPlay device."""
+async def test_user_adds_unusable_device(hass, device_with_no_services):
+    """Test that it is not possible to add device with no services."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"device_input": "AirPlay Device"},
+        {"device_input": "Invalid Device"},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "no_usable_service"}
@@ -398,10 +400,10 @@ async def test_zeroconf_unsupported_service_aborts(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "type": "_dummy._tcp.local.",
-            "properties": {},
-        },
+        data=zeroconf.HaServiceInfo(
+            type="_dummy._tcp.local.",
+            properties={},
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"
@@ -412,10 +414,10 @@ async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "type": "_mediaremotetv._tcp.local.",
-            "properties": {"UniqueIdentifier": "mrpid", "Name": "Kitchen"},
-        },
+        data=zeroconf.HaServiceInfo(
+            type="_mediaremotetv._tcp.local.",
+            properties={"UniqueIdentifier": "mrpid", "Name": "Kitchen"},
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["description_placeholders"] == {"name": "MRP Device"}
@@ -518,7 +520,7 @@ async def test_reconfigure_update_credentials(hass, mrp_device, pairing):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "reauth"},
+        context={"source": config_entries.SOURCE_REAUTH},
         data={"identifier": "mrpid", "name": "apple tv"},
     )
 
@@ -551,11 +553,11 @@ async def test_reconfigure_ongoing_aborts(hass, mrp_device):
     }
 
     await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_in_progress"
