@@ -111,9 +111,8 @@ class AtomeData:
         """Return latest active power value."""
         return self._is_connected
 
-    @Throttle(LIVE_SCAN_INTERVAL)
-    def update_live_usage(self):
-        """Return current power value."""
+    def _retrieve_live(self):
+        Error_During_Retrieve = False
         try:
             values = self.atome_client.get_live()
             self._live_power = values["last"]
@@ -125,9 +124,20 @@ class AtomeData:
                 self._is_connected,
                 self._subscribed_power,
             )
-
         except KeyError as error:
-            _LOGGER.error("Missing last value in values: %s: %s", values, error)
+            _LOGGER.error("Live Data : Missing last value in values: %s: %s", values, error)
+            Error_During_Retrieve = True
+        return Error_During_Retrieve
+
+    @Throttle(LIVE_SCAN_INTERVAL)
+    def update_live_usage(self):
+        """Return current power value."""
+        Error_in_Retrieve = self._retrieve_live()
+
+        if Error_in_Retrieve:
+           _LOGGER.debug("Perform Reconnect")
+           self.atome_client.login()
+           self._retrieve_live()
 
     @property
     def day_usage(self):
@@ -139,18 +149,32 @@ class AtomeData:
         """Return latest daily usage value."""
         return self._day_price
 
+    def _retrieve_period_usage(self,period_type):
+        """Return current daily/monthly/yearly power usage."""
+        Error_During_Retrieve = False
+        period_usage = None
+        period_price = None
+        try:
+            values = self.atome_client.get_consumption(period_type)
+            period_usage = values["total"] / 1000
+            period_price = values["price"]
+            _LOGGER.debug("Updating Atome %s data. Got: %d", period_type, period_usage)
+
+        except KeyError as error:
+            Error_During_Retrieve = True
+            _LOGGER.error("%s : Missing last value in values: %s: %s",period_type,  values, error)
+
+        return Error_During_Retrieve, period_usage, period_price
+
     @Throttle(DAILY_SCAN_INTERVAL)
     def update_day_usage(self):
         """Return current daily power usage."""
-        try:
-            values = self.atome_client.get_consumption(DAILY_TYPE)
-            self._day_usage = values["total"] / 1000
-            self._day_price = values["price"]
-            _LOGGER.debug("Updating Atome daily data. Got: %d", self._day_usage)
-
-        except KeyError as error:
-            _LOGGER.error("Missing last value in values: %s: %s", values, error)
-
+        Error_in_Retrieve, self._day_usage, self._day_price = self._retrieve_period_usage(DAILY_TYPE)
+        if Error_in_Retrieve:
+           _LOGGER.debug("Perform Reconnect")
+           self.atome_client.login()
+           Error_in_Retrieve, self._day_usage, self._day_price = self._retrieve_period_usage(DAILY_TYPE)
+    
     @property
     def week_usage(self):
         """Return latest weekly usage value."""
@@ -164,14 +188,11 @@ class AtomeData:
     @Throttle(WEEKLY_SCAN_INTERVAL)
     def update_week_usage(self):
         """Return current weekly power usage."""
-        try:
-            values = self.atome_client.get_consumption(WEEKLY_TYPE)
-            self._week_usage = values["total"] / 1000
-            self._week_price = values["price"]
-            _LOGGER.debug("Updating Atome weekly data. Got: %d", self._week_usage)
-
-        except KeyError as error:
-            _LOGGER.error("Missing last value in values: %s: %s", values, error)
+        Error_in_Retrieve, self._week_usage, self._week_price = self._retrieve_period_usage(WEEKLY_TYPE)
+        if Error_in_Retrieve:
+           _LOGGER.debug("Perform Reconnect")
+           self.atome_client.login()
+           Error_in_Retrieve, self._week_usage, self._week_price = self._retrieve_period_usage(WEEKLY_TYPE)
 
     @property
     def month_usage(self):
@@ -186,15 +207,12 @@ class AtomeData:
     @Throttle(MONTHLY_SCAN_INTERVAL)
     def update_month_usage(self):
         """Return current monthly power usage."""
-        try:
-            values = self.atome_client.get_consumption(MONTHLY_TYPE)
-            self._month_usage = values["total"] / 1000
-            self._month_price = values["price"]
-            _LOGGER.debug("Updating Atome monthly data. Got: %d", self._month_usage)
-
-        except KeyError as error:
-            _LOGGER.error("Missing last value in values: %s: %s", values, error)
-
+        Error_in_Retrieve, self._month_usage, self._month_price = self._retrieve_period_usage(MONTHLY_TYPE)
+        if Error_in_Retrieve:
+           _LOGGER.debug("Perform Reconnect")
+           self.atome_client.login()
+           Error_in_Retrieve, self._month_usage, self._month_price = self._retrieve_period_usage(MONTHLY_TYPE)
+    
     @property
     def year_usage(self):
         """Return latest yearly usage value."""
@@ -208,14 +226,11 @@ class AtomeData:
     @Throttle(YEARLY_SCAN_INTERVAL)
     def update_year_usage(self):
         """Return current yearly power usage."""
-        try:
-            values = self.atome_client.get_consumption(YEARLY_TYPE)
-            self._year_usage = values["total"] / 1000
-            self._year_price = values["price"]
-            _LOGGER.debug("Updating Atome yearly data. Got: %d", self._year_usage)
-
-        except KeyError as error:
-            _LOGGER.error("Missing last value in values: %s: %s", values, error)
+        Error_in_Retrieve, self._year_usage, self._year_price = self._retrieve_period_usage(YEARLY_TYPE)
+        if Error_in_Retrieve:
+           _LOGGER.debug("Perform Reconnect")
+           self.atome_client.login()
+           Error_in_Retrieve, self._year_usage, self._year_price = self._retrieve_period_usage(YEARLY_TYPE)
 
 
 class AtomeSensor(SensorEntity):
