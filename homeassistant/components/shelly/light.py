@@ -1,12 +1,10 @@
 """Light for Shelly."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
-import async_timeout
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -35,10 +33,10 @@ from homeassistant.util.color import (
 
 from . import BlockDeviceWrapper, RpcDeviceWrapper
 from .const import (
-    AIOSHELLY_DEVICE_TIMEOUT_SEC,
     BLOCK,
     DATA_CONFIG_ENTRY,
     DOMAIN,
+    DUAL_MODE_LIGHT_MODELS,
     FIRMWARE_PATTERN,
     KELVIN_MAX_VALUE,
     KELVIN_MIN_VALUE_COLOR,
@@ -136,7 +134,6 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
-        self.mode_result: dict[str, Any] | None = None
         self._supported_color_modes: set[str] = set()
         self._supported_features: int = 0
         self._min_kelvin: int = KELVIN_MIN_VALUE_WHITE
@@ -185,8 +182,8 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def mode(self) -> str:
         """Return the color mode of the light."""
-        if self.mode_result:
-            return cast(str, self.mode_result["mode"])
+        if self.control_result and self.control_result.get("mode"):
+            return cast(str, self.control_result["mode"])
 
         if hasattr(self.block, "mode"):
             return cast(str, self.block.mode)
@@ -369,9 +366,10 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                     self.wrapper.model,
                 )
 
-        if await self.set_light_mode(set_mode):
-            self.control_result = await self.set_state(**params)
+        if set_mode and self.wrapper.model in DUAL_MODE_LIGHT_MODELS:
+            params["mode"] = set_mode
 
+        self.control_result = await self.set_state(**params)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -387,32 +385,10 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 
         self.async_write_ha_state()
 
-    async def set_light_mode(self, set_mode: str | None) -> bool:
-        """Change device mode color/white if mode has changed."""
-        if set_mode is None or self.mode == set_mode:
-            return True
-
-        _LOGGER.debug("Setting light mode for entity %s, mode: %s", self.name, set_mode)
-        try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                self.mode_result = await self.wrapper.device.switch_light_mode(set_mode)
-        except (asyncio.TimeoutError, OSError) as err:
-            _LOGGER.error(
-                "Setting light mode for entity %s failed, state: %s, error: %s",
-                self.name,
-                set_mode,
-                repr(err),
-            )
-            self.wrapper.last_update_success = False
-            return False
-
-        return True
-
     @callback
     def _update_callback(self) -> None:
         """When device updates, clear control & mode result that overrides state."""
         self.control_result = None
-        self.mode_result = None
         super()._update_callback()
 
 
