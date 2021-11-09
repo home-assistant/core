@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DEFAULT_NAME, DOMAIN, MANUFACTURER
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return self.async_create_entry(
-                title=MANUFACTURER,
+                title="Goal Zero",
                 data={
                     CONF_HOST: self.ip_address,
                     CONF_NAME: DEFAULT_NAME,
