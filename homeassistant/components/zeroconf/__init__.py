@@ -397,6 +397,11 @@ class ZeroconfDiscovery:
         else:
             lowercase_manufacturer = None
 
+        if "model" in info[ATTR_PROPERTIES]:
+            lowercase_model: str | None = info[ATTR_PROPERTIES]["model"].lower()
+        else:
+            lowercase_model = None
+
         # Not all homekit types are currently used for discovery
         # so not all service type exist in zeroconf_types
         for matcher in self.zeroconf_types.get(service_type, []):
@@ -416,6 +421,11 @@ class ZeroconfDiscovery:
                     or not fnmatch.fnmatch(
                         lowercase_manufacturer, matcher["manufacturer"]
                     )
+                ):
+                    continue
+                if "model" in matcher and (
+                    lowercase_model is None
+                    or not fnmatch.fnmatch(lowercase_model, matcher["model"])
                 ):
                     continue
 
