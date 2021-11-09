@@ -1,4 +1,6 @@
 ais:
+  mdc-text-field-fill-color: "#c2c2c2"
+  mdc-select-fill-color: "#c2c2c2"
   primary-color: "#FF9800"
   accent-color: "#c66900"
   light-primary-color: "#ffc947"
@@ -52,7 +54,7 @@ ais:
   zigbee2mqtt-networkmap-node-coordinator-color: "rgba(224, 78, 93, .7)"
   zigbee2mqtt-networkmap-node-router-color: "rgba(0, 165, 255, .7)"
 
-  #Animated icons
+  # Animated icons
   weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
   weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
   weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
