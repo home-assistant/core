@@ -64,7 +64,14 @@ from .utils import (
     get_rpc_device_name,
 )
 
-BLOCK_PLATFORMS: Final = ["binary_sensor", "cover", "light", "sensor", "switch"]
+BLOCK_PLATFORMS: Final = [
+    "binary_sensor",
+    "climate",
+    "cover",
+    "light",
+    "sensor",
+    "switch",
+]
 BLOCK_SLEEPING_PLATFORMS: Final = ["binary_sensor", "sensor"]
 RPC_PLATFORMS: Final = ["binary_sensor", "light", "sensor", "switch"]
 _LOGGER: Final = logging.getLogger(__name__)
