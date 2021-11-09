@@ -448,7 +448,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             _LOGGER.info(
                 "Start OTA update of device %s from '%s' to '%s'",
                 self.name,
-                update_data["old_version"],
+                self.device.firmware_version,
                 new_version,
             )
             result = None
@@ -745,7 +745,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             _LOGGER.info(
                 "Start OTA update of device %s from '%s' to '%s'",
                 self.name,
-                self.device.shelly["fw_id"],
+                self.device.firmware_version,
                 new_version,
             )
             result = None
