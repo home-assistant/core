@@ -50,7 +50,7 @@ async def async_setup_entry(
 class ShellyOtaUpdateButton(ButtonEntity):
     """Defines a Shelly OTA update button."""
 
-    _attr_icon = "mdi:sync"
+    _attr_icon = "mdi:package-up"
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     def __init__(
