@@ -172,16 +172,17 @@ def test_speed_unknown_unit():
 def test_speed_to_metric():
     """Test length conversion to metric system."""
     assert METRIC_SYSTEM.speed(100, METRIC_SYSTEM.speed_unit) == 100
-    assert METRIC_SYSTEM.speed(5, IMPERIAL_SYSTEM.speed_unit) == pytest.approx(
-        8.04672, abs=1e-5
+    # 1 mile is about 1.6 km
+    assert METRIC_SYSTEM.speed(1000, IMPERIAL_SYSTEM.speed_unit) == pytest.approx(
+        1609.344, abs=1e-5
     )
 
 
 def test_speed_to_imperial():
     """Test speed conversion to imperial system."""
     assert IMPERIAL_SYSTEM.speed(100, IMPERIAL_SYSTEM.speed_unit) == 100
-    assert IMPERIAL_SYSTEM.speed(5, METRIC_SYSTEM.speed_unit) == pytest.approx(
-        3.10686, abs=1e-5
+    assert IMPERIAL_SYSTEM.speed(1609.344, METRIC_SYSTEM.speed_unit) == pytest.approx(
+        1000, abs=1e-5
     )
 
 
