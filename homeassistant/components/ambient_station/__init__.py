@@ -24,7 +24,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 import homeassistant.helpers.entity_registry as er
-from homeassistant.helpers.event import async_call_later
 
 from .const import (
     ATTR_LAST_DATA,
@@ -138,20 +137,6 @@ class AmbientStation:
         self.stations: dict[str, dict] = {}
         self.websocket = websocket
 
-    async def _attempt_connect(self) -> None:
-        """Attempt to connect to the socket (retrying later on fail)."""
-
-        async def connect(timestamp: int | None = None) -> None:
-            """Connect."""
-            await self.websocket.connect()
-
-        try:
-            await connect()
-        except WebsocketError as err:
-            LOGGER.error("Error with the websocket connection: %s", err)
-            self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
-            async_call_later(self._hass, self._ws_reconnect_delay, connect)
-
     async def ws_connect(self) -> None:
         """Register handlers and connect to the websocket."""
 
@@ -202,7 +187,7 @@ class AmbientStation:
         self.websocket.on_disconnect(on_disconnect)
         self.websocket.on_subscribed(on_subscribed)
 
-        await self._attempt_connect()
+        await self.websocket.connect()
 
     async def ws_disconnect(self) -> None:
         """Disconnect from the websocket."""
