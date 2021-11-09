@@ -745,7 +745,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             _LOGGER.info(
                 "Start OTA update of device %s from '%s' to '%s'",
                 self.name,
-                self.device.shelly["fw"],
+                self.device.shelly["fw_id"],
                 new_version,
             )
             result = None
