@@ -135,6 +135,7 @@ ABBREVIATIONS = {
     "pl_osc_off": "payload_oscillation_off",
     "pl_osc_on": "payload_oscillation_on",
     "pl_paus": "payload_pause",
+    "pl_prs": "payload_press",
     "pl_rst": "payload_reset",
     "pl_rst_hum": "payload_reset_humidity",
     "pl_rst_mode": "payload_reset_mode",
