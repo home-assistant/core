@@ -42,12 +42,12 @@ from .const import (
     CONF_GROUP,
     CONF_KEY,
     CONF_UNIT,
+    DEVICE_CONFIGURATION_URL,
     DOMAIN,
     GROUPS,
     PYSMA_COORDINATOR,
     PYSMA_DEVICE_INFO,
     PYSMA_SENSORS,
-    DEVICE_CONFIGURATION_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)

@@ -29,6 +29,7 @@ from .const import (
     CONF_KEY,
     CONF_UNIT,
     DEFAULT_SCAN_INTERVAL,
+    DEVICE_CONFIGURATION_URL,
     DOMAIN,
     PLATFORMS,
     PYSMA_COORDINATOR,
@@ -36,7 +37,6 @@ from .const import (
     PYSMA_OBJECT,
     PYSMA_REMOVE_LISTENER,
     PYSMA_SENSORS,
-    DEVICE_CONFIGURATION_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
