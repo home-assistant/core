@@ -262,7 +262,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     @property
     def is_closed(self) -> bool | None:
-        """Return is cover is closed."""
+        """Return true if cover is closed."""
         if (
             self.entity_description.current_state is not None
             and (
@@ -272,7 +272,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             )
             is not None
         ):
-            return current_state in (True, "fully_close")
+            return current_state in (False, "fully_close")
 
         if (position := self.current_cover_position) is not None:
             return position == 0
