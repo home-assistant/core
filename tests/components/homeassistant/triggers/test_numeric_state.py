@@ -1822,3 +1822,78 @@ async def test_template_variable(hass, calls, multiplier):
         assert len(calls) == 1
     else:
         assert len(calls) == 0
+
+
+@pytest.mark.parametrize(
+    "template_val",
+    ("test.entity_1,test.entity_2", "['test.entity_1','test.entity_2']"),
+)
+async def test_entity_id_template(hass, calls, template_val):
+    """Test entity_id configured using a template."""
+
+    hass.states.async_set("test.entity_1", 11)
+    hass.states.async_set("test.entity_2", 11)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {
+                    "entities": template_val,
+                },
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "{{entities}}",
+                    "below": 10,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"from": "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity_1", 9)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["from"] == "test.entity_1"
+
+    hass.states.async_set("test.entity_2", 9)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["from"] == "test.entity_2"
+
+
+@pytest.mark.parametrize(
+    "template_val",
+    (10, "test_entity_1,test_entity_2", "['test_entity_1','test_entity_2']"),
+)
+async def test_bad_entity_id_template(hass, caplog, template_val):
+    """Test entity_id configured using a bad template."""
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {
+                    "entities": template_val,
+                },
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "{{entities}}",
+                    "below": 10,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"from": "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert "Invalid Template! Must return list of entities" in caplog.text

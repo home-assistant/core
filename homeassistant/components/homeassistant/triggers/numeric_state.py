@@ -20,6 +20,8 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 
+from .util import validate_entities_or_template_of_entities
+
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
 
@@ -47,7 +49,7 @@ TRIGGER_SCHEMA = vol.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_PLATFORM): "numeric_state",
-            vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Required(CONF_ENTITY_ID): validate_entities_or_template_of_entities,
             vol.Optional(CONF_BELOW): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_ABOVE): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -66,7 +68,7 @@ async def async_attach_trigger(
     hass, config, action, automation_info, *, platform_type="numeric_state"
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    entity_ids = config.get(CONF_ENTITY_ID)
+    entity_id = config.get(CONF_ENTITY_ID)
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
     time_delta = config.get(CONF_FOR)
@@ -81,6 +83,7 @@ async def async_attach_trigger(
     trigger_data = automation_info["trigger_data"]
     _variables = automation_info["variables"] or {}
 
+    entity_ids = validate_entities_or_template_of_entities(entity_id, hass, _variables)
     if value_template is not None:
         value_template.hass = hass
 

@@ -1358,3 +1358,63 @@ async def test_variables_priority(hass, calls):
         await hass.async_block_till_done()
         assert len(calls) == 2
         assert calls[1].data["some"] == "test.entity_2 - 0:00:10"
+
+
+@pytest.mark.parametrize(
+    "template_val",
+    ("test.entity_1,test.entity_2", "['test.entity_1','test.entity_2']"),
+)
+async def test_entity_id_template(hass, calls, template_val):
+    """Test entity_id configured using a template."""
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {
+                    "entities": template_val,
+                },
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "{{entities}}",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity_1", "world")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    hass.states.async_set("test.entity_2", "universe")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize(
+    "template_val",
+    (10, "test_entity_1,test_entity_2", "['test_entity_1','test_entity_2']"),
+)
+async def test_bad_entity_id_template(hass, caplog, template_val):
+    """Test entity_id configured using a bad template."""
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {
+                    "entities": template_val,
+                },
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "{{entities}}",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert "Invalid Template! Must return list of entities" in caplog.text
