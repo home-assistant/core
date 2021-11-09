@@ -176,7 +176,7 @@ class AtomeData:
         (
             Error_in_Retrieve,
             self._day_usage,
-            self._day_price
+            self._day_price,
         ) = self._retrieve_period_usage(DAILY_TYPE)
         if Error_in_Retrieve:
             _LOGGER.debug("Perform Reconnect")
@@ -184,7 +184,7 @@ class AtomeData:
             (
                 Error_in_Retrieve,
                 self._day_usage,
-                self._day_price
+                self._day_price,
             ) = self._retrieve_period_usage(DAILY_TYPE)
 
     @property
@@ -203,7 +203,7 @@ class AtomeData:
         (
             Error_in_Retrieve,
             self._week_usage,
-            self._week_price
+            self._week_price,
         ) = self._retrieve_period_usage(WEEKLY_TYPE)
         if Error_in_Retrieve:
             _LOGGER.debug("Perform Reconnect")
@@ -211,7 +211,7 @@ class AtomeData:
             (
                 Error_in_Retrieve,
                 self._week_usage,
-                self._week_price
+                self._week_price,
             ) = self._retrieve_period_usage(WEEKLY_TYPE)
 
     @property
@@ -230,7 +230,7 @@ class AtomeData:
         (
             Error_in_Retrieve,
             self._month_usage,
-            self._month_price
+            self._month_price,
         ) = self._retrieve_period_usage(MONTHLY_TYPE)
         if Error_in_Retrieve:
             _LOGGER.debug("Perform Reconnect")
@@ -238,7 +238,7 @@ class AtomeData:
             (
                 Error_in_Retrieve,
                 self._month_usage,
-                self._month_price
+                self._month_price,
             ) = self._retrieve_period_usage(MONTHLY_TYPE)
 
     @property
@@ -257,7 +257,7 @@ class AtomeData:
         (
             Error_in_Retrieve,
             self._year_usage,
-            self._year_price
+            self._year_price,
         ) = self._retrieve_period_usage(YEARLY_TYPE)
         if Error_in_Retrieve:
             _LOGGER.debug("Perform Reconnect")
@@ -265,7 +265,7 @@ class AtomeData:
             (
                 Error_in_Retrieve,
                 self._year_usage,
-                self._year_price
+                self._year_price,
             ) = self._retrieve_period_usage(YEARLY_TYPE)
 
 
