@@ -133,9 +133,8 @@ def _max_payload_value(payload_length: int) -> int:
 
 def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     """Validate a button entity payload configuration."""
-    _payload = entity_config[CONF_PAYLOAD]
-
     if _type := entity_config.get(CONF_TYPE):
+        _payload = entity_config[ButtonSchema.CONF_VALUE]
         if (transcoder := DPTBase.parse_transcoder(_type)) is None:
             raise vol.Invalid(f"'type: {_type}' is not a valid sensor type.")
         entity_config[CONF_PAYLOAD_LENGTH] = transcoder.payload_length
@@ -149,6 +148,7 @@ def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:
             ) from ex
         return entity_config
 
+    _payload = entity_config[CONF_PAYLOAD]
     _payload_length = entity_config[CONF_PAYLOAD_LENGTH]
     if _payload > (max_payload := _max_payload_value(_payload_length)):
         raise vol.Invalid(
@@ -320,30 +320,58 @@ class ButtonSchema(KNXPlatformSchema):
 
     PLATFORM_NAME = SupportedPlatforms.BUTTON.value
 
+    CONF_VALUE = "value"
     DEFAULT_NAME = "KNX Button"
+
+    payload_or_value_msg = f"Please use only one of `{CONF_PAYLOAD}` or `{CONF_VALUE}`"
+    length_or_type_msg = (
+        f"Please use only one of `{CONF_PAYLOAD_LENGTH}` or `{CONF_TYPE}`"
+    )
 
     ENTITY_SCHEMA = vol.All(
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_PAYLOAD, default=1): cv.positive_int,
-                vol.Required(CONF_PAYLOAD): cv.positive_int,
                 vol.Required(KNX_ADDRESS): ga_validator,
+                vol.Exclusive(
+                    CONF_PAYLOAD, "payload_or_value", msg=payload_or_value_msg
+                ): object,
+                vol.Exclusive(
+                    CONF_VALUE, "payload_or_value", msg=payload_or_value_msg
+                ): object,
+                vol.Exclusive(
+                    CONF_PAYLOAD_LENGTH, "length_or_type", msg=length_or_type_msg
+                ): object,
+                vol.Exclusive(
+                    CONF_TYPE, "length_or_type", msg=length_or_type_msg
+                ): object,
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
-                vol.Exclusive(CONF_PAYLOAD_LENGTH, "raw_or_type"): object,
-                vol.Exclusive(CONF_TYPE, "raw_or_type"): sensor_type_validator,
             }
         ),
-        vol.Schema(
-            # default to `payload_length: 0` when neither `payload_length` nor `type` is given
-            {
-                vol.Optional(CONF_PAYLOAD_LENGTH, default=0): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=14)
-                ),
-            },
-            extra=vol.ALLOW_EXTRA,
+        vol.Any(
+            vol.Schema(
+                # encoded value
+                {
+                    vol.Required(CONF_VALUE): vol.Any(int, float, str),
+                    vol.Required(CONF_TYPE): sensor_type_validator,
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
+            vol.Schema(
+                # raw payload - default is DPT 1 style True
+                {
+                    vol.Optional(CONF_PAYLOAD, default=1): cv.positive_int,
+                    vol.Optional(CONF_PAYLOAD_LENGTH, default=0): vol.All(
+                        vol.Coerce(int), vol.Range(min=0, max=14)
+                    ),
+                    vol.Optional(CONF_VALUE): None,
+                    vol.Optional(CONF_TYPE): None,
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
         ),
-        # calculate raw CONF_PAYLOAD and CONF_PAYLOAD_LENGTH from CONF_TYPE if given
+        # calculate raw CONF_PAYLOAD and CONF_PAYLOAD_LENGTH
+        # from CONF_VALUE and CONF_TYPE if given and check payload size
         button_payload_sub_validator,
     )
 
