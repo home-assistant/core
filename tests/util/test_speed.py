@@ -47,12 +47,19 @@ def test_convert_nonnumeric_value():
 @pytest.mark.parametrize(
     "from_value, from_unit, expected, to_unit",
     [
+        # 5 km/h / 1.609 km/mi = 3.10686 mi/h
         (5, SPEED_KILOMETERS_PER_HOUR, 3.10686, SPEED_MILES_PER_HOUR),
+        # 5 mi/h * 1.609 km/mi = 8.04672 km/h
         (5, SPEED_MILES_PER_HOUR, 8.04672, SPEED_KILOMETERS_PER_HOUR),
+        # 5 in/day * 25.4 mm/in = 127 mm/day
         (5, SPEED_INCHES_PER_DAY, 127, SPEED_MILLIMETERS_PER_DAY),
+        # 5 mm/day / 25.4 mm/in = 0.19685 in/day
         (5, SPEED_MILLIMETERS_PER_DAY, 0.19685, SPEED_INCHES_PER_DAY),
-        (5, SPEED_INCHES_PER_DAY, 127, SPEED_MILLIMETERS_PER_DAY),
+        # 5 in/hr * 24 hr/day = 3048 mm/day
+        (5, SPEED_INCHES_PER_HOUR, 3048, SPEED_MILLIMETERS_PER_DAY),
+        # 5 m/s * 39.3701 in/m * 3600 s/hr = 708661
         (5, SPEED_METERS_PER_SECOND, 708661, SPEED_INCHES_PER_HOUR),
+        # 5000 in/hr / 39.3701 in/m / 3600 s/hr = 0.03528 m/s
         (5000, SPEED_INCHES_PER_HOUR, 0.03528, SPEED_METERS_PER_SECOND),
     ],
 )
