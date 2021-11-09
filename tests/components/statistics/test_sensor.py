@@ -125,8 +125,7 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
 
-        # Source sensor turns unavailable, statistics sensor should follow
-        # Source sensor turns available and receives new valid value,
+        # Source sensor turns unavailable, then available with valid value,
         # statistics sensor should follow
         state = self.hass.states.get("sensor.test")
         self.hass.states.set(
