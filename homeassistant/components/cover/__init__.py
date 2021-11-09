@@ -187,7 +187,7 @@ class CoverEntity(Entity):
     _attr_is_opening: bool | None = None
     _attr_state: None = None
 
-    _attr_is_last_toggle_direction_open = True
+    _cover_is_last_toggle_direction_open = True
 
     @property
     def current_cover_position(self) -> int | None:
@@ -210,8 +210,10 @@ class CoverEntity(Entity):
     def state(self) -> str | None:
         """Return the state of the cover."""
         if self.is_opening:
+            self._cover_is_last_toggle_direction_open = True
             return STATE_OPENING
         if self.is_closing:
+            self._cover_is_last_toggle_direction_open = False
             return STATE_CLOSING
 
         if (closed := self.is_closed) is None:
@@ -371,15 +373,6 @@ class CoverEntity(Entity):
         else:
             await self.async_close_cover_tilt(**kwargs)
 
-    def async_write_ha_state(self) -> None:
-        """Set last toggle direction when writing ha state."""
-        super().async_write_ha_state()
-        if self.state == STATE_OPENING:
-            self._attr_is_last_toggle_direction_open = True
-        elif self.state == STATE_CLOSING:
-            self._attr_is_last_toggle_direction_open = False
-        # do nothing on all other states
-
     def _get_toggle_function(self, fns):
         if SUPPORT_STOP | self.supported_features and (
             self.is_closing or self.is_opening
@@ -387,7 +380,7 @@ class CoverEntity(Entity):
             return fns["stop"]
         if self.is_closed:
             return fns["open"]
-        if self._attr_is_last_toggle_direction_open:
+        if self._cover_is_last_toggle_direction_open:
             return fns["close"]
         return fns["open"]
 

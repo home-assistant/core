@@ -33,27 +33,53 @@ def init(empty=False):
                 name="Simple cover",
                 is_on=True,
                 unique_id="unique_cover",
-                supports_tilt=False,
+                supported_features=SUPPORT_OPEN | SUPPORT_CLOSE,
             ),
             MockCover(
                 name="Set position cover",
                 is_on=True,
                 unique_id="unique_set_pos_cover",
                 current_cover_position=50,
-                supports_tilt=False,
+                supported_features=SUPPORT_OPEN
+                | SUPPORT_CLOSE
+                | SUPPORT_STOP
+                | SUPPORT_SET_POSITION,
+            ),
+            MockCover(
+                name="Simple tilt cover",
+                is_on=True,
+                unique_id="unique_tilt_cover",
+                supported_features=SUPPORT_OPEN
+                | SUPPORT_CLOSE
+                | SUPPORT_OPEN_TILT
+                | SUPPORT_CLOSE_TILT,
             ),
             MockCover(
                 name="Set tilt position cover",
                 is_on=True,
                 unique_id="unique_set_pos_tilt_cover",
                 current_cover_tilt_position=50,
-                supports_tilt=True,
+                supported_features=SUPPORT_OPEN
+                | SUPPORT_CLOSE
+                | SUPPORT_OPEN_TILT
+                | SUPPORT_CLOSE_TILT
+                | SUPPORT_STOP_TILT
+                | SUPPORT_SET_TILT_POSITION,
             ),
             MockCover(
-                name="Tilt cover",
+                name="All functions cover",
                 is_on=True,
-                unique_id="unique_tilt_cover",
-                supports_tilt=True,
+                unique_id="unique_all_functions_cover",
+                current_cover_position=50,
+                current_cover_tilt_position=50,
+                supported_features=SUPPORT_OPEN
+                | SUPPORT_CLOSE
+                | SUPPORT_STOP
+                | SUPPORT_SET_POSITION
+                | SUPPORT_OPEN_TILT
+                | SUPPORT_CLOSE_TILT
+                | SUPPORT_STOP_TILT
+                | SUPPORT_SET_TILT_POSITION,
             ),
         ]
     )
@@ -98,29 +124,34 @@ class MockCover(MockEntity, CoverEntity):
         return False
 
     def open_cover(self, **kwargs) -> None:
-        """Open cover. This usually needs a thread that simulates the state change from OPENING to OPEN."""
+        """Open cover."""
         if self.supported_features & SUPPORT_STOP:
             self._values["state"] = STATE_OPENING
         else:
             self._values["state"] = STATE_OPEN
 
     def close_cover(self, **kwargs) -> None:
-        """Close cover. This usually needs a thread that simulates the state change from CLOSING to CLOSED."""
+        """Close cover."""
         if self.supported_features & SUPPORT_STOP:
             self._values["state"] = STATE_CLOSING
         else:
             self._values["state"] = STATE_CLOSED
 
     def stop_cover(self, **kwargs) -> None:
-        """Stop cover. this is used to simulate the state change which is missing in open_cover and close_cover."""
+        """Stop cover."""
+        self._values["state"] = STATE_CLOSED if self.is_closed else STATE_OPEN
+
+    @property
+    def state(self):
+        """Fake State."""
         if self.is_opening:
-            self._values["state"] = STATE_OPEN
-            self._values["current_cover_position"] = 100
-        elif self.is_closing:
-            self._values["state"] = STATE_CLOSED
-            self._values["current_cover_position"] = 0
-        else:
-            self._values["state"] = STATE_OPEN if self.is_closed else STATE_CLOSED
+            self._cover_is_last_toggle_direction_open = True
+            return STATE_OPENING
+        if self.is_closing:
+            self._cover_is_last_toggle_direction_open = False
+            return STATE_CLOSING
+
+        return super().state
 
     @property
     def current_cover_position(self):
@@ -131,26 +162,3 @@ class MockCover(MockEntity, CoverEntity):
     def current_cover_tilt_position(self):
         """Return current position of cover tilt."""
         return self._handle("current_cover_tilt_position")
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
-
-        if self._handle("supports_tilt"):
-            supported_features |= (
-                SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
-            )
-
-        if self.current_cover_position is not None:
-            supported_features |= SUPPORT_SET_POSITION
-
-        if self.current_cover_tilt_position is not None:
-            supported_features |= (
-                SUPPORT_OPEN_TILT
-                | SUPPORT_CLOSE_TILT
-                | SUPPORT_STOP_TILT
-                | SUPPORT_SET_TILT_POSITION
-            )
-
-        return supported_features
