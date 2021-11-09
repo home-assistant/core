@@ -13,7 +13,13 @@
     },
     "device_automation": {
         "action_type": {
-            "clear_lock_usercode": "{entity_name} \u30e6\u30fc\u30b6\u30fc\u30b3\u30fc\u30c9\u3092\u30af\u30ea\u30a2"
+            "clear_lock_usercode": "{entity_name} \u30e6\u30fc\u30b6\u30fc\u30b3\u30fc\u30c9\u3092\u30af\u30ea\u30a2",
+            "ping": "ping\u30c7\u30d0\u30a4\u30b9",
+            "refresh_value": "{entity_name} \u306e\u5024\u3092\u66f4\u65b0",
+            "reset_meter": "{subtype} \u306e\u30e1\u30fc\u30bf\u30fc\u3092\u30ea\u30bb\u30c3\u30c8",
+            "set_config_parameter": "\u8a2d\u5b9a\u30d1\u30e9\u30e1\u30fc\u30bf {subtype} \u306e\u5024\u3092\u8a2d\u5b9a",
+            "set_lock_usercode": "{entity_name} \u306b\u30e6\u30fc\u30b6\u30fc\u30b3\u30fc\u30c9\u3092\u8a2d\u5b9a",
+            "set_value": "Z-Wave\u5024\u306e\u8a2d\u5b9a\u5024"
         }
     },
     "options": {

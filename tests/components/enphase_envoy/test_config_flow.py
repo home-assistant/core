@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import httpx
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.enphase_envoy.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -157,10 +158,10 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "properties": {"serialnum": "1234"},
-            "host": "1.1.1.1",
-        },
+        data=zeroconf.HaServiceInfo(
+            properties={"serialnum": "1234"},
+            host="1.1.1.1",
+        ),
     )
     await hass.async_block_till_done()
 
@@ -253,10 +254,10 @@ async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "properties": {"serialnum": "1234"},
-            "host": "1.1.1.1",
-        },
+        data=zeroconf.HaServiceInfo(
+            properties={"serialnum": "1234"},
+            host="1.1.1.1",
+        ),
     )
 
     assert result["type"] == "abort"
@@ -288,10 +289,10 @@ async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data={
-                "properties": {"serialnum": "1234"},
-                "host": "1.1.1.1",
-            },
+            data=zeroconf.HaServiceInfo(
+                properties={"serialnum": "1234"},
+                host="1.1.1.1",
+            ),
         )
         await hass.async_block_till_done()
 

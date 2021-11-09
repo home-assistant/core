@@ -9,8 +9,10 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     CONF_INTERFACE,
@@ -58,6 +60,22 @@ async def velbus_connect_task(
     await controller.connect()
 
 
+def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
+    """Migrate old device indentifiers."""
+    dev_reg = device_registry.async_get(hass)
+    devices: list[DeviceEntry] = device_registry.async_entries_for_config_entry(
+        dev_reg, entry_id
+    )
+    for device in devices:
+        old_identifier = list(next(iter(device.identifiers)))
+        if len(old_identifier) > 2:
+            new_identifier = {(old_identifier.pop(0), old_identifier.pop(0))}
+            _LOGGER.debug(
+                "migrate identifier '%s' to '%s'", device.identifiers, new_identifier
+            )
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Establish connection with velbus."""
     hass.data.setdefault(DOMAIN, {})
@@ -71,6 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id]["tsk"] = hass.async_create_task(
         velbus_connect_task(controller, hass, entry.entry_id)
     )
+
+    _migrate_device_identifiers(hass, entry.entry_id)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -176,18 +196,14 @@ class VelbusEntity(Entity):
         self.async_write_ha_state()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {
-                (
-                    DOMAIN,
-                    self._channel.get_module_address(),
-                    self._channel.get_module_serial(),
-                )
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, self._channel.get_module_address()),
             },
-            "name": self._channel.get_full_name(),
-            "manufacturer": "Velleman",
-            "model": self._channel.get_module_type_name(),
-            "sw_version": self._channel.get_module_sw_version(),
-        }
+            manufacturer="Velleman",
+            model=self._channel.get_module_type_name(),
+            name=self._channel.get_full_name(),
+            sw_version=self._channel.get_module_sw_version(),
+        )

@@ -2,22 +2,20 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime
 from typing import Any
 
-from aioridwell.client import RidwellAccount
+from aioridwell.client import RidwellAccount, RidwellPickupEvent
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import DEVICE_CLASS_DATE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util.dt import as_utc
 
 from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN
 
@@ -25,14 +23,6 @@ ATTR_CATEGORY = "category"
 ATTR_PICKUP_STATE = "pickup_state"
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_QUANTITY = "quantity"
-
-DEFAULT_ATTRIBUTION = "Pickup data provided by Ridwell"
-
-
-@callback
-def async_get_utc_midnight(target_date: date) -> datetime:
-    """Get UTC midnight for a given date."""
-    return as_utc(datetime.combine(target_date, datetime.min.time()))
 
 
 async def async_setup_entry(
@@ -49,7 +39,7 @@ async def async_setup_entry(
 class RidwellSensor(CoordinatorEntity, SensorEntity):
     """Define a Ridwell pickup sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = DEVICE_CLASS_DATE
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, account: RidwellAccount
@@ -67,7 +57,6 @@ class RidwellSensor(CoordinatorEntity, SensorEntity):
         event = self.coordinator.data[self._account.account_id]
 
         attrs: dict[str, Any] = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
             ATTR_PICKUP_TYPES: {},
             ATTR_PICKUP_STATE: event.state,
         }
@@ -82,12 +71,12 @@ class RidwellSensor(CoordinatorEntity, SensorEntity):
                 # Ridwell's API will return distinct objects, even if they have the
                 # same name (e.g. two pickups of Latex Paint will show up as two
                 # objects) – so, we sum the quantities:
-                attrs[ATTR_PICKUP_TYPES][pickup.name]["quantity"] += pickup.quantity
+                attrs[ATTR_PICKUP_TYPES][pickup.name][ATTR_QUANTITY] += pickup.quantity
 
         return attrs
 
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        event = self.coordinator.data[self._account.account_id]
-        return async_get_utc_midnight(event.pickup_date).isoformat()
+        event: RidwellPickupEvent = self.coordinator.data[self._account.account_id]
+        return event.pickup_date.isoformat()

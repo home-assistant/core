@@ -1623,9 +1623,9 @@ def from_json(value):
     return json.loads(value)
 
 
-def to_json(value):
+def to_json(value, ensure_ascii=True):
     """Convert an object to a JSON string."""
-    return json.dumps(value)
+    return json.dumps(value, ensure_ascii=ensure_ascii)
 
 
 @pass_context

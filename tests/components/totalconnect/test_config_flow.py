@@ -95,7 +95,7 @@ async def test_abort_if_already_setup(hass):
     with patch(
         "homeassistant.components.totalconnect.config_flow.TotalConnectClient"
     ) as client_mock:
-        client_mock.return_value.is_valid_credentials.return_value = True
+        client_mock.return_value.is_logged_in.return_value = True
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -111,7 +111,7 @@ async def test_login_failed(hass):
     with patch(
         "homeassistant.components.totalconnect.config_flow.TotalConnectClient"
     ) as client_mock:
-        client_mock.return_value.is_valid_credentials.return_value = False
+        client_mock.return_value.is_logged_in.return_value = False
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -143,7 +143,7 @@ async def test_reauth(hass):
         "homeassistant.components.totalconnect.async_setup_entry", return_value=True
     ):
         # first test with an invalid password
-        client_mock.return_value.is_valid_credentials.return_value = False
+        client_mock.return_value.is_logged_in.return_value = False
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "password"}
@@ -153,7 +153,7 @@ async def test_reauth(hass):
         assert result["errors"] == {"base": "invalid_auth"}
 
         # now test with the password valid
-        client_mock.return_value.is_valid_credentials.return_value = True
+        client_mock.return_value.is_logged_in.return_value = True
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "password"}

@@ -38,6 +38,7 @@ TOPIC_MATCHER = re.compile(
 SUPPORTED_COMPONENTS = [
     "alarm_control_panel",
     "binary_sensor",
+    "button",
     "camera",
     "climate",
     "cover",
