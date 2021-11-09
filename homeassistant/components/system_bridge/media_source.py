@@ -1,8 +1,6 @@
 """System Bridge Media Source Implementation."""
 from __future__ import annotations
 
-import logging
-
 from systembridge import Bridge
 from systembridge.objects.filesystem.file import FilesystemFile
 
@@ -22,8 +20,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 ROOT_PATHS: list[str] = [
     "desktop",
