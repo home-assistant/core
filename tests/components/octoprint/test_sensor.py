@@ -2,6 +2,8 @@
 from datetime import datetime
 from unittest.mock import patch
 
+from homeassistant.helpers import entity_registry as er
+
 from . import init_integration
 
 
@@ -24,7 +26,7 @@ async def test_sensors(hass):
     ):
         await init_integration(hass, "sensor", printer=printer, job=job)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     state = hass.states.get("sensor.octoprint_job_percentage")
     assert state is not None
@@ -90,7 +92,7 @@ async def test_sensors_no_target_temp(hass):
     ):
         await init_integration(hass, "sensor", printer=printer)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     state = hass.states.get("sensor.octoprint_actual_tool1_temp")
     assert state is not None
