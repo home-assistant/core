@@ -479,7 +479,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==6.4.1
+colorlog==6.6.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -517,7 +517,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.5.0
+debugpy==1.5.1
 
 # homeassistant.components.decora
 # decora==0.6
@@ -1450,7 +1450,7 @@ pyeconet==0.1.14
 pyedimax==0.2.1
 
 # homeassistant.components.efergy
-pyefergy==0.1.4
+pyefergy==0.1.5
 
 # homeassistant.components.eight_sleep
 pyeight==0.1.9
@@ -2492,7 +2492,7 @@ zigpy-xbee==0.14.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.5.4
+zigpy-znp==0.6.1
 
 # homeassistant.components.zha
 zigpy==0.41.0
