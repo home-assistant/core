@@ -126,7 +126,7 @@ async def test_get_action_capabilities(
     await hass.async_block_till_done()
 
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 3  # open, close, stop
+    assert len(actions) == 2  # open, close
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action

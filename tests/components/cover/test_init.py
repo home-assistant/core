@@ -83,7 +83,7 @@ async def test_services(hass, enable_custom_integrations):
 
 def call_service(hass, service, ent):
     """Call any service on entity."""
-    hass.services.async_call(
+    return hass.services.async_call(
         cover.DOMAIN, service, {ATTR_ENTITY_ID: ent.entity_id}, blocking=True
     )
 
