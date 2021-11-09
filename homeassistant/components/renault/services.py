@@ -116,7 +116,7 @@ def setup_services(hass: HomeAssistant) -> None:
         # dedicated button entity and marked as deprecated
         LOGGER.warning(
             "The 'renault.charge_start' service is deprecated and "
-            "replaced by a dedicated start charge button entity; Please "
+            "replaced by a dedicated start charge button entity; please "
             "use that entity to start the charge instead"
         )
 
