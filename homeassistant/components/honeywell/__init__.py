@@ -107,17 +107,25 @@ class HoneywellData:
         if self._client is None:
             return False
 
-        devices = [
+        refreshed_devices = [
             device
             for location in self._client.locations_by_id.values()
             for device in location.devices_by_id.values()
         ]
 
-        if len(devices) == 0:
-            _LOGGER.error("Failed to find any devices")
+        if len(refreshed_devices) == 0:
+            _LOGGER.error("Failed to find any devices after retry")
             return False
 
-        self.devices = devices
+        for configured_device in self.devices:
+            for refreshed_device in refreshed_devices:
+                if (
+                    configured_device.deviceid == refreshed_device.deviceid
+                    and configured_device.name == refreshed_device.name
+                ):
+                    configured_device = refreshed_device
+
+        await self._hass.config_entries.async_reload(self._config.entry_id)
         return True
 
     async def _refresh_devices(self):
@@ -142,10 +150,16 @@ class HoneywellData:
             ) as exp:
                 retries -= 1
                 if retries == 0:
-                    _LOGGER.error("SomeComfort update failed. Error: %s", exp)
+                    _LOGGER.error(
+                        "Ran out of retry attempts (3 attempts allocated). Error: %s",
+                        exp,
+                    )
                     raise exp
 
                 result = await self._retry()
 
                 if not result:
+                    _LOGGER.error("Retry result was empty. Error: %s", exp)
                     raise exp
+
+                _LOGGER.info("SomeComfort update failed, retrying. Error: %s", exp)
