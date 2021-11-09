@@ -56,21 +56,21 @@ async def async_setup_entry(
         except RequestFailedException as ex:
             # UDP communication with inverter is by definition unreliable.
             # It is rather normal in many environments to fail to receive
-            # proper response in usual time, so we intentionally report
-            # failures only after consecutive streak of 3 of them.
+            # proper response in usual time, so we intentionally ignore isolated
+            # failures and report problem with availability only after
+            # consecutive streak of 3 of failed requests.
             if ex.consecutive_failures_count < 3:
-                # return empty dictionary
-                # sensors will keep their previous values
-                _LOGGER.debug(f"Request failed (#{ex.consecutive_failures_count}).")
-                return {}
-            else:
-                # Inverter does not respond anymore (e.g. it went to sleep mode)
-                # return None
-                # sensors will report themselves as not available
                 _LOGGER.debug(
-                    f"Inverter not responding (#{ex.consecutive_failures_count})."
+                    "No response received (streak of %d)", ex.consecutive_failures_count
                 )
-                return None
+                # return empty dictionary, sensors will keep their previous values
+                return {}
+            # Inverter does not respond anymore (e.g. it went to sleep mode)
+            _LOGGER.debug(
+                "Inverter not responding (streak of %d)", ex.consecutive_failures_count
+            )
+            # return None, sensors will report themselves as Unavailable
+            return None
         except InverterError as ex:
             raise UpdateFailed(ex) from ex
 

@@ -51,6 +51,13 @@ SET_GRID_EXPORT_LIMIT_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
+_MAIN_SENSORS = (
+    "house_consumption",
+    "active_power",
+    "battery_soc",
+    "e_day",
+)
+
 _ICONS = {
     SensorKind.PV: "mdi:solar-power",
     SensorKind.AC: "mdi:power-plug-outline",
@@ -101,7 +108,8 @@ def _get_sensor_description(sensor):
     if sensor.unit == "%" and sensor.kind == SensorKind.BAT:
         desc.state_class = STATE_CLASS_MEASUREMENT
         desc.device_class = DEVICE_CLASS_BATTERY
-
+    if sensor.id_ not in _MAIN_SENSORS:
+        desc.entity_category = "diagnostic"
     return desc
 
 
@@ -112,6 +120,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     device_info: DeviceInfo = {
+        "configuration_url": "https://www.semsportal.com",
         "identifiers": {(DOMAIN, config_entry.unique_id)},
         "name": config_entry.title,
         "manufacturer": "GoodWe",
