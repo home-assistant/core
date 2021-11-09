@@ -80,7 +80,7 @@ async def test_onewiredirect_setup_valid_device(
     with patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(
         "pi1wire.OneWire.get_temperature",
         side_effect=read_side_effect,
-    ):
+    ), patch("homeassistant.components.onewire.sensor.asyncio.sleep"):
         await hass.config_entries.async_setup(sysbus_config_entry.entry_id)
         await hass.async_block_till_done()
 
