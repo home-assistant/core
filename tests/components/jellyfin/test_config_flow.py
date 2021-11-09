@@ -44,16 +44,16 @@ async def test_form(hass: HomeAssistant):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.jellyfin.config_flow.ConnectionManager.connect_to_address",
+        "homeassistant.components.jellyfin.client_wrapper.ConnectionManager.connect_to_address",
         return_value=MOCK_SUCCESFUL_CONNECTION_STATE,
     ) as mock_connect, patch(
-        "homeassistant.components.jellyfin.config_flow.ConnectionManager.login",
+        "homeassistant.components.jellyfin.client_wrapper.ConnectionManager.login",
         return_value=MOCK_SUCCESFUL_LOGIN_RESPONSE,
     ) as mock_login, patch(
         "homeassistant.components.jellyfin.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.jellyfin.config_flow.API.get_user_settings",
+        "homeassistant.components.jellyfin.client_wrapper.API.get_user_settings",
         return_value=MOCK_USER_SETTINGS,
     ) as mock_set_id:
         result2 = await hass.config_entries.flow.async_configure(
@@ -90,7 +90,7 @@ async def test_form_cannot_connect(hass: HomeAssistant):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.jellyfin.config_flow.ConnectionManager.connect_to_address",
+        "homeassistant.components.jellyfin.client_wrapper.ConnectionManager.connect_to_address",
         return_value=MOCK_UNSUCCESFUL_CONNECTION_STATE,
     ) as mock_connect:
         result2 = await hass.config_entries.flow.async_configure(
@@ -119,10 +119,10 @@ async def test_form_invalid_auth(hass: HomeAssistant):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.jellyfin.config_flow.ConnectionManager.connect_to_address",
+        "homeassistant.components.jellyfin.client_wrapper.ConnectionManager.connect_to_address",
         return_value=MOCK_SUCCESFUL_CONNECTION_STATE,
     ) as mock_connect, patch(
-        "homeassistant.components.jellyfin.config_flow.ConnectionManager.login",
+        "homeassistant.components.jellyfin.client_wrapper.ConnectionManager.login",
         return_value=MOCK_UNSUCCESFUL_LOGIN_RESPONSE,
     ) as mock_login:
         result2 = await hass.config_entries.flow.async_configure(
@@ -152,7 +152,7 @@ async def test_form_exception(hass: HomeAssistant):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.jellyfin.config_flow.ConnectionManager.connect_to_address",
+        "homeassistant.components.jellyfin.client_wrapper.ConnectionManager.connect_to_address",
         side_effect=Exception("UnknownException"),
     ) as mock_connect:
         result2 = await hass.config_entries.flow.async_configure(

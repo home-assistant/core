@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .config_flow import CannotConnect, InvalidAuth, create_client, validate_input
+from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
 from .const import DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,8 +15,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Jellyfin from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
+    client = create_client()
     try:
-        client = create_client()
         await validate_input(hass, dict(entry.data), client)
     except CannotConnect as ex:
         raise ConfigEntryNotReady("Cannot connect to Jellyfin server") from ex
