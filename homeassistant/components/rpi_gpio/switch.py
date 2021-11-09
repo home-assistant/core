@@ -47,6 +47,7 @@ class RPiGPIOSwitch(ToggleEntity):
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._on_state = 0 if invert_logic else 1
+        self._is_on = None
         rpi_gpio.setup_output(self._port)
 
     @property
@@ -56,13 +57,13 @@ class RPiGPIOSwitch(ToggleEntity):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Polling needed."""
         return True
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return rpi_gpio.read_input(self._port) == self._on_state
+        return self._is_on
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -73,3 +74,7 @@ class RPiGPIOSwitch(ToggleEntity):
         """Turn the device off."""
         rpi_gpio.write_output(self._port, 1 - self._on_state)
         self.schedule_update_ha_state()
+
+    def update(self):
+        """Update the GPIO state."""
+        self._is_on = rpi_gpio.read_input(self._port) == self._on_state
