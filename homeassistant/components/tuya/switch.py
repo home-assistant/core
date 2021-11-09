@@ -92,6 +92,10 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
     "ggq": (
         SwitchEntityDescription(
+            key=DPCode.START,
+            name="Start",            
+        ),
+        SwitchEntityDescription(
             key=DPCode.SWITCH,
             name="Switch",
         ),
