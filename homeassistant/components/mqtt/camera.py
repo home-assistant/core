@@ -66,6 +66,7 @@ async def _async_setup_entity(
 class MqttCamera(MqttEntity, Camera):
     """representation of a MQTT camera."""
 
+    _entity_id_format = camera.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_CAMERA_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):

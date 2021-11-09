@@ -27,7 +27,6 @@ DEVICE_CLASS = DEVICE_CLASS_SWITCH
 METHOD = "post"
 RESOURCE = "http://localhost/"
 STATE_RESOURCE = RESOURCE
-HEADERS = {"Content-type": CONTENT_TYPE_JSON}
 AUTH = None
 PARAMS = None
 
@@ -151,19 +150,51 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
     assert_setup_component(1, SWITCH_DOMAIN)
 
 
+async def test_setup_with_templated_headers_params(hass, aioclient_mock):
+    """Test setup with valid configuration."""
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {
+            SWITCH_DOMAIN: {
+                CONF_PLATFORM: DOMAIN,
+                CONF_NAME: "foo",
+                CONF_RESOURCE: "http://localhost",
+                CONF_HEADERS: {
+                    "Accept": CONTENT_TYPE_JSON,
+                    "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
+                },
+                CONF_PARAMS: {
+                    "start": 0,
+                    "end": "{{ 3 + 2 }}",
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[-1][3].get("Accept") == CONTENT_TYPE_JSON
+    assert aioclient_mock.mock_calls[-1][3].get("User-Agent") == "Mozilla/5.0"
+    assert aioclient_mock.mock_calls[-1][1].query["start"] == "0"
+    assert aioclient_mock.mock_calls[-1][1].query["end"] == "5"
+    assert_setup_component(1, SWITCH_DOMAIN)
+
+
 """Tests for REST switch platform."""
 
 
 def _setup_test_switch(hass):
     body_on = Template("on", hass)
     body_off = Template("off", hass)
+    headers = {"Content-type": Template(CONTENT_TYPE_JSON, hass)}
     switch = rest.RestSwitch(
         NAME,
         DEVICE_CLASS,
         RESOURCE,
         STATE_RESOURCE,
         METHOD,
-        HEADERS,
+        headers,
         PARAMS,
         AUTH,
         body_on,

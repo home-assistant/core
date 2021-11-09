@@ -1,6 +1,9 @@
 """Support for Aurora ABB PowerOne Solar Photvoltaic (PV) inverter."""
+from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from aurorapy.client import AuroraError, AuroraSerialClient
 import voluptuous as vol
@@ -8,26 +11,52 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
     CONF_NAME,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.exceptions import InvalidStateError
 import homeassistant.helpers.config_validation as cv
 
-from .aurora_device import AuroraDevice
+from .aurora_device import AuroraEntity
 from .const import DEFAULT_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_TYPES = [
+    SensorEntityDescription(
+        key="instantaneouspower",
+        device_class=DEVICE_CLASS_POWER,
+        native_unit_of_measurement=POWER_WATT,
+        state_class=STATE_CLASS_MEASUREMENT,
+        name="Power Output",
+    ),
+    SensorEntityDescription(
+        key="temp",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
+        name="Temperature",
+    ),
+    SensorEntityDescription(
+        key="totalenergy",
+        device_class=DEVICE_CLASS_ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        name="Total Energy",
+    ),
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -55,40 +84,29 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
 
-    sensortypes = [
-        {"parameter": "instantaneouspower", "name": "Power Output"},
-        {"parameter": "temperature", "name": "Temperature"},
-    ]
-    client = hass.data[DOMAIN][config_entry.unique_id]
+    client = hass.data[DOMAIN][config_entry.entry_id]
     data = config_entry.data
 
-    for sens in sensortypes:
-        entities.append(AuroraSensor(client, data, sens["name"], sens["parameter"]))
+    for sens in SENSOR_TYPES:
+        entities.append(AuroraSensor(client, data, sens))
 
     _LOGGER.debug("async_setup_entry adding %d entities", len(entities))
     async_add_entities(entities, True)
 
 
-class AuroraSensor(AuroraDevice, SensorEntity):
+class AuroraSensor(AuroraEntity, SensorEntity):
     """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
-
-    def __init__(self, client: AuroraSerialClient, data, name, typename):
+    def __init__(
+        self,
+        client: AuroraSerialClient,
+        data: Mapping[str, Any],
+        entity_description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(client, data)
-        if typename == "instantaneouspower":
-            self.type = typename
-            self._attr_native_unit_of_measurement = POWER_WATT
-            self._attr_device_class = DEVICE_CLASS_POWER
-        elif typename == "temperature":
-            self.type = typename
-            self._attr_native_unit_of_measurement = TEMP_CELSIUS
-            self._attr_device_class = DEVICE_CLASS_TEMPERATURE
-        else:
-            raise InvalidStateError(f"Unrecognised typename '{typename}'")
-        self._attr_name = f"{name}"
-        self.availableprev = True
+        self.entity_description = entity_description
+        self.available_prev = True
 
     def update(self):
         """Fetch new state data for the sensor.
@@ -96,15 +114,18 @@ class AuroraSensor(AuroraDevice, SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            self.availableprev = self._attr_available
+            self.available_prev = self._attr_available
             self.client.connect()
-            if self.type == "instantaneouspower":
+            if self.entity_description.key == "instantaneouspower":
                 # read ADC channel 3 (grid power output)
                 power_watts = self.client.measure(3, True)
                 self._attr_native_value = round(power_watts, 1)
-            elif self.type == "temperature":
+            elif self.entity_description.key == "temp":
                 temperature_c = self.client.measure(21)
                 self._attr_native_value = round(temperature_c, 1)
+            elif self.entity_description.key == "totalenergy":
+                energy_wh = self.client.cumulated_energy(5)
+                self._attr_native_value = round(energy_wh / 1000, 2)
             self._attr_available = True
 
         except AuroraError as error:
@@ -124,7 +145,7 @@ class AuroraSensor(AuroraDevice, SensorEntity):
             else:
                 raise error
         finally:
-            if self._attr_available != self.availableprev:
+            if self._attr_available != self.available_prev:
                 if self._attr_available:
                     _LOGGER.info("Communication with %s back online", self.name)
                 else:

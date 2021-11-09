@@ -80,7 +80,6 @@ from .const import (
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
     CONF_USER_ID,
-    DATA_CLIENT,
     DOMAIN,
     LOGGER,
 )
@@ -103,8 +102,10 @@ ATTR_TIMESTAMP = "timestamp"
 
 DEFAULT_ENTITY_MODEL = "alarm_control_panel"
 DEFAULT_ENTITY_NAME = "Alarm Control Panel"
+DEFAULT_REST_API_ERROR_COUNT = 2
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
+
 
 DISPATCHER_TOPIC_WEBSOCKET_EVENT = "simplisafe_websocket_event_{0}"
 
@@ -118,7 +119,12 @@ PLATFORMS = (
     "sensor",
 )
 
-VOLUMES = [VOLUME_OFF, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_HIGH]
+VOLUME_MAP = {
+    "high": VOLUME_HIGH,
+    "low": VOLUME_LOW,
+    "medium": VOLUME_MEDIUM,
+    "off": VOLUME_OFF,
+}
 
 SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
 
@@ -137,8 +143,8 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
             lambda value: value.total_seconds(),
             vol.Range(min=30, max=480),
         ),
-        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
-        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
+        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
+        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
         vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
@@ -157,7 +163,7 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         ),
         vol.Optional(ATTR_LIGHT): cv.boolean,
         vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-            vol.Coerce(int), vol.In(VOLUMES)
+            vol.In(VOLUME_MAP), VOLUME_MAP.get
         ),
     }
 )
@@ -218,9 +224,6 @@ def _async_register_base_station(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     _async_standardize_config_entry(hass, entry)
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
@@ -243,7 +246,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = simplisafe
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = simplisafe
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @callback
@@ -550,6 +555,8 @@ class SimpliSafeEntity(CoordinatorEntity):
         assert simplisafe.coordinator
         super().__init__(simplisafe.coordinator)
 
+        self._rest_api_errors = 0
+
         if device:
             model = device.type.name
             device_name = device.name
@@ -612,11 +619,24 @@ class SimpliSafeEntity(CoordinatorEntity):
         else:
             system_offline = False
 
-        return super().available and self._online and not system_offline
+        return (
+            self._rest_api_errors < DEFAULT_REST_API_ERROR_COUNT
+            and self._online
+            and not system_offline
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update the entity with new REST API data."""
+        # SimpliSafe can incorrectly return an error state when there isn't any
+        # error. This can lead to the system having an unknown state frequently.
+        # To protect against that, we measure how many "error states" we receive
+        # and only alter the state if we detect a few in a row:
+        if self.coordinator.last_update_success:
+            self._rest_api_errors = 0
+        else:
+            self._rest_api_errors += 1
+
         self.async_update_from_rest_api()
         self.async_write_ha_state()
 

@@ -1,7 +1,6 @@
 """The tests for the REST sensor platform."""
 import asyncio
 from http import HTTPStatus
-from os import path
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -22,6 +21,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.setup import async_setup_component
+
+from tests.common import get_fixture_path
 
 
 async def test_setup_missing_config(hass):
@@ -215,6 +216,40 @@ async def test_setup_get(hass):
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
     assert state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_MEASUREMENT
+
+
+@respx.mock
+async def test_setup_get_templated_headers_params(hass):
+    """Test setup with valid configuration."""
+    respx.get("http://localhost").respond(status_code=200, json={})
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.key }}",
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+                "headers": {
+                    "Accept": CONTENT_TYPE_JSON,
+                    "User-Agent": "Mozilla/{{ 3 + 2 }}.0",
+                },
+                "params": {
+                    "start": 0,
+                    "end": "{{ 3 + 2 }}",
+                },
+            }
+        },
+    )
+    await async_setup_component(hass, "homeassistant", {})
+
+    assert respx.calls.last.request.headers["Accept"] == CONTENT_TYPE_JSON
+    assert respx.calls.last.request.headers["User-Agent"] == "Mozilla/5.0"
+    assert respx.calls.last.request.url.query == b"start=0&end=5"
 
 
 @respx.mock
@@ -752,11 +787,7 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.mockrest")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "rest/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "rest")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "rest",
@@ -768,7 +799,3 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.mockreset") is None
     assert hass.states.get("sensor.rollout")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

@@ -86,9 +86,7 @@ class HomeAssistantView:
         routes: list[AbstractRoute] = []
 
         for method in ("get", "post", "delete", "put", "patch", "head", "options"):
-            handler = getattr(self, method, None)
-
-            if not handler:
+            if not (handler := getattr(self, method, None)):
                 continue
 
             handler = request_handler_factory(self, handler)
@@ -96,11 +94,11 @@ class HomeAssistantView:
             for url in urls:
                 routes.append(router.add_route(method, url, handler))
 
-        if not self.cors_allowed:
-            return
-
+        allow_cors = (
+            app["allow_all_cors"] if self.cors_allowed else app["allow_configured_cors"]
+        )
         for route in routes:
-            app["allow_cors"](route)
+            allow_cors(route)
 
 
 def request_handler_factory(

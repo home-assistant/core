@@ -90,7 +90,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         data = {}
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             try:
                 data = await self.poolsense.get_poolsense_data()
             except (PoolSenseError) as error:

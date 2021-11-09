@@ -270,7 +270,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return self.async_external_step_done(next_step_id="creation")
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 url = await self.flow_impl.async_generate_authorize_url(self.flow_id)
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
@@ -356,8 +356,7 @@ async def async_get_implementations(
     registered = dict(registered)
 
     for provider_domain, get_impl in hass.data[DATA_PROVIDERS].items():
-        implementation = await get_impl(hass, domain)
-        if implementation is not None:
+        if (implementation := await get_impl(hass, domain)) is not None:
             registered[provider_domain] = implementation
 
     return registered

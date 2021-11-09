@@ -502,7 +502,6 @@ omit =
     homeassistant/components/incomfort/*
     homeassistant/components/intesishome/*
     homeassistant/components/ios/*
-    homeassistant/components/iota/*
     homeassistant/components/iperf3/*
     homeassistant/components/iqvia/*
     homeassistant/components/irish_rail_transport/sensor.py
@@ -871,6 +870,8 @@ omit =
     homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/rest/notify.py
     homeassistant/components/rest/switch.py
+    homeassistant/components/ridwell/__init__.py
+    homeassistant/components/ridwell/sensor.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rocketchat/notify.py
@@ -1168,6 +1169,7 @@ omit =
     homeassistant/components/velbus/switch.py
     homeassistant/components/velux/*
     homeassistant/components/venstar/__init__.py
+    homeassistant/components/venstar/binary_sensor.py
     homeassistant/components/venstar/climate.py
     homeassistant/components/verisure/__init__.py
     homeassistant/components/verisure/alarm_control_panel.py

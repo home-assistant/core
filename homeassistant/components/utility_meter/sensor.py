@@ -38,6 +38,7 @@ from .const import (
     BIMONTHLY,
     CONF_CRON_PATTERN,
     CONF_METER,
+    CONF_METER_DELTA_VALUES,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
     CONF_METER_TYPE,
@@ -100,6 +101,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
         conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
         conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
+        conf_meter_delta_values = hass.data[DATA_UTILITY][meter][
+            CONF_METER_DELTA_VALUES
+        ]
         conf_meter_net_consumption = hass.data[DATA_UTILITY][meter][
             CONF_METER_NET_CONSUMPTION
         ]
@@ -113,6 +117,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             conf.get(CONF_NAME),
             conf_meter_type,
             conf_meter_offset,
+            conf_meter_delta_values,
             conf_meter_net_consumption,
             conf.get(CONF_TARIFF),
             conf_meter_tariff_entity,
@@ -143,6 +148,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         name,
         meter_type,
         meter_offset,
+        delta_values,
         net_consumption,
         tariff=None,
         tariff_entity=None,
@@ -171,6 +177,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             _LOGGER.debug("CRON pattern: %s", self._cron_pattern)
         else:
             self._cron_pattern = cron_pattern
+        self._sensor_delta_values = delta_values
         self._sensor_net_consumption = net_consumption
         self._tariff = tariff
         self._tariff_entity = tariff_entity
@@ -206,12 +213,15 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         try:
-            diff = Decimal(new_state.state) - Decimal(old_state.state)
+            if self._sensor_delta_values:
+                adjustment = Decimal(new_state.state)
+            else:
+                adjustment = Decimal(new_state.state) - Decimal(old_state.state)
 
-            if (not self._sensor_net_consumption) and diff < 0:
+            if (not self._sensor_net_consumption) and adjustment < 0:
                 # Source sensor just rolled over for unknown reasons,
                 return
-            self._state += diff
+            self._state += adjustment
 
         except ValueError as err:
             _LOGGER.warning("While processing state changes: %s", err)
@@ -287,8 +297,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
 
         async_dispatcher_connect(self.hass, SIGNAL_RESET_METER, self.async_reset_meter)
 
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             try:
                 self._state = Decimal(state.state)
             except InvalidOperation:

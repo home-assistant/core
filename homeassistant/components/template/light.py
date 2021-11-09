@@ -37,7 +37,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -211,32 +211,31 @@ class LightTemplate(TemplateEntity, LightEntity):
         )
         self._name = friendly_name
         self._template = state_template
-        domain = __name__.split(".")[-2]
-        self._on_script = Script(hass, on_action, friendly_name, domain)
-        self._off_script = Script(hass, off_action, friendly_name, domain)
+        self._on_script = Script(hass, on_action, friendly_name, DOMAIN)
+        self._off_script = Script(hass, off_action, friendly_name, DOMAIN)
         self._level_script = None
         if level_action is not None:
-            self._level_script = Script(hass, level_action, friendly_name, domain)
+            self._level_script = Script(hass, level_action, friendly_name, DOMAIN)
         self._level_template = level_template
         self._temperature_script = None
         if temperature_action is not None:
             self._temperature_script = Script(
-                hass, temperature_action, friendly_name, domain
+                hass, temperature_action, friendly_name, DOMAIN
             )
         self._temperature_template = temperature_template
         self._color_script = None
         if color_action is not None:
-            self._color_script = Script(hass, color_action, friendly_name, domain)
+            self._color_script = Script(hass, color_action, friendly_name, DOMAIN)
         self._color_template = color_template
         self._white_value_script = None
         if white_value_action is not None:
             self._white_value_script = Script(
-                hass, white_value_action, friendly_name, domain
+                hass, white_value_action, friendly_name, DOMAIN
             )
         self._white_value_template = white_value_template
         self._effect_script = None
         if effect_action is not None:
-            self._effect_script = Script(hass, effect_action, friendly_name, domain)
+            self._effect_script = Script(hass, effect_action, friendly_name, DOMAIN)
         self._effect_list_template = effect_list_template
         self._effect_template = effect_template
         self._max_mireds_template = max_mireds_template

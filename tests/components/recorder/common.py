@@ -1,12 +1,15 @@
 """Common test utils for working with recorder."""
 from datetime import timedelta
 
+from sqlalchemy import create_engine
+
 from homeassistant import core as ha
 from homeassistant.components import recorder
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, fire_time_changed
+from tests.components.recorder import models_schema_0
 
 DEFAULT_PURGE_TASKS = 3
 
@@ -80,3 +83,13 @@ def corrupt_db_file(test_db_file):
     with open(test_db_file, "w+") as fhandle:
         fhandle.seek(200)
         fhandle.write("I am a corrupt db" * 100)
+
+
+def create_engine_test(*args, **kwargs):
+    """Test version of create_engine that initializes with old schema.
+
+    This simulates an existing db with the old schema.
+    """
+    engine = create_engine(*args, **kwargs)
+    models_schema_0.Base.metadata.create_all(engine)
+    return engine

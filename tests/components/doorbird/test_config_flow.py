@@ -5,6 +5,7 @@ import pytest
 import requests
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
@@ -81,11 +82,11 @@ async def test_form_zeroconf_wrong_oui(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "properties": {"macaddress": "notdoorbirdoui"},
-            "host": "192.168.1.8",
-            "name": "Doorstation - abc123._axis-video._tcp.local.",
-        },
+        data=zeroconf.HaServiceInfo(
+            properties={"macaddress": "notdoorbirdoui"},
+            host="192.168.1.8",
+            name="Doorstation - abc123._axis-video._tcp.local.",
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "not_doorbird_device"
@@ -97,11 +98,11 @@ async def test_form_zeroconf_link_local_ignored(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "properties": {"macaddress": "1CCAE3DOORBIRD"},
-            "host": "169.254.103.61",
-            "name": "Doorstation - abc123._axis-video._tcp.local.",
-        },
+        data=zeroconf.HaServiceInfo(
+            properties={"macaddress": "1CCAE3DOORBIRD"},
+            host="169.254.103.61",
+            name="Doorstation - abc123._axis-video._tcp.local.",
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "link_local_address"
@@ -120,11 +121,11 @@ async def test_form_zeroconf_correct_oui(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data={
-                "properties": {"macaddress": "1CCAE3DOORBIRD"},
-                "name": "Doorstation - abc123._axis-video._tcp.local.",
-                "host": "192.168.1.5",
-            },
+            data=zeroconf.HaServiceInfo(
+                properties={"macaddress": "1CCAE3DOORBIRD"},
+                name="Doorstation - abc123._axis-video._tcp.local.",
+                host="192.168.1.5",
+            ),
         )
         await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -179,11 +180,11 @@ async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data={
-                "properties": {"macaddress": "1CCAE3DOORBIRD"},
-                "name": "Doorstation - abc123._axis-video._tcp.local.",
-                "host": "192.168.1.5",
-            },
+            data=zeroconf.HaServiceInfo(
+                properties={"macaddress": "1CCAE3DOORBIRD"},
+                name="Doorstation - abc123._axis-video._tcp.local.",
+                host="192.168.1.5",
+            ),
         )
         await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

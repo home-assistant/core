@@ -788,8 +788,7 @@ class Device(RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Add an entity."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if not state:
+        if not (state := await self.async_get_last_state()):
             return
         self._state = state.state
         self.last_update_home = state.state == STATE_HOME

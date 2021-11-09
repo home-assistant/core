@@ -1,5 +1,6 @@
 """Support for statistics for sensor values."""
 from collections import deque
+import contextlib
 import logging
 import statistics
 
@@ -175,7 +176,7 @@ class StatisticsSensor(SensorEntity):
 
     def _add_state_to_queue(self, new_state):
         """Add the state to the queue."""
-        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE, None):
             return
 
         try:
@@ -203,7 +204,12 @@ class StatisticsSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.mean if not self.is_binary else self.count
+        if self.is_binary:
+            return self.count
+        if self._precision == 0:
+            with contextlib.suppress(TypeError, ValueError):
+                return int(self.mean)
+        return self.mean
 
     @property
     def native_unit_of_measurement(self):
