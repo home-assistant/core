@@ -1,6 +1,7 @@
 ﻿"""Select Kostal Plenticore charging/usage mode"""
 from __future__ import annotations
 
+import json
 from abc import ABC
 from datetime import timedelta
 import logging
@@ -8,7 +9,7 @@ import logging
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -97,17 +98,31 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_unique_id = unique_id
 
+        self.async_update_callback()
+
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
+        # self._attr_current_option = self.coordinator.data[self.module_id][self.data_id]
+        is_available = (
             super().available
+            and self.coordinator.data is not None
+            and self.module_id in self.coordinator.data
+            and self.data_id in self.coordinator.data[self.module_id]
         )
+
+        if is_available:
+            _LOGGER.debug("--------------------aaaaaa------------------------------------ %s",
+                          json.dumps(self.coordinator.data[self.module_id][self.data_id]))
+            self._attr_current_option = self.coordinator.data[self.module_id][self.data_id]
+
+        return is_available
 
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
         self.coordinator.start_fetch_data(self.module_id, self.data_id, self.all_options)
+        self.async_update_callback()
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
@@ -127,5 +142,9 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
             await self.coordinator.async_write_data(self.module_id, {option: "1"})
         self.async_write_ha_state()
 
-
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        _LOGGER.debug("--------------------ccccccc------------------------------------")
+        self._attr_current_option = 'None'
 

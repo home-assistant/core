@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from datetime import datetime, timedelta
+from typing import Dict, Iterable, Union
 import logging
 
 from aiohttp.client_exceptions import ClientError
@@ -242,7 +243,7 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
     def start_fetch_data(self, module_id: str, data_id: str, all_options: str) -> None:
         """Start fetching the given data (module-id and entry-id)."""
         self._fetch[module_id].append(data_id)
-
+        _LOGGER.debug("--------------------bbbbbb------------------------------------")
         # Force an update of all data. Multiple refresh calls
         # are ignored by the debouncer.
         async def force_refresh(event_time: datetime) -> None:
@@ -268,36 +269,34 @@ class SelectDataUpdateCoordinator(PlenticoreSelectUpdateCoordinator):
         _LOGGER.debug("Fetching select %s for %s", self.name, self._fetch)
 
         fetched_data = await self.async_get_currentoption(self._fetch)
-        return {
-            module_id: {
-                data_id: data_value
-                for data_id, data_value in data
-            }
-            for module_id, data in fetched_data.items()
-        }
 
-    async def async_get_currentoption(self, fetch) -> dict[str, list]:
+        _LOGGER.debug("Fetched select %s", fetched_data)
+        return fetched_data
+
+    async def async_get_currentoption(self, module_id: Union[str, Dict[str, Iterable[str]]],
+                                      data_id: Union[str, Iterable[str]] = None,
+                                      ) -> Dict[str, Dict[str, str]]:
         """Get current option."""
-        for module_id in fetch:
-            for data_id in fetch[module_id]:
-                _LOGGER.debug("async_get_currentoption %s", self.name)
-                all_options = ['None', "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"]
-                for all_option in all_options:
-                    _LOGGER.debug("async_get_currentoption all_options %s", data_id)
-                    _LOGGER.debug("async_get_currentoption all_option %s", all_option)
-                    if all_option != 'None':
-                        val = await self.async_read_data(module_id, all_option)
-                        _LOGGER.debug("async_get_currentoption val %s", val)
-                        for option in val.values():
-                            _LOGGER.debug("async_get_currentoption option 1 %s", option)
-                            _LOGGER.debug("async_get_currentoption option 2 %s", all_option)
-                            _LOGGER.debug("async_get_currentoption option 3 %s", option[all_option])
-                            if option[all_option] == '1':
-                                _LOGGER.debug("async_get_currentoption option is %s", all_option)
-                                fetched = dict()
-                                fetched = {module_id: [(data_id, all_option)]}
-                                return fetched
-        return self.data
+        _LOGGER.debug("async_get_currentoption %s", self.name)
+        all_options = ['None', "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"]
+        for mid, pids in module_id.items():
+            _LOGGER.debug("async_get_currentoption module_id %s", mid)
+            _LOGGER.debug("async_get_currentoption data_id %s", pids[0])
+            for all_option in all_options:
+                _LOGGER.debug("async_get_currentoption all_options %s", all_options)
+                if all_option != 'None':
+                    val = await self.async_read_data(mid, all_option)
+                    _LOGGER.debug("async_get_currentoption val %s", val)
+                    for option in val.values():
+                        _LOGGER.debug("async_get_currentoption option 1 %s", option)
+                        _LOGGER.debug("async_get_currentoption option 2 %s", all_option)
+                        _LOGGER.debug("async_get_currentoption option 3 %s", option[all_option])
+                        if option[all_option] == '1':
+                            _LOGGER.debug("async_get_currentoption option is %s", all_option)
+                            fetched = {mid: {pids[0]: all_option}}
+                            return fetched
+
+        return {module_id: {data_id: 'None'}}
 
     async def async_read_data(self, module_id: str, data_id: str) -> [str, bool]:
         """Writes settings back to Plenticore."""
