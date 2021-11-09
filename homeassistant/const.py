@@ -495,9 +495,6 @@ ELECTRIC_CURRENT_AMPERE: Final = "A"
 ELECTRIC_POTENTIAL_MILLIVOLT: Final = "mV"
 ELECTRIC_POTENTIAL_VOLT: Final = "V"
 
-# Power factor units
-ELECTRIC_POWER_FACTOR: Final = "pf"
-
 # Degree units
 DEGREE: Final = "°"
 
