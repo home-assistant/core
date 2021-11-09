@@ -111,7 +111,6 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-
         assert str(self.mean) == state.state
         assert self.min == state.attributes.get("min_value")
         assert self.max == state.attributes.get("max_value")
@@ -126,28 +125,41 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
 
-        # Source sensor has a non float state, unit and state should not change
-        self.hass.states.set("sensor.test_monitored", "beer", {})
-        self.hass.block_till_done()
-        new_state = self.hass.states.get("sensor.test")
-        assert state == new_state
-
         # Source sensor turns unavailable, statistics sensor should follow
-        assert self.hass.states.get("sensor.test").state != STATE_UNAVAILABLE
+        # Source sensor turns available and receives new valid value,
+        # statistics sensor should follow
+        state = self.hass.states.get("sensor.test")
         self.hass.states.set(
             "sensor.test_monitored",
             STATE_UNAVAILABLE,
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
         self.hass.block_till_done()
-        assert self.hass.states.get("sensor.test").state == STATE_UNAVAILABLE
+        state_new = self.hass.states.get("sensor.test")
+        assert state_new.state == STATE_UNAVAILABLE
+        self.hass.states.set(
+            "sensor.test_monitored",
+            0,
+            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        )
+        self.hass.block_till_done()
+        state_new = self.hass.states.get("sensor.test")
+        assert state_new.state != STATE_UNAVAILABLE
+        assert state_new.attributes.get("count") == state.attributes.get("count") + 1
+
+        # Source sensor has a non-float state, unit and state should not change
+        state = self.hass.states.get("sensor.test")
+        self.hass.states.set("sensor.test_monitored", "beer", {})
+        self.hass.block_till_done()
+        state_new = self.hass.states.get("sensor.test")
+        assert state == state_new
 
         # Source sensor is removed, unit and state should not change
         # This is equal to a None value being published
         self.hass.states.remove("sensor.test_monitored")
         self.hass.block_till_done()
-        new_state = self.hass.states.get("sensor.test")
-        assert state == new_state
+        state_new = self.hass.states.get("sensor.test")
+        assert state == state_new
 
     def test_sampling_size(self):
         """Test rotation."""
