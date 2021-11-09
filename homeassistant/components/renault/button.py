@@ -1,7 +1,6 @@
 """Support for Renault button entities."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
@@ -20,7 +19,6 @@ class RenaultButtonRequiredKeysMixin:
     """Mixin for required keys."""
 
     async_press: Callable[[RenaultButtonEntity], Awaitable]
-    cooldown: int
 
 
 @dataclass
@@ -28,6 +26,8 @@ class RenaultButtonEntityDescription(
     ButtonEntityDescription, RenaultButtonRequiredKeysMixin
 ):
     """Class describing Renault button entities."""
+
+    requires_electricity: bool = False
 
 
 async def async_setup_entry(
@@ -41,47 +41,43 @@ async def async_setup_entry(
         RenaultButtonEntity(vehicle, description)
         for vehicle in proxy.vehicles.values()
         for description in BUTTON_TYPES
+        if not description.requires_electricity or vehicle.details.uses_electricity()
     ]
     async_add_entities(entities)
 
 
 class RenaultButtonEntity(RenaultEntity, ButtonEntity):
-    """Mixin for sensor specific attributes."""
+    """Mixin for button specific attributes."""
 
     entity_description: RenaultButtonEntityDescription
 
     async def async_press(self) -> None:
-        """Send out a persistent notification."""
+        """Process the button press."""
         await self.entity_description.async_press(self)
-        if self.entity_description.cooldown > 0:
-            self._attr_available = False
-            await asyncio.sleep(self.entity_description.cooldown)
-            self._attr_available = True
 
 
 async def _start_charge(entity: RenaultButtonEntity) -> None:
-    """Return the icon of this entity."""
+    """Start charge on the vehicle."""
     await entity.vehicle.vehicle.set_charge_start()
 
 
 async def _start_air_conditioner(entity: RenaultButtonEntity) -> None:
-    """Return the icon of this entity."""
-    await entity.vehicle.vehicle.set_ac_start(21)
+    """Start air conditioner on the vehicle."""
+    await entity.vehicle.vehicle.set_ac_start(21, None)
 
 
 BUTTON_TYPES: tuple[RenaultButtonEntityDescription, ...] = (
     RenaultButtonEntityDescription(
         async_press=_start_air_conditioner,
-        cooldown=30,
         key="start_air_conditioner",
         icon="mdi:air-conditioner",
         name="Start Air Conditioner",
     ),
     RenaultButtonEntityDescription(
         async_press=_start_charge,
-        cooldown=30,
         key="start_charge",
         icon="mdi:ev-station",
         name="Start Charge",
+        requires_electricity=True,
     ),
 )
