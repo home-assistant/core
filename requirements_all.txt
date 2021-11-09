@@ -1696,9 +1696,6 @@ pyopnsense==0.2.0
 # homeassistant.components.opple
 pyoppleio==1.0.5
 
-# homeassistant.components.iota
-pyota==2.0.5
-
 # homeassistant.components.opentherm_gw
 pyotgw==1.1b1
 
