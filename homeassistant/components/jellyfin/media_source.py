@@ -87,9 +87,7 @@ class JellyfinSource(MediaSource):
 
         return PlayMedia(stream_url, mime_type)
 
-    async def async_browse_media(
-        self, item: MediaSourceItem, media_types: tuple[str] = (MEDIA_TYPE_AUDIO,)
-    ) -> BrowseMediaSource:
+    async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return a browsable Jellyfin media source."""
         if not item.identifier:
             return await self._build_libraries()
@@ -171,7 +169,7 @@ class JellyfinSource(MediaSource):
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_ARTIST
-            result.children = await self._build_artists(library_id)
+            result.children = await self._build_artists(library_id)  # type: ignore[assignment]
 
         return result
 
@@ -202,7 +200,7 @@ class JellyfinSource(MediaSource):
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_ALBUM
-            result.children = await self._build_albums(artist_id)
+            result.children = await self._build_albums(artist_id)  # type: ignore[assignment]
 
         return result
 
@@ -233,7 +231,7 @@ class JellyfinSource(MediaSource):
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_TRACK
-            result.children = await self._build_tracks(album_id)
+            result.children = await self._build_tracks(album_id)  # type: ignore[assignment]
 
         return result
 

@@ -47,8 +47,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            client = create_client()
             try:
-                client = create_client()
                 userid = await validate_input(self.hass, user_input, client)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -74,9 +74,9 @@ async def validate_input(
     hass: HomeAssistant, user_input: dict[str, Any], client: JellyfinClient
 ) -> str:
     """Validate that the provided url and credentials can be used to connect."""
-    url = user_input.get(CONF_URL)
-    username = user_input.get(CONF_USERNAME)
-    password = user_input.get(CONF_PASSWORD)
+    url = user_input[CONF_URL]
+    username = user_input[CONF_USERNAME]
+    password = user_input[CONF_PASSWORD]
 
     userid = await hass.async_add_executor_job(
         _connect, client, url, username, password
