@@ -46,9 +46,11 @@ class KNXButton(KnxEntity, ButtonEntity):
                 group_address=config[KNX_ADDRESS],
             )
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.remote_value.group_address)
         self._payload = config[CONF_PAYLOAD]
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+        self._attr_unique_id = (
+            f"{self._device.remote_value.group_address}_{self._payload}"
+        )
 
     async def async_press(self) -> None:
         """Press the button."""

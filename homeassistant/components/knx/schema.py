@@ -142,8 +142,10 @@ def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:
             entity_config[CONF_PAYLOAD] = int.from_bytes(
                 transcoder.to_knx(_payload), byteorder="big"
             )
-        except ConversionError:
-            raise vol.Invalid(f"'payload: {_payload}' not valid for 'type: {_type}'")
+        except ConversionError as ex:
+            raise vol.Invalid(
+                f"'payload: {_payload}' not valid for 'type: {_type}'"
+            ) from ex
         return entity_config
 
     _payload_length = entity_config[CONF_PAYLOAD_LENGTH]
