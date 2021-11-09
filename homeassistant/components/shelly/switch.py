@@ -48,6 +48,8 @@ async def async_setup_block_entry(
     """Set up entities for block device."""
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
 
+    async_add_entities([ShellyOtaUpdateBetaChannelSwitch(wrapper, config_entry)])
+
     # In roller mode the relay blocks exist but do not contain required info
     if (
         wrapper.model in ["SHSW-21", "SHSW-25"]
@@ -71,7 +73,6 @@ async def async_setup_block_entry(
         return
 
     async_add_entities(BlockRelaySwitch(wrapper, block) for block in relay_blocks)
-    async_add_entities([ShellyOtaUpdateBetaChannelSwitch(wrapper, config_entry)])
 
 
 async def async_setup_rpc_entry(
