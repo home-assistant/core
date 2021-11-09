@@ -27,11 +27,7 @@ async def async_setup_entry(
     devices = tradfri_data[DEVICES]
 
     async_add_entities(
-        [
-            TradfriSwitch(dev, api, gateway_id)
-            for dev in devices
-            if dev.has_socket_control
-        ]
+        TradfriSwitch(dev, api, gateway_id) for dev in devices if dev.has_socket_control
     )
 
 

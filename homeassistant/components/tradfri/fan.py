@@ -32,11 +32,9 @@ async def async_setup_entry(
     devices = tradfri_data[DEVICES]
 
     async_add_entities(
-        [
-            TradfriAirPurifierFan(dev, api, gateway_id)
-            for dev in devices
-            if dev.has_air_purifier_control
-        ]
+        TradfriAirPurifierFan(dev, api, gateway_id)
+        for dev in devices
+        if dev.has_air_purifier_control
     )
 
 

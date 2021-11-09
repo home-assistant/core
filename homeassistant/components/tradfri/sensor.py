@@ -28,17 +28,15 @@ async def async_setup_entry(
     devices = tradfri_data[DEVICES]
 
     async_add_entities(
-        [
-            TradfriSensor(dev, api, gateway_id)
-            for dev in devices
-            if (
-                not dev.has_light_control
-                and not dev.has_socket_control
-                and not dev.has_blind_control
-                and not dev.has_signal_repeater_control
-                and not dev.has_air_purifier_control
-            )
-        ]
+        TradfriSensor(dev, api, gateway_id)
+        for dev in devices
+        if (
+            not dev.has_light_control
+            and not dev.has_socket_control
+            and not dev.has_blind_control
+            and not dev.has_signal_repeater_control
+            and not dev.has_air_purifier_control
+        )
     )
 
 
