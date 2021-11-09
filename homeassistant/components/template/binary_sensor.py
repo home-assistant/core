@@ -73,7 +73,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME): cv.template,
         vol.Required(CONF_STATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,  # Should be removed
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
 
