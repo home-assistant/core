@@ -183,6 +183,9 @@ class SensorEntity(Entity):
     _last_reset_reported = False
     _temperature_conversion_reported = False
 
+    # Temporary private attribute to track if deprecation has been logged.
+    __datetime_as_string_deprecation_logged = False
+
     @property
     def state_class(self) -> str | None:
         """Return the state class of this entity, from STATE_CLASSES, if any."""
@@ -270,30 +273,69 @@ class SensorEntity(Entity):
 
     @final
     @property
-    def state(self) -> StateType:
+    def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
         unit_of_measurement = self.native_unit_of_measurement
         value = self.native_value
         device_class = self.device_class
 
+        # We have an old non-datetime value, warn about it and convert it during
+        # the deprecation period.
         if (
             value is not None
             and device_class in (DEVICE_CLASS_DATE, DEVICE_CLASS_TIMESTAMP)
-            and not isinstance(value, (datetime, date))
+            and not isinstance(value, (date, datetime))
         ):
+            # Deprecation warning for date/timestamp device classes
+            if not self.__datetime_as_string_deprecation_logged:
+                caller = inspect.stack()[2]
+                module = inspect.getmodule(caller[0])
+                if module and "custom_components" in module.__file__:
+                    report_issue = "report it to the custom component author."
+                else:
+                    report_issue = (
+                        "create a bug report at "
+                        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+                    )
+                _LOGGER.warning(
+                    "%s is providing a string for its state, while the device "
+                    "class is '%s', this is not valid and will be unsupported "
+                    "from Home Assistant 2022.2. Please %s",
+                    module.__name__ if module else "Unknown",
+                    device_class,
+                    report_issue,
+                )
+                self.__datetime_as_string_deprecation_logged = True
+
+            # Anyways, lets validate the date at least..
             try:
-                ciso8601.parse_datetime(str(value))
+                value = ciso8601.parse_datetime(str(value))
             except (ValueError, IndexError) as error:
                 raise ValueError(
                     f"Invalid date/datetime: {self.entity_id} provide state '{value}', "
                     f"while it has device class '{device_class}'"
                 ) from error
 
-        if value is not None and isinstance(value, (datetime, date)):
-            if device_class not in (DEVICE_CLASS_DATE, DEVICE_CLASS_TIMESTAMP):
+            # Convert the date object to a standardized state string.
+            if device_class == DEVICE_CLASS_DATE:
+                return value.date().isoformat()
+            return value.isoformat(timespec="seconds")
+
+        # Received a datetime
+        if value is not None and isinstance(value, datetime):
+            if device_class != DEVICE_CLASS_TIMESTAMP:
                 raise ValueError(
-                    f"Invalid date/datetime: {self.entity_id} provides a {type(value)}"
-                    "state, however, does not have a date or timestamp device class"
+                    f"Invalid datetime: {self.entity_id} provides a {type(value)}"
+                    "state, however, does not have a timestamp device class"
+                )
+            return value.isoformat(timespec="seconds")
+
+        # Received a date value
+        if value is not None and isinstance(value, date):
+            if device_class != DEVICE_CLASS_DATE:
+                raise ValueError(
+                    f"Invalid date: {self.entity_id} provides a {type(value)}"
+                    "state, however, does not have a date device class"
                 )
             return value.isoformat()
 

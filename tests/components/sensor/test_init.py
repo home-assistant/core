@@ -155,19 +155,14 @@ async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
     "device_class,native_value",
     [
         (DEVICE_CLASS_BATTERY, date(2017, 12, 19)),
-        (DEVICE_CLASS_DATE, "invalid"),
-        (DEVICE_CLASS_DATE, 123),
-        (DEVICE_CLASS_POWER, datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)),
-        (DEVICE_CLASS_TIMESTAMP, "invalid"),
-        (DEVICE_CLASS_TIMESTAMP, 123),
+        (DEVICE_CLASS_TIMESTAMP, date(2017, 12, 19)),
         (None, date(2017, 12, 19)),
-        (None, datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)),
     ],
 )
-async def test_invalid_datetime_values(
+async def test_invalid_date_values(
     hass, caplog, enable_custom_integrations, device_class, native_value
 ):
-    """Test datatime has invalid values."""
+    """Test date has invalid values."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
@@ -178,4 +173,59 @@ async def test_invalid_datetime_values(
     await hass.async_block_till_done()
 
     entity_id = platform.ENTITIES["0"].entity_id
-    assert f"Invalid date/datetime: {entity_id}" in caplog.text
+    assert f"Invalid date: {entity_id}" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,native_value",
+    [
+        (DEVICE_CLASS_POWER, datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)),
+        (DEVICE_CLASS_DATE, datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)),
+        (None, datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)),
+    ],
+)
+async def test_invalid_datetime_values(
+    hass, caplog, enable_custom_integrations, device_class, native_value
+):
+    """Test date has invalid values."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test", device_class=device_class, native_value=native_value
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    entity_id = platform.ENTITIES["0"].entity_id
+    assert f"Invalid datetime: {entity_id}" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,native_value",
+    [
+        (DEVICE_CLASS_DATE, "2021-11-09"),
+        (DEVICE_CLASS_TIMESTAMP, "2021-01-09T12:00:00+00:00"),
+    ],
+)
+async def test_deprecated_datetime_str(
+    hass, caplog, enable_custom_integrations, device_class, native_value
+):
+    """Test warning on deprecated str for a date(time) value."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test", native_value=native_value, device_class=device_class
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == native_value
+    assert (
+        "is providing a string for its state, while the device class is "
+        f"'{device_class}', this is not valid and will be unsupported "
+        "from Home Assistant 2022.2. Please create a bug report at"
+    ) in caplog.text
