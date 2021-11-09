@@ -394,6 +394,13 @@ class AsusWrtRouter:
             availability = await self._api.async_find_temperature_commands()
         except (OSError, ValueError):
             return []
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.warning(
+                "Failed checking temperature sensor availability for ASUS router %s. Exception: %s",
+                self._host,
+                exc,
+            )
+            return []
 
         return [SENSORS_TEMPERATURES[i] for i in range(3) if availability[i]]
 
