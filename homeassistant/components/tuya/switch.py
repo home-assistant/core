@@ -93,7 +93,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "ggq": (
         SwitchEntityDescription(
             key=DPCode.START,
-            name="Start",            
+            name="Start",
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH,
