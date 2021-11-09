@@ -30,7 +30,6 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
@@ -185,7 +184,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="vis",
-            device_class=DEVICE_CLASS_CURRENT,
+            device_class=DEVICE_CLASS_VOLTAGE,
             entity_registry_enabled_default=False,
             name="vis",
             native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,

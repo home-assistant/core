@@ -63,6 +63,7 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             OneWireSwitchEntityDescription(
                 key=f"IAD",
                 entity_registry_enabled_default=False,
+                entity_category=ENTITY_CATEGORY_CONFIG,
                 name=f"IAD",
                 read_mode=READ_MODE_BOOL,
             )
