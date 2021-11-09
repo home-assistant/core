@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_LICENSE_PLATE, DOMAIN, ENTRY_TYPE_SERVICE
+from .const import DOMAIN, ENTRY_TYPE_SERVICE
 
 
 @dataclass
@@ -63,7 +63,6 @@ async def async_setup_entry(
     async_add_entities(
         RDWBinarySensorEntity(
             coordinator=coordinator,
-            license_plate=entry.data[CONF_LICENSE_PLATE],
             description=description,
         )
         for description in BINARY_SENSORS
@@ -80,17 +79,16 @@ class RDWBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
         self,
         *,
         coordinator: DataUpdateCoordinator,
-        license_plate: str,
         description: RDWBinarySensorEntityDescription,
     ) -> None:
         """Initialize RDW binary sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{license_plate}_{description.key}"
+        self._attr_unique_id = f"{coordinator.data.license_plate}_{description.key}"
 
         self._attr_device_info = DeviceInfo(
             entry_type=ENTRY_TYPE_SERVICE,
-            identifiers={(DOMAIN, f"{license_plate}")},
+            identifiers={(DOMAIN, coordinator.data.license_plate)},
             manufacturer=coordinator.data.brand,
             name=f"{coordinator.data.brand}: {coordinator.data.license_plate}",
             model=coordinator.data.model,
