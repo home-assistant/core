@@ -4,7 +4,7 @@ from unittest.mock import patch
 import halohome
 
 from homeassistant import config_entries
-from homeassistant.components.halohome.const import DOMAIN
+from homeassistant.components.halohome.const import CONF_LOCATIONS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
@@ -14,29 +14,42 @@ from tests.common import MockConfigEntry
 HOST = "http://127.0.0.1"
 MODULE = "homeassistant.components.halohome"
 USERNAME = "example@example.com"
-USER_ID = 12345678
-TITLE = f"HALO Home ({USER_ID})"
+TITLE = f"HALO Home ({USERNAME})"
 PASSWORD = "TestPassword"
-CONFIG_ENTRY = {
+
+LOCATIONS = [
+    {
+        "location_id": "12345",
+        "passphrase": "abc123==",
+        "devices": [
+            {
+                "device_id": 0,
+                "pid": "abc123",
+                "device_name": "Living Room 1",
+                "mac_address": "9C:A4:6C:CC:5D:04",
+            }
+        ],
+    }
+]
+USER_INPUT = {
     CONF_USERNAME: USERNAME,
     CONF_PASSWORD: PASSWORD,
     CONF_HOST: HOST,
 }
+CONFIG_ENTRY = {
+    **USER_INPUT,
+    CONF_LOCATIONS: LOCATIONS,
+}
 
 
-class MockConnection:
-    """A mocked Connection object for the halohome library."""
-
-    user_id = USER_ID
-
-
-def _patch_connect(raise_error: bool = False):
-    async def _connect(email: str, password: str, host: str):
+def _patch_list(raise_error: bool = False):
+    async def _list(email: str, password: str, host: str):
         if raise_error:
             raise halohome.HaloHomeError("Test login error")
-        return MockConnection()
 
-    return patch("halohome.connect", new=_connect)
+        return LOCATIONS
+
+    return patch("halohome.list_devices", new=_list)
 
 
 async def test_manual_setup(hass: HomeAssistant):
@@ -48,12 +61,12 @@ async def test_manual_setup(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_connect(), patch(
+    with _patch_list(), patch(
         f"{MODULE}.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            CONFIG_ENTRY,
+            USER_INPUT,
         )
         await hass.async_block_till_done()
 
@@ -68,7 +81,7 @@ async def test_manual_setup_already_exists(hass: HomeAssistant):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_ENTRY,
-        unique_id=str(USER_ID),
+        unique_id=USERNAME,
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -78,9 +91,9 @@ async def test_manual_setup_already_exists(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_connect():
+    with _patch_list():
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG_ENTRY
+            result["flow_id"], USER_INPUT
         )
         await hass.async_block_till_done()
 
@@ -97,9 +110,9 @@ async def test_manual_setup_connection_exception(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_connect(raise_error=True):
+    with _patch_list(raise_error=True):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG_ENTRY
+            result["flow_id"], USER_INPUT
         )
         await hass.async_block_till_done()
 

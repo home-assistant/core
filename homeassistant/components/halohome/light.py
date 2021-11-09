@@ -18,7 +18,7 @@ async def async_setup_entry(
 ):
     """Set up the HALO Home light platform from a config entry."""
     connection = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(HaloLight(device) for device in await connection.list_devices())
+    async_add_entities(HaloLight(device) for device in connection.devices)
 
 
 class HaloLight(LightEntity):
