@@ -293,7 +293,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==6.4.1
+colorlog==6.6.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
