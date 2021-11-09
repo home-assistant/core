@@ -12,7 +12,7 @@
     "zigpy==0.41.0",
     "zigpy-xbee==0.14.0",
     "zigpy-zigate==0.7.3",
-    "zigpy-znp==0.5.4"
+    "zigpy-znp==0.6.1"
   ],
   "usb": [
    {"vid":"10C4","pid":"EA60","description":"*2652*","known_devices":["slae.sh cc2652rb stick"]},
