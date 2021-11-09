@@ -8,6 +8,8 @@ PYSMA_REMOVE_LISTENER = "remove_listener"
 PYSMA_SENSORS = "pysma_sensors"
 PYSMA_DEVICE_INFO = "device_info"
 
+DEVICE_CONFIGURATION_URL = "configuration_url"
+
 PLATFORMS = ["sensor"]
 
 CONF_CUSTOM = "custom"

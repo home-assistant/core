@@ -36,6 +36,7 @@ from .const import (
     PYSMA_OBJECT,
     PYSMA_REMOVE_LISTENER,
     PYSMA_SENSORS,
+    DEVICE_CONFIGURATION_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -144,6 +145,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         # Get updated device info
         device_info = await sma.device_info()
+        # Add the WebUI URL
+        device_info[DEVICE_CONFIGURATION_URL] = url
         # Get all device sensors
         sensor_def = await sma.get_sensors()
     except (

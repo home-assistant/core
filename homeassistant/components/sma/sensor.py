@@ -47,6 +47,7 @@ from .const import (
     PYSMA_COORDINATOR,
     PYSMA_DEVICE_INFO,
     PYSMA_SENSORS,
+    DEVICE_CONFIGURATION_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -211,6 +212,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
             model=self._device_info["type"],
             name=self._device_info["name"],
             sw_version=self._device_info["sw_version"],
+            configuration_url=self._device_info[DEVICE_CONFIGURATION_URL],
         )
 
     @property
