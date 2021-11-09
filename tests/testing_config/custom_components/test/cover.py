@@ -144,14 +144,7 @@ class MockCover(MockEntity, CoverEntity):
     @property
     def state(self):
         """Fake State."""
-        if self.is_opening:
-            self._cover_is_last_toggle_direction_open = True
-            return STATE_OPENING
-        if self.is_closing:
-            self._cover_is_last_toggle_direction_open = False
-            return STATE_CLOSING
-
-        return super().state
+        return CoverEntity.state.fget(self)
 
     @property
     def current_cover_position(self):
