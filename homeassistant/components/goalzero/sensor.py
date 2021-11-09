@@ -38,8 +38,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import Yeti, YetiEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
-PARALLEL_UPDATES = 0
-
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="wattsIn",
