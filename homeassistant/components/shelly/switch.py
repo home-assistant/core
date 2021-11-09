@@ -81,6 +81,9 @@ async def async_setup_rpc_entry(
 ) -> None:
     """Set up entities for RPC device."""
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][RPC]
+
+    async_add_entities([ShellyOtaUpdateBetaChannelSwitch(wrapper, config_entry)])
+
     switch_key_ids = get_rpc_key_ids(wrapper.device.status, "switch")
 
     switch_ids = []
@@ -96,7 +99,6 @@ async def async_setup_rpc_entry(
         return
 
     async_add_entities(RpcRelaySwitch(wrapper, id_) for id_ in switch_ids)
-    async_add_entities([ShellyOtaUpdateBetaChannelSwitch(wrapper, config_entry)])
 
 
 class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):
