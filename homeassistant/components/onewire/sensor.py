@@ -43,7 +43,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
-    CONF_MOUNT_DIR,
     CONF_NAMES,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
@@ -212,11 +211,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             state_class=STATE_CLASS_TOTAL_INCREASING,
         ),
     ),
-    "EF": (),  # "HobbyBoard": special
-    "7E": (),  # "EDS": special
 }
-
-DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
 
 # EF sensors are usually hobbyboards specialized sensors.
 # These can only be read by OWFS.  Currently this driver only supports them
@@ -343,7 +338,9 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
 }
 
 
-def get_sensor_types(device_sub_type: str) -> dict[str, Any]:
+def get_sensor_types(
+    device_sub_type: str,
+) -> dict[str, tuple[OneWireSensorEntityDescription, ...]]:
     """Return the proper info array for the device type."""
     if "HobbyBoard" in device_sub_type:
         return HOBBYBOARD_EF
@@ -398,11 +395,6 @@ def get_entities(
                 family = device_type
 
             if family not in get_sensor_types(device_sub_type):
-                _LOGGER.warning(
-                    "Ignoring unknown family (%s) of sensor found for device: %s",
-                    family,
-                    device_id,
-                )
                 continue
             for description in get_sensor_types(device_sub_type)[family]:
                 if description.key.startswith("moisture/"):
@@ -434,8 +426,6 @@ def get_entities(
 
     # We have a raw GPIO ow sensor on a Pi
     elif conf_type == CONF_TYPE_SYSBUS:
-        base_dir = config[CONF_MOUNT_DIR]
-        _LOGGER.debug("Initializing using SysBus %s", base_dir)
         for device in onewirehub.devices:
             if TYPE_CHECKING:
                 assert isinstance(device, OWDirectDeviceDescription)
@@ -443,14 +433,6 @@ def get_entities(
             family = p1sensor.mac_address[:2]
             device_id = f"{family}-{p1sensor.mac_address[2:]}"
             device_info = device.device_info
-            if family not in DEVICE_SUPPORT_SYSBUS:
-                _LOGGER.warning(
-                    "Ignoring unknown family (%s) of sensor found for device: %s",
-                    family,
-                    device_id,
-                )
-                continue
-
             description = SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION
             device_file = f"/sys/bus/w1/devices/{device_id}/w1_slave"
             name = f"{device_names.get(device_id, device_id)} {description.name}"
@@ -463,12 +445,6 @@ def get_entities(
                     name=name,
                     owsensor=p1sensor,
                 )
-            )
-        if not entities:
-            _LOGGER.error(
-                "No onewire sensor found. Check if dtoverlay=w1-gpio "
-                "is in your /boot/config.txt. "
-                "Check the mount_dir parameter if it's defined"
             )
 
     return entities
