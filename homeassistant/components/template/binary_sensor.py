@@ -190,7 +190,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         hass: HomeAssistant,
         config: dict[str, Any],
         unique_id: str | None,
-    ):
+    ) -> None:
         """Initialize the Template binary sensor."""
         super().__init__(config=config)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
