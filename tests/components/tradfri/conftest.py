@@ -59,7 +59,7 @@ def mock_gateway_fixture():
 def mock_api_fixture(mock_gateway):
     """Mock api."""
 
-    async def api(command):
+    async def api(command, timeout=None):
         """Mock api function."""
         # Store the data for "real" command objects.
         if hasattr(command, "_data") and not isinstance(command, Mock):
