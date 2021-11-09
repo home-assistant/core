@@ -1,5 +1,5 @@
 """The tests for the Netatmo climate platform."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
@@ -18,7 +18,6 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_BOOST,
 )
-from homeassistant.components.netatmo import climate
 from homeassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_SCHEDULE
 from homeassistant.components.netatmo.const import (
     ATTR_SCHEDULE_NAME,
@@ -39,6 +38,7 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
+    print(hass.states._states)
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
         hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
@@ -419,7 +419,7 @@ async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_
 
     # Test setting a valid schedule
     with patch(
-        "pyatmo.thermostat.AsyncHomeData.async_switch_home_schedule"
+        "pyatmo.climate.AsyncClimate.async_switch_home_schedule"
     ) as mock_switch_home_schedule:
         await hass.services.async_call(
             "netatmo",
@@ -429,7 +429,7 @@ async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_
         )
         await hass.async_block_till_done()
         mock_switch_home_schedule.assert_called_once_with(
-            home_id="91763b24c43d3e344f424e8b", schedule_id="b1b54a2f45795764f59d50d8"
+            schedule_id="b1b54a2f45795764f59d50d8"
         )
 
     # Fake backend response for valve being turned on
@@ -448,7 +448,7 @@ async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_
 
     # Test setting an invalid schedule
     with patch(
-        "pyatmo.thermostat.AsyncHomeData.async_switch_home_schedule"
+        "pyatmo.climate.AsyncClimate.async_switch_home_schedule"
     ) as mock_switch_home_schedule:
         await hass.services.async_call(
             "netatmo",
@@ -698,21 +698,6 @@ async def test_valves_service_turn_on(hass, config_entry, netatmo_auth):
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
-
-
-async def test_get_all_home_ids():
-    """Test extracting all home ids returned by NetAtmo API."""
-    # Test with backend returning no data
-    assert climate.get_all_home_ids(None) == []
-
-    # Test with fake data
-    home_data = Mock()
-    home_data.homes = {
-        "123": {"id": "123", "name": "Home 1", "modules": [], "therm_schedules": []},
-        "987": {"id": "987", "name": "Home 2", "modules": [], "therm_schedules": []},
-    }
-    expected = ["123", "987"]
-    assert climate.get_all_home_ids(home_data) == expected
 
 
 async def test_webhook_home_id_mismatch(hass, config_entry, netatmo_auth):
