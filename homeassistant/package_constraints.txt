@@ -15,7 +15,7 @@ ciso8601==2.2.0
 cryptography==3.4.8
 emoji==1.5.0
 hass-nabucasa==0.50.0
-home-assistant-frontend==20211108.0
+home-assistant-frontend==20211109.0
 httpx==0.19.0
 ifaddr==0.1.7
 jinja2==3.0.2
