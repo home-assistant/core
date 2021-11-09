@@ -39,7 +39,16 @@ async def async_setup_entry(
         timedelta(seconds=30),
         plenticore,
     )
-    for module_id, data_id, name, is_on, on_value, on_label, off_value, off_label in SWITCH_SETTINGS_DATA:
+    for (
+        module_id,
+        data_id,
+        name,
+        is_on,
+        on_value,
+        on_label,
+        off_value,
+        off_label,
+    ) in SWITCH_SETTINGS_DATA:
         if module_id not in available_settings_data or data_id not in (
             setting.id for setting in available_settings_data[module_id]
         ):
@@ -130,7 +139,9 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
 
     async def async_turn_on(self) -> None:
         """Turn device on."""
-        if await self.coordinator.async_write_data(self.module_id, {self.data_id: self.on_value}):
+        if await self.coordinator.async_write_data(
+            self.module_id, {self.data_id: self.on_value}
+        ):
             self._last_run_success = True
             self.coordinator.name = f"{self.platform_name} {self._name} {self.on_label}"
             await self.coordinator.async_request_refresh()
@@ -139,9 +150,13 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
 
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        if await self.coordinator.async_write_data(self.module_id, {self.data_id: self.off_value}):
+        if await self.coordinator.async_write_data(
+            self.module_id, {self.data_id: self.off_value}
+        ):
             self._last_run_success = True
-            self.coordinator.name = f"{self.platform_name} {self._name} {self.off_label}"
+            self.coordinator.name = (
+                f"{self.platform_name} {self._name} {self.off_label}"
+            )
             await self.coordinator.async_request_refresh()
         else:
             self._last_run_success = False
@@ -157,7 +172,9 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         if self.coordinator.data[self.module_id][self.data_id] == self._is_on:
             self.coordinator.name = f"{self.platform_name} {self._name} {self.on_label}"
         else:
-            self.coordinator.name = f"{self.platform_name} {self._name} {self.off_label}"
+            self.coordinator.name = (
+                f"{self.platform_name} {self._name} {self.off_label}"
+            )
         return bool(self.coordinator.data[self.module_id][self.data_id] == self._is_on)
 
     @property

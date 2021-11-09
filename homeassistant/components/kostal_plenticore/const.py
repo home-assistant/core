@@ -648,7 +648,7 @@ SWITCH_SETTINGS_DATA = [
         "1",
         "Automatic",
         "2",
-        "Automatic economical"
+        "Automatic economical",
     ),
 ]
 SELECT_SETTINGS_DATA = [
@@ -656,7 +656,7 @@ SELECT_SETTINGS_DATA = [
         "devices:local",
         "battery_charge",
         "Battery Charging / Usage mode",
-        ['None', "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"],
+        ["None", "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"],
         "1",
     )
 ]
