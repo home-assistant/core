@@ -173,7 +173,7 @@ aioftp==0.12.0
 aiogithubapi==21.8.0
 
 # homeassistant.components.guardian
-aioguardian==1.0.8
+aioguardian==2021.11.0
 
 # homeassistant.components.harmony
 aioharmony==0.2.8
@@ -243,7 +243,7 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.8
 
 # homeassistant.components.shelly
-aioshelly==1.0.2
+aioshelly==1.0.4
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
@@ -652,7 +652,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.24.14
+flux_led==0.24.17
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -813,7 +813,7 @@ hole==0.5.1
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211103.0
+home-assistant-frontend==20211108.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1163,7 +1163,7 @@ p1monitor==1.0.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-paho-mqtt==1.5.1
+paho-mqtt==1.6.1
 
 # homeassistant.components.panasonic_bluray
 panacotta==0.1
@@ -2314,7 +2314,7 @@ todoist-python==8.0.0
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2021.8.3
+total_connect_client==2021.11.2
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
@@ -2360,7 +2360,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.8.1
 
 # homeassistant.components.velbus
-velbus-aio==2021.11.0
+velbus-aio==2021.11.6
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14

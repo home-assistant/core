@@ -60,7 +60,6 @@ class TradfriBaseClass(Entity):
         """Initialize a device."""
         self._api = handle_error(api)
         self._attr_name = device.name
-        self._attr_available = device.reachable
         self._device: Device = device
         self._device_control: BlindControl | LightControl | SocketControl | SignalRepeaterControl | AirPurifierControl | None = (
             None
@@ -105,7 +104,6 @@ class TradfriBaseClass(Entity):
         """Refresh the device data."""
         self._device = device
         self._attr_name = device.name
-        self._attr_available = device.reachable
         if write_ha:
             self.async_write_ha_state()
 
@@ -115,6 +113,16 @@ class TradfriBaseDevice(TradfriBaseClass):
 
     All devices should inherit from this class.
     """
+
+    def __init__(
+        self,
+        device: Device,
+        api: Callable[[Command | list[Command]], Any],
+        gateway_id: str,
+    ) -> None:
+        """Initialize a device."""
+        self._attr_available = device.reachable
+        super().__init__(device, api, gateway_id)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -128,3 +136,11 @@ class TradfriBaseDevice(TradfriBaseClass):
             sw_version=info.firmware_version,
             via_device=(DOMAIN, self._gateway_id),
         )
+
+    def _refresh(self, device: Device, write_ha: bool = True) -> None:
+        """Refresh the device data."""
+        # The base class _refresh cannot be used, because
+        # there are devices (group) that do not have .reachable
+        # so set _attr_available here and let the base class do the rest.
+        self._attr_available = device.reachable
+        super()._refresh(device, write_ha)

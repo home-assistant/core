@@ -1,17 +1,11 @@
 """Support for ReCollect Waste sensors."""
 from __future__ import annotations
 
-from datetime import date, datetime, time
-
 from aiorecollect.client import PickupType
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_FRIENDLY_NAME,
-    DEVICE_CLASS_TIMESTAMP,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_FRIENDLY_NAME, DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,7 +13,6 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util.dt import as_utc
 
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN
 
@@ -47,12 +40,6 @@ def async_get_pickup_type_names(
     ]
 
 
-@callback
-def async_get_utc_midnight(target_date: date) -> datetime:
-    """Get UTC midnight for a given date."""
-    return as_utc(datetime.combine(target_date, time(0)))
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -64,7 +51,7 @@ async def async_setup_entry(
 class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     """ReCollect Waste Sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = DEVICE_CLASS_DATE
 
     def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:
         """Initialize the sensor."""
@@ -91,8 +78,13 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        pickup_event = self.coordinator.data[0]
-        next_pickup_event = self.coordinator.data[1]
+        try:
+            pickup_event = self.coordinator.data[0]
+            next_pickup_event = self.coordinator.data[1]
+        except IndexError:
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
+            return
 
         self._attr_extra_state_attributes.update(
             {
@@ -103,9 +95,7 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
                 ATTR_NEXT_PICKUP_TYPES: async_get_pickup_type_names(
                     self._entry, next_pickup_event.pickup_types
                 ),
-                ATTR_NEXT_PICKUP_DATE: async_get_utc_midnight(
-                    next_pickup_event.date
-                ).isoformat(),
+                ATTR_NEXT_PICKUP_DATE: next_pickup_event.date.isoformat(),
             }
         )
-        self._attr_native_value = async_get_utc_midnight(pickup_event.date).isoformat()
+        self._attr_native_value = pickup_event.date.isoformat()
