@@ -42,7 +42,7 @@
             },
             "init": {
                 "data": {
-                    "apps": "Skonfiguruj listę aplikacji",
+                    "apps": "Skonfiguruj listę aplikacji (wybierz opcję z listy i naciśnij przycisk \"ZATWIERDŹ\".)",
                     "exclude_unnamed_apps": "Wyklucz aplikację o nieznanej nazwie",
                     "get_sources": "Czy pobierać uruchomione aplikacje jako listę źródeł",
                     "screencap": "Określa, czy okładka albumu powinna zostać pobrana z tego, co jest wyświetlane na ekranie",

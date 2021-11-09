@@ -170,7 +170,7 @@ COLORS = {
     "violet": RGBColor(238, 130, 238),
     "wheat": RGBColor(245, 222, 179),
     "white": RGBColor(255, 255, 255),
-    "whitesmoke": RGBColor(245, 245, 245),
+    "whitesmoke": RGBColor(200, 200, 200),
     "yellow": RGBColor(255, 255, 0),
     "yellowgreen": RGBColor(154, 205, 50),
     # And...

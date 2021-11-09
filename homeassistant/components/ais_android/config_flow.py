@@ -1,15 +1,19 @@
 """Config flow to configure the AIS Android integration."""
+import asyncio
 import logging
 import os
 import socket
 
+from adb_shell.auth.keygen import keygen
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.ais_dom import ais_global
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import async_connect_androidtv, validate_state_det_rules
 from .const import (
@@ -24,11 +28,11 @@ from .const import (
     CONF_TURN_OFF_COMMAND,
     CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
-    DEFAULT_DEVICE_CLASS,
     DEFAULT_EXCLUDE_UNNAMED_APPS,
     DEFAULT_GET_SOURCES,
     DEFAULT_PORT,
     DEFAULT_SCREENCAP,
+    DEVICE_ANDROIDTV,
     DEVICE_CLASSES,
     DOMAIN,
     PROP_ETHMAC,
@@ -71,10 +75,10 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "127.0.0.1")): str,
-                vol.Required(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
-                    DEVICE_CLASSES
-                ),
+                vol.Required(
+                    CONF_HOST, default=user_input.get(CONF_HOST, "127.0.0.1")
+                ): str,
+                vol.Required(CONF_DEVICE_CLASS, default="ais"): vol.In(DEVICE_CLASSES),
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
             }
         )
@@ -115,6 +119,18 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await aftv.adb_close()
         return None, unique_id
 
+    async def async_execute_command(self, cmd):
+        cmd_process = await asyncio.create_subprocess_shell(
+            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, stderr = await cmd_process.communicate()
+
+        if stdout:
+            _LOGGER.info("stdout %s", stdout.decode())
+        if stderr:
+            _LOGGER.info("stderr %s", stderr.decode())
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         error = None
@@ -139,6 +155,35 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: host})
             if ip_address != host:
                 self._async_abort_entries_match({CONF_HOST: ip_address})
+
+            device_calss = user_input.get(CONF_DEVICE_CLASS)
+            if device_calss == "ais":
+                user_input[CONF_DEVICE_CLASS] = DEVICE_ANDROIDTV
+                if host == "127.0.0.1" and ais_global.has_root():
+                    await self.async_execute_command(
+                        "su -c 'setprop persist.service.adb.enable 1'"
+                    )
+                    await self.async_execute_command(
+                        "su -c 'setprop service.adb.tcp.port 5555'"
+                    )
+                    await self.async_execute_command("su -c 'stop adbd'")
+                    await self.async_execute_command(
+                        "su -c 'touch /data/misc/adb/adb_keys'"
+                    )
+                    adbkey = self.hass.config.path(STORAGE_DIR, "androidtv_adbkey")
+                    if not os.path.isfile(adbkey):
+                        # Generate ADB key files
+                        keygen(adbkey)
+                    await self.async_execute_command(
+                        "su -c 'grep  -F -f /data/data/pl.sviete.dom/files/home/AIS"
+                        "/.storage/androidtv_adbkey.pub /data/misc/adb/adb_keys || cat "
+                        "/data/data/pl.sviete.dom/files/home/AIS/.storage"
+                        "/androidtv_adbkey.pub >> /data/misc/adb/adb_keys'"
+                    )
+                    await self.async_execute_command(
+                        "su -c 'chmod 0644 /data/misc/adb/adb_keys'"
+                    )
+                    await self.async_execute_command("su -c 'start adbd'")
 
             error, unique_id = await self._async_check_connection(user_input)
             if error is None:
@@ -206,7 +251,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def _async_init_form(self, errors=None):
         """Return initial configuration form."""
 
-        apps = {APPS_NEW_ID: "Add new"}
+        apps = {APPS_NEW_ID: "Dodaj nową aplikację"}
         apps.update(self._apps)
         options = self.config_entry.options
         data_schema = vol.Schema(
