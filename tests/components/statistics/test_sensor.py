@@ -135,31 +135,31 @@ class TestStatisticsSensor(unittest.TestCase):
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
         self.hass.block_till_done()
-        state_new = self.hass.states.get("sensor.test")
-        assert state_new.state == STATE_UNAVAILABLE
+        new_state = self.hass.states.get("sensor.test")
+        assert new_state.state == STATE_UNAVAILABLE
         self.hass.states.set(
             "sensor.test_monitored",
             0,
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
         self.hass.block_till_done()
-        state_new = self.hass.states.get("sensor.test")
-        assert state_new.state != STATE_UNAVAILABLE
-        assert state_new.attributes.get("count") == state.attributes.get("count") + 1
+        new_state = self.hass.states.get("sensor.test")
+        assert new_state.state != STATE_UNAVAILABLE
+        assert new_state.attributes.get("count") == state.attributes.get("count") + 1
 
         # Source sensor has a non-float state, unit and state should not change
         state = self.hass.states.get("sensor.test")
         self.hass.states.set("sensor.test_monitored", "beer", {})
         self.hass.block_till_done()
-        state_new = self.hass.states.get("sensor.test")
-        assert state == state_new
+        new_state = self.hass.states.get("sensor.test")
+        assert state == new_state
 
         # Source sensor is removed, unit and state should not change
         # This is equal to a None value being published
         self.hass.states.remove("sensor.test_monitored")
         self.hass.block_till_done()
-        state_new = self.hass.states.get("sensor.test")
-        assert state == state_new
+        new_state = self.hass.states.get("sensor.test")
+        assert state == new_state
 
     def test_sampling_size(self):
         """Test rotation."""
