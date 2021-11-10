@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -88,6 +89,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         PYNUT_UNIQUE_ID: unique_id,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, unique_id)},
+        name=data.name.title(),
+        manufacturer=data.device_info.get(ATTR_MANUFACTURER),
+        model=data.device_info.get(ATTR_MODEL),
+        sw_version=data.device_info.get(ATTR_SW_VERSION),
+    )
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
