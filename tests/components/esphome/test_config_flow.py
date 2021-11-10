@@ -216,7 +216,7 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     """Test discovery importing works."""
     mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test8266"))
 
-    service_info = zeroconf.HaServiceInfo(
+    service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
         port=6053,
         hostname="test8266.local.",
@@ -248,7 +248,7 @@ async def test_discovery_already_configured_hostname(hass, mock_client):
 
     entry.add_to_hass(hass)
 
-    service_info = zeroconf.HaServiceInfo(
+    service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
         port=6053,
         hostname="test8266.local.",
@@ -273,7 +273,7 @@ async def test_discovery_already_configured_ip(hass, mock_client):
 
     entry.add_to_hass(hass)
 
-    service_info = zeroconf.HaServiceInfo(
+    service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
         port=6053,
         hostname="test8266.local.",
@@ -302,7 +302,7 @@ async def test_discovery_already_configured_name(hass, mock_client):
     domain_data = DomainData.get(hass)
     domain_data.set_entry_data(entry, mock_entry_data)
 
-    service_info = zeroconf.HaServiceInfo(
+    service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.184",
         port=6053,
         hostname="test8266.local.",
@@ -321,7 +321,7 @@ async def test_discovery_already_configured_name(hass, mock_client):
 
 async def test_discovery_duplicate_data(hass, mock_client):
     """Test discovery aborts if same mDNS packet arrives."""
-    service_info = zeroconf.HaServiceInfo(
+    service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
         port=6053,
         hostname="test8266.local.",
@@ -352,7 +352,7 @@ async def test_discovery_updates_unique_id(hass, mock_client):
 
     entry.add_to_hass(hass)
 
-    service_info = zeroconf.HaServiceInfo(
+    service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
         port=6053,
         hostname="test8266.local.",
