@@ -133,14 +133,14 @@
         },
         "connectivity": {
             "off": "Ba\u011flant\u0131 kesildi",
-            "on": "Ba\u011fl\u0131"
+            "on": "Ba\u011fland\u0131"
         },
         "door": {
-            "off": "Kapal\u0131",
+            "off": "Kapand\u0131",
             "on": "A\u00e7\u0131k"
         },
         "garage_door": {
-            "off": "Kapal\u0131",
+            "off": "Kapand\u0131",
             "on": "A\u00e7\u0131k"
         },
         "gas": {
@@ -156,8 +156,8 @@
             "on": "I\u015f\u0131k alg\u0131land\u0131"
         },
         "lock": {
-            "off": "Kilit kapal\u0131",
-            "on": "Kilit a\u00e7\u0131k"
+            "off": "Kilitli",
+            "on": "Kilitli de\u011fil"
         },
         "moisture": {
             "off": "Kuru",
@@ -176,7 +176,7 @@
             "on": "Alg\u0131land\u0131"
         },
         "opening": {
-            "off": "Kapal\u0131",
+            "off": "Kapand\u0131",
             "on": "A\u00e7\u0131k"
         },
         "plug": {
@@ -184,7 +184,7 @@
             "on": "Tak\u0131l\u0131"
         },
         "presence": {
-            "off": "D\u0131\u015farda",
+            "off": "D\u0131\u015far\u0131da",
             "on": "Evde"
         },
         "problem": {
@@ -216,7 +216,7 @@
             "on": "Alg\u0131land\u0131"
         },
         "window": {
-            "off": "Kapal\u0131",
+            "off": "Kapand\u0131",
             "on": "A\u00e7\u0131k"
         }
     },

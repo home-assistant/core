@@ -7,13 +7,13 @@
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "invalid_response": "Cihazdan ge\u00e7ersiz yan\u0131t",
-            "unknown": "Beklenmeyen Hata"
+            "unknown": "Beklenmeyen hata"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
-                    "password": "\u015eifre",
+                    "host": "Ana bilgisayar",
+                    "password": "Parola",
                     "port": "Port",
                     "rtsp_port": "RTSP port",
                     "stream": "Ak\u0131\u015f",

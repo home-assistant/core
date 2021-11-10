@@ -12,14 +12,14 @@
         "step": {
             "reauth": {
                 "data": {
-                    "access_token": "Eri\u015fim Belirteci",
+                    "access_token": "Eri\u015fim Anahtar\u0131",
                     "email": "E-posta"
                 },
                 "description": "L\u00fctfen Awair geli\u015ftirici eri\u015fim anahtar\u0131n\u0131 yeniden girin."
             },
             "user": {
                 "data": {
-                    "access_token": "Eri\u015fim Belirteci",
+                    "access_token": "Eri\u015fim Anahtar\u0131",
                     "email": "E-posta"
                 },
                 "description": "Awair geli\u015ftirici eri\u015fim belirteci i\u00e7in \u015fu adresten kaydolmal\u0131s\u0131n\u0131z: https://developer.getawair.com/onboard/login"
