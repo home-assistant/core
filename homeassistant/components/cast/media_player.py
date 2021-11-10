@@ -46,8 +46,8 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import lookup_plex_media
 from homeassistant.const import (
-    CAST_APP_ID_HOMEASSISTANT_MEDIA,
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
+    CAST_APP_ID_HOMEASSISTANT_MEDIA,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
