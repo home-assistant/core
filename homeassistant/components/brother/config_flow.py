@@ -90,7 +90,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: self.host})
 
         snmp_engine = get_snmp_engine(self.hass)
-        model = discovery_info.get(zeroconf.ATTR_PROPERTIES, {}).get("product")
+        model = discovery_info[zeroconf.ATTR_PROPERTIES].get("product")
 
         try:
             self.brother = Brother(self.host, snmp_engine=snmp_engine, model=model)

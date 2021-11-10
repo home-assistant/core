@@ -78,7 +78,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: self.host})
 
         try:
-            mac = await self._async_get_mac(cast(str, self.host))
+            mac = await self._async_get_mac(self.host)
         except (ApiError, ClientConnectorError, asyncio.TimeoutError):
             return self.async_abort(reason="cannot_connect")
         except CannotGetMac:

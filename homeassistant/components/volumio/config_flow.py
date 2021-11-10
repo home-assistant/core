@@ -96,7 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info: zeroconf.ZeroconfServiceInfo):
         """Handle zeroconf discovery."""
         self._host = discovery_info["host"]
-        self._port = int(discovery_info["port"])
+        self._port = discovery_info["port"]
         self._name = discovery_info["properties"]["volumioName"]
         self._uuid = discovery_info["properties"]["UUID"]
 

@@ -93,7 +93,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle Nanoleaf Zeroconf discovery."""
         _LOGGER.debug("Zeroconf discovered: %s", discovery_info)
-        return await self._async_homekit_zeroconf_discovery_handler(discovery_info)
+        return await self._async_homekit_zeroconf_discovery_handler(
+            cast(dict, discovery_info)
+        )
 
     async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle Nanoleaf Homekit discovery."""

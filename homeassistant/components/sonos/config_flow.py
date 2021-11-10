@@ -1,4 +1,6 @@
 """Config flow for SONOS."""
+from typing import cast
+
 import soco
 
 from homeassistant import config_entries
@@ -43,7 +45,7 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
             discovery_manager.async_discovered_player(
                 "Zeroconf", properties, host, uid, boot_seqnum, model, mdns_name
             )
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
 
 config_entries.HANDLERS.register(DOMAIN)(SonosDiscoveryFlowHandler)
