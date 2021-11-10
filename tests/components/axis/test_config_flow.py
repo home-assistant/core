@@ -293,7 +293,7 @@ async def test_reauth_flow_update_configuration(hass):
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.HaServiceInfo(
+            zeroconf.ZeroconfServiceInfo(
                 host=DEFAULT_HOST,
                 port=80,
                 hostname=f"axis-{MAC.lower()}.local.",
@@ -363,7 +363,7 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.HaServiceInfo(
+            zeroconf.ZeroconfServiceInfo(
                 host=DEFAULT_HOST,
                 port=80,
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
@@ -411,7 +411,7 @@ async def test_discovered_device_already_configured(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.HaServiceInfo(
+            zeroconf.ZeroconfServiceInfo(
                 host="2.3.4.5",
                 port=8080,
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
@@ -479,7 +479,7 @@ async def test_discovery_flow_updated_configuration(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.HaServiceInfo(
+            zeroconf.ZeroconfServiceInfo(
                 host="",
                 port=0,
                 name="",
@@ -517,7 +517,7 @@ async def test_discovery_flow_ignore_non_axis_device(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.HaServiceInfo(
+            zeroconf.ZeroconfServiceInfo(
                 host="169.254.3.4",
                 port=80,
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
