@@ -6,7 +6,11 @@ from typing import Any
 
 import async_timeout
 from devolo_plc_api import Device
-from devolo_plc_api.device_api import ConnectedStationInfo, NeighborAPInfo
+from devolo_plc_api.device_api import (
+    ConnectedStationInfo,
+    NeighborAPInfo,
+    WifiGuestAccessGet,
+)
 from devolo_plc_api.exceptions.device import DeviceNotFound, DeviceUnavailable
 from devolo_plc_api.plcnet_api import LogicalNetwork
 
@@ -26,6 +30,8 @@ from .const import (
     NEIGHBORING_WIFI_NETWORKS,
     PLATFORMS,
     SHORT_UPDATE_INTERVAL,
+    SWITCH_GUEST_WIFI,
+    SWITCH_LEDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +62,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             async with async_timeout.timeout(10):
                 return await device.plcnet.async_get_network_overview()
+        except DeviceUnavailable as err:
+            raise UpdateFailed(err) from err
+
+    async def async_update_guest_wifi_status() -> WifiGuestAccessGet:
+        """Fetch data from API endpoint."""
+        assert device.device
+        try:
+            async with async_timeout.timeout(10):
+                return await device.device.async_get_wifi_guest_access()
+        except DeviceUnavailable as err:
+            raise UpdateFailed(err) from err
+
+    async def async_update_led_status() -> bool:
+        """Fetch data from API endpoint."""
+        assert device.device
+        try:
+            async with async_timeout.timeout(10):
+                return await device.device.async_get_led_setting()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
 
@@ -90,6 +114,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_method=async_update_connected_plc_devices,
             update_interval=LONG_UPDATE_INTERVAL,
         )
+    if device.device and "led" in device.device.features:
+        coordinators[SWITCH_LEDS] = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=SWITCH_LEDS,
+            update_method=async_update_led_status,
+            update_interval=SHORT_UPDATE_INTERVAL,
+        )
     if device.device and "wifi1" in device.device.features:
         coordinators[CONNECTED_WIFI_CLIENTS] = DataUpdateCoordinator(
             hass,
@@ -104,6 +136,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             name=NEIGHBORING_WIFI_NETWORKS,
             update_method=async_update_wifi_neighbor_access_points,
             update_interval=LONG_UPDATE_INTERVAL,
+        )
+        coordinators[SWITCH_GUEST_WIFI] = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=SWITCH_GUEST_WIFI,
+            update_method=async_update_guest_wifi_status,
+            update_interval=SHORT_UPDATE_INTERVAL,
         )
 
     hass.data[DOMAIN][entry.entry_id] = {"device": device, "coordinators": coordinators}
