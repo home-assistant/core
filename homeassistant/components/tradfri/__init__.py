@@ -142,9 +142,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         gw_status = True
         try:
-            await api(gateway.get_gateway_info())
+            await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
         except RequestError:
             _LOGGER.error("Keep-alive failed")
+            gw_status = False
+        except PytradfriError as exc:
+            msg = f"keep-alive {exc}"
+            _LOGGER.error(msg)
             gw_status = False
 
         async_dispatcher_send(hass, SIGNAL_GW, gw_status)

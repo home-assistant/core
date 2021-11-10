@@ -23,21 +23,19 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN, SIGNAL_GW
+from .const import DOMAIN, SIGNAL_GW, TIMEOUT_API
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def handle_error(
-    func: Callable[[Command | list[Command]], Any]
-) -> Callable[[str], Any]:
+def handle_error(func: Callable[..., Any]) -> Callable[[str], Any]:
     """Handle tradfri api call error."""
 
     @wraps(func)
     async def wrapper(command: Command | list[Command]) -> None:
         """Decorate api call."""
         try:
-            await func(command)
+            await func(command, timeout=TIMEOUT_API)
         except PytradfriError as err:
             _LOGGER.error("Unable to execute command %s: %s", command, err)
 

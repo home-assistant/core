@@ -23,6 +23,7 @@ from .const import (
     CONF_KEY,
     DOMAIN,
     KEY_SECURITY_CODE,
+    TIMEOUT_API,
 )
 
 
@@ -197,7 +198,7 @@ async def get_gateway_info(
 
         api = factory.request
         gateway = Gateway()
-        gateway_info_result = await api(gateway.get_gateway_info())
+        gateway_info_result = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
 
         await factory.shutdown()
     except (OSError, RequestError) as err:
