@@ -12,6 +12,7 @@ from typing import Any, Callable, Optional, cast
 import weakref
 
 from homeassistant import data_entry_flow, loader
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -1369,10 +1370,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self.async_step_discovery(discovery_info)
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(DiscoveryInfoType, discovery_info))
 
     async def async_step_dhcp(
         self, discovery_info: DiscoveryInfoType
