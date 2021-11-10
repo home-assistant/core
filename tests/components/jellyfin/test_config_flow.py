@@ -1,26 +1,23 @@
 """Test the jellyfin config flow."""
 from unittest.mock import patch
 
-from jellyfin_apiclient_python.connection_manager import CONNECTION_STATE
-
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from .const import (
+    MOCK_SUCCESFUL_CONNECTION_STATE,
+    MOCK_SUCCESFUL_LOGIN_RESPONSE,
+    MOCK_UNSUCCESFUL_CONNECTION_STATE,
+    MOCK_UNSUCCESFUL_LOGIN_RESPONSE,
+    MOCK_USER_SETTINGS,
+    TEST_PASSWORD,
+    TEST_URL,
+    TEST_USERNAME,
+)
+
 from tests.common import MockConfigEntry
-
-URL = "https://example.com"
-USERNAME = "test-username"
-PASSWORD = "test-password"
-
-MOCK_SUCCESFUL_CONNECTION_STATE = {"State": CONNECTION_STATE["ServerSignIn"]}
-MOCK_SUCCESFUL_LOGIN_RESPONSE = {"AccessToken": "Test"}
-
-MOCK_UNSUCCESFUL_CONNECTION_STATE = {"State": CONNECTION_STATE["Unavailable"]}
-MOCK_UNSUCCESFUL_LOGIN_RESPONSE = {""}
-
-MOCK_USER_SETTINGS = {"Id": "123"}
 
 
 async def test_abort_if_existing_entry(hass: HomeAssistant):
@@ -36,7 +33,6 @@ async def test_abort_if_existing_entry(hass: HomeAssistant):
 
 async def test_form(hass: HomeAssistant):
     """Test the complete configuration form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -59,19 +55,19 @@ async def test_form(hass: HomeAssistant):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_URL: URL,
-                CONF_USERNAME: USERNAME,
-                CONF_PASSWORD: PASSWORD,
+                CONF_URL: TEST_URL,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == URL
+    assert result2["title"] == TEST_URL
     assert result2["data"] == {
-        CONF_URL: URL,
-        CONF_USERNAME: USERNAME,
-        CONF_PASSWORD: PASSWORD,
+        CONF_URL: TEST_URL,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
     }
 
     assert len(mock_connect.mock_calls) == 1
@@ -82,7 +78,6 @@ async def test_form(hass: HomeAssistant):
 
 async def test_form_cannot_connect(hass: HomeAssistant):
     """Test we handle an unreachable server."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -96,9 +91,9 @@ async def test_form_cannot_connect(hass: HomeAssistant):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_URL: URL,
-                CONF_USERNAME: USERNAME,
-                CONF_PASSWORD: PASSWORD,
+                CONF_URL: TEST_URL,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
             },
         )
     await hass.async_block_till_done()
@@ -111,7 +106,6 @@ async def test_form_cannot_connect(hass: HomeAssistant):
 
 async def test_form_invalid_auth(hass: HomeAssistant):
     """Test that we can handle invalid credentials."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -128,9 +122,9 @@ async def test_form_invalid_auth(hass: HomeAssistant):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_URL: URL,
-                CONF_USERNAME: USERNAME,
-                CONF_PASSWORD: PASSWORD,
+                CONF_URL: TEST_URL,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
             },
         )
         await hass.async_block_till_done()
@@ -144,7 +138,6 @@ async def test_form_invalid_auth(hass: HomeAssistant):
 
 async def test_form_exception(hass: HomeAssistant):
     """Test we handle an unexpected exception during server setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -158,9 +151,9 @@ async def test_form_exception(hass: HomeAssistant):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_URL: URL,
-                CONF_USERNAME: USERNAME,
-                CONF_PASSWORD: PASSWORD,
+                CONF_URL: TEST_URL,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
             },
         )
         await hass.async_block_till_done()
