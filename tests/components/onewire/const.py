@@ -397,7 +397,7 @@ MOCK_OWPROXY_DEVICES = {
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
-                ATTR_ENTITY_ID: "sensor.26_111111111111_current_vis",
+                ATTR_ENTITY_ID: "sensor.26_111111111111_vis",
                 ATTR_INJECT_READS: b"    0.12",
                 ATTR_STATE: "0.1",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
