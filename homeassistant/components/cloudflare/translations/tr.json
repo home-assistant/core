@@ -10,7 +10,7 @@
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "invalid_zone": "Ge\u00e7ersiz b\u00f6lge"
         },
-        "flow_title": "Cloudflare: {name}",
+        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
                 "data": {
