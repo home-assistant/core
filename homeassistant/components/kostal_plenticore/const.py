@@ -622,26 +622,6 @@ SENSOR_SETTINGS_DATA = [
 SWITCH_SETTINGS_DATA = [
     (
         "devices:local",
-        "Battery:SmartBatteryControl:Enable",
-        "Battery SmartBatteryControl Enable",
-        "1",
-        "1",
-        "",
-        "0",
-        "",
-    ),
-    (
-        "devices:local",
-        "Battery:TimeControl:Enable",
-        "Battery TimeControl Enable",
-        "1",
-        "1",
-        "",
-        "0",
-        "",
-    ),
-    (
-        "devices:local",
         "Battery:Strategy",
         "Battery Strategy:",
         "1",
