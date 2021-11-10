@@ -52,7 +52,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for elmax-cloud."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize."""
@@ -70,22 +69,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         If the flow is user initiated, filter out ignored entries unless include_ignore is True.
         """
-        config_entries = self.hass.config_entries.async_entries(self.handler)
+        conf_entries = self.hass.config_entries.async_entries(self.handler)
 
         if (
             include_ignore is True
             or include_ignore is None
             and self.source != SOURCE_USER
         ):
-            return config_entries
+            return conf_entries
 
-        return [entry for entry in config_entries if entry.source != SOURCE_IGNORE]
+        return [entry for entry in conf_entries if entry.source != SOURCE_IGNORE]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-
         # When invokes without parameters, show the login form.
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=LOGIN_FORM_SCHEMA)
@@ -194,7 +192,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except ElmaxBadPinError:
             errors["base"] = "invalid_pin"
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error occurred")
             errors["base"] = "unknown_error"
 
@@ -214,5 +212,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class NoOnlinePanelsError(HomeAssistantError):
     """Error occurring when no online panel was found."""
-
-    pass
