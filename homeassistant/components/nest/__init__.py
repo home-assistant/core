@@ -194,7 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
 
-    subscriber = await api.NewSubscriber(hass, entry)
+    subscriber = await api.new_subscriber(hass, entry)
     callback = SignalUpdateCallback(hass)
     subscriber.set_update_callback(callback.async_handle_event)
 

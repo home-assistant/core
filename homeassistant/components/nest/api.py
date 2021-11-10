@@ -69,7 +69,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
         return creds
 
 
-async def NewSubscriber(
+async def new_subscriber(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> GoogleNestSubscriber:
     """Create a GoogleNestSubscriber."""
