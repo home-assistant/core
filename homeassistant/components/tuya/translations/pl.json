@@ -26,6 +26,8 @@
             },
             "user": {
                 "data": {
+                    "access_id": "Identyfikator dost\u0119pu do Tuya IoT",
+                    "access_secret": "Has\u0142o dost\u0119pu do Tuya IoT",
                     "country_code": "Kod kraju twojego konta (np. 1 dla USA lub 86 dla Chin)",
                     "password": "Has\u0142o",
                     "platform": "Aplikacja, w kt\u00f3rej zarejestrowane jest Twoje konto",

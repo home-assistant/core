@@ -17,7 +17,7 @@
             },
             "pat": {
                 "data": {
-                    "access_token": "Eri\u015fim Belirteci"
+                    "access_token": "Eri\u015fim Anahtar\u0131"
                 },
                 "description": "L\u00fctfen [talimatlar]( {component_url} ) daki gibi olu\u015fturulmu\u015f bir SmartThings [Ki\u015fisel Eri\u015fim Anahtar\u0131]( {token_url} } ) girin. Bu, SmartThings hesab\u0131n\u0131zda Home Assistant entegrasyonunu olu\u015fturmak i\u00e7in kullan\u0131lacakt\u0131r.",
                 "title": "Ki\u015fisel Eri\u015fim Anahtar\u0131 Girin"

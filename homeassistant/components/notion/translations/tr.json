@@ -12,7 +12,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "password": "\u015eifre"
+                    "password": "Parola"
                 },
                 "description": "{username} \u015fifresini tekrar girin.",
                 "title": "Entegrasyonu Yeniden Do\u011frula"

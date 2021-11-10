@@ -19,13 +19,13 @@
             },
             "location": {
                 "data": {
-                    "location_type": "Lokasyon"
+                    "location_type": "Konum"
                 },
                 "description": "\u0130zlemek i\u00e7in bir konum se\u00e7in:"
             },
             "reauth_confirm": {
                 "data": {
-                    "password": "\u015eifre"
+                    "password": "Parola"
                 },
                 "description": "L\u00fctfen {username} parolas\u0131n\u0131 yeniden girin:",
                 "title": "Entegrasyonu Yeniden Do\u011frula"

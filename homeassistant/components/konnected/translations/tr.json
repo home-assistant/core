@@ -20,7 +20,7 @@
             },
             "user": {
                 "data": {
-                    "host": "\u0130p Adresi",
+                    "host": "IP Adresi",
                     "port": "Port"
                 },
                 "description": "L\u00fctfen Konnected Paneliniz i\u00e7in ana bilgisayar bilgilerini girin."
