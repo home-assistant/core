@@ -78,7 +78,7 @@ class IntegerTypeData:
         """Remap a value from its current range to this range."""
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
-   @classmethod
+    @classmethod
     def from_json(cls, data: str) -> IntegerTypeData:
         """Load JSON string and return a IntegerTypeData object."""
         return cls(**json.loads(data, object_hook=int_please_object_hook))
