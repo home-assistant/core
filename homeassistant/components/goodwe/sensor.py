@@ -1,5 +1,5 @@
 """Support for GoodWe inverter via UDP."""
-from goodwe import SensorKind
+from goodwe import Inverter, Sensor, SensorKind
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -18,38 +18,27 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     FREQUENCY_HERTZ,
     POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_INVERTER
 
 # Service related constants
 SERVICE_SET_WORK_MODE = "set_work_mode"
 ATTR_WORK_MODE = "work_mode"
-SET_WORK_MODE_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_WORK_MODE): cv.positive_int,
-    }
-)
 SERVICE_SET_ONGRID_BATTERY_DOD = "set_ongrid_battery_dod"
 ATTR_ONGRID_BATTERY_DOD = "ongrid_battery_dod"
-SET_ONGRID_BATTERY_DOD_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ONGRID_BATTERY_DOD): cv.positive_int,
-    }
-)
 SERVICE_SET_GRID_EXPORT_LIMIT = "set_grid_export_limit"
 ATTR_GRID_EXPORT_LIMIT = "grid_export_limit"
-SET_GRID_EXPORT_LIMIT_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_GRID_EXPORT_LIMIT): cv.positive_int,
-    }
-)
 
 _MAIN_SENSORS = (
     "house_consumption",
@@ -94,7 +83,7 @@ _UNITS = {
 }
 
 
-def _get_sensor_description(sensor):
+def _get_sensor_description(sensor: Sensor) -> SensorEntityDescription:
     """Create entity description for specified inverter sensor."""
     desc = SensorEntityDescription(
         key=sensor.id_,
@@ -108,8 +97,6 @@ def _get_sensor_description(sensor):
     if sensor.unit == "%" and sensor.kind == SensorKind.BAT:
         desc.state_class = STATE_CLASS_MEASUREMENT
         desc.device_class = DEVICE_CLASS_BATTERY
-    if sensor.id_ not in _MAIN_SENSORS:
-        desc.entity_category = "diagnostic"
     return desc
 
 
@@ -119,14 +106,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
-    device_info: DeviceInfo = {
-        "configuration_url": "https://www.semsportal.com",
-        "identifiers": {(DOMAIN, config_entry.unique_id)},
-        "name": config_entry.title,
-        "manufacturer": "GoodWe",
-        "model": inverter.model_name,
-        "sw_version": f"{inverter.software_version} ({inverter.arm_version})",
-    }
+    device_info = DeviceInfo(
+        configuration_url="https://www.semsportal.com",
+        identifiers={(DOMAIN, config_entry.unique_id)},
+        name=config_entry.title,
+        manufacturer="GoodWe",
+        model=inverter.model_name,
+        sw_version=f"{inverter.software_version} ({inverter.arm_version})",
+    )
 
     # Entity representing inverter itself
     inverter_entity = InverterEntity(coordinator, device_info, inverter)
@@ -153,17 +140,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     platform.async_register_entity_service(
         SERVICE_SET_WORK_MODE,
         {vol.Required(ATTR_WORK_MODE): vol.Coerce(int)},
-        "set_work_mode",
+        "async_set_work_mode",
     )
     platform.async_register_entity_service(
         SERVICE_SET_ONGRID_BATTERY_DOD,
         {vol.Required(ATTR_ONGRID_BATTERY_DOD): vol.Coerce(int)},
-        "set_ongrid_battery_dod",
+        "async_set_ongrid_battery_dod",
     )
     platform.async_register_entity_service(
         SERVICE_SET_GRID_EXPORT_LIMIT,
         {vol.Required(ATTR_GRID_EXPORT_LIMIT): vol.Coerce(int)},
-        "set_grid_export_limit",
+        "async_set_grid_export_limit",
     )
 
     return True
@@ -174,7 +161,12 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
 
     _MAIN_ENTITY_SENSOR = "ppv"
 
-    def __init__(self, coordinator, device_info, inverter):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        device_info: DeviceInfo,
+        inverter: Inverter,
+    ) -> None:
         """Initialize the main inverter entity."""
         super().__init__(coordinator)
         self.entity_id = f".{DOMAIN}_inverter"
@@ -183,22 +175,22 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         self._attr_icon = "mdi:solar-power"
         self._attr_name = "PV Inverter"
         self._attr_native_unit_of_measurement = POWER_WATT
-        self._inverter = inverter
+        self._inverter: Inverter = inverter
 
-    async def set_work_mode(self, work_mode: int):
+    async def async_set_work_mode(self, work_mode: int) -> None:
         """Set the inverter work mode."""
         await self._inverter.set_work_mode(work_mode)
 
-    async def set_ongrid_battery_dod(self, ongrid_battery_dod: int):
+    async def async_set_ongrid_battery_dod(self, ongrid_battery_dod: int) -> None:
         """Set the on-grid battery dod."""
         await self._inverter.set_ongrid_battery_dod(ongrid_battery_dod)
 
-    async def set_grid_export_limit(self, grid_export_limit: int):
+    async def async_set_grid_export_limit(self, grid_export_limit: int) -> None:
         """Set the grid export limit."""
         await self._inverter.set_grid_export_limit(grid_export_limit)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self.coordinator.data is not None
 
@@ -222,10 +214,7 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return the inverter state attributes."""
         data = {
-            "model": self._inverter.model_name,
             "serial_number": self._inverter.serial_number,
-            "firmware_version": self._inverter.software_version,
-            "arm_version": self._inverter.arm_version,
         }
         return data
 
@@ -233,16 +222,25 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
 class InverterSensor(CoordinatorEntity, SensorEntity):
     """Entity representing individual inverter sensor."""
 
-    def __init__(self, coordinator, device_info, description, inverter):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        device_info: DeviceInfo,
+        description: SensorEntityDescription,
+        inverter: Inverter,
+    ) -> None:
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self.entity_id = f".{DOMAIN}_{description.key}"
         self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
         self._attr_device_info = device_info
+        self._attr_entity_category = (
+            ENTITY_CATEGORY_DIAGNOSTIC if description.key not in _MAIN_SENSORS else None
+        )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self.coordinator.data is not None
 
