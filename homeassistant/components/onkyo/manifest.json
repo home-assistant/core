@@ -1,9 +1,10 @@
 {
   "domain": "onkyo",
-  "name": "Onkyo",
-  "codeowners": [],
+  "name": "Onkyo & Pioneer Network Receivers",
+  "codeowners": ["@klaashoekstra94"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "loggers": ["eiscp"],
-  "requirements": ["onkyo-eiscp==1.2.7"]
+  "requirements": ["pyeiscp==0.0.5"]
 }

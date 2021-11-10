@@ -809,7 +809,9 @@ omit =
     homeassistant/components/ondilo_ico/__init__.py
     homeassistant/components/ondilo_ico/api.py
     homeassistant/components/ondilo_ico/sensor.py
+    homeassistant/components/onkyo/__init__.py
     homeassistant/components/onkyo/media_player.py
+    homeassistant/components/onkyo/receiver.py
     homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/binary_sensor.py
     homeassistant/components/onvif/camera.py

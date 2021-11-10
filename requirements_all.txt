@@ -1262,9 +1262,6 @@ omnilogic==0.4.5
 # homeassistant.components.ondilo_ico
 ondilo==0.2.0
 
-# homeassistant.components.onkyo
-onkyo-eiscp==1.2.7
-
 # homeassistant.components.onvif
 onvif-zeep-async==1.2.1
 
@@ -1601,6 +1598,9 @@ pyefergy==22.1.1
 
 # homeassistant.components.eight_sleep
 pyeight==0.3.2
+
+# homeassistant.components.onkyo
+pyeiscp==0.0.5
 
 # homeassistant.components.emby
 pyemby==1.8
