@@ -33,7 +33,7 @@ DEVICE_SUPPORT_OWSERVER = {
     "3B": (),
     "42": (),
     "7E": ("EDS0066", "EDS0068"),
-    "EF": ("HB_MOISTURE_METER", "HobbyBoards_EF"),
+    "EF": ("HB_HUB", "HB_MOISTURE_METER", "HobbyBoards_EF"),
 }
 DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
 
