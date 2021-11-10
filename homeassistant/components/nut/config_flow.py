@@ -16,13 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from . import PyNUTData
-from .const import (
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    SENSOR_TYPES,
-)
+from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,15 +36,6 @@ def _base_schema(discovery_info):
     )
 
     return vol.Schema(base_schema)
-
-
-def _check_available_resouces(available_resources):
-    """Check if exists valid resource to monitor."""
-
-    for sensor_id in SENSOR_TYPES:
-        if sensor_id in available_resources:
-            return True
-    return False
 
 
 def _ups_schema(ups_list):
@@ -131,8 +116,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 if self._host_port_alias_already_configured(self.nut_config):
                     return self.async_abort(reason="already_configured")
-                if not _check_available_resouces(info["available_resources"]):
-                    return self.async_abort(reason="resources_not_available")
                 title = _format_host_port_alias(self.nut_config)
                 return self.async_create_entry(title=title, data=self.nut_config)
 
@@ -150,8 +133,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
             info, errors = await self._async_validate_or_error(self.nut_config)
             if not errors:
-                if not _check_available_resouces(info["available_resources"]):
-                    return self.async_abort(reason="resources_not_available")
                 title = _format_host_port_alias(self.nut_config)
                 return self.async_create_entry(title=title, data=self.nut_config)
 

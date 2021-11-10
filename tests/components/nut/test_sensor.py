@@ -263,40 +263,6 @@ async def test_unknown_state_sensors(hass):
         assert state2.state == "OQ"
 
 
-async def test_stale_data(hass):
-    """Test creation of sensors with stale data to remove."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "mock",
-            CONF_PORT: "mock",
-            CONF_RESOURCES: ["ups.delay.reboot"],
-        },
-    )
-    config_entry.add_to_hass(hass)
-
-    mock_pynut = _get_mock_pynutclient(
-        list_ups={"ups1": "UPS 1"}, list_vars={"ups.delay.reboot": "10"}
-    )
-
-    with patch(
-        "homeassistant.components.nut.PyNUTClient",
-        return_value=mock_pynut,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        registry = er.async_get(hass)
-        entry = registry.async_get("sensor.ups1_ups_reboot_delay")
-        assert entry
-        assert entry.unique_id == f"{config_entry.entry_id}_ups.delay.reboot"
-        assert entry.entity_category is not None
-        assert CONF_RESOURCES not in config_entry.data
-
-        state = hass.states.get("sensor.ups1_ups_reboot_delay")
-        assert state.state == "10"
-
-
 async def test_stale_options(hass):
     """Test creation of sensors with stale options to remove."""
     config_entry = MockConfigEntry(
@@ -304,14 +270,14 @@ async def test_stale_options(hass):
         data={
             CONF_HOST: "mock",
             CONF_PORT: "mock",
-            CONF_RESOURCES: ["ups.delay.reboot"],
+            CONF_RESOURCES: ["battery.charge"],
         },
-        options={CONF_RESOURCES: ["ups.delay.shutdown"]},
+        options={CONF_RESOURCES: ["battery.charge"]},
     )
     config_entry.add_to_hass(hass)
 
     mock_pynut = _get_mock_pynutclient(
-        list_ups={"ups1": "UPS 1"}, list_vars={"ups.delay.shutdown": "10"}
+        list_ups={"ups1": "UPS 1"}, list_vars={"battery.charge": "10"}
     )
 
     with patch(
@@ -322,16 +288,11 @@ async def test_stale_options(hass):
         await hass.async_block_till_done()
 
         registry = er.async_get(hass)
-
-        entry_removed = registry.async_get("sensor.ups1_ups_reboot_delay")
-        assert entry_removed is None
-
-        entry = registry.async_get("sensor.ups1_ups_shutdown_delay")
+        entry = registry.async_get("sensor.ups1_battery_charge")
         assert entry
-        assert entry.unique_id == f"{config_entry.entry_id}_ups.delay.shutdown"
-        assert entry.entity_category is not None
+        assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
         assert CONF_RESOURCES not in config_entry.data
         assert config_entry.options == {}
 
-        state = hass.states.get("sensor.ups1_ups_shutdown_delay")
+        state = hass.states.get("sensor.ups1_battery_charge")
         assert state.state == "10"
