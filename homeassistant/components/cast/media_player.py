@@ -88,6 +88,7 @@ SUPPORT_CAST = (
     | SUPPORT_TURN_ON
 )
 
+STATE_CASTING = "casting"
 
 ENTITY_SCHEMA = vol.All(
     vol.Schema(
@@ -553,10 +554,6 @@ class CastDevice(MediaPlayerEntity):
 
         First try from our own cast, then groups which our cast is a member in.
         """
-        # Suppress media status when the Lovelace app is active
-        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
-            return (None, None)
-
         media_status = self.media_status
         media_status_received = self.media_status_received
 
@@ -573,6 +570,8 @@ class CastDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the player."""
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return STATE_CASTING
         if (media_status := self._media_status()[0]) is None:
             return None
         if media_status.player_is_playing:
@@ -588,12 +587,16 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status = self._media_status()[0]
         return media_status.content_id if media_status else None
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         if (media_status := self._media_status()[0]) is None:
             return None
         if media_status.media_is_tvshow:
@@ -607,6 +610,8 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status = self._media_status()[0]
         return media_status.duration if media_status else None
 
@@ -704,6 +709,8 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status = self._media_status()[0]
         if media_status is None or not (
             media_status.player_is_playing
@@ -719,6 +726,8 @@ class CastDevice(MediaPlayerEntity):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status_recevied = self._media_status()[1]
         return media_status_recevied
 
