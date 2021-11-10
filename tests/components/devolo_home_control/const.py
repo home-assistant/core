@@ -2,7 +2,7 @@
 
 from homeassistant.components import zeroconf
 
-DISCOVERY_INFO = zeroconf.HaServiceInfo(
+DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="192.168.0.1",
     port=14791,
     hostname="test.local.",
@@ -19,6 +19,8 @@ DISCOVERY_INFO = zeroconf.HaServiceInfo(
     },
 )
 
-DISCOVERY_INFO_WRONG_DEVOLO_DEVICE = zeroconf.HaServiceInfo(properties={"MT": "2700"})
+DISCOVERY_INFO_WRONG_DEVOLO_DEVICE = zeroconf.ZeroconfServiceInfo(
+    properties={"MT": "2700"}
+)
 
-DISCOVERY_INFO_WRONG_DEVICE = zeroconf.HaServiceInfo(properties={"Features": ""})
+DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(properties={"Features": ""})
