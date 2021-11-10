@@ -8,7 +8,6 @@ from google_nest_sdm.exceptions import (
     ConfigurationException,
     GoogleNestException,
 )
-from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,11 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_entry_oauth2_flow,
-    config_validation as cv,
-)
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
@@ -199,24 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
-
-    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
-
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    auth = api.AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass),
-        session,
-        config[CONF_CLIENT_ID],
-        config[CONF_CLIENT_SECRET],
-    )
-    subscriber = GoogleNestSubscriber(
-        auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
-    )
+    subscriber = await api.NewSubscriber(hass, entry)
     callback = SignalUpdateCallback(hass)
     subscriber.set_update_callback(callback.async_handle_event)
 
