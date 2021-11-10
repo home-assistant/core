@@ -13,12 +13,11 @@ from adb_shell.exceptions import (
     InvalidResponseError,
     TcpTimeoutException,
 )
-from androidtv import ha_state_detection_rules_validator
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -70,14 +69,12 @@ from .const import (
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
     CONF_TURN_ON_COMMAND,
-    DEFAULT_ADB_SERVER_PORT,
     DEFAULT_DEVICE_CLASS,
     DEFAULT_EXCLUDE_UNNAMED_APPS,
     DEFAULT_GET_SOURCES,
     DEFAULT_PORT,
     DEFAULT_SCREENCAP,
     DEVICE_ANDROIDTV,
-    DEVICE_CLASSES,
     DOMAIN,
     MIGRATION_DATA,
     PROP_ETHMAC,
@@ -123,40 +120,6 @@ SERVICE_LEARN_SENDEVENT = "learn_sendevent"
 SERVICE_UPLOAD = "upload"
 
 DEFAULT_NAME = "Android TV"
-
-# Deprecated in Home Assistant 2021.9
-PLATFORM_SCHEMA = cv.deprecated(
-    vol.All(
-        PLATFORM_SCHEMA=PLATFORM_SCHEMA.extend(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
-                    DEVICE_CLASSES
-                ),
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_ADBKEY): cv.isfile,
-                vol.Optional(CONF_ADB_SERVER_IP): cv.string,
-                vol.Optional(
-                    CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT
-                ): cv.port,
-                vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
-                vol.Optional(CONF_APPS, default={}): vol.Schema(
-                    {cv.string: vol.Any(cv.string, None)}
-                ),
-                vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
-                vol.Optional(CONF_TURN_OFF_COMMAND): cv.string,
-                vol.Optional(CONF_STATE_DETECTION_RULES, default={}): vol.Schema(
-                    {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
-                ),
-                vol.Optional(
-                    CONF_EXCLUDE_UNNAMED_APPS, default=DEFAULT_EXCLUDE_UNNAMED_APPS
-                ): cv.boolean,
-                vol.Optional(CONF_SCREENCAP, default=DEFAULT_SCREENCAP): cv.boolean,
-            }
-        ),
-    )
-)
 
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
 ANDROIDTV_STATES = {
@@ -388,6 +351,7 @@ class ADBDevice(MediaPlayerEntity):
         """Load the config options."""
         _LOGGER.debug("Loading configuration options")
         options = self.hass.data[DOMAIN][self._entry_id][ANDROID_DEV_OPT]
+        self.ais_android_config = self.hass.data[DOMAIN][self._entry_id][DOMAIN]
 
         apps = options.get(CONF_APPS, {})
         self._app_id_to_name = APPS.copy()
@@ -465,18 +429,30 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def async_turn_on(self):
         """Turn on the device."""
-        if self.turn_on_command:
-            await self.aftv.adb_shell(self.turn_on_command)
+        # ais gate - do not turn off, only stop hdmi
+        if self.ais_android_config[CONF_HOST] == "127.0.0.1":
+            await self.aftv.adb_shell(
+                "su -c 'echo 1 > /sys/class/amhdmitx/amhdmitx0/phy'"
+            )
         else:
-            await self.aftv.turn_on()
+            if self.turn_on_command:
+                await self.aftv.adb_shell(self.turn_on_command)
+            else:
+                await self.aftv.turn_on()
 
     @adb_decorator()
     async def async_turn_off(self):
         """Turn off the device."""
-        if self.turn_off_command:
-            await self.aftv.adb_shell(self.turn_off_command)
+        # ais gate - do not turn off, only stop hdmi
+        if self.ais_android_config[CONF_HOST] == "127.0.0.1":
+            await self.aftv.adb_shell(
+                "su -c 'echo 0 > /sys/class/amhdmitx/amhdmitx0/phy'"
+            )
         else:
-            await self.aftv.turn_off()
+            if self.turn_off_command:
+                await self.aftv.adb_shell(self.turn_off_command)
+            else:
+                await self.aftv.turn_off()
 
     @adb_decorator()
     async def async_media_previous_track(self):
