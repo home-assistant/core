@@ -376,4 +376,4 @@ class RainMachineEntity(CoordinatorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        raise NotImplementedError
+        pass
