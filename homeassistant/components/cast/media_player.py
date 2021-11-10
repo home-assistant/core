@@ -580,11 +580,8 @@ class CastDevice(MediaPlayerEntity):
                 return STATE_PAUSED
             if media_status.player_is_idle:
                 return STATE_IDLE
-        if self.app_id is not None:
-            if self.app_id == pychromecast.IDLE_APP_ID:
-                return STATE_IDLE
+        if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
             return STATE_CASTING
-        # We're connected to the chromecast, but it's not showing the idle app
         if self._chromecast is not None and self._chromecast.is_idle:
             return STATE_OFF
         return None
