@@ -136,7 +136,7 @@ async def test_tilt_open_cover(hass: core.HomeAssistant):
 async def test_tilt_close_cover(hass: core.HomeAssistant):
     """Tests that tilt close cover command delegates to API."""
     await setup_platform(
-        hass, COVER_DOMAIN, shades("name-1"), bond_device_id="test-device-id"
+        hass, COVER_DOMAIN, tilt_only_shades("name-1"), bond_device_id="test-device-id"
     )
 
     with patch_bond_action() as mock_close, patch_bond_device_state():
@@ -154,7 +154,7 @@ async def test_tilt_close_cover(hass: core.HomeAssistant):
 async def test_tilt_stop_cover(hass: core.HomeAssistant):
     """Tests that tilt stop cover command delegates to API."""
     await setup_platform(
-        hass, COVER_DOMAIN, shades("name-1"), bond_device_id="test-device-id"
+        hass, COVER_DOMAIN, tilt_only_shades("name-1"), bond_device_id="test-device-id"
     )
 
     with patch_bond_action() as mock_hold, patch_bond_device_state():
