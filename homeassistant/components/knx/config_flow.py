@@ -290,7 +290,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
                     vol.Optional(CONF_HOST, default=current_config.get(CONF_HOST)): str,
                     vol.Optional(
                         CONF_PORT, default=current_config.get(CONF_PORT, 3671)
-                    ): vol.Coerce(int),
+                    ): cv.port,
                     vol.Required(
                         CONF_KNX_INDIVIDUAL_ADDRESS,
                         default=current_config.get(
