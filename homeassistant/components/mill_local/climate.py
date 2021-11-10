@@ -9,10 +9,9 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, MAX_TEMP, MIN_TEMP
+from .const import DOMAIN, MAX_TEMP, MIN_TEMP
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
@@ -44,13 +43,6 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         super().__init__(coordinator)
 
         self._attr_name = coordinator.mill_data_connection.name
-        self._attr_device_info = DeviceInfo(
-            configuration_url=coordinator.mill_data_connection.url,
-            identifiers={(DOMAIN, device_id)},
-            manufacturer=MANUFACTURER,
-            name=coordinator.mill_data_connection.name,
-            sw_version=coordinator.mill_data_connection.version,
-        )
         self._update_attr()
 
     async def async_set_temperature(self, **kwargs):
