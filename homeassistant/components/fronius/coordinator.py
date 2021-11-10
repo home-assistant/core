@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Dict, TypeVar
 
 from pyfronius import FroniusError
@@ -38,7 +37,7 @@ class FroniusCoordinatorBase(
 ):
     """Query Fronius endpoint and keep track of seen conditions."""
 
-    valid_descriptions: Mapping[str, SensorEntityDescription]
+    valid_descriptions: list[SensorEntityDescription]
 
     def __init__(self, *args: Any, solar_net: FroniusSolarNet, **kwargs: Any) -> None:
         """Set up the FroniusCoordinatorBase class."""
@@ -62,7 +61,9 @@ class FroniusCoordinatorBase(
             for solar_net_id in data:
                 if solar_net_id not in self.unregistered_keys:
                     # id seen for the first time
-                    self.unregistered_keys[solar_net_id] = set(self.valid_descriptions)
+                    self.unregistered_keys[solar_net_id] = {
+                        desc.key for desc in self.valid_descriptions
+                    }
             return data
 
     @callback
