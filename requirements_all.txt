@@ -819,7 +819,7 @@ hole==0.5.1
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211103.0
+home-assistant-frontend==20211108.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1169,7 +1169,7 @@ p1monitor==1.0.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-paho-mqtt==1.5.1
+paho-mqtt==1.6.1
 
 # homeassistant.components.panasonic_bluray
 panacotta==0.1
@@ -1469,6 +1469,9 @@ pyephember==0.3.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
+
+# homeassistant.components.evil_genius_labs
+pyevilgenius==1.0.0
 
 # homeassistant.components.ezviz
 pyezviz==0.1.9.4
@@ -1970,7 +1973,7 @@ pytouchline==0.7
 pytraccar==0.9.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.1.1
+pytradfri[async]==7.2.0
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -2125,7 +2128,7 @@ sense-hat==2.2.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.9.2
+sense_energy==0.9.3
 
 # homeassistant.components.sentry
 sentry-sdk==1.4.3
@@ -2266,7 +2269,7 @@ swisshydrodata==0.1.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridge==2.2.1
+systembridge==2.2.3
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.16
@@ -2369,7 +2372,7 @@ vallox-websocket-api==2.8.1
 vehicle==0.1.0
 
 # homeassistant.components.velbus
-velbus-aio==2021.11.0
+velbus-aio==2021.11.6
 
 # homeassistant.components.venstar
 venstarcolortouch==0.15
@@ -2498,7 +2501,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.4
 
 # homeassistant.components.zha
-zigpy==0.39.0
+zigpy==0.41.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

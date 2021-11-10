@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
             "unknown_license_plate": "Bilinmeyen plaka"
         },
         "step": {

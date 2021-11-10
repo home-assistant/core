@@ -2,40 +2,70 @@
     "config": {
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
             "reconfigure_successful": "Yeniden yap\u0131land\u0131rma ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "missing_data": "Eksik veriler: l\u00fctfen daha sonra veya ba\u015fka bir yap\u0131land\u0131rmay\u0131 yeniden deneyin",
+            "otp_failed": "\u0130ki ad\u0131ml\u0131 kimlik do\u011frulama ba\u015far\u0131s\u0131z oldu, yeni bir parolayla yeniden deneyin",
             "unknown": "Beklenmeyen hata"
         },
+        "flow_title": "{name} ({host})",
         "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Kod"
+                },
+                "title": "Synology DSM: iki ad\u0131ml\u0131 kimlik do\u011frulama"
+            },
             "link": {
                 "data": {
                     "password": "Parola",
                     "port": "Port",
+                    "ssl": "SSL sertifikas\u0131 kullan\u0131r",
                     "username": "Kullan\u0131c\u0131 Ad\u0131",
                     "verify_ssl": "SSL sertifikalar\u0131n\u0131 do\u011frula"
-                }
+                },
+                "description": "{name} ( {host} ) kurulumu yapmak istiyor musunuz?",
+                "title": "Synology DSM"
             },
             "reauth": {
-                "description": "Sebep: {details}"
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "Sebep: {details}",
+                "title": "Synology DSM Entegrasyonu Yeniden Do\u011frula"
             },
             "reauth_confirm": {
                 "data": {
                     "password": "\u015eifre",
                     "username": "Kullan\u0131c\u0131 ad\u0131"
-                }
+                },
+                "title": "Synology DSM Entegrasyonu Yeniden Do\u011frula"
             },
             "user": {
                 "data": {
                     "host": "Ana Bilgisayar",
                     "password": "Parola",
                     "port": "Port",
+                    "ssl": "SSL sertifikas\u0131 kullan\u0131r",
                     "username": "Kullan\u0131c\u0131 Ad\u0131",
                     "verify_ssl": "SSL sertifikalar\u0131n\u0131 do\u011frula"
                 },
                 "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Taramalar aras\u0131ndaki dakika",
+                    "timeout": "Zaman a\u015f\u0131m\u0131 (saniye)"
+                }
             }
         }
     }

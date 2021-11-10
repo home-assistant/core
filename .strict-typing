@@ -42,6 +42,7 @@ homeassistant.components.efergy.*
 homeassistant.components.elgato.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
+homeassistant.components.evil_genius_labs.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.fitbit.*
 homeassistant.components.flunearyou.*

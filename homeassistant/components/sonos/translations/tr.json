@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "no_devices_found": "A\u011fda cihaz bulunamad\u0131",
             "not_sonos_device": "Bulunan cihaz bir Sonos cihaz\u0131 de\u011fil",
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
         },

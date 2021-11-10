@@ -82,6 +82,7 @@ FLOWS = [
     "environment_canada",
     "epson",
     "esphome",
+    "evil_genius_labs",
     "ezviz",
     "faa_delays",
     "fireservicerota",

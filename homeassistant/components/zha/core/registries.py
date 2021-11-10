@@ -82,6 +82,8 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.measurement.OccupancySensing.cluster_id: BINARY_SENSOR,
     zcl.clusters.measurement.PressureMeasurement.cluster_id: SENSOR,
     zcl.clusters.measurement.RelativeHumidity.cluster_id: SENSOR,
+    zcl.clusters.measurement.SoilMoisture.cluster_id: SENSOR,
+    zcl.clusters.measurement.LeafWetness.cluster_id: SENSOR,
     zcl.clusters.measurement.TemperatureMeasurement.cluster_id: SENSOR,
     zcl.clusters.security.IasZone.cluster_id: BINARY_SENSOR,
 }

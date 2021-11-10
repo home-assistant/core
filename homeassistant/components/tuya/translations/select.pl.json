@@ -1,0 +1,25 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "1": "Wy\u0142\u0105czony",
+            "2": "W\u0142\u0105czony"
+        },
+        "tuya__led_type": {
+            "halogen": "Halogen",
+            "led": "LED"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "Niska czu\u0142o\u015b\u0107",
+            "1": "\u015arednia czu\u0142o\u015b\u0107",
+            "2": "Wysoka czu\u0142o\u015b\u0107"
+        },
+        "tuya__relay_status": {
+            "last": "Zapami\u0119taj ostatni stan",
+            "memory": "Zapami\u0119taj ostatni stan"
+        }
+    }
+}

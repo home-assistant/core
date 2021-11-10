@@ -11,6 +11,7 @@
         "airvisual__pollutant_level": {
             "good": "\u0130yi",
             "hazardous": "Tehlikeli",
+            "moderate": "Il\u0131ml\u0131",
             "unhealthy": "Sa\u011fl\u0131ks\u0131z",
             "unhealthy_sensitive": "Hassas gruplar i\u00e7in sa\u011fl\u0131ks\u0131z",
             "very_unhealthy": "\u00c7ok sa\u011fl\u0131ks\u0131z"
