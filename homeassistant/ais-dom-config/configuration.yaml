@@ -38,12 +38,6 @@ map:
 #
 media_extractor:
 
-media_player:
-  # Use the Python ADB implementation
-  - platform: androidtv
-    name: AIS TV
-    host: 192.168.6.122
-
 # Enables the frontend
 frontend:
   # development_repo: ~/Projects/AIS-home-assistant-polymer
