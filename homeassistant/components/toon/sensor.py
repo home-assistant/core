@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
@@ -139,6 +140,18 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_TEMPERATURE,
         entity_registry_enabled_default=False,
         state_class=STATE_CLASS_MEASUREMENT,
+        cls=ToonDisplayDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
+        key="current_humidity",
+        name="Humidity",
+        section="thermostat",
+        measurement="current_humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:water-percent",
         cls=ToonDisplayDeviceSensor,
     ),
     ToonSensorEntityDescription(
