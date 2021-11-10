@@ -70,7 +70,7 @@ class WallboxCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         except requests.exceptions.HTTPError as wallbox_connection_error:
             raise ConnectionError from wallbox_connection_error
 
-    def _set_charging_current(self, charging_current: str | float) -> None:
+    def _set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
         try:
             self._authenticate()
@@ -80,7 +80,7 @@ class WallboxCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
-    async def async_set_charging_current(self, charging_current: str | float) -> None:
+    async def async_set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
         await self.hass.async_add_executor_job(
             self._set_charging_current, charging_current
