@@ -5,10 +5,9 @@ from aiomusiccast.capabilities import OptionSetter
 from homeassistant.components.select import SelectEntity
 from homeassistant.components.yamaha_musiccast import (
     DOMAIN,
+    MusicCastCapabilityEntity,
     MusicCastDataUpdateCoordinator,
-    MusicCastDeviceEntity,
 )
-from homeassistant.components.yamaha_musiccast.const import ENTITY_CATEGORY_MAPPING
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,37 +37,10 @@ async def async_setup_entry(
     async_add_entities(select_entities)
 
 
-class SelectableCapapility(MusicCastDeviceEntity, SelectEntity):
+class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
     """Representation of a MusicCast Alarm entity."""
 
-    def __init__(
-        self,
-        coordinator: MusicCastDataUpdateCoordinator,
-        capability: OptionSetter,
-        zone_id: str = None,
-    ) -> None:
-        """Initialize the switch."""
-        if zone_id is not None:
-            self._zone_id = zone_id
-        self.capability = capability
-        super().__init__(name=capability.name, icon="", coordinator=coordinator)
-        self._attr_entity_category = ENTITY_CATEGORY_MAPPING.get(capability.entity_type)
-
-    async def async_added_to_hass(self):
-        """Run when this Entity has been added to HA."""
-        await super().async_added_to_hass()
-        # Sensors should also register callbacks to HA when their state changes
-        self.coordinator.musiccast.register_callback(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Entity being removed from hass."""
-        await super().async_added_to_hass()
-        self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this media_player."""
-        return f"{self.device_id}_{self.capability.id}"
+    capability: OptionSetter
 
     async def async_select_option(self, option: str) -> None:
         """Select the given option."""
