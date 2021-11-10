@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -22,9 +23,7 @@ DATA_SCHEMA = vol.Schema(
 REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
-async def validate_input(
-    user_input: dict[str, Any]
-) -> dict[str, str] | None:  # pragma: no cover
+async def validate_input(user_input: dict[str, Any]) -> dict[str, str] | None:
     """Login to the brunt api and return errors if any."""
     errors = None
     bapi = BruntClientAsync(
@@ -38,13 +37,13 @@ async def validate_input(
             _LOGGER.warning("Brunt Credentials are incorrect")
             errors = {"base": "invalid_auth"}
         else:
-            _LOGGER.exception("Unknown error when connecting to Brunt: %s", exc)
+            _LOGGER.exception("Unknown error when trying to login to Brunt: %s", exc)
             errors = {"base": "unknown"}
     except ServerDisconnectedError:
         _LOGGER.warning("Cannot connect to Brunt")
         errors = {"base": "cannot_connect"}
     except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Unknown error when connecting to Brunt: %s", exc)
+        _LOGGER.exception("Unknown error when trying to login to Brunt: %s", exc)
         errors = {"base": "unknown"}
     finally:
         await bapi.async_close()
@@ -56,11 +55,11 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
-        """Start the Brunt config flow."""
-        self._reauth_entry: ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
@@ -71,39 +70,61 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=DATA_SCHEMA, errors=errors
             )
 
-        await self.async_set_unique_id(user_input[CONF_USERNAME])
+        await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],
             data=user_input,
         )
 
-    async def async_step_reauth(self, user_input: dict[str, Any] | None = None):
-        """Handle the reauth step."""
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+            )
+        return await self.async_step_reauth_input()
+
+    async def async_step_reauth_input(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the reauth input."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
         assert self._reauth_entry
+        username = self._reauth_entry.data[CONF_USERNAME]
         if user_input is None:
-            return self.async_show_form(step_id="reauth", data_schema=REAUTH_SCHEMA)
-        user_input[CONF_USERNAME] = self._reauth_entry.data[CONF_USERNAME]
-
+            return self.async_show_form(
+                step_id="reauth_input",
+                data_schema=REAUTH_SCHEMA,
+                description_placeholders={"username": username},
+            )
+        user_input[CONF_USERNAME] = username
         errors = await validate_input(user_input)
         if errors is not None:
             return self.async_show_form(
-                step_id="reauth", data_schema=REAUTH_SCHEMA, errors=errors
+                step_id="reauth_input",
+                data_schema=REAUTH_SCHEMA,
+                errors=errors,
+                description_placeholders={"username": username},
             )
 
         self.hass.config_entries.async_update_entry(self._reauth_entry, data=user_input)
         await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-
         return self.async_abort(reason="reauth_successful")
 
-    async def async_step_import(self, import_config: dict[str, Any]):
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import config from configuration.yaml."""
-        entries = self._async_current_entries()
-        for entry in entries:
-            if entry.data[CONF_USERNAME] == import_config[CONF_USERNAME]:
-                return self.async_abort(reason="already_configured_account")
-
+        await self.async_set_unique_id(import_config[CONF_USERNAME].lower())
+        self._abort_if_unique_id_configured()
         return await self.async_step_user(import_config)

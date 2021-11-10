@@ -7,6 +7,17 @@
             "username": "[%key:common::config_flow::data::username%]",
             "password": "[%key:common::config_flow::data::password%]"
           }
+        },
+        "reauth_confirm": {
+          "title": "[%key:common::config_flow::title::reauth%]",
+          "description": "The Brunt integration needs to re-authenticate your account"
+        },
+        "reauth_input": {
+          "title": "[%key:common::config_flow::title::reauth%]",
+          "description": "Reenter the password for Brunt account: {username}.",
+          "data": {
+            "password": "[%key:common::config_flow::data::password%]"
+          }
         }
       },
       "error": {
@@ -15,7 +26,7 @@
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "abort": {
-        "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
+        "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
         "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
       }
     }

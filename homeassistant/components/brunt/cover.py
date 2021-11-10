@@ -2,12 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import MutableMapping
-from datetime import timedelta
 import logging
 from typing import Any
 
-from aiohttp.client_exceptions import ClientResponseError, ServerDisconnectedError
-import async_timeout
+from aiohttp.client_exceptions import ClientResponseError
 from brunt import BruntClientAsync, Thing
 
 from homeassistant.components.cover import (
@@ -20,29 +18,30 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
 from .const import (
     ATTR_REQUEST_POSITION,
     ATTRIBUTION,
     CLOSED_POSITION,
+    DATA_BAPI,
+    DATA_COOR,
     DOMAIN,
+    FAST_INTERVAL,
     OPEN_POSITION,
+    REGULAR_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-REGULAR_INTERVAL = timedelta(seconds=20)
-FAST_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_platform(
@@ -66,35 +65,10 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the brunt platform."""
-    bapi: BruntClientAsync = hass.data[DOMAIN][entry.entry_id]
-
-    async def async_update_data():
-        """Fetch data from the Brunt endpoint for all Things."""
-        try:
-            async with async_timeout.timeout(10):
-                things = await bapi.async_get_things(force=True)
-                return {thing.SERIAL: thing for thing in things}
-        except ServerDisconnectedError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-        except ClientResponseError as err:
-            if err.status == 403:
-                raise ConfigEntryAuthFailed() from err
-            if err.status == 401:
-                raise UpdateFailed(f"Error communicating with API: {err}") from err
-        except Exception as err:
-            raise UpdateFailed("Unknown error.") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="brunt",
-        update_method=async_update_data,
-        update_interval=REGULAR_INTERVAL,
-    )
-    await coordinator.async_config_entry_first_refresh()
+    bapi: BruntClientAsync = hass.data[DOMAIN][entry.entry_id][DATA_BAPI]
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][DATA_COOR]
 
     async_add_entities(
         BruntDevice(coordinator, serial, thing, bapi, entry.entry_id)
@@ -153,8 +127,8 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pos = self.coordinator.data[self._attr_unique_id].currentPosition
-        return int(pos) if pos else None
+        pos = self.coordinator.data[self.unique_id].currentPosition
+        return int(pos) if pos is not None else None
 
     @property
     def request_cover_position(self) -> int | None:
@@ -165,7 +139,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         to Brunt, at times there is a diff of 1 to current
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pos = self.coordinator.data[self._attr_unique_id].requestPosition
+        pos = self.coordinator.data[self.unique_id].requestPosition
         return int(pos) if pos is not None else None
 
     @property
@@ -175,7 +149,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         None is unknown, 0 when stopped, 1 when opening, 2 when closing
         """
-        mov = self.coordinator.data[self._attr_unique_id].moveState
+        mov = self.coordinator.data[self.unique_id].moveState
         return int(mov) if mov is not None else None
 
     @property
@@ -200,15 +174,15 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         """Return true if cover is closed, else False."""
         return self.current_cover_position == CLOSED_POSITION
 
-    async def async_open_cover(self, **kwargs) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Set the cover to the open position."""
         await self._async_update_cover(OPEN_POSITION)
 
-    async def async_close_cover(self, **kwargs) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Set the cover to the closed position."""
         await self._async_update_cover(CLOSED_POSITION)
 
-    async def async_set_cover_position(self, **kwargs) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover to a specific position."""
         await self._async_update_cover(int(kwargs[ATTR_POSITION]))
 
