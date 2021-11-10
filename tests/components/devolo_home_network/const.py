@@ -16,7 +16,7 @@ CONNECTED_STATIONS = {
     ],
 }
 
-DISCOVERY_INFO = zeroconf.HaServiceInfo(
+DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host=IP,
     port=14791,
     hostname="test.local.",
@@ -36,7 +36,7 @@ DISCOVERY_INFO = zeroconf.HaServiceInfo(
     },
 )
 
-DISCOVERY_INFO_WRONG_DEVICE = zeroconf.HaServiceInfo(properties={"MT": "2600"})
+DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(properties={"MT": "2600"})
 
 NEIGHBOR_ACCESS_POINTS = {
     "neighbor_aps": [
