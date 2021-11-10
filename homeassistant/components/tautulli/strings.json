@@ -5,10 +5,8 @@
         "title": "Tautulli",
         "description": "To find your API key, open the Tautulli web interface and navigate to Settings and then to Web interface. The API key will be at the bottom of that page.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
           "api_key": "[%key:common::config_flow::data::api_key]",
-          "path": "Path",
-          "port": "[%key:common::config_flow::data::port]",
+          "url": "[%key:common::config_flow::data::url%]",
           "ssl": "[%key:common::config_flow::data::ssl]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl]"
         }

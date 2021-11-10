@@ -5,8 +5,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -18,9 +22,9 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import DiscoveryInfoType, StateType
 
 from . import CONF_MONITORED_USERS, TautulliEntity
 from .const import (
@@ -49,41 +53,63 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        icon="mdi:plex",
+        key="tautulli",
+        name="Tautulli",
+        native_unit_of_measurement="Watching",
+    ),
+)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Modem Caller ID component."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tautulli sensor."""
-    entities = [
+    sensors = [
         TautulliSensor(
             hass.data[DOMAIN][entry.entry_id][DATA_KEY_COORDINATOR],
-            entry.data.get(CONF_NAME, DEFAULT_NAME),
-            entry.options[CONF_MONITORED_USERS],
+            entry.data.get(CONF_NAME, description.name),
+            description,
             entry.entry_id,
         )
+        for description in SENSOR_TYPES
     ]
 
-    async_add_entities(entities, True)
+    async_add_entities(sensors, True)
 
 
 class TautulliSensor(TautulliEntity, SensorEntity):
     """Representation of a Tautulli sensor."""
 
-    _attr_icon = "mdi:plex"
-    _attr_native_unit_of_measurement = "Watching"
     coordinator: TautulliDataUpdateCoordinator
 
     def __init__(
         self,
         coordinator: TautulliDataUpdateCoordinator,
         name: str,
-        users: list,
+        description: SensorEntityDescription,
         server_unique_id: str,
     ) -> None:
         """Initialize the Tautulli sensor."""
         super().__init__(coordinator, name, server_unique_id)
+        self.entity_description = description
         self._attr_unique_id = f"{server_unique_id}/{name}"
-        self.usernames = users
         self._attr_name = name
 
     @property
@@ -122,16 +148,12 @@ class TautulliSensor(TautulliEntity, SensorEntity):
                 _attributes["Top User"] = stat.rows[0].user if stat.rows else None
 
         for user in self.coordinator.users:
-            if (
-                self.usernames
-                and user.username not in self.usernames
-                or user.username == "Local"
-            ):
+            if user.username == "Local":
                 continue
             _attributes.setdefault(user.username, {})["Activity"] = None
 
         for session in self.coordinator.activity.sessions:
-            if not _attributes.get(session.username):
+            if not _attributes.get(session.username) or "null" in session.state:
                 continue
 
             _attributes[session.username]["Activity"] = session.state

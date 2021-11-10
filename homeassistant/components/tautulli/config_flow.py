@@ -6,34 +6,18 @@ from typing import Any
 from pytautulli import PyTautulli, exceptions
 import voluptuous as vol
 
-from homeassistant.components.tautulli.coordinator import TautulliDataUpdateCoordinator
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PATH,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigFlow
+from homeassistant.const import CONF_API_KEY, CONF_SSL, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_MONITORED_USERS, DATA_KEY_COORDINATOR, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 
 class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tautulli."""
 
     VERSION = 1
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return TautulliOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -54,17 +38,12 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         data_schema = {
             vol.Required(CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")): str,
-            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-            vol.Optional(CONF_PORT, default=user_input.get(CONF_PORT, "8181")): str,
-            vol.Optional(CONF_PATH, default=user_input.get(CONF_PATH, "")): str,
+            vol.Required(CONF_URL, default=user_input.get(CONF_URL, "http://")): str,
             vol.Optional(CONF_SSL, default=user_input.get(CONF_SSL, False)): bool,
+            vol.Optional(
+                CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
+            ): bool,
         }
-        if self.show_advanced_options:
-            data_schema[
-                vol.Optional(
-                    CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
-                )
-            ] = bool
 
         return self.async_show_form(
             step_id="user",
@@ -117,14 +96,12 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             api_client = PyTautulli(
                 api_token=user_input[CONF_API_KEY],
-                hostname=user_input[CONF_HOST],
+                url=user_input[CONF_URL],
                 session=async_get_clientsession(
                     self.hass, user_input.get(CONF_VERIFY_SSL, True)
                 ),
                 verify_ssl=user_input.get(CONF_VERIFY_SSL, True),
-                port=user_input[CONF_PORT],
                 ssl=user_input[CONF_SSL],
-                base_api_path=user_input[CONF_PATH],
             )
             return await api_client.async_get_server_info(), None
         except exceptions.PyTautulliConnectionException:
@@ -133,47 +110,3 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
             return None, "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             return None, "unknown"
-
-
-class TautulliOptionsFlowHandler(OptionsFlow):
-    """Config flow options for Tautulli."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize Tautulli options flow."""
-        self.entry = entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow initialized by the user."""
-        try:
-            coordinator: TautulliDataUpdateCoordinator = self.hass.data[DOMAIN][
-                self.entry.entry_id
-            ][DATA_KEY_COORDINATOR]
-        except KeyError:
-            return self.async_abort(reason="cannot_connect")
-        if coordinator.users:
-            usernames = {user.username: user.username for user in coordinator.users}
-        options = dict(self.entry.options)
-        if user_input is not None and coordinator.users:
-            account_data = {
-                user.user_id: {
-                    "enabled": bool(user.user_id in user_input[CONF_MONITORED_USERS])
-                }
-                for user in coordinator.users
-            }
-            options[CONF_MONITORED_USERS] = account_data
-            await self.hass.config_entries.async_reload(self.entry.entry_id)
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_MONITORED_USERS,
-                        default=options[CONF_MONITORED_USERS],
-                    ): cv.multi_select(usernames),
-                }
-            ),
-        )

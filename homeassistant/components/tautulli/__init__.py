@@ -1,20 +1,12 @@
 """The Tautulli integration."""
 from __future__ import annotations
 
-from pytautulli import PyTautulli, exceptions
+from pytautulli import PyTautulli
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PATH,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_SSL, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -29,22 +21,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tautulli from a config entry."""
     api_client = PyTautulli(
         api_token=entry.data[CONF_API_KEY],
-        hostname=entry.data[CONF_HOST],
+        url=entry.data[CONF_URL],
         session=async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL]),
         verify_ssl=entry.data[CONF_VERIFY_SSL],
-        port=entry.data[CONF_PORT],
         ssl=entry.data[CONF_SSL],
-        base_api_path=entry.data[CONF_PATH],
     )
-    try:
-        await api_client.async_get_activity()
-    except exceptions.PyTautulliConnectionException as ex:
-        raise ConfigEntryNotReady(ex) from ex
-    except (exceptions.PyTautulliAuthenticationException) as ex:
-        raise ConfigEntryAuthFailed(ex) from ex
-
     cordnator = TautulliDataUpdateCoordinator(hass, api_client)
     await cordnator.async_config_entry_first_refresh()
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_KEY_COORDINATOR: cordnator}
     if not entry.options:
         options = {CONF_MONITORED_USERS: entry.data.get(CONF_MONITORED_USERS)}
@@ -66,6 +50,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TautulliEntity(CoordinatorEntity):
     """Defines a base Tautulli entity."""
 
+    coordinator: TautulliDataUpdateCoordinator
+
     def __init__(
         self,
         coordinator: TautulliDataUpdateCoordinator,
@@ -81,5 +67,5 @@ class TautulliEntity(CoordinatorEntity):
             entry_type="service",
             identifiers={(DOMAIN, server_unique_id)},
             manufacturer=DEFAULT_NAME,
-            name="Activity Sensor",
+            name=name,
         )

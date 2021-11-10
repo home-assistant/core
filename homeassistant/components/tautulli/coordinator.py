@@ -9,10 +9,15 @@ from pytautulli import (
     PyTautulliApiActivity,
     PyTautulliApiHomeStats,
     PyTautulliApiUser,
-    PyTautulliException,
+)
+from pytautulli.exceptions import (
+    PyTautulliAuthenticationException,
+    PyTautulliConnectionException,
 )
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -48,5 +53,9 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
                     self.api_client.async_get_users(),
                 ]
             )
-        except PyTautulliException as exception:
-            raise UpdateFailed(exception) from exception
+        except PyTautulliConnectionException as ex:
+            if self.config_entry and self.config_entry.state == ConfigEntryState.LOADED:
+                raise UpdateFailed(ex) from ex
+            raise ConfigEntryNotReady(ex) from ex
+        except PyTautulliAuthenticationException as ex:
+            raise ConfigEntryAuthFailed(ex) from ex
