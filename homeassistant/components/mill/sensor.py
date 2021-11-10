@@ -28,11 +28,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     BATTERY,
+    CLOUD,
+    CONNECTION_TYPE,
     CONSUMPTION_TODAY,
     CONSUMPTION_YEAR,
     DOMAIN,
     ECO2,
     HUMIDITY,
+    LOCAL,
     MANUFACTURER,
     TEMPERATURE,
     TVOC,
@@ -95,8 +98,10 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Mill sensor."""
+    if entry.data[CONNECTION_TYPE] == LOCAL:
+        return
 
-    mill_data_coordinator = hass.data[DOMAIN]
+    mill_data_coordinator = hass.data[DOMAIN][CLOUD]
 
     entities = [
         MillSensor(
