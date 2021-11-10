@@ -10,12 +10,12 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "Home Asistan\u0131'na Volumio ('{name}') eklemek istiyor musunuz?",
+                "description": "Home Assistant'a Volumio (` {name}",
                 "title": "Bulunan Volumio"
             },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "port": "Port"
                 }
             }

@@ -29,7 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "model": "Model (Opsiyonel)",
+                    "model": "Model",
                     "nightlight_switch": "Gece I\u015f\u0131\u011f\u0131 Anahtar\u0131n\u0131 Kullan",
                     "save_on_change": "De\u011fi\u015fiklikte Durumu Kaydet",
                     "transition": "Ge\u00e7i\u015f S\u00fcresi (ms)",
