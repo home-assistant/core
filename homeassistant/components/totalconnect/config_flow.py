@@ -138,14 +138,14 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=PASSWORD_DATA_SCHEMA,
             )
 
-        client = await self.hass.async_add_executor_job(
-            TotalConnectClient,
-            self.username,
-            user_input[CONF_PASSWORD],
-            self.usercodes,
-        )
-
-        if not client.is_logged_in():
+        try:
+            await self.hass.async_add_executor_job(
+                TotalConnectClient,
+                self.username,
+                user_input[CONF_PASSWORD],
+                self.usercodes,
+            )
+        except AuthenticationError:
             errors["base"] = "invalid_auth"
             return self.async_show_form(
                 step_id="reauth_confirm",
