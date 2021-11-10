@@ -80,11 +80,6 @@ class BondCover(BondEntity, CoverEntity):
             True if cover_open == 0 else False if cover_open == 1 else None
         )
 
-    @property
-    def current_cover_tilt_position(self) -> None:
-        """Tilt position is always assumed state."""
-        return None
-
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._hub.bond.action(self._device.device_id, Action.open())
