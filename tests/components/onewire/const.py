@@ -8,7 +8,6 @@ from homeassistant.components.onewire.const import (
     MANUFACTURER_EDS,
     MANUFACTURER_HOBBYBOARDS,
     MANUFACTURER_MAXIM,
-    PRESSURE_CBAR,
 )
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -37,6 +36,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
+    PRESSURE_CBAR,
     PRESSURE_MBAR,
     STATE_OFF,
     STATE_ON,
