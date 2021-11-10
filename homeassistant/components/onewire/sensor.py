@@ -34,6 +34,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
+    PRESSURE_CBAR,
     PRESSURE_MBAR,
     TEMP_CELSIUS,
 )
@@ -47,7 +48,6 @@ from .const import (
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DOMAIN,
-    PRESSURE_CBAR,
     READ_MODE_FLOAT,
     READ_MODE_INT,
 )
