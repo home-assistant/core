@@ -38,7 +38,8 @@ def create_entry(hass: HomeAssistant):
     return entry
 
 
-async def _create_mocked_yeti():
+async def create_mocked_yeti():
+    """Create mocked yeti device."""
     mocked_yeti = AsyncMock()
     mocked_yeti.data = {}
     mocked_yeti.data["firmwareVersion"] = "1.0.0"
@@ -48,11 +49,8 @@ async def _create_mocked_yeti():
     return mocked_yeti
 
 
-def _patch_init_yeti(mocked_yeti):
-    return patch("homeassistant.components.goalzero.Yeti", return_value=mocked_yeti)
-
-
-def _patch_config_flow_yeti(mocked_yeti):
+def patch_config_flow_yeti(mocked_yeti):
+    """Patch Goal Zero config flow."""
     return patch(
         "homeassistant.components.goalzero.config_flow.Yeti",
         return_value=mocked_yeti,

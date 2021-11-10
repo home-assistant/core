@@ -11,13 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.dt as dt_util
 
-from . import (
-    CONF_DATA,
-    _create_mocked_yeti,
-    _patch_init_yeti,
-    async_init_integration,
-    create_entry,
-)
+from . import CONF_DATA, async_init_integration, create_entry, create_mocked_yeti
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -26,7 +20,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_setup_config_and_unload(hass: HomeAssistant):
     """Test Goal Zero setup and unload."""
     entry = create_entry(hass)
-    with _patch_init_yeti(await _create_mocked_yeti()):
+    mocked_yeti = await create_mocked_yeti()
+    with patch("homeassistant.components.goalzero.Yeti", return_value=mocked_yeti):
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED

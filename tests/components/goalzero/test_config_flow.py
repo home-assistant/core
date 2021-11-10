@@ -12,9 +12,9 @@ from . import (
     CONF_DATA,
     CONF_DHCP_FLOW,
     MAC,
-    _create_mocked_yeti,
-    _patch_config_flow_yeti,
     create_entry,
+    create_mocked_yeti,
+    patch_config_flow_yeti,
 )
 
 
@@ -24,8 +24,8 @@ def _patch_setup():
 
 async def test_flow_user(hass: HomeAssistant):
     """Test user initialized flow."""
-    mocked_yeti = await _create_mocked_yeti()
-    with _patch_config_flow_yeti(mocked_yeti), _patch_setup():
+    mocked_yeti = await create_mocked_yeti()
+    with patch_config_flow_yeti(mocked_yeti), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -53,7 +53,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant):
 
 async def test_flow_user_cannot_connect(hass: HomeAssistant):
     """Test user initialized flow with unreachable server."""
-    with _patch_config_flow_yeti(await _create_mocked_yeti()) as yetimock:
+    with patch_config_flow_yeti(await create_mocked_yeti()) as yetimock:
         yetimock.side_effect = exceptions.ConnectError
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
@@ -65,7 +65,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant):
 
 async def test_flow_user_invalid_host(hass: HomeAssistant):
     """Test user initialized flow with invalid server."""
-    with _patch_config_flow_yeti(await _create_mocked_yeti()) as yetimock:
+    with patch_config_flow_yeti(await create_mocked_yeti()) as yetimock:
         yetimock.side_effect = exceptions.InvalidHost
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
@@ -77,7 +77,7 @@ async def test_flow_user_invalid_host(hass: HomeAssistant):
 
 async def test_flow_user_unknown_error(hass: HomeAssistant):
     """Test user initialized flow with unreachable server."""
-    with _patch_config_flow_yeti(await _create_mocked_yeti()) as yetimock:
+    with patch_config_flow_yeti(await create_mocked_yeti()) as yetimock:
         yetimock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
@@ -90,8 +90,8 @@ async def test_flow_user_unknown_error(hass: HomeAssistant):
 async def test_dhcp_discovery(hass: HomeAssistant):
     """Test we can process the discovery from dhcp."""
 
-    mocked_yeti = await _create_mocked_yeti()
-    with _patch_config_flow_yeti(mocked_yeti), _patch_setup():
+    mocked_yeti = await create_mocked_yeti()
+    with patch_config_flow_yeti(mocked_yeti), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
@@ -120,8 +120,8 @@ async def test_dhcp_discovery(hass: HomeAssistant):
 
 async def test_dhcp_discovery_failed(hass: HomeAssistant):
     """Test failed setup from dhcp."""
-    mocked_yeti = await _create_mocked_yeti()
-    with _patch_config_flow_yeti(mocked_yeti) as yetimock:
+    mocked_yeti = await create_mocked_yeti()
+    with patch_config_flow_yeti(mocked_yeti) as yetimock:
         yetimock.side_effect = exceptions.ConnectError
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -131,7 +131,7 @@ async def test_dhcp_discovery_failed(hass: HomeAssistant):
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "cannot_connect"
 
-    with _patch_config_flow_yeti(mocked_yeti) as yetimock:
+    with patch_config_flow_yeti(mocked_yeti) as yetimock:
         yetimock.side_effect = exceptions.InvalidHost
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -141,7 +141,7 @@ async def test_dhcp_discovery_failed(hass: HomeAssistant):
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "invalid_host"
 
-    with _patch_config_flow_yeti(mocked_yeti) as yetimock:
+    with patch_config_flow_yeti(mocked_yeti) as yetimock:
         yetimock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
