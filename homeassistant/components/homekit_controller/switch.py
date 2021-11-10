@@ -1,21 +1,34 @@
 """Support for Homekit switches."""
 from aiohomekit.model.characteristics import (
+    Characteristic,
     CharacteristicsTypes,
     InUseValues,
     IsConfiguredValues,
 )
 from aiohomekit.model.services import ServicesTypes
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import callback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
 
 OUTLET_IN_USE = "outlet_in_use"
 
 ATTR_IN_USE = "in_use"
 ATTR_IS_CONFIGURED = "is_configured"
 ATTR_REMAINING_DURATION = "remaining_duration"
+
+
+SIMPLE_SWITCH: dict[str, SwitchEntityDescription] = {
+    CharacteristicsTypes.Vendor.HAA_SETUP: SwitchEntityDescription(
+        key=CharacteristicsTypes.Vendor.HAA_SETUP,
+        name="Setup",
+    ),
+    CharacteristicsTypes.Vendor.HAA_UPDATE: SwitchEntityDescription(
+        key=CharacteristicsTypes.Vendor.HAA_UPDATE,
+        name="Update",
+    ),
+}
 
 
 class HomeKitSwitch(HomeKitEntity, SwitchEntity):
@@ -96,6 +109,56 @@ class HomeKitValve(HomeKitEntity, SwitchEntity):
         return attrs
 
 
+class SimpleSwitch(CharacteristicEntity, HomeKitSwitch):
+    """
+    A simple switch for a single characteristic.
+
+    This may be an additional secondary entity that is part of another service. An
+    example is a device that has an OTA update switch.
+
+    These *have* to have a different unique_id to the normal sensors as there could
+    be multiple entities per HomeKit service (this was not previously the case).
+    """
+
+    entity_description: SwitchEntityDescription
+
+    def __init__(
+        self,
+        conn,
+        info,
+        char,
+        description: SwitchEntityDescription,
+    ):
+        """Initialize switch."""
+        super().__init__(conn, info, char)
+        self.entity_description = description
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [self._char.type]
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        name = super().name
+        if name:
+            return f"{name} - {self.entity_description.name}"
+        return f"{self.entity_description.name}"
+
+    @property
+    def native_value(self):
+        """Return the current switch value."""
+        return self._char.value
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the specified switch on."""
+        key = self.entity_description.key
+        vendor = CharacteristicsTypes.Vendor
+        if key in {vendor.HAA_SETUP, vendor.HAA_UPDATE}:
+            return await self.async_put_characteristics({key: "#HAA@trcmd"})
+        return await super().async_turn_on(**kwargs)
+
+
 ENTITY_TYPES = {
     ServicesTypes.SWITCH: HomeKitSwitch,
     ServicesTypes.OUTLET: HomeKitSwitch,
@@ -117,3 +180,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return True
 
     conn.add_listener(async_add_service)
+
+    @callback
+    def async_add_characteristic(char: Characteristic):
+        if not (description := SIMPLE_SWITCH.get(char.type)):
+            return False
+        info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
+        async_add_entities([SimpleSwitch(conn, info, char, description)], True)
+
+        return True
+
+    conn.add_char_factory(async_add_characteristic)
