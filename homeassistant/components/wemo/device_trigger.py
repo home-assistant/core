@@ -7,7 +7,7 @@ from homeassistant.components.homeassistant.triggers import event as event_trigg
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 
 from .const import DOMAIN as WEMO_DOMAIN, WEMO_SUBSCRIPTION_EVENT
-from .wemo_device import async_get_device
+from .wemo_device import async_get_coordinator
 
 TRIGGER_TYPES = {EVENT_TYPE_LONG_PRESS}
 
@@ -28,11 +28,11 @@ async def async_get_triggers(hass, device_id):
         CONF_DEVICE_ID: device_id,
     }
 
-    device = async_get_device(hass, device_id)
+    coordinator = async_get_coordinator(hass, device_id)
     triggers = []
 
     # Check for long press support.
-    if device.supports_long_press:
+    if coordinator.supports_long_press:
         triggers.append(
             {
                 # Required fields of TRIGGER_SCHEMA

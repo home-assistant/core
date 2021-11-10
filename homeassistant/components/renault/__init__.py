@@ -4,10 +4,11 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_LOCALE, DOMAIN, PLATFORMS
 from .renault_hub import RenaultHub
+from .services import SERVICE_AC_START, setup_services, unload_services
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -21,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady() from exc
 
     if not login_success:
-        return False
+        raise ConfigEntryAuthFailed()
 
     hass.data.setdefault(DOMAIN, {})
     await renault_hub.async_initialise(config_entry)
@@ -29,6 +30,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][config_entry.entry_id] = renault_hub
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+
+    if not hass.services.has_service(DOMAIN, SERVICE_AC_START):
+        setup_services(hass)
 
     return True
 
@@ -41,5 +45,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
+        if not hass.data[DOMAIN]:
+            unload_services(hass)
 
     return unload_ok

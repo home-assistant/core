@@ -16,8 +16,10 @@ from tests.common import async_fire_time_changed, mock_coro
 SERVICE = "yamaha"
 SERVICE_COMPONENT = "media_player"
 
-SERVICE_NO_PLATFORM = "netgear_router"
-SERVICE_NO_PLATFORM_COMPONENT = "device_tracker"
+# sabnzbd is the last no platform integration to be migrated
+# drop these tests once it is migrated
+SERVICE_NO_PLATFORM = "sabnzbd"
+SERVICE_NO_PLATFORM_COMPONENT = "sabnzbd"
 SERVICE_INFO = {"key": "value"}  # Can be anything
 
 UNKNOWN_SERVICE = "this_service_will_never_be_supported"

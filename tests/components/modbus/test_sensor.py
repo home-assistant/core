@@ -6,21 +6,21 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_PRECISION,
-    CONF_REGISTERS,
     CONF_SCALE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
-    DATA_TYPE_CUSTOM,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
-    DATA_TYPE_UINT,
+    DataType,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+)
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COUNT,
@@ -35,7 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import TEST_ENTITY_NAME, ReadResult, base_test
+from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
 ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
 
@@ -62,6 +62,8 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_PRECISION: 0,
                     CONF_SCALE: 1,
                     CONF_OFFSET: 0,
+                    CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+                    CONF_LAZY_ERROR: 10,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_DEVICE_CLASS: "battery",
                 }
@@ -130,7 +132,7 @@ async def test_config_sensor(hass, mock_modbus):
     assert SENSOR_DOMAIN in hass.config.components
 
 
-@pytest.mark.parametrize("mock_modbus", [{"testLoad": False}], indirect=True)
+@pytest.mark.parametrize("check_config_loaded", [False])
 @pytest.mark.parametrize(
     "do_config,error_message",
     [
@@ -142,7 +144,7 @@ async def test_config_sensor(hass, mock_modbus):
                         CONF_ADDRESS: 1234,
                         CONF_COUNT: 8,
                         CONF_PRECISION: 2,
-                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_DATA_TYPE: DataType.CUSTOM,
                         CONF_STRUCTURE: ">no struct",
                     },
                 ]
@@ -157,7 +159,7 @@ async def test_config_sensor(hass, mock_modbus):
                         CONF_ADDRESS: 1234,
                         CONF_COUNT: 2,
                         CONF_PRECISION: 2,
-                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_DATA_TYPE: DataType.CUSTOM,
                         CONF_STRUCTURE: ">4f",
                     },
                 ]
@@ -170,7 +172,7 @@ async def test_config_sensor(hass, mock_modbus):
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 1234,
-                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_DATA_TYPE: DataType.CUSTOM,
                         CONF_COUNT: 4,
                         CONF_SWAP: CONF_SWAP_NONE,
                         CONF_STRUCTURE: "invalid",
@@ -185,7 +187,7 @@ async def test_config_sensor(hass, mock_modbus):
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 1234,
-                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_DATA_TYPE: DataType.CUSTOM,
                         CONF_COUNT: 4,
                         CONF_SWAP: CONF_SWAP_NONE,
                         CONF_STRUCTURE: "",
@@ -200,7 +202,7 @@ async def test_config_sensor(hass, mock_modbus):
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 1234,
-                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_DATA_TYPE: DataType.CUSTOM,
                         CONF_COUNT: 4,
                         CONF_SWAP: CONF_SWAP_NONE,
                         CONF_STRUCTURE: "1s",
@@ -215,7 +217,7 @@ async def test_config_sensor(hass, mock_modbus):
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 1234,
-                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_DATA_TYPE: DataType.CUSTOM,
                         CONF_COUNT: 1,
                         CONF_STRUCTURE: "2s",
                         CONF_SWAP: CONF_SWAP_WORD,
@@ -233,301 +235,427 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
 
 
 @pytest.mark.parametrize(
-    "cfg,regs,expected",
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words,do_exception,expected",
     [
         (
             {
                 CONF_COUNT: 1,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
             [0],
+            False,
             "0",
         ),
         (
             {},
             [0x8000],
+            False,
             "-32768",
         ),
         (
             {
                 CONF_COUNT: 1,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 13,
                 CONF_PRECISION: 0,
             },
             [7],
+            False,
             "20",
         ),
         (
             {
                 CONF_COUNT: 1,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SCALE: 3,
                 CONF_OFFSET: 13,
                 CONF_PRECISION: 0,
             },
             [7],
+            False,
             "34",
         ),
         (
             {
                 CONF_COUNT: 1,
-                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_DATA_TYPE: DataType.UINT,
                 CONF_SCALE: 3,
                 CONF_OFFSET: 13,
                 CONF_PRECISION: 4,
             },
             [7],
+            False,
             "34.0000",
         ),
         (
             {
                 CONF_COUNT: 1,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SCALE: 1.5,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
             [1],
+            False,
             "2",
         ),
         (
             {
                 CONF_COUNT: 1,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SCALE: "1.5",
                 CONF_OFFSET: "5",
                 CONF_PRECISION: "1",
             },
             [9],
+            False,
             "18.5",
         ),
         (
             {
                 CONF_COUNT: 1,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SCALE: 2.4,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 2,
             },
             [1],
+            False,
             "2.40",
         ),
         (
             {
                 CONF_COUNT: 1,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: -10.3,
                 CONF_PRECISION: 1,
             },
             [2],
+            False,
             "-8.3",
         ),
         (
             {
                 CONF_COUNT: 2,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
             [0x89AB, 0xCDEF],
+            False,
             "-1985229329",
         ),
         (
             {
                 CONF_COUNT: 2,
-                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_DATA_TYPE: DataType.UINT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
             [0x89AB, 0xCDEF],
+            False,
             str(0x89ABCDEF),
         ),
         (
             {
                 CONF_COUNT: 4,
-                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_DATA_TYPE: DataType.UINT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
             [0x89AB, 0xCDEF, 0x0123, 0x4567],
+            False,
             "9920249030613615975",
         ),
         (
             {
                 CONF_COUNT: 4,
-                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_DATA_TYPE: DataType.UINT,
                 CONF_SCALE: 2,
                 CONF_OFFSET: 3,
                 CONF_PRECISION: 0,
             },
             [0x0123, 0x4567, 0x89AB, 0xCDEF],
+            False,
             "163971058432973793",
         ),
         (
             {
                 CONF_COUNT: 4,
-                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_DATA_TYPE: DataType.UINT,
                 CONF_SCALE: 2.0,
                 CONF_OFFSET: 3.0,
                 CONF_PRECISION: 0,
             },
             [0x0123, 0x4567, 0x89AB, 0xCDEF],
+            False,
             "163971058432973792",
         ),
         (
             {
                 CONF_COUNT: 2,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_DATA_TYPE: DataType.UINT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
             [0x89AB, 0xCDEF],
+            False,
             str(0x89ABCDEF),
         ),
         (
             {
                 CONF_COUNT: 2,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_DATA_TYPE: DataType.UINT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
             [0x89AB, 0xCDEF],
+            False,
             str(0x89ABCDEF),
         ),
         (
             {
                 CONF_COUNT: 2,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                CONF_DATA_TYPE: DATA_TYPE_FLOAT,
+                CONF_DATA_TYPE: DataType.FLOAT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 5,
             },
             [16286, 1617],
+            False,
             "1.23457",
         ),
         (
             {
                 CONF_COUNT: 8,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                CONF_DATA_TYPE: DATA_TYPE_STRING,
+                CONF_DATA_TYPE: DataType.STRING,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
             [0x3037, 0x2D30, 0x352D, 0x3230, 0x3230, 0x2031, 0x343A, 0x3335],
+            False,
             "07-05-2020 14:35",
         ),
         (
             {
                 CONF_COUNT: 8,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                CONF_DATA_TYPE: DATA_TYPE_STRING,
+                CONF_DATA_TYPE: DataType.STRING,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
-            None,
+            [0x00],
+            True,
             STATE_UNAVAILABLE,
         ),
         (
             {
                 CONF_COUNT: 2,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_DATA_TYPE: DataType.UINT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
-            None,
+            [0x00],
+            True,
             STATE_UNAVAILABLE,
         ),
         (
             {
                 CONF_COUNT: 1,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SWAP: CONF_SWAP_NONE,
             },
             [0x0102],
+            False,
             str(int(0x0102)),
         ),
         (
             {
                 CONF_COUNT: 1,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SWAP: CONF_SWAP_BYTE,
             },
             [0x0201],
+            False,
             str(int(0x0102)),
         ),
         (
             {
                 CONF_COUNT: 2,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SWAP: CONF_SWAP_BYTE,
             },
             [0x0102, 0x0304],
+            False,
             str(int(0x02010403)),
         ),
         (
             {
                 CONF_COUNT: 2,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SWAP: CONF_SWAP_WORD,
             },
             [0x0102, 0x0304],
+            False,
             str(int(0x03040102)),
         ),
         (
             {
                 CONF_COUNT: 2,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
                 CONF_SWAP: CONF_SWAP_WORD_BYTE,
             },
             [0x0102, 0x0304],
+            False,
             str(int(0x04030201)),
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_DATA_TYPE: DataType.FLOAT32,
+                CONF_PRECISION: 2,
+            },
+            [16286, 1617],
+            False,
+            "1.23",
         ),
     ],
 )
-async def test_all_sensor(hass, cfg, regs, expected):
+async def test_all_sensor(hass, mock_do_cycle, expected):
     """Run test for sensor."""
-
-    state = await base_test(
-        hass,
-        {CONF_NAME: TEST_ENTITY_NAME, CONF_ADDRESS: 1234, **cfg},
-        TEST_ENTITY_NAME,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        CONF_REGISTERS,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
-    "cfg,regs,expected",
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words",
+    [
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DataType.INT16,
+            },
+            [7, 9],
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_DATA_TYPE: DataType.INT32,
+            },
+            [7],
+        ),
+    ],
+)
+async def test_wrong_unpack(hass, mock_do_cycle):
+    """Run test for sensor."""
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 10,
+                    CONF_LAZY_ERROR: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,do_exception,start_expect,end_expect",
+    [
+        (
+            [0x8000],
+            True,
+            "17",
+            STATE_UNAVAILABLE,
+        ),
+    ],
+)
+async def test_lazy_error_sensor(hass, mock_do_cycle, start_expect, end_expect):
+    """Run test for sensor."""
+    hass.states.async_set(ENTITY_ID, 17)
+    await hass.async_block_till_done()
+    now = mock_do_cycle
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == end_expect
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words,expected",
     [
         (
             {
                 CONF_COUNT: 8,
                 CONF_PRECISION: 2,
-                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_DATA_TYPE: DataType.CUSTOM,
                 CONF_STRUCTURE: ">4f",
             },
             # floats: 7.931250095367432, 10.600000381469727,
@@ -539,7 +667,7 @@ async def test_all_sensor(hass, cfg, regs, expected):
             {
                 CONF_COUNT: 4,
                 CONF_PRECISION: 0,
-                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_DATA_TYPE: DataType.CUSTOM,
                 CONF_STRUCTURE: ">2i",
             },
             [0x0000, 0x0100, 0x0000, 0x0032],
@@ -549,29 +677,16 @@ async def test_all_sensor(hass, cfg, regs, expected):
             {
                 CONF_COUNT: 1,
                 CONF_PRECISION: 0,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_DATA_TYPE: DataType.INT,
             },
             [0x0101],
             "257",
         ),
     ],
 )
-async def test_struct_sensor(hass, cfg, regs, expected):
+async def test_struct_sensor(hass, mock_do_cycle, expected):
     """Run test for sensor struct."""
-
-    state = await base_test(
-        hass,
-        {CONF_NAME: TEST_ENTITY_NAME, CONF_ADDRESS: 1234, **cfg},
-        TEST_ENTITY_NAME,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        None,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(

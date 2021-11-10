@@ -22,12 +22,6 @@
         }
     },
     "options": {
-        "error": {
-            "many": "\u05e8\u05d9\u05e7\u05d9\u05dd",
-            "one": "\u05e8\u05d9\u05e7",
-            "other": "\u05e8\u05d9\u05e7\u05d9\u05dd",
-            "two": "\u05e8\u05d9\u05e7\u05d9\u05dd"
-        },
         "step": {
             "options_binary": {
                 "data": {

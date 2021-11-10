@@ -1,0 +1,49 @@
+{
+    "config": {
+        "error": {
+            "login_error": "\u30ed\u30b0\u30a4\u30f3\u30a8\u30e9\u30fc ({code}): {msg}"
+        },
+        "step": {
+            "login": {
+                "data": {
+                    "access_id": "\u30a2\u30af\u30bb\u30b9ID",
+                    "access_secret": "\u30a2\u30af\u30bb\u30b9\u30b7\u30fc\u30af\u30ec\u30c3\u30c8",
+                    "country_code": "\u56fd\u5225\u30b3\u30fc\u30c9",
+                    "endpoint": "\u5229\u7528\u53ef\u80fd\u30be\u30fc\u30f3",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "tuya_app_type": "\u30e2\u30d0\u30a4\u30eb\u30a2\u30d7\u30ea",
+                    "username": "\u30a2\u30ab\u30a6\u30f3\u30c8"
+                },
+                "description": "Tuya\u306e\u8cc7\u683c\u60c5\u5831\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044",
+                "title": "Tuya"
+            },
+            "user": {
+                "data": {
+                    "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "region": "\u30ea\u30fc\u30b8\u30e7\u30f3",
+                    "tuya_project_type": "Tuya Cloud\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u30bf\u30a4\u30d7"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "dev_not_found": "\u30c7\u30d0\u30a4\u30b9\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "\u30c7\u30d0\u30a4\u30b9\u304c\u4f7f\u7528\u3059\u308b\u8f1d\u5ea6\u7bc4\u56f2",
+                    "support_color": "\u5f37\u5236\u7684\u306b\u30ab\u30e9\u30fc\u3092\u30b5\u30dd\u30fc\u30c8"
+                },
+                "title": "Tuya\u30c7\u30d0\u30a4\u30b9\u306e\u8a2d\u5b9a"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "\u30c7\u30d0\u30a4\u30b9\u691c\u51fa\u306e\u30dd\u30fc\u30ea\u30f3\u30b0\u9593\u9694(\u79d2\u5358\u4f4d)"
+                }
+            }
+        }
+    }
+}

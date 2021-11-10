@@ -23,6 +23,7 @@
       "is_current": "Current {entity_name} current",
       "is_energy": "Current {entity_name} energy",
       "is_power_factor": "Current {entity_name} power factor",
+      "is_volatile_organic_compounds": "Current {entity_name} volatile organic compounds concentration level",
       "is_voltage": "Current {entity_name} voltage",
       "is_value": "Current {entity_name} value"
     },
@@ -48,6 +49,7 @@
       "current": "{entity_name} current changes",
       "energy": "{entity_name} energy changes",
       "power_factor": "{entity_name} power factor changes",
+      "volatile_organic_compounds": "{entity_name} volatile organic compounds concentration changes",
       "voltage": "{entity_name} voltage changes",
       "value": "{entity_name} value changes"
     }

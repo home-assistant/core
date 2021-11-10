@@ -96,8 +96,7 @@ class AuthStore:
 
         groups = []
         for group_id in group_ids or []:
-            group = self._groups.get(group_id)
-            if group is None:
+            if (group := self._groups.get(group_id)) is None:
                 raise ValueError(f"Invalid group specified {group_id}")
             groups.append(group)
 
@@ -160,8 +159,7 @@ class AuthStore:
         if group_ids is not None:
             groups = []
             for grid in group_ids:
-                group = self._groups.get(grid)
-                if group is None:
+                if (group := self._groups.get(grid)) is None:
                     raise ValueError("Invalid group specified.")
                 groups.append(group)
 
@@ -446,16 +444,14 @@ class AuthStore:
                 )
                 continue
 
-            token_type = rt_dict.get("token_type")
-            if token_type is None:
+            if (token_type := rt_dict.get("token_type")) is None:
                 if rt_dict["client_id"] is None:
                     token_type = models.TOKEN_TYPE_SYSTEM
                 else:
                     token_type = models.TOKEN_TYPE_NORMAL
 
             # old refresh_token don't have last_used_at (pre-0.78)
-            last_used_at_str = rt_dict.get("last_used_at")
-            if last_used_at_str:
+            if last_used_at_str := rt_dict.get("last_used_at"):
                 last_used_at = dt_util.parse_datetime(last_used_at_str)
             else:
                 last_used_at = None

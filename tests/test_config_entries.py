@@ -349,7 +349,7 @@ async def test_remove_entry_cancels_reauth(hass, manager):
     await entry.async_setup(hass)
     await hass.async_block_till_done()
 
-    flows = hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress_by_handler("test")
     assert len(flows) == 1
     assert flows[0]["context"]["entry_id"] == entry.entry_id
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
@@ -357,7 +357,7 @@ async def test_remove_entry_cancels_reauth(hass, manager):
 
     await manager.async_remove(entry.entry_id)
 
-    flows = hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress_by_handler("test")
     assert len(flows) == 0
 
 
@@ -673,7 +673,6 @@ async def test_discovery_notification(hass):
     """Test that we create/dismiss a notification when source is discovery."""
     mock_integration(hass, MockModule("test"))
     mock_entity_platform(hass, "config_flow.test", None)
-    await async_setup_component(hass, "persistent_notification", {})
 
     with patch.dict(config_entries.HANDLERS):
 
@@ -726,7 +725,6 @@ async def test_reauth_notification(hass):
     """Test that we create/dismiss a notification when source is reauth."""
     mock_integration(hass, MockModule("test"))
     mock_entity_platform(hass, "config_flow.test", None)
-    await async_setup_component(hass, "persistent_notification", {})
 
     with patch.dict(config_entries.HANDLERS):
 
@@ -794,7 +792,6 @@ async def test_discovery_notification_not_created(hass):
     """Test that we not create a notification when discovery is aborted."""
     mock_integration(hass, MockModule("test"))
     mock_entity_platform(hass, "config_flow.test", None)
-    await async_setup_component(hass, "persistent_notification", {})
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -1002,7 +999,6 @@ async def test_create_entry_options(hass):
         ),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
-    await async_setup_component(hass, "persistent_notification", {})
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -2104,11 +2100,11 @@ async def test_unignore_step_form(hass, manager):
 
         # Right after removal there shouldn't be an entry or active flows
         assert len(hass.config_entries.async_entries("comp")) == 0
-        assert len(hass.config_entries.flow.async_progress()) == 0
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
 
         # But after a 'tick' the unignore step has run and we can see an active flow again.
         await hass.async_block_till_done()
-        assert len(hass.config_entries.flow.async_progress()) == 1
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 1
 
         # and still not config entries
         assert len(hass.config_entries.async_entries("comp")) == 0
@@ -2148,7 +2144,7 @@ async def test_unignore_create_entry(hass, manager):
         await manager.async_remove(entry.entry_id)
 
         # Right after removal there shouldn't be an entry or flow
-        assert len(hass.config_entries.flow.async_progress()) == 0
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
         assert len(hass.config_entries.async_entries("comp")) == 0
 
         # But after a 'tick' the unignore step has run and we can see a config entry.
@@ -2159,7 +2155,7 @@ async def test_unignore_create_entry(hass, manager):
         assert entry.title == "yo"
 
         # And still no active flow
-        assert len(hass.config_entries.flow.async_progress()) == 0
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
 
 
 async def test_unignore_default_impl(hass, manager):
@@ -2199,7 +2195,6 @@ async def test_partial_flows_hidden(hass, manager):
     async_setup_entry = AsyncMock(return_value=True)
     mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
     mock_entity_platform(hass, "config_flow.comp", None)
-    await async_setup_component(hass, "persistent_notification", {})
 
     # A flag to test our assertion that `async_step_discovery` was called and is in its blocked state
     # This simulates if the step was e.g. doing network i/o
@@ -2275,7 +2270,6 @@ async def test_async_setup_init_entry(hass):
         ),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
-    await async_setup_component(hass, "persistent_notification", {})
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -2328,7 +2322,6 @@ async def test_async_setup_update_entry(hass):
         ),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
-    await async_setup_component(hass, "persistent_notification", {})
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -2359,6 +2352,7 @@ async def test_async_setup_update_entry(hass):
     (
         config_entries.SOURCE_DISCOVERY,
         config_entries.SOURCE_SSDP,
+        config_entries.SOURCE_USB,
         config_entries.SOURCE_HOMEKIT,
         config_entries.SOURCE_DHCP,
         config_entries.SOURCE_ZEROCONF,
@@ -2582,6 +2576,74 @@ async def test_default_discovery_abort_on_user_flow_complete(hass, manager):
     # Ensure the first flow is gone now
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 0
+
+
+async def test_flow_same_device_multiple_sources(hass, manager):
+    """Test discovery of the same devices from multiple discovery sources."""
+    mock_integration(
+        hass,
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_zeroconf(self, discovery_info=None):
+            """Test zeroconf step."""
+            return await self._async_discovery_handler(discovery_info)
+
+        async def async_step_homekit(self, discovery_info=None):
+            """Test homekit step."""
+            return await self._async_discovery_handler(discovery_info)
+
+        async def _async_discovery_handler(self, discovery_info=None):
+            """Test any discovery handler."""
+            await self.async_set_unique_id("thisid")
+            self._abort_if_unique_id_configured()
+            await asyncio.sleep(0.1)
+            return await self.async_step_link()
+
+        async def async_step_link(self, user_input=None):
+            """Test a link step."""
+            if user_input is None:
+                return self.async_show_form(step_id="link")
+            return self.async_create_entry(title="title", data={"token": "supersecret"})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Create one to be in progress
+        flow1 = manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_ZEROCONF}
+        )
+        flow2 = manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_ZEROCONF}
+        )
+        flow3 = manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_HOMEKIT}
+        )
+        result1, result2, result3 = await asyncio.gather(flow1, flow2, flow3)
+
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+        assert flows[0]["context"]["unique_id"] == "thisid"
+
+        # Finish flow
+        result2 = await manager.flow.async_configure(
+            flows[0]["flow_id"], user_input={"fake": "data"}
+        )
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
+
+    entry = hass.config_entries.async_entries("comp")[0]
+    assert entry.title == "title"
+    assert entry.source in {
+        config_entries.SOURCE_ZEROCONF,
+        config_entries.SOURCE_HOMEKIT,
+    }
+    assert entry.unique_id == "thisid"
 
 
 async def test_updating_entry_with_and_without_changes(manager):
@@ -2847,8 +2909,6 @@ async def test__async_abort_entries_match(hass, manager, matchers, reason):
         source=config_entries.SOURCE_IGNORE,
         data={"ip": "7.7.7.7", "host": "4.5.6.7", "port": 23},
     ).add_to_hass(hass)
-
-    await async_setup_component(hass, "persistent_notification", {})
 
     mock_setup_entry = AsyncMock(return_value=True)
 

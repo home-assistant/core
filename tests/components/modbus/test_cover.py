@@ -8,6 +8,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OPEN,
@@ -29,9 +30,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import TEST_ENTITY_NAME, ReadResult, base_test
+from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
 ENTITY_ID = f"{COVER_DOMAIN}.{TEST_ENTITY_NAME}"
+ENTITY_ID2 = f"{ENTITY_ID}2"
 
 
 @pytest.mark.parametrize(
@@ -54,6 +56,7 @@ ENTITY_ID = f"{COVER_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SLAVE: 10,
                     CONF_SCAN_INTERVAL: 20,
+                    CONF_LAZY_ERROR: 10,
                 }
             ]
         },
@@ -65,7 +68,22 @@ async def test_config_cover(hass, mock_modbus):
 
 
 @pytest.mark.parametrize(
-    "regs,expected",
+    "do_config",
+    [
+        {
+            CONF_COVERS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,expected",
     [
         (
             [0x00],
@@ -89,30 +107,65 @@ async def test_config_cover(hass, mock_modbus):
         ),
     ],
 )
-async def test_coil_cover(hass, regs, expected):
+async def test_coil_cover(hass, expected, mock_do_cycle):
     """Run test for given config."""
-    state = await base_test(
-        hass,
-        {
-            CONF_NAME: TEST_ENTITY_NAME,
-            CONF_INPUT_TYPE: CALL_TYPE_COIL,
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-        },
-        TEST_ENTITY_NAME,
-        COVER_DOMAIN,
-        CONF_COVERS,
-        None,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
-    "regs,expected",
+    "do_config",
+    [
+        {
+            CONF_COVERS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_SCAN_INTERVAL: 10,
+                    CONF_LAZY_ERROR: 2,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,do_exception, start_expect,end_expect",
+    [
+        (
+            [0x00],
+            True,
+            STATE_OPEN,
+            STATE_UNAVAILABLE,
+        ),
+    ],
+)
+async def test_lazy_error_cover(hass, start_expect, end_expect, mock_do_cycle):
+    """Run test for given config."""
+    now = mock_do_cycle
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == end_expect
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_COVERS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,expected",
     [
         (
             [0x00],
@@ -136,25 +189,9 @@ async def test_coil_cover(hass, regs, expected):
         ),
     ],
 )
-async def test_register_cover(hass, regs, expected):
+async def test_register_cover(hass, expected, mock_do_cycle):
     """Run test for given config."""
-    state = await base_test(
-        hass,
-        {
-            CONF_NAME: TEST_ENTITY_NAME,
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-        },
-        TEST_ENTITY_NAME,
-        COVER_DOMAIN,
-        CONF_COVERS,
-        None,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
@@ -245,7 +282,6 @@ async def test_restore_state_cover(hass, mock_test_state, mock_modbus):
 async def test_service_cover_move(hass, mock_modbus, mock_ha):
     """Run test for service homeassistant.update_entity."""
 
-    ENTITY_ID2 = f"{ENTITY_ID}2"
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     await hass.services.async_call(
         "cover", "open_cover", {"entity_id": ENTITY_ID}, blocking=True

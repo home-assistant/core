@@ -4,14 +4,14 @@ from __future__ import annotations
 from typing import Final
 
 MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 9
+MINOR_VERSION: Final = 12
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 8, 0)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 9, 0)
-REQUIRED_NEXT_PYTHON_DATE: Final = ""
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2022.1"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -102,6 +102,7 @@ CONF_EFFECT: Final = "effect"
 CONF_ELEVATION: Final = "elevation"
 CONF_EMAIL: Final = "email"
 CONF_ENTITIES: Final = "entities"
+CONF_ENTITY_CATEGORY: Final = "entity_category"
 CONF_ENTITY_ID: Final = "entity_id"
 CONF_ENTITY_NAMESPACE: Final = "entity_namespace"
 CONF_ENTITY_PICTURE_TEMPLATE: Final = "entity_picture_template"
@@ -237,6 +238,7 @@ DEVICE_CLASS_BATTERY: Final = "battery"
 DEVICE_CLASS_CO: Final = "carbon_monoxide"
 DEVICE_CLASS_CO2: Final = "carbon_dioxide"
 DEVICE_CLASS_CURRENT: Final = "current"
+DEVICE_CLASS_DATE: Final = "date"
 DEVICE_CLASS_ENERGY: Final = "energy"
 DEVICE_CLASS_HUMIDITY: Final = "humidity"
 DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
@@ -256,6 +258,7 @@ DEVICE_CLASS_SULPHUR_DIOXIDE = "sulphur_dioxide"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
 DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
 DEVICE_CLASS_VOLTAGE: Final = "voltage"
+DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
 DEVICE_CLASS_GAS: Final = "gas"
 
 # #### STATES ####
@@ -349,9 +352,14 @@ ATTR_LOCATION: Final = "location"
 
 ATTR_MODE: Final = "mode"
 
+ATTR_CONFIGURATION_URL: Final = "configuration_url"
+ATTR_CONNECTIONS: Final = "connections"
+ATTR_DEFAULT_NAME: Final = "default_name"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
+ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
+ATTR_VIA_DEVICE: Final = "via_device"
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
 ATTR_BATTERY_LEVEL: Final = "battery_level"
@@ -416,6 +424,7 @@ POWER_VOLT_AMPERE: Final = "VA"
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
+ENERGY_MEGA_WATT_HOUR: Final = "MWh"
 
 # Electric_current units
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
@@ -468,6 +477,7 @@ FREQUENCY_GIGAHERTZ: Final = "GHz"
 # Pressure units
 PRESSURE_PA: Final = "Pa"
 PRESSURE_HPA: Final = "hPa"
+PRESSURE_KPA: Final = "kPa"
 PRESSURE_BAR: Final = "bar"
 PRESSURE_MBAR: Final = "mbar"
 PRESSURE_INHG: Final = "inHg"
@@ -650,21 +660,6 @@ URL_API_ERROR_LOG: Final = "/api/error_log"
 URL_API_LOG_OUT: Final = "/api/log_out"
 URL_API_TEMPLATE: Final = "/api/template"
 
-HTTP_OK: Final = 200
-HTTP_CREATED: Final = 201
-HTTP_ACCEPTED: Final = 202
-HTTP_MOVED_PERMANENTLY: Final = 301
-HTTP_BAD_REQUEST: Final = 400
-HTTP_UNAUTHORIZED: Final = 401
-HTTP_FORBIDDEN: Final = 403
-HTTP_NOT_FOUND: Final = 404
-HTTP_METHOD_NOT_ALLOWED: Final = 405
-HTTP_UNPROCESSABLE_ENTITY: Final = 422
-HTTP_TOO_MANY_REQUESTS: Final = 429
-HTTP_INTERNAL_SERVER_ERROR: Final = 500
-HTTP_BAD_GATEWAY: Final = 502
-HTTP_SERVICE_UNAVAILABLE: Final = 503
-
 HTTP_BASIC_AUTHENTICATION: Final = "basic"
 HTTP_BEARER_AUTHENTICATION: Final = "bearer_token"
 HTTP_DIGEST_AUTHENTICATION: Final = "digest"
@@ -685,7 +680,7 @@ MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"
 TEMPERATURE: Final = "temperature"
-SPEED_MS: Final = "speed_ms"
+SPEED: Final = "speed"
 ILLUMINANCE: Final = "illuminance"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
@@ -701,3 +696,16 @@ CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
 # The ID of the Home Assistant Cast App
 CAST_APP_ID_HOMEASSISTANT: Final = "B12CE3CA"
+
+ENTITY_CATEGORY_CONFIG: Final = "config"
+ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
+ENTITY_CATEGORY_SYSTEM: Final = "system"
+
+# Entity categories which will:
+# - Not be exposed to cloud, alexa, or google_home components
+# - Not be included in indirect service calls to devices or areas
+ENTITY_CATEGORIES: Final[list[str]] = [
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORY_SYSTEM,
+]

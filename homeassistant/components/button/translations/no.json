@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "press": "Trykk p\u00e5 {entity_name} -knappen"
+        },
+        "trigger_type": {
+            "pressed": "{entity_name} har blitt trykket"
+        }
+    },
+    "title": "Knapp"
+}

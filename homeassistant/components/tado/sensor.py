@@ -1,7 +1,7 @@
 """Support for Tado sensors for each zone."""
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -153,6 +153,13 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
             return DEVICE_CLASS_TEMPERATURE
         return None
 
+    @property
+    def state_class(self):
+        """Return the state class."""
+        if self.home_variable in ["outdoor temperature", "solar percentage"]:
+            return STATE_CLASS_MEASUREMENT
+        return None
+
     @callback
     def _async_update_callback(self):
         """Update and write state."""
@@ -168,10 +175,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
             return
 
         if self.home_variable == "outdoor temperature":
-            self._state = self.hass.config.units.temperature(
-                self._tado_weather_data["outsideTemperature"]["celsius"],
-                TEMP_CELSIUS,
-            )
+            self._state = self._tado_weather_data["outsideTemperature"]["celsius"]
             self._state_attributes = {
                 "time": self._tado_weather_data["outsideTemperature"]["timestamp"],
             }
@@ -245,7 +249,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if self.zone_variable == "temperature":
-            return self.hass.config.units.temperature_unit
+            return TEMP_CELSIUS
         if self.zone_variable == "humidity":
             return PERCENTAGE
         if self.zone_variable == "heating":
@@ -260,6 +264,13 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
             return DEVICE_CLASS_HUMIDITY
         if self.zone_variable == "temperature":
             return DEVICE_CLASS_TEMPERATURE
+        return None
+
+    @property
+    def state_class(self):
+        """Return the state class."""
+        if self.zone_variable in ["ac", "heating", "humidity", "temperature"]:
+            return STATE_CLASS_MEASUREMENT
         return None
 
     @callback
@@ -277,9 +288,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
             return
 
         if self.zone_variable == "temperature":
-            self._state = self.hass.config.units.temperature(
-                self._tado_zone_data.current_temp, TEMP_CELSIUS
-            )
+            self._state = self._tado_zone_data.current_temp
             self._state_attributes = {
                 "time": self._tado_zone_data.current_temp_timestamp,
                 "setting": 0,  # setting is used in climate device

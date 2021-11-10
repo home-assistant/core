@@ -23,6 +23,7 @@
             "is_sulphur_dioxide": "Praegune v\u00e4\u00e4veldioksiidi kontsentratsioonitase {entity_name}",
             "is_temperature": "Praegune {entity_name} temperatuur",
             "is_value": "Praegune {entity_name} v\u00e4\u00e4rtus",
+            "is_volatile_organic_compounds": "Praegune {entity_name} lenduvate orgaaniliste \u00fchendite kontsentratsioonitase",
             "is_voltage": "Praegune {entity_name}pinge"
         },
         "trigger_type": {
@@ -48,6 +49,7 @@
             "sulphur_dioxide": "{entity_name} v\u00e4\u00e4veldioksiidi kontsentratsiooni muutused",
             "temperature": "{entity_name} temperatuur muutub",
             "value": "{entity_name} v\u00e4\u00e4rtus muutub",
+            "volatile_organic_compounds": "{entity_name} lenduvate orgaaniliste \u00fchendite kontsentratsiooni muutused",
             "voltage": "{entity_name} pingemuutub"
         }
     },

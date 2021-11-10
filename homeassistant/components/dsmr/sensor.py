@@ -22,10 +22,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import ConfigType, EventType, StateType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -139,22 +140,29 @@ async def async_setup_entry(
         transport = None
         protocol = None
 
-        while hass.is_running:
+        while hass.state == CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
             try:
                 transport, protocol = await hass.loop.create_task(reader_factory())
 
                 if transport:
                     # Register listener to close transport on HA shutdown
+                    @callback
+                    def close_transport(_event: EventType) -> None:
+                        """Close the transport on HA shutdown."""
+                        if not transport:
+                            return
+                        transport.close()
+
                     stop_listener = hass.bus.async_listen_once(
-                        EVENT_HOMEASSISTANT_STOP, transport.close
+                        EVENT_HOMEASSISTANT_STOP, close_transport
                     )
 
                     # Wait for reader to close
                     await protocol.wait_closed()
 
                     # Unexpected disconnect
-                    if hass.is_running:
+                    if hass.state == CoreState.not_running or hass.is_running:
                         stop_listener()
 
                 transport = None
@@ -181,7 +189,9 @@ async def async_setup_entry(
                     entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
                 )
             except CancelledError:
-                if stop_listener and hass.is_running:
+                if stop_listener and (
+                    hass.state == CoreState.not_running or hass.is_running
+                ):
                     stop_listener()  # pylint: disable=not-callable
 
                 if transport:
@@ -221,10 +231,10 @@ class DSMREntity(SensorEntity):
         if device_serial is None:
             device_serial = entry.entry_id
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, device_serial)},
-            "name": device_name,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_serial)},
+            name=device_name,
+        )
         self._attr_unique_id = f"{device_serial}_{entity_description.name}".replace(
             " ", "_"
         )
@@ -250,8 +260,7 @@ class DSMREntity(SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
-        value = self.get_dsmr_object_attr("value")
-        if value is None:
+        if (value := self.get_dsmr_object_attr("value")) is None:
             return None
 
         if self.entity_description.key == obis_ref.ELECTRICITY_ACTIVE_TARIFF:

@@ -10,7 +10,7 @@
             "no_server_found": "Tidak dapat menemukan server secara otomatis.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "flow_title": "Logitech Squeezebox: {host}",
+        "flow_title": "{host}",
         "step": {
             "edit": {
                 "data": {

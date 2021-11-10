@@ -1,9 +1,10 @@
 """Represent the AsusWrt router."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from aioasuswrt.asuswrt import AsusWrt
 
@@ -23,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
@@ -248,11 +250,9 @@ class AsusWrtRouter:
             self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
 
         # Load tracked entities from registry
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        track_entries = (
-            self.hass.helpers.entity_registry.async_entries_for_config_entry(
-                entity_registry, self._entry.entry_id
-            )
+        track_entries = er.async_entries_for_config_entry(
+            er.async_get(self.hass),
+            self._entry.entry_id,
         )
         for entry in track_entries:
             if entry.domain == TRACKER_DOMAIN:
@@ -373,7 +373,7 @@ class AsusWrtRouter:
         """Update router options."""
         req_reload = False
         for name, new_opt in new_options.items():
-            if name in (CONF_REQ_RELOAD):
+            if name in CONF_REQ_RELOAD:
                 old_opt = self._options.get(name)
                 if not old_opt or old_opt != new_opt:
                     req_reload = True
@@ -385,13 +385,14 @@ class AsusWrtRouter:
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, "AsusWRT")},
-            "name": self._host,
-            "model": self._model,
-            "manufacturer": "Asus",
-            "sw_version": self._sw_v,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, "AsusWRT")},
+            name=self._host,
+            model=self._model,
+            manufacturer="Asus",
+            sw_version=self._sw_v,
+            configuration_url=f"http://{self._host}",
+        )
 
     @property
     def signal_device_new(self) -> str:

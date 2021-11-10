@@ -15,7 +15,6 @@ from homeassistant.const import (
     CURRENCY_EURO,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
@@ -151,25 +150,31 @@ async def test_settings(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    state = hass.states.get("sensor.monitor_energy_consumption_low_tariff")
-    entry = entity_registry.async_get("sensor.monitor_energy_consumption_low_tariff")
+    state = hass.states.get("sensor.monitor_energy_consumption_price_low")
+    entry = entity_registry.async_get("sensor.monitor_energy_consumption_price_low")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_settings_energy_consumption_low_tariff"
+    assert entry.unique_id == f"{entry_id}_settings_energy_consumption_price_low"
     assert state.state == "0.20522"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption - Low Tariff"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption Price - Low"
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+    )
 
-    state = hass.states.get("sensor.monitor_energy_production_low_tariff")
-    entry = entity_registry.async_get("sensor.monitor_energy_production_low_tariff")
+    state = hass.states.get("sensor.monitor_energy_production_price_low")
+    entry = entity_registry.async_get("sensor.monitor_energy_production_price_low")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_settings_energy_production_low_tariff"
+    assert entry.unique_id == f"{entry_id}_settings_energy_production_price_low"
     assert state.state == "0.20522"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production - Low Tariff"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production Price - Low"
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+    )
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)

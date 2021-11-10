@@ -125,7 +125,7 @@ class SmhiWeather(WeatherEntity):
     async def async_update(self) -> None:
         """Refresh the forecast data from SMHI weather API."""
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 self._forecasts = await self.get_weather_forecast()
                 self._fail_count = 0
 

@@ -109,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name="lyric_coordinator",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=120),
+        update_interval=timedelta(seconds=300),
     )
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -122,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -140,34 +140,18 @@ class LyricEntity(CoordinatorEntity):
         location: LyricLocation,
         device: LyricDevice,
         key: str,
-        name: str,
-        icon: str | None,
     ) -> None:
         """Initialize the Honeywell Lyric entity."""
         super().__init__(coordinator)
         self._key = key
-        self._name = name
-        self._icon = icon
         self._location = location
         self._mac_id = device.macID
-        self._device_name = device.name
-        self._device_model = device.deviceModel
         self._update_thermostat = coordinator.data.update_thermostat
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return self._key
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
 
     @property
     def location(self) -> LyricLocation:
@@ -186,9 +170,9 @@ class LyricDeviceEntity(LyricEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Honeywell Lyric instance."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
-            "manufacturer": "Honeywell",
-            "model": self._device_model,
-            "name": self._device_name,
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
+            manufacturer="Honeywell",
+            model=self.device.deviceModel,
+            name=self.device.name,
+        )

@@ -25,30 +25,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        for entry in self._async_current_entries(include_ignore=True):
-            if import_config[CONF_HOST] == entry.data[CONF_HOST]:
-                return self.async_abort(reason="already_configured")
-        try:
-            projector = await validate_projector(
-                hass=self.hass,
-                host=import_config[CONF_HOST],
-                check_power=True,
-                check_powered_on=False,
-            )
-        except CannotConnect:
-            _LOGGER.warning("Cannot connect to projector")
-            return self.async_abort(reason="cannot_connect")
-
-        serial_no = await projector.get_serial_number()
-        await self.async_set_unique_id(serial_no)
-        self._abort_if_unique_id_configured()
-        import_config.pop(CONF_PORT, None)
-        return self.async_create_entry(
-            title=import_config.pop(CONF_NAME), data=import_config
-        )
-
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}

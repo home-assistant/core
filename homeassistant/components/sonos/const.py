@@ -137,11 +137,13 @@ PLAYABLE_MEDIA_TYPES = [
 
 SONOS_CREATE_ALARM = "sonos_create_alarm"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
+SONOS_CREATE_SWITCHES = "sonos_create_switches"
 SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
 SONOS_ENTITY_CREATED = "sonos_entity_created"
 SONOS_POLL_UPDATE = "sonos_poll_update"
 SONOS_ALARMS_UPDATED = "sonos_alarms_updated"
 SONOS_FAVORITES_UPDATED = "sonos_favorites_updated"
+SONOS_SPEAKER_ADDED = "sonos_speaker_added"
 SONOS_STATE_UPDATED = "sonos_state_updated"
 SONOS_REBOOTED = "sonos_rebooted"
 SONOS_SEEN = "sonos_seen"

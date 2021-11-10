@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import ToneID
+from zwave_js_server.const.command_class.sound_switch import ToneID
 
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenEntity
 from homeassistant.components.siren.const import (

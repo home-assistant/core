@@ -1,7 +1,7 @@
 """Support for Modbus."""
 from __future__ import annotations
 
-import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -12,7 +12,9 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
+    STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
 )
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
@@ -44,13 +46,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ATTR_ADDRESS,
-    ATTR_HUB,
-    ATTR_STATE,
-    ATTR_UNIT,
-    ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -65,6 +63,7 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_FANS,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_MSG_WAIT,
@@ -92,20 +91,6 @@ from .const import (
     CONF_TARGET_TEMP,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
-    DATA_TYPE_CUSTOM,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_FLOAT16,
-    DATA_TYPE_FLOAT32,
-    DATA_TYPE_FLOAT64,
-    DATA_TYPE_INT,
-    DATA_TYPE_INT16,
-    DATA_TYPE_INT32,
-    DATA_TYPE_INT64,
-    DATA_TYPE_STRING,
-    DATA_TYPE_UINT,
-    DATA_TYPE_UINT16,
-    DATA_TYPE_UINT32,
-    DATA_TYPE_UINT64,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
@@ -114,16 +99,16 @@ from .const import (
     SERIAL,
     TCP,
     UDP,
+    DataType,
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
     duplicate_entity_validator,
+    duplicate_modbus_validator,
     number_validator,
     scan_interval_validator,
     struct_validator,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
@@ -136,6 +121,7 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
+        vol.Optional(CONF_LAZY_ERROR, default=0): cv.positive_int,
     }
 )
 
@@ -149,23 +135,23 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_COUNT): cv.positive_int,
-        vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
+        vol.Optional(CONF_DATA_TYPE, default=DataType.INT): vol.In(
             [
-                DATA_TYPE_INT16,
-                DATA_TYPE_INT32,
-                DATA_TYPE_INT64,
-                DATA_TYPE_UINT16,
-                DATA_TYPE_UINT32,
-                DATA_TYPE_UINT64,
-                DATA_TYPE_FLOAT16,
-                DATA_TYPE_FLOAT32,
-                DATA_TYPE_FLOAT64,
-                DATA_TYPE_STRING,
-                DATA_TYPE_INT,
-                DATA_TYPE_UINT,
-                DATA_TYPE_FLOAT,
-                DATA_TYPE_STRING,
-                DATA_TYPE_CUSTOM,
+                DataType.INT16,
+                DataType.INT32,
+                DataType.INT64,
+                DataType.UINT16,
+                DataType.UINT32,
+                DataType.UINT64,
+                DataType.FLOAT16,
+                DataType.FLOAT32,
+                DataType.FLOAT64,
+                DataType.STRING,
+                DataType.INT,
+                DataType.UINT,
+                DataType.FLOAT,
+                DataType.STRING,
+                DataType.CUSTOM,
             ]
         ),
         vol.Optional(CONF_STRUCTURE): cv.string,
@@ -267,6 +253,7 @@ SENSOR_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
         }
@@ -333,6 +320,7 @@ CONFIG_SCHEMA = vol.Schema(
             cv.ensure_list,
             scan_interval_validator,
             duplicate_entity_validator,
+            duplicate_modbus_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
@@ -341,36 +329,15 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Required(ATTR_UNIT): cv.positive_int,
-        vol.Required(ATTR_ADDRESS): cv.positive_int,
-        vol.Required(ATTR_VALUE): vol.Any(
-            cv.positive_int, vol.All(cv.ensure_list, [cv.positive_int])
-        ),
-    }
-)
-
-SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Required(ATTR_UNIT): cv.positive_int,
-        vol.Required(ATTR_ADDRESS): cv.positive_int,
-        vol.Required(ATTR_STATE): vol.Any(
-            cv.boolean, vol.All(cv.ensure_list, [cv.boolean])
-        ),
-    }
-)
-
 
 def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
     """Return modbus hub with name."""
-    return hass.data[DOMAIN][name]
+    return cast(ModbusHub, hass.data[DOMAIN][name])
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
     return await async_modbus_setup(
-        hass, config, SERVICE_WRITE_REGISTER_SCHEMA, SERVICE_WRITE_COIL_SCHEMA
+        hass,
+        config,
     )

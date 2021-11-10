@@ -5,6 +5,7 @@
             "cannot_connect": "\u00dchendamine nurjus"
         },
         "error": {
+            "api_password": "Vigane autentimine , kasuta kas API v\u00f5tit v\u00f5i salas\u00f5na.",
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamise viga",
             "unknown": "Tundmatu viga"

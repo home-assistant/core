@@ -1,13 +1,16 @@
 """The Samsung TV integration."""
+from __future__ import annotations
+
 from functools import partial
 import socket
+from typing import Any
 
 import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -17,10 +20,17 @@ from homeassistant.const import (
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
+from .bridge import (
+    SamsungTVBridge,
+    SamsungTVLegacyBridge,
+    SamsungTVWSBridge,
+    async_get_device_info,
+    mac_from_device_info,
+)
 from .const import (
     CONF_ON_ACTION,
     DEFAULT_NAME,
@@ -32,7 +42,7 @@ from .const import (
 )
 
 
-def ensure_unique_hosts(value):
+def ensure_unique_hosts(value: dict[Any, Any]) -> dict[Any, Any]:
     """Validate that all configs have a unique host."""
     vol.Schema(vol.Unique("duplicate host entries found"))(
         [entry[CONF_HOST] for entry in value]
@@ -64,7 +74,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Samsung TV integration."""
     hass.data[DOMAIN] = {}
     if DOMAIN not in config:
@@ -88,7 +98,9 @@ async def async_setup(hass, config):
 
 
 @callback
-def _async_get_device_bridge(data):
+def _async_get_device_bridge(
+    data: dict[str, Any]
+) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
     """Get device bridge."""
     return SamsungTVBridge.get_bridge(
         data[CONF_METHOD],
@@ -98,13 +110,13 @@ def _async_get_device_bridge(data):
     )
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Samsung TV platform."""
 
     # Initialize bridge
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
 
-    def stop_bridge(event):
+    def stop_bridge(event: Event) -> None:
         """Stop SamsungTV bridge connection."""
         bridge.stop()
 
@@ -117,7 +129,9 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def _async_create_bridge_with_updated_data(hass, entry):
+async def _async_create_bridge_with_updated_data(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
     """Create a bridge object and update any missing data in the config entry."""
     updated_data = {}
     host = entry.data[CONF_HOST]
@@ -163,7 +177,7 @@ async def _async_create_bridge_with_updated_data(hass, entry):
     return bridge
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -171,7 +185,7 @@ async def async_unload_entry(hass, entry):
     return unload_ok
 
 
-async def async_migrate_entry(hass, config_entry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     version = config_entry.version
 

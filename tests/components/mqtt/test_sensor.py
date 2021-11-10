@@ -29,6 +29,7 @@ from .test_common import (
     help_test_discovery_update_attr,
     help_test_discovery_update_availability,
     help_test_discovery_update_unchanged,
+    help_test_entity_category,
     help_test_entity_debug_info,
     help_test_entity_debug_info_max_messages,
     help_test_entity_debug_info_message,
@@ -208,7 +209,7 @@ async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock):
     assert state.state == "100"
 
 
-async def test_setting_sensor_last_reset_via_mqtt_message(hass, mqtt_mock):
+async def test_setting_sensor_last_reset_via_mqtt_message(hass, mqtt_mock, caplog):
     """Test the setting of the last_reset property via MQTT."""
     assert await async_setup_component(
         hass,
@@ -228,6 +229,11 @@ async def test_setting_sensor_last_reset_via_mqtt_message(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "last-reset-topic", "2020-01-02 08:11:00")
     state = hass.states.get("sensor.test")
     assert state.attributes.get("last_reset") == "2020-01-02T08:11:00"
+    assert "'last_reset_topic' must be same as 'state_topic'" in caplog.text
+    assert (
+        "'last_reset_value_template' must be set if 'last_reset_topic' is set"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize("datestring", ["2020-21-02 08:11:00", "Hello there!"])
@@ -306,26 +312,43 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message(hass, mqtt_mock):
     assert state.attributes.get("last_reset") == "2020-01-02T08:11:00"
 
 
-async def test_last_reset_deprecated(hass, mqtt_mock, caplog):
-    """Test the setting of the last_reset property via MQTT."""
+@pytest.mark.parametrize("extra", [{}, {"last_reset_topic": "test-topic"}])
+async def test_setting_sensor_last_reset_via_mqtt_json_message_2(
+    hass, mqtt_mock, caplog, extra
+):
+    """Test the setting of the value via MQTT with JSON payload."""
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,
         {
             sensor.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "test-topic",
-                "unit_of_measurement": "fav unit",
-                "last_reset_topic": "last-reset-topic",
-                "last_reset_value_template": "{{ value_json.last_reset }}",
+                **{
+                    "platform": "mqtt",
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "unit_of_measurement": "kWh",
+                    "value_template": "{{ value_json.value | float / 60000 }}",
+                    "last_reset_value_template": "{{ utcnow().fromtimestamp(value_json.time / 1000, tz=utcnow().tzinfo) }}",
+                },
+                **extra,
             }
         },
     )
     await hass.async_block_till_done()
 
-    assert "The 'last_reset_topic' option is deprecated" in caplog.text
-    assert "The 'last_reset_value_template' option is deprecated" in caplog.text
+    async_fire_mqtt_message(
+        hass,
+        "test-topic",
+        '{"type":"minute","time":1629385500000,"value":947.7706166666667}',
+    )
+    state = hass.states.get("sensor.test")
+    assert float(state.state) == pytest.approx(0.015796176944444445)
+    assert state.attributes.get("last_reset") == "2021-08-19T15:05:00+00:00"
+    assert "'last_reset_topic' must be same as 'state_topic'" not in caplog.text
+    assert (
+        "'last_reset_value_template' must be set if 'last_reset_topic' is set"
+        not in caplog.text
+    )
 
 
 async def test_force_update_disabled(hass, mqtt_mock):
@@ -638,15 +661,13 @@ async def test_discovery_update_sensor_topic_template(hass, mqtt_mock, caplog):
         ([("sensor/state2", '{"state":100}')], "200", None),
     ]
 
-    data1 = json.dumps(config1)
-    data2 = json.dumps(config2)
     await help_test_discovery_update(
         hass,
         mqtt_mock,
         caplog,
         sensor.DOMAIN,
-        data1,
-        data2,
+        config1,
+        config2,
         state_data1=state_data1,
         state_data2=state_data2,
     )
@@ -671,15 +692,13 @@ async def test_discovery_update_sensor_template(hass, mqtt_mock, caplog):
         ([("sensor/state1", '{"state":100}')], "200", None),
     ]
 
-    data1 = json.dumps(config1)
-    data2 = json.dumps(config2)
     await help_test_discovery_update(
         hass,
         mqtt_mock,
         caplog,
         sensor.DOMAIN,
-        data1,
-        data2,
+        config1,
+        config2,
         state_data1=state_data1,
         state_data2=state_data2,
     )
@@ -814,6 +833,12 @@ async def test_entity_disabled_by_default(hass, mqtt_mock):
     await help_test_entity_disabled_by_default(
         hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
     )
+
+
+@pytest.mark.no_fail_on_log_exception
+async def test_entity_category(hass, mqtt_mock):
+    """Test entity category."""
+    await help_test_entity_category(hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG)
 
 
 async def test_value_template_with_entity_id(hass, mqtt_mock):

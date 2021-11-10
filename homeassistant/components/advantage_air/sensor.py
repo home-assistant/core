@@ -1,8 +1,12 @@
 """Sensor platform for Advantage Air integration."""
 import voluptuous as vol
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_TEMPERATURE,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN as ADVANTAGE_AIR_DOMAIN
@@ -46,6 +50,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air timer control."""
 
     _attr_native_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, instance, ac_key, action):
         """Initialize the Advantage Air timer control."""
@@ -80,6 +85,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
 
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone Vent Sensor."""
@@ -109,6 +115,7 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
 
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone wireless signal sensor."""
@@ -138,12 +145,13 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
 
 
 class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
-    """Representation of Advantage Air Zone wireless signal sensor."""
+    """Representation of Advantage Air Zone temperature sensor."""
 
     _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_icon = "mdi:thermometer"
     _attr_entity_registry_enabled_default = False
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone Temp Sensor."""

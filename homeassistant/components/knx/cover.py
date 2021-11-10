@@ -1,8 +1,9 @@
 """Support for KNX/IP covers."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any
 
 from xknx import XKNX
 from xknx.devices import Cover as XknxCover, Device as XknxDevice
@@ -22,7 +23,7 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_ENTITY_CATEGORY, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -108,6 +109,7 @@ class KNXCover(KnxEntity, CoverEntity):
             )
         )
         self._unsubscribe_auto_updater: Callable[[], None] | None = None
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS) or (
             DEVICE_CLASS_BLIND if self._device.supports_angle else None

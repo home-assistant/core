@@ -18,7 +18,9 @@
                 "data": {
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "description": "Enerji kullan\u0131m\u0131n\u0131za eri\u015fmek i\u00e7in bir OVO Energy \u00f6rne\u011fi ayarlay\u0131n.",
+                "title": "OVO Enerji Hesab\u0131 Ekle"
             }
         }
     }

@@ -23,9 +23,10 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
 
     VERSION = 1
 
+    auth: HomematicipAuth
+
     def __init__(self) -> None:
         """Initialize HomematicIP Cloud config flow."""
-        self.auth = None
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initialized by the user."""

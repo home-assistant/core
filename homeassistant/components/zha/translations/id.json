@@ -1,13 +1,18 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+            "not_zha_device": "Perangkat ini bukan perangkat zha",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "usb_probe_failed": "Gagal mendeteksi perangkat usb"
         },
         "error": {
             "cannot_connect": "Gagal terhubung"
         },
-        "flow_title": "ZHA: {name}",
+        "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Ingin menyiapkan {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Jenis Radio"
@@ -43,6 +48,7 @@
         "zha_options": {
             "consider_unavailable_battery": "Anggap perangkat bertenaga baterai sebagai tidak tersedia setelah (detik)",
             "consider_unavailable_mains": "Anggap perangkat bertenaga listrik sebagai tidak tersedia setelah (detik)",
+            "default_light_transition": "Waktu transisi lampu default (detik)",
             "enable_identify_on_join": "Aktifkan efek identifikasi saat perangkat bergabung dengan jaringan",
             "title": "Opsi Global"
         }

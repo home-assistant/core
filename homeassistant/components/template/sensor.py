@@ -4,6 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
@@ -38,7 +39,6 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_OBJECT_ID,
     CONF_PICTURE,
-    CONF_STATE_CLASS,
     CONF_TRIGGER,
 )
 from .template_entity import TemplateEntity
@@ -245,6 +245,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
 
         self._friendly_name_template = friendly_name_template
 
+        self._attr_name = None
         # Try to render the name as it can influence the entity ID
         if friendly_name_template:
             friendly_name_template.hass = hass

@@ -1,21 +1,22 @@
 """Proxy to handle account communication with Renault servers."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
-from typing import Callable, TypeVar
+from typing import TypeVar
 
 from renault_api.kamereon.exceptions import (
     AccessDeniedException,
     KamereonResponseException,
     NotSupportedException,
 )
+from renault_api.kamereon.models import KamereonVehicleDataAttributes
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-T = TypeVar("T")
+T = TypeVar("T", bound=KamereonVehicleDataAttributes)
 
 
 class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):

@@ -6,11 +6,9 @@ from homeassistant.components.climate.const import HVAC_MODE_AUTO
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_DATA_TYPE,
+    CONF_LAZY_ERROR,
     CONF_TARGET_TEMP,
-    DATA_TYPE_FLOAT32,
-    DATA_TYPE_FLOAT64,
-    DATA_TYPE_INT16,
-    DATA_TYPE_INT32,
+    DataType,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -22,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import TEST_ENTITY_NAME, ReadResult, base_test
+from .conftest import TEST_ENTITY_NAME, ReadResult
 
 ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}"
 
@@ -49,6 +47,7 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_SLAVE: 10,
                     CONF_SCAN_INTERVAL: 20,
                     CONF_COUNT: 2,
+                    CONF_LAZY_ERROR: 10,
                 }
             ],
         },
@@ -60,36 +59,33 @@ async def test_config_climate(hass, mock_modbus):
 
 
 @pytest.mark.parametrize(
-    "regs,expected",
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_SLAVE: 1,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_COUNT: 2,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,expected",
     [
         (
-            [0x00],
+            [0x00, 0x00],
             "auto",
         ),
     ],
 )
-async def test_temperature_climate(hass, regs, expected):
+async def test_temperature_climate(hass, expected, mock_do_cycle):
     """Run test for given config."""
-    return
-    state = await base_test(
-        hass,
-        {
-            CONF_NAME: TEST_ENTITY_NAME,
-            CONF_SLAVE: 1,
-            CONF_TARGET_TEMP: 117,
-            CONF_ADDRESS: 117,
-            CONF_COUNT: 2,
-        },
-        TEST_ENTITY_NAME,
-        CLIMATE_DOMAIN,
-        CONF_CLIMATES,
-        None,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
@@ -98,11 +94,13 @@ async def test_temperature_climate(hass, regs, expected):
         {
             CONF_CLIMATES: [
                 {
+                    CONF_COUNT: 2,
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
                     CONF_SCAN_INTERVAL: 0,
+                    CONF_DATA_TYPE: DataType.INT32,
                 }
             ]
         },
@@ -129,7 +127,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
-                        CONF_DATA_TYPE: DATA_TYPE_INT16,
+                        CONF_DATA_TYPE: DataType.INT16,
                     }
                 ]
             },
@@ -144,7 +142,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
-                        CONF_DATA_TYPE: DATA_TYPE_INT32,
+                        CONF_DATA_TYPE: DataType.INT32,
                     }
                 ]
             },
@@ -159,7 +157,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
-                        CONF_DATA_TYPE: DATA_TYPE_FLOAT32,
+                        CONF_DATA_TYPE: DataType.FLOAT32,
                     }
                 ]
             },
@@ -174,7 +172,7 @@ async def test_service_climate_update(hass, mock_modbus, mock_ha):
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
-                        CONF_DATA_TYPE: DATA_TYPE_FLOAT64,
+                        CONF_DATA_TYPE: DataType.FLOAT64,
                     }
                 ]
             },

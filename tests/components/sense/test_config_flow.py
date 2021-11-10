@@ -3,13 +3,13 @@ from unittest.mock import patch
 
 from sense_energy import SenseAPITimeoutException, SenseAuthenticationException
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.sense.const import DOMAIN
 
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -72,3 +72,22 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_unknown_exception(hass):
+    """Test we handle unknown error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "sense_energy.ASyncSenseable.authenticate",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"timeout": "6", "email": "test-email", "password": "test-password"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
-            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
+            "reconfigure_successful": "La riconfigurazione \u00e8 andata a buon fine"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
@@ -37,6 +38,13 @@
                 },
                 "description": "Motivo: {details}",
                 "title": "Synology DSM Autenticare nuovamente l'integrazione"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "title": "Autenticare nuovamente l'integrazione Synology DSM "
             },
             "user": {
                 "data": {

@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
@@ -21,7 +22,9 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -163,9 +166,12 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self._config_entry_unique_id = config_entry_unique_id
         self._device_info = device_info
 
-        if self.unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+        if self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
             self._attr_device_class = DEVICE_CLASS_ENERGY
+        if self.native_unit_of_measurement == POWER_WATT:
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = DEVICE_CLASS_POWER
 
         # Set sensor enabled to False.
         # Will be enabled by async_added_to_hass if actually used.
@@ -194,18 +200,18 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return the device information."""
         if not self._device_info:
             return None
 
-        return {
-            "identifiers": {(DOMAIN, self._config_entry_unique_id)},
-            "name": self._device_info["name"],
-            "manufacturer": self._device_info["manufacturer"],
-            "model": self._device_info["type"],
-            "sw_version": self._device_info["sw_version"],
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._config_entry_unique_id)},
+            manufacturer=self._device_info["manufacturer"],
+            model=self._device_info["type"],
+            name=self._device_info["name"],
+            sw_version=self._device_info["sw_version"],
+        )
 
     @property
     def entity_registry_enabled_default(self) -> bool:

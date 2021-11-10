@@ -22,6 +22,7 @@ from homeassistant.util import Throttle
 
 ALL_IMAGES = [
     "default",
+    "generic-x86-64",
     "intel-nuc",
     "odroid-c2",
     "odroid-n2",
@@ -87,7 +88,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         source = HaVersionSource.CONTAINER
 
     if (
-        source in (HaVersionSource.SUPERVISOR, HaVersionSource.CONTAINER)
+        source == HaVersionSource.CONTAINER
         and image is not None
         and image != DEFAULT_IMAGE
     ):

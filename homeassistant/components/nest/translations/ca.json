@@ -18,6 +18,13 @@
             "unknown": "Error inesperat"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Token d'acc\u00e9s"
+                },
+                "description": "Per enlla\u00e7ar un compte de Google, [autoritza el compte]({url}). \n\nDespr\u00e9s de l'autoritzaci\u00f3, copia i enganxa a continuaci\u00f3 el codi 'token' d'autenticaci\u00f3 proporcionat.",
+                "title": "Vinculaci\u00f3 amb compte de Google"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Prove\u00efdor"

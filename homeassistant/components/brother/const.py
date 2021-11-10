@@ -7,7 +7,11 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntityDescription,
 )
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
+from homeassistant.const import (
+    DEVICE_CLASS_TIMESTAMP,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    PERCENTAGE,
+)
 
 ATTR_BELT_UNIT_REMAINING_LIFE: Final = "belt_unit_remaining_life"
 ATTR_BLACK_DRUM_COUNTER: Final = "black_drum_counter"
@@ -82,6 +86,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         key=ATTR_STATUS,
         icon="mdi:printer",
         name=ATTR_STATUS.title(),
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_PAGE_COUNTER,
@@ -89,6 +94,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_PAGE_COUNTER.replace("_", " ").title(),
         native_unit_of_measurement=UNIT_PAGES,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_BW_COUNTER,
@@ -96,6 +102,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_BW_COUNTER.replace("_", " ").title(),
         native_unit_of_measurement=UNIT_PAGES,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_COLOR_COUNTER,
@@ -103,6 +110,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_COLOR_COUNTER.replace("_", " ").title(),
         native_unit_of_measurement=UNIT_PAGES,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_DUPLEX_COUNTER,
@@ -110,6 +118,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_DUPLEX_COUNTER.replace("_", " ").title(),
         native_unit_of_measurement=UNIT_PAGES,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_DRUM_REMAINING_LIFE,
@@ -117,6 +126,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_DRUM_REMAINING_LIFE.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_BLACK_DRUM_REMAINING_LIFE,
@@ -124,6 +134,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_BLACK_DRUM_REMAINING_LIFE.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_CYAN_DRUM_REMAINING_LIFE,
@@ -131,6 +142,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_CYAN_DRUM_REMAINING_LIFE.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_MAGENTA_DRUM_REMAINING_LIFE,
@@ -138,6 +150,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_MAGENTA_DRUM_REMAINING_LIFE.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_YELLOW_DRUM_REMAINING_LIFE,
@@ -145,6 +158,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_YELLOW_DRUM_REMAINING_LIFE.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_BELT_UNIT_REMAINING_LIFE,
@@ -152,6 +166,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_BELT_UNIT_REMAINING_LIFE.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_FUSER_REMAINING_LIFE,
@@ -159,6 +174,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_FUSER_REMAINING_LIFE.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_LASER_REMAINING_LIFE,
@@ -166,6 +182,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_LASER_REMAINING_LIFE.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_PF_KIT_1_REMAINING_LIFE,
@@ -173,6 +190,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_PF_KIT_1_REMAINING_LIFE.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_PF_KIT_MP_REMAINING_LIFE,
@@ -180,6 +198,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_PF_KIT_MP_REMAINING_LIFE.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_BLACK_TONER_REMAINING,
@@ -187,6 +206,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_BLACK_TONER_REMAINING.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_CYAN_TONER_REMAINING,
@@ -194,6 +214,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_CYAN_TONER_REMAINING.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_MAGENTA_TONER_REMAINING,
@@ -201,6 +222,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_MAGENTA_TONER_REMAINING.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_YELLOW_TONER_REMAINING,
@@ -208,6 +230,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_YELLOW_TONER_REMAINING.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_BLACK_INK_REMAINING,
@@ -215,6 +238,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_BLACK_INK_REMAINING.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_CYAN_INK_REMAINING,
@@ -222,6 +246,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_CYAN_INK_REMAINING.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_MAGENTA_INK_REMAINING,
@@ -229,6 +254,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_MAGENTA_INK_REMAINING.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_YELLOW_INK_REMAINING,
@@ -236,11 +262,13 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         name=ATTR_YELLOW_INK_REMAINING.replace("_", " ").title(),
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_UPTIME,
         name=ATTR_UPTIME.title(),
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_TIMESTAMP,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )

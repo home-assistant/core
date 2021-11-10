@@ -1,13 +1,13 @@
 {
     "device_automation": {
         "action_type": {
-            "select_option": "Zmie\u0144 opcj\u0119 {entity_name}"
+            "select_option": "zmie\u0144 opcj\u0119 {entity_name}"
         },
         "condition_type": {
-            "selected_option": "Aktualnie wybrana opcja dla {entity_name}"
+            "selected_option": "aktualnie wybrana opcja dla {entity_name}"
         },
         "trigger_type": {
-            "current_option_changed": "Zmieniono opcj\u0119 {entity_name}"
+            "current_option_changed": "zmieniono opcj\u0119 {entity_name}"
         }
     },
     "title": "Wybierz"

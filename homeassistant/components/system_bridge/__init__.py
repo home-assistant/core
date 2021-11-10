@@ -84,7 +84,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             while (
                 coordinator.bridge.battery is None
                 or coordinator.bridge.cpu is None
+                or coordinator.bridge.display is None
                 or coordinator.bridge.filesystem is None
+                or coordinator.bridge.graphics is None
                 or coordinator.bridge.information is None
                 or coordinator.bridge.memory is None
                 or coordinator.bridge.network is None
@@ -230,17 +232,14 @@ class SystemBridgeEntity(CoordinatorEntity):
         self,
         coordinator: SystemBridgeDataUpdateCoordinator,
         key: str,
-        name: str,
-        icon: str | None,
-        enabled_by_default: bool,
+        name: str | None,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
         bridge: Bridge = coordinator.data
         self._key = f"{bridge.information.host}_{key}"
         self._name = f"{bridge.information.host} {name}"
-        self._icon = icon
-        self._enabled_default = enabled_by_default
+        self._configuration_url = bridge.get_configuration_url()
         self._hostname = bridge.information.host
         self._mac = bridge.information.mac
         self._manufacturer = bridge.system.system.manufacturer
@@ -257,16 +256,6 @@ class SystemBridgeEntity(CoordinatorEntity):
         """Return the name of the entity."""
         return self._name
 
-    @property
-    def icon(self) -> str | None:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
-
 
 class SystemBridgeDeviceEntity(SystemBridgeEntity):
     """Defines a System Bridge device entity."""
@@ -274,10 +263,11 @@ class SystemBridgeDeviceEntity(SystemBridgeEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this System Bridge instance."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "manufacturer": self._manufacturer,
-            "model": self._model,
-            "name": self._hostname,
-            "sw_version": self._version,
-        }
+        return DeviceInfo(
+            configuration_url=self._configuration_url,
+            connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
+            manufacturer=self._manufacturer,
+            model=self._model,
+            name=self._hostname,
+            sw_version=self._version,
+        )

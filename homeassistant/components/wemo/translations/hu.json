@@ -6,7 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Be szeretn\u00e9 \u00e1ll\u00edtani a Wemo-t?"
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani Wemo-t?"
             }
         }
     },

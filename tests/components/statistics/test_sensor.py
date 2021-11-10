@@ -1,6 +1,5 @@
 """The test for the statistics sensor platform."""
 from datetime import datetime, timedelta
-from os import path
 import statistics
 import unittest
 from unittest.mock import patch
@@ -21,6 +20,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import (
     fire_time_changed,
+    get_fixture_path,
     get_test_home_assistant,
     init_recorder_component,
 )
@@ -103,7 +103,9 @@ class TestStatisticsSensor(unittest.TestCase):
 
         for value in self.values:
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
 
@@ -122,6 +124,25 @@ class TestStatisticsSensor(unittest.TestCase):
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
+
+        # Source sensor is unavailable, unit and state should not change
+        self.hass.states.set("sensor.test_monitored", "unavailable", {})
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert state == new_state
+
+        # Source sensor has a non float state, unit and state should not change
+        self.hass.states.set("sensor.test_monitored", "beer", {})
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert state == new_state
+
+        # Source sensor is removed, unit and state should not change
+        # This is equal to a None value being published
+        self.hass.states.remove("sensor.test_monitored")
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert state == new_state
 
     def test_sampling_size(self):
         """Test rotation."""
@@ -144,7 +165,9 @@ class TestStatisticsSensor(unittest.TestCase):
 
         for value in self.values:
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
 
@@ -174,7 +197,9 @@ class TestStatisticsSensor(unittest.TestCase):
 
         for value in self.values[-3:]:  # just the last 3 will do
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
 
@@ -344,6 +369,66 @@ class TestStatisticsSensor(unittest.TestCase):
         ) == state.attributes.get("max_age")
         assert self.change_rate == state.attributes.get("change_rate")
 
+    def test_precision_0(self):
+        """Test correct result with precision=0 as integer."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "precision": 0,
+                }
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in self.values:
+            self.hass.states.set(
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test")
+        assert state.state == str(int(state.attributes.get("mean")))
+
+    def test_precision_1(self):
+        """Test correct result with precision=1 rounded to one decimal."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "precision": 1,
+                }
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in self.values:
+            self.hass.states.set(
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test")
+        assert state.state == str(round(sum(self.values) / len(self.values), 1))
+
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
         # enable the recorder
@@ -353,7 +438,9 @@ class TestStatisticsSensor(unittest.TestCase):
         # store some values
         for value in self.values:
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
         # wait for the recorder to really store the data
@@ -380,6 +467,7 @@ class TestStatisticsSensor(unittest.TestCase):
         # check if the result is as in test_sensor_source()
         state = self.hass.states.get("sensor.test")
         assert str(self.mean) == state.state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     def test_initialize_from_database_with_maxage(self):
         """Test initializing the statistics from the database."""
@@ -483,11 +571,7 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "statistics/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "statistics")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -501,7 +585,3 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.cputest")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

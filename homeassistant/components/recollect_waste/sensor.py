@@ -2,27 +2,19 @@
 from __future__ import annotations
 
 from aiorecollect.client import PickupType
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_FRIENDLY_NAME,
-    CONF_NAME,
-    DEVICE_CLASS_TIMESTAMP,
-)
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_FRIENDLY_NAME, DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util.dt import as_utc
 
-from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN
 
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_AREA_NAME = "area_name"
@@ -30,15 +22,9 @@ ATTR_NEXT_PICKUP_TYPES = "next_pickup_types"
 ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 
 DEFAULT_ATTRIBUTION = "Pickup data provided by ReCollect Waste"
-DEFAULT_NAME = "recollect_waste"
+DEFAULT_NAME = "Waste Pickup"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_PLACE_ID): cv.string,
-        vol.Required(CONF_SERVICE_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+PLATFORM_SCHEMA = cv.deprecated(DOMAIN)
 
 
 @callback
@@ -54,38 +40,18 @@ def async_get_pickup_type_names(
     ]
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import Recollect Waste configuration from YAML."""
-    LOGGER.warning(
-        "Loading ReCollect Waste via platform setup is deprecated; "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     async_add_entities([ReCollectWasteSensor(coordinator, entry)])
 
 
 class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     """ReCollect Waste Sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = DEVICE_CLASS_DATE
 
     def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:
         """Initialize the sensor."""
@@ -112,8 +78,13 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        pickup_event = self.coordinator.data[0]
-        next_pickup_event = self.coordinator.data[1]
+        try:
+            pickup_event = self.coordinator.data[0]
+            next_pickup_event = self.coordinator.data[1]
+        except IndexError:
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
+            return
 
         self._attr_extra_state_attributes.update(
             {
@@ -124,7 +95,7 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
                 ATTR_NEXT_PICKUP_TYPES: async_get_pickup_type_names(
                     self._entry, next_pickup_event.pickup_types
                 ),
-                ATTR_NEXT_PICKUP_DATE: as_utc(next_pickup_event.date).isoformat(),
+                ATTR_NEXT_PICKUP_DATE: next_pickup_event.date.isoformat(),
             }
         )
-        self._attr_native_value = as_utc(pickup_event.date).isoformat()
+        self._attr_native_value = pickup_event.date.isoformat()

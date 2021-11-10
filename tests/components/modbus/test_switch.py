@@ -11,6 +11,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_VERIFY,
@@ -45,12 +46,13 @@ from .conftest import (
     TEST_MODBUS_HOST,
     TEST_PORT_TCP,
     ReadResult,
-    base_test,
+    do_next_cycle,
 )
 
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}"
+ENTITY_ID2 = f"{ENTITY_ID}2"
 
 
 @pytest.mark.parametrize(
@@ -70,6 +72,7 @@ ENTITY_ID = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                    CONF_LAZY_ERROR: 10,
                 }
             ]
         },
@@ -149,58 +152,108 @@ async def test_config_switch(hass, mock_modbus):
     assert SWITCH_DOMAIN in hass.config.components
 
 
-@pytest.mark.parametrize("call_type", [CALL_TYPE_COIL, CALL_TYPE_REGISTER_HOLDING])
 @pytest.mark.parametrize(
-    "regs,verify,expected",
+    "do_config",
+    [
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                },
+            ],
+        },
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,do_exception,config_addon,expected",
     [
         (
             [0x00],
+            False,
             {CONF_VERIFY: {}},
             STATE_OFF,
         ),
         (
             [0x01],
+            False,
             {CONF_VERIFY: {}},
             STATE_ON,
         ),
         (
             [0xFE],
+            False,
             {CONF_VERIFY: {}},
             STATE_OFF,
         ),
         (
-            None,
+            [0x00],
+            True,
             {CONF_VERIFY: {}},
             STATE_UNAVAILABLE,
         ),
         (
+            [0x00],
+            True,
             None,
-            {},
             STATE_OFF,
         ),
     ],
 )
-async def test_all_switch(hass, call_type, regs, verify, expected):
+async def test_all_switch(hass, mock_do_cycle, expected):
     """Run test for given config."""
-    state = await base_test(
-        hass,
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
         {
-            CONF_NAME: TEST_ENTITY_NAME,
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_WRITE_TYPE: call_type,
-            **verify,
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 10,
+                    CONF_LAZY_ERROR: 2,
+                    CONF_VERIFY: {},
+                },
+            ],
         },
-        TEST_ENTITY_NAME,
-        SWITCH_DOMAIN,
-        CONF_SWITCHES,
-        None,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,do_exception,start_expect,end_expect",
+    [
+        (
+            [0x00],
+            True,
+            STATE_OFF,
+            STATE_UNAVAILABLE,
+        ),
+    ],
+)
+async def test_lazy_error_switch(hass, start_expect, end_expect, mock_do_cycle):
+    """Run test for given config."""
+    now = mock_do_cycle
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == start_expect
+    now = await do_next_cycle(hass, now, 11)
+    assert hass.states.get(ENTITY_ID).state == end_expect
 
 
 @pytest.mark.parametrize(
@@ -230,7 +283,6 @@ async def test_restore_state_switch(hass, mock_test_state, mock_modbus):
 async def test_switch_service_turn(hass, caplog, mock_pymodbus):
     """Run test for service turn_on/turn_off."""
 
-    ENTITY_ID2 = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}2"
     config = {
         MODBUS_DOMAIN: {
             CONF_TYPE: TCP,

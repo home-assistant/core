@@ -19,7 +19,7 @@
                 "data": {
                     "password": "Kata Sandi"
                 },
-                "description": "Token akses Anda telah kedaluwarsa atau dicabut. Masukkan kata sandi Anda untuk menautkan kembali akun Anda.",
+                "description": "Akses Anda telah kedaluwarsa atau dicabut. Masukkan kata sandi Anda untuk menautkan kembali akun Anda.",
                 "title": "Autentikasi Ulang Integrasi"
             },
             "user": {
