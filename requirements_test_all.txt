@@ -278,7 +278,7 @@ broadlink==0.18.0
 brother==1.1.0
 
 # homeassistant.components.brunt
-brunt==1.0.0b1
+brunt==1.0.0
 
 # homeassistant.components.bsblan
 bsblan==0.4.0
