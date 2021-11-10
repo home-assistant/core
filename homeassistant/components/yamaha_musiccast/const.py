@@ -1,5 +1,7 @@
 """Constants for the MusicCast integration."""
 
+from aiomusiccast.capabilities import EntityTypes
+
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_TRACK,
@@ -7,6 +9,7 @@ from homeassistant.components.media_player.const import (
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
 )
+from homeassistant.const import ENTITY_CATEGORY_CONFIG, ENTITY_CATEGORY_DIAGNOSTIC
 
 DOMAIN = "yamaha_musiccast"
 
@@ -41,4 +44,10 @@ MEDIA_CLASS_MAPPING = {
     "track": MEDIA_CLASS_TRACK,
     "directory": MEDIA_CLASS_DIRECTORY,
     "categories": MEDIA_CLASS_DIRECTORY,
+}
+
+ENTITY_CATEGORY_MAPPING = {
+    EntityTypes.CONFIG: ENTITY_CATEGORY_CONFIG,
+    EntityTypes.REGULAR: None,
+    EntityTypes.DIAGNOSTIC: ENTITY_CATEGORY_DIAGNOSTIC,
 }

@@ -8,6 +8,7 @@ from homeassistant.components.yamaha_musiccast import (
     MusicCastDataUpdateCoordinator,
     MusicCastDeviceEntity,
 )
+from homeassistant.components.yamaha_musiccast.const import ENTITY_CATEGORY_MAPPING
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -52,6 +53,7 @@ class NumberCapability(MusicCastDeviceEntity, NumberEntity):
         self._attr_max_value = capability.max_value
         self._attr_step = capability.step
         super().__init__(name=capability.name, icon="", coordinator=coordinator)
+        self._attr_entity_category = ENTITY_CATEGORY_MAPPING.get(capability.entity_type)
 
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
