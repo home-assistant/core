@@ -47,6 +47,7 @@ from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import lookup_plex_media
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_MEDIA,
+    CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
@@ -552,6 +553,10 @@ class CastDevice(MediaPlayerEntity):
 
         First try from our own cast, then groups which our cast is a member in.
         """
+        # Suppress media status when the Lovelace app is active
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return (None, None)
+
         media_status = self.media_status
         media_status_received = self.media_status_received
 
