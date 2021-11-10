@@ -142,11 +142,6 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
     "ggq": (
         SensorEntityDescription(
-            key=DPCode.COUNTDOWN,
-            name="Countdown",
-            state_class=STATE_CLASS_MEASUREMENT,
-        ),
-        SensorEntityDescription(
             key=DPCode.COUNTDOWN_LEFT,
             name="Countdown left",
             state_class=STATE_CLASS_MEASUREMENT,
