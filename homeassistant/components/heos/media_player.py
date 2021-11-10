@@ -36,6 +36,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import utcnow
 
 from .const import (
+    DATA_ENTITY_ID_MAP,
     DATA_GROUP_MANAGER,
     DATA_SOURCE_MANAGER,
     DOMAIN as HEOS_DOMAIN,
@@ -133,6 +134,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
                 SIGNAL_HEOS_UPDATED, self._heos_updated
             )
         )
+        # Register this player's entity_id so it can be resolved by the group manager
+        self.hass.data[HEOS_DOMAIN][DATA_ENTITY_ID_MAP][self._player.player_id] = self.entity_id
+        self._group_manager.force_update_groups()
 
     @log_command_error("clear playlist")
     async def async_clear_playlist(self):

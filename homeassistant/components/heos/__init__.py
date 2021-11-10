@@ -10,8 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, EVENT_COMPONENT_LOADED
+from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -23,12 +23,12 @@ from .const import (
     COMMAND_RETRY_ATTEMPTS,
     COMMAND_RETRY_DELAY,
     DATA_CONTROLLER_MANAGER,
+    DATA_ENTITY_ID_MAP,
     DATA_GROUP_MANAGER,
     DATA_SOURCE_MANAGER,
     DOMAIN,
     SIGNAL_HEOS_UPDATED,
 )
-from .media_player import HeosMediaPlayer
 
 PLATFORMS = [MEDIA_PLAYER_DOMAIN]
 
@@ -122,14 +122,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DATA_GROUP_MANAGER: group_manager,
         DATA_SOURCE_MANAGER: source_manager,
         MEDIA_PLAYER_DOMAIN: players,
+        # Maps player_id to entity_id. Populated by the individual HeosMediaPlayer entites.
+        DATA_ENTITY_ID_MAP: {}
     }
 
     services.register(hass, controller)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    # Update group membership when platform setup is completed
     group_manager.connect_update()
-    group_manager.force_update_groups()
 
     return True
 
@@ -236,71 +236,63 @@ class GroupManager:
         self._group_membership = {}
         self.controller = controller
 
-    def _get_heos_entities_to_ids(self) -> dict:
-        """Return a dictionary which maps all HEOS entity ids to HEOS player ids."""
-        if MEDIA_PLAYER_DOMAIN not in self._hass.data:
-            return {}
-
-        return {
-            entity.entity_id: entity.player_id
-            for entity in self._hass.data[MEDIA_PLAYER_DOMAIN].entities
-            if isinstance(entity, HeosMediaPlayer)
-        }
-
-    def _get_heos_ids_to_entities(self) -> dict:
-        """Return a dictionary which maps all HEOS player ids to entity ids."""
-        return {v: k for k, v in self._get_heos_entities_to_ids().items()}
+    def _get_entity_id_to_player_id_map(self) -> dict:
+        """Return a dictionary which maps all HeosMediaPlayer entity_ids to player_ids."""
+        return {v: k for k, v in self._hass.data[DOMAIN][DATA_ENTITY_ID_MAP].items()}
 
     async def async_get_group_membership(self):
         """Return a dictionary which contains all group members for each player as entity_ids."""
-        player_id_map = self._get_heos_entities_to_ids()
-        group_info_by_player = {player_entity: [] for player_entity in player_id_map}
+        group_info_by_entity_id = {
+            player_entity_id: [] for player_entity_id in self._get_entity_id_to_player_id_map()
+        }
 
         try:
             groups = await self.controller.get_groups(refresh=True)
         except HeosError as err:
             _LOGGER.error("Unable to get HEOS group info: %s", err)
-            return group_info_by_player
+            return group_info_by_entity_id
 
-        id_to_entity = self._get_heos_ids_to_entities()
+        player_id_to_entity_id_map = self._hass.data[DOMAIN][DATA_ENTITY_ID_MAP]
         for group in groups.values():
-            leader_entity_id = id_to_entity.get(group.leader.player_id)
+            leader_entity_id = player_id_to_entity_id_map.get(group.leader.player_id)
             member_entity_ids = [
-                id_to_entity[member.player_id]
+                player_id_to_entity_id_map[member.player_id]
                 for member in group.members
-                if member.player_id in id_to_entity
+                if member.player_id in player_id_to_entity_id_map
             ]
             # Make sure the group leader is always the first element
             group_info = [leader_entity_id, *member_entity_ids]
-            group_info_by_player[leader_entity_id] = group_info
+            group_info_by_entity_id[leader_entity_id] = group_info
             for member_entity_id in member_entity_ids:
-                group_info_by_player[member_entity_id] = group_info
+                group_info_by_entity_id[member_entity_id] = group_info
 
-        return group_info_by_player
+        return group_info_by_entity_id
 
-    async def async_join_players(self, leader_entity: str, member_entities: list):
-        """Create a group with `leader_entity` as group leader and `member_entities` as member players."""
-        player_id_map = self._get_heos_entities_to_ids()
-        leader_id = player_id_map.get(leader_entity)
-        member_ids = [player_id_map.get(member) for member in member_entities]
+    async def async_join_players(
+        self, leader_entity_id: str, member_entity_ids: list[str]
+    ) -> None:
+        """Create a group with `leader_entity_id` as group leader and `member_entities` as member players."""
+        entity_id_to_player_id_map = self._get_entity_id_to_player_id_map()
+        leader_id = entity_id_to_player_id_map.get(leader_entity_id)
+        member_ids = [entity_id_to_player_id_map.get(member) for member in member_entity_ids]
 
         try:
             await self.controller.create_group(leader_id, member_ids)
         except HeosError as err:
             _LOGGER.error(
-                "Failed to group %s with %s: %s", leader_entity, member_entities, err
+                "Failed to group %s with %s: %s", leader_entity_id, member_entity_ids, err
             )
 
-    async def async_unjoin_player(self, player_entity: str):
+    async def async_unjoin_player(self, player_entity_id: str):
         """Remove `player_entity` from any group."""
-        player_id = self._get_heos_entities_to_ids().get(player_entity)
+        player_id = self._get_entity_id_to_player_id_map().get(player_entity_id)
 
         try:
             await self.controller.create_group(player_id, [])
         except HeosError as err:
             _LOGGER.error(
                 "Failed to ungroup %s: %s",
-                player_entity,
+                player_entity_id,
                 err,
             )
 
