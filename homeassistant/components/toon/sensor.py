@@ -151,7 +151,6 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_HUMIDITY,
         entity_registry_enabled_default=False,
         state_class=STATE_CLASS_MEASUREMENT,
-        icon="mdi:water-percent",
         cls=ToonDisplayDeviceSensor,
     ),
     ToonSensorEntityDescription(
