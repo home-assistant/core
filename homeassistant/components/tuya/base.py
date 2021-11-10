@@ -29,19 +29,6 @@ def int_please_object_hook(obj):
             rv[k] = v
     return rv
 
-def int_please_object_hook(obj):
-    """If a value in obj is a string, try to convert it to an int"""
-    rv = {}
-    for k, v in obj.items():
-        if isinstance(v, str):
-            try:
-                rv[k] = int(v)
-            except ValueError:
-                rv[k] = v
-        else:
-            rv[k] = v
-    return rv
-
 
 @dataclass
 class IntegerTypeData:
