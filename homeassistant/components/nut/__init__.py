@@ -37,13 +37,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Network UPS Tools (NUT) from a config entry."""
 
-    # strip out the stale options CONF_RESOURCES
-    if CONF_RESOURCES in entry.options:
-        new_data = {**entry.data, CONF_RESOURCES: entry.options[CONF_RESOURCES]}
-        new_options = {k: v for k, v in entry.options.items() if k != CONF_RESOURCES}
-        hass.config_entries.async_update_entry(
-            entry, data=new_data, options=new_options
-        )
+    # strip out the stale setting CONF_RESOURCES from data & options
+    if CONF_RESOURCES in entry.data:
+        new_data = {k: v for k, v in entry.data.items() if k != CONF_RESOURCES}
+        new_opts = {k: v for k, v in entry.options.items() if k != CONF_RESOURCES}
+        hass.config_entries.async_update_entry(entry, data=new_data, options=new_opts)
 
     config = entry.data
     host = config[CONF_HOST]
@@ -79,7 +77,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("NUT Sensors Available: %s", status)
 
     undo_listener = entry.add_update_listener(_async_update_listener)
-
     unique_id = _unique_id_from_status(status)
     if unique_id is None:
         unique_id = entry.entry_id
@@ -91,7 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         PYNUT_UNIQUE_ID: unique_id,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
-
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
