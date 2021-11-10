@@ -41,6 +41,17 @@ def get_config_entry(hass):
     return entries[0]
 
 
+def create_config_entry(hass, data: dict) -> ConfigEntry:
+    """Create the ConfigEntry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
 class OAuthFixture:
     """Simulate the oauth flow used by the config flow."""
 
@@ -165,9 +176,9 @@ async def test_web_reauth(hass, oauth):
 
     assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
 
-    old_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
+    old_entry = create_config_entry(
+        hass,
+        {
             "auth_implementation": WEB_AUTH_DOMAIN,
             "token": {
                 # Verify this is replaced at end of the test
@@ -175,9 +186,7 @@ async def test_web_reauth(hass, oauth):
             },
             "sdm": {},
         },
-        unique_id=DOMAIN,
     )
-    old_entry.add_to_hass(hass)
 
     entry = get_config_entry(hass)
     assert entry.data["token"] == {
@@ -211,10 +220,7 @@ async def test_web_reauth(hass, oauth):
 
 async def test_single_config_entry(hass):
     """Test that only a single config entry is allowed."""
-    old_entry = MockConfigEntry(
-        domain=DOMAIN, data={"auth_implementation": WEB_AUTH_DOMAIN, "sdm": {}}
-    )
-    old_entry.add_to_hass(hass)
+    create_config_entry(hass, {"auth_implementation": WEB_AUTH_DOMAIN, "sdm": {}})
 
     assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
 
@@ -299,9 +305,9 @@ async def test_app_reauth(hass, oauth):
 
     assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
 
-    old_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
+    old_entry = create_config_entry(
+        hass,
+        {
             "auth_implementation": APP_AUTH_DOMAIN,
             "token": {
                 # Verify this is replaced at end of the test
@@ -309,9 +315,7 @@ async def test_app_reauth(hass, oauth):
             },
             "sdm": {},
         },
-        unique_id=DOMAIN,
     )
-    old_entry.add_to_hass(hass)
 
     entry = get_config_entry(hass)
     assert entry.data["token"] == {
