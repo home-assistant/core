@@ -46,7 +46,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-# PySwitchbot==0.12.0
+# PySwitchbot==0.13.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -136,7 +136,7 @@ aio_georss_gdacs==0.5
 aioambient==2021.10.1
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.3.4
+aioasuswrt==1.4.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
@@ -479,7 +479,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==6.4.1
+colorlog==6.6.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -517,7 +517,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.5.0
+debugpy==1.5.1
 
 # homeassistant.components.decora
 # decora==0.6
@@ -726,7 +726,7 @@ glances_api==0.2.0
 gntp==1.0.3
 
 # homeassistant.components.goalzero
-goalzero==0.2.0
+goalzero==0.2.1
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -819,7 +819,7 @@ hole==0.5.1
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211108.0
+home-assistant-frontend==20211109.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -922,9 +922,6 @@ krakenex==2.1.0
 
 # homeassistant.components.eufy
 lakeside==0.12
-
-# homeassistant.components.dyson
-libpurecool==0.6.4
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -1387,7 +1384,7 @@ pybotvac==0.0.22
 pycarwings2==2.12
 
 # homeassistant.components.cloudflare
-pycfdns==1.2.1
+pycfdns==1.2.2
 
 # homeassistant.components.channels
 pychannels==1.0.0
@@ -1453,7 +1450,7 @@ pyeconet==0.1.14
 pyedimax==0.2.1
 
 # homeassistant.components.efergy
-pyefergy==0.1.4
+pyefergy==0.1.5
 
 # homeassistant.components.eight_sleep
 pyeight==0.1.9
@@ -1595,7 +1592,7 @@ pylacrosse==0.4
 pylast==4.2.1
 
 # homeassistant.components.launch_library
-pylaunches==1.0.0
+pylaunches==1.2.0
 
 # homeassistant.components.lg_netcast
 pylgnetcast==0.3.5
@@ -1698,9 +1695,6 @@ pyopnsense==0.2.0
 
 # homeassistant.components.opple
 pyoppleio==1.0.5
-
-# homeassistant.components.iota
-pyota==2.0.5
 
 # homeassistant.components.opentherm_gw
 pyotgw==1.1b1
@@ -1847,7 +1841,7 @@ pysyncthru==0.7.10
 pytankerkoenig==0.0.6
 
 # homeassistant.components.tautulli
-pytautulli==21.10.0
+pytautulli==21.11.0
 
 # homeassistant.components.tfiac
 pytfiac==0.4
@@ -1865,7 +1859,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.11
+python-ecobee-api==0.2.14
 
 # homeassistant.components.eq3btsmart
 # python-eq3bt==0.1.11
@@ -1970,7 +1964,7 @@ pytile==5.2.4
 pytouchline==0.7
 
 # homeassistant.components.traccar
-pytraccar==0.9.0
+pytraccar==0.10.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==7.2.0
@@ -1983,7 +1977,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==21.9.0
+pyuptimerobot==21.11.0
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
@@ -2498,7 +2492,7 @@ zigpy-xbee==0.14.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.5.4
+zigpy-znp==0.6.1
 
 # homeassistant.components.zha
 zigpy==0.41.0

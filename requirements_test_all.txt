@@ -24,7 +24,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-# PySwitchbot==0.12.0
+# PySwitchbot==0.13.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -84,7 +84,7 @@ aio_georss_gdacs==0.5
 aioambient==2021.10.1
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.3.4
+aioasuswrt==1.4.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
@@ -293,7 +293,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==6.4.1
+colorlog==6.6.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -325,7 +325,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.5.0
+debugpy==1.5.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -446,7 +446,7 @@ gios==2.1.0
 glances_api==0.2.0
 
 # homeassistant.components.goalzero
-goalzero==0.2.0
+goalzero==0.2.1
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -506,7 +506,7 @@ hole==0.5.1
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211108.0
+home-assistant-frontend==20211109.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -565,9 +565,6 @@ kostal_plenticore==0.2.0
 
 # homeassistant.components.kraken
 krakenex==2.1.0
-
-# homeassistant.components.dyson
-libpurecool==0.6.4
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -832,7 +829,7 @@ pyblackbird==0.5
 pybotvac==0.0.22
 
 # homeassistant.components.cloudflare
-pycfdns==1.2.1
+pycfdns==1.2.2
 
 # homeassistant.components.cast
 pychromecast==9.3.1
@@ -862,7 +859,7 @@ pydispatcher==2.0.5
 pyeconet==0.1.14
 
 # homeassistant.components.efergy
-pyefergy==0.1.4
+pyefergy==0.1.5
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1115,7 +1112,7 @@ pysqueezebox==0.5.5
 pysyncthru==0.7.10
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.11
+python-ecobee-api==0.2.14
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
@@ -1160,7 +1157,7 @@ python_awair==0.2.1
 pytile==5.2.4
 
 # homeassistant.components.traccar
-pytraccar==0.9.0
+pytraccar==0.10.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==7.2.0
@@ -1169,7 +1166,7 @@ pytradfri[async]==7.2.0
 pyudev==0.22.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==21.9.0
+pyuptimerobot==21.11.0
 
 # homeassistant.components.vera
 pyvera==0.3.13
@@ -1460,7 +1457,7 @@ zigpy-xbee==0.14.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.5.4
+zigpy-znp==0.6.1
 
 # homeassistant.components.zha
 zigpy==0.41.0
