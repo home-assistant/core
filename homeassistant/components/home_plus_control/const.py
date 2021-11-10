@@ -12,6 +12,7 @@ DISPATCHER_REMOVERS = "dispatcher_removers"
 
 # Legrand Model Identifiers - https://developer.legrand.com/documentation/product-cluster-list/#
 HW_TYPE = {
+    "NBR": "NBR - Bubendorff Roller Shutter",
     "NLC": "NLC - Cable Outlet",
     "NLF": "NLF - On-Off Dimmer Switch w/o Neutral",
     "NLP": "NLP - Socket (Connected) Outlet",

@@ -45,8 +45,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# The Legrand Home+ Control platform is currently limited to "switch" entities
-PLATFORMS = ["switch"]
+# The Legrand Home+ Control platform is currently limited to "cover" and "switch" entities
+PLATFORMS = ["cover", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
 
