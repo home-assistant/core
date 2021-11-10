@@ -131,7 +131,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.nut_config.update(user_input)
             if self._host_port_alias_already_configured(self.nut_config):
                 return self.async_abort(reason="already_configured")
-            info, errors = await self._async_validate_or_error(self.nut_config)
+            _, errors = await self._async_validate_or_error(self.nut_config)
             if not errors:
                 title = _format_host_port_alias(self.nut_config)
                 return self.async_create_entry(title=title, data=self.nut_config)
