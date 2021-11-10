@@ -1,11 +1,12 @@
 """Config flow to configure the WLED integration."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 from wled import WLED, WLEDConnectionError
 
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
     ConfigEntry,
@@ -16,7 +17,6 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT, DOMAIN
 
@@ -39,7 +39,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._handle_config_flow(user_input)
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
 
@@ -57,7 +57,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         # Prepare configuration flow
-        return await self._handle_config_flow(discovery_info, True)
+        return await self._handle_config_flow(cast(dict, discovery_info), True)
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
