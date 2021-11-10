@@ -17,6 +17,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
+    CONF_PAYLOAD,
+    CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
@@ -49,7 +51,7 @@ def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
     return RawValue(
         xknx,
         name=config[CONF_NAME],
-        payload_length=config[SelectSchema.CONF_PAYLOAD_LENGTH],
+        payload_length=config[CONF_PAYLOAD_LENGTH],
         group_address=config[KNX_ADDRESS],
         group_address_state=config.get(CONF_STATE_ADDRESS),
         respond_to_read=config[CONF_RESPOND_TO_READ],
@@ -66,7 +68,7 @@ class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
         """Initialize a KNX select."""
         super().__init__(_create_raw_value(xknx, config))
         self._option_payloads: dict[str, int] = {
-            option[SelectSchema.CONF_OPTION]: option[SelectSchema.CONF_PAYLOAD]
+            option[SelectSchema.CONF_OPTION]: option[CONF_PAYLOAD]
             for option in config[SelectSchema.CONF_OPTIONS]
         }
         self._attr_options = list(self._option_payloads)
