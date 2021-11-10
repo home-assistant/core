@@ -345,7 +345,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set hvac mode."""
-        if hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == self._hvac_mode:
+            # skip any action when HVAC mode the same
+            return
+         if hvac_mode == HVAC_MODE_HEAT:
             self._hvac_mode = HVAC_MODE_HEAT
             await self._async_control_heating(force=True)
         elif hvac_mode == HVAC_MODE_COOL:
