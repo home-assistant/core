@@ -213,10 +213,11 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
-        # NotificationType 9: System - State Id's 1, 2, 6, 7
+        # NotificationType 9: System - State Id's 1, 2, 3, 4, 6, 7
         key=NOTIFICATION_SYSTEM,
-        states=("1", "2", "6", "7"),
+        states=("1", "2", "3", "4", "6", "7"),
         device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 10: Emergency - State Id's 1, 2, 3
