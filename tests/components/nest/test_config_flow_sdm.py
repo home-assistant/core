@@ -8,6 +8,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .common import MockConfigEntry
@@ -34,14 +35,14 @@ WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
 
 
-def get_config_entry(hass):
+def get_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Return a single config entry."""
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     return entries[0]
 
 
-def create_config_entry(hass, data: dict) -> ConfigEntry:
+def create_config_entry(hass: HomeAssistant, data: dict) -> ConfigEntry:
     """Create the ConfigEntry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
