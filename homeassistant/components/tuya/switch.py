@@ -436,7 +436,11 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     # Smart Electricity Meter
     # https://developer.tuya.com/en/docs/iot/smart-meter?id=Kaiuz4gv6ack7
     "zndb": (
-        SwitchEntityDescription(key=DPCode.SWITCH, name="Switch"),),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+        ),
+    ),
 }
 
 # Socket (duplicate of `pc`)

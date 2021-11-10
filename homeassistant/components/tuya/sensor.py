@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import json
 from typing import cast
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -43,7 +42,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import HomeAssistantTuyaData
-from .base import EnumTypeData, IntegerTypeData, TuyaEntity
+from .base import ElectricityTypeData, EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import (
     DEVICE_CLASS_TUYA_STATUS,
     DEVICE_CLASS_UNITS,
@@ -696,10 +695,12 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             return None
 
         # Get subkey value from Json string.
-        if self._status_range.type == "Json":
-            if self.entity_description.subkey is None:
-                return None
-            return json.loads(value).get(self.entity_description.subkey)
+        if (
+            self._status_range.type == "Json"
+            and self.entity_description.subkey is not None
+        ):
+            values = ElectricityTypeData.from_json(value)
+            return getattr(values, self.entity_description.subkey)
 
         # Valid string or enum value
         return value
