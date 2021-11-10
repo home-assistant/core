@@ -4,16 +4,11 @@ from unittest.mock import patch
 
 from goalzero import exceptions
 
-from homeassistant.components.goalzero.const import (
-    DATA_KEY_COORDINATOR,
-    DEFAULT_NAME,
-    DOMAIN,
-    MANUFACTURER,
-)
+from homeassistant.components.goalzero.const import DEFAULT_NAME, DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from . import (
@@ -61,10 +56,8 @@ async def test_update_failed(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test data update failure."""
-    entry = await async_init_integration(hass, aioclient_mock)
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_KEY_COORDINATOR
-    ]
+    await async_init_integration(hass, aioclient_mock)
+    assert hass.states.get(f"switch.{DEFAULT_NAME}_ac_port_status").state == STATE_ON
     with patch(
         "homeassistant.components.goalzero.Yeti.get_state",
         side_effect=exceptions.ConnectError,
@@ -73,7 +66,8 @@ async def test_update_failed(
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
         updater.assert_called_once()
-        assert not coordinator.last_update_success
+        state = hass.states.get(f"switch.{DEFAULT_NAME}_ac_port_status")
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):

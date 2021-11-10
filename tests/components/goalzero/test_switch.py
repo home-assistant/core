@@ -20,30 +20,32 @@ async def test_switches_states(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ):
     """Test we get sensor data."""
-    aioclient_mock.post(
-        "http://1.2.3.4/state",
-        text=load_fixture("goalzero/state_data.json"),
-    )
     await async_setup_platform(hass, aioclient_mock, DOMAIN)
 
+    assert hass.states.get(f"switch.{DEFAULT_NAME}_usb_port_status").state == STATE_OFF
+    assert hass.states.get(f"switch.{DEFAULT_NAME}_ac_port_status").state == STATE_ON
     entity_id = f"switch.{DEFAULT_NAME}_12v_port_status"
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
+    assert hass.states.get(entity_id).state == STATE_OFF
+    aioclient_mock.post(
+        "http://1.2.3.4/state",
+        text=load_fixture("goalzero/state_change.json"),
+    )
     await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    entity_id = f"switch.{DEFAULT_NAME}_usb_port_status"
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
-    entity_id = f"switch.{DEFAULT_NAME}_ac_port_status"
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert hass.states.get(entity_id).state == STATE_ON
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "http://1.2.3.4/state",
+        text=load_fixture("goalzero/state_data.json"),
+    )
     await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
+    assert hass.states.get(entity_id).state == STATE_OFF
