@@ -55,6 +55,15 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Irrigator
+    # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
+    "ggq": (
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     "hps": (
