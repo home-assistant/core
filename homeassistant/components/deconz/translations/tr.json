@@ -23,7 +23,7 @@
             },
             "manual_input": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "port": "Port"
                 }
             },
@@ -65,7 +65,7 @@
         "trigger_type": {
             "remote_awakened": "Cihaz uyand\u0131",
             "remote_button_double_press": "\" {subtype} \" d\u00fc\u011fmesine \u00e7ift t\u0131kland\u0131",
-            "remote_button_long_press": "\"{alt t\u00fcr}\" d\u00fc\u011fmesine s\u00fcrekli bas\u0131ld\u0131",
+            "remote_button_long_press": "\" {subtype} \" d\u00fc\u011fmesi s\u00fcrekli bas\u0131l\u0131",
             "remote_button_long_release": "\" {subtype} \" d\u00fc\u011fmesi uzun bas\u0131ld\u0131ktan sonra b\u0131rak\u0131ld\u0131",
             "remote_button_quadruple_press": "\" {subtype} \" d\u00fc\u011fmesi d\u00f6rt kez t\u0131kland\u0131",
             "remote_button_quintuple_press": "\" {subtype} \" d\u00fc\u011fmesi be\u015f kez t\u0131kland\u0131",

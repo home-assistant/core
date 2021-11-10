@@ -4,11 +4,11 @@
             "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
-            "reauth_successful": "Kimlik do\u011frulama yeniden ba\u015far\u0131l\u0131 oldu",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
             "unknown": "Beklenmeyen hata"
         },
         "error": {
-            "cannot_connect": "Ba\u011flant\u0131 ba\u015far\u0131s\u0131z",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "unknown": "Beklenmeyen hata"
         },
@@ -19,15 +19,15 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "password": "\u015eifre"
+                    "password": "Parola"
                 },
                 "description": "L\u00fctfen sunucunun do\u011fru \u015fifresini giriniz: {host}"
             },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
-                    "name": "\u0130sim",
-                    "password": "\u015eifre",
+                    "host": "Ana bilgisayar",
+                    "name": "Ad",
+                    "password": "Parola",
                     "port": "Port"
                 }
             }
