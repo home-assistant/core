@@ -175,11 +175,19 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         # Generate ADB key files
                         keygen(adbkey)
                     await self.async_execute_command(
-                        "su -c 'grep  -F -f /data/data/pl.sviete.dom/files/home/AIS"
-                        "/.storage/androidtv_adbkey.pub /data/misc/adb/adb_keys || cat "
-                        "/data/data/pl.sviete.dom/files/home/AIS/.storage"
-                        "/androidtv_adbkey.pub >> /data/misc/adb/adb_keys'"
+                        "su -c 'rm /data/misc/adb/adb_keys'"
                     )
+                    await self.async_execute_command(
+                        "su -c 'cat /data/data/pl.sviete.dom/files/home/AIS/.storage/androidtv_adbkey.pub >> "
+                        "/data/misc/adb/adb_keys'"
+                    )
+                    # TODO add without rm
+                    # await self.async_execute_command(
+                    #     "su -c 'grep  -F -f /data/data/pl.sviete.dom/files/home/AIS"
+                    #     "/.storage/androidtv_adbkey.pub /data/misc/adb/adb_keys || cat "
+                    #     "/data/data/pl.sviete.dom/files/home/AIS/.storage"
+                    #     "/androidtv_adbkey.pub >> /data/misc/adb/adb_keys'"
+                    # )
                     await self.async_execute_command(
                         "su -c 'chmod 0644 /data/misc/adb/adb_keys'"
                     )
