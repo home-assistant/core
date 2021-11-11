@@ -10,8 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, EVENT_COMPONENT_LOADED
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -122,8 +122,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DATA_GROUP_MANAGER: group_manager,
         DATA_SOURCE_MANAGER: source_manager,
         MEDIA_PLAYER_DOMAIN: players,
-        # Maps player_id to entity_id. Populated by the individual HeosMediaPlayer entites.
-        DATA_ENTITY_ID_MAP: {}
+        # Maps player_id to entity_id. Populated by the individual HeosMediaPlayer entities.
+        DATA_ENTITY_ID_MAP: {},
     }
 
     services.register(hass, controller)
@@ -243,7 +243,8 @@ class GroupManager:
     async def async_get_group_membership(self):
         """Return a dictionary which contains all group members for each player as entity_ids."""
         group_info_by_entity_id = {
-            player_entity_id: [] for player_entity_id in self._get_entity_id_to_player_id_map()
+            player_entity_id: []
+            for player_entity_id in self._get_entity_id_to_player_id_map()
         }
 
         try:
@@ -274,13 +275,18 @@ class GroupManager:
         """Create a group with `leader_entity_id` as group leader and `member_entities` as member players."""
         entity_id_to_player_id_map = self._get_entity_id_to_player_id_map()
         leader_id = entity_id_to_player_id_map.get(leader_entity_id)
-        member_ids = [entity_id_to_player_id_map.get(member) for member in member_entity_ids]
+        member_ids = [
+            entity_id_to_player_id_map.get(member) for member in member_entity_ids
+        ]
 
         try:
             await self.controller.create_group(leader_id, member_ids)
         except HeosError as err:
             _LOGGER.error(
-                "Failed to group %s with %s: %s", leader_entity_id, member_entity_ids, err
+                "Failed to group %s with %s: %s",
+                leader_entity_id,
+                member_entity_ids,
+                err,
             )
 
     async def async_unjoin_player(self, player_entity_id: str):

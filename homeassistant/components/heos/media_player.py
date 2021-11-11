@@ -135,7 +135,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
             )
         )
         # Register this player's entity_id so it can be resolved by the group manager
-        self.hass.data[HEOS_DOMAIN][DATA_ENTITY_ID_MAP][self._player.player_id] = self.entity_id
+        self.hass.data[HEOS_DOMAIN][DATA_ENTITY_ID_MAP][
+            self._player.player_id
+        ] = self.entity_id
         self._group_manager.force_update_groups()
 
     @log_command_error("clear playlist")
