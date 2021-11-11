@@ -1,8 +1,22 @@
 """SmartTub integration."""
+from homeassistant.const import (
+    DOMAIN_BINARY_SENSOR,
+    DOMAIN_CLIMATE,
+    DOMAIN_LIGHT,
+    DOMAIN_SENSOR,
+    DOMAIN_SWITCH,
+)
+
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .controller import SmartTubController
 
-PLATFORMS = ["binary_sensor", "climate", "light", "sensor", "switch"]
+PLATFORMS = (
+    DOMAIN_BINARY_SENSOR,
+    DOMAIN_CLIMATE,
+    DOMAIN_LIGHT,
+    DOMAIN_SENSOR,
+    DOMAIN_SWITCH,
+)
 
 
 async def async_setup_entry(hass, entry):
