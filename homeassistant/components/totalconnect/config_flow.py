@@ -46,15 +46,12 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
-                return self.async_show_form(
-                    step_id="user", data_schema=data_schema, errors=errors
-                )
-
-            # username/password valid so show user locations
-            self.username = username
-            self.password = password
-            self.client = client
-            return await self.async_step_locations()
+            else:
+                # username/password valid so show user locations
+                self.username = username
+                self.password = password
+                self.client = client
+                return await self.async_step_locations()
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
