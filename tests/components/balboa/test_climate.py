@@ -149,6 +149,7 @@ async def test_spa_temperature(hass: HomeAssistant):
 async def test_spa_temperature_unit(hass: HomeAssistant):
     """Test temperature unit conversions."""
 
+    save_unit = hass.config.units.temperature_unit
     hass.config.units.temperature_unit = TEMP_FAHRENHEIT
     config_entry = await init_integration_mocked(hass)
 
@@ -174,6 +175,9 @@ async def test_spa_temperature_unit(hass: HomeAssistant):
     state = hass.states.get(ENTITY_CLIMATE)
 
     assert state.attributes.get(ATTR_TEMPERATURE) == 60.0
+
+    # put things back how we found them
+    hass.config.units.temperature_unit = save_unit
 
 
 async def test_spa_hvac_modes(hass: HomeAssistant):
