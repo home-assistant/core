@@ -104,7 +104,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.device_id)},
             manufacturer=MANUFACTURER,
-            model=f"generation {heater.generation}",
+            model=f"generation {1 if heater.is_gen1 else 2}",
             name=self.name,
         )
         if heater.is_gen1 or heater.is_gen3:
@@ -196,9 +196,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
 
     def __init__(self, coordinator):
         """Initialize the thermostat."""
-
         super().__init__(coordinator)
-
         self._attr_name = coordinator.mill_data_connection.name
         self._update_attr()
 
