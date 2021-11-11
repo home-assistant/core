@@ -28,10 +28,10 @@ from .const import DOMAIN, SIGNAL_GW, TIMEOUT_API
 _LOGGER = logging.getLogger(__name__)
 
 
-F = TypeVar("F", bound=Callable[..., Any])
+FuncArg = TypeVar("FuncArg", bound=Callable[..., Any])
 
 
-def handle_error(func: F) -> F:
+def handle_error(func: FuncArg) -> FuncArg:
     """Handle tradfri api call error."""
 
     @wraps(func)
@@ -42,7 +42,7 @@ def handle_error(func: F) -> F:
         except PytradfriError as err:
             _LOGGER.error("Unable to execute command %s: %s", command, err)
 
-    return cast(F, wrapper)
+    return cast(FuncArg, wrapper)
 
 
 class TradfriBaseClass(Entity):
