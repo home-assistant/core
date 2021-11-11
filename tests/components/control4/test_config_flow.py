@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import STEP_ID_INIT
 
 from tests.common import MockConfigEntry
 
@@ -167,7 +166,7 @@ async def test_option_flow(hass):
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
-    assert result["step_id"] == STEP_ID_INIT
+    assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -187,7 +186,7 @@ async def test_option_flow_defaults(hass):
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
-    assert result["step_id"] == STEP_ID_INIT
+    assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
