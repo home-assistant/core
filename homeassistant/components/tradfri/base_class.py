@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from functools import wraps
 import logging
-from typing import Any, cast
+from typing import Any
 
 from pytradfri.command import Command
 from pytradfri.device import Device
@@ -39,7 +39,7 @@ def handle_error(func: Callable[..., Any]) -> Callable[..., Any]:
         except PytradfriError as err:
             _LOGGER.error("Unable to execute command %s: %s", command, err)
 
-    return cast(Callable[..., Any], wrapper)
+    return wrapper
 
 
 class TradfriBaseClass(Entity):
