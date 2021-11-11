@@ -1,5 +1,7 @@
 """Tests of the climate entity of the balboa integration."""
 
+from unittest.mock import patch
+
 from homeassistant.components.balboa.const import DOMAIN as BALBOA_DOMAIN, SPA
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
@@ -149,35 +151,35 @@ async def test_spa_temperature(hass: HomeAssistant):
 async def test_spa_temperature_unit(hass: HomeAssistant):
     """Test temperature unit conversions."""
 
-    save_unit = hass.config.units.temperature_unit
-    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
-    config_entry = await init_integration_mocked(hass)
+    with patch.object(hass.config.units, "temperature_unit", TEMP_FAHRENHEIT):
+        config_entry = await init_integration_mocked(hass)
 
-    await async_setup_component(hass, BALBOA_DOMAIN, config_entry)
-    await hass.async_block_till_done()
+        await async_setup_component(hass, BALBOA_DOMAIN, config_entry)
+        await hass.async_block_till_done()
 
-    spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id][SPA]
+        spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id][SPA]
 
-    spa.settemp = 15.4
-    await common.async_set_temperature(hass, temperature=15.4, entity_id=ENTITY_CLIMATE)
-    await spa.int_new_data_cb()
-    await hass.async_block_till_done()
-    state = hass.states.get(ENTITY_CLIMATE)
+        spa.settemp = 15.4
+        await common.async_set_temperature(
+            hass, temperature=15.4, entity_id=ENTITY_CLIMATE
+        )
+        await spa.int_new_data_cb()
+        await hass.async_block_till_done()
+        state = hass.states.get(ENTITY_CLIMATE)
 
-    assert state.attributes.get(ATTR_TEMPERATURE) == 15.0
+        assert state.attributes.get(ATTR_TEMPERATURE) == 15.0
 
-    # flip the spa to Celsius and try again
-    spa.settemp = 15.4
-    spa.tempscale = 1
-    await common.async_set_temperature(hass, temperature=15.4, entity_id=ENTITY_CLIMATE)
-    await spa.int_new_data_cb()
-    await hass.async_block_till_done()
-    state = hass.states.get(ENTITY_CLIMATE)
+        # flip the spa to Celsius and try again
+        spa.settemp = 15.4
+        spa.tempscale = 1
+        await common.async_set_temperature(
+            hass, temperature=15.4, entity_id=ENTITY_CLIMATE
+        )
+        await spa.int_new_data_cb()
+        await hass.async_block_till_done()
+        state = hass.states.get(ENTITY_CLIMATE)
 
-    assert state.attributes.get(ATTR_TEMPERATURE) == 60.0
-
-    # put things back how we found them
-    hass.config.units.temperature_unit = save_unit
+        assert state.attributes.get(ATTR_TEMPERATURE) == 60.0
 
 
 async def test_spa_hvac_modes(hass: HomeAssistant):
