@@ -57,7 +57,6 @@ from .const import (
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
-from .service import async_services_setup
 from .utils import (
     get_block_device_name,
     get_block_device_sleep_period,
@@ -191,8 +190,6 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         _LOGGER.debug("Setting up offline block device %s", entry.title)
         await async_block_device_setup(hass, entry, device)
 
-    await async_services_setup(hass)
-
     return True
 
 
@@ -239,8 +236,6 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
     device_wrapper.async_setup()
 
     hass.config_entries.async_setup_platforms(entry, RPC_PLATFORMS)
-
-    await async_services_setup(hass)
 
     return True
 

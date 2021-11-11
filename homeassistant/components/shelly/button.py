@@ -5,7 +5,7 @@ from typing import cast
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, ENTITY_CATEGORY_CONFIG
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
@@ -13,15 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import BlockDeviceWrapper, RpcDeviceWrapper
-from .const import (
-    ATTR_BETA,
-    BLOCK,
-    CONF_OTA_BETA_CHANNEL,
-    DATA_CONFIG_ENTRY,
-    DOMAIN,
-    RPC,
-    SERVICE_OTA_UPDATE,
-)
+from .const import BLOCK, CONF_OTA_BETA_CHANNEL, DATA_CONFIG_ENTRY, DOMAIN, RPC
 from .utils import get_block_device_name, get_device_entry_gen, get_rpc_device_name
 
 
@@ -74,11 +66,6 @@ class ShellyOtaUpdateButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Triggers the OTA update service."""
-        await self.hass.services.async_call(
-            DOMAIN,
-            SERVICE_OTA_UPDATE,
-            {
-                ATTR_DEVICE_ID: self.wrapper.device_id,
-                ATTR_BETA: self.entry.options.get(CONF_OTA_BETA_CHANNEL),
-            },
+        await self.wrapper.async_trigger_ota_update(
+            beta=bool(self.entry.options.get(CONF_OTA_BETA_CHANNEL))
         )

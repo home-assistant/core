@@ -10,8 +10,6 @@ DEVICE: Final = "device"
 DOMAIN: Final = "shelly"
 REST: Final = "rest"
 RPC: Final = "rpc"
-SERVICE_OTA_UPDATE: Final = "ota_update"
-SERVICES: Final = [SERVICE_OTA_UPDATE]
 
 CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683

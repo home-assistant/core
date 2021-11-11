@@ -1,7 +1,6 @@
 """Tests for Shelly button platform."""
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.button.const import SERVICE_PRESS
-from homeassistant.components.shelly.service import async_services_setup
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -20,7 +19,6 @@ async def test_block_button(hass: HomeAssistant, coap_wrapper):
     assert state
     assert state.state == STATE_UNKNOWN
 
-    await async_services_setup(hass)
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
@@ -42,8 +40,6 @@ async def test_block_button_beta(hass: HomeAssistant, coap_wrapper):
         hass.config_entries.async_forward_entry_setup(coap_wrapper.entry, SWITCH_DOMAIN)
     )
     await hass.async_block_till_done()
-
-    await async_services_setup(hass)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -74,7 +70,6 @@ async def test_rpc_button(hass: HomeAssistant, rpc_wrapper):
     assert state
     assert state.state == STATE_UNKNOWN
 
-    await async_services_setup(hass)
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
@@ -96,8 +91,6 @@ async def test_rpc_button_beta(hass: HomeAssistant, rpc_wrapper):
         hass.config_entries.async_forward_entry_setup(rpc_wrapper.entry, SWITCH_DOMAIN)
     )
     await hass.async_block_till_done()
-
-    await async_services_setup(hass)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
