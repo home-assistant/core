@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from functools import wraps
 import logging
-from typing import Any
+from typing import Any, TypeVar, cast
 
 from pytradfri.command import Command
 from pytradfri.device import Device
@@ -28,7 +28,10 @@ from .const import DOMAIN, SIGNAL_GW, TIMEOUT_API
 _LOGGER = logging.getLogger(__name__)
 
 
-def handle_error(func: Callable[..., Any]) -> Callable[[str], Any]:
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+def handle_error(func: F) -> F:
     """Handle tradfri api call error."""
 
     @wraps(func)
@@ -39,7 +42,7 @@ def handle_error(func: Callable[..., Any]) -> Callable[[str], Any]:
         except PytradfriError as err:
             _LOGGER.error("Unable to execute command %s: %s", command, err)
 
-    return wrapper
+    return cast(F, wrapper)
 
 
 class TradfriBaseClass(Entity):

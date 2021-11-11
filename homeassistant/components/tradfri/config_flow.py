@@ -6,7 +6,7 @@ from typing import Any
 from uuid import uuid4
 
 import async_timeout
-from pytradfri import Gateway, RequestError
+from pytradfri import Gateway, PytradfriError, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
@@ -201,7 +201,7 @@ async def get_gateway_info(
         gateway_info_result = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
 
         await factory.shutdown()
-    except (OSError, RequestError) as err:
+    except (OSError, RequestError, PytradfriError) as err:
         # We're also catching OSError as PyTradfri doesn't catch that one yet
         # Upstream PR: https://github.com/ggravlingen/pytradfri/pull/189
         raise AuthError("cannot_connect") from err
