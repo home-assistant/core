@@ -155,8 +155,11 @@ async def test_update_config_write_to_temp_file(hass, hass_client, tmpdir):
 
     new_data = await hass.async_add_executor_job(load_yaml, group_yaml)
 
-    orig_data["hello_beer"]["name"] = "Beer"
-    orig_data["hello_beer"]["entities"] = ["light.top", "light.bottom"]
-
-    assert new_data == orig_data
+    assert new_data == {
+        **orig_data,
+        "hello_beer": {
+            "name": "Beer",
+            "entities": ["light.top", "light.bottom"],
+        },
+    }
     mock_call.assert_called_once_with("group", "reload")
