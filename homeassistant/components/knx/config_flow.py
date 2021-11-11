@@ -209,14 +209,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         data = {
-            ConnectionSchema.CONF_KNX_RATE_LIMIT: config.get(
-                ConnectionSchema.CONF_KNX_RATE_LIMIT,
-                ConnectionSchema.CONF_KNX_DEFAULT_RATE_LIMIT,
-            ),
-            ConnectionSchema.CONF_KNX_STATE_UPDATER: config.get(
-                ConnectionSchema.CONF_KNX_STATE_UPDATER,
-                ConnectionSchema.CONF_KNX_DEFAULT_STATE_UPDATER,
-            ),
+            ConnectionSchema.CONF_KNX_RATE_LIMIT: config[
+                ConnectionSchema.CONF_KNX_RATE_LIMIT
+            ],
+            ConnectionSchema.CONF_KNX_STATE_UPDATER: config[
+                ConnectionSchema.CONF_KNX_STATE_UPDATER
+            ],
             ConnectionSchema.CONF_KNX_MCAST_GRP: config[
                 ConnectionSchema.CONF_KNX_MCAST_GRP
             ],
@@ -293,9 +291,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
                     ): cv.port,
                     vol.Required(
                         CONF_KNX_INDIVIDUAL_ADDRESS,
-                        default=current_config.get(
-                            CONF_KNX_INDIVIDUAL_ADDRESS, XKNX.DEFAULT_ADDRESS
-                        ),
+                        default=current_config[CONF_KNX_INDIVIDUAL_ADDRESS],
                     ): str,
                     vol.Required(
                         ConnectionSchema.CONF_KNX_ROUTE_BACK,
