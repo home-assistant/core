@@ -124,7 +124,7 @@ async def test_update_config_write_to_temp_file(hass, hass_client, tmpdir):
     test_dir = await hass.async_add_executor_job(tmpdir.mkdir, "files")
     group_yaml = Path(test_dir / "group.yaml")
 
-    with patch.object(group.GROUP_CONFIG_PATH, group_yaml), patch.object(
+    with patch.object(group, "GROUP_CONFIG_PATH", group_yaml), patch.object(
         config, "SECTIONS", ["group"]
     ):
         await async_setup_component(hass, "config", {})
