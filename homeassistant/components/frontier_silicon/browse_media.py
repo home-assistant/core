@@ -64,9 +64,9 @@ async def item_payload(item, get_thumbnail_url=None):
 
     media_class = None
 
-    if "band" in item:
+    if "key" in item:
         media_content_type = f"{item['type']}"
-        media_content_id = f"{item['band']}"
+        media_content_id = f"{item['key']}"
         can_play = True
         can_expand = False
     else:
@@ -141,78 +141,99 @@ async def library_payload():
     return library_info
 
 
+async def _get_content_list(media_library, list_url, set_nav_state=True):
+    nav = None
+    if set_nav_state:
+        nav = await media_library.handle_set("netRemote.nav.state", 1)
+        if not nav:
+            _LOGGER.error("Failed to enter nav state")
+            return None
+        index = -1
+        has_more = True
+        result = []
+
+        while has_more:
+            res = await media_library.call(
+                f"LIST_GET_NEXT/{list_url}/{index}", {"maxItems": 100}
+            )
+            has_more = res.status == "FS_OK"
+            for item in res.findall("item"):
+                if "key" not in item.attrib or not item.attrib["key"]:
+                    continue
+
+                key = int(item.attrib["key"])
+                index = key
+                entry = {"key": key}
+                for field in item.findall("field"):
+                    if "name" not in field.attrib:
+                        continue
+                    value = []
+                    for text in field.itertext():
+                        value.append(text.strip())
+                    if not value:
+                        continue
+                    entry[field.attrib["name"]] = "\n".join(value)
+                result.append(entry)
+
+    if set_nav_state:
+        nav = media_library.handle_set("netRemote.nav.state", 0)
+    return result, nav
+
+
 async def get_media_info(media_library, search_id, search_type):
     """Fetch media/channels."""
     thumbnail = None
     title = None
     media = None
+    nav = None
 
     if search_type == "preset":
-        nav = await media_library.handle_set("netRemote.nav.state", 1)
-        if not nav:
-            _LOGGER.error("Failed to enter nav state")
+        presets, nav = await _get_content_list(media_library, "netRemote.nav.presets")
+        if not presets:
             return thumbnail, title, media
-        presets = await media_library.handle_list("netRemote.nav.presets")
-        await media_library.handle_set("netRemote.nav.state", 0)
+
         media = []
         for preset in presets:
-            if "band" in preset and "name" in preset and preset["name"].text:
+            if "key" in preset and "name" in preset and preset["name"]:
                 entry = {
                     **preset,
                     **{
-                        "label": preset["name"].text.strip(),
+                        "label": preset["name"],
                         "type": "preset",
                     },
                 }
                 if (
                     not search_id
-                    or (search_id.isnumeric() and entry["band"] == int(search_id))
+                    or (search_id.isnumeric() and entry["key"] == int(search_id))
                     or (search_id.lower() in entry["label"].lower())
                 ):
                     media.append(entry)
         title = "Favorites"
+
     if search_type == MEDIA_TYPE_CHANNEL:
-        nav = await media_library.handle_set("netRemote.nav.state", 1)
-        if not nav:
-            _LOGGER.error("Failed to enter nav state")
+        channels, nav = await _get_content_list(media_library, "netRemote.nav.list")
+        if not channels:
             return thumbnail, title, media
 
-        channels = await media_library.call(
-            "LIST_GET_NEXT/netRemote.nav.list/-1", {"maxItems": 100}
-        )
-        nav = media_library.handle_set("netRemote.nav.state", 0)
-
         media = []
-        for item in channels.findall("item"):
-            if "key" not in item.attrib or not item.attrib["key"]:
-                continue
-
-            channel = {"band": int(item.attrib["key"])}
-            for field in item.findall("field"):
-                if "name" not in field.attrib:
-                    continue
-                value = []
-                for text in field.itertext():
-                    value.append(text.strip())
-                if not value:
-                    continue
-                channel[field.attrib["name"]] = "\n".join(value)
-
-            if "name" in channel and channel["name"]:
+        for channel in channels:
+            if "key" in channel and "name" in channel and channel["name"]:
                 entry = {
                     **channel,
                     **{
                         "label": channel["name"],
-                        "type": MEDIA_TYPE_CHANNEL,
+                        "type": "channel",
                     },
                 }
                 if (
                     not search_id
-                    or (search_id.isnumeric() and entry["band"] == int(search_id))
+                    or (search_id.isnumeric() and entry["key"] == int(search_id))
                     or (search_id.lower() in entry["label"].lower())
                 ):
                     media.append(entry)
         title = "Channels"
+
+    if nav:
         await nav
 
     return thumbnail, title, media

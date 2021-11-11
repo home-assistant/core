@@ -5,7 +5,11 @@ from afsapi import AFSAPI
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    BrowseError,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_CHANNEL,
@@ -346,7 +350,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         ):
             _, _, media = await get_media_info(fs_device, media_id, media_type)
             if media:
-                media_id = media[0]["band"]
+                media_id = media[0]["key"]
             else:
                 _LOGGER.error("No entry found for %s %s", media_type, media_id)
                 return
@@ -357,11 +361,11 @@ class AFSAPIDevice(MediaPlayerEntity):
             return False
 
         if media_type == "preset":
-            ok = await fs_device.handle_set(
+            result = await fs_device.handle_set(
                 "netRemote.nav.action.selectPreset", media_id
             )
         if media_type == MEDIA_TYPE_CHANNEL:
-            ok = await fs_device.handle_set("netRemote.nav.action.selectItem", media_id)
+            result = await fs_device.handle_set("netRemote.nav.action.selectItem", media_id)
 
         await fs_device.handle_set("netRemote.nav.state", 0)
-        return ok
+        return result
