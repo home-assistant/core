@@ -1,6 +1,7 @@
 """Support for functionality to interact with Android TV / Fire TV devices."""
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 import functools
 import json
@@ -375,11 +376,25 @@ class ADBDevice(MediaPlayerEntity):
         self.turn_on_command = options.get(CONF_TURN_ON_COMMAND)
 
     def _is_ais_gate(self):
+        # am force-stop com.spotify.music
+        # am start -W -a android.intent.action.VIEW -d "spotify:track:0ufdvcaRSNKq8NmIJx0E4A:play"
         # check if we have ais gate
         if self.aftv.host == "127.0.0.1":
             return True
         ais_model = self.device_info["model"].startswith("AIS")
         return ais_model
+
+    async def async_execute_ais_command(self, cmd):
+        cmd_process = await asyncio.create_subprocess_shell(
+            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, stderr = await cmd_process.communicate()
+
+        if stdout:
+            _LOGGER.info("stdout %s", stdout.decode())
+        if stderr:
+            _LOGGER.info("stderr %s", stderr.decode())
 
     async def async_added_to_hass(self):
         """Set config parameter when add to hass."""
