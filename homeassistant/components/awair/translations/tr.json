@@ -6,7 +6,7 @@
             "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
-            "invalid_access_token": "Ge\u00e7ersiz eri\u015fim belirteci",
+            "invalid_access_token": "Ge\u00e7ersiz eri\u015fim anahtar\u0131",
             "unknown": "Beklenmeyen hata"
         },
         "step": {

@@ -64,7 +64,7 @@
                     "5": "B\u00f6lge 5",
                     "6": "B\u00f6lge 6",
                     "7": "B\u00f6lge 7",
-                    "out": "OUT"
+                    "out": "DI\u015eARI"
                 },
                 "description": "{host} bir {model} ke\u015ffetti. A\u015fa\u011f\u0131dan her G/\u00c7'\u0131n temel yap\u0131land\u0131rmas\u0131n\u0131 se\u00e7in - G/\u00c7'a ba\u011fl\u0131 olarak ikili sens\u00f6rlere (a\u00e7\u0131k/kapal\u0131 kontaklar), dijital sens\u00f6rlere (dht ve ds18b20) veya de\u011fi\u015ftirilebilir \u00e7\u0131k\u0131\u015flara izin verebilir. Sonraki ad\u0131mlarda ayr\u0131nt\u0131l\u0131 se\u00e7enekleri yap\u0131land\u0131rabileceksiniz.",
                 "title": "G/\u00c7'\u0131 yap\u0131land\u0131r"
@@ -77,8 +77,8 @@
                     "8": "B\u00f6lge 8",
                     "9": "B\u00f6lge 9",
                     "alarm1": "ALARM1",
-                    "alarm2_out2": "OUT2/ALARM2",
-                    "out1": "OUT1"
+                    "alarm2_out2": "\u00c7IKI\u015e2/ALARM2",
+                    "out1": "\u00c7IKI\u015e1"
                 },
                 "description": "A\u015fa\u011f\u0131da kalan G/\u00c7'nin yap\u0131land\u0131rmas\u0131n\u0131 se\u00e7in. Sonraki ad\u0131mlarda ayr\u0131nt\u0131l\u0131 se\u00e7enekleri yap\u0131land\u0131rabileceksiniz.",
                 "title": "Geni\u015fletilmi\u015f G/\u00c7'yi Yap\u0131land\u0131r"
