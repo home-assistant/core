@@ -715,7 +715,7 @@ async def test_supported_features(hass: HomeAssistant, cast_type, supported_feat
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "unknown"
+    assert state.state == "off"
 
     assert state.attributes.get("supported_features") == supported_features
 
