@@ -47,13 +47,13 @@ async def test_haa_fan_setup(hass):
     assert state.attributes["friendly_name"] == "HAA-C718B3"
     assert round(state.attributes["percentage_step"], 2) == 33.33
 
-    # Check that custom HAA Setup switch is created
-    entry = entity_registry.async_get("switch.haa_c718b3_setup")
+    # Check that custom HAA Setup button is created
+    entry = entity_registry.async_get("button.haa_c718b3_setup")
     assert entry.unique_id == "homekit-C718B3-1-aid:1-sid:1010-cid:1012"
 
     helper = Helper(
         hass,
-        "switch.haa_c718b3_setup",
+        "button.haa_c718b3_setup",
         pairing,
         accessories[0],
         config_entry,
@@ -61,13 +61,13 @@ async def test_haa_fan_setup(hass):
     state = await helper.poll_and_get_state()
     assert state.attributes["friendly_name"] == "HAA-C718B3 - Setup"
 
-    # Check that custom HAA Update switch is created
-    entry = entity_registry.async_get("switch.haa_c718b3_update")
+    # Check that custom HAA Update button is created
+    entry = entity_registry.async_get("button.haa_c718b3_update")
     assert entry.unique_id == "homekit-C718B3-1-aid:1-sid:1010-cid:1011"
 
     helper = Helper(
         hass,
-        "switch.haa_c718b3_update",
+        "button.haa_c718b3_update",
         pairing,
         accessories[0],
         config_entry,
