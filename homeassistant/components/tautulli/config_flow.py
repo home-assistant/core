@@ -1,17 +1,35 @@
 """Config flow for Tautulli."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-from pytautulli import PyTautulli, exceptions
+from pytautulli import PyTautulli, PyTautulliHostConfiguration, exceptions
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_API_KEY, CONF_SSL, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PATH,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import (
+    DEFAULT_NAME,
+    DEFAULT_PATH,
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -85,9 +103,26 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-        return await self.async_step_user(config)
+        for entry in self._async_current_entries():
+            if entry.data[CONF_API_KEY] == config[CONF_API_KEY]:
+                _part = config[CONF_API_KEY][0:4]
+                _msg = f"Tautulli yaml config with partial key {_part} has been imported. Please remove it"
+                _LOGGER.warning(_msg)
+                return self.async_abort(reason="already_configured")
+        host_configuration = PyTautulliHostConfiguration(
+            config[CONF_API_KEY],
+            ipaddress=config[CONF_HOST],
+            port=config.get(CONF_PORT, DEFAULT_PORT),
+            ssl=config.get(CONF_SSL, DEFAULT_SSL),
+            verify_ssl=config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            base_api_path=config.get(CONF_PATH, DEFAULT_PATH),
+        )
+        conf = {}
+        conf[CONF_API_KEY] = host_configuration.api_token
+        conf[CONF_URL] = host_configuration.base_url
+        conf[CONF_SSL] = host_configuration.ssl
+        conf[CONF_VERIFY_SSL] = host_configuration.verify_ssl
+        return await self.async_step_user(conf)
 
     async def validate_input(
         self, user_input: dict[str, Any]

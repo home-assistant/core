@@ -2,8 +2,12 @@
 from __future__ import annotations
 
 from pytautulli import PyTautulli
+from pytautulli.models.host_configuration import PyTautulliHostConfiguration
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_SSL, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -11,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_KEY_COORDINATOR, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import TautulliDataUpdateCoordinator
 
 PLATFORMS = [SENSOR_DOMAIN]
@@ -19,17 +23,20 @@ PLATFORMS = [SENSOR_DOMAIN]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tautulli from a config entry."""
-    api_client = PyTautulli(
+    host_configuration = PyTautulliHostConfiguration(
         api_token=entry.data[CONF_API_KEY],
         url=entry.data[CONF_URL],
-        session=async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL]),
         verify_ssl=entry.data[CONF_VERIFY_SSL],
         ssl=entry.data[CONF_SSL],
     )
-    cordnator = TautulliDataUpdateCoordinator(hass, api_client)
-    await cordnator.async_config_entry_first_refresh()
+    api_client = PyTautulli(
+        host_configuration=host_configuration,
+        session=async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL]),
+    )
+    coordinator = TautulliDataUpdateCoordinator(hass, host_configuration, api_client)
+    await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_KEY_COORDINATOR: cordnator}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -46,19 +53,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TautulliEntity(CoordinatorEntity):
     """Defines a base Tautulli entity."""
 
-    coordinator: TautulliDataUpdateCoordinator
-
     def __init__(
         self,
         coordinator: TautulliDataUpdateCoordinator,
+        description: SensorEntityDescription,
         entry_id: str,
     ) -> None:
         """Initialize the Tautulli entity."""
         super().__init__(coordinator)
-        self._attr_name = DEFAULT_NAME
-        self._server_unique_id = entry_id
+        self.entity_description = description
+        self._attr_unique_id = f"{entry_id}/{description.name}"
         self._attr_device_info = DeviceInfo(
-            configuration_url=coordinator.api_client._host.base_url,
+            configuration_url=coordinator.host_configuration.base_url,
             entry_type="service",
             identifiers={(DOMAIN, entry_id)},
             manufacturer=DEFAULT_NAME,

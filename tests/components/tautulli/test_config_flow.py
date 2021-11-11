@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     CONF_DATA,
+    CONF_IMPORT_DATA,
     NAME,
     UNIQUE_ID,
     create_mocked_tautulli,
@@ -85,6 +86,34 @@ async def test_flow_user_unknown_error(hass: HomeAssistant):
         assert result["errors"]["base"] == "unknown"
 
 
+async def test_flow_import(hass: HomeAssistant):
+    """Test import step."""
+    with patch_config_flow_tautulli(await create_mocked_tautulli()), _patch_setup():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=CONF_IMPORT_DATA,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == DEFAULT_NAME
+        assert result["data"] == CONF_DATA
+
+
+async def test_flow_import_already_configured(hass: HomeAssistant):
+    """Test import step already configured."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    with patch_config_flow_tautulli(await create_mocked_tautulli()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=CONF_IMPORT_DATA,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
 async def test_flow_reauth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     """Test reauth flow."""
     with patch("homeassistant.components.tautulli.PLATFORMS", []):
@@ -141,32 +170,3 @@ async def test_flow_reauth_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["base"] == "invalid_auth"
-
-
-async def test_flow_import(hass: HomeAssistant):
-    """Test import step."""
-    with patch_config_flow_tautulli(await create_mocked_tautulli()), _patch_setup():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_DATA,
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == DEFAULT_NAME
-        assert result["data"] == CONF_DATA
-
-
-async def test_flow_import_already_configured(hass: HomeAssistant):
-    """Test import step already configured."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONF_DATA)
-    entry.add_to_hass(hass)
-
-    with patch_config_flow_tautulli(await create_mocked_tautulli()):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"

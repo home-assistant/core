@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import logging
 
 from pytautulli import (
     PyTautulli,
@@ -14,13 +15,14 @@ from pytautulli.exceptions import (
     PyTautulliAuthenticationException,
     PyTautulliConnectionException,
 )
+from pytautulli.models.host_configuration import PyTautulliHostConfiguration
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 
 class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
@@ -29,15 +31,17 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        host_configuration: PyTautulliHostConfiguration,
         api_client: PyTautulli,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
-            logger=LOGGER,
+            logger=logging.getLogger(__name__),
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
+        self.host_configuration = host_configuration
         self.api_client = api_client
         self.activity: PyTautulliApiActivity | None = None
         self.home_stats: list[PyTautulliApiHomeStats] | None = None
