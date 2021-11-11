@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import Any, Generic, Optional, TypeVar, cast
 
 import greeneye
-from greeneye import Monitors
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
@@ -145,7 +144,7 @@ class GEMSensor(Generic[T], SensorEntity):
             monitors = self.hass.data[DATA_GREENEYE_MONITOR]
             monitors.remove_listener(self._on_new_monitor)
 
-    def _try_connect_to_monitor(self, monitors: Monitors) -> bool:
+    def _try_connect_to_monitor(self, monitors: greeneye.Monitors) -> bool:
         monitor = monitors.monitors.get(self._monitor_serial_number)
         if not monitor:
             return False
