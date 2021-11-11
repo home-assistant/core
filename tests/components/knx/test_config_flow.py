@@ -249,6 +249,8 @@ async def test_import_config_tunneling(hass: HomeAssistant) -> None:
         CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
         ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,  # has a default in the original config
         ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,  # has a default in the original config
+        ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,  # has a default in the original config
+        ConnectionSchema.CONF_KNX_STATE_UPDATER: True,  # has a default in the original config
         CONF_KNX_TUNNELING: {
             CONF_HOST: "192.168.1.1",
             CONF_PORT: 3675,
@@ -287,6 +289,8 @@ async def test_import_config_routing(hass: HomeAssistant) -> None:
         CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,  # has a default in the original config
         ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,  # has a default in the original config
         ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,  # has a default in the original config
+        ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,  # has a default in the original config
+        ConnectionSchema.CONF_KNX_STATE_UPDATER: True,  # has a default in the original config
         CONF_KNX_ROUTING: {},  # is required when using routing
     }
 
@@ -318,6 +322,8 @@ async def test_import_config_automatic(hass: HomeAssistant) -> None:
         CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,  # has a default in the original config
         ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,  # has a default in the original config
         ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,  # has a default in the original config
+        ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,  # has a default in the original config
+        ConnectionSchema.CONF_KNX_STATE_UPDATER: True,  # has a default in the original config
     }
 
     with patch(
