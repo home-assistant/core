@@ -11,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MONITORED_USERS, DATA_KEY_COORDINATOR, DEFAULT_NAME, DOMAIN
+from .const import DATA_KEY_COORDINATOR, DEFAULT_NAME, DOMAIN
 from .coordinator import TautulliDataUpdateCoordinator
 
 PLATFORMS = [SENSOR_DOMAIN]
@@ -30,10 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await cordnator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_KEY_COORDINATOR: cordnator}
-    if not entry.options:
-        options = {CONF_MONITORED_USERS: entry.data.get(CONF_MONITORED_USERS)}
-        hass.config_entries.async_update_entry(entry, options=options)
-
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -55,17 +51,16 @@ class TautulliEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: TautulliDataUpdateCoordinator,
-        name: str,
-        server_unique_id: str,
+        entry_id: str,
     ) -> None:
         """Initialize the Tautulli entity."""
         super().__init__(coordinator)
-        self._attr_name = name
-        self._server_unique_id = server_unique_id
+        self._attr_name = DEFAULT_NAME
+        self._server_unique_id = entry_id
         self._attr_device_info = DeviceInfo(
             configuration_url=coordinator.api_client._host.base_url,
             entry_type="service",
-            identifiers={(DOMAIN, server_unique_id)},
+            identifiers={(DOMAIN, entry_id)},
             manufacturer=DEFAULT_NAME,
-            name=name,
+            name=DEFAULT_NAME,
         )

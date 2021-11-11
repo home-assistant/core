@@ -17,8 +17,10 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PATH,
+    CONF_PLATFORM,
     CONF_PORT,
     CONF_SSL,
+    CONF_URL,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
@@ -26,8 +28,9 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType, StateType
 
-from . import CONF_MONITORED_USERS, TautulliEntity
+from . import TautulliEntity
 from .const import (
+    CONF_MONITORED_USERS,
     DATA_KEY_COORDINATOR,
     DEFAULT_NAME,
     DEFAULT_PATH,
@@ -65,11 +68,27 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: dict,
     async_add_entities: entity_platform.AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Modem Caller ID component."""
+    if CONF_MONITORED_CONDITIONS in config:
+        config.pop(CONF_MONITORED_CONDITIONS)
+    if CONF_MONITORED_USERS in config:
+        config.pop(CONF_MONITORED_USERS)
+    if CONF_NAME in config:
+        config.pop(CONF_NAME)
+    if CONF_PORT in config:
+        port = config[CONF_PORT]
+        config.pop(CONF_PORT)
+    if CONF_PATH in config:
+        path = config[CONF_PATH]
+        config.pop(CONF_PATH)
+    protocol = f"http{'s' if config.get(CONF_SSL) else ''}"
+    config[CONF_URL] = f"{protocol}://{config[CONF_HOST]}:{port or '8181'}{path or ''}"
+    config.pop(CONF_HOST)
+    config.pop(CONF_PLATFORM)
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -84,7 +103,6 @@ async def async_setup_entry(
     sensors = [
         TautulliSensor(
             hass.data[DOMAIN][entry.entry_id][DATA_KEY_COORDINATOR],
-            entry.data.get(CONF_NAME, description.name),
             description,
             entry.entry_id,
         )
@@ -102,15 +120,14 @@ class TautulliSensor(TautulliEntity, SensorEntity):
     def __init__(
         self,
         coordinator: TautulliDataUpdateCoordinator,
-        name: str,
         description: SensorEntityDescription,
-        server_unique_id: str,
+        entry_id: str,
     ) -> None:
         """Initialize the Tautulli sensor."""
-        super().__init__(coordinator, name, server_unique_id)
+        super().__init__(coordinator, entry_id)
         self.entity_description = description
-        self._attr_unique_id = f"{server_unique_id}/{name}"
-        self._attr_name = name
+        self._attr_unique_id = f"{entry_id}/{description.name}"
+        self._attr_name = description.name
 
     @property
     def native_value(self) -> StateType:

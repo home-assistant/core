@@ -38,7 +38,7 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         data_schema = {
             vol.Required(CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")): str,
-            vol.Required(CONF_URL, default=user_input.get(CONF_URL, "http://")): str,
+            vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
             vol.Optional(CONF_SSL, default=user_input.get(CONF_SSL, False)): bool,
             vol.Optional(
                 CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
