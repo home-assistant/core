@@ -1,8 +1,7 @@
 """The Tautulli integration."""
 from __future__ import annotations
 
-from pytautulli import PyTautulli
-from pytautulli.models.host_configuration import PyTautulliHostConfiguration
+from pytautulli import PyTautulli, PyTautulliHostConfiguration
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
