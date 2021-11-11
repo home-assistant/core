@@ -108,7 +108,7 @@ def async_get_cloud_coordinators_by_api_key(
         for entry_id, attrs in hass.data[DOMAIN].items()
         if (entry := hass.config_entries.async_get_entry(entry_id))
         and entry.data.get(CONF_API_KEY) == api_key
-        and attrs.get(DATA_COORDINATOR) != None
+        and attrs.get(DATA_COORDINATOR) is not None
     ]
 
 
