@@ -156,7 +156,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle discovery confirm."""
-        errors: dict = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             return self.async_create_entry(
