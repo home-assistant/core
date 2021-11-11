@@ -11,7 +11,7 @@
         "step": {
             "hubv1": {
                 "data": {
-                    "host": "\u0130p Adresi",
+                    "host": "IP Adresi",
                     "port": "Port"
                 },
                 "description": "Insteon Hub S\u00fcr\u00fcm 1'i (2014 \u00f6ncesi) yap\u0131land\u0131r\u0131n.",
@@ -19,7 +19,7 @@
             },
             "hubv2": {
                 "data": {
-                    "host": "\u0130p Adresi",
+                    "host": "IP Adresi",
                     "password": "Parola",
                     "port": "Port",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
@@ -71,7 +71,7 @@
             },
             "change_hub_config": {
                 "data": {
-                    "host": "\u0130p Adresi",
+                    "host": "IP Adresi",
                     "password": "Parola",
                     "port": "Port",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"

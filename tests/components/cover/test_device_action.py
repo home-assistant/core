@@ -110,7 +110,7 @@ async def test_get_action_capabilities(
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
-    ent = platform.ENTITIES[0]
+    ent = platform.ENTITIES[2]
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -126,7 +126,7 @@ async def test_get_action_capabilities(
     await hass.async_block_till_done()
 
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 3  # open, close, stop
+    assert len(actions) == 4  # open, close, stop, set_position
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action

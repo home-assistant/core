@@ -197,7 +197,7 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.HaServiceInfo(
+        data=zeroconf.ZeroconfServiceInfo(
             name="test-bond-id.some-other-tail-info", host="test-host"
         ),
     )
@@ -229,7 +229,7 @@ async def test_zeroconf_form_token_unavailable(hass: core.HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
+            data=zeroconf.ZeroconfServiceInfo(
                 name="test-bond-id.some-other-tail-info", host="test-host"
             ),
         )
@@ -264,7 +264,7 @@ async def test_zeroconf_form_with_token_available(hass: core.HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
+            data=zeroconf.ZeroconfServiceInfo(
                 name="test-bond-id.some-other-tail-info", host="test-host"
             ),
         )
@@ -302,7 +302,7 @@ async def test_zeroconf_already_configured(hass: core.HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
+            data=zeroconf.ZeroconfServiceInfo(
                 name="already-registered-bond-id.some-other-tail-info",
                 host="updated-host",
             ),
@@ -343,7 +343,7 @@ async def test_zeroconf_already_configured_refresh_token(hass: core.HomeAssistan
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
+            data=zeroconf.ZeroconfServiceInfo(
                 name="already-registered-bond-id.some-other-tail-info",
                 host="updated-host",
             ),
@@ -376,7 +376,7 @@ async def test_zeroconf_already_configured_no_reload_same_host(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
+            data=zeroconf.ZeroconfServiceInfo(
                 name="already-registered-bond-id.some-other-tail-info",
                 host="stored-host",
             ),
@@ -393,7 +393,7 @@ async def test_zeroconf_form_unexpected_error(hass: core.HomeAssistant):
     await _help_test_form_unexpected_error(
         hass,
         source=config_entries.SOURCE_ZEROCONF,
-        initial_input=zeroconf.HaServiceInfo(
+        initial_input=zeroconf.ZeroconfServiceInfo(
             name="test-bond-id.some-other-tail-info",
             host="test-host",
         ),

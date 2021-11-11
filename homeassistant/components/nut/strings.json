@@ -16,12 +16,6 @@
           "alias": "Alias",
           "resources": "Resources"
         }
-      },
-      "resources": {
-        "title": "Choose the Resources to Monitor",
-        "data": {
-          "resources": "Resources"
-        }
       }
     },
     "error": {

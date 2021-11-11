@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "no_home": "Ev Asistan\u0131 yap\u0131land\u0131rmas\u0131nda ev koordinatlar\u0131 ayarlanmiyor"
+            "no_home": "Home Assistant yap\u0131land\u0131rmas\u0131nda hi\u00e7bir ev koordinat\u0131 ayarlanmad\u0131"
         },
         "error": {
             "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"

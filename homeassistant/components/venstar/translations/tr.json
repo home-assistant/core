@@ -10,11 +10,11 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Sunucu",
-                    "password": "\u015eifre",
+                    "host": "Ana bilgisayar",
+                    "password": "Parola",
                     "pin": "PIN Kodu",
                     "ssl": "SSL sertifikas\u0131 kullan\u0131r",
-                    "username": "Kullan\u0131c\u0131 ad\u0131"
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
                 "title": "Venstar Termostat'a ba\u011flan\u0131n"
             }
