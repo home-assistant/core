@@ -29,24 +29,24 @@ class MockWeather(MockEntity, WeatherEntity):
     """Mock weather class."""
 
     @property
-    def native_temperature(self) -> float | None:
+    def temperature(self) -> float | None:
         """Return the platform temperature."""
-        return self._handle("native_temperature")
+        return self._handle("temperature")
 
     @property
-    def native_temperature_unit(self) -> str | None:
+    def temperature_unit(self) -> str | None:
         """Return the unit of measurement for temperature."""
-        return self._handle("native_temperature_unit")
+        return self._handle("temperature_unit")
 
     @property
-    def native_pressure(self) -> float | None:
+    def pressure(self) -> float | None:
         """Return the pressure."""
-        return self._handle("native_pressure")
+        return self._handle("pressure")
 
     @property
-    def native_pressure_unit(self) -> str | None:
+    def pressure_unit(self) -> str | None:
         """Return the unit of measurement for pressure."""
-        return self._handle("native_pressure_unit")
+        return self._handle("pressure_unit")
 
     @property
     def humidity(self) -> float | None:
@@ -54,14 +54,14 @@ class MockWeather(MockEntity, WeatherEntity):
         return self._handle("humidity")
 
     @property
-    def native_wind_speed(self) -> float | None:
+    def wind_speed(self) -> float | None:
         """Return the wind speed."""
-        return self._handle("native_wind_speed")
+        return self._handle("wind_speed")
 
     @property
-    def native_wind_speed_unit(self) -> str | None:
+    def wind_speed_unit(self) -> str | None:
         """Return the unit of measurement for wind speed."""
-        return self._handle("native_wind_speed_unit")
+        return self._handle("wind_speed_unit")
 
     @property
     def wind_bearing(self) -> float | str | None:
@@ -79,14 +79,14 @@ class MockWeather(MockEntity, WeatherEntity):
         return self._handle("attribution")
 
     @property
-    def native_visibility(self) -> float | None:
+    def visibility(self) -> float | None:
         """Return the visibility."""
-        return self._handle("native_visibility")
+        return self._handle("visibility")
 
     @property
-    def native_visibility_unit(self) -> str | None:
+    def visibility_unit(self) -> str | None:
         """Return the unit of measurement for visibility."""
-        return self._handle("native_visibility_unit")
+        return self._handle("visibility_unit")
 
     @property
     def forecast(self) -> list[Forecast] | None:

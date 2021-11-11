@@ -48,8 +48,8 @@ async def test_temperature_conversion(
     platform.ENTITIES.append(
         platform.MockWeather(
             name="Test",
-            native_temperature=native_value,
-            native_temperature_unit=native_unit,
+            temperature=native_value,
+            temperature_unit=native_unit,
             condition=ATTR_CONDITION_SUNNY,
         )
     )
@@ -88,10 +88,10 @@ async def test_pressure_conversion(
     platform.ENTITIES.append(
         platform.MockWeather(
             name="Test",
-            native_temperature=None,
-            native_temperature_unit=None,
-            native_pressure=native_value,
-            native_pressure_unit=native_unit,
+            temperature=None,
+            temperature_unit=None,
+            pressure=native_value,
+            pressure_unit=native_unit,
             condition=ATTR_CONDITION_SUNNY,
         )
     )
@@ -132,10 +132,10 @@ async def test_visibility_conversion(
     platform.ENTITIES.append(
         platform.MockWeather(
             name="Test",
-            native_temperature=None,
-            native_temperature_unit=None,
-            native_visibility=native_value,
-            native_visibility_unit=native_unit,
+            temperature=None,
+            temperature_unit=None,
+            visibility=native_value,
+            visibility_unit=native_unit,
             condition=ATTR_CONDITION_SUNNY,
         )
     )
