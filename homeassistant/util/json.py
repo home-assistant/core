@@ -5,12 +5,12 @@ from collections import deque
 from collections.abc import Callable
 import json
 import logging
-import os
-import tempfile
 from typing import Any
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
+
+from .file import write_utf8_file
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,29 +61,7 @@ def save_json(
         _LOGGER.error(msg)
         raise SerializationError(msg) from error
 
-    tmp_filename = ""
-    tmp_path = os.path.split(filename)[0]
-    try:
-        # Modern versions of Python tempfile create this file with mode 0o600
-        with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=tmp_path, delete=False
-        ) as fdesc:
-            fdesc.write(json_data)
-            tmp_filename = fdesc.name
-        if not private:
-            os.chmod(tmp_filename, 0o644)
-        os.replace(tmp_filename, filename)
-    except OSError as error:
-        _LOGGER.exception("Saving JSON file failed: %s", filename)
-        raise WriteError(error) from error
-    finally:
-        if os.path.exists(tmp_filename):
-            try:
-                os.remove(tmp_filename)
-            except OSError as err:
-                # If we are cleaning up then something else went wrong, so
-                # we should suppress likely follow-on errors in the cleanup
-                _LOGGER.error("JSON replacement cleanup failed: %s", err)
+    write_utf8_file(filename, json_data, private)
 
 
 def format_unserializable_data(data: dict[str, Any]) -> str:
