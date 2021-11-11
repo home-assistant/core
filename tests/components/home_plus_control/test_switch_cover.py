@@ -5,15 +5,22 @@ from unittest.mock import patch
 from homepluscontrol.homeplusapi import HomePlusControlApiError
 
 from homeassistant import config_entries, setup
+from homeassistant.components.cover import ATTR_POSITION, DOMAIN as COVER_DOMAIN
 from homeassistant.components.home_plus_control.const import (
     CONF_SUBSCRIPTION_KEY,
     DOMAIN,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
     STATE_OFF,
     STATE_ON,
+    STATE_OPEN,
     STATE_UNAVAILABLE,
 )
 
@@ -95,7 +102,7 @@ async def test_plant_update(
     # Check the entities and devices
     entity_assertions(
         hass,
-        num_exp_entities=5,
+        num_exp_entities=6,
         expected_entities={
             "switch.dining_room_wall_outlet": True,
             "switch.kitchen_wall_outlet": True,
@@ -132,7 +139,7 @@ async def test_plant_topology_reduction_change(
     # Check the entities and devices - 5 mock entities
     entity_assertions(
         hass,
-        num_exp_entities=5,
+        num_exp_entities=6,
         expected_entities={
             "switch.dining_room_wall_outlet": True,
             "switch.kitchen_wall_outlet": True,
@@ -154,7 +161,7 @@ async def test_plant_topology_reduction_change(
     # Check for plant, topology and module status - this time only 4 left
     entity_assertions(
         hass,
-        num_exp_entities=4,
+        num_exp_entities=5,
         expected_entities={
             "switch.dining_room_wall_outlet": True,
             "switch.kitchen_wall_outlet": False,
@@ -194,7 +201,7 @@ async def test_plant_topology_increase_change(
     # Check the entities and devices - we have 4 entities to start with
     entity_assertions(
         hass,
-        num_exp_entities=4,
+        num_exp_entities=5,
         expected_entities={
             "switch.dining_room_wall_outlet": True,
             "switch.kitchen_wall_outlet": False,
@@ -215,7 +222,7 @@ async def test_plant_topology_increase_change(
 
     entity_assertions(
         hass,
-        num_exp_entities=5,
+        num_exp_entities=6,
         expected_entities={
             "switch.dining_room_wall_outlet": True,
             "switch.kitchen_wall_outlet": True,
@@ -245,10 +252,10 @@ async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
         await hass.async_block_till_done()
     assert len(mock_check.mock_calls) == 1
 
-    # Check the entities and devices - 5 mock entities
+    # Check the entities and devices - 6 mock entities
     entity_assertions(
         hass,
-        num_exp_entities=5,
+        num_exp_entities=6,
         expected_entities={
             "switch.dining_room_wall_outlet": True,
             "switch.kitchen_wall_outlet": True,
@@ -276,7 +283,7 @@ async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
     # Assert the devices and entities
     entity_assertions(
         hass,
-        num_exp_entities=5,
+        num_exp_entities=6,
         expected_entities={
             "switch.dining_room_wall_outlet": True,
             "switch.kitchen_wall_outlet": True,
@@ -320,7 +327,7 @@ async def test_module_status_available(
     # Assert the devices and entities
     entity_assertions(
         hass,
-        num_exp_entities=5,
+        num_exp_entities=6,
         expected_entities={
             "switch.dining_room_wall_outlet": True,
             "switch.kitchen_wall_outlet": True,
@@ -347,7 +354,7 @@ async def test_module_status_available(
     # Assert the devices and entities remain the same
     entity_assertions(
         hass,
-        num_exp_entities=5,
+        num_exp_entities=6,
         expected_entities={
             "switch.dining_room_wall_outlet": True,
             "switch.kitchen_wall_outlet": True,
@@ -426,7 +433,7 @@ async def test_update_with_api_error(
     # Check the entities and devices - all entities should be there
     entity_assertions(
         hass,
-        num_exp_entities=5,
+        num_exp_entities=6,
         expected_entities={
             "switch.dining_room_wall_outlet": True,
             "switch.kitchen_wall_outlet": True,
@@ -434,7 +441,7 @@ async def test_update_with_api_error(
     )
     for test_entity_uid in mock_modules:
         test_entity_state = one_entity_state(hass, test_entity_uid)
-        assert test_entity_state in (STATE_ON, STATE_OFF)
+        assert test_entity_state in (STATE_ON, STATE_OFF, STATE_OPEN)
 
     # Attempt to update the data, but API update fails
     with patch(
@@ -451,7 +458,7 @@ async def test_update_with_api_error(
     # Assert the devices and entities - all should still be present
     entity_assertions(
         hass,
-        num_exp_entities=5,
+        num_exp_entities=6,
         expected_entities={
             "switch.dining_room_wall_outlet": True,
             "switch.kitchen_wall_outlet": True,
@@ -462,3 +469,159 @@ async def test_update_with_api_error(
     for test_entity_uid in mock_modules:
         test_entity_state = one_entity_state(hass, test_entity_uid)
         assert test_entity_state == STATE_UNAVAILABLE
+
+
+async def test_cover_open(
+    hass,
+    mock_config_entry,
+    mock_modules,
+):
+    """Test actions on cover entities."""
+    # Load the entry
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+    ) as mock_check:
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "home_plus_control": {
+                    CONF_CLIENT_ID: CLIENT_ID,
+                    CONF_CLIENT_SECRET: CLIENT_SECRET,
+                    CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+                },
+            },
+        )
+        await hass.async_block_till_done()
+    assert len(mock_check.mock_calls) == 1
+
+    with patch(
+        "homepluscontrol.homeplusautomation.HomePlusAutomation.open"
+    ) as mock_open:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.dining_room_cover"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_open.assert_called_once()
+
+
+async def test_cover_close(
+    hass,
+    mock_config_entry,
+    mock_modules,
+):
+    """Test actions on cover entities."""
+    # Load the entry
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+    ) as mock_check:
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "home_plus_control": {
+                    CONF_CLIENT_ID: CLIENT_ID,
+                    CONF_CLIENT_SECRET: CLIENT_SECRET,
+                    CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+                },
+            },
+        )
+        await hass.async_block_till_done()
+    assert len(mock_check.mock_calls) == 1
+
+    with patch(
+        "homepluscontrol.homeplusautomation.HomePlusAutomation.close"
+    ) as mock_close:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: "cover.dining_room_cover"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_close.assert_called_once()
+
+
+async def test_cover_stop(
+    hass,
+    mock_config_entry,
+    mock_modules,
+):
+    """Test actions on cover entities."""
+    # Load the entry
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+    ) as mock_check:
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "home_plus_control": {
+                    CONF_CLIENT_ID: CLIENT_ID,
+                    CONF_CLIENT_SECRET: CLIENT_SECRET,
+                    CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+                },
+            },
+        )
+        await hass.async_block_till_done()
+    assert len(mock_check.mock_calls) == 1
+
+    with patch(
+        "homepluscontrol.homeplusautomation.HomePlusAutomation.stop"
+    ) as mock_stop:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_STOP_COVER,
+            {ATTR_ENTITY_ID: "cover.dining_room_cover"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_stop.assert_called_once()
+
+
+async def test_cover_set_pos(
+    hass,
+    mock_config_entry,
+    mock_modules,
+):
+    """Test actions on cover entities."""
+    # Load the entry
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+    ) as mock_check:
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "home_plus_control": {
+                    CONF_CLIENT_ID: CLIENT_ID,
+                    CONF_CLIENT_SECRET: CLIENT_SECRET,
+                    CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+                },
+            },
+        )
+        await hass.async_block_till_done()
+    assert len(mock_check.mock_calls) == 1
+
+    with patch(
+        "homepluscontrol.homeplusautomation.HomePlusAutomation.set_level"
+    ) as mock_set_pos:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: "cover.dining_room_cover", ATTR_POSITION: 50},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_set_pos.assert_called_once()

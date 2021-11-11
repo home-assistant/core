@@ -1,4 +1,5 @@
 """Test setup and fixtures for component Home+ Control by Legrand."""
+from homepluscontrol.homeplusautomation import HomePlusAutomation
 from homepluscontrol.homeplusinteractivemodule import HomePlusInteractiveModule
 from homepluscontrol.homeplusplant import HomePlusPlant
 import pytest
@@ -92,12 +93,23 @@ def mock_modules():
             fw="42",
             reachable=True,
         ),
+        "0000000487654321fedcba": HomePlusAutomation(
+            plant,
+            id="0000000487654321fedcba",
+            name="Dining Room Cover",
+            hw_type="NBR",
+            device="automation",
+            fw="42",
+            reachable=True,
+        ),
     }
 
     # Set lights off and plugs on
     for mod_stat in modules.values():
         mod_stat.status = "on"
-        if mod_stat.device == "light":
+        if mod_stat.device == "automation":
+            mod_stat.status = "open"
+        elif mod_stat.device == "light":
             mod_stat.status = "off"
 
     return modules
