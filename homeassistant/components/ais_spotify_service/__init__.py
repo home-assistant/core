@@ -53,7 +53,7 @@ async def async_setup(hass, config):
 
     # info about discovery
     async def do_the_spotify_disco(service):
-        """ Called when a Spotify integration has been discovered. """
+        """Called when a Spotify integration has been discovered."""
         await hass.config_entries.flow.async_init(
             "ais_spotify_service", context={"source": "discovery"}, data={}
         )
@@ -572,6 +572,18 @@ class SpotifyData:
                 "media_content_id": _audio_info,
             },
         )
+        # new way to play
+        if not track["uri"].startswith("spotify:track:"):
+            track["uri"] = track["uri"] + ":play"
+        self.hass.services.call(
+            "ais_shell_command",
+            "execute_command",
+            {
+                "command": "su -c 'am start -W -a android.intent.action.VIEW -d "
+                + track["uri"]
+                + "'"
+            },
+        )
 
         # get track list
         self.get_tracks_list(
@@ -606,6 +618,18 @@ class SpotifyData:
                 "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                 "media_content_type": "ais_content_info",
                 "media_content_id": _audio_info,
+            },
+        )
+        # new way to play
+        if not track["uri"].startswith("spotify:track:"):
+            track["uri"] = track["uri"] + ":play"
+        self.hass.services.call(
+            "ais_shell_command",
+            "execute_command",
+            {
+                "command": "su -c 'am start -W -a android.intent.action.VIEW -d "
+                + track["uri"]
+                + "'"
             },
         )
 
