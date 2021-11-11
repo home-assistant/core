@@ -32,7 +32,7 @@ def config_entry_fixture():
 
 @pytest.fixture(name="controller")
 def controller_fixture(
-    players, favorites, input_sources, playlists, change_data, dispatcher
+    players, favorites, input_sources, playlists, change_data, dispatcher, group
 ):
     """Create a mock Heos controller fixture."""
     mock_heos = Mock(Heos)
@@ -48,7 +48,8 @@ def controller_fixture(
     mock_heos.is_signed_in = True
     mock_heos.signed_in_username = "user@user.com"
     mock_heos.connection_state = const.STATE_CONNECTED
-    mock_heos.get_groups.return_value = {}
+    mock_heos.get_groups.return_value = group
+    mock_heos.create_group.return_value = None
     mock = Mock(return_value=mock_heos)
 
     with patch("homeassistant.components.heos.Heos", new=mock), patch(
