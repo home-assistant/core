@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from greeneye import Monitors
+import greeneye
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -123,7 +123,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: COMPONENT_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the GreenEye Monitor component."""
-    monitors = Monitors()
+    monitors = greeneye.Monitors()
     hass.data[DATA_GREENEYE_MONITOR] = monitors
 
     server_config = config[DOMAIN]
