@@ -138,7 +138,10 @@ async def async_setup_entry(
                 coordinator,
                 config_entry.unique_id,
                 device_info,
-                next((e for e in SENSOR_ENTITIES if e.key == sensor.name), None),
+                next(
+                    (e for e in SENSOR_ENTITIES if e.key == sensor.name),
+                    SensorEntityDescription(key=sensor.name, name=sensor.name),
+                ),
                 sensor,
             )
         )
