@@ -9,10 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.components.sma.entities import SENSOR_ENTITIES
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -21,10 +21,6 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -142,6 +138,7 @@ async def async_setup_entry(
                 coordinator,
                 config_entry.unique_id,
                 device_info,
+                next((e for e in SENSOR_ENTITIES if e.key == sensor.name), None),
                 sensor,
             )
         )
@@ -157,54 +154,26 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
         config_entry_unique_id: str,
         device_info: DeviceInfo,
+        description: SensorEntityDescription,
         pysma_sensor: pysma.sensor.Sensor,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self.entity_description = description
         self._sensor = pysma_sensor
-        self._enabled_default = self._sensor.enabled
-        self._config_entry_unique_id = config_entry_unique_id
         self._attr_device_info = device_info
-
-        self._attr_entity_category = self._sensor.entity_category
-
-        if self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
-            self._attr_device_class = DEVICE_CLASS_ENERGY
-        if self.native_unit_of_measurement == POWER_WATT:
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
-            self._attr_device_class = DEVICE_CLASS_POWER
+        self._attr_unique_id = (
+            f"{config_entry_unique_id}-{self._sensor.key}_{self._sensor.key_idx}"
+        )
 
         # Set sensor enabled to False.
         # Will be enabled by async_added_to_hass if actually used.
         self._sensor.enabled = False
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._sensor.name
-
-    @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._sensor.value
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return self._sensor.unit
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this sensor."""
-        return (
-            f"{self._config_entry_unique_id}-{self._sensor.key}_{self._sensor.key_idx}"
-        )
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
