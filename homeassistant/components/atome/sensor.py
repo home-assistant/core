@@ -129,7 +129,7 @@ class AtomeData:
                 "Live Data : Missing last value in values: %s: %s", values, error
             )
             error_during_retrieve = True
-        return (error_during_retrieve == False)
+        return not error_during_retrieve
 
     @Throttle(LIVE_SCAN_INTERVAL)
     def update_live_usage(self):
@@ -157,7 +157,7 @@ class AtomeData:
             _LOGGER.error(
                 "%s : Missing last value in values: %s: %s", period_type, values, error
             )
-        retrieve_has_been_sucessful = (error_during_retrieve == False)
+        retrieve_has_been_sucessful = not error_during_retrieve
         return retrieve_has_been_sucessful, period_usage, period_price
 
     def _retrieve_period_usage_with_retry(self, period_type):
