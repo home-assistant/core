@@ -24,7 +24,6 @@ from rensonVentilationLib.fieldEnum import (
     NIGHT_POLLUTION_FIELD,
     NIGHTTIME_FIELD,
     OUTDOOR_TEMP_FIELD,
-    TIME_AND_DATE_FIELD,
 )
 import rensonVentilationLib.renson as renson
 import voluptuous as vol
@@ -35,12 +34,7 @@ from homeassistant.components.renson.renson_descriptions import (
 from homeassistant.components.renson.renson_sensor import RensonSensor
 from homeassistant.components.sensor import PLATFORM_SCHEMA, STATE_CLASS_MEASUREMENT
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TIMESTAMP,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import CONF_HOST, DEVICE_CLASS_HUMIDITY, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
@@ -108,7 +102,7 @@ sensor_descriptions = [
     ),
     RensonSensorEntityDescription(
         key="CURRENT_AIRFLOW_INGOING_FIELD",
-        name="Total airflow int",
+        name="Total airflow in",
         field=CURRENT_AIRFLOW_INGOING_FIELD,
         raw_format=False,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -157,72 +151,64 @@ sensor_descriptions = [
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     RensonSensorEntityDescription(
-        key="MANUAL_LEVEL_FIELD",
-        name="System time",
-        field=TIME_AND_DATE_FIELD,
-        raw_format=False,
-        state_class=STATE_CLASS_MEASUREMENT,
-        device_class=DEVICE_CLASS_TIMESTAMP,
-    ),
-    RensonSensorEntityDescription(
         key="BREEZE_TEMPERATURE_FIELD",
         name="Breeze temperature",
         field=BREEZE_TEMPERATURE_FIELD,
         raw_format=False,
         device_class=TEMP_CELSIUS,
-        state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
+        entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="BREEZE_LEVEL_FIELD",
         name="Breeze level",
         field=BREEZE_LEVEL_FIELD,
         raw_format=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="DAYTIME_FIELD",
         name="Start day time",
         field=DAYTIME_FIELD,
         raw_format=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="NIGHTTIME_FIELD",
         name="Start night time",
         field=NIGHTTIME_FIELD,
         raw_format=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="DAY_POLLUTION_FIELD",
         name="Day pollution level",
         field=DAY_POLLUTION_FIELD,
         raw_format=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="NIGHT_POLLUTION_FIELD",
         name="Night pollution level",
         field=NIGHT_POLLUTION_FIELD,
         raw_format=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="CO2_THRESHOLD_FIELD",
         name="CO2 threshold",
         field=CO2_THRESHOLD_FIELD,
         raw_format=False,
-        state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement="ppm",
+        entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="CO2_HYSTERESIS_FIELD",
         name="CO2 hysteresis",
         field=CO2_HYSTERESIS_FIELD,
         raw_format=False,
-        state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement="ppm",
+        entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="BYPASS_TEMPERATURE_FIELD",

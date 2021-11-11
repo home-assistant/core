@@ -31,6 +31,7 @@ binary_sensor_descriptions = [
         key="BREEZE_ENABLE_FIELD",
         name="Breeze",
         field=BREEZE_ENABLE_FIELD,
+        entity_registry_enabled_default=False,
     ),
     RensonBinarySensorEntityDescription(
         key="BREEZE_MET_FIELD",
@@ -41,16 +42,19 @@ binary_sensor_descriptions = [
         key="HUMIDITY_CONTROL_FIELD",
         name="Humidity control",
         field=HUMIDITY_CONTROL_FIELD,
+        entity_registry_enabled_default=False,
     ),
     RensonBinarySensorEntityDescription(
         key="AIR_QUALITY_CONTROL_FIELD",
         name="Air quality control",
         field=AIR_QUALITY_CONTROL_FIELD,
+        entity_registry_enabled_default=False,
     ),
     RensonBinarySensorEntityDescription(
         key="CO2_CONTROL_FIELD",
         name="CO2 control",
         field=CO2_CONTROL_FIELD,
+        entity_registry_enabled_default=False,
     ),
     RensonBinarySensorEntityDescription(
         key="PREHEATER_FIELD",

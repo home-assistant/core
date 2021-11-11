@@ -9,9 +9,18 @@ from homeassistant.components.sensor import SensorEntityDescription
 class RensonBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Description of binary sensor."""
 
-    def __init__(self, key: str, name: str, field: FieldEnum) -> None:
+    def __init__(
+        self,
+        key: str,
+        name: str,
+        field: FieldEnum,
+        entity_registry_enabled_default: bool = True,
+    ) -> None:
         """Initialize class."""
-        super().__init__(key=key)
+        super().__init__(
+            key=key,
+            entity_registry_enabled_default=entity_registry_enabled_default,
+        )
 
         self.name = name
         self.field = field
@@ -29,6 +38,7 @@ class RensonSensorEntityDescription(SensorEntityDescription):
         state_class: str = None,
         device_class: str = None,
         native_unit_of_measurement: str = None,
+        entity_registry_enabled_default: bool = True,
     ) -> None:
         """Initialize class."""
         super().__init__(
@@ -36,6 +46,7 @@ class RensonSensorEntityDescription(SensorEntityDescription):
             state_class=state_class,
             device_class=device_class,
             native_unit_of_measurement=native_unit_of_measurement,
+            entity_registry_enabled_default=entity_registry_enabled_default,
         )
 
         self.name = name
