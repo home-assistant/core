@@ -3,16 +3,23 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
-from nettigo_air_monitor import ApiError, CannotGetMac, NettigoAirMonitor
+from nettigo_air_monitor import (
+    ApiError,
+    AuthRequired,
+    CannotGetMac,
+    ConnectionOptions,
+    NettigoAirMonitor,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.const import ATTR_NAME, CONF_HOST
+from homeassistant.const import ATTR_NAME, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -22,6 +29,19 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_get_mac(hass: HomeAssistant, host: str, data: dict[str, Any]) -> str:
+    """Get device MAC address."""
+    websession = async_get_clientsession(hass)
+
+    options = ConnectionOptions(host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD))
+    nam = await NettigoAirMonitor.create(websession, options)
+    # Device firmware uses synchronous code and doesn't respond to http queries
+    # when reading data from sensors. The nettigo-air-monitor library tries to get
+    # the data 4 times, so we use a longer than usual timeout here.
+    async with async_timeout.timeout(30):
+        return await nam.async_get_mac_address()
+
+
 class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Nettigo Air Monitor."""
 
@@ -29,18 +49,21 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self.host: str | None = None
+        self.host: str = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             self.host = user_input[CONF_HOST]
+
             try:
-                mac = await self._async_get_mac(cast(str, self.host))
+                mac = await async_get_mac(self.hass, self.host, {})
+            except AuthRequired:
+                return await self.async_step_credentials()
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
             except CannotGetMac:
@@ -49,23 +72,57 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-
                 await self.async_set_unique_id(format_mac(mac))
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
                 return self.async_create_entry(
-                    title=cast(str, self.host),
+                    title=self.host,
                     data=user_input,
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=""): str,
-                }
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
+        )
+
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the credentials step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                mac = await async_get_mac(self.hass, self.host, user_input)
+            except AuthRequired:
+                errors["base"] = "invalid_auth"
+            except (ApiError, ClientConnectorError, asyncio.TimeoutError):
+                errors["base"] = "cannot_connect"
+            except CannotGetMac:
+                return self.async_abort(reason="device_unsupported")
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(format_mac(mac))
+                self._abort_if_unique_id_configured({CONF_HOST: self.host})
+
+                return self.async_create_entry(
+                    title=self.host,
+                    data={**user_input, CONF_HOST: self.host},
+                )
+        else:
+            user_input = {}
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME)): str,
+                vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="credentials", data_schema=schema, errors=errors
         )
 
     async def async_step_zeroconf(
@@ -78,7 +135,9 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: self.host})
 
         try:
-            mac = await self._async_get_mac(self.host)
+            mac = await async_get_mac(self.hass, self.host, {})
+        except AuthRequired:
+            return await self.async_step_credentials()
         except (ApiError, ClientConnectorError, asyncio.TimeoutError):
             return self.async_abort(reason="cannot_connect")
         except CannotGetMac:
@@ -101,7 +160,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=cast(str, self.host),
+                title=self.host,
                 data={CONF_HOST: self.host},
             )
 
@@ -112,13 +171,3 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_HOST: self.host},
             errors=errors,
         )
-
-    async def _async_get_mac(self, host: str) -> str:
-        """Get device MAC address."""
-        websession = async_get_clientsession(self.hass)
-        nam = NettigoAirMonitor(websession, host)
-        # Device firmware uses synchronous code and doesn't respond to http queries
-        # when reading data from sensors. The nettigo-air-monitor library tries to get
-        # the data 4 times, so we use a longer than usual timeout here.
-        async with async_timeout.timeout(30):
-            return await nam.async_get_mac_address()
