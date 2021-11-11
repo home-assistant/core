@@ -129,27 +129,17 @@ class AtomeData:
                 "Live Data : Missing last value in values: %s: %s", values, error
             )
             error_during_retrieve = True
-        return error_during_retrieve
+        return (error_during_retrieve == False)
 
     @Throttle(LIVE_SCAN_INTERVAL)
     def update_live_usage(self):
         """Return current power value."""
-        error_in_retrieve = self._retrieve_live()
+        retrieve_has_been_sucessful = self._retrieve_live()
 
-        if error_in_retrieve:
-            _LOGGER.debug("Perform Reconnect")
+        if not retrieve_has_been_sucessful:
+            _LOGGER.debug("Perform Reconnect during live request")
             self.atome_client.login()
             self._retrieve_live()
-
-    @property
-    def day_usage(self):
-        """Return latest daily usage value."""
-        return self._day_usage
-
-    @property
-    def day_price(self):
-        """Return latest daily usage value."""
-        return self._day_price
 
     def _retrieve_period_usage(self, period_type):
         """Return current daily/monthly/yearly power usage."""
@@ -167,25 +157,43 @@ class AtomeData:
             _LOGGER.error(
                 "%s : Missing last value in values: %s: %s", period_type, values, error
             )
+        retrieve_has_been_sucessful = (error_during_retrieve == False)
+        return retrieve_has_been_sucessful, period_usage, period_price
 
-        return error_during_retrieve, period_usage, period_price
+    def _retrieve_period_usage_with_retry(self, period_type):
+        """Return current daily/monthly/yearly power usage with one retry."""
+        (
+            retrieve_has_been_sucessful,
+            period_usage,
+            period_price,
+        ) = self._retrieve_period_usage(period_type)
+        if not retrieve_has_been_sucessful:
+            _LOGGER.debug("Perform Reconnect during %s", period_type)
+            self.atome_client.login()
+            (
+                retrieve_has_been_sucessful,
+                self._day_usage,
+                self._day_price,
+            ) = self._retrieve_period_usage(period_type)
+        return (period_usage, period_price)
+
+    @property
+    def day_usage(self):
+        """Return latest daily usage value."""
+        return self._day_usage
+
+    @property
+    def day_price(self):
+        """Return latest daily usage value."""
+        return self._day_price
 
     @Throttle(DAILY_SCAN_INTERVAL)
     def update_day_usage(self):
         """Return current daily power usage."""
         (
-            error_in_retrieve,
             self._day_usage,
             self._day_price,
-        ) = self._retrieve_period_usage(DAILY_TYPE)
-        if error_in_retrieve:
-            _LOGGER.debug("Perform Reconnect")
-            self.atome_client.login()
-            (
-                error_in_retrieve,
-                self._day_usage,
-                self._day_price,
-            ) = self._retrieve_period_usage(DAILY_TYPE)
+        ) = self._retrieve_period_usage_with_retry(DAILY_TYPE)
 
     @property
     def week_usage(self):
@@ -201,18 +209,9 @@ class AtomeData:
     def update_week_usage(self):
         """Return current weekly power usage."""
         (
-            error_in_retrieve,
             self._week_usage,
             self._week_price,
-        ) = self._retrieve_period_usage(WEEKLY_TYPE)
-        if error_in_retrieve:
-            _LOGGER.debug("Perform Reconnect")
-            self.atome_client.login()
-            (
-                error_in_retrieve,
-                self._week_usage,
-                self._week_price,
-            ) = self._retrieve_period_usage(WEEKLY_TYPE)
+        ) = self._retrieve_period_usage_with_retry(WEEKLY_TYPE)
 
     @property
     def month_usage(self):
@@ -228,18 +227,9 @@ class AtomeData:
     def update_month_usage(self):
         """Return current monthly power usage."""
         (
-            error_in_retrieve,
             self._month_usage,
             self._month_price,
-        ) = self._retrieve_period_usage(MONTHLY_TYPE)
-        if error_in_retrieve:
-            _LOGGER.debug("Perform Reconnect")
-            self.atome_client.login()
-            (
-                error_in_retrieve,
-                self._month_usage,
-                self._month_price,
-            ) = self._retrieve_period_usage(MONTHLY_TYPE)
+        ) = self._retrieve_period_usage_with_retry(MONTHLY_TYPE)
 
     @property
     def year_usage(self):
@@ -255,18 +245,9 @@ class AtomeData:
     def update_year_usage(self):
         """Return current yearly power usage."""
         (
-            error_in_retrieve,
             self._year_usage,
             self._year_price,
-        ) = self._retrieve_period_usage(YEARLY_TYPE)
-        if error_in_retrieve:
-            _LOGGER.debug("Perform Reconnect")
-            self.atome_client.login()
-            (
-                error_in_retrieve,
-                self._year_usage,
-                self._year_price,
-            ) = self._retrieve_period_usage(YEARLY_TYPE)
+        ) = self._retrieve_period_usage_with_retry(YEARLY_TYPE)
 
 
 class AtomeSensor(SensorEntity):
