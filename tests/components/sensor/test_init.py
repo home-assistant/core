@@ -1,8 +1,55 @@
 """The test for sensor device automation."""
+import pytest
+from pytest import approx
+
 from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+
+
+@pytest.mark.parametrize(
+    "unit_system,native_unit,state_unit,native_value,state_value",
+    [
+        (IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, TEMP_FAHRENHEIT, 100, 100),
+        (IMPERIAL_SYSTEM, TEMP_CELSIUS, TEMP_FAHRENHEIT, 38, 100),
+        (METRIC_SYSTEM, TEMP_FAHRENHEIT, TEMP_CELSIUS, 100, 38),
+        (METRIC_SYSTEM, TEMP_CELSIUS, TEMP_CELSIUS, 38, 38),
+    ],
+)
+async def test_temperature_conversion(
+    hass,
+    enable_custom_integrations,
+    unit_system,
+    native_unit,
+    state_unit,
+    native_value,
+    state_value,
+):
+    """Test temperature conversion."""
+    hass.config.units = unit_system
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=str(native_value),
+        native_unit_of_measurement=native_unit,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == approx(float(state_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
 
 async def test_deprecated_temperature_conversion(
