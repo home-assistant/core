@@ -153,11 +153,7 @@ async def test_update_config_write_to_temp_file(hass, hass_client, tmpdir):
     result = await resp.json()
     assert result == {"result": "ok"}
 
-    def _read_yaml():
-        with open(group_yaml) as fh:
-            return load_yaml(fh.read())
-
-    new_data = await hass.async_add_executor_job(_read_yaml)
+    new_data = await hass.async_add_executor_job(load_yaml, group_yaml)
 
     assert new_data == orig_data
     mock_call.assert_called_once_with("group", "reload")
