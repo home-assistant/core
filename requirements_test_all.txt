@@ -820,7 +820,7 @@ pyatag==0.3.5.3
 pyatmo==6.1.0
 
 # homeassistant.components.apple_tv
-pyatv==0.9.6
+pyatv==0.8.2
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
