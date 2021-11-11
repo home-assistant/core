@@ -46,7 +46,6 @@ from .const import (
     GROUPS,
     PYSMA_COORDINATOR,
     PYSMA_DEVICE_INFO,
-    PYSMA_OBJECT,
     PYSMA_SENSORS,
 )
 
@@ -135,7 +134,6 @@ async def async_setup_entry(
     coordinator = sma_data[PYSMA_COORDINATOR]
     used_sensors = sma_data[PYSMA_SENSORS]
     device_info = sma_data[PYSMA_DEVICE_INFO]
-    device_info["configuration_url"] = sma_data[PYSMA_OBJECT].url
 
     entities = []
     for sensor in used_sensors:
@@ -158,7 +156,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         config_entry_unique_id: str,
-        device_info: dict[str, Any],
+        device_info: DeviceInfo,
         pysma_sensor: pysma.sensor.Sensor,
     ) -> None:
         """Initialize the sensor."""
@@ -166,7 +164,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self._sensor = pysma_sensor
         self._enabled_default = self._sensor.enabled
         self._config_entry_unique_id = config_entry_unique_id
-        self._device_info = device_info
+        self._attr_device_info = device_info
 
         self._attr_entity_category = self._sensor.entity_category
 
@@ -201,21 +199,6 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         """Return a unique identifier for this sensor."""
         return (
             f"{self._config_entry_unique_id}-{self._sensor.key}_{self._sensor.key_idx}"
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device information."""
-        if not self._device_info:
-            return None
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._config_entry_unique_id)},
-            manufacturer=self._device_info["manufacturer"],
-            model=self._device_info["type"],
-            name=self._device_info["name"],
-            sw_version=self._device_info["sw_version"],
-            configuration_url=self._device_info["configuration_url"],
         )
 
     @property

@@ -19,3 +19,5 @@ CONF_UNIT = "unit"
 DEFAULT_SCAN_INTERVAL = 5
 
 GROUPS = ["user", "installer"]
+
+DEFAULT_MANUFACTURER = "SMA"
