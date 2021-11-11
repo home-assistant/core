@@ -128,7 +128,7 @@ class WeatherEntity(Entity):
         return self._attr_temperature
 
     @property
-    def temperature_unit(self) -> str | None:
+    def temperature_unit(self) -> str:
         """Return the unit of measurement for temperature."""
         return self._attr_temperature_unit
 
@@ -166,11 +166,6 @@ class WeatherEntity(Entity):
     def ozone(self) -> float | None:
         """Return the ozone level."""
         return self._attr_ozone
-
-    @property
-    def attribution(self) -> str | None:
-        """Return the attribution."""
-        return self._attr_attribution
 
     @property
     def visibility(self) -> float | None:

@@ -74,11 +74,6 @@ class MockWeather(MockEntity, WeatherEntity):
         return self._handle("ozone")
 
     @property
-    def attribution(self) -> str | None:
-        """Return the attribution."""
-        return self._handle("attribution")
-
-    @property
     def visibility(self) -> float | None:
         """Return the visibility."""
         return self._handle("visibility")
