@@ -42,6 +42,7 @@ def pycast_mock(castbrowser_mock, castbrowser_constructor_mock):
     pycast_mock = MagicMock()
     pycast_mock.IDLE_APP_ID = pychromecast.IDLE_APP_ID
     pycast_mock.IGNORE_CEC = []
+    pycast_mock.const = pychromecast.const
     pycast_mock.discovery.CastBrowser = castbrowser_constructor_mock
     pycast_mock.discovery.CastBrowser.return_value = castbrowser_mock
     pycast_mock.discovery.AbstractCastListener = (
