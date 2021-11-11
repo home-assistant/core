@@ -591,6 +591,7 @@ async def test_entity_cast_status(hass: HomeAssistant):
     )
 
     chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = pychromecast.const.CAST_TYPE_CHROMECAST
     cast_status_cb, conn_status_cb, _ = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -658,6 +659,65 @@ async def test_entity_cast_status(hass: HomeAssistant):
         | SUPPORT_TURN_OFF
         | SUPPORT_TURN_ON
     )
+
+
+@pytest.mark.parametrize(
+    "cast_type,supported_features",
+    [
+        (
+            pychromecast.const.CAST_TYPE_AUDIO,
+            SUPPORT_PAUSE
+            | SUPPORT_PLAY
+            | SUPPORT_PLAY_MEDIA
+            | SUPPORT_STOP
+            | SUPPORT_TURN_OFF
+            | SUPPORT_VOLUME_MUTE
+            | SUPPORT_VOLUME_SET,
+        ),
+        (
+            pychromecast.const.CAST_TYPE_CHROMECAST,
+            SUPPORT_PAUSE
+            | SUPPORT_PLAY
+            | SUPPORT_PLAY_MEDIA
+            | SUPPORT_STOP
+            | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
+            | SUPPORT_VOLUME_MUTE
+            | SUPPORT_VOLUME_SET,
+        ),
+        (
+            pychromecast.const.CAST_TYPE_GROUP,
+            SUPPORT_PAUSE
+            | SUPPORT_PLAY
+            | SUPPORT_PLAY_MEDIA
+            | SUPPORT_STOP
+            | SUPPORT_TURN_OFF
+            | SUPPORT_VOLUME_MUTE
+            | SUPPORT_VOLUME_SET,
+        ),
+    ],
+)
+async def test_supported_features(hass: HomeAssistant, cast_type, supported_features):
+    """Test supported features."""
+    entity_id = "media_player.speaker"
+
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = cast_type
+    _, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == "Speaker"
+    assert state.state == "off"
+
+    assert state.attributes.get("supported_features") == supported_features
 
 
 async def test_entity_play_media(hass: HomeAssistant):
@@ -872,6 +932,7 @@ async def test_entity_control(hass: HomeAssistant):
     )
 
     chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = pychromecast.const.CAST_TYPE_CHROMECAST
     _, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
