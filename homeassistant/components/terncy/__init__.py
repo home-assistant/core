@@ -142,11 +142,6 @@ def terncy_event_handler(tern, ev):
             _LOGGER.info("unsupported event type %s", evt_type)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Terncy component."""
-    return True
-
-
 async def update_or_create_entity(dev, tern):
     """Update or create hass entity for given terncy device."""
     model = dev["model"] if "model" in dev else ""
