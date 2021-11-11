@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_USERNAME,
     ENERGY_KILO_WATT_HOUR,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
@@ -101,7 +102,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if entry.data[CONNECTION_TYPE] == LOCAL:
         return
 
-    mill_data_coordinator = hass.data[DOMAIN][CLOUD]
+    mill_data_coordinator = hass.data[DOMAIN][CLOUD][entry.data[CONF_USERNAME]]
 
     entities = [
         MillSensor(

@@ -50,16 +50,17 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors={},
             )
 
-        ip_address = user_input[CONF_IP_ADDRESS]
-
         mill_data_connection = MillLocal(
-            ip_address,
+            user_input[CONF_IP_ADDRESS],
             websession=async_get_clientsession(self.hass),
         )
 
+        await self.async_set_unique_id(mill_data_connection.device_ip)
+        self._abort_if_unique_id_configured()
+
         errors = {}
 
-        if not await mill_data_connection.get_status():
+        if not await mill_data_connection.connect():
             errors["cannot_connect"] = "cannot_connect"
             return self.async_show_form(
                 step_id="local",
@@ -67,13 +68,10 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        await self.async_set_unique_id(ip_address)
-        self._abort_if_unique_id_configured()
-
         return self.async_create_entry(
-            title=ip_address,
+            title=user_input[CONF_IP_ADDRESS],
             data={
-                CONF_IP_ADDRESS: ip_address,
+                CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
                 CONNECTION_TYPE: LOCAL,
             },
         )

@@ -153,7 +153,7 @@ async def test_local_create_entry(hass):
     }
 
     with patch(
-        "mill_local.Mill.get_status",
+        "mill_local.Mill.connect",
         return_value={
             "name": "panel heater gen. 3",
             "version": "0x210927",
@@ -205,7 +205,7 @@ async def test_local_flow_entry_already_exists(hass):
     }
 
     with patch(
-        "mill_local.Mill.get_status",
+        "mill_local.Mill.connect",
         return_value={
             "name": "panel heater gen. 3",
             "version": "0x210927",
@@ -244,7 +244,7 @@ async def test_local_connection_error(hass):
     }
 
     with patch(
-        "mill_local.Mill.get_status",
+        "mill_local.Mill.connect",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(

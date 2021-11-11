@@ -12,7 +12,13 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_IP_ADDRESS,
+    CONF_USERNAME,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -47,14 +53,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Mill climate."""
 
     if entry.data[CONNECTION_TYPE] == LOCAL:
-        entities = [
-            LocalMillHeater(device_id, mill_data_coordinator)
-            for device_id, mill_data_coordinator in hass.data[DOMAIN][LOCAL].items()
-        ]
-        async_add_entities(entities)
+        mill_data_coordinator = hass.data[DOMAIN][LOCAL][entry.data[CONF_IP_ADDRESS]]
+        async_add_entities([LocalMillHeater(mill_data_coordinator)])
         return
 
-    mill_data_coordinator = hass.data[DOMAIN][CLOUD]
+    mill_data_coordinator = hass.data[DOMAIN][CLOUD][entry.data[CONF_USERNAME]]
 
     entities = [
         MillHeater(mill_data_coordinator, mill_device)
@@ -191,7 +194,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = TEMP_CELSIUS
 
-    def __init__(self, device_id, coordinator):
+    def __init__(self, coordinator):
         """Initialize the thermostat."""
 
         super().__init__(coordinator)

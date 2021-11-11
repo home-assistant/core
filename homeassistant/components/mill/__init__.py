@@ -1,4 +1,6 @@
 """The mill component."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -24,6 +26,7 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        update_interval: timedelta | None = None,
         *,
         mill_data_connection: Mill,
     ) -> None:
@@ -35,28 +38,7 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_method=mill_data_connection.fetch_heater_and_sensor_data,
-            update_interval=timedelta(seconds=30),
-        )
-
-
-class LocalMillDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching Mill data."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        *,
-        mill_data_connection: MillLocal,
-    ) -> None:
-        """Initialize global Mill data updater."""
-        self.mill_data_connection = mill_data_connection
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=mill_data_connection.get_control_status,
-            update_interval=timedelta(seconds=15),
+            update_interval=update_interval,
         )
 
 
@@ -70,31 +52,26 @@ async def async_setup_entry(hass, entry):
             entry.data[CONF_PASSWORD],
             websession=async_get_clientsession(hass),
         )
-        if not await mill_data_connection.connect():
-            raise ConfigEntryNotReady
-
-        data_coordinator = MillDataUpdateCoordinator(
-            hass,
-            mill_data_connection=mill_data_connection,
-        )
-        hass.data[DOMAIN][CLOUD] = data_coordinator
+        update_interval = timedelta(seconds=30)
+        key = entry.data[CONF_USERNAME]
 
     else:
         mill_data_connection = MillLocal(
             entry.data[CONF_IP_ADDRESS],
             websession=async_get_clientsession(hass),
         )
+        update_interval = timedelta(seconds=15)
+        key = entry.data[CONF_IP_ADDRESS]
 
-        status = await mill_data_connection.get_status()
-        if not status:
-            raise ConfigEntryNotReady
+    if not await mill_data_connection.connect():
+        raise ConfigEntryNotReady
+    data_coordinator = MillDataUpdateCoordinator(
+        hass,
+        mill_data_connection=mill_data_connection,
+        update_interval=update_interval,
+    )
 
-        data_coordinator = LocalMillDataUpdateCoordinator(
-            hass,
-            mill_data_connection=mill_data_connection,
-        )
-        hass.data[DOMAIN][LOCAL][entry.data[CONF_IP_ADDRESS]] = data_coordinator
-
+    hass.data[DOMAIN][entry.data[CONNECTION_TYPE]][key] = data_coordinator
     await data_coordinator.async_config_entry_first_refresh()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
