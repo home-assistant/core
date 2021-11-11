@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
+    DOMAIN_REMOTE as DOMAIN,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -45,7 +46,6 @@ ATTR_HOLD_SECS = "hold_secs"
 ATTR_ALTERNATIVE = "alternative"
 ATTR_TIMEOUT = "timeout"
 
-DOMAIN = "remote"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"

@@ -1,4 +1,5 @@
 """Provides the constants needed for component."""
+from homeassistant.const import DOMAIN_MEDIA_PLAYER as DOMAIN  # noqa: F401
 
 ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
@@ -29,8 +30,6 @@ ATTR_MEDIA_VOLUME_LEVEL = "volume_level"
 ATTR_MEDIA_VOLUME_MUTED = "is_volume_muted"
 ATTR_SOUND_MODE = "sound_mode"
 ATTR_SOUND_MODE_LIST = "sound_mode_list"
-
-DOMAIN = "media_player"
 
 MEDIA_CLASS_ALBUM = "album"
 MEDIA_CLASS_APP = "app"

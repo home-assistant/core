@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DOMAIN_COVER as DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -39,7 +40,6 @@ from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "cover"
 SCAN_INTERVAL = timedelta(seconds=15)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"

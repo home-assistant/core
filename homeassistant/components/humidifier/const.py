@@ -1,4 +1,6 @@
 """Provides the constants needed for component."""
+from homeassistant.const import DOMAIN_HUMIDIFIER as DOMAIN  # noqa: F401
+
 MODE_NORMAL = "normal"
 MODE_ECO = "eco"
 MODE_AWAY = "away"
@@ -16,8 +18,6 @@ ATTR_MIN_HUMIDITY = "min_humidity"
 
 DEFAULT_MIN_HUMIDITY = 0
 DEFAULT_MAX_HUMIDITY = 100
-
-DOMAIN = "humidifier"
 
 DEVICE_CLASS_HUMIDIFIER = "humidifier"
 DEVICE_CLASS_DEHUMIDIFIER = "dehumidifier"

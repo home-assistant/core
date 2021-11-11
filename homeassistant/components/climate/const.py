@@ -1,4 +1,5 @@
 """Provides the constants needed for component."""
+from homeassistant.const import DOMAIN_CLIMATE as DOMAIN  # noqa: F401
 
 # All activity disabled / Device is off/standby
 HVAC_MODE_OFF = "off"
@@ -122,8 +123,6 @@ DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35
 DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
-
-DOMAIN = "climate"
 
 SERVICE_SET_AUX_HEAT = "set_aux_heat"
 SERVICE_SET_FAN_MODE = "set_fan_mode"

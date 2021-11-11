@@ -1,7 +1,7 @@
 """Constants for Camera component."""
 from typing import Final
 
-DOMAIN: Final = "camera"
+from homeassistant.const import DOMAIN_CAMERA as DOMAIN  # noqa: F401
 
 DATA_CAMERA_PREFS: Final = "camera_prefs"
 

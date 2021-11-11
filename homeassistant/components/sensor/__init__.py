@@ -40,6 +40,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
+    DOMAIN_SENSOR as DOMAIN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -58,8 +59,6 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 ATTR_LAST_RESET: Final = "last_reset"  # Deprecated, to be removed in 2021.11
 ATTR_STATE_CLASS: Final = "state_class"
-
-DOMAIN: Final = "sensor"
 
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 

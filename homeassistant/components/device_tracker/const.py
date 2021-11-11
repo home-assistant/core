@@ -3,9 +3,10 @@ from datetime import timedelta
 import logging
 from typing import Final
 
+from homeassistant.const import DOMAIN_DEVICE_TRACKER as DOMAIN
+
 LOGGER: Final = logging.getLogger(__package__)
 
-DOMAIN: Final = "device_tracker"
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 PLATFORM_TYPE_LEGACY: Final = "legacy"

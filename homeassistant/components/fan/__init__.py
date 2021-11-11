@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DOMAIN_FAN as DOMAIN,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -36,7 +37,6 @@ from homeassistant.util.percentage import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "fan"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"

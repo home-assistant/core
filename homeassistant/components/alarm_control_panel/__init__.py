@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
+    DOMAIN_ALARM_CONTROL_PANEL as DOMAIN,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -38,7 +39,6 @@ from .const import (
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-DOMAIN: Final = "alarm_control_panel"
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 ATTR_CHANGED_BY: Final = "changed_by"
 FORMAT_TEXT: Final = "text"

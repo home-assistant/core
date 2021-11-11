@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
+    DOMAIN_VACUUM as DOMAIN,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -39,7 +40,6 @@ from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "vacuum"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=20)
 

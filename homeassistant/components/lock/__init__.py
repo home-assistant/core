@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
+    DOMAIN_LOCK as DOMAIN,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
@@ -37,7 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_CHANGED_BY = "changed_by"
 
-DOMAIN = "lock"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"

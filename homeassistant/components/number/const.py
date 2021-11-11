@@ -1,6 +1,7 @@
 """Provides the constants needed for the component."""
-
 from typing import Final
+
+from homeassistant.const import DOMAIN_NUMBER as DOMAIN  # noqa: F401
 
 ATTR_VALUE = "value"
 ATTR_MIN = "min"
@@ -14,7 +15,5 @@ MODE_SLIDER: Final = "slider"
 DEFAULT_MIN_VALUE = 0.0
 DEFAULT_MAX_VALUE = 100.0
 DEFAULT_STEP = 1.0
-
-DOMAIN = "number"
 
 SERVICE_SET_VALUE = "set_value"

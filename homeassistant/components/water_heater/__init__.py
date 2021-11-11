@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    DOMAIN_WATER_HEATER as DOMAIN,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     SERVICE_TURN_OFF,
@@ -37,8 +38,6 @@ from homeassistant.util.temperature import convert as convert_temperature
 
 DEFAULT_MIN_TEMP = 110
 DEFAULT_MAX_TEMP = 140
-
-DOMAIN = "water_heater"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=60)

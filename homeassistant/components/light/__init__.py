@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DOMAIN_LIGHT as DOMAIN,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -32,7 +33,6 @@ import homeassistant.util.color as color_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
-DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
 DATA_PROFILES = "light_profiles"
 
