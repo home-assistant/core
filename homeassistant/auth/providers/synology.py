@@ -90,9 +90,8 @@ class SynologyAuthProvider(AuthProvider):
 
         if login_response.status != 200:
             _LOGGER.error(
-                "Status code %s in authentication response not successful: %s",
+                "Status code %s in authentication response not successful",
                 login_response.status,
-                login_response.reason,
             )
             raise SynologyConnectionError(
                 f"Connection to Synology DSM did not succeed. Status code: {login_response.status}"
@@ -106,7 +105,7 @@ class SynologyAuthProvider(AuthProvider):
             )
             if login_response_json["error"]["code"] < 400:
                 raise SynologyConnectionError(
-                    f"Connection to Synology DSM did not succeed. Synology error code: {login_response_json['error']['error']}"
+                    f"Connection to Synology DSM did not succeed. Synology error code: {login_response_json['error']['code']}"
                 )
             if login_response_json["error"]["code"] in [403, 404, 406]:
                 raise Synology2FAError(
