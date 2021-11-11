@@ -414,11 +414,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return str(self._player.player_id)
 
     @property
-    def player_id(self) -> int:
-        """Return the HEOS player ID."""
-        return self._player.player_id
-
-    @property
     def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         return self._player.volume / 100
