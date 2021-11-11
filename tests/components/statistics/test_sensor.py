@@ -12,6 +12,7 @@ from homeassistant.components.statistics.sensor import DOMAIN, StatisticsSensor
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
@@ -110,7 +111,6 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-
         assert str(self.mean) == state.state
         assert self.min == state.attributes.get("min_value")
         assert self.max == state.attributes.get("max_value")
@@ -125,13 +125,29 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
 
-        # Source sensor is unavailable, unit and state should not change
-        self.hass.states.set("sensor.test_monitored", "unavailable", {})
+        # Source sensor turns unavailable, then available with valid value,
+        # statistics sensor should follow
+        state = self.hass.states.get("sensor.test")
+        self.hass.states.set(
+            "sensor.test_monitored",
+            STATE_UNAVAILABLE,
+            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        )
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
-        assert state == new_state
+        assert new_state.state == STATE_UNAVAILABLE
+        self.hass.states.set(
+            "sensor.test_monitored",
+            0,
+            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        )
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert new_state.state != STATE_UNAVAILABLE
+        assert new_state.attributes.get("count") == state.attributes.get("count") + 1
 
-        # Source sensor has a non float state, unit and state should not change
+        # Source sensor has a non-float state, unit and state should not change
+        state = self.hass.states.get("sensor.test")
         self.hass.states.set("sensor.test_monitored", "beer", {})
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
