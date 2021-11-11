@@ -270,7 +270,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
             return CURRENT_HVAC_IDLE
         if (
             self._device.mode is not None and self._device.mode.supports_controller_mode
-        ) or self._device.is_active is True:
+        ) or self._device.is_active:
             return CURRENT_HVAC_ACTIONS.get(self.hvac_mode, CURRENT_HVAC_IDLE)
         return None
 
