@@ -1,4 +1,4 @@
-"""The tests for the Weather component."""
+"""The tests for the demo weather component."""
 from homeassistant.components import weather
 from homeassistant.components.weather import (
     ATTR_FORECAST,
