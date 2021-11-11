@@ -324,6 +324,9 @@ class ADBDevice(MediaPlayerEntity):
         self.turn_on_command = None
         self.turn_off_command = None
 
+        # AIS
+        self.ais_hdmi_off = False
+
         # ADB exceptions to catch
         if not aftv.adb_server_ip:
             # Using "adb_shell" (Python ADB implementation)
@@ -351,8 +354,6 @@ class ADBDevice(MediaPlayerEntity):
         """Load the config options."""
         _LOGGER.debug("Loading configuration options")
         options = self.hass.data[DOMAIN][self._entry_id][ANDROID_DEV_OPT]
-        self.ais_android_config = self.hass.data[DOMAIN][self._entry_id][DOMAIN]
-
         apps = options.get(CONF_APPS, {})
         self._app_id_to_name = APPS.copy()
         self._app_id_to_name.update(apps)
@@ -372,6 +373,13 @@ class ADBDevice(MediaPlayerEntity):
         self._screencap = options.get(CONF_SCREENCAP, DEFAULT_SCREENCAP)
         self.turn_off_command = options.get(CONF_TURN_OFF_COMMAND)
         self.turn_on_command = options.get(CONF_TURN_ON_COMMAND)
+
+    def _is_ais_gate(self):
+        # check if we have ais gate
+        if self.aftv.host == "127.0.0.1":
+            return True
+        ais_model = self.device_info["model"].startswith("AIS")
+        return ais_model
 
     async def async_added_to_hass(self):
         """Set config parameter when add to hass."""
@@ -430,7 +438,8 @@ class ADBDevice(MediaPlayerEntity):
     async def async_turn_on(self):
         """Turn on the device."""
         # ais gate - do not turn off, only stop hdmi
-        if self.ais_android_config[CONF_HOST] == "127.0.0.1":
+        if self._is_ais_gate():
+            self.ais_hdmi_off = False
             await self.aftv.adb_shell(
                 "su -c 'echo 1 > /sys/class/amhdmitx/amhdmitx0/phy'"
             )
@@ -444,7 +453,8 @@ class ADBDevice(MediaPlayerEntity):
     async def async_turn_off(self):
         """Turn off the device."""
         # ais gate - do not turn off, only stop hdmi
-        if self.ais_android_config[CONF_HOST] == "127.0.0.1":
+        if self._is_ais_gate():
+            self.ais_hdmi_off = True
             await self.aftv.adb_shell(
                 "su -c 'echo 0 > /sys/class/amhdmitx/amhdmitx0/phy'"
             )
@@ -566,6 +576,9 @@ class AndroidTVDevice(ADBDevice):
         ) = await self.aftv.update(self._get_sources)
 
         self._attr_state = ANDROIDTV_STATES.get(state)
+        # ais
+        if self.ais_hdmi_off:
+            self._attr_state = ANDROIDTV_STATES.get(STATE_OFF)
         if self._attr_state is None:
             self._attr_available = False
 
