@@ -10,7 +10,7 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "Home Assistant'a Volumio (` {name}",
+                "description": "Ev Asistan\u0131'na Volumio ('{name}') eklemek istiyor musunuz?",
                 "title": "Bulunan Volumio"
             },
             "user": {
