@@ -17,7 +17,7 @@
                     "interface": "Kullan\u0131lacak a\u011f aray\u00fcz\u00fc"
                 },
                 "description": "16 karakterlik API Anahtar\u0131na ihtiyac\u0131n\u0131z olacak, talimatlar i\u00e7in https://www.home-assistant.io/integrations/motion_blinds/#retriving-the-key adresine bak\u0131n.",
-                "title": "Hareketli Panjurlar"
+                "title": "Hareketli Perdeler"
             },
             "select": {
                 "data": {
@@ -32,7 +32,7 @@
                     "host": "IP Adresi"
                 },
                 "description": "Motion Gateway'inize ba\u011flan\u0131n, IP adresi ayarlanmad\u0131ysa, otomatik ke\u015fif kullan\u0131l\u0131r",
-                "title": "Hareketli Panjurlar"
+                "title": "Hareketli Perdeler"
             }
         }
     },
