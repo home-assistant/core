@@ -1063,6 +1063,8 @@ omit =
     homeassistant/components/telnet/switch.py
     homeassistant/components/temper/sensor.py
     homeassistant/components/tensorflow/image_processing.py
+    homeassistant/components/terncy/__init__.py
+    homeassistant/components/terncy/config_flow.py
     homeassistant/components/terncy/const.py
     homeassistant/components/terncy/hub_monitor.py
     homeassistant/components/terncy/light.py
