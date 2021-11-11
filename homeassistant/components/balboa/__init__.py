@@ -32,13 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Configure the Balboa Spa Client component using flow only."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Balboa Spa from a config entry."""
     host = entry.data[CONF_HOST]
 
@@ -46,6 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Attempting to connect to %s", host)
     spa = BalboaSpaWifi(host)
+
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {SPA: spa, UNSUB: unsub}
 
     connected = await spa.connect()
@@ -63,9 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.loop.create_task(spa.check_connection_status())
 
     # At this point we have a configured spa.
-    forward_setup = hass.config_entries.async_forward_entry_setup
-    for component in PLATFORMS:
-        hass.async_create_task(forward_setup(entry, component))
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def _async_balboa_update_cb():
         """Primary update callback called from pybalboa."""
@@ -80,22 +75,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     _LOGGER.debug("Disconnecting from spa")
     spa = hass.data[DOMAIN][entry.entry_id][SPA]
     await spa.disconnect()
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN][entry.entry_id][UNSUB]()
 
     if unload_ok:
