@@ -102,8 +102,10 @@ ATTR_TIMESTAMP = "timestamp"
 
 DEFAULT_ENTITY_MODEL = "alarm_control_panel"
 DEFAULT_ENTITY_NAME = "Alarm Control Panel"
+DEFAULT_REST_API_ERROR_COUNT = 2
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
+
 
 DISPATCHER_TOPIC_WEBSOCKET_EVENT = "simplisafe_websocket_event_{0}"
 
@@ -553,6 +555,8 @@ class SimpliSafeEntity(CoordinatorEntity):
         assert simplisafe.coordinator
         super().__init__(simplisafe.coordinator)
 
+        self._rest_api_errors = 0
+
         if device:
             model = device.type.name
             device_name = device.name
@@ -615,11 +619,24 @@ class SimpliSafeEntity(CoordinatorEntity):
         else:
             system_offline = False
 
-        return super().available and self._online and not system_offline
+        return (
+            self._rest_api_errors < DEFAULT_REST_API_ERROR_COUNT
+            and self._online
+            and not system_offline
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update the entity with new REST API data."""
+        # SimpliSafe can incorrectly return an error state when there isn't any
+        # error. This can lead to the system having an unknown state frequently.
+        # To protect against that, we measure how many "error states" we receive
+        # and only alter the state if we detect a few in a row:
+        if self.coordinator.last_update_success:
+            self._rest_api_errors = 0
+        else:
+            self._rest_api_errors += 1
+
         self.async_update_from_rest_api()
         self.async_write_ha_state()
 

@@ -42,6 +42,7 @@ homeassistant.components.efergy.*
 homeassistant.components.elgato.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
+homeassistant.components.evil_genius_labs.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.fitbit.*
 homeassistant.components.flunearyou.*
@@ -96,6 +97,7 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.proximity.*
 homeassistant.components.rainmachine.*
+homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
