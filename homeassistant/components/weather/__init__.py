@@ -112,12 +112,15 @@ class WeatherEntity(Entity):
     _attr_ozone: float | None = None
     _attr_precision: float
     _attr_pressure: float | None = None
+    _attr_pressure_unit: str | None = None
     _attr_state: None = None
     _attr_temperature_unit: str
     _attr_temperature: float | None
     _attr_visibility: float | None = None
+    _attr_visibility_unit: str | None = None
     _attr_wind_bearing: float | str | None = None
     _attr_wind_speed: float | None = None
+    _attr_wind_speed_unit: str | None = None
 
     @property
     def native_temperature(self) -> float | None:
@@ -129,7 +132,6 @@ class WeatherEntity(Entity):
         """Return the unit of measurement for temperature."""
         return self._attr_temperature_unit
 
-    @final
     @property
     def temperature(self) -> float | None:
         """Return the platform temperature, after unit conversion."""
@@ -137,9 +139,8 @@ class WeatherEntity(Entity):
         unit = self.native_temperature_unit
         if temp is None or unit is None:
             return temp
-        return self.hass.config.units.temperature(temp, unit)
+        return show_temp(self.hass, temp, unit, self.precision)
 
-    @final
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement for temperature, after unit conversion."""
@@ -153,9 +154,8 @@ class WeatherEntity(Entity):
     @property
     def native_pressure_unit(self) -> str | None:
         """Return the unit of measurement for pressure."""
-        return None
+        return self._attr_pressure_unit
 
-    @final
     @property
     def pressure(self) -> float | None:
         """Return the pressure, after unit conversion."""
@@ -178,9 +178,8 @@ class WeatherEntity(Entity):
     @property
     def native_wind_speed_unit(self) -> str | None:
         """Return the unit of measurement for wind speed."""
-        return None
+        return self._attr_wind_speed_unit
 
-    @final
     @property
     def wind_speed(self) -> float | None:
         """Return the wind speed, after unit conversion."""
@@ -209,9 +208,8 @@ class WeatherEntity(Entity):
     @property
     def native_visibility_unit(self) -> str | None:
         """Return the unit of measurement for visibility."""
-        return None
+        return self._attr_visibility_unit
 
-    @final
     @property
     def visibility(self) -> float | None:
         """Return the visibility, after unit conversion."""
@@ -244,7 +242,10 @@ class WeatherEntity(Entity):
         data = {}
         if self.temperature is not None:
             data[ATTR_WEATHER_TEMPERATURE] = show_temp(
-                self.hass, self.temperature, self.temperature_unit, self.precision
+                self.hass,
+                self.temperature,
+                self.native_temperature_unit,
+                self.precision,
             )
 
         if (humidity := self.humidity) is not None:
@@ -272,14 +273,14 @@ class WeatherEntity(Entity):
                 forecast_entry[ATTR_FORECAST_TEMP] = show_temp(
                     self.hass,
                     forecast_entry[ATTR_FORECAST_TEMP],
-                    self.temperature_unit,
+                    self.native_temperature_unit,
                     self.precision,
                 )
                 if ATTR_FORECAST_TEMP_LOW in forecast_entry:
                     forecast_entry[ATTR_FORECAST_TEMP_LOW] = show_temp(
                         self.hass,
                         forecast_entry[ATTR_FORECAST_TEMP_LOW],
-                        self.temperature_unit,
+                        self.native_temperature_unit,
                         self.precision,
                     )
                 forecast.append(forecast_entry)
