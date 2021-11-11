@@ -282,10 +282,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     tern.register_event_handler(terncy_event_handler)
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(pdata.hub_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
