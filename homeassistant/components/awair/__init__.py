@@ -12,8 +12,16 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.dt import utcnow
 
-from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL, AwairResult
+from .const import (
+    API_TIMEOUT,
+    DATA_UPDATE_INTERVAL,
+    DEVICE_UPDATE_INTERVAL,
+    DOMAIN,
+    LOGGER,
+    AwairResult,
+)
 
 PLATFORMS = ["sensor"]
 
@@ -52,25 +60,44 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
         """Set up the AwairDataUpdateCoordinator class."""
         access_token = config_entry.data[CONF_ACCESS_TOKEN]
         self._awair = Awair(access_token=access_token, session=session)
+        self._awair_devices = []
+        self._last_device_update = None
         self._config_entry = config_entry
 
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass, LOGGER, name=DOMAIN, update_interval=DATA_UPDATE_INTERVAL
+        )
 
     async def _async_update_data(self) -> Any | None:
         """Update data via Awair client library."""
         async with timeout(API_TIMEOUT):
             try:
-                LOGGER.debug("Fetching users and devices")
-                user = await self._awair.user()
-                devices = await user.devices()
+                devices = await self._fetch_devices()
                 results = await gather(
                     *(self._fetch_air_data(device) for device in devices)
                 )
                 return {result.device.uuid: result for result in results}
             except AuthError as err:
+                self._last_device_update = None
                 raise ConfigEntryAuthFailed from err
             except Exception as err:
+                self._last_device_update = None
                 raise UpdateFailed(err) from err
+
+    async def _fetch_devices(self):
+        """Fetch user's device list, less frequently than device data."""
+        now = utcnow()
+
+        if (
+            self._last_device_update is None
+            or now > self._last_device_update + DEVICE_UPDATE_INTERVAL
+        ):
+            LOGGER.debug("Fetching users and devices")
+            user = await self._awair.user()
+            self._awair_devices = await user.devices()
+            self._last_device_update = now
+
+        return self._awair_devices
 
     async def _fetch_air_data(self, device):
         """Fetch latest air quality data."""

@@ -42,7 +42,8 @@ DUST_ALIASES = [API_PM25, API_PM10]
 
 LOGGER = logging.getLogger(__package__)
 
-UPDATE_INTERVAL = timedelta(minutes=5)
+DATA_UPDATE_INTERVAL = timedelta(minutes=5)
+DEVICE_UPDATE_INTERVAL = timedelta(hours=6)
 
 
 @dataclass
