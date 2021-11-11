@@ -10,10 +10,6 @@ import pytest
 def dial_mock():
     """Mock pychromecast dial."""
     dial_mock = MagicMock()
-    dial_mock.get_device_status.return_value.uuid = "fake_uuid"
-    dial_mock.get_device_status.return_value.manufacturer = "fake_manufacturer"
-    dial_mock.get_device_status.return_value.model_name = "fake_model_name"
-    dial_mock.get_device_status.return_value.friendly_name = "fake_friendly_name"
     dial_mock.get_multizone_status.return_value.dynamic_groups = []
     return dial_mock
 
