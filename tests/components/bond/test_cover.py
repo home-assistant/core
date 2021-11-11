@@ -4,7 +4,7 @@ from datetime import timedelta
 from bond_api import Action, DeviceType
 
 from homeassistant import core
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, STATE_CLOSED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -13,6 +13,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
+    STATE_UNKNOWN,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -38,11 +39,20 @@ def shades(name: str):
 
 
 def tilt_only_shades(name: str):
-    """Create motorized shades with given name."""
+    """Create motorized shades that only tilt."""
     return {
         "name": name,
         "type": DeviceType.MOTORIZED_SHADES,
         "actions": ["TiltOpen", "TiltClose", "Hold"],
+    }
+
+
+def tilt_shades(name: str):
+    """Create motorized shades with given name that can also tilt."""
+    return {
+        "name": name,
+        "type": DeviceType.MOTORIZED_SHADES,
+        "actions": ["Open", "Close", "Hold", "TiltOpen", "TiltClose", "Hold"],
     }
 
 
@@ -131,6 +141,7 @@ async def test_tilt_open_cover(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     mock_open.assert_called_once_with("test-device-id", Action.tilt_open())
+    assert hass.states.get("cover.name_1").state == STATE_UNKNOWN
 
 
 async def test_tilt_close_cover(hass: core.HomeAssistant):
@@ -149,12 +160,17 @@ async def test_tilt_close_cover(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     mock_close.assert_called_once_with("test-device-id", Action.tilt_close())
+    assert hass.states.get("cover.name_1").state == STATE_UNKNOWN
 
 
 async def test_tilt_stop_cover(hass: core.HomeAssistant):
     """Tests that tilt stop cover command delegates to API."""
     await setup_platform(
-        hass, COVER_DOMAIN, tilt_only_shades("name-1"), bond_device_id="test-device-id"
+        hass,
+        COVER_DOMAIN,
+        tilt_only_shades("name-1"),
+        bond_device_id="test-device-id",
+        state={"counter1": 123},
     )
 
     with patch_bond_action() as mock_hold, patch_bond_device_state():
@@ -167,6 +183,30 @@ async def test_tilt_stop_cover(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     mock_hold.assert_called_once_with("test-device-id", Action.hold())
+    assert hass.states.get("cover.name_1").state == STATE_UNKNOWN
+
+
+async def test_tilt_and_open(hass: core.HomeAssistant):
+    """Tests that supports both tilt and open."""
+    await setup_platform(
+        hass,
+        COVER_DOMAIN,
+        tilt_shades("name-1"),
+        bond_device_id="test-device-id",
+        state={"open": False},
+    )
+
+    with patch_bond_action() as mock_open, patch_bond_device_state():
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: "cover.name_1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_open.assert_called_once_with("test-device-id", Action.tilt_open())
+    assert hass.states.get("cover.name_1").state == STATE_CLOSED
 
 
 async def test_update_reports_open_cover(hass: core.HomeAssistant):

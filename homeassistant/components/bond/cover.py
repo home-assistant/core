@@ -54,10 +54,6 @@ class BondCover(BondEntity, CoverEntity):
     ) -> None:
         """Create HA entity representing Bond cover."""
         super().__init__(hub, device, bpup_subs)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
         supported_features = 0
         if self._device.supports_open():
             supported_features |= SUPPORT_OPEN
@@ -72,7 +68,7 @@ class BondCover(BondEntity, CoverEntity):
                 supported_features |= SUPPORT_STOP
             if self._device.supports_tilt_open() or self._device.supports_tilt_close():
                 supported_features |= SUPPORT_STOP_TILT
-        return supported_features
+        self._attr_supported_features = supported_features
 
     def _apply_state(self, state: dict) -> None:
         cover_open = state.get("open")
