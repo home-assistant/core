@@ -1,25 +1,27 @@
 """Support for WLED."""
 from __future__ import annotations
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DOMAIN_BUTTON,
+    DOMAIN_LIGHT,
+    DOMAIN_NUMBER,
+    DOMAIN_SELECT,
+    DOMAIN_SENSOR,
+    DOMAIN_SWITCH,
+)
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .coordinator import WLEDDataUpdateCoordinator
 
 PLATFORMS = (
-    BUTTON_DOMAIN,
-    LIGHT_DOMAIN,
-    SELECT_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
-    NUMBER_DOMAIN,
+    DOMAIN_BUTTON,
+    DOMAIN_LIGHT,
+    DOMAIN_SELECT,
+    DOMAIN_SENSOR,
+    DOMAIN_SWITCH,
+    DOMAIN_NUMBER,
 )
 
 
