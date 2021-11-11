@@ -44,5 +44,10 @@ def soco_error(errorcodes: list[str] | None = None) -> Callable:
 
 def hostname_to_uid(hostname: str) -> str:
     """Convert a Sonos hostname to a uid."""
-    baseuid = hostname.split("-")[1].replace(".local.", "")
+    if hostname.startswith("Sonos-"):
+        baseuid = hostname.split("-")[1].replace(".local.", "")
+    elif hostname.startswith("sonos"):
+        baseuid = hostname[5:].replace(".local.", "")
+    else:
+        raise ValueError(f"{hostname} is not a sonos device.")
     return f"{UID_PREFIX}{baseuid}{UID_POSTFIX}"
