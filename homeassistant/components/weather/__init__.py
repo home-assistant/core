@@ -139,7 +139,7 @@ class WeatherEntity(Entity):
         unit = self.native_temperature_unit
         if temp is None or unit is None:
             return temp
-        return show_temp(self.hass, temp, unit, self.precision)
+        return self.hass.config.units.temperature(temp, unit)
 
     @property
     def temperature_unit(self) -> str:
@@ -243,7 +243,8 @@ class WeatherEntity(Entity):
         if self.temperature is not None:
             data[ATTR_WEATHER_TEMPERATURE] = show_temp(
                 self.hass,
-                self.temperature,
+                # Use native_temperature if defined, use temperature for old integrations
+                self.native_temperature or self.temperature,
                 self.native_temperature_unit,
                 self.precision,
             )
