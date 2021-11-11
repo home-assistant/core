@@ -399,8 +399,6 @@ omit =
     homeassistant/components/google_travel_time/sensor.py
     homeassistant/components/gpmdp/media_player.py
     homeassistant/components/gpsd/sensor.py
-    homeassistant/components/greeneye_monitor/*
-    homeassistant/components/greeneye_monitor/sensor.py
     homeassistant/components/greenwave/light.py
     homeassistant/components/group/notify.py
     homeassistant/components/growatt_server/sensor.py
@@ -502,7 +500,6 @@ omit =
     homeassistant/components/incomfort/*
     homeassistant/components/intesishome/*
     homeassistant/components/ios/*
-    homeassistant/components/iota/*
     homeassistant/components/iperf3/*
     homeassistant/components/iqvia/*
     homeassistant/components/irish_rail_transport/sensor.py
@@ -1171,6 +1168,7 @@ omit =
     homeassistant/components/velbus/switch.py
     homeassistant/components/velux/*
     homeassistant/components/venstar/__init__.py
+    homeassistant/components/venstar/binary_sensor.py
     homeassistant/components/venstar/climate.py
     homeassistant/components/verisure/__init__.py
     homeassistant/components/verisure/alarm_control_panel.py

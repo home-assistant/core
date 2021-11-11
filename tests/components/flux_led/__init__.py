@@ -46,8 +46,10 @@ def _mocked_bulb() -> AIOWifiLedBulb:
 
     bulb.device_type = DeviceType.Bulb
     bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
+    bulb.effect_list = ["some_effect"]
     bulb.async_set_custom_pattern = AsyncMock()
     bulb.async_set_preset_pattern = AsyncMock()
+    bulb.async_set_effect = AsyncMock()
     bulb.async_set_white_temp = AsyncMock()
     bulb.async_stop = AsyncMock()
     bulb.async_update = AsyncMock()
@@ -68,6 +70,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.getWhiteTemperature = MagicMock(return_value=(2700, 128))
     bulb.brightness = 128
     bulb.model_num = 0x35
+    bulb.effect = None
     bulb.model = "Smart Bulb (0x35)"
     bulb.version_num = 8
     bulb.rgbwcapable = True

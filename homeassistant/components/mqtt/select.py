@@ -90,6 +90,8 @@ async def _async_setup_entity(
 class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     """representation of an MQTT select."""
 
+    _entity_id_format = select.ENTITY_ID_FORMAT
+
     _attributes_extra_blocked = MQTT_SELECT_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):

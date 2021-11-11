@@ -133,4 +133,5 @@ VALUE_SCHEMA = vol.Any(
     vol.Coerce(float),
     BITMASK_SCHEMA,
     cv.string,
+    dict,
 )

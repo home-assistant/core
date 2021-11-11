@@ -298,21 +298,24 @@ class HomeAssistantHTTP:
             # Should be instance of aiohttp.web_exceptions._HTTPMove.
             raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
 
-        self.app.router.add_route("GET", url, redirect)
+        self.app["allow_configured_cors"](
+            self.app.router.add_route("GET", url, redirect)
+        )
 
     def register_static_path(
         self, url_path: str, path: str, cache_headers: bool = True
-    ) -> web.FileResponse | None:
+    ) -> None:
         """Register a folder or file to serve as a static path."""
         if os.path.isdir(path):
             if cache_headers:
-                resource: type[
-                    CachingStaticResource | web.StaticResource
-                ] = CachingStaticResource
+                resource: CachingStaticResource | web.StaticResource = (
+                    CachingStaticResource(url_path, path)
+                )
             else:
-                resource = web.StaticResource
-            self.app.router.register_resource(resource(url_path, path))
-            return None
+                resource = web.StaticResource(url_path, path)
+            self.app.router.register_resource(resource)
+            self.app["allow_configured_cors"](resource)
+            return
 
         async def serve_file(request: web.Request) -> web.FileResponse:
             """Serve file from disk."""
@@ -320,8 +323,9 @@ class HomeAssistantHTTP:
                 return web.FileResponse(path, headers=CACHE_HEADERS)
             return web.FileResponse(path)
 
-        self.app.router.add_route("GET", url_path, serve_file)
-        return None
+        self.app["allow_configured_cors"](
+            self.app.router.add_route("GET", url_path, serve_file)
+        )
 
     async def start(self) -> None:
         """Start the aiohttp server."""

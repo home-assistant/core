@@ -25,7 +25,7 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN
 from .template_entity import TemplateEntity
 
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
@@ -119,9 +119,8 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         )
         self._name = friendly_name
         self._template = state_template
-        domain = __name__.split(".")[-2]
-        self._on_script = Script(hass, on_action, friendly_name, domain)
-        self._off_script = Script(hass, off_action, friendly_name, domain)
+        self._on_script = Script(hass, on_action, friendly_name, DOMAIN)
+        self._off_script = Script(hass, off_action, friendly_name, DOMAIN)
         self._state = False
         self._unique_id = unique_id
 

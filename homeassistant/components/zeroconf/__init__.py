@@ -61,7 +61,7 @@ MAX_PROPERTY_VALUE_LEN = 230
 # Dns label max length
 MAX_NAME_LEN = 63
 
-# Attributes for HaServiceInfo
+# Attributes for ZeroconfServiceInfo
 ATTR_HOST: Final = "host"
 ATTR_HOSTNAME: Final = "hostname"
 ATTR_NAME: Final = "name"
@@ -87,7 +87,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class HaServiceInfo(TypedDict):
+class ZeroconfServiceInfo(TypedDict):
     """Prepared info from mDNS entries."""
 
     host: str
@@ -397,6 +397,11 @@ class ZeroconfDiscovery:
         else:
             lowercase_manufacturer = None
 
+        if "model" in info[ATTR_PROPERTIES]:
+            lowercase_model: str | None = info[ATTR_PROPERTIES]["model"].lower()
+        else:
+            lowercase_model = None
+
         # Not all homekit types are currently used for discovery
         # so not all service type exist in zeroconf_types
         for matcher in self.zeroconf_types.get(service_type, []):
@@ -416,6 +421,11 @@ class ZeroconfDiscovery:
                     or not fnmatch.fnmatch(
                         lowercase_manufacturer, matcher["manufacturer"]
                     )
+                ):
+                    continue
+                if "model" in matcher and (
+                    lowercase_model is None
+                    or not fnmatch.fnmatch(lowercase_model, matcher["model"])
                 ):
                     continue
 
@@ -456,7 +466,7 @@ def async_get_homekit_discovery_domain(
     return None
 
 
-def info_from_service(service: AsyncServiceInfo) -> HaServiceInfo | None:
+def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     """Return prepared info from mDNS entries."""
     properties: dict[str, Any] = {"_raw": {}}
 
@@ -483,7 +493,7 @@ def info_from_service(service: AsyncServiceInfo) -> HaServiceInfo | None:
     if (host := _first_non_link_local_or_v6_address(addresses)) is None:
         return None
 
-    return HaServiceInfo(
+    return ZeroconfServiceInfo(
         host=str(host),
         port=service.port,
         hostname=service.server,
