@@ -1,7 +1,9 @@
 """Provides the constants needed for the component."""
 from typing import Final
 
-from homeassistant.const import DOMAIN_NUMBER as DOMAIN  # noqa: F401
+from homeassistant.const import (  # noqa: F401  # pylint: disable=unused-import
+    DOMAIN_NUMBER as DOMAIN,
+)
 
 ATTR_VALUE = "value"
 ATTR_MIN = "min"

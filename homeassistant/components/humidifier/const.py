@@ -1,5 +1,7 @@
 """Provides the constants needed for component."""
-from homeassistant.const import DOMAIN_HUMIDIFIER as DOMAIN  # noqa: F401
+from homeassistant.const import (  # noqa: F401  # pylint: disable=unused-import
+    DOMAIN_HUMIDIFIER as DOMAIN,
+)
 
 MODE_NORMAL = "normal"
 MODE_ECO = "eco"

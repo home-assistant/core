@@ -1,5 +1,7 @@
 """Provides the constants needed for component."""
-from homeassistant.const import DOMAIN_CLIMATE as DOMAIN  # noqa: F401
+from homeassistant.const import (  # noqa: F401  # pylint: disable=unused-import
+    DOMAIN_CLIMATE as DOMAIN,
+)
 
 # All activity disabled / Device is off/standby
 HVAC_MODE_OFF = "off"

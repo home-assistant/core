@@ -1,5 +1,7 @@
 """Provides the constants needed for component."""
-from homeassistant.const import DOMAIN_MEDIA_PLAYER as DOMAIN  # noqa: F401
+from homeassistant.const import (  # noqa: F401  # pylint: disable=unused-import
+    DOMAIN_MEDIA_PLAYER as DOMAIN,
+)
 
 ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
