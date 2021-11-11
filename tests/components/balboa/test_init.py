@@ -7,31 +7,14 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from . import BalboaMock
+from . import TEST_HOST, TEST_NAME, BalboaMock, init_integration
 
 from tests.common import MockConfigEntry
-
-TEST_HOST = "balboatest.localdomain"
-TEST_NAME = "FakeSpa"
 
 
 async def test_setup_entry(hass: HomeAssistant):
     """Validate that setup entry also configure the client."""
-    config_entry = MockConfigEntry(
-        domain=BALBOA_DOMAIN,
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_NAME: TEST_NAME,
-        },
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.balboa.BalboaSpaWifi",
-        new=BalboaMock,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    config_entry = await init_integration(hass)
 
     assert config_entry.state == ConfigEntryState.LOADED
 

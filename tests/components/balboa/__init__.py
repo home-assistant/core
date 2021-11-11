@@ -1,7 +1,76 @@
-"""Tests for the Balboa Spa Client integration."""
+"""Test the Balboa Spa Client integration."""
 import asyncio
+from unittest.mock import patch
+
+from homeassistant.components.balboa.const import DOMAIN as BALBOA_DOMAIN
+from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 BALBOA_DEFAULT_PORT = 4257
+TEST_HOST = "balboatest.localdomain"
+TEST_NAME = "FakeSpa"
+
+
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
+    """Mock integration setup."""
+    config_entry = MockConfigEntry(
+        domain=BALBOA_DOMAIN,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_NAME: TEST_NAME,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.balboa.BalboaSpaWifi",
+        new=BalboaMock,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return config_entry
+
+
+async def init_integration_mocked(hass: HomeAssistant) -> MockConfigEntry:
+    """Mock integration setup."""
+    config_entry = MockConfigEntry(
+        domain=BALBOA_DOMAIN,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_NAME: TEST_NAME,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.balboa.BalboaSpaWifi.connect",
+        new=BalboaMock.connect,
+    ), patch(
+        "homeassistant.components.balboa.BalboaSpaWifi.listen_until_configured",
+        new=BalboaMock.listen_until_configured,
+    ), patch(
+        "homeassistant.components.balboa.BalboaSpaWifi.listen",
+        new=BalboaMock.listen,
+    ), patch(
+        "homeassistant.components.balboa.BalboaSpaWifi.check_connection_status",
+        new=BalboaMock.check_connection_status,
+    ), patch(
+        "homeassistant.components.balboa.BalboaSpaWifi.send_panel_req",
+        new=BalboaMock.send_panel_req,
+    ), patch(
+        "homeassistant.components.balboa.BalboaSpaWifi.send_mod_ident_req",
+        new=BalboaMock.send_mod_ident_req,
+    ), patch(
+        "homeassistant.components.balboa.BalboaSpaWifi.spa_configured",
+        new=BalboaMock.spa_configured,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return config_entry
 
 
 class BalboaMock:
@@ -15,6 +84,7 @@ class BalboaMock:
         self.new_data_cb = None
         self.lastupd = 0
         self.connected = False
+        self.fake_action = False
 
     async def connect(self):
         """Connect to the spa."""
@@ -30,14 +100,14 @@ class BalboaMock:
         """Stop talking to the spa."""
         self.connected = False
 
-    @staticmethod
-    async def send_panel_req(arg_ba, arg_bb):
+    async def send_panel_req(self, arg_ba, arg_bb):
         """Send a panel request, 2 bytes of data."""
+        self.fake_action = False
         return
 
-    @staticmethod
-    async def send_mod_ident_req():
+    async def send_mod_ident_req(self):
         """Ask for the module identification."""
+        self.fake_action = False
         return
 
     @staticmethod
@@ -71,14 +141,27 @@ class BalboaMock:
             # fake it
             await asyncio.sleep(5)
 
-    @staticmethod
-    async def check_connection_status():
+    async def check_connection_status(self):
         """Set this up to periodically check the spa connection and fix."""
+        self.fake_action = False
         while True:
             # fake it
             await asyncio.sleep(15)
 
-    @staticmethod
-    async def spa_configured():
+    async def spa_configured(self):
         """Check if the spa has been configured."""
+        self.fake_action = False
         return
+
+    async def int_new_data_cb(self):
+        """Call false internal data callback."""
+
+        if self.new_data_cb is None:
+            return
+        await self.new_data_cb()  # pylint: disable=not-callable
+
+    async def listen_until_configured(self, maxiter=20):
+        """Listen to the spa babble until we are configured."""
+        if not self.connected:
+            return False
+        return True
