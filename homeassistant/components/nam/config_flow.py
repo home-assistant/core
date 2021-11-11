@@ -18,7 +18,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.const import ATTR_NAME, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,6 +27,10 @@ from homeassistant.helpers.device_registry import format_mac
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+AUTH_SCHEMA = vol.Schema(
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+)
 
 
 async def async_get_mac(hass: HomeAssistant, host: str, data: dict[str, Any]) -> str:
@@ -91,6 +95,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the credentials step."""
         errors: dict[str, str] = {}
+
         if user_input is not None:
             try:
                 mac = await async_get_mac(self.hass, self.host, user_input)
@@ -111,18 +116,9 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=self.host,
                     data={**user_input, CONF_HOST: self.host},
                 )
-        else:
-            user_input = {}
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME)): str,
-                vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
-            }
-        )
 
         return self.async_show_form(
-            step_id="credentials", data_schema=schema, errors=errors
+            step_id="credentials", data_schema=AUTH_SCHEMA, errors=errors
         )
 
     async def async_step_zeroconf(
@@ -146,9 +142,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(format_mac(mac))
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
-        self.context["title_placeholders"] = {
-            ATTR_NAME: discovery_info[ATTR_NAME].split(".")[0]
-        }
+        self.context["title_placeholders"] = {"host": self.host}
 
         return await self.async_step_confirm_discovery()
 
@@ -168,6 +162,49 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm_discovery",
-            description_placeholders={CONF_HOST: self.host},
+            description_placeholders={"host": self.host},
+            errors=errors,
+        )
+
+    async def async_step_reauth(self, _: dict[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self.config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        if not self.config_entry:
+            return self.async_abort(reason="reauth_failed_existing")
+
+        self.context["title_placeholders"] = {"host": self.config_entry.data[CONF_HOST]}
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            assert self.config_entry is not None
+            host = self.config_entry.data[CONF_HOST]
+
+            try:
+                await async_get_mac(self.hass, host, user_input)
+            except AuthRequired:
+                errors["base"] = "invalid_auth"
+            except (ApiError, ClientConnectorError, asyncio.TimeoutError):
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data={**user_input, CONF_HOST: host}
+                )
+                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=AUTH_SCHEMA,
             errors=errors,
         )
