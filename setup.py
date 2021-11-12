@@ -34,7 +34,7 @@ PACKAGES = find_packages(exclude=["tests", "tests.*"])
 REQUIRES = [
     "aiohttp==3.8.0",
     "astral==2.2",
-    "async_timeout==4.0.0",
+    "async_timeout==4.0.1",
     "attrs==21.2.0",
     "awesomeversion==21.10.1",
     'backports.zoneinfo;python_version<"3.9"',
