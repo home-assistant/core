@@ -12,9 +12,6 @@ from typing import TYPE_CHECKING, Any, Callable, Optional, cast
 import weakref
 
 from homeassistant import data_entry_flow, loader
-
-if TYPE_CHECKING:
-    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -33,6 +30,9 @@ from homeassistant.helpers.typing import (
 from homeassistant.setup import async_process_deps_reqs, async_setup_component
 from homeassistant.util.decorator import Registry
 import homeassistant.util.uuid as uuid_util
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
