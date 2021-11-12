@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "exchange_base": "\u70ba\u66ff\u30ec\u30fc\u30c8\u30bb\u30f3\u30b5\u30fc\u306e\u57fa\u6e96\u901a\u8ca8\u3002"
+                }
+            }
+        }
+    }
+}

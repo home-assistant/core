@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "flipr_id": {
+                "data": {
+                    "flipr_id": "Flipr ID"
+                }
+            },
+            "user": {
+                "title": "Flipr\u306b\u63a5\u7d9a"
+            }
+        }
+    }
+}
