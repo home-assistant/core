@@ -19,5 +19,6 @@ async def async_setup_entry(
     """Set up sensor entities."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     if bridge.api_version == 1:
-        return await setup_entry_v1(hass, config_entry, async_add_entities)
-    return await setup_entry_v2(hass, config_entry, async_add_entities)
+        await setup_entry_v1(hass, config_entry, async_add_entities)
+        return
+    await setup_entry_v2(hass, config_entry, async_add_entities)
