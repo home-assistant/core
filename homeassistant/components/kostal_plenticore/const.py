@@ -621,6 +621,17 @@ SENSOR_SETTINGS_DATA = [
         "format_round",
     ),
 ]
+
+# Defines all entities for switches.
+#
+# Each entry is defined with a tuple of these values:
+#  - module id (str)
+#  - process data id (str)
+#  - entity name suffix (str)
+#  - on Value (str)
+#  - on Label (str)
+#  - off Value (str)
+#  - off Label (str)
 SWITCH = namedtuple('SWITCH', 'module_id data_id name is_on on_value on_label off_value off_label')
 SWITCH_SETTINGS_DATA = [
     SWITCH(
@@ -643,7 +654,14 @@ class SelectData(NamedTuple):
     options: list
     is_on: str
 
-
+# Defines all entities for select widgets.
+#
+# Each entry is defined with a tuple of these values:
+#  - module id (str)
+#  - process data id (str)
+#  - entity name suffix (str)
+#  - options
+#  - entity is enabled by default (bool)
 SELECT_SETTINGS_DATA = [
     SelectData(
         "devices:local",
