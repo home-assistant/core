@@ -45,13 +45,19 @@ class HueBaseEntity(Entity):
         self._attr_unique_id = resource.id
         # device is precreated in main handler
         # this attaches the entity to the precreated device
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device.id)},
-        )
+        if self.device is not None:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self.device.id)},
+            )
 
     @property
     def name(self) -> str:
         """Return name for the entity."""
+        if self.device is None:
+            # this is just a guard
+            # creating a pretty name for device-less entities (e.g. groups/scenes)
+            # should be handled in the platform instead
+            return self.resource.type.value
         dev_name = self.device.metadata.name
         # if resource is a light, use the device name
         if self.resource.type == ResourceTypes.LIGHT:
