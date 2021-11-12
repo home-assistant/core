@@ -132,6 +132,11 @@ async def hue_activate_scene_v2(
     dynamic: bool = True,
 ) -> bool:
     """Service for V2 bridge to call scene by name."""
+    LOGGER.warning(
+        "Use of service_call '%s' is deprecated and will be removed "
+        "in a future release. Please use scene entities instead",
+        SERVICE_HUE_ACTIVATE_SCENE,
+    )
     api: HueBridgeV2 = bridge.api
     for scene in api.scenes:
         if scene.metadata.name.lower() != scene_name.lower():
