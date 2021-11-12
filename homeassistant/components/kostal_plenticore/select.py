@@ -1,4 +1,4 @@
-﻿"""Select Kostal Plenticore charging/usage mode"""
+﻿"""Platform for Kostal Plenticore select widgets."""
 from __future__ import annotations
 
 from abc import ABC
@@ -38,9 +38,9 @@ async def async_setup_entry(
         timedelta(seconds=30),
         plenticore,
     )
-    for module_id, data_id, name, options, is_on in SELECT_SETTINGS_DATA:
-        if module_id not in available_settings_data:
-            _LOGGER.debug("Skipping non existing setting data %s/%s", module_id, name)
+    for select in SELECT_SETTINGS_DATA:
+        if select.module_id not in available_settings_data:
+            _LOGGER.debug("Skipping non existing setting data %s/%s", select.module_id, select.name)
             continue
         entities.append(
             PlenticoreDataSelect(
@@ -48,14 +48,14 @@ async def async_setup_entry(
                 entry_id=entry.entry_id,
                 platform_name=entry.title,
                 device_class="kostal_plenticore__battery",
-                module_id=module_id,
-                data_id=data_id,
-                name=name,
+                module_id=select.module_id,
+                data_id=select.data_id,
+                name=select.name,
                 current_option="None",
-                options=options,
-                is_on=is_on,
+                options=select.options,
+                is_on=select.is_on,
                 device_info=plenticore.device_info,
-                unique_id=f"{entry.entry_id}_{module_id}",
+                unique_id=f"{entry.entry_id}_{select.module_id}",
             )
         )
 

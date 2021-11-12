@@ -1,9 +1,9 @@
 ﻿"""Platform for Kostal Plenticore switches."""
 from __future__ import annotations
 
+import logging
 from abc import ABC
 from datetime import timedelta
-import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -39,21 +39,12 @@ async def async_setup_entry(
         timedelta(seconds=30),
         plenticore,
     )
-    for (
-        module_id,
-        data_id,
-        name,
-        is_on,
-        on_value,
-        on_label,
-        off_value,
-        off_label,
-    ) in SWITCH_SETTINGS_DATA:
-        if module_id not in available_settings_data or data_id not in (
-            setting.id for setting in available_settings_data[module_id]
+    for (switch) in SWITCH_SETTINGS_DATA:
+        if switch.module_id not in available_settings_data or switch.data_id not in (
+            setting.id for setting in available_settings_data[switch.module_id]
         ):
             _LOGGER.debug(
-                "Skipping non existing setting data %s/%s", module_id, data_id
+                "Skipping non existing setting data %s/%s", switch.module_id, switch.data_id
             )
             continue
 
@@ -62,17 +53,17 @@ async def async_setup_entry(
                 settings_data_update_coordinator,
                 entry.entry_id,
                 entry.title,
-                module_id,
-                data_id,
-                name,
-                is_on,
-                on_value,
-                on_label,
-                off_value,
-                off_label,
+                switch.module_id,
+                switch.data_id,
+                switch.name,
+                switch.is_on,
+                switch.on_value,
+                switch.on_label,
+                switch.off_value,
+                switch.off_label,
                 plenticore.device_info,
-                f"{entry.title} {name}",
-                f"{entry.entry_id}_{module_id}_{data_id}",
+                f"{entry.title} {switch.name}",
+                f"{entry.entry_id}_{switch.module_id}_{switch.data_id}",
             )
         )
 

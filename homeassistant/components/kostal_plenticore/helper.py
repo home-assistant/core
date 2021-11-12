@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Dict, Iterable, Union
+from typing import Union, Iterable
 import logging
 
 from aiohttp.client_exceptions import ClientError
@@ -190,7 +191,7 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
         return fetched_data
 
     async def async_read_data(self, module_id: str, data_id: str) -> [str, bool]:
-        """Writes settings back to Plenticore."""
+        """Write settings back to Plenticore."""
         client = self._plenticore.client
 
         if not self._fetch or client is None:
@@ -204,7 +205,7 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
             return val
 
     async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
-        """Writes settings back to Plenticore."""
+        """Write settings back to Plenticore."""
         client = self._plenticore.client
 
         if not self._fetch or client is None:
@@ -244,6 +245,7 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
         """Start fetching the given data (module-id and entry-id)."""
         self._fetch[module_id].append(data_id)
         self._fetch[module_id].append(all_options)
+
         # Force an update of all data. Multiple refresh calls
         # are ignored by the debouncer.
         async def force_refresh(event_time: datetime) -> None:
@@ -274,9 +276,8 @@ class SelectDataUpdateCoordinator(PlenticoreSelectUpdateCoordinator):
 
     async def async_get_currentoption(
         self,
-        module_id: Union[str, Dict[str, Iterable[str]]],
-        data_id: Union[str, Iterable[str]] = None,
-    ) -> Dict[str, Dict[str, str]]:
+        module_id: Union[str, dict[str, Iterable[str]]],
+    ) -> dict[str, dict[str, str]]:
         """Get current option."""
         for mid, pids in module_id.items():
             all_options = pids[1]
@@ -288,10 +289,10 @@ class SelectDataUpdateCoordinator(PlenticoreSelectUpdateCoordinator):
                             fetched = {mid: {pids[0]: all_option}}
                             return fetched
 
-        return {module_id: {data_id: "None"}}
+            return {mid: {pids[0]: "None"}}
 
     async def async_read_data(self, module_id: str, data_id: str) -> [str, bool]:
-        """Writes settings back to Plenticore."""
+        """Write settings back to Plenticore."""
         client = self._plenticore.client
 
         if client is None:
@@ -305,7 +306,7 @@ class SelectDataUpdateCoordinator(PlenticoreSelectUpdateCoordinator):
             return val
 
     async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
-        """Writes settings back to Plenticore."""
+        """Write settings back to Plenticore."""
         client = self._plenticore.client
 
         if client is None:

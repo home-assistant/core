@@ -1,4 +1,6 @@
 """Constants for the Kostal Plenticore Solar Inverter integration."""
+from collections import namedtuple
+from typing import NamedTuple
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -619,8 +621,9 @@ SENSOR_SETTINGS_DATA = [
         "format_round",
     ),
 ]
+SWITCH = namedtuple('SWITCH', 'module_id data_id name is_on on_value on_label off_value off_label')
 SWITCH_SETTINGS_DATA = [
-    (
+    SWITCH(
         "devices:local",
         "Battery:Strategy",
         "Battery Strategy:",
@@ -631,8 +634,18 @@ SWITCH_SETTINGS_DATA = [
         "Automatic economical",
     ),
 ]
+
+
+class SelectData(NamedTuple):
+    module_id: str
+    data_id: str
+    name: str
+    options: list
+    is_on: str
+
+
 SELECT_SETTINGS_DATA = [
-    (
+    SelectData(
         "devices:local",
         "battery_charge",
         "Battery Charging / Usage mode",
