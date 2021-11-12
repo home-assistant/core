@@ -154,12 +154,8 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
         for ent in entities_for_config_entry(ent_reg, entry.entry_id):
             if ent.device_id is not None:
                 continue
-            if ent.unique_id is None:
-                continue  # not sure if this is possible at all ?
             v1_id = f"/groups/{ent.unique_id}"
-            hue_group = api.groups.room.get_by_v1_id(
-                v1_id
-            ) or api.groups.zone.get_by_v1_id(v1_id)
+            hue_group = api.groups.room.get_by_v1_id(v1_id)
             if hue_group is None or hue_group.grouped_light is None:
                 # this may happen if we're looking at some orphaned entity
                 LOGGER.warning(
