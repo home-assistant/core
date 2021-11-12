@@ -377,7 +377,8 @@ class ADBDevice(MediaPlayerEntity):
 
     def _is_ais_gate(self):
         # am force-stop com.spotify.music
-        # am start -W -a android.intent.action.VIEW -d "spotify:track:0ufdvcaRSNKq8NmIJx0E4A:play"
+        # am start -W -a android.intent.action.VIEW -d spotify:track:0ufdvcaRSNKq8NmIJx0E4A
+        # am start -W -a android.intent.action.VIEW -d spotify:track:68oEr8XOWURWoheb2VatZi:play
         # check if we have ais gate
         if self.aftv.host == "127.0.0.1":
             return True
