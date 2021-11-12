@@ -1316,10 +1316,8 @@ pyControl4==0.0.6
 # homeassistant.components.met_eireann
 pyMetEireann==2021.8.0
 
-# homeassistant.components.norway_air
-pyMetno==0.8.4
-
 # homeassistant.components.met
+# homeassistant.components.norway_air
 pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
