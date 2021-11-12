@@ -573,14 +573,15 @@ class SpotifyData:
             },
         )
         # new way to play
+        ais_track_uri = track["uri"]
         if not track["uri"].startswith("spotify:track:"):
-            track["uri"] = track["uri"] + ":play"
+            ais_track_uri = track["uri"] + ":play"
         self.hass.services.call(
             "ais_shell_command",
             "execute_command",
             {
                 "command": "su -c 'am start -W -a android.intent.action.VIEW -d "
-                + track["uri"]
+                + ais_track_uri
                 + "'"
             },
         )
@@ -621,14 +622,15 @@ class SpotifyData:
             },
         )
         # new way to play
+        ais_track_uri = track["uri"]
         if not track["uri"].startswith("spotify:track:"):
-            track["uri"] = track["uri"] + ":play"
+            ais_track_uri = track["uri"] + ":play"
         self.hass.services.call(
             "ais_shell_command",
             "execute_command",
             {
                 "command": "su -c 'am start -W -a android.intent.action.VIEW -d "
-                + track["uri"]
+                + ais_track_uri
                 + "'"
             },
         )
