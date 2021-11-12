@@ -2,18 +2,21 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
+from datetime import datetime
 import functools
 from types import ModuleType
-from typing import Any, Awaitable, Callable, cast
+from typing import Any, Awaitable, Callable, DefaultDict, cast
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import recorder, websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.singleton import singleton
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .data import (
@@ -44,6 +47,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_validate)
     websocket_api.async_register_command(hass, ws_solar_forecast)
+    websocket_api.async_register_command(hass, ws_get_fossil_energy_consumption)
 
 
 @singleton("energy_platforms")
@@ -218,3 +222,106 @@ async def ws_solar_forecast(
             forecasts[config_entry_id] = forecast
 
     connection.send_result(msg["id"], forecasts)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "energy/fossil_energy_consumption",
+        vol.Required("start_time"): str,
+        vol.Required("end_time"): str,
+        vol.Required("energy_statistic_ids"): [str],
+        vol.Required("co2_statistic_id"): str,
+        vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
+    }
+)
+@websocket_api.async_response
+async def ws_get_fossil_energy_consumption(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Calculate amount of fossil based energy."""
+    start_time_str = msg["start_time"]
+    end_time_str = msg["end_time"]
+
+    if start_time := dt_util.parse_datetime(start_time_str):
+        start_time = dt_util.as_utc(start_time)
+    else:
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+        return
+
+    if end_time := dt_util.parse_datetime(end_time_str):
+        end_time = dt_util.as_utc(end_time)
+    else:
+        connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+        return
+
+    # Fetch energy statistics
+    energy_statistics = await hass.async_add_executor_job(
+        recorder.statistics.statistics_during_period,
+        hass,
+        start_time,
+        end_time,
+        msg["energy_statistic_ids"],
+        "hour",
+        True,
+    )
+
+    # Fetch CO2 statistics
+    co2_statistics = await hass.async_add_executor_job(
+        recorder.statistics.statistics_during_period,
+        hass,
+        start_time,
+        end_time,
+        [msg["co2_statistic_id"]],
+        "hour",
+        True,
+    )
+
+    def _combine_sum_statistics(
+        stats: dict[str, list[dict[str, Any]]]
+    ) -> dict[datetime, float]:
+        """Combine multiple statistics, returns a dict indexed by start time."""
+        result: DefaultDict[datetime, float] = defaultdict(float)
+
+        for stat in stats.values():
+            for period in stat:
+                if period["sum"] is None:
+                    continue
+                result[period["start"]] += period["sum"]
+
+        return dict(result)
+
+    merged_energy_statistics = _combine_sum_statistics(energy_statistics)
+    indexed_co2_statistics = {
+        period["start"]: period["mean"]
+        for period in co2_statistics.get(msg["co2_statistic_id"], {})
+    }
+
+    # Calculate amount of fossil based energy, assume 100% fossil if missing
+    fossil_energy = [
+        {"start": start, "sum": sum * indexed_co2_statistics.get(start, 100) / 100}
+        for start, sum in merged_energy_statistics.items()
+    ]
+
+    if msg["period"] == "hour":
+        result = {
+            period["start"].isoformat(): period["sum"] for period in fossil_energy
+        }
+        connection.send_result(msg["id"], result)
+
+    if msg["period"] == "day":
+        reduced_fossil_energy = recorder.statistics._reduce_statistics_per_day(
+            {"combined": fossil_energy}
+        )
+        result = {
+            period["start"]: period["sum"]
+            for period in reduced_fossil_energy["combined"]
+        }
+        connection.send_result(msg["id"], result)
+
+    reduced_fossil_energy = recorder.statistics._reduce_statistics_per_month(
+        {"combined": fossil_energy}
+    )
+    result = {
+        period["start"]: period["sum"] for period in reduced_fossil_energy["combined"]
+    }
+    connection.send_result(msg["id"], result)

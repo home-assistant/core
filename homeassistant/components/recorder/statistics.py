@@ -697,8 +697,8 @@ def _reduce_statistics(
                         "mean": mean(mean_values) if mean_values else None,
                         "min": min(min_values) if min_values else None,
                         "max": max(max_values) if max_values else None,
-                        "last_reset": prev_stat["last_reset"],
-                        "state": prev_stat["state"],
+                        "last_reset": prev_stat.get("last_reset"),
+                        "state": prev_stat.get("state"),
                         "sum": prev_stat["sum"],
                     }
                 )
@@ -768,6 +768,7 @@ def statistics_during_period(
     end_time: datetime | None = None,
     statistic_ids: list[str] | None = None,
     period: Literal["5minute", "day", "hour", "month"] = "hour",
+    start_time_as_datetime: bool = False,
 ) -> dict[str, list[dict[str, Any]]]:
     """Return statistics during UTC period start_time - end_time for the statistic_ids.
 
@@ -808,7 +809,15 @@ def statistics_during_period(
         # Return statistics combined with metadata
         if period not in ("day", "month"):
             return _sorted_statistics_to_dict(
-                hass, session, stats, statistic_ids, metadata, True, table, start_time
+                hass,
+                session,
+                stats,
+                statistic_ids,
+                metadata,
+                True,
+                table,
+                start_time,
+                start_time_as_datetime,
             )
 
         result = _sorted_statistics_to_dict(
