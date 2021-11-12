@@ -1,4 +1,4 @@
-"""Sensor platform for UniFi integration.
+"""Sensor platform for UniFi Network integration.
 
 Support for bandwidth sensors of network clients.
 Support for uptime sensors of network clients.
@@ -21,7 +21,7 @@ UPTIME_SENSOR = "uptime"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up sensors for UniFi integration."""
+    """Set up sensors for UniFi Network integration."""
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {
         RX_SENSOR: set(),
@@ -127,7 +127,7 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
 
 
 class UniFiUpTimeSensor(UniFiClient, SensorEntity):
-    """UniFi uptime sensor."""
+    """UniFi Network uptime sensor."""
 
     DOMAIN = DOMAIN
     TYPE = UPTIME_SENSOR

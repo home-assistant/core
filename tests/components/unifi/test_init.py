@@ -1,4 +1,4 @@
-"""Test UniFi setup process."""
+"""Test UniFi Network setup process."""
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import unifi

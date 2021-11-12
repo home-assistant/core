@@ -1,4 +1,4 @@
-"""UniFi sensor platform tests."""
+"""UniFi Network sensor platform tests."""
 
 from datetime import datetime
 from unittest.mock import patch

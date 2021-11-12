@@ -1,4 +1,4 @@
-"""UniFi Controller abstraction."""
+"""UniFi Network Controller abstraction."""
 from __future__ import annotations
 
 import asyncio
@@ -90,7 +90,7 @@ DEVICE_CONNECTED = (
 
 
 class UniFiController:
-    """Manages a single UniFi Controller."""
+    """Manages a single UniFi Network Controller."""
 
     def __init__(self, hass, config_entry):
         """Initialize the system."""
@@ -503,7 +503,9 @@ async def get_controller(
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
     ) as err:
-        LOGGER.error("Error connecting to the UniFi controller at %s: %s", host, err)
+        LOGGER.error(
+            "Error connecting to the UniFi Network Controller at %s: %s", host, err
+        )
         raise CannotConnect from err
 
     except aiounifi.LoginRequired as err:

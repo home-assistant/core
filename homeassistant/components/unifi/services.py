@@ -1,4 +1,4 @@
-"""UniFi services."""
+"""UniFi Network services."""
 
 import voluptuous as vol
 
