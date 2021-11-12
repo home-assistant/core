@@ -1373,7 +1373,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self, discovery_info: ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
-        return await self.async_step_discovery(discovery_info.__dict__)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
     async def async_step_dhcp(
         self, discovery_info: DiscoveryInfoType
