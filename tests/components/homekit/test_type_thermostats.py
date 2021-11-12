@@ -2011,3 +2011,25 @@ async def test_thermostat_with_temp_clamps(hass, hk_driver, events):
     assert acc.char_target_heat_cool.value == 3
     assert acc.char_current_temp.value == 1000
     assert acc.char_display_units.value == 0
+
+
+async def test_thermostat_not_exist_hvac_action(hass, hk_driver, events):
+    """Test that unsupported HVAC action does not crash thermostat."""
+    entity_id = "climate.test"
+
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_COOL,
+        {
+            ATTR_TEMPERATURE: 20.0,
+            ATTR_CURRENT_TEMPERATURE: 19.0,
+            ATTR_HVAC_ACTION: "None",
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    await acc.run()
+    await hass.async_block_till_done()
+    assert acc.char_current_heat_cool.value == 0
