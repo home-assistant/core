@@ -310,7 +310,7 @@ coronavirus==1.1.1
 croniter==1.0.6
 
 # homeassistant.components.crownstone
-crownstone-cloud==1.4.8
+crownstone-cloud==1.4.9
 
 # homeassistant.components.crownstone
 crownstone-sse==2.0.2
@@ -462,6 +462,9 @@ googlemaps==2.5.1
 
 # homeassistant.components.gree
 greeclimate==0.12.3
+
+# homeassistant.components.greeneye_monitor
+greeneye_monitor==2.1
 
 # homeassistant.components.growatt_server
 growattServer==1.1.0

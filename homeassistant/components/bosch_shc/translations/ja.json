@@ -1,0 +1,13 @@
+{
+    "config": {
+        "flow_title": "Bosch SHC: {name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Smart Home Controller\u306e\u30d1\u30b9\u30ef\u30fc\u30c9"
+                }
+            }
+        }
+    },
+    "title": "Bosch SHC"
+}

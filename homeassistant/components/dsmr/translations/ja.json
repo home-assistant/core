@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "cannot_communicate": "\u901a\u4fe1\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
+        },
+        "error": {
+            "cannot_communicate": "\u901a\u4fe1\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "dsmr_version": "DSMR\u30d0\u30fc\u30b8\u30e7\u30f3\u3092\u9078\u629e"
+                },
+                "title": "\u63a5\u7d9a\u30a2\u30c9\u30ec\u30b9\u306e\u9078\u629e"
+            },
+            "setup_serial": {
+                "data": {
+                    "dsmr_version": "DSMR\u30d0\u30fc\u30b8\u30e7\u30f3\u3092\u9078\u629e",
+                    "port": "\u30c7\u30d0\u30a4\u30b9\u3092\u9078\u629e"
+                },
+                "title": "\u30c7\u30d0\u30a4\u30b9"
+            },
+            "setup_serial_manual_path": {
+                "title": "\u30d1\u30b9"
+            },
+            "user": {
+                "data": {
+                    "type": "\u63a5\u7d9a\u30bf\u30a4\u30d7"
+                },
+                "title": "\u63a5\u7d9a\u30bf\u30a4\u30d7\u306e\u9078\u629e"
+            }
+        }
+    }
+}

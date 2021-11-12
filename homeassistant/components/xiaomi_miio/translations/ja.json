@@ -2,6 +2,26 @@
     "config": {
         "error": {
             "wrong_token": "\u30c1\u30a7\u30c3\u30af\u30b5\u30e0\u30a8\u30e9\u30fc\u3001\u9593\u9055\u3063\u305f\u30c8\u30fc\u30af\u30f3"
+        },
+        "step": {
+            "connect": {
+                "data": {
+                    "model": "\u30c7\u30d0\u30a4\u30b9\u30e2\u30c7\u30eb"
+                }
+            },
+            "select": {
+                "data": {
+                    "select_device": "Miio\u30c7\u30d0\u30a4\u30b9"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "\u30aa\u30d7\u30b7\u30e7\u30f3\u8a2d\u5b9a\u306e\u6307\u5b9a",
+                "title": "Xiaomi Miio"
+            }
         }
     }
 }

@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "area_id": "\u30a8\u30ea\u30a2ID"
+                }
+            }
+        }
+    }
+}

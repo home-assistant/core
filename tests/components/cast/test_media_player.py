@@ -27,7 +27,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CAST_APP_ID_HOMEASSISTANT_LOVELACE,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -45,6 +49,7 @@ FakeGroupUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e3")
 def get_fake_chromecast(info: ChromecastInfo):
     """Generate a Fake Chromecast object with the specified arguments."""
     mock = MagicMock(uuid=info.uuid)
+    mock.app_id = None
     mock.media_controller.status = None
     return mock
 
@@ -565,7 +570,7 @@ async def test_entity_availability(hass: HomeAssistant):
     conn_status_cb(connection_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == "unknown"
+    assert state.state == "off"
 
     connection_status = MagicMock()
     connection_status.status = "DISCONNECTED"
@@ -586,6 +591,7 @@ async def test_entity_cast_status(hass: HomeAssistant):
     )
 
     chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = pychromecast.const.CAST_TYPE_CHROMECAST
     cast_status_cb, conn_status_cb, _ = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -596,7 +602,7 @@ async def test_entity_cast_status(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "unknown"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
 
     assert state.attributes.get("supported_features") == (
@@ -610,6 +616,17 @@ async def test_entity_cast_status(hass: HomeAssistant):
         | SUPPORT_VOLUME_SET
     )
 
+    cast_status = MagicMock()
+    cast_status.volume_level = 0.5
+    cast_status.volume_muted = False
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    # Volume hidden if no app is active
+    assert state.attributes.get("volume_level") is None
+    assert not state.attributes.get("is_volume_muted")
+
+    chromecast.app_id = "1234"
     cast_status = MagicMock()
     cast_status.volume_level = 0.5
     cast_status.volume_muted = False
@@ -644,6 +661,65 @@ async def test_entity_cast_status(hass: HomeAssistant):
     )
 
 
+@pytest.mark.parametrize(
+    "cast_type,supported_features",
+    [
+        (
+            pychromecast.const.CAST_TYPE_AUDIO,
+            SUPPORT_PAUSE
+            | SUPPORT_PLAY
+            | SUPPORT_PLAY_MEDIA
+            | SUPPORT_STOP
+            | SUPPORT_TURN_OFF
+            | SUPPORT_VOLUME_MUTE
+            | SUPPORT_VOLUME_SET,
+        ),
+        (
+            pychromecast.const.CAST_TYPE_CHROMECAST,
+            SUPPORT_PAUSE
+            | SUPPORT_PLAY
+            | SUPPORT_PLAY_MEDIA
+            | SUPPORT_STOP
+            | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
+            | SUPPORT_VOLUME_MUTE
+            | SUPPORT_VOLUME_SET,
+        ),
+        (
+            pychromecast.const.CAST_TYPE_GROUP,
+            SUPPORT_PAUSE
+            | SUPPORT_PLAY
+            | SUPPORT_PLAY_MEDIA
+            | SUPPORT_STOP
+            | SUPPORT_TURN_OFF
+            | SUPPORT_VOLUME_MUTE
+            | SUPPORT_VOLUME_SET,
+        ),
+    ],
+)
+async def test_supported_features(hass: HomeAssistant, cast_type, supported_features):
+    """Test supported features."""
+    entity_id = "media_player.speaker"
+
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = cast_type
+    _, conn_status_cb, _ = get_status_callbacks(chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == "Speaker"
+    assert state.state == "off"
+
+    assert state.attributes.get("supported_features") == supported_features
+
+
 async def test_entity_play_media(hass: HomeAssistant):
     """Test playing media."""
     entity_id = "media_player.speaker"
@@ -665,7 +741,7 @@ async def test_entity_play_media(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "unknown"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
 
     # Play_media
@@ -694,7 +770,7 @@ async def test_entity_play_media_cast(hass: HomeAssistant, quick_play_mock):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "unknown"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
 
     # Play_media - cast with app ID
@@ -739,7 +815,7 @@ async def test_entity_play_media_cast_invalid(hass, caplog, quick_play_mock):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "unknown"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
 
     # play_media - media_type cast with invalid JSON
@@ -812,7 +888,7 @@ async def test_entity_media_content_type(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "unknown"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
 
     media_status = MagicMock(images=None)
@@ -856,6 +932,7 @@ async def test_entity_control(hass: HomeAssistant):
     )
 
     chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = pychromecast.const.CAST_TYPE_CHROMECAST
     _, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
 
     connection_status = MagicMock()
@@ -866,7 +943,7 @@ async def test_entity_control(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "unknown"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
 
     assert state.attributes.get("supported_features") == (
@@ -975,7 +1052,7 @@ async def test_entity_media_states(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "unknown"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
 
     media_status = MagicMock(images=None)
@@ -1013,6 +1090,73 @@ async def test_entity_media_states(hass: HomeAssistant):
     assert state.state == "unknown"
 
 
+async def test_entity_media_states_lovelace_app(hass: HomeAssistant):
+    """Test various entity media states when the lovelace app is active."""
+    entity_id = "media_player.speaker"
+    reg = er.async_get(hass)
+
+    info = get_fake_chromecast_info()
+    full_info = attr.evolve(
+        info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
+    )
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    cast_status_cb, conn_status_cb, media_status_cb = get_status_callbacks(chromecast)
+
+    connection_status = MagicMock()
+    connection_status.status = "CONNECTED"
+    conn_status_cb(connection_status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == "Speaker"
+    assert state.state == "off"
+    assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
+
+    chromecast.app_id = CAST_APP_ID_HOMEASSISTANT_LOVELACE
+    cast_status = MagicMock()
+    cast_status_cb(cast_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "casting"
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_playing = True
+    media_status_cb(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "casting"
+
+    media_status.player_is_playing = False
+    media_status.player_is_paused = True
+    media_status_cb(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "casting"
+
+    media_status.player_is_paused = False
+    media_status.player_is_idle = True
+    media_status_cb(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "casting"
+
+    chromecast.app_id = pychromecast.IDLE_APP_ID
+    media_status.player_is_idle = False
+    chromecast.is_idle = True
+    media_status_cb(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+
+    chromecast.is_idle = False
+    media_status_cb(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "unknown"
+
+
 async def test_group_media_states(hass, mz_mock):
     """Test media states are read from group if entity has no state."""
     entity_id = "media_player.speaker"
@@ -1036,7 +1180,7 @@ async def test_group_media_states(hass, mz_mock):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "unknown"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
 
     group_media_status = MagicMock(images=None)
@@ -1090,7 +1234,7 @@ async def test_group_media_control(hass, mz_mock):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == "Speaker"
-    assert state.state == "unknown"
+    assert state.state == "off"
     assert entity_id == reg.async_get_entity_id("media_player", "cast", full_info.uuid)
 
     group_media_status = MagicMock(images=None)
