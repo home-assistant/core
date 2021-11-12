@@ -13,6 +13,9 @@ from homeassistant.const import CONF_HOST, CONF_TYPE
 from tests.common import MockConfigEntry, load_fixture
 
 CONFIG = {CONF_HOST: "localhost", CONF_TYPE: "laser"}
+ZEROCONF_CONFIG = zeroconf.ZeroconfServiceInfo(
+    hostname="example.local.", name="Brother Printer", properties={}
+)
 
 
 async def test_show_form(hass):
@@ -144,9 +147,7 @@ async def test_zeroconf_snmp_error(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
-                hostname="example.local.", name="Brother Printer"
-            ),
+            data=ZEROCONF_CONFIG,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -184,9 +185,7 @@ async def test_zeroconf_device_exists_abort(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
-                hostname="example.local.", name="Brother Printer"
-            ),
+            data=ZEROCONF_CONFIG,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -222,9 +221,7 @@ async def test_zeroconf_confirm_create_entry(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
-                hostname="example.local.", name="Brother Printer"
-            ),
+            data=ZEROCONF_CONFIG,
         )
 
         assert result["step_id"] == "zeroconf_confirm"
