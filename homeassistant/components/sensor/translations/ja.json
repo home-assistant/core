@@ -1,9 +1,24 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_power_factor": "\u73fe\u5728\u306e {entity_name} \u529b\u7387"
+            "is_gas": "\u73fe\u5728\u306e {entity_name} \u30ac\u30b9",
+            "is_nitrogen_monoxide": "\u73fe\u5728\u306e {entity_name} \u4e00\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u30ec\u30d9\u30eb",
+            "is_nitrous_oxide": "\u73fe\u5728\u306e {entity_name} \u4e9c\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u30ec\u30d9\u30eb",
+            "is_ozone": "\u73fe\u5728\u306e {entity_name} \u30aa\u30be\u30f3\u6fc3\u5ea6\u30ec\u30d9\u30eb",
+            "is_pm1": "\u73fe\u5728\u306e {entity_name} PM1\u6fc3\u5ea6\u30ec\u30d9\u30eb",
+            "is_pm10": "\u73fe\u5728\u306e {entity_name} PM10\u6fc3\u5ea6\u30ec\u30d9\u30eb",
+            "is_pm25": "\u73fe\u5728\u306e {entity_name} PM2.5\u6fc3\u5ea6\u30ec\u30d9\u30eb",
+            "is_power_factor": "\u73fe\u5728\u306e {entity_name} \u529b\u7387",
+            "is_sulphur_dioxide": "\u73fe\u5728\u306e {entity_name} \u4e8c\u9178\u5316\u786b\u9ec4\u6fc3\u5ea6\u30ec\u30d9\u30eb"
         },
         "trigger_type": {
+            "nitrogen_dioxide": "{entity_name} \u4e8c\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u306e\u5909\u5316",
+            "nitrogen_monoxide": "{entity_name} \u4e00\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u306e\u5909\u5316",
+            "nitrous_oxide": "{entity_name} \u4e9c\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u306e\u5909\u5316",
+            "ozone": "{entity_name} \u30aa\u30be\u30f3\u6fc3\u5ea6\u306e\u5909\u5316",
+            "pm1": "{entity_name} PM1\u6fc3\u5ea6\u306e\u5909\u5316",
+            "pm10": "{entity_name} PM10\u6fc3\u5ea6\u306e\u5909\u5316",
+            "pm25": "{entity_name} PM2.5\u6fc3\u5ea6\u306e\u5909\u5316",
             "power_factor": "{entity_name} \u529b\u7387\u304c\u5909\u66f4"
         }
     },

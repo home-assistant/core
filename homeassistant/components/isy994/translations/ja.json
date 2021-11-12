@@ -1,0 +1,8 @@
+{
+    "system_health": {
+        "info": {
+            "host_reachable": "\u30db\u30b9\u30c8\u5230\u9054\u53ef\u80fd",
+            "websocket_status": "\u30a4\u30d9\u30f3\u30c8\u30bd\u30b1\u30c3\u30c8 \u30b9\u30c6\u30fc\u30bf\u30b9"
+        }
+    }
+}

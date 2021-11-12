@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "parse_error": "\u30d7\u30ea\u30f3\u30bf\u30fc\u304b\u3089\u306e\u5fdc\u7b54\u306e\u89e3\u6790\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002"
+        }
+    }
+}

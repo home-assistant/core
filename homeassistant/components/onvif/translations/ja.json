@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "auto": "\u81ea\u52d5\u7684\u306b\u691c\u7d22"
+                }
+            }
+        }
+    }
+}
