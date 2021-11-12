@@ -22,6 +22,11 @@ from .const import (
     CONF_REGIONS,
     DOMAIN,
     SCAN_INTERVAL,
+    ATTR_HEADLINE,
+    ATTR_ID,
+    ATTR_SENT,
+    ATTR_START,
+    ATTR_EXPIRES,
 )
 
 
@@ -152,11 +157,11 @@ class Message(CoordinatorEntity, BinarySensorEntity):  # pylint: disable=R0902
         self.parse_update()
 
         attributes: Dict[str, Any] = {
-            "Headline": self._message_heading,
-            "ID": self._message_id,
-            "Sent": self._message_sent,
-            "Start": self._message_start,
-            "Expires": self._message_expires,
+            ATTR_HEADLINE: self._message_heading,
+            ATTR_ID: self._message_id,
+            ATTR_SENT: self._message_sent,
+            ATTR_START: self._message_start,
+            ATTR_EXPIRES: self._message_expires,
         }
 
         return attributes
