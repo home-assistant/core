@@ -323,6 +323,28 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    version = entry.version
+
+    LOGGER.debug("Migrating from version %s", version)
+
+    # 1 -> 2: Unique ID format changed, so delete and re-import:
+    if version == 1:
+        dev_reg = await hass.helpers.device_registry.async_get_registry()
+        dev_reg.async_clear_config_entry(entry)
+
+        en_reg = await hass.helpers.entity_registry.async_get_registry()
+        en_reg.async_clear_config_entry(entry)
+
+        version = entry.version = 2
+        hass.config_entries.async_update_entry(entry)
+
+    LOGGER.info("Migration to version %s successful", version)
+
+    return True
+
+
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)
