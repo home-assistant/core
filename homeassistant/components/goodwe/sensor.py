@@ -173,6 +173,7 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = POWER_WATT
         self._attr_extra_state_attributes = {"serial_number": inverter.serial_number}
         self._inverter: Inverter = inverter
+        self._previous_value = None
 
     async def async_set_work_mode(self, work_mode: int) -> None:
         """Set the inverter work mode."""
@@ -187,20 +188,13 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         await self._inverter.set_grid_export_limit(grid_export_limit)
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.data is not None
-
-    @property
     def native_value(self):
         """Return the value reported by the sensor."""
-        if self.coordinator.data is not None:
-            new_value = self.coordinator.data.get(self._MAIN_ENTITY_SENSOR)
-            # If no new value was provided, keep the previous
-            if new_value is not None:
-                self._attr_native_value = new_value
-
-        return self._attr_native_value
+        new_value = self.coordinator.data.get(
+            self._MAIN_ENTITY_SENSOR, self._previous_value
+        )
+        self._previous_value = new_value
+        return new_value
 
     @property
     def state_attributes(self):
@@ -236,27 +230,18 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         if sensor.id_ == BATTERY_SOC:
             self._attr_device_class = DEVICE_CLASS_BATTERY
         self._sensor = sensor
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.data is not None
+        self._previous_value = None
 
     @property
     def native_value(self):
         """Return the value reported by the sensor."""
-        if self.coordinator.data is not None:
-            new_value = self.coordinator.data.get(self._sensor.id_)
-            # If no new value was provided, keep the previous
-            if new_value is not None:
-                # Total increasing sensor should never be set to 0
-                if (
-                    self.state_class == STATE_CLASS_TOTAL_INCREASING
-                    and "total" in self._sensor.id_
-                ):
-                    if new_value:
-                        self._attr_native_value = new_value
-                else:
-                    self._attr_native_value = new_value
-
-        return self._attr_native_value
+        new_value = self.coordinator.data.get(self._sensor.id_, self._previous_value)
+        # Total increasing sensor should never be set to 0
+        if (
+            self.state_class == STATE_CLASS_TOTAL_INCREASING
+            and "total" in self._sensor.id_
+            and not new_value
+        ):
+            new_value = self._previous_value
+        self._previous_value = new_value
+        return new_value

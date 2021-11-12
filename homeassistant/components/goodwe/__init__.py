@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data():
         """Fetch data from the inverter."""
         try:
-            data = await inverter.read_runtime_data()
+            return await inverter.read_runtime_data()
         except RequestFailedException as ex:
             # UDP communication with inverter is by definition unreliable.
             # It is rather normal in many environments to fail to receive
@@ -68,12 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.debug(
                 "Inverter not responding (streak of %d)", ex.consecutive_failures_count
             )
-            # return None, sensors will report themselves as Unavailable
-            return None
+            raise UpdateFailed(ex) from ex
         except InverterError as ex:
             raise UpdateFailed(ex) from ex
-
-        return data
 
     # Create update coordinator
     coordinator = DataUpdateCoordinator(
