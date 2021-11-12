@@ -46,23 +46,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
         return
 
     # look for humidity, and temperature
-    for sensor in sensors:
-        if coordinator.client.get_sensor(sensor, "hum") is not None:
+    for sensor_name in sensors:
+        if coordinator.client.get_sensor(sensor_name, "hum") is not None:
             entities.append(
                 VenstarHumiditySensor(
                     coordinator,
                     config_entry,
                     HUMIDITY_SENSOR_DESCRIPTION,
-                    sensor,
+                    sensor_name,
                 )
             )
-        if coordinator.client.get_sensor(sensor, "temp") is not None:
+        if coordinator.client.get_sensor(sensor_name, "temp") is not None:
             entities.append(
                 VenstarTemperatureSensor(
                     coordinator,
                     config_entry,
                     TEMPERATURE_SENSOR_DESCRIPTION,
-                    sensor,
+                    sensor_name,
                 )
             )
 
