@@ -36,6 +36,7 @@ REQUIRES = [
     "astral==2.2",
     "async_timeout==4.0.0",
     "attrs==21.2.0",
+    "atomicwrites==1.4.0",
     "awesomeversion==21.10.1",
     'backports.zoneinfo;python_version<"3.9"',
     "bcrypt==3.1.7",
