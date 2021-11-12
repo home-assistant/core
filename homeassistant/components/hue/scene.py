@@ -108,7 +108,6 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
                     brightness = action.action.dimming.brightness
                     break
         return {
-            "is_hue_scene": True,
             "group_name": group.metadata.name,
             "group_type": group.type.value,
             "name": self.resource.metadata.name,
