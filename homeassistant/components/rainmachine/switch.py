@@ -149,7 +149,7 @@ async def async_setup_entry(
     program_coordinator = data[DATA_COORDINATOR][DATA_PROGRAMS]
     zone_coordinator = data[DATA_COORDINATOR][DATA_ZONES]
 
-    entities: list[RainMachineProgram | RainMachineZone] = []
+    entities: list[RainMachineActivitySwitch | RainMachineEnabledSwitch] = []
 
     for kind, coordinator, switch_class, switch_enabled_class in [
         ("program", program_coordinator, RainMachineProgram, RainMachineProgramEnabled),
