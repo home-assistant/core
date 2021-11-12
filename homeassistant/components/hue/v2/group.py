@@ -1,4 +1,4 @@
-"""Support for HUE groups (room/zone)."""
+"""Support for Hue groups (room/zone)."""
 from __future__ import annotations
 
 from typing import Any

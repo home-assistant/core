@@ -1,4 +1,4 @@
-"""Support for HUE sensors."""
+"""Support for Hue sensors."""
 from __future__ import annotations
 
 from typing import Any, Union
@@ -65,7 +65,7 @@ async def async_setup_entry(
 
         @callback
         def async_add_sensor(event_type: EventType, resource: SensorType) -> None:
-            """Add HUE Sensor."""
+            """Add Hue Sensor."""
             async_add_entities([sensor_class(bridge, controller, resource)])
 
         # add all current items in controller

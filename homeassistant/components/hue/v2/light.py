@@ -1,4 +1,4 @@
-"""Support for HUE lights."""
+"""Support for Hue lights."""
 from __future__ import annotations
 
 from typing import Any
@@ -46,7 +46,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_light(event_type: EventType, resource: Light) -> None:
-        """Add HUE Light."""
+        """Add Hue Light."""
         light = HueLight(bridge, controller, resource)
         async_add_entities([light])
 

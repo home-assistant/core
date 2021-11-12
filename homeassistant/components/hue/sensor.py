@@ -1,4 +1,4 @@
-"""Support for HUE sensors."""
+"""Support for Hue sensors."""
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +16,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Redirect HUE Platform setup from Config Entry to correct version."""
+    """Set up sensor entities."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     if bridge.api_version == 1:
         return await setup_entry_v1(hass, config_entry, async_add_entities)

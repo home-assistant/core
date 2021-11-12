@@ -24,7 +24,7 @@ async def async_setup_entry(
     if not await bridge.async_initialize_bridge():
         return False
 
-    # register HUE domain services
+    # register Hue domain services
     async_register_services(hass)
 
     api = bridge.api

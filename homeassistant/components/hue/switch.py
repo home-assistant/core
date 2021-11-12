@@ -54,7 +54,7 @@ async def async_setup_entry(
 
 
 class HueSensingServiceEnabledEntity(HueBaseEntity, SwitchEntity):
-    """Representation of a Switch entity from HUE SensingService."""
+    """Representation of a Switch entity from Hue SensingService."""
 
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
     _attr_device_class = DEVICE_CLASS_SWITCH

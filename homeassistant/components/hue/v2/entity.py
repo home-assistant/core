@@ -1,4 +1,4 @@
-"""Generic HUE Entity Model."""
+"""Generic Hue Entity Model."""
 from __future__ import annotations
 
 from aiohue.v2.controllers.base import BaseResourcesController

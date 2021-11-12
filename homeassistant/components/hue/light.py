@@ -1,4 +1,4 @@
-"""Support for HUE lights."""
+"""Support for Hue lights."""
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,12 +17,13 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Redirect HUE Platform setup from Config Entry to correct version."""
+    """Set up light entities."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
 
     if bridge.api_version == 1:
-        return await setup_entry_v1(hass, config_entry, async_add_entities)
-
+        await setup_entry_v1(hass, config_entry, async_add_entities)
+        return
+    # v2 setup logic here
     await setup_entry_v2(hass, config_entry, async_add_entities)
     if bridge.allow_groups:
         # allow creating of lights for hue groups

@@ -51,7 +51,7 @@ async def async_setup_entry(
 
 
 class HueSceneEntity(HueBaseEntity, SceneEntity):
-    """Representation of a Scene entity from HUE Scenes."""
+    """Representation of a Scene entity from Hue Scenes."""
 
     def __init__(
         self,

@@ -178,7 +178,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=f"HUE Bridge {bridge.id}",
+            title=f"Hue Bridge {bridge.id}",
             data={
                 CONF_HOST: bridge.host,
                 CONF_API_KEY: app_key,
