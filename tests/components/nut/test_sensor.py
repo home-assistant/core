@@ -270,7 +270,7 @@ async def test_stale_options(hass):
         data={
             CONF_HOST: "mock",
             CONF_PORT: "mock",
-            CONF_RESOURCES: ["battery.charge"],
+            CONF_RESOURCES: ["ups.load"],
         },
         options={CONF_RESOURCES: ["battery.charge"]},
     )
@@ -291,7 +291,7 @@ async def test_stale_options(hass):
         entry = registry.async_get("sensor.ups1_battery_charge")
         assert entry
         assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
-        assert CONF_RESOURCES not in config_entry.data
+        assert config_entry.data[CONF_RESOURCES] == ["battery.charge"]
         assert config_entry.options == {}
 
         state = hass.states.get("sensor.ups1_battery_charge")
