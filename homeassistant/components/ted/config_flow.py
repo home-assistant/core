@@ -138,13 +138,13 @@ class TedOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="options",
             data_schema=vol.Schema(
                 {
-                    self.create_option_schema_field("show_spyder_consumption"): bool,
-                    self.create_option_schema_field(
-                        "show_spyder_daily_consumption"
-                    ): bool,
-                    self.create_option_schema_field(
-                        "show_spyder_mtd_consumption"
-                    ): bool,
+                    self.create_option_schema_field("show_spyder_energy_now"): bool,
+                    self.create_option_schema_field("show_spyder_energy_daily"): bool,
+                    self.create_option_schema_field("show_spyder_energy_mtd"): bool,
+                    self.create_option_schema_field("show_mtu_power_voltage"): bool,
+                    self.create_option_schema_field("show_mtu_energy_now"): bool,
+                    self.create_option_schema_field("show_mtu_energy_daily"): bool,
+                    self.create_option_schema_field("show_mtu_energy_mtd"): bool,
                 }
             ),
         )

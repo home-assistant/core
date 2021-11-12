@@ -2,7 +2,7 @@
   "domain": "ted",
   "name": "The Energy Detective",
   "documentation": "https://www.home-assistant.io/integrations/ted",
-  "requirements": ["tedpy==1.0.1"],
+  "requirements": ["tedpy==1.0.2"],
   "codeowners": ["@rianadon"],
   "config_flow": true,
   "iot_class": "local_polling"

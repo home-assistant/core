@@ -20,9 +20,13 @@
         "step": {
             "options": {
                 "data": {
-                    "show_spyder_consumption": "Create Spyder Current Consumption entities",
-                    "show_spyder_daily_consumption": "Create Spyder Daily Consumption entities",
-                    "show_spyder_mtd_consumption": "Create Spyder Month-to-Date Consumption entities"
+                    "show_spyder_energy_now": "Create Spyder Current Power entities",
+                    "show_spyder_energy_daily": "Create Spyder Daily Energy entities",
+                    "show_spyder_energy_mtd": "Create Spyder Month-to-Date Energy entities",
+                    "show_mtu_power_voltage": "Create MTU Current Voltage entities",
+                    "show_mtu_energy_now": "Create MTU Current Power entities",
+                    "show_mtu_energy_daily": "Create MTU Daily Energy entities",
+                    "show_mtu_energy_mtd": "Create MTU Month-to-Date Energy entities"
                 },
                 "description": "Configure TED integration",
                 "title": "TED options"

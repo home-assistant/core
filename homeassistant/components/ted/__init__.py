@@ -22,8 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Enphase Envoy from a config entry."""
-
+    """Set up TED from a config entry."""
     config = entry.data
     name = config[CONF_NAME]
 
@@ -42,29 +41,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except httpx.HTTPError as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-            consumption = ted_reader.energy()
-            data["is_5000"] = isinstance(ted_reader, tedpy.TED5000)
-            data["consumption"] = consumption.now
-            data["daily_consumption"] = consumption.daily
-            data["mtd_consumption"] = consumption.mtd
+            data["type"] = ted_reader.system_type
+            data["energy"] = ted_reader.energy()
+            data["production"] = ted_reader.production()
+            data["consumption"] = ted_reader.consumption()
             data["spyders"] = {}
             for spyder in ted_reader.spyders:
                 for ctgroup in spyder.ctgroups:
-                    consumption = ctgroup.energy()
                     data["spyders"][f"{spyder.position}.{ctgroup.position}"] = {
                         "name": ctgroup.description,
-                        "consumption": consumption.now,
-                        "daily_consumption": consumption.daily,
-                        "mtd_consumption": consumption.mtd,
+                        "energy": ctgroup.energy(),
                     }
             data["mtus"] = {}
             for mtu in ted_reader.mtus:
-                consumption = mtu.energy()
-                power = mtu.power()
                 data["mtus"][mtu.position] = {
                     "name": mtu.description,
-                    "consumption": consumption.now,
-                    "voltage": power.voltage,
+                    "type": mtu.type,
+                    "power": mtu.power(),
+                    "energy": mtu.energy(),
                 }
 
             _LOGGER.debug("Retrieved data from API: %s", data)

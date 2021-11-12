@@ -1,6 +1,8 @@
 """Support gathering ted5000 and ted6000 information."""
 import logging
 
+from tedpy import MtuType, SystemType
+
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -19,90 +21,94 @@ from .const import COORDINATOR, DOMAIN, NAME, OPTION_DEFAULTS
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSORS = (
-    SensorEntityDescription(
-        key="consumption",
-        name="Current Energy Consumption",
-        native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="daily_consumption",
-        name="Today's Energy Consumption",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-    SensorEntityDescription(
-        key="mtd_consumption",
-        name="Month to Date Energy Consumption",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
-        device_class=DEVICE_CLASS_ENERGY,
-    ),
-)
 
-MTU_SENSORS = (
-    SensorEntityDescription(
-        key="consumption",
-        name="Current Energy Consumption",
-        native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="voltage",
-        name="Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-    ),
-)
+def sensors(prefix, stype):
+    """Return a list of sensors with given key prefix and type (Production / Consumption)."""
+    return [
+        SensorEntityDescription(
+            key=f"{prefix}_now",
+            name=f"Current {stype}",
+            native_unit_of_measurement=POWER_WATT,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=f"{prefix}_daily",
+            name=f"Today's {stype}",
+            native_unit_of_measurement=ENERGY_WATT_HOUR,
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_ENERGY,
+        ),
+        SensorEntityDescription(
+            key=f"{prefix}_mtd",
+            name=f"Month to Date {stype}",
+            native_unit_of_measurement=ENERGY_WATT_HOUR,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=DEVICE_CLASS_ENERGY,
+        ),
+    ]
+
+
+def mtu_sensors(stype):
+    """Return a list of mtu sensors with given key prefix and type (Production / Consumption)."""
+    return [
+        *sensors("mtu_energy", stype),
+        SensorEntityDescription(
+            key="mtu_power_voltage",
+            name="Voltage",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        ),
+    ]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up envoy sensor platform."""
     data = hass.data[DOMAIN][config_entry.entry_id]
     coordinator = data[COORDINATOR]
-    name = data[NAME]
+    config_name = data[NAME]
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    config_id = config_entry.unique_id
     entities = []
-    for sensor_description in SENSORS:
-        if coordinator.data["is_5000"] and sensor_description.key != "consumption":
-            continue  # TED 5000 does not support aggregate values for power
-        entity_name = f"{name} {sensor_description.name}"
-        entities.append(
-            TedSensor(
-                sensor_description, entity_name, config_entry.unique_id, coordinator
-            )
-        )
+    for desc in sensors("consumption", "Energy Consumption"):
+        name = f"{config_name} {desc.name}"
+        entities.append(TedSensor(desc, name, config_id, coordinator))
+
+    if coordinator.data["type"] != SystemType.NET:
+        for desc in sensors("net", "Net Energy"):
+            name = f"{config_name} {desc.name}"
+            entities.append(TedSensor(desc, name, config_id, coordinator))
+        for desc in sensors("production", "Energy Production"):
+            name = f"{config_name} {desc.name}"
+            entities.append(TedSensor(desc, name, config_id, coordinator))
+
+    option_entities = []
 
     for spyder_id, spyder in coordinator.data["spyders"].items():
         spyder_name = spyder["name"]
-        for sensor_description in SENSORS:
-            option = "show_spyder_" + sensor_description.key
+        for sensor_description in sensors("spyder_energy", "Energy Consumption"):
             entity_name = f"{spyder_name} {sensor_description.name}"
-            sensor = TedBreakdownSensor(
-                "spyders",
-                spyder_id,
-                sensor_description,
-                entity_name,
-                config_entry.unique_id,
-                coordinator,
-            )
-            if config_entry.options.get(option, OPTION_DEFAULTS[option]):
-                entities.append(sensor)
-            else:
-                entity_id = entity_registry.async_get_entity_id(
-                    "sensor", DOMAIN, sensor.unique_id
+            option_entities.append(
+                TedBreakdownSensor(
+                    "spyders",
+                    spyder_id,
+                    sensor_description,
+                    entity_name,
+                    config_entry.unique_id,
+                    coordinator,
                 )
-                if entity_id:
-                    _LOGGER.debug("Removing entity: %s", sensor.unique_id)
-                    entity_registry.async_remove(entity_id)
+            )
 
     for mtu_id, mtu in coordinator.data["mtus"].items():
         mtu_name = mtu["name"]
-        for sensor_description in MTU_SENSORS:
+        if mtu["type"] == MtuType.LOAD:
+            stype = "Energy Consumption"
+        elif mtu["type"] == MtuType.GENERATION:
+            stype = "Energy Production"
+        else:
+            stype = "Net Energy"
+        for sensor_description in mtu_sensors(stype):
             entity_name = f"{mtu_name} {sensor_description.name}"
-            entities.append(
+            option_entities.append(
                 TedBreakdownSensor(
                     "mtus",
                     mtu_id,
@@ -112,6 +118,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     coordinator,
                 )
             )
+
+    for sensor in option_entities:
+        option = "show_" + sensor.entity_description.key
+        if config_entry.options.get(option, OPTION_DEFAULTS[option]):
+            entities.append(sensor)
+        else:
+            entity_id = entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, sensor.unique_id
+            )
+            if entity_id:
+                _LOGGER.debug("Removing entity: %s", sensor.unique_id)
+                entity_registry.async_remove(entity_id)
 
     async_add_entities(entities)
     return True
@@ -146,7 +164,8 @@ class TedSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the resources."""
-        return self.coordinator.data.get(self.entity_description.key)
+        key, field = self.entity_description.key.split("_")
+        return getattr(self.coordinator.data.get(key), field)
 
 
 class TedBreakdownSensor(TedSensor):
@@ -166,8 +185,7 @@ class TedBreakdownSensor(TedSensor):
     @property
     def state(self):
         """Return the state of the resources."""
-        return (
-            self.coordinator.data[self._group]
-            .get(self._position)
-            .get(self.entity_description.key)
+        _, key, field = self.entity_description.key.split("_")
+        return getattr(
+            self.coordinator.data[self._group].get(self._position).get(key), field
         )
