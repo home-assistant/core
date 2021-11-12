@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
-    """Add kostal plenticore Sensors."""
+    """Add kostal plenticore Select widget."""
     plenticore = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
