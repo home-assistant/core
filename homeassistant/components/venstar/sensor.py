@@ -1,6 +1,8 @@
 """Representation of Venstar sensors."""
+from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
@@ -37,17 +39,16 @@ TEMPERATURE_SENSOR_DESCRIPTION = VenstarSensorEntityDescription(
 async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     """Set up Vensar device binary_sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    hum_sensors = []
-    temp_sensors = []
+    entities: list[Any] = []
 
     sensors = coordinator.client.get_sensor_list()
     if not sensors:
         return
 
-    # first, look for humidity
+    # look for humidity, and temperature
     for sensor in sensors:
         if coordinator.client.get_sensor(sensor, "hum") is not None:
-            hum_sensors.append(
+            entities.append(
                 VenstarHumiditySensor(
                     coordinator,
                     config_entry,
@@ -55,11 +56,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
                     sensor,
                 )
             )
-
-    # Now, temperature
-    for sensor in sensors:
         if coordinator.client.get_sensor(sensor, "temp") is not None:
-            temp_sensors.append(
+            entities.append(
                 VenstarTemperatureSensor(
                     coordinator,
                     config_entry,
@@ -68,8 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
                 )
             )
 
-    async_add_entities(hum_sensors, True)
-    async_add_entities(temp_sensors, True)
+    async_add_entities(entities)
 
 
 class VenstarSensor(VenstarEntity, SensorEntity):
