@@ -1,5 +1,8 @@
 """Support for deCONZ fans."""
+
 from __future__ import annotations
+
+from collections.abc import ValuesView
 
 from pydeconz.light import (
     FAN_SPEED_25_PERCENT,
@@ -19,15 +22,17 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
 
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry
+from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 ORDERED_NAMED_FAN_SPEEDS = [
     FAN_SPEED_25_PERCENT,
@@ -50,13 +55,19 @@ LEGACY_DECONZ_TO_SPEED = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up fans for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_fan(lights=gateway.api.lights.values()) -> None:
+    def async_add_fan(
+        lights: list[Fan] | ValuesView[Fan] = gateway.api.lights.values(),
+    ) -> None:
         """Add fan from deCONZ."""
         entities = []
 
@@ -86,8 +97,9 @@ class DeconzFan(DeconzDevice, FanEntity):
     """Representation of a deCONZ fan."""
 
     TYPE = DOMAIN
+    _device: Fan
 
-    def __init__(self, device, gateway) -> None:
+    def __init__(self, device: Fan, gateway: DeconzGateway) -> None:
         """Set up fan."""
         super().__init__(device, gateway)
 
@@ -100,7 +112,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self._device.speed != FAN_SPEED_OFF
+        return bool(self._device.speed != FAN_SPEED_OFF)
 
     @property
     def percentage(self) -> int | None:
@@ -156,6 +168,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
+        assert self._attr_supported_features
         return self._attr_supported_features
 
     @callback
@@ -183,10 +196,10 @@ class DeconzFan(DeconzDevice, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: None,
     ) -> None:
         """Turn on fan."""
         new_speed = self._default_on_speed
@@ -198,6 +211,6 @@ class DeconzFan(DeconzDevice, FanEntity):
 
         await self._device.set_speed(new_speed)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: None) -> None:
         """Turn off fan."""
         await self._device.set_speed(FAN_SPEED_OFF)
