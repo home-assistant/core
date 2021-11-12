@@ -1306,7 +1306,7 @@ surepy==0.7.2
 systembridge==2.1.0
 
 # homeassistant.components.ted
-tedpy==0.1.1
+tedpy==1.0.1
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11

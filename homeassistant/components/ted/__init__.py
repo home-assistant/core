@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except httpx.HTTPError as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-            consumption = ted_reader.total_consumption()
+            consumption = ted_reader.energy()
             data["is_5000"] = isinstance(ted_reader, tedpy.TED5000)
             data["consumption"] = consumption.now
             data["daily_consumption"] = consumption.daily
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data["spyders"] = {}
             for spyder in ted_reader.spyders:
                 for ctgroup in spyder.ctgroups:
-                    consumption = ted_reader.spyder_ctgroup_consumption(spyder, ctgroup)
+                    consumption = ctgroup.energy()
                     data["spyders"][f"{spyder.position}.{ctgroup.position}"] = {
                         "name": ctgroup.description,
                         "consumption": consumption.now,
@@ -59,11 +59,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     }
             data["mtus"] = {}
             for mtu in ted_reader.mtus:
-                consumption = ted_reader.mtu_consumption(mtu)
+                consumption = mtu.energy()
+                power = mtu.power()
                 data["mtus"][mtu.position] = {
                     "name": mtu.description,
-                    "consumption": consumption.current_usage,
-                    "voltage": consumption.voltage,
+                    "consumption": consumption.now,
+                    "voltage": power.voltage,
                 }
 
             _LOGGER.debug("Retrieved data from API: %s", data)

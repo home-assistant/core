@@ -1,5 +1,5 @@
 """Tests for the TED config flow."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import httpx
 import tedpy
@@ -25,6 +25,8 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch("tedpy.TED5000.check", return_value=True), patch(
         "tedpy.TED5000.update", return_value=True
+    ), patch(
+        "tedpy.TED5000.gateway_id", new_callable=PropertyMock, return_value="test"
     ), patch(
         "homeassistant.components.ted.async_setup_entry",
         return_value=True,
@@ -108,6 +110,8 @@ async def test_import(hass: HomeAssistant) -> None:
     """Test we can import from yaml."""
     with patch("tedpy.TED5000.check", return_value=True), patch(
         "tedpy.TED5000.update", return_value=True
+    ), patch(
+        "tedpy.TED5000.gateway_id", new_callable=PropertyMock, return_value="test"
     ), patch(
         "homeassistant.components.ted.async_setup_entry",
         return_value=True,
