@@ -25,21 +25,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     """Set up elmax-cloud from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    # Retrieve username/password from integration configuration
-    username: str = entry.data[CONF_ELMAX_USERNAME]
-    password: str = entry.data[CONF_ELMAX_PASSWORD]
-    panel_id: str = entry.data[CONF_ELMAX_PANEL_ID]
-    panel_pin: str = entry.data[CONF_ELMAX_PANEL_PIN]
-
     # Create the API client object and attempt a login, so that we immediately know
     # if there is something wrong with user credentials
     coordinator = ElmaxCoordinator(
         hass=hass,
         logger=_LOGGER,
-        username=username,
-        password=password,
-        panel_id=panel_id,
-        panel_pin=panel_pin,
+        username=entry.data[CONF_ELMAX_USERNAME],
+        password=entry.data[CONF_ELMAX_PASSWORD],
+        panel_id=entry.data[CONF_ELMAX_PANEL_ID],
+        panel_pin=entry.data[CONF_ELMAX_PANEL_PIN],
         name=f"Elmax Cloud {entry.entry_id}",
         update_interval=timedelta(seconds=POLLING_SECONDS),
     )
