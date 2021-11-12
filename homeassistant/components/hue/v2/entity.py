@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from ..bridge import HueBridge
-from ..const import DOMAIN as DOMAIN
+from ..const import DOMAIN
 
 RESOURCE_TYPE_NAMES = {
     # a simple mapping of hue resource type to Hass name
@@ -91,7 +91,7 @@ class HueBaseEntity(Entity):
     @callback
     def on_update(self) -> None:
         """Call on update event."""
-        pass  # used in subclasses
+        # used in subclasses
 
     @callback
     def _handle_event(self, event_type: EventType, resource: CLIPResource) -> None:

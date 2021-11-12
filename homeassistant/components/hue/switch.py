@@ -32,7 +32,7 @@ async def async_setup_entry(
         # should not happen, but just in case
         raise NotImplementedError("Switch support is only available for V2 bridges")
 
-    for controller in [api.sensors.motion, api.sensors.light_level]:
+    for controller in (api.sensors.motion, api.sensors.light_level):
         # add entities for all scenes
         @callback
         def async_add_entity(event_type: EventType, resource: SensingService) -> None:

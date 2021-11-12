@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 
-from ..const import DOMAIN as DOMAIN
+from ..const import DOMAIN
 
 if TYPE_CHECKING:
     from ..bridge import HueBridge
@@ -64,9 +64,9 @@ async def async_setup_devices(bridge: "HueBridge"):
             dev_reg.async_remove_device(device.id)
 
     @callback
-    def handle_device_event(type: EventType, hue_device: Device) -> None:
+    def handle_device_event(evt_type: EventType, hue_device: Device) -> None:
         """Handle event from Hue devices controller."""
-        if type == EventType.RESOURCE_DELETED:
+        if evt_type == EventType.RESOURCE_DELETED:
             remove_device(hue_device.id)
         else:
             # updates to existing device will also be handled by this call

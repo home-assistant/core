@@ -32,7 +32,7 @@ async def async_setup_hue_events(bridge: "HueBridge"):
     btn_controller = api.sensors.button
 
     @callback
-    def handle_button_event(type: EventType, hue_resource: Button) -> None:
+    def handle_button_event(evt_type: EventType, hue_resource: Button) -> None:
         """Handle event from Hue devices controller."""
         LOGGER.debug("Received button event: %s", hue_resource)
         hue_device = btn_controller.get_device(hue_resource.id)

@@ -140,8 +140,7 @@ class HueBridge:
                             "Ignored error/warning from Hue API: %s", str(err)
                         )
                         return None
-                    else:
-                        raise err
+                    raise err
                 except (
                     client_exceptions.ClientOSError,
                     client_exceptions.ClientResponseError,
