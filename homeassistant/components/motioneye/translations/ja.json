@@ -3,7 +3,8 @@
         "step": {
             "init": {
                 "data": {
-                    "stream_url_template": "Stream URL\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8"
+                    "stream_url_template": "Stream URL\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8",
+                    "webhook_set_overwrite": "\u8a8d\u8b58\u3055\u308c\u3066\u3044\u306a\u3044Webhook\u3092\u4e0a\u66f8\u304d\u3059\u308b"
                 }
             }
         }

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "response_error": "\u30c7\u30d0\u30a4\u30b9\u304b\u3089\u306e\u4e0d\u660e\u306a\u30a8\u30e9\u30fc"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unauthenticated_mode": "\u8a8d\u8a3c\u306a\u3057\u306e\u30e2\u30fc\u30c9(\u5909\u66f4\u306b\u306f\u30ea\u30ed\u30fc\u30c9\u304c\u5fc5\u8981)"
+                }
+            }
+        }
+    }
+}

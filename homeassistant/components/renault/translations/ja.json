@@ -1,6 +1,12 @@
 {
     "config": {
         "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "Kamereon\u30a2\u30ab\u30a6\u30f3\u30c8ID"
+                },
+                "title": "Kamereon\u306e\u30a2\u30ab\u30a6\u30f3\u30c8ID\u3092\u9078\u629e"
+            },
             "reauth_confirm": {
                 "data": {
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"

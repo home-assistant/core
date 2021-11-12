@@ -7,6 +7,7 @@
             "btn_down": "{subtype} button down",
             "btn_up": "{subtype} button up",
             "double_push": "{subtype} double push",
+            "long": "{subtype} \u30ed\u30f3\u30b0\u30af\u30ea\u30c3\u30af",
             "long_push": "{subtype} long push",
             "single_push": "{subtype} single push"
         }
