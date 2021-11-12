@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_ELGATO_CLIENT, DOMAIN
+from .const import DOMAIN
 
 PLATFORMS = [LIGHT_DOMAIN]
 
@@ -31,8 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         logging.getLogger(__name__).debug("Unable to connect: %s", exception)
         raise ConfigEntryNotReady from exception
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {DATA_ELGATO_CLIENT: elgato}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = elgato
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

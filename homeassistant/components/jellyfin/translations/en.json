@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Only a single Jellyfin server is currently supported"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "url": "URL",
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    }
+}

@@ -51,7 +51,7 @@ abodepy==1.2.0
 accuweather==0.3.0
 
 # homeassistant.components.adax
-adax==0.1.1
+adax==0.2.0
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.4.0
@@ -200,7 +200,7 @@ aioymaps==1.2.1
 airly==1.1.0
 
 # homeassistant.components.airthings
-airthings_cloud==0.0.1
+airthings_cloud==0.1.0
 
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
@@ -354,7 +354,7 @@ dsmr_parser==0.30
 dynalite_devices==0.1.46
 
 # homeassistant.components.elgato
-elgato==2.1.1
+elgato==2.2.0
 
 # homeassistant.components.elkm1
 elkm1-lib==1.0.0
@@ -556,6 +556,9 @@ iotawattpy==0.1.0
 
 # homeassistant.components.gogogate2
 ismartgate==4.0.4
+
+# homeassistant.components.jellyfin
+jellyfin-apiclient-python==1.7.2
 
 # homeassistant.components.rest
 jsonpath==0.82
@@ -790,7 +793,7 @@ pyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.8.3
+pyMetno==0.8.4
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.27.0
@@ -1376,7 +1379,7 @@ url-normalize==1.4.1
 uvcclient==0.11.0
 
 # homeassistant.components.rdw
-vehicle==0.1.0
+vehicle==0.2.0
 
 # homeassistant.components.velbus
 velbus-aio==2021.11.6

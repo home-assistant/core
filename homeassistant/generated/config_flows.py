@@ -148,6 +148,7 @@ FLOWS = [
     "islamic_prayer_times",
     "isy994",
     "izone",
+    "jellyfin",
     "juicenet",
     "keenetic_ndms2",
     "kmtronic",
