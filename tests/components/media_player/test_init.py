@@ -1,6 +1,5 @@
 """Test the base functions of the media player."""
 import base64
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -27,19 +26,18 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.parametrize(
-    "feature_reg,service_name,service_args",
+    "feature_reg,service_name",
     [
-        (SUPPORT_NEXT_CHANNEL, SERVICE_MEDIA_NEXT_CHANNEL, {}),
-        (SUPPORT_NEXT_TRACK, SERVICE_MEDIA_NEXT_TRACK, {}),
-        (SUPPORT_PREVIOUS_CHANNEL, SERVICE_MEDIA_PREVIOUS_CHANNEL, {}),
-        (SUPPORT_PREVIOUS_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, {}),
+        (SUPPORT_NEXT_CHANNEL, SERVICE_MEDIA_NEXT_CHANNEL),
+        (SUPPORT_NEXT_TRACK, SERVICE_MEDIA_NEXT_TRACK),
+        (SUPPORT_PREVIOUS_CHANNEL, SERVICE_MEDIA_PREVIOUS_CHANNEL),
+        (SUPPORT_PREVIOUS_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK),
     ],
 )
 async def test_media_player(
     hass: HomeAssistant,
     feature_reg: int,
     service_name: str,
-    service_args: dict[str, Any],
 ) -> None:
     """Test getting data from the mocked button entity."""
     media_player = MediaPlayerEntity()
@@ -51,10 +49,10 @@ async def test_media_player(
     assert getattr(media_player, f"support_{service_name.replace('media_','')}")
 
     with pytest.raises(NotImplementedError):
-        await getattr(media_player, f"async_{service_name}")(**service_args)
+        await getattr(media_player, f"async_{service_name}")()
 
     setattr(media_player, service_name, MagicMock())
-    await getattr(media_player, f"async_{service_name}")(**service_args)
+    await getattr(media_player, f"async_{service_name}")()
 
     assert getattr(media_player, service_name).called
 
