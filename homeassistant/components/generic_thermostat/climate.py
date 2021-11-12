@@ -348,7 +348,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if hvac_mode == self._hvac_mode:
             # skip any action when HVAC mode the same
             return
-         if hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVAC_MODE_HEAT:
             self._hvac_mode = HVAC_MODE_HEAT
             await self._async_control_heating(force=True)
         elif hvac_mode == HVAC_MODE_COOL:
