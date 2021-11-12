@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
 from urllib.parse import urlparse
 
 from aiohue import LinkButtonNotPressed, create_app_key
@@ -19,6 +18,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
@@ -44,16 +44,18 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> HueOptionsFlowHandler:
         """Get the options flow for this handler."""
         return HueOptionsFlowHandler(config_entry)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Hue flow."""
         self.bridge: DiscoveredHueBridge | None = None
         self.discovered_bridges: dict[str, DiscoveredHueBridge] | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initialized by the user."""
         # This is for backwards compatibility.
         return await self.async_step_init(user_input)
@@ -70,7 +72,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             assert bridge_id == bridge.id
         return bridge
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow start."""
         # Check if user chooses manual entry
         if user_input is not None and user_input["id"] == HUE_MANUAL_BRIDGE_ID:
@@ -120,7 +122,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_manual(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: ConfigType | None = None
     ) -> FlowResult:
         """Handle manual bridge setup."""
         if user_input is None:
@@ -133,7 +135,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge = await self._get_bridge(user_input[CONF_HOST])
         return await self.async_step_link()
 
-    async def async_step_link(self, user_input=None):
+    async def async_step_link(self, user_input: ConfigType | None = None) -> FlowResult:
         """Attempt to link with the Hue bridge.
 
         Given a configured host, will ask the user to press the link button
@@ -184,7 +186,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle a discovered Hue bridge.
 
         This flow is triggered by the SSDP component. It will check if the
@@ -211,7 +213,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_hue_bridge")
 
         host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        bridge = await self._get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
+        bridge = await self._get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])  # type: ignore[arg-type]
 
         await self.async_set_unique_id(bridge.id)
         self._abort_if_unique_id_configured(
@@ -241,7 +243,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge = bridge
         return await self.async_step_link()
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle a discovered Hue bridge on HomeKit.
 
         The bridge ID communicated over HomeKit differs, so we cannot use that
@@ -252,7 +254,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_link()
 
-    async def async_step_import(self, import_info):
+    async def async_step_import(self, import_info: ConfigType) -> FlowResult:
         """Import a new bridge as a config entry.
 
         This flow is triggered by `async_setup` for both configured and
@@ -271,13 +273,11 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class HueOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Hue options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Hue options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_init(self, user_input: ConfigType | None = None) -> FlowResult:
         """Manage Hue options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
