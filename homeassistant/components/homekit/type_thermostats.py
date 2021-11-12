@@ -462,7 +462,8 @@ class Thermostat(HomeAccessory):
                 )
 
         # Set current operation mode for supported thermostats
-        if hvac_action := new_state.attributes.get(ATTR_HVAC_ACTION):
+        hvac_action = new_state.attributes.get(ATTR_HVAC_ACTION)
+        if hvac_action and hvac_action in HC_HASS_TO_HOMEKIT_ACTION:
             homekit_hvac_action = HC_HASS_TO_HOMEKIT_ACTION[hvac_action]
             self.char_current_heat_cool.set_value(homekit_hvac_action)
 
