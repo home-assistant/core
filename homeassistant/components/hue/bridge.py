@@ -136,7 +136,9 @@ class HueBridge:
                     # an identifier or something.
                     if allowed_errors is not None and str(err) in allowed_errors:
                         # log only
-                        self.logger.warning(str(err))
+                        self.logger.debug(
+                            "Ignored error/warning from Hue API: %s", str(err)
+                        )
                         return None
                     else:
                         raise err
