@@ -19,12 +19,10 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
-    SERVICE_MEDIA_NEXT_CHANNEL,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PLAY_PAUSE,
-    SERVICE_MEDIA_PREVIOUS_CHANNEL,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
@@ -181,20 +179,6 @@ def media_stop(hass, entity_id=ENTITY_MATCH_ALL):
     hass.add_job(async_media_stop, hass, entity_id)
 
 
-async def async_media_next_channel(hass, entity_id=ENTITY_MATCH_ALL):
-    """Send the media player the command for switching to next channel."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(
-        DOMAIN, SERVICE_MEDIA_NEXT_CHANNEL, data, blocking=True
-    )
-
-
-@bind_hass
-def media_next_channel(hass, entity_id=ENTITY_MATCH_ALL):
-    """Send the media player the command for switching to next channel."""
-    hass.add_job(async_media_next_channel, hass, entity_id)
-
-
 async def async_media_next_track(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for next track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -207,20 +191,6 @@ async def async_media_next_track(hass, entity_id=ENTITY_MATCH_ALL):
 def media_next_track(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for next track."""
     hass.add_job(async_media_next_track, hass, entity_id)
-
-
-async def async_media_previous_channel(hass, entity_id=ENTITY_MATCH_ALL):
-    """Send the media player the command for switching to prev channel."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(
-        DOMAIN, SERVICE_MEDIA_PREVIOUS_CHANNEL, data, blocking=True
-    )
-
-
-@bind_hass
-def media_previous_channel(hass, entity_id=ENTITY_MATCH_ALL):
-    """Send the media player the command for switching to prev channel."""
-    hass.add_job(async_media_previous_channel, hass, entity_id)
 
 
 async def async_media_previous_track(hass, entity_id=ENTITY_MATCH_ALL):

@@ -1,11 +1,62 @@
 """Test the base functions of the media player."""
 import base64
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from homeassistant.components import media_player
+from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player.const import (
+    SUPPORT_NEXT_CHANNEL,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PREVIOUS_CHANNEL,
+    SUPPORT_PREVIOUS_TRACK,
+)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_MEDIA_NEXT_CHANNEL,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PREVIOUS_CHANNEL,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    STATE_OFF,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+
+@pytest.mark.parametrize(
+    "feature_reg,service_name,service_args",
+    [
+        (SUPPORT_NEXT_CHANNEL, SERVICE_MEDIA_NEXT_CHANNEL, {}),
+        (SUPPORT_NEXT_TRACK, SERVICE_MEDIA_NEXT_TRACK, {}),
+        (SUPPORT_PREVIOUS_CHANNEL, SERVICE_MEDIA_PREVIOUS_CHANNEL, {}),
+        (SUPPORT_PREVIOUS_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, {}),
+    ],
+)
+async def test_media_player(
+    hass: HomeAssistant,
+    feature_reg: int,
+    service_name: str,
+    service_args: dict[str, Any],
+) -> None:
+    """Test getting data from the mocked button entity."""
+    media_player = MediaPlayerEntity()
+    assert media_player.state is None
+
+    media_player.hass = hass
+    media_player._attr_supported_features = feature_reg
+
+    assert getattr(media_player, f"support_{service_name.replace('media_','')}")
+
+    with pytest.raises(NotImplementedError):
+        await getattr(media_player, f"async_{service_name}")(**service_args)
+
+    setattr(media_player, service_name, MagicMock())
+    await getattr(media_player, f"async_{service_name}")(**service_args)
+
+    assert getattr(media_player, service_name).called
 
 
 async def test_get_image(hass, hass_ws_client, caplog):
