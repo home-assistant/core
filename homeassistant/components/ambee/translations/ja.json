@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Ambee\u304cHome Assistant\u3068\u9023\u643a\u3059\u308b\u3088\u3046\u306b\u8a2d\u5b9a\u3057\u307e\u3059\u3002"
+            }
+        }
+    }
+}

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "no_udn": "SSDP\u691c\u51fa\u60c5\u5831\u306b\u3001UDN\u304c\u3042\u308a\u307e\u305b\u3093"
+        }
+    }
+}

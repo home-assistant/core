@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "\u30c7\u30fc\u30bf\u901a\u77e5\u30b5\u30fc\u30d3\u30b9\u306e\u4f7f\u7528\u3092\u8a31\u53ef\u3057\u307e\u3059\u3002"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "\u30c7\u30d5\u30a9\u30eb\u30c8 \u30c8\u30e9\u30f3\u30b8\u30b7\u30e7\u30f3(\u79d2)"
+                }
+            }
+        }
+    }
+}

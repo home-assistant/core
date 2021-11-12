@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "api_ratelimit": "API\u30ec\u30fc\u30c8\u5236\u9650\u3092\u8d85\u3048\u307e\u3057\u305f"
+        },
+        "error": {
+            "api_ratelimit": "API\u30ec\u30fc\u30c8\u5236\u9650\u3092\u8d85\u3048\u307e\u3057\u305f"
+        }
+    }
+}
