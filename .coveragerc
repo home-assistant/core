@@ -518,6 +518,8 @@ omit =
     homeassistant/components/isy994/switch.py
     homeassistant/components/itach/remote.py
     homeassistant/components/itunes/media_player.py
+    homeassistant/components/jellyfin/__init__.py
+    homeassistant/components/jellyfin/media_source.py
     homeassistant/components/joaoapps_join/*
     homeassistant/components/juicenet/__init__.py
     homeassistant/components/juicenet/const.py
