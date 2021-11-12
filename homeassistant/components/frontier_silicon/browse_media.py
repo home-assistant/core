@@ -141,28 +141,31 @@ async def library_payload():
     return library_info
 
 
-async def _get_content_list(media_library, list_url, set_nav_state=True):
+async def _get_content_list(
+    media_library, list_url, set_nav_state=True, max_results=500
+):
     nav = None
     if set_nav_state:
         nav = await media_library.handle_set("netRemote.nav.state", 1)
         if not nav:
             _LOGGER.error("Failed to enter nav state")
             return None
-        index = -1
-        has_more = True
+
+        start = -1
         result = []
 
-        while has_more:
+        while max_results == -1 or len(result) < max_results:
             res = await media_library.call(
-                f"LIST_GET_NEXT/{list_url}/{index}", {"maxItems": 100}
+                f"LIST_GET_NEXT/{list_url}/{start}", {"maxItems": 100}
             )
-            has_more = res.status == "FS_OK"
+            if res.status != "FS_OK":
+                break
             for item in res.findall("item"):
                 if "key" not in item.attrib or not item.attrib["key"]:
                     continue
 
                 key = int(item.attrib["key"])
-                index = key
+                start = key
                 entry = {"key": key}
                 for field in item.findall("field"):
                     if "name" not in field.attrib:

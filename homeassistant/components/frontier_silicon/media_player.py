@@ -365,7 +365,9 @@ class AFSAPIDevice(MediaPlayerEntity):
                 "netRemote.nav.action.selectPreset", media_id
             )
         if media_type == MEDIA_TYPE_CHANNEL:
-            result = await fs_device.handle_set("netRemote.nav.action.selectItem", media_id)
+            result = await fs_device.handle_set(
+                "netRemote.nav.action.selectItem", media_id
+            )
 
         await fs_device.handle_set("netRemote.nav.state", 0)
         return result
