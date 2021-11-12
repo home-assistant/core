@@ -11,6 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import (
     ATTR_BOT,
     ATTR_CURTAIN,
+    ATTR_METER,
     BTLE_LOCK,
     COMMON_OPTIONS,
     CONF_RETRY_COUNT,
@@ -29,6 +30,7 @@ from .coordinator import SwitchbotDataUpdateCoordinator
 PLATFORMS_BY_TYPE = {
     ATTR_BOT: ["switch", "sensor"],
     ATTR_CURTAIN: ["cover", "binary_sensor", "sensor"],
+    ATTR_METER: ["sensor"],
 }
 
 

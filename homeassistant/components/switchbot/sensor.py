@@ -9,13 +9,16 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_HUMIDITY,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
@@ -40,6 +43,16 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="lightLevel",
         native_unit_of_measurement="Level",
         device_class=DEVICE_CLASS_ILLUMINANCE,
+    ),
+    "temp": SensorEntityDescription(
+        key="temp",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    "humidity": SensorEntityDescription(
+        key="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
     ),
 }
 
@@ -93,4 +106,9 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         """Return the state of the sensor."""
+        if self._sensor == "temp" and self.data["data"].get("temp"):
+            if self.data["data"].get("fahrenheit"):
+                return self.data["data"]["temp"].get("f")
+            return self.data["data"]["temp"].get("c")
+
         return self.data["data"][self._sensor]
