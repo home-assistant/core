@@ -108,9 +108,9 @@ INTERFACES = {
 }
 
 
-def _get_device_event_description(modelid: str, event: str) -> tuple:
+def _get_device_event_description(modelid: str, event: int) -> tuple:
     """Get device event description."""
-    device_event_descriptions: dict = REMOTES[modelid]
+    device_event_descriptions = REMOTES[modelid]
 
     for event_type_tuple, event_dict in device_event_descriptions.items():
         if event == event_dict.get(CONF_EVENT):
@@ -131,9 +131,10 @@ def async_describe_events(
     @callback
     def async_describe_deconz_alarm_event(event: Event) -> dict:
         """Describe deCONZ logbook alarm event."""
-        deconz_alarm_event: DeconzAlarmEvent | None = _get_deconz_event_from_device_id(
-            hass, event.data[ATTR_DEVICE_ID]
+        deconz_alarm_event: DeconzAlarmEvent | DeconzEvent | None = (
+            _get_deconz_event_from_device_id(hass, event.data[ATTR_DEVICE_ID])
         )
+        assert deconz_alarm_event
 
         data = event.data[CONF_EVENT]
 
@@ -148,6 +149,7 @@ def async_describe_events(
         deconz_event: DeconzEvent | None = _get_deconz_event_from_device_id(
             hass, event.data[ATTR_DEVICE_ID]
         )
+        assert deconz_event
 
         action = None
         interface = None
