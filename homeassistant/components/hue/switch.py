@@ -75,13 +75,6 @@ class HueSensingServiceEnabledEntity(HueBaseEntity, SwitchEntity):
         """Return true if the switch is on."""
         return self.resource.enabled
 
-    @property
-    def icon(self) -> str | None:
-        """Return pretty icon for this config switch."""
-        if self.resource.enabled:
-            return "mdi:toggle-switch"
-        return "mdi:toggle-switch-off"
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.bridge.async_request_call(
