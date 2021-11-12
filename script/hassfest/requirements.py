@@ -26,7 +26,7 @@ PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
 )
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
-PIP_VERSION_RANGE_SEPERATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
+PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 SUPPORTED_PYTHON_TUPLES = [
     REQUIRED_PYTHON_VER[:2],
     tuple(map(operator.add, REQUIRED_PYTHON_VER, (0, 1, 0)))[:2],
@@ -100,7 +100,7 @@ def validate_requirements_format(integration: Integration) -> bool:
             continue
 
         for part in version.split(","):
-            version_part = PIP_VERSION_RANGE_SEPERATOR.match(part)
+            version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
             if (
                 version_part
                 and AwesomeVersion(version_part.group(2)).strategy
