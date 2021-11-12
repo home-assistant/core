@@ -41,6 +41,10 @@ from homeassistant.util import color
 
 from ..bridge import HueBridge
 from ..const import (
+    CONF_ALLOW_HUE_GROUPS,
+    CONF_ALLOW_UNREACHABLE,
+    DEFAULT_ALLOW_HUE_GROUPS,
+    DEFAULT_ALLOW_UNREACHABLE,
     DOMAIN as HUE_DOMAIN,
     GROUP_TYPE_ENTERTAINMENT,
     GROUP_TYPE_LIGHT_GROUP,
@@ -112,7 +116,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     api_version = tuple(int(v) for v in bridge.api.config.apiversion.split("."))
     rooms = {}
 
-    allow_groups = bridge.allow_groups
+    allow_groups = config_entry.options.get(
+        CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
+    )
     supports_groups = api_version >= GROUP_MIN_API_VERSION
     if allow_groups and not supports_groups:
         LOGGER.warning("Please update your Hue bridge to support groups")
@@ -283,6 +289,9 @@ class HueLight(CoordinatorEntity, LightEntity):
         self.is_group = is_group
         self._supported_features = supported_features
         self._rooms = rooms
+        self.allow_unreachable = self.bridge.config_entry.options.get(
+            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
+        )
 
         if is_group:
             self.is_osram = False
@@ -414,9 +423,7 @@ class HueLight(CoordinatorEntity, LightEntity):
     def available(self):
         """Return if light is available."""
         return self.coordinator.last_update_success and (
-            self.is_group
-            or self.bridge.allow_unreachable
-            or self.light.state["reachable"]
+            self.is_group or self.allow_unreachable or self.light.state["reachable"]
         )
 
     @property

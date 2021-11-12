@@ -22,11 +22,9 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
-    CONF_ALLOW_HUE_SCENES,
     CONF_ALLOW_UNREACHABLE,
     CONF_API_VERSION,
     DEFAULT_ALLOW_HUE_GROUPS,
-    DEFAULT_ALLOW_HUE_SCENES,
     DEFAULT_ALLOW_UNREACHABLE,
     DOMAIN,
 )
@@ -284,32 +282,26 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_ALLOW_HUE_GROUPS,
-                    default=self.config_entry.options.get(
-                        CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
-                    ),
-                ): bool,
-                vol.Optional(
-                    CONF_ALLOW_UNREACHABLE,
-                    default=self.config_entry.options.get(
-                        CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
-                    ),
-                ): bool,
-            }
-        )
-        if self.config_entry.data.get(CONF_API_VERSION) > 1:
-            schema = schema.extend(
+        if self.config_entry.data.get(CONF_API_VERSION, 1) > 1:
+            # Options for Hue are only applicable to V1 bridges.
+            return self.async_show_form(step_id="init")
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_ALLOW_HUE_SCENES,
+                        CONF_ALLOW_HUE_GROUPS,
                         default=self.config_entry.options.get(
-                            CONF_ALLOW_HUE_SCENES, DEFAULT_ALLOW_HUE_SCENES
+                            CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_ALLOW_UNREACHABLE,
+                        default=self.config_entry.options.get(
+                            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
                         ),
                     ): bool,
                 }
-            )
-
-        return self.async_show_form(step_id="init", data_schema=schema)
+            ),
+        )

@@ -1,7 +1,11 @@
 """Support for the Philips Hue sensor devices."""
 from homeassistant.helpers import entity
 
-from ..const import DOMAIN as HUE_DOMAIN
+from ..const import (
+    CONF_ALLOW_UNREACHABLE,
+    DEFAULT_ALLOW_UNREACHABLE,
+    DOMAIN as HUE_DOMAIN,
+)
 
 
 class GenericHueDevice(entity.Entity):
@@ -13,6 +17,9 @@ class GenericHueDevice(entity.Entity):
         self._name = name
         self._primary_sensor = primary_sensor
         self.bridge = bridge
+        self.allow_unreachable = bridge.config_entry.options.get(
+            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
+        )
 
     @property
     def primary_sensor(self):

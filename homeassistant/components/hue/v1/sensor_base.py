@@ -173,7 +173,7 @@ class GenericHueSensor(GenericHueDevice, entity.Entity):
     def available(self):
         """Return if sensor is available."""
         return self.bridge.sensor_manager.coordinator.last_update_success and (
-            self.bridge.allow_unreachable
+            self.allow_unreachable
             # remotes like Hue Tap (ZGPSwitchSensor) have no _reachability_
             or self.sensor.config.get("reachable", True)
         )

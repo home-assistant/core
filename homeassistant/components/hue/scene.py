@@ -31,9 +31,6 @@ async def async_setup_entry(
         # should not happen, but just in case
         raise NotImplementedError("Scene support is only available for V2 bridges")
 
-    if not bridge.allow_scenes:
-        return
-
     # add entities for all scenes
     @callback
     def async_add_entity(event_type: EventType, resource: HueScene) -> None:

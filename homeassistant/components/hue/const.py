@@ -2,15 +2,6 @@
 
 DOMAIN = "hue"
 
-CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
-DEFAULT_ALLOW_HUE_GROUPS = False
-
-CONF_ALLOW_HUE_SCENES = "allow_hue_scenes"
-DEFAULT_ALLOW_HUE_SCENES = False
-
-CONF_ALLOW_UNREACHABLE = "allow_unreachable"
-DEFAULT_ALLOW_UNREACHABLE = False
-
 CONF_API_VERSION = "api_version"
 
 CONF_SUBTYPE = "subtype"
@@ -31,6 +22,12 @@ GROUP_TYPE_LUMINAIRE = "Luminaire"
 GROUP_TYPE_LIGHT_SOURCE = "LightSource"
 GROUP_TYPE_ZONE = "Zone"
 GROUP_TYPE_ENTERTAINMENT = "Entertainment"
+
+CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
+DEFAULT_ALLOW_HUE_GROUPS = False
+
+CONF_ALLOW_UNREACHABLE = "allow_unreachable"
+DEFAULT_ALLOW_UNREACHABLE = False
 
 # How long to wait to actually do the refresh after requesting it.
 # We wait some time so if we control multiple lights, we batch requests.

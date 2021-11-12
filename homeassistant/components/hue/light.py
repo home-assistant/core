@@ -25,6 +25,4 @@ async def async_setup_entry(
         return
     # v2 setup logic here
     await setup_entry_v2(hass, config_entry, async_add_entities)
-    if bridge.allow_groups:
-        # allow creating of lights for hue groups
-        await setup_groups_entry_v2(hass, config_entry, async_add_entities)
+    await setup_groups_entry_v2(hass, config_entry, async_add_entities)

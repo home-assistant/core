@@ -17,16 +17,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .const import (
-    CONF_ALLOW_HUE_GROUPS,
-    CONF_ALLOW_HUE_SCENES,
-    CONF_ALLOW_UNREACHABLE,
-    CONF_API_VERSION,
-    DEFAULT_ALLOW_HUE_GROUPS,
-    DEFAULT_ALLOW_HUE_SCENES,
-    DEFAULT_ALLOW_UNREACHABLE,
-    DOMAIN,
-)
+from .const import CONF_API_VERSION, DOMAIN
 from .v1.sensor_base import SensorManager
 from .v2.device import async_setup_devices
 from .v2.hue_event import async_setup_hue_events
@@ -72,27 +63,6 @@ class HueBridge:
     def api_version(self) -> int:
         """Return api version we're set-up for."""
         return self.config_entry.data[CONF_API_VERSION]
-
-    @property
-    def allow_unreachable(self) -> bool:
-        """Allow unreachable light bulbs."""
-        return self.config_entry.options.get(
-            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
-        )
-
-    @property
-    def allow_groups(self) -> bool:
-        """Allow groups defined in the Hue bridge."""
-        return self.config_entry.options.get(
-            CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
-        )
-
-    @property
-    def allow_scenes(self) -> bool:
-        """Allow scenes defined in the Hue bridge."""
-        return self.config_entry.options.get(
-            CONF_ALLOW_HUE_SCENES, DEFAULT_ALLOW_HUE_SCENES
-        )
 
     async def async_initialize_bridge(self) -> bool:
         """Initialize Connection with the Hue API."""
