@@ -83,8 +83,8 @@ class DeLijnPublicTransportSensor(SensorEntity):
         self._attributes["stopname"] = self._name
 
         """ check if there is a passage """
-        if len(self.line.passages) == 0:
-            self._available = False;
+        if not self.line.passages:
+            self._available = False
             return
 
         try:
