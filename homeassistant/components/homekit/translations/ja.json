@@ -1,6 +1,11 @@
 {
     "options": {
         "step": {
+            "advanced": {
+                "data": {
+                    "devices": "\u30c7\u30d0\u30a4\u30b9(\u30c8\u30ea\u30ac\u30fc)"
+                }
+            },
             "cameras": {
                 "data": {
                     "camera_audio": "\u97f3\u58f0\u306b\u5bfe\u5fdc\u3057\u305f\u30ab\u30e1\u30e9"

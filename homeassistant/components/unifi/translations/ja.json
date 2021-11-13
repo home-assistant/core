@@ -9,5 +9,14 @@
                 "title": "UniFi\u30b3\u30f3\u30c8\u30ed\u30fc\u30e9\u30fc\u306e\u8a2d\u5b9a"
             }
         }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30a2\u30af\u30bb\u30b9\u5236\u5fa1\u30af\u30e9\u30a4\u30a2\u30f3\u30c8"
+                }
+            }
+        }
     }
 }
