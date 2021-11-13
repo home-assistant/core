@@ -683,6 +683,7 @@ VOLUME: Final = "volume"
 TEMPERATURE: Final = "temperature"
 SPEED: Final = "speed"
 ILLUMINANCE: Final = "illuminance"
+ACCUMULATED_PRECIPITATION: Final = "accumulated_precipitation"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
