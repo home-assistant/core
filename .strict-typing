@@ -133,6 +133,7 @@ homeassistant.components.tplink.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
 homeassistant.components.tts.*
+homeassistant.components.twentemilieu.*
 homeassistant.components.upcloud.*
 homeassistant.components.uptime.*
 homeassistant.components.uptimerobot.*
