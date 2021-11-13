@@ -53,7 +53,7 @@ class TwenteMilieuFlowHandler(ConfigFlow, domain=DOMAIN):
         twentemilieu = TwenteMilieu(
             post_code=user_input[CONF_POST_CODE],
             house_number=user_input[CONF_HOUSE_NUMBER],
-            house_letter=user_input.get(CONF_HOUSE_LETTER),
+            house_letter=user_input.get(CONF_HOUSE_LETTER, ""),
             session=session,
         )
 
