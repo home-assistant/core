@@ -35,13 +35,13 @@ class ElgatoIdentifyButton(ButtonEntity):
         """Initialize the button entity."""
         self.elgato = elgato
         self._info = info
-        self._attr_unique_id = f"{info.serial_number}_identify"
         self.entity_description = ButtonEntityDescription(
             key="identify",
             name="Identify",
             icon="mdi:help",
             entity_category=ENTITY_CATEGORY_CONFIG,
         )
+        self._attr_unique_id = f"{info.serial_number}_{self.entity_description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:

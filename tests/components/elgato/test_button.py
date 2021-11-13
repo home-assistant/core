@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from elgato import ElgatoError
+import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import (
@@ -13,11 +14,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import mock_coro
 from tests.components.elgato import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.freeze_time("2021-11-13 11:48:00")
 async def test_button_identify(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -37,8 +38,7 @@ async def test_button_identify(
     assert entry.entity_category == ENTITY_CATEGORY_CONFIG
 
     with patch(
-        "homeassistant.components.elgato.light.Elgato.identify",
-        return_value=mock_coro(),
+        "homeassistant.components.elgato.light.Elgato.identify"
     ) as mock_identify:
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -49,6 +49,10 @@ async def test_button_identify(
 
     assert len(mock_identify.mock_calls) == 1
     mock_identify.assert_called_with()
+
+    state = hass.states.get("button.identify")
+    assert state
+    assert state.state == "2021-11-13T11:48:00+00:00"
 
 
 async def test_button_identify_error(
