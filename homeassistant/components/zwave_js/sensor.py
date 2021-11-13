@@ -40,8 +40,6 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
@@ -201,10 +199,15 @@ async def async_setup_entry(
         """Add Z-Wave Sensor."""
         entities: list[ZWaveBaseEntity] = []
 
+        if info.platform_data:
+            entity_description_key, unit = info.platform_data
+        else:
+            entity_description_key, unit = None, None
         entity_description = ENTITY_DESCRIPTION_KEY_MAP.get(
-            info.platform_data
+            entity_description_key
         ) or ZwaveSensorEntityDescription("base_sensor")
         entity_description.info = info
+        entity_description.native_unit_of_measurement = unit
 
         if info.platform_hint == "string_sensor":
             entities.append(ZWaveStringSensor(config_entry, client, entity_description))
@@ -312,12 +315,10 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
+        if self.entity_description.native_unit_of_measurement is not None:
+            return self.entity_description.native_unit_of_measurement
         if self.info.primary_value.metadata.unit is None:
             return None
-        if self.info.primary_value.metadata.unit == "C":
-            return TEMP_CELSIUS
-        if self.info.primary_value.metadata.unit == "F":
-            return TEMP_FAHRENHEIT
 
         return str(self.info.primary_value.metadata.unit)
 
