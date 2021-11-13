@@ -608,6 +608,9 @@ class FanEntity(ToggleEntity):
         data: dict[str, float | str | None] = {}
         supported_features = self.supported_features
 
+        if supported_features is None:
+            return data
+
         if supported_features & SUPPORT_DIRECTION:
             data[ATTR_DIRECTION] = self.current_direction
 
@@ -626,11 +629,6 @@ class FanEntity(ToggleEntity):
             data[ATTR_PRESET_MODE] = self.preset_mode
 
         return data
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._attr_supported_features
 
     @property
     def preset_mode(self) -> str | None:
