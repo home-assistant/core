@@ -5,6 +5,7 @@ from typing import Any
 
 from aioambient import Websocket
 from aioambient.errors import WebsocketError
+from aioambient.util import get_public_device_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,11 +17,13 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
@@ -108,14 +111,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
-        dev_reg = await hass.helpers.device_registry.async_get_registry()
-        dev_reg.async_clear_config_entry(entry)
+        dev_reg = dr.async_get(hass)
+        dev_reg.async_clear_config_entry(entry.entry_id)
 
-        en_reg = await hass.helpers.entity_registry.async_get_registry()
-        en_reg.async_clear_config_entry(entry)
+        en_reg = er.async_get(hass)
+        en_reg.async_clear_config_entry(entry.entry_id)
 
         version = entry.version = 2
         hass.config_entries.async_update_entry(entry)
+
     LOGGER.info("Migration to version %s successful", version)
 
     return True
@@ -220,11 +224,15 @@ class AmbientWeatherEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         self._ambient = ambient
+
+        public_device_id = get_public_device_id(mac_address)
         self._attr_device_info = DeviceInfo(
+            configuration_url=f"https://ambientweather.net/dashboard/{public_device_id}",
             identifiers={(DOMAIN, mac_address)},
             manufacturer="Ambient Weather",
             name=station_name,
         )
+
         self._attr_name = f"{station_name}_{description.name}"
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._mac_address = mac_address
