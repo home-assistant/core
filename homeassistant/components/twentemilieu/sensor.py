@@ -1,14 +1,9 @@
 """Support for Twente Milieu sensors."""
 from __future__ import annotations
 
-from twentemilieu import (
-    WASTE_TYPE_NON_RECYCLABLE,
-    WASTE_TYPE_ORGANIC,
-    WASTE_TYPE_PAPER,
-    WASTE_TYPE_PLASTIC,
-    TwenteMilieu,
-    TwenteMilieuConnectionError,
-)
+from dataclasses import dataclass
+
+from twentemilieu import TwenteMilieu, TwenteMilieuConnectionError, WasteType
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -23,28 +18,47 @@ from .const import DATA_UPDATE, DOMAIN
 
 PARALLEL_UPDATES = 1
 
-SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key=WASTE_TYPE_NON_RECYCLABLE,
-        name=f"{WASTE_TYPE_NON_RECYCLABLE} Waste Pickup",
+
+@dataclass
+class TwenteMilieuSensorDescriptionMixin:
+    """Define an entity description mixin."""
+
+    waste_type: WasteType
+
+
+@dataclass
+class TwenteMilieuSensorDescription(
+    SensorEntityDescription, TwenteMilieuSensorDescriptionMixin
+):
+    """Describe an Ambient PWS binary sensor."""
+
+
+SENSORS: tuple[TwenteMilieuSensorDescription, ...] = (
+    TwenteMilieuSensorDescription(
+        key="Non-recyclable",
+        waste_type=WasteType.NON_RECYCLABLE,
+        name="Non-recyclable Waste Pickup",
         icon="mdi:delete-empty",
         device_class=DEVICE_CLASS_DATE,
     ),
-    SensorEntityDescription(
-        key=WASTE_TYPE_ORGANIC,
-        name=f"{WASTE_TYPE_ORGANIC} Waste Pickup",
+    TwenteMilieuSensorDescription(
+        key="Organic",
+        waste_type=WasteType.ORGANIC,
+        name="Organic Waste Pickup",
         icon="mdi:delete-empty",
         device_class=DEVICE_CLASS_DATE,
     ),
-    SensorEntityDescription(
-        key=WASTE_TYPE_PAPER,
-        name=f"{WASTE_TYPE_PAPER} Waste Pickup",
+    TwenteMilieuSensorDescription(
+        key="Paper",
+        waste_type=WasteType.PAPER,
+        name="Paper Waste Pickup",
         icon="mdi:delete-empty",
         device_class=DEVICE_CLASS_DATE,
     ),
-    SensorEntityDescription(
-        key=WASTE_TYPE_PLASTIC,
-        name=f"{WASTE_TYPE_PLASTIC} Waste Pickup",
+    TwenteMilieuSensorDescription(
+        key="Plastic",
+        waste_type=WasteType.PACKAGES,
+        name="Packages Waste Pickup",
         icon="mdi:delete-empty",
         device_class=DEVICE_CLASS_DATE,
     ),
@@ -76,13 +90,14 @@ async def async_setup_entry(
 class TwenteMilieuSensor(SensorEntity):
     """Defines a Twente Milieu sensor."""
 
+    entity_description: TwenteMilieuSensorDescription
     _attr_should_poll = False
 
     def __init__(
         self,
         twentemilieu: TwenteMilieu,
         unique_id: str,
-        description: SensorEntityDescription,
+        description: TwenteMilieuSensorDescription,
     ) -> None:
         """Initialize the Twente Milieu entity."""
         self.entity_description = description
@@ -104,6 +119,7 @@ class TwenteMilieuSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update Twente Milieu entity."""
-        next_pickup = await self._twentemilieu.next_pickup(self.entity_description.key)
-        if next_pickup is not None:
-            self._attr_native_value = next_pickup.date().isoformat()
+        pickups = await self._twentemilieu.update()
+        self._attr_native_value = None
+        if pickup := pickups.get(self.entity_description.waste_type):
+            self._attr_native_value = pickup.isoformat()

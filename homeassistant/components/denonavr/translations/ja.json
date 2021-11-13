@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "not_denonavr_manufacturer": "Denon AVR\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ec\u30b7\u30fc\u30d0\u30fc\u3067\u306f\u306a\u304f\u3001\u691c\u51fa\u3055\u308c\u305f\u30e1\u30fc\u30ab\u30fc\u304c\u4e00\u81f4\u3057\u307e\u305b\u3093\u3067\u3057\u305f",
+            "not_denonavr_missing": "Denon AVR\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ec\u30b7\u30fc\u30d0\u30fc\u3067\u306f\u306a\u304f\u3001\u691c\u51fa\u60c5\u5831\u304c\u5b8c\u5168\u3067\u306f\u3042\u308a\u307e\u305b\u3093"
+        },
+        "error": {
+            "discovery_error": "Denon AVR\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ec\u30b7\u30fc\u30d0\u30fc\u306e\u691c\u51fa\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
+        },
+        "step": {
+            "confirm": {
+                "title": "\u30c7\u30ce\u30f3(Denon)AVR\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ec\u30b7\u30fc\u30d0\u30fc"
+            },
+            "user": {
+                "title": "\u30c7\u30ce\u30f3(Denon)AVR\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ec\u30b7\u30fc\u30d0\u30fc"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone2": "\u30be\u30fc\u30f32\u306e\u8a2d\u5b9a",
+                    "zone3": "\u30be\u30fc\u30f33\u306e\u8a2d\u5b9a"
+                },
+                "title": "\u30c7\u30ce\u30f3(Denon)AVR\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ec\u30b7\u30fc\u30d0\u30fc"
+            }
+        }
+    }
+}

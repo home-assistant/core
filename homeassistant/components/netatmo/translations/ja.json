@@ -5,5 +5,14 @@
                 "description": "Netatmo\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u3067\u306f\u3001\u30a2\u30ab\u30a6\u30f3\u30c8\u3092\u518d\u8a8d\u8a3c\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059\u3002"
             }
         }
+    },
+    "options": {
+        "step": {
+            "public_weather_areas": {
+                "data": {
+                    "weather_areas": "\u5929\u6c17\u4e88\u5831\u306e\u30a8\u30ea\u30a2"
+                }
+            }
+        }
     }
 }

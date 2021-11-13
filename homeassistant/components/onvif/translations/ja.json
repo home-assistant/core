@@ -1,6 +1,9 @@
 {
     "config": {
         "step": {
+            "configure": {
+                "title": "ONVIF\u30c7\u30d0\u30a4\u30b9\u306e\u8a2d\u5b9a"
+            },
             "user": {
                 "data": {
                     "auto": "\u81ea\u52d5\u7684\u306b\u691c\u7d22"

@@ -1,6 +1,26 @@
 {
     "options": {
         "step": {
+            "options_io": {
+                "data": {
+                    "1": "\u30be\u30fc\u30f31",
+                    "2": "\u30be\u30fc\u30f32",
+                    "3": "\u30be\u30fc\u30f33",
+                    "4": "\u30be\u30fc\u30f34",
+                    "5": "\u30be\u30fc\u30f35",
+                    "6": "\u30be\u30fc\u30f36",
+                    "7": "\u30be\u30fc\u30f37"
+                }
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "\u30be\u30fc\u30f310",
+                    "11": "\u30be\u30fc\u30f311",
+                    "12": "\u30be\u30fc\u30f312",
+                    "8": "\u30be\u30fc\u30f38",
+                    "9": "\u30be\u30fc\u30f39"
+                }
+            },
             "options_misc": {
                 "data": {
                     "discovery": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u4e0a\u306e\u691c\u51fa(discovery)\u8981\u6c42\u306b\u5fdc\u7b54\u3059\u308b"
