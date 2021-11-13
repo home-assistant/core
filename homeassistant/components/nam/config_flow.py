@@ -9,7 +9,7 @@ from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
 from nettigo_air_monitor import (
     ApiError,
-    AuthRequired,
+    AuthFailed,
     CannotGetMac,
     ConnectionOptions,
     NettigoAirMonitor,
@@ -66,7 +66,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 mac = await async_get_mac(self.hass, self.host, {})
-            except AuthRequired:
+            except AuthFailed:
                 return await self.async_step_credentials()
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
@@ -99,7 +99,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 mac = await async_get_mac(self.hass, self.host, user_input)
-            except AuthRequired:
+            except AuthFailed:
                 errors["base"] = "invalid_auth"
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
@@ -132,7 +132,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             mac = await async_get_mac(self.hass, self.host, {})
-        except AuthRequired:
+        except AuthFailed:
             return await self.async_step_credentials()
         except (ApiError, ClientConnectorError, asyncio.TimeoutError):
             return self.async_abort(reason="cannot_connect")
@@ -189,7 +189,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await async_get_mac(self.hass, host, user_input)
-            except AuthRequired:
+            except AuthFailed:
                 errors["base"] = "invalid_auth"
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"

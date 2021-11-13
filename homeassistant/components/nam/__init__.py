@@ -9,7 +9,7 @@ from aiohttp.client_exceptions import ClientConnectorError, ClientError
 import async_timeout
 from nettigo_air_monitor import (
     ApiError,
-    AuthRequired,
+    AuthFailed,
     ConnectionOptions,
     InvalidSensorData,
     NAMSensors,
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(host=host, username=username, password=password)
     try:
         nam = await NettigoAirMonitor.create(websession, options)
-    except AuthRequired as err:
+    except AuthFailed as err:
         raise ConfigEntryAuthFailed from err
     except (ClientError, ClientConnectorError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
