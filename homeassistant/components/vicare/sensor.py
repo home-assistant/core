@@ -21,6 +21,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
+    CONF_NAME,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
@@ -36,8 +37,8 @@ from . import ViCareRequiredKeysMixin
 from .const import (
     DOMAIN,
     VICARE_API,
+    VICARE_CIRCUITS,
     VICARE_DEVICE_CONFIG,
-    VICARE_NAME,
     VICARE_UNIT_TO_DEVICE_CLASS,
     VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
 )
@@ -359,7 +360,7 @@ async def _entities_from_descriptions(
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Create the ViCare sensor devices."""
-    name = hass.data[DOMAIN][config_entry.entry_id][VICARE_NAME]
+    name = config_entry.data[CONF_NAME]
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
 
     all_devices = []
@@ -375,9 +376,9 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             all_devices.append(entity)
 
     for description in CIRCUIT_SENSORS:
-        for circuit in api.circuits:
+        for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
             suffix = ""
-            if len(api.circuits) > 1:
+            if len(hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]) > 1:
                 suffix = f" {circuit.id}"
             entity = await hass.async_add_executor_job(
                 _build_entity,

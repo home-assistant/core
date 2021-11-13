@@ -17,9 +17,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import CONF_NAME
 
 from . import ViCareRequiredKeysMixin
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .const import DOMAIN, VICARE_API, VICARE_CIRCUITS, VICARE_DEVICE_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,15 +106,15 @@ async def _entities_from_descriptions(
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Create the ViCare binary sensor devices."""
-    name = hass.data[DOMAIN][config_entry.entry_id][VICARE_NAME]
+    name = config_entry.data[CONF_NAME]
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
 
     all_devices = []
 
     for description in CIRCUIT_SENSORS:
-        for circuit in api.circuits:
+        for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
             suffix = ""
-            if len(api.circuits) > 1:
+            if len(hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]) > 1:
                 suffix = f" {circuit.id}"
             entity = await hass.async_add_executor_job(
                 _build_entity,

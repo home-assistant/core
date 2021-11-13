@@ -13,7 +13,12 @@ from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_NAME,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+)
 
 from .const import (
     CONF_HEATING_TYPE,
@@ -21,7 +26,6 @@ from .const import (
     VICARE_API,
     VICARE_CIRCUITS,
     VICARE_DEVICE_CONFIG,
-    VICARE_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +72,7 @@ def _build_entity(name, vicare_api, circuit, device_config, heating_type):
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the ViCare climate platform."""
-    name = hass.data[DOMAIN][config_entry.entry_id][VICARE_NAME]
+    name = config_entry.data[CONF_NAME]
 
     all_devices = []
     for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
@@ -80,7 +84,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             hass.data[DOMAIN][config_entry.entry_id][VICARE_API],
             circuit,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-            hass.data[DOMAIN][config_entry.entry_id][CONF_HEATING_TYPE],
+            config_entry.data[CONF_HEATING_TYPE],
         )
         if entity is not None:
             all_devices.append(entity)
