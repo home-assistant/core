@@ -136,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         bridge: Bridge = coordinator.bridge
 
         command = call.data[CONF_COMMAND]
-        arguments = shlex.split(call.data.get(CONF_ARGUMENTS, ""))
+        arguments = shlex.split(call.data[CONF_ARGUMENTS])
 
         _LOGGER.debug(
             "Command payload: %s",
@@ -213,7 +213,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             {
                 vol.Required(CONF_BRIDGE): valid_device,
                 vol.Required(CONF_COMMAND): cv.string,
-                vol.Optional(CONF_ARGUMENTS, []): cv.string,
+                vol.Optional(CONF_ARGUMENTS, ""): cv.string,
             },
         ),
     )
