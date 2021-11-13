@@ -40,6 +40,12 @@ async def test_plug(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
+    # We should have a LED entity for the strip
+    led_entity_id = f"{entity_id}_led"
+    led_state = hass.states.get(led_entity_id)
+    assert led_state.state == STATE_ON
+    assert led_state.name == f"{state.name} LED"
+
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
@@ -51,6 +57,18 @@ async def test_plug(hass: HomeAssistant) -> None:
     )
     plug.turn_on.assert_called_once()
     plug.turn_on.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+    )
+    plug.set_led.assert_called_once_with(False)
+    plug.set_led.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+    )
+    plug.set_led.assert_called_once_with(True)
+    plug.set_led.reset_mock()
 
 
 async def test_plug_unique_id(hass: HomeAssistant) -> None:
@@ -104,7 +122,25 @@ async def test_strip(hass: HomeAssistant) -> None:
 
     # Verify we only create entities for the children
     # since this is what the previous version did
-    assert hass.states.get("switch.my_strip") is None
+    strip_entity_id = "switch.my_strip"
+    assert hass.states.get(strip_entity_id) is None
+
+    # We should have a LED entity for the strip
+    led_entity_id = f"{strip_entity_id}_led"
+    led_state = hass.states.get(led_entity_id)
+    assert led_state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+    )
+    strip.set_led.assert_called_once_with(False)
+    strip.set_led.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: led_entity_id}, blocking=True
+    )
+    strip.set_led.assert_called_once_with(True)
+    strip.set_led.reset_mock()
 
     for plug_id in range(2):
         entity_id = f"switch.plug{plug_id}"
