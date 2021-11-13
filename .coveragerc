@@ -668,7 +668,6 @@ omit =
     homeassistant/components/mutesync/binary_sensor.py
     homeassistant/components/nest/const.py
     homeassistant/components/mvglive/sensor.py
-    homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*
     homeassistant/components/mysensors/__init__.py
     homeassistant/components/mysensors/binary_sensor.py
