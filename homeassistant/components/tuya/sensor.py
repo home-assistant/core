@@ -486,7 +486,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_CURRENT,
             native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
             state_class=STATE_CLASS_MEASUREMENT,
-            subkey="electricCurrent",
+            subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_A,
@@ -510,7 +510,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_CURRENT,
             native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
             state_class=STATE_CLASS_MEASUREMENT,
-            subkey="electricCurrent",
+            subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_B,
@@ -534,7 +534,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_CURRENT,
             native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
             state_class=STATE_CLASS_MEASUREMENT,
-            subkey="electricCurrent",
+            subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_C,
@@ -599,6 +599,8 @@ async def async_setup_entry(
 
 class TuyaSensorEntity(TuyaEntity, SensorEntity):
     """Tuya Sensor Entity."""
+
+    entity_description: TuyaSensorEntityDescription
 
     _status_range: TuyaDeviceStatusRange | None = None
     _type_data: IntegerTypeData | EnumTypeData | None = None
