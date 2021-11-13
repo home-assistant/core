@@ -1,30 +1,32 @@
 """Support for TCP socket based sensors."""
 from __future__ import annotations
 
-from typing import Final
-
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from .common import TCP_PLATFORM_SCHEMA, TcpEntity
+from . import HOST_SCHEMA
+from .common import TcpEntity
 
-PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(TCP_PLATFORM_SCHEMA)
 
-
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the TCP Sensor."""
-    add_entities([TcpSensor(hass, config)])
+    if discovery_info is None:
+        return
+
+    host_config = {key: discovery_info[key] for key in HOST_SCHEMA.schema.keys()}
+    entities = [
+        TcpSensor(hass, entity_config, host_config)
+        for entity_config in discovery_info["sensors"]
+    ]
+    async_add_entities(entities)
 
 
 class TcpSensor(TcpEntity, SensorEntity):

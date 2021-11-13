@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Final
 
+CONF_HOST_ID = "host_id"
 CONF_BUFFER_SIZE: Final = "buffer_size"
 CONF_VALUE_ON: Final = "value_on"
 

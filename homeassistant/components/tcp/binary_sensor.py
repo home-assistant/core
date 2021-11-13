@@ -1,30 +1,32 @@
 """Provides a binary sensor which gets its values from a TCP socket."""
 from __future__ import annotations
 
-from typing import Final
-
-from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .common import TCP_PLATFORM_SCHEMA, TcpEntity
+from . import HOST_SCHEMA
+from .common import TcpEntity
 from .const import CONF_VALUE_ON
 
-PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(TCP_PLATFORM_SCHEMA)
 
-
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the TCP binary sensor."""
-    add_entities([TcpBinarySensor(hass, config)])
+    if discovery_info is None:
+        return
+
+    host_config = {key: discovery_info[key] for key in HOST_SCHEMA.schema.keys()}
+    entities = [
+        TcpBinarySensor(hass, entity_config, host_config)
+        for entity_config in discovery_info["binary_sensors"]
+    ]
+    async_add_entities(entities)
 
 
 class TcpBinarySensor(TcpEntity, BinarySensorEntity):
