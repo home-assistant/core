@@ -368,7 +368,7 @@ class AsusWrtRouter:
         for sensor_type, sensor_names in sensors_types.items():
             if sensor_type == SENSORS_TYPE_TEMPERATURES:
                 sensor_names = await self._get_available_temperature_sensors()
-                if sensor_names == []:
+                if not sensor_names:
                     continue
             coordinator = await self._sensors_data_handler.get_coordinator(
                 sensor_type, sensor_type != SENSORS_TYPE_COUNT
@@ -392,17 +392,18 @@ class AsusWrtRouter:
         """Check which temperature information is available on the router."""
         try:
             availability = await self._api.async_find_temperature_commands()
-        except (OSError, ValueError):
-            return []
+            available_sensors = [
+                SENSORS_TEMPERATURES[i] for i in range(3) if availability[i]
+            ]
         except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Failed checking temperature sensor availability for ASUS router %s. Exception: %s",
                 self._host,
                 exc,
             )
             return []
 
-        return [SENSORS_TEMPERATURES[i] for i in range(3) if availability[i]]
+        return available_sensors
 
     async def close(self) -> None:
         """Close the connection."""
