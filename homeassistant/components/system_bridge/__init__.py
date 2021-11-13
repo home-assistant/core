@@ -124,8 +124,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     for entry in hass.config_entries.async_entries(DOMAIN)
                     if entry.entry_id in device_entry.config_entries
                 )
-            except StopIteration:
-                raise vol.Invalid(f"Cannot find device: {device}")
+            except StopIteration as exception:
+                raise vol.Invalid from exception
         raise vol.Invalid(f"Device {device} does not exist")
 
     async def handle_send_command(call):
