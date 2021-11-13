@@ -83,7 +83,7 @@ class DeLijnPublicTransportSensor(SensorEntity):
         self._attributes["stopname"] = self._name
 
         try:
-            if len(self.line.passages) > 1: """do a check if there is a passage"""
+            if len(self.line.passages) > 0: """do a check if there is a passage"""
                 first = self.line.passages[0]
                 if first["due_at_realtime"] is not None:
                     first_passage = first["due_at_realtime"]
