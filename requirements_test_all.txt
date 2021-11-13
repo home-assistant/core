@@ -1245,7 +1245,7 @@ screenlogicpy==0.4.1
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.9.2
+sense_energy==0.9.3
 
 # homeassistant.components.sentry
 sentry-sdk==1.4.3
