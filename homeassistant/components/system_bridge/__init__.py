@@ -118,11 +118,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get(device)
         if device_entry is not None:
-            return next(
-                entry.entry_id
-                for entry in hass.config_entries.async_entries(DOMAIN)
-                if entry.entry_id in device_entry.config_entries
-            )
+            try:
+                return next(
+                    entry.entry_id
+                    for entry in hass.config_entries.async_entries(DOMAIN)
+                    if entry.entry_id in device_entry.config_entries
+                )
+            except StopIteration:
+                raise vol.Invalid(f"Cannot find device: {device}")
         raise vol.Invalid(f"Device {device} does not exist")
 
     async def handle_send_command(call):
