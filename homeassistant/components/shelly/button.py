@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import BlockDeviceWrapper, RpcDeviceWrapper
-from .const import BLOCK, CONF_OTA_BETA_CHANNEL, DATA_CONFIG_ENTRY, DOMAIN, RPC
+from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC
 from .utils import get_block_device_name, get_device_entry_gen, get_rpc_device_name
 
 
@@ -36,17 +36,26 @@ async def async_setup_entry(
             wrapper = cast(BlockDeviceWrapper, block_wrapper)
 
     if wrapper is not None:
-        async_add_entities([ShellyOtaUpdateButton(wrapper, config_entry)])
+        async_add_entities(
+            [
+                ShellyOtaUpdateStableButton(wrapper, config_entry),
+                ShellyOtaUpdateBetaButton(wrapper, config_entry),
+            ]
+        )
 
 
-class ShellyOtaUpdateButton(ButtonEntity):
-    """Defines a Shelly OTA update button."""
+class ShellyOtaUpdateBaseButton(ButtonEntity):
+    """Defines a Shelly OTA update base button."""
 
-    _attr_icon = "mdi:package-up"
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     def __init__(
-        self, wrapper: RpcDeviceWrapper | BlockDeviceWrapper, entry: ConfigEntry
+        self,
+        wrapper: RpcDeviceWrapper | BlockDeviceWrapper,
+        entry: ConfigEntry,
+        name: str,
+        beta_channel: bool,
+        icon: str,
     ) -> None:
         """Initialize Shelly OTA update button."""
         self._attr_device_info = DeviceInfo(
@@ -58,14 +67,34 @@ class ShellyOtaUpdateButton(ButtonEntity):
         else:
             device_name = get_block_device_name(wrapper.device)
 
-        self._attr_name = f"{device_name} OTA Update"
+        self._attr_name = f"{device_name} {name}"
         self._attr_unique_id = slugify(self._attr_name)
+        self._attr_icon = icon
 
+        self.beta_channel = beta_channel
         self.entry = entry
         self.wrapper = wrapper
 
     async def async_press(self) -> None:
         """Triggers the OTA update service."""
-        await self.wrapper.async_trigger_ota_update(
-            beta=bool(self.entry.options.get(CONF_OTA_BETA_CHANNEL))
-        )
+        await self.wrapper.async_trigger_ota_update(beta=self.beta_channel)
+
+
+class ShellyOtaUpdateStableButton(ShellyOtaUpdateBaseButton):
+    """Defines a Shelly OTA update stable channel button."""
+
+    def __init__(
+        self, wrapper: RpcDeviceWrapper | BlockDeviceWrapper, entry: ConfigEntry
+    ) -> None:
+        """Initialize Shelly OTA update button."""
+        super().__init__(wrapper, entry, "OTA Update", False, "mdi:package-up")
+
+
+class ShellyOtaUpdateBetaButton(ShellyOtaUpdateBaseButton):
+    """Defines a Shelly OTA update beta channel button."""
+
+    def __init__(
+        self, wrapper: RpcDeviceWrapper | BlockDeviceWrapper, entry: ConfigEntry
+    ) -> None:
+        """Initialize Shelly OTA update button."""
+        super().__init__(wrapper, entry, "OTA Update Beta", True, "mdi:flask-outline")
