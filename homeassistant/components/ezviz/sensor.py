@@ -36,6 +36,8 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="PIR_Status",
         device_class=DEVICE_CLASS_MOTION,
     ),
+    "last_alarm_type_code": SensorEntityDescription(key="last_alarm_type_code"),
+    "last_alarm_type_name": SensorEntityDescription(key="last_alarm_type_name"),
 }
 
 
@@ -53,6 +55,7 @@ async def async_setup_entry(
             for camera in coordinator.data
             for sensor, value in coordinator.data[camera].items()
             if sensor in SENSOR_TYPES
+            if value is not None
         ]
     )
 
