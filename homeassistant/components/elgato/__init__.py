@@ -3,6 +3,7 @@ import logging
 
 from elgato import Elgato, ElgatoConnectionError
 
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -12,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
-PLATFORMS = [LIGHT_DOMAIN]
+PLATFORMS = [BUTTON_DOMAIN, LIGHT_DOMAIN]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
