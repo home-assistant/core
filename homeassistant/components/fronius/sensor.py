@@ -8,7 +8,6 @@ from pyfronius import Fronius
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -600,7 +599,7 @@ class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
 
     coordinator: FroniusCoordinatorBase
     entity_descriptions: list[SensorEntityDescription]
-    _entity_id_prefix: str
+    _name_extension: str
 
     def __init__(
         self,
@@ -613,8 +612,8 @@ class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
         self.entity_description = next(
             desc for desc in self.entity_descriptions if desc.key == key
         )
-        self.entity_id = f"{SENSOR_DOMAIN}.{key}_{DOMAIN}_{self._entity_id_prefix}_{coordinator.solar_net.host}"
         self.solar_net_id = solar_net_id
+        self._attr_name = f"{key.replace('_', ' ').capitalize()} {DOMAIN.capitalize()} {self._name_extension} {coordinator.solar_net.host}"
         self._attr_native_value = self._get_entity_value()
 
     def _device_data(self) -> dict[str, Any]:
@@ -650,7 +649,7 @@ class InverterSensor(_FroniusSensorEntity):
         solar_net_id: str,
     ) -> None:
         """Set up an individual Fronius inverter sensor."""
-        self._entity_id_prefix = f"inverter_{solar_net_id}"
+        self._name_extension = f"Inverter {solar_net_id}"
         super().__init__(coordinator, key, solar_net_id)
 
         self._attr_unique_id = f"{coordinator.inverter_info.unique_id}-{key}"
@@ -660,7 +659,7 @@ class LoggerSensor(_FroniusSensorEntity):
     """Defines a Fronius logger device sensor entity."""
 
     entity_descriptions = LOGGER_ENTITY_DESCRIPTIONS
-    _entity_id_prefix = "logger_info_0"
+    _name_extension = "Logger info 0"
 
     def __init__(
         self,
@@ -688,7 +687,7 @@ class MeterSensor(_FroniusSensorEntity):
         solar_net_id: str,
     ) -> None:
         """Set up an individual Fronius meter sensor."""
-        self._entity_id_prefix = f"meter_{solar_net_id}"
+        self._name_extension = f"Meter {solar_net_id}"
         super().__init__(coordinator, key, solar_net_id)
 
         self._attr_unique_id = f'{self._device_data()["serial"]["value"]}-{key}'
@@ -698,7 +697,7 @@ class PowerFlowSensor(_FroniusSensorEntity):
     """Defines a Fronius power flow sensor entity."""
 
     entity_descriptions = POWER_FLOW_ENTITY_DESCRIPTIONS
-    _entity_id_prefix = "power_flow_0"
+    _name_extension = "Power flow 0"
 
     def __init__(
         self,
@@ -726,7 +725,7 @@ class StorageSensor(_FroniusSensorEntity):
         solar_net_id: str,
     ) -> None:
         """Set up an individual Fronius storage sensor."""
-        self._entity_id_prefix = f"storage_{solar_net_id}"
+        self._name_extension = f"Storage {solar_net_id}"
         super().__init__(coordinator, key, solar_net_id)
 
         self._attr_unique_id = f'{self._device_data()["serial"]["value"]}-{key}'
