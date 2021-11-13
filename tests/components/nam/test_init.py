@@ -32,8 +32,8 @@ async def test_config_not_ready(hass):
         data={"host": "10.10.2.3"},
     )
 
-    with patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_get_data",
+    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
         side_effect=ApiError("API Error"),
     ):
         entry.add_to_hass(hass)

@@ -24,7 +24,7 @@ async def test_form_create_entry(hass):
     assert result["step_id"] == SOURCE_USER
     assert result["errors"] == {}
 
-    with patch(
+    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ), patch(
@@ -55,7 +55,7 @@ async def test_form_errors(hass, error):
     """Test we handle errors."""
     exc, base_error = error
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        "homeassistant.components.nam.NettigoAirMonitor.initialize",
         side_effect=exc,
     ):
 
@@ -70,7 +70,7 @@ async def test_form_errors(hass, error):
 
 async def test_form_abort(hass):
     """Test we handle abort after error."""
-    with patch(
+    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         side_effect=CannotGetMac("Cannot get MAC address from device"),
     ):
@@ -96,7 +96,7 @@ async def test_form_already_configured(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
+    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
@@ -114,7 +114,7 @@ async def test_form_already_configured(hass):
 
 async def test_zeroconf(hass):
     """Test we get the form."""
-    with patch(
+    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         return_value="aa:bb:cc:dd:ee:ff",
     ):
@@ -131,7 +131,7 @@ async def test_zeroconf(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
-    assert context["title_placeholders"]["name"] == "NAM-12345"
+    assert context["title_placeholders"]["host"] == "10.10.2.3"
     assert context["confirm_only"] is True
 
     with patch(
@@ -178,7 +178,7 @@ async def test_zeroconf_errors(hass, error):
     """Test we handle errors."""
     exc, reason = error
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        "homeassistant.components.nam.NettigoAirMonitor.initialize",
         side_effect=exc,
     ):
 
