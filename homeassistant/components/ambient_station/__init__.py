@@ -5,6 +5,7 @@ from typing import Any
 
 from aioambient import Websocket
 from aioambient.errors import WebsocketError
+from aioambient.util import get_public_device_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -220,11 +221,15 @@ class AmbientWeatherEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         self._ambient = ambient
+
+        public_device_id = get_public_device_id(mac_address)
         self._attr_device_info = DeviceInfo(
+            configuration_url=f"https://ambientweather.net/dashboard/{public_device_id}",
             identifiers={(DOMAIN, mac_address)},
             manufacturer="Ambient Weather",
             name=station_name,
         )
+
         self._attr_name = f"{station_name}_{description.name}"
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._mac_address = mac_address
