@@ -85,38 +85,6 @@ async def test_block_device_mode_roller(hass, coap_wrapper, monkeypatch):
     assert hass.states.get("switch.test_name_channel_1") is None
 
 
-async def test_block_ota_beta_switch(hass, coap_wrapper):
-    """Test block device OTA update beta channel switch."""
-    assert coap_wrapper
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(coap_wrapper.entry, SWITCH_DOMAIN)
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_name_ota_update_beta_channel")
-    assert state
-    assert state.state == STATE_OFF
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_name_ota_update_beta_channel"},
-        blocking=True,
-    )
-    assert hass.states.get("switch.test_name_ota_update_beta_channel").state == STATE_ON
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_name_ota_update_beta_channel"},
-        blocking=True,
-    )
-    assert (
-        hass.states.get("switch.test_name_ota_update_beta_channel").state == STATE_OFF
-    )
-
-
 async def test_block_device_app_type_light(hass, coap_wrapper, monkeypatch):
     """Test block device in app type set to light mode."""
     assert coap_wrapper
@@ -173,35 +141,3 @@ async def test_rpc_device_switch_type_lights_mode(hass, rpc_wrapper, monkeypatch
     )
     await hass.async_block_till_done()
     assert hass.states.get("switch.test_switch_0") is None
-
-
-async def test_rpc_ota_beta_switch(hass, rpc_wrapper):
-    """Test rpc device OTA update beta channel switch."""
-    assert rpc_wrapper
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(rpc_wrapper.entry, SWITCH_DOMAIN)
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_name_ota_update_beta_channel")
-    assert state
-    assert state.state == STATE_OFF
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_name_ota_update_beta_channel"},
-        blocking=True,
-    )
-    assert hass.states.get("switch.test_name_ota_update_beta_channel").state == STATE_ON
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_name_ota_update_beta_channel"},
-        blocking=True,
-    )
-    assert (
-        hass.states.get("switch.test_name_ota_update_beta_channel").state == STATE_OFF
-    )
