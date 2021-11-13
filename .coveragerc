@@ -1140,6 +1140,7 @@ omit =
     homeassistant/components/tuya/switch.py
     homeassistant/components/tuya/util.py
     homeassistant/components/tuya/vacuum.py
+    homeassistant/components/twentemilieu/__init__.py
     homeassistant/components/twentemilieu/const.py
     homeassistant/components/twentemilieu/sensor.py
     homeassistant/components/twilio_call/notify.py
