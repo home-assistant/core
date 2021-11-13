@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "connection_error": "ZoneMinder\u30b5\u30fc\u30d0\u30fc\u3078\u306e\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002"
+        },
+        "create_entry": {
+            "default": "ZoneMinder\u30b5\u30fc\u30d0\u30fc\u304c\u8ffd\u52a0\u3055\u308c\u307e\u3057\u305f\u3002"
+        },
+        "flow_title": "ZoneMinder",
+        "step": {
+            "user": {
+                "title": "ZoneMinder\u30b5\u30fc\u30d0\u30fc\u3092\u8ffd\u52a0\u3057\u307e\u3059\u3002"
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Only a single Jellyfin server is currently supported"
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "url": "URL",
                     "password": "Password",
+                    "url": "URL",
                     "username": "Username"
                 }
             }
