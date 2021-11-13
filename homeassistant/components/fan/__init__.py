@@ -235,6 +235,13 @@ class FanEntity(ToggleEntity):
     """Base class for fan entities."""
 
     entity_description: FanEntityDescription
+    _attr_current_direction: str | None = None
+    _attr_oscillating: bool | None = None
+    _attr_percentage: int | None = None
+    _attr_preset_mode: str | None = None
+    _attr_preset_modes: list[str] | None = None
+    _attr_speed_count: int | None = None
+    _attr_supported_features = 0
 
     @_fan_native
     def set_speed(self, speed: str) -> None:
@@ -469,6 +476,9 @@ class FanEntity(ToggleEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
+        if self._attr_percentage is not None:
+            return self._attr_percentage
+
         if (
             not self._implemented_preset_mode
             and self.preset_modes
@@ -482,6 +492,9 @@ class FanEntity(ToggleEntity):
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
+        if self._attr_speed_count is not None:
+            return self._attr_speed_count
+
         speed_list = speed_list_without_preset_modes(self.speed_list)
         if speed_list:
             return len(speed_list)
@@ -505,12 +518,12 @@ class FanEntity(ToggleEntity):
     @property
     def current_direction(self) -> str | None:
         """Return the current direction of the fan."""
-        return None
+        return self._attr_current_direction
 
     @property
-    def oscillating(self):
+    def oscillating(self) -> bool | None:
         """Return whether or not the fan is currently oscillating."""
-        return None
+        return self._attr_oscillating
 
     @property
     def capability_attributes(self):
@@ -607,6 +620,9 @@ class FanEntity(ToggleEntity):
         data: dict[str, float | str | None] = {}
         supported_features = self.supported_features
 
+        if supported_features is None:
+            return data
+
         if supported_features & SUPPORT_DIRECTION:
             data[ATTR_DIRECTION] = self.current_direction
 
@@ -627,16 +643,14 @@ class FanEntity(ToggleEntity):
         return data
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return 0
-
-    @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite.
 
         Requires SUPPORT_SET_SPEED.
         """
+        if self._attr_preset_mode is not None:
+            return self._attr_preset_mode
+
         speed = self.speed
         if self.preset_modes and speed in self.preset_modes:
             return speed
@@ -648,6 +662,9 @@ class FanEntity(ToggleEntity):
 
         Requires SUPPORT_SET_SPEED.
         """
+        if self._attr_preset_modes is not None:
+            return self._attr_preset_modes
+
         return preset_modes_from_speed_list(self.speed_list)
 
 
