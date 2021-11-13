@@ -9,12 +9,12 @@ from homeassistant.const import (
     MASS_GRAMS,
     PRESSURE,
     PRESSURE_PA,
-    SPEED,
-    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TEMPERATURE,
     VOLUME,
     VOLUME_LITERS,
+    WIND_SPEED,
 )
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
@@ -29,7 +29,7 @@ def test_invalid_units():
             SYSTEM_NAME,
             INVALID_UNIT,
             LENGTH_METERS,
-            SPEED_KILOMETERS_PER_HOUR,
+            SPEED_METERS_PER_SECOND,
             VOLUME_LITERS,
             MASS_GRAMS,
             PRESSURE_PA,
@@ -40,7 +40,7 @@ def test_invalid_units():
             SYSTEM_NAME,
             TEMP_CELSIUS,
             INVALID_UNIT,
-            SPEED_KILOMETERS_PER_HOUR,
+            SPEED_METERS_PER_SECOND,
             VOLUME_LITERS,
             MASS_GRAMS,
             PRESSURE_PA,
@@ -62,7 +62,7 @@ def test_invalid_units():
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
-            SPEED_KILOMETERS_PER_HOUR,
+            SPEED_METERS_PER_SECOND,
             INVALID_UNIT,
             MASS_GRAMS,
             PRESSURE_PA,
@@ -73,7 +73,7 @@ def test_invalid_units():
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
-            SPEED_KILOMETERS_PER_HOUR,
+            SPEED_METERS_PER_SECOND,
             VOLUME_LITERS,
             INVALID_UNIT,
             PRESSURE_PA,
@@ -84,7 +84,7 @@ def test_invalid_units():
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
-            SPEED_KILOMETERS_PER_HOUR,
+            SPEED_METERS_PER_SECOND,
             VOLUME_LITERS,
             MASS_GRAMS,
             INVALID_UNIT,
@@ -98,7 +98,7 @@ def test_invalid_value():
     with pytest.raises(TypeError):
         METRIC_SYSTEM.temperature("50K", TEMP_CELSIUS)
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.speed("50km/h", SPEED_KILOMETERS_PER_HOUR)
+        METRIC_SYSTEM.wind_speed("50km/h", SPEED_METERS_PER_SECOND)
     with pytest.raises(TypeError):
         METRIC_SYSTEM.volume("50L", VOLUME_LITERS)
     with pytest.raises(TypeError):
@@ -109,7 +109,7 @@ def test_as_dict():
     """Test that the as_dict() method returns the expected dictionary."""
     expected = {
         LENGTH: LENGTH_KILOMETERS,
-        SPEED: SPEED_KILOMETERS_PER_HOUR,
+        WIND_SPEED: SPEED_METERS_PER_SECOND,
         TEMPERATURE: TEMP_CELSIUS,
         VOLUME: VOLUME_LITERS,
         MASS: MASS_GRAMS,
@@ -163,27 +163,27 @@ def test_length_to_imperial():
     assert IMPERIAL_SYSTEM.length(5, METRIC_SYSTEM.length_unit) == 3.106855
 
 
-def test_speed_unknown_unit():
-    """Test speed conversion with unknown from unit."""
+def test_wind_speed_unknown_unit():
+    """Test wind_speed conversion with unknown from unit."""
     with pytest.raises(ValueError):
         METRIC_SYSTEM.length(5, "turtles")
 
 
-def test_speed_to_metric():
+def test_wind_speed_to_metric():
     """Test length conversion to metric system."""
-    assert METRIC_SYSTEM.speed(100, METRIC_SYSTEM.speed_unit) == 100
-    # 1 mile is about 1.6 km
-    assert METRIC_SYSTEM.speed(1000, IMPERIAL_SYSTEM.speed_unit) == pytest.approx(
-        1609.344, abs=1e-5
-    )
+    assert METRIC_SYSTEM.wind_speed(100, METRIC_SYSTEM.wind_speed_unit) == 100
+    # 1 m/s is about 2.237 mph
+    assert METRIC_SYSTEM.wind_speed(
+        2237, IMPERIAL_SYSTEM.wind_speed_unit
+    ) == pytest.approx(1000, abs=0.1)
 
 
-def test_speed_to_imperial():
-    """Test speed conversion to imperial system."""
-    assert IMPERIAL_SYSTEM.speed(100, IMPERIAL_SYSTEM.speed_unit) == 100
-    assert IMPERIAL_SYSTEM.speed(1609.344, METRIC_SYSTEM.speed_unit) == pytest.approx(
-        1000, abs=1e-5
-    )
+def test_wind_speed_to_imperial():
+    """Test wind_speed conversion to imperial system."""
+    assert IMPERIAL_SYSTEM.wind_speed(100, IMPERIAL_SYSTEM.wind_speed_unit) == 100
+    assert IMPERIAL_SYSTEM.wind_speed(
+        1000, METRIC_SYSTEM.wind_speed_unit
+    ) == pytest.approx(2237, abs=0.1)
 
 
 def test_pressure_same_unit():
@@ -216,7 +216,7 @@ def test_pressure_to_imperial():
 def test_properties():
     """Test the unit properties are returned as expected."""
     assert METRIC_SYSTEM.length_unit == LENGTH_KILOMETERS
-    assert METRIC_SYSTEM.speed_unit == SPEED_KILOMETERS_PER_HOUR
+    assert METRIC_SYSTEM.wind_speed_unit == SPEED_METERS_PER_SECOND
     assert METRIC_SYSTEM.temperature_unit == TEMP_CELSIUS
     assert METRIC_SYSTEM.mass_unit == MASS_GRAMS
     assert METRIC_SYSTEM.volume_unit == VOLUME_LITERS
