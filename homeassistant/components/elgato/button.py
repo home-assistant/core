@@ -22,14 +22,14 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up WLED button based on a config entry."""
+    """Set up Elgato button based on a config entry."""
     elgato: Elgato = hass.data[DOMAIN][entry.entry_id]
     info = await elgato.info()
     async_add_entities([ElgatoIdentifyButton(elgato, info)])
 
 
 class ElgatoIdentifyButton(ButtonEntity):
-    """Defines a Elgato identify button."""
+    """Defines an Elgato identify button."""
 
     def __init__(self, elgato: Elgato, info: Info) -> None:
         """Initialize the button entity."""

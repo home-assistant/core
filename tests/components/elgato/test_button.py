@@ -1,4 +1,4 @@
-"""Tests for the Elgato Key Light button platform."""
+"""Tests for the Elgato Light button platform."""
 from unittest.mock import patch
 
 from elgato import ElgatoError
