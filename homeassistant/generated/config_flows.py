@@ -345,6 +345,7 @@ FLOWS = [
     "wallbox",
     "watttime",
     "waze_travel_time",
+    "webrtc",
     "wemo",
     "whirlpool",
     "whois",

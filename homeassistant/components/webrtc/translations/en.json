@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No devices found on the network",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to start set up?"
+            },
+            "user": {
+                "data": {
+                    "rtsp_to_webrtc_url": "Enter server url e.g. https://example.com"
+                },
+                "description": "The WebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.\n",
+                "title": "Configure WebRTC"
+            }
+        }
+    }
+}
