@@ -156,7 +156,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         config_entry_unique_id: str,
-        device_info: DeviceInfo,
+        device_info: dict[str, Any],
         description: SensorEntityDescription,
         pysma_sensor: pysma.sensor.Sensor,
     ) -> None:
@@ -164,7 +164,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._sensor = pysma_sensor
-        self._attr_device_info = device_info
+        self._device_info = device_info
         self._attr_unique_id = (
             f"{config_entry_unique_id}-{self._sensor.key}_{self._sensor.key_idx}"
         )
@@ -177,6 +177,20 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._sensor.value
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return the device information."""
+        if not self._device_info:
+            return None
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._config_entry_unique_id)},
+            manufacturer=self._device_info["manufacturer"],
+            model=self._device_info["type"],
+            name=self._device_info["name"],
+            sw_version=self._device_info["sw_version"],
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
