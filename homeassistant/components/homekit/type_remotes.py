@@ -52,6 +52,10 @@ from .const import (
     SERV_TELEVISION,
 )
 
+MAXIMUM_SOURCES = (
+    90  # Maximum services per accessory is 100. The base acccessory uses 9
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 REMOTE_KEYS = {
@@ -117,6 +121,11 @@ class RemoteInputSelectAccessory(HomeAccessory):
             CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source
         )
         for index, source in enumerate(self.sources):
+            if index == MAXIMUM_SOURCES:
+                _LOGGER.warning(
+                    "Reached maximum number of sources (%s)", MAXIMUM_SOURCES
+                )
+                break
             serv_input = self.add_preload_service(
                 SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME]
             )
@@ -159,6 +168,15 @@ class RemoteInputSelectAccessory(HomeAccessory):
 
         possible_sources = new_state.attributes.get(self.source_list_key, [])
         if source_name in possible_sources:
+            index = self.sources.index(source_name)
+            if index >= MAXIMUM_SOURCES:
+                _LOGGER.debug(
+                    "%s: Source %s and above are not supported",
+                    MAXIMUM_SOURCES,
+                    self.entity_id,
+                )
+                self.char_input_source.set_value(0)
+                return
             _LOGGER.debug(
                 "%s: Sources out of sync. Rebuilding Accessory",
                 self.entity_id,
