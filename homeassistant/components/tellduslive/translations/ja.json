@@ -1,6 +1,9 @@
 {
     "config": {
         "step": {
+            "auth": {
+                "title": "TelldusLive\u306b\u5bfe\u3057\u3066\u8a8d\u8a3c\u3059\u308b"
+            },
             "user": {
                 "description": "\u7a7a",
                 "title": "\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u3092\u9078\u3076\u3002"

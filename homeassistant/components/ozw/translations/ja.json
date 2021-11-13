@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "start_addon": {
+                "data": {
+                    "network_key": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ad\u30fc"
+                }
+            }
+        }
+    }
+}

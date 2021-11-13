@@ -1,0 +1,17 @@
+{
+    "options": {
+        "step": {
+            "zone_details": {
+                "data": {
+                    "zone_name": "\u30be\u30fc\u30f3\u540d",
+                    "zone_type": "\u30be\u30fc\u30f3\u306e\u7a2e\u985e"
+                }
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "\u30be\u30fc\u30f3\u756a\u53f7"
+                }
+            }
+        }
+    }
+}

@@ -1,5 +1,9 @@
 {
     "state": {
+        "tuya__basic_anti_flickr": {
+            "1": "50 \u05d4\u05e8\u05e5",
+            "2": "60 \u05d4\u05e8\u05e5"
+        },
         "tuya__basic_nightvision": {
             "1": "\u05db\u05d1\u05d5\u05d9",
             "2": "\u05de\u05d5\u05e4\u05e2\u05dc"
