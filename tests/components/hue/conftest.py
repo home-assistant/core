@@ -3,6 +3,7 @@ from collections import deque
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 
+import aiohue
 from aiohue.v1.groups import Groups
 from aiohue.v1.lights import Lights
 from aiohue.v1.scenes import Scenes
@@ -10,7 +11,7 @@ from aiohue.v1.sensors import Sensors
 import pytest
 
 from homeassistant.components import hue
-from homeassistant.components.hue import sensor_base as hue_sensor_base
+from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -19,19 +20,16 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 @pytest.fixture(autouse=True)
 def no_request_delay():
     """Make the request refresh delay 0 for instant tests."""
-    with patch("homeassistant.components.hue.light.REQUEST_REFRESH_DELAY", 0):
+    with patch("homeassistant.components.hue.const.REQUEST_REFRESH_DELAY", 0):
         yield
 
 
-def create_mock_bridge(hass):
-    """Create a mock Hue bridge."""
+def create_mock_bridge_v1(hass):
+    """Create a mock Hue V1 bridge."""
     bridge = Mock(
         hass=hass,
-        available=True,
         authorized=True,
-        allow_unreachable=False,
-        allow_groups=False,
-        api=create_mock_api(hass),
+        api=create_mock_api_v1(hass),
         config_entry=None,
         reset_jobs=[],
         spec=hue.HueBridge,
@@ -42,12 +40,12 @@ def create_mock_bridge(hass):
     bridge.mock_group_responses = bridge.api.mock_group_responses
     bridge.mock_sensor_responses = bridge.api.mock_sensor_responses
 
-    async def async_setup():
+    async def async_initialize_bridge():
         if bridge.config_entry:
             hass.data.setdefault(hue.DOMAIN, {})[bridge.config_entry.entry_id] = bridge
         return True
 
-    bridge.async_setup = async_setup
+    bridge.async_initialize_bridge = async_initialize_bridge
 
     async def async_request_call(task):
         await task()
@@ -65,14 +63,15 @@ def create_mock_bridge(hass):
 
 
 @pytest.fixture
-def mock_api(hass):
-    """Mock the Hue api."""
-    return create_mock_api(hass)
+def mock_api_v1(hass):
+    """Mock the Hue V1 api."""
+    return create_mock_api_v1(hass)
 
 
-def create_mock_api(hass):
-    """Create a mock API."""
-    api = Mock(initialize=AsyncMock())
+def create_mock_api_v1(hass):
+    """Create a mock V1 API."""
+    api = Mock(spec=aiohue.HueBridgeV1)
+    api.initialize = AsyncMock()
     api.mock_requests = []
     api.mock_light_responses = deque()
     api.mock_group_responses = deque()
@@ -105,17 +104,17 @@ def create_mock_api(hass):
     )
     api.config.name = "Home"
 
-    api.lights = Lights(logger, {}, [], mock_request)
-    api.groups = Groups(logger, {}, [], mock_request)
-    api.sensors = Sensors(logger, {}, [], mock_request)
-    api.scenes = Scenes(logger, {}, [], mock_request)
+    api.lights = Lights(logger, {}, mock_request)
+    api.groups = Groups(logger, {}, mock_request)
+    api.sensors = Sensors(logger, {}, mock_request)
+    api.scenes = Scenes(logger, {}, mock_request)
     return api
 
 
 @pytest.fixture
 def mock_bridge(hass):
     """Mock a Hue bridge."""
-    return create_mock_bridge(hass)
+    return create_mock_bridge_v1(hass)
 
 
 async def setup_bridge_for_sensors(hass, mock_bridge, hostname=None):
