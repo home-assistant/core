@@ -17,6 +17,8 @@ USERNAME = "example@example.com"
 TITLE = f"HALO Home ({USERNAME})"
 PASSWORD = "TestPassword"
 
+ENTITY_NAME_LIGHT_1 = "Living Room 1"
+ENTITY_ID_LIGHT_1 = "light.living_room_1"
 LOCATIONS = [
     {
         "location_id": "12345",
@@ -25,7 +27,7 @@ LOCATIONS = [
             {
                 "device_id": 0,
                 "pid": "abc123",
-                "device_name": "Living Room 1",
+                "device_name": ENTITY_NAME_LIGHT_1,
                 "mac_address": "9C:A4:6C:CC:5D:04",
             }
         ],
