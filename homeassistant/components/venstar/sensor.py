@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
@@ -13,6 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.helpers.entity import Entity
 
 from . import VenstarDataUpdateCoordinator, VenstarEntity
 from .const import DOMAIN
@@ -39,7 +39,7 @@ TEMPERATURE_SENSOR_DESCRIPTION = VenstarSensorEntityDescription(
 async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     """Set up Vensar device binary_sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[Any] = []
+    entities: list[Entity] = []
 
     sensors = coordinator.client.get_sensor_list()
     if not sensors:
