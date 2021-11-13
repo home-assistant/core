@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "relay_modes": {
+                "title": "\u30ea\u30ec\u30fc\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+            },
+            "user": {
+                "title": "\u30dc\u30fc\u30c9\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+            }
+        }
+    }
+}

@@ -5,6 +5,19 @@
         },
         "error": {
             "api_ratelimit": "API\u30ec\u30fc\u30c8\u5236\u9650\u3092\u8d85\u3048\u307e\u3057\u305f"
+        },
+        "step": {
+            "country": {
+                "data": {
+                    "country_code": "\u56fd\u5225\u30b3\u30fc\u30c9"
+                }
+            },
+            "user": {
+                "data": {
+                    "location": "\uff5e\u306e\u30c7\u30fc\u30bf\u3092\u53d6\u5f97\u3059\u308b"
+                },
+                "description": "\u30c8\u30fc\u30af\u30f3\u3092\u30ea\u30af\u30a8\u30b9\u30c8\u3059\u308b\u306b\u306f\u3001https://co2signal.com/ \u306b\u30a2\u30af\u30bb\u30b9\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+            }
         }
     }
 }

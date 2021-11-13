@@ -31,6 +31,8 @@
             "is_not_plugged_in": "{entity_name} \u05de\u05e0\u05d5\u05ea\u05e7",
             "is_not_powered": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05de\u05d5\u05e4\u05e2\u05dc",
             "is_not_present": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05e7\u05d9\u05d9\u05dd",
+            "is_not_running": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05e4\u05d5\u05e2\u05dc",
+            "is_not_tampered": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05de\u05d6\u05d4\u05d4 \u05d7\u05d1\u05dc\u05d4",
             "is_not_unsafe": "{entity_name} \u05d1\u05d8\u05d5\u05d7",
             "is_occupied": "{entity_name} \u05ea\u05e4\u05d5\u05e1",
             "is_off": "{entity_name} \u05db\u05d1\u05d5\u05d9",
@@ -40,8 +42,10 @@
             "is_powered": "{entity_name} \u05de\u05d5\u05e4\u05e2\u05dc",
             "is_present": "{entity_name} \u05e0\u05d5\u05db\u05d7",
             "is_problem": "{entity_name} \u05de\u05d6\u05d4\u05d4 \u05d1\u05e2\u05d9\u05d4",
+            "is_running": "{entity_name} \u05e4\u05d5\u05e2\u05dc",
             "is_smoke": "{entity_name} \u05de\u05d6\u05d4\u05d4 \u05e2\u05e9\u05df",
             "is_sound": "{entity_name} \u05de\u05d6\u05d4\u05d4 \u05e6\u05dc\u05d9\u05dc",
+            "is_tampered": "{entity_name} \u05de\u05d6\u05d4\u05d4 \u05d7\u05d1\u05dc\u05d4",
             "is_unsafe": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05d1\u05d8\u05d5\u05d7",
             "is_update": "\u05e2\u05d3\u05db\u05d5\u05df \u05d6\u05de\u05d9\u05df \u05e2\u05d1\u05d5\u05e8 {entity_name}",
             "is_vibration": "{entity_name} \u05de\u05d6\u05d4\u05d4 \u05e8\u05d8\u05d8"
@@ -52,6 +56,8 @@
             "connected": "{entity_name} \u05de\u05d7\u05d5\u05d1\u05e8",
             "gas": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05d2\u05d6",
             "hot": "{entity_name} \u05e0\u05e2\u05e9\u05d4 \u05d7\u05dd",
+            "is_not_tampered": "{entity_name} \u05d4\u05e4\u05e1\u05d9\u05e7 \u05dc\u05d6\u05d4\u05d5\u05ea \u05d7\u05d1\u05dc\u05d4",
+            "is_tampered": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05d7\u05d1\u05dc\u05d4",
             "light": "{entity_name} \u05d4\u05ea\u05d7\u05d9\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05d0\u05d5\u05e8",
             "locked": "{entity_name} \u05e0\u05e2\u05d5\u05dc",
             "moist": "{entity_name} \u05d4\u05e4\u05da \u05dc\u05d7",
@@ -66,17 +72,18 @@
             "no_update": "{entity_name} \u05d4\u05e4\u05da \u05dc\u05de\u05e2\u05d5\u05d3\u05db\u05df",
             "no_vibration": "{entity_name} \u05d4\u05e4\u05e1\u05d9\u05e7 \u05dc\u05d6\u05d4\u05d5\u05ea \u05e8\u05d8\u05d8",
             "not_bat_low": "{entity_name} \u05e1\u05d5\u05dc\u05dc\u05d4 \u05e8\u05d2\u05d9\u05dc\u05d4",
-            "not_cold": "{entity_name} \u05e0\u05d4\u05d9\u05d4 \u05dc\u05d0 \u05e7\u05e8",
+            "not_cold": "{entity_name} \u05e0\u05e2\u05e9\u05d4 \u05dc\u05d0 \u05e7\u05e8",
             "not_connected": "{entity_name} \u05de\u05e0\u05d5\u05ea\u05e7",
             "not_hot": "{entity_name} \u05d4\u05e4\u05da \u05dc\u05d0 \u05d7\u05dd",
             "not_locked": "{entity_name} \u05dc\u05d0 \u05e0\u05e2\u05d5\u05dc",
             "not_moist": "{entity_name} \u05d4\u05ea\u05d9\u05d9\u05d1\u05e9",
             "not_moving": "{entity_name} \u05d4\u05e4\u05e1\u05d9\u05e7 \u05dc\u05d6\u05d5\u05d6",
             "not_occupied": "{entity_name} \u05dc\u05d0 \u05e0\u05ea\u05e4\u05e1",
-            "not_opened": "{entity_name} \u05e1\u05d2\u05d5\u05e8",
+            "not_opened": "{entity_name} \u05e0\u05e1\u05d2\u05e8",
             "not_plugged_in": "{entity_name} \u05de\u05e0\u05d5\u05ea\u05e7",
             "not_powered": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05de\u05d5\u05e4\u05e2\u05dc",
             "not_present": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05e7\u05d9\u05d9\u05dd",
+            "not_running": "{entity_name} \u05d0\u05d9\u05e0\u05d5 \u05e4\u05d5\u05e2\u05dc \u05e2\u05d5\u05d3",
             "not_unsafe": "{entity_name} \u05d4\u05e4\u05da \u05dc\u05d1\u05d8\u05d5\u05d7",
             "occupied": "{entity_name} \u05e0\u05ea\u05e4\u05e1",
             "opened": "{entity_name} \u05e0\u05e4\u05ea\u05d7",
@@ -84,6 +91,7 @@
             "powered": "{entity_name} \u05de\u05d5\u05e4\u05e2\u05dc",
             "present": "{entity_name} \u05e0\u05d5\u05db\u05d7",
             "problem": "{entity_name} \u05d4\u05d7\u05dc\u05d4 \u05dc\u05d6\u05d4\u05d5\u05ea \u05d1\u05e2\u05d9\u05d4",
+            "running": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05e4\u05e2\u05d5\u05dc",
             "smoke": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05e2\u05e9\u05df",
             "sound": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05e6\u05dc\u05d9\u05dc",
             "turned_off": "{entity_name} \u05db\u05d5\u05d1\u05d4",
@@ -92,6 +100,19 @@
             "update": "{entity_name} \u05e7\u05d9\u05d1\u05dc \u05e2\u05d3\u05db\u05d5\u05df \u05d6\u05de\u05d9\u05df",
             "vibration": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05e8\u05d8\u05d8"
         }
+    },
+    "device_class": {
+        "cold": "\u05e7\u05d5\u05e8",
+        "gas": "\u05d2\u05d6",
+        "heat": "\u05d7\u05d5\u05dd",
+        "moisture": "\u05dc\u05d7\u05d5\u05ea",
+        "motion": "\u05ea\u05e0\u05d5\u05e2\u05d4",
+        "occupancy": "\u05ea\u05e4\u05d5\u05e1\u05d4",
+        "power": "\u05db\u05d7",
+        "problem": "\u05d1\u05e2\u05d9\u05d4",
+        "smoke": "\u05e2\u05e9\u05df",
+        "sound": "\u05e7\u05d5\u05dc",
+        "vibration": "\u05e8\u05d8\u05d8"
     },
     "state": {
         "_": {
@@ -169,6 +190,10 @@
         "problem": {
             "off": "\u05ea\u05e7\u05d9\u05df",
             "on": "\u05d1\u05e2\u05d9\u05d4"
+        },
+        "running": {
+            "off": "\u05dc\u05d0 \u05e4\u05d5\u05e2\u05dc",
+            "on": "\u05e4\u05d5\u05e2\u05dc"
         },
         "safety": {
             "off": "\u05d1\u05d8\u05d5\u05d7",

@@ -81,7 +81,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.ambient_station
-aioambient==2021.10.1
+aioambient==2021.11.0
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
@@ -685,7 +685,7 @@ ondilo==0.2.0
 onvif-zeep-async==1.2.0
 
 # homeassistant.components.opengarage
-open-garage==0.1.6
+open-garage==0.2.0
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
@@ -793,7 +793,7 @@ pyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.8.4
+pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.27.0
@@ -1354,7 +1354,7 @@ transmissionrpc==0.11
 tuya-iot-py-sdk==0.6.3
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.3.0
+twentemilieu==0.4.2
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -1416,7 +1416,7 @@ wiffi==1.0.1
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.8.0
+wled==0.9.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
@@ -1448,7 +1448,7 @@ yeelight==0.7.8
 youless-api==0.15
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.12
+zeroconf==0.36.13
 
 # homeassistant.components.zha
 zha-quirks==0.0.63

@@ -104,6 +104,11 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, self.info.primary_value.value)
 
     @property
+    def percentage_step(self) -> float:
+        """Return the step size for percentage."""
+        return 1
+
+    @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
