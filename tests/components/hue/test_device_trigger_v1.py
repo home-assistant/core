@@ -1,13 +1,13 @@
-"""The tests for Philips Hue device triggers."""
+"""The tests for Philips Hue device triggers for V1 bridge."""
 import pytest
 
 from homeassistant.components import hue
 import homeassistant.components.automation as automation
-from homeassistant.components.hue import device_trigger
+from homeassistant.components.hue.v1 import device_trigger
 from homeassistant.setup import async_setup_component
 
 from .conftest import setup_bridge_for_sensors as setup_bridge
-from .test_sensor_base import HUE_DIMMER_REMOTE_1, HUE_TAP_REMOTE_1
+from .test_sensor_v1 import HUE_DIMMER_REMOTE_1, HUE_TAP_REMOTE_1
 
 from tests.common import (
     assert_lists_same,
@@ -32,12 +32,12 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, mock_bridge, device_reg):
+async def test_get_triggers(hass, mock_bridge_v1, device_reg):
     """Test we get the expected triggers from a hue remote."""
-    mock_bridge.mock_sensor_responses.append(REMOTES_RESPONSE)
-    await setup_bridge(hass, mock_bridge)
+    mock_bridge_v1.mock_sensor_responses.append(REMOTES_RESPONSE)
+    await setup_bridge(hass, mock_bridge_v1)
 
-    assert len(mock_bridge.mock_requests) == 1
+    assert len(mock_bridge_v1.mock_requests) == 1
     # 2 remotes, just 1 battery sensor
     assert len(hass.states.async_all()) == 1
 
@@ -88,11 +88,11 @@ async def test_get_triggers(hass, mock_bridge, device_reg):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_state_change(hass, mock_bridge, device_reg, calls):
+async def test_if_fires_on_state_change(hass, mock_bridge_v1, device_reg, calls):
     """Test for button press trigger firing."""
-    mock_bridge.mock_sensor_responses.append(REMOTES_RESPONSE)
-    await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
+    mock_bridge_v1.mock_sensor_responses.append(REMOTES_RESPONSE)
+    await setup_bridge(hass, mock_bridge_v1)
+    assert len(mock_bridge_v1.mock_requests) == 1
     assert len(hass.states.async_all()) == 1
 
     # Set an automation with a specific tap switch trigger
@@ -145,13 +145,13 @@ async def test_if_fires_on_state_change(hass, mock_bridge, device_reg, calls):
         "buttonevent": 18,
         "lastupdated": "2019-12-28T22:58:02",
     }
-    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+    mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert len(mock_bridge.mock_requests) == 2
+    assert len(mock_bridge_v1.mock_requests) == 2
 
     assert len(calls) == 1
     assert calls[0].data["some"] == "B4 - 18"
@@ -162,10 +162,10 @@ async def test_if_fires_on_state_change(hass, mock_bridge, device_reg, calls):
         "buttonevent": 34,
         "lastupdated": "2019-12-28T22:58:05",
     }
-    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+    mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
     await hass.async_block_till_done()
-    assert len(mock_bridge.mock_requests) == 3
+    assert len(mock_bridge_v1.mock_requests) == 3
     assert len(calls) == 1
