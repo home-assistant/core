@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, ENTRY_TYPE_SERVICE
 
 
 @dataclass
@@ -97,7 +97,8 @@ class TwenteMilieuSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{DOMAIN}_{entry.data[CONF_ID]}_{description.key}"
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.twentemilieu.nl",
-            identifiers={(DOMAIN, entry.data[CONF_ID])},
+            entry_type=ENTRY_TYPE_SERVICE,
+            identifiers={(DOMAIN, str(entry.data[CONF_ID]))},
             manufacturer="Twente Milieu",
             name="Twente Milieu",
         )
