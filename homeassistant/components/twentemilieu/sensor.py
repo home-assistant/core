@@ -2,21 +2,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 
-from twentemilieu import TwenteMilieu, TwenteMilieuConnectionError, WasteType
+from twentemilieu import WasteType
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .const import DATA_UPDATE, DOMAIN
-
-PARALLEL_UPDATES = 1
+from .const import DOMAIN
 
 
 @dataclass
@@ -71,55 +73,38 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Twente Milieu sensor based on a config entry."""
-    twentemilieu = hass.data[DOMAIN][entry.data[CONF_ID]]
-
-    try:
-        await twentemilieu.update()
-    except TwenteMilieuConnectionError as exception:
-        raise PlatformNotReady from exception
-
+    coordinator = hass.data[DOMAIN][entry.data[CONF_ID]]
     async_add_entities(
-        [
-            TwenteMilieuSensor(twentemilieu, entry.data[CONF_ID], description)
-            for description in SENSORS
-        ],
-        True,
+        TwenteMilieuSensor(coordinator, description, entry) for description in SENSORS
     )
 
 
-class TwenteMilieuSensor(SensorEntity):
+class TwenteMilieuSensor(CoordinatorEntity, SensorEntity):
     """Defines a Twente Milieu sensor."""
 
     entity_description: TwenteMilieuSensorDescription
-    _attr_should_poll = False
+    coordinator: DataUpdateCoordinator[dict[WasteType, date | None]]
 
     def __init__(
         self,
-        twentemilieu: TwenteMilieu,
-        unique_id: str,
+        coordinator: DataUpdateCoordinator,
         description: TwenteMilieuSensorDescription,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the Twente Milieu entity."""
+        super().__init__(coordinator=coordinator)
         self.entity_description = description
-        self._twentemilieu = twentemilieu
-        self._attr_unique_id = f"{DOMAIN}_{unique_id}_{description.key}"
+        self._attr_unique_id = f"{DOMAIN}_{entry.data[CONF_ID]}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
+            configuration_url="https://www.twentemilieu.nl",
+            identifiers={(DOMAIN, entry.data[CONF_ID])},
             manufacturer="Twente Milieu",
             name="Twente Milieu",
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, DATA_UPDATE, self.async_schedule_update_ha_state
-            )
-        )
-
-    async def async_update(self) -> None:
-        """Update Twente Milieu entity."""
-        pickups = await self._twentemilieu.update()
-        self._attr_native_value = None
-        if pickup := pickups.get(self.entity_description.waste_type):
-            self._attr_native_value = pickup.isoformat()
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        if pickup := self.coordinator.data.get(self.entity_description.waste_type):
+            return pickup.isoformat()
+        return None
