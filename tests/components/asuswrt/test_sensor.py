@@ -187,7 +187,7 @@ async def test_sensors(hass, connect, mock_devices, mock_available_temps):
 
     # checking temperature sensors without exceptions
     mock_available_temps.append(True)
-    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
