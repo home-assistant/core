@@ -18,6 +18,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
@@ -64,6 +65,9 @@ async def async_setup_entry(
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
     ]
+
+    if not coordinator.data.get(entry.unique_id):
+        raise PlatformNotReady
 
     if not coordinator.data[entry.unique_id].get("data"):
         return
