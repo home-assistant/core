@@ -160,7 +160,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return the state attributes of the sensor."""
-        attr: dict[str, bool | float | int | str | list | None] = {}
+        attr: dict[str, bool | float | int | list | None] = {}
 
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
