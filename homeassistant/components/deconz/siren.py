@@ -80,7 +80,7 @@ class DeconzSiren(DeconzDevice, SirenEntity):
         """Return true if siren is on."""
         return bool(self._device.is_on)
 
-    async def async_turn_on(self, **kwargs: int) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
         data = {}
         if (duration := kwargs.get(ATTR_DURATION)) is not None:
