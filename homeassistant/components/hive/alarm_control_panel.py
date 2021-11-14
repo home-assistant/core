@@ -12,6 +12,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import HiveEntity
 from .const import DOMAIN
@@ -32,11 +33,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
     hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("alarm_control_panel")
     if devices:
-        async_add_entities([HiveAlarmControlPanelEntity(hive, dev) for dev in devices], True)
+        async_add_entities(
+            [HiveAlarmControlPanelEntity(hive, dev) for dev in devices], True
+        )
 
 
 class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
     """Representation of a Hive alarm."""
+
+    _attr_icon = ICON
 
     @property
     def unique_id(self):
@@ -44,26 +49,21 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.device["device_id"])},
-            "name": self.device["device_name"],
-            "model": self.device["deviceData"]["model"],
-            "manufacturer": self.device["deviceData"]["manufacturer"],
-            "sw_version": self.device["deviceData"]["version"],
-            "via_device": (DOMAIN, self.device["parentDevice"]),
-        }
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this AdGuard Home instance."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device["device_id"])},
+            model=self.device["deviceData"]["model"],
+            manufacturer=self.device["deviceData"]["manufacturer"],
+            name=self.device["device_name"],
+            sw_version=self.device["deviceData"]["version"],
+            via_device=(DOMAIN, self.device["parentDevice"]),
+        )
 
     @property
     def name(self):
         """Return the name of the alarm."""
         return self.device["haName"]
-
-    @property
-    def icon(self):
-        """Return icon for the alarm."""
-        return ICON
 
     @property
     def available(self):
