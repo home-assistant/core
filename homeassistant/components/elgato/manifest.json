@@ -3,7 +3,7 @@
   "name": "Elgato Light",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elgato",
-  "requirements": ["elgato==2.1.1"],
+  "requirements": ["elgato==2.2.0"],
   "zeroconf": ["_elg._tcp.local."],
   "codeowners": ["@frenck"],
   "quality_scale": "platinum",

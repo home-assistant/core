@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Met \u00c9ireann Public Weather Forecast API\u306e\u6c17\u8c61\u30c7\u30fc\u30bf\u3092\u4f7f\u7528\u3059\u308b\u5834\u6240\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044"
+            }
+        }
+    }
+}

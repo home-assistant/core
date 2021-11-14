@@ -21,7 +21,8 @@
         "step": {
             "init": {
                 "data": {
-                    "ph_offset": "pH ofseti (pozitif veya negatif)"
+                    "ph_offset": "pH ofseti (pozitif veya negatif)",
+                    "polling_interval": "Kontrol etme aral\u0131\u011f\u0131 (saniye cinsinden)"
                 }
             }
         }

@@ -1,7 +1,12 @@
 {
     "config": {
         "abort": {
-            "kamereon_no_account": "Kamereon hesab\u0131 bulunamad\u0131"
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "kamereon_no_account": "Kamereon hesab\u0131 bulunamad\u0131",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "invalid_credentials": "Ge\u00e7ersiz kimlik do\u011frulama"
         },
         "step": {
             "kamereon": {
@@ -12,13 +17,16 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "password": "\u015eifre"
+                    "password": "Parola"
                 },
-                "description": "{username} i\u00e7in \u015fifrenizi g\u00fcncelleyin"
+                "description": "{username} i\u00e7in \u015fifrenizi g\u00fcncelleyin",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
             },
             "user": {
                 "data": {
-                    "locale": "Yerel ayar"
+                    "locale": "Yerel ayar",
+                    "password": "Parola",
+                    "username": "E-posta"
                 },
                 "title": "Renault kimlik bilgilerini ayarla"
             }

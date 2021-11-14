@@ -155,6 +155,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
 
             if (
                 old_state is None
+                or new_state is None
                 or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
                 or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):

@@ -46,6 +46,8 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import lookup_plex_media
 from homeassistant.const import (
+    CAST_APP_ID_HOMEASSISTANT_LOVELACE,
+    CAST_APP_ID_HOMEASSISTANT_MEDIA,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
@@ -78,14 +80,10 @@ _LOGGER = logging.getLogger(__name__)
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
 
 SUPPORT_CAST = (
-    SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
+    SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_TURN_OFF
 )
 
+STATE_CASTING = "casting"
 
 ENTITY_SCHEMA = vol.All(
     vol.Schema(
@@ -244,6 +242,7 @@ class CastDevice(MediaPlayerEntity):
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )
+        chromecast.media_controller.app_id = CAST_APP_ID_HOMEASSISTANT_MEDIA
         self._chromecast = chromecast
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
@@ -566,14 +565,18 @@ class CastDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the player."""
-        if (media_status := self._media_status()[0]) is None:
-            return None
-        if media_status.player_is_playing:
-            return STATE_PLAYING
-        if media_status.player_is_paused:
-            return STATE_PAUSED
-        if media_status.player_is_idle:
-            return STATE_IDLE
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return STATE_CASTING
+        if (media_status := self._media_status()[0]) is not None:
+            if media_status.player_is_playing:
+                return STATE_PLAYING
+            if media_status.player_is_paused:
+                return STATE_PAUSED
+            if media_status.player_is_idle:
+                return STATE_IDLE
+        if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
+            return STATE_CASTING
         if self._chromecast is not None and self._chromecast.is_idle:
             return STATE_OFF
         return None
@@ -581,12 +584,18 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status = self._media_status()[0]
         return media_status.content_id if media_status else None
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         if (media_status := self._media_status()[0]) is None:
             return None
         if media_status.media_is_tvshow:
@@ -600,6 +609,9 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status = self._media_status()[0]
         return media_status.duration if media_status else None
 
@@ -678,6 +690,12 @@ class CastDevice(MediaPlayerEntity):
         media_status = self._media_status()[0]
 
         if (
+            self._chromecast
+            and self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST
+        ):
+            support |= SUPPORT_TURN_ON
+
+        if (
             self.cast_status
             and self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED
         ):
@@ -697,6 +715,9 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status = self._media_status()[0]
         if media_status is None or not (
             media_status.player_is_playing
@@ -712,6 +733,8 @@ class CastDevice(MediaPlayerEntity):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status_recevied = self._media_status()[1]
         return media_status_recevied
 
@@ -816,6 +839,7 @@ class DynamicCastGroup:
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )
+        chromecast.media_controller.app_id = CAST_APP_ID_HOMEASSISTANT_MEDIA
         self._chromecast = chromecast
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:

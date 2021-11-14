@@ -52,6 +52,7 @@ from .const import (
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
 from .schema import (
     BinarySensorSchema,
+    ButtonSchema,
     ClimateSchema,
     ConnectionSchema,
     CoverSchema,
@@ -109,6 +110,7 @@ CONFIG_SCHEMA = vol.Schema(
                     **EventSchema.SCHEMA,
                     **ExposeSchema.platform_node(),
                     **BinarySensorSchema.platform_node(),
+                    **ButtonSchema.platform_node(),
                     **ClimateSchema.platform_node(),
                     **CoverSchema.platform_node(),
                     **FanSchema.platform_node(),

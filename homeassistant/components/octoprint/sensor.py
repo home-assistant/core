@@ -211,12 +211,15 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
 
         for temp in printer.temperatures:
             if temp.name == self._api_tool:
-                return round(
+                val = (
                     temp.actual_temp
                     if self._temp_type == "actual"
-                    else temp.target_temp,
-                    2,
+                    else temp.target_temp
                 )
+                if val is None:
+                    return None
+
+                return round(val, 2)
 
         return None
 

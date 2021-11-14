@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                },
+                "description": "\u30eb\u30fc\u30bf\u30fc\u306b\u63a5\u7d9a\u3059\u308b\u305f\u3081\u306b\u5fc5\u8981\u306a\u30d1\u30e9\u30e1\u30fc\u30bf\u30fc\u3092\u8a2d\u5b9a\u3057\u307e\u3059"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "dnsmasq": "dnsmasq.leases\u30d5\u30a1\u30a4\u30eb\u306e\u30eb\u30fc\u30bf\u30fc\u5185\u306e\u5834\u6240"
+                }
+            }
+        }
+    }
+}

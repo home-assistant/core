@@ -4,11 +4,13 @@
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_host": "Ge\u00e7ersiz ana bilgisayar ad\u0131 veya IP adresi",
             "not_supported": "Cihaz desteklenmiyor",
             "unknown": "Beklenmeyen hata"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_host": "Ge\u00e7ersiz ana bilgisayar ad\u0131 veya IP adresi",
             "unknown": "Beklenmeyen hata"
         },
         "flow_title": "{name} ({model} at {host})",
@@ -17,6 +19,9 @@
                 "title": "Cihaza kimlik do\u011frulama"
             },
             "finish": {
+                "data": {
+                    "name": "Ad"
+                },
                 "title": "Cihaz i\u00e7in bir isim se\u00e7in"
             },
             "reset": {
@@ -32,7 +37,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "timeout": "Zaman a\u015f\u0131m\u0131"
                 },
                 "title": "Cihaza ba\u011flan\u0131n"

@@ -164,7 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         surveillance_station = api.surveillance_station
 
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(30):
                 await hass.async_add_executor_job(surveillance_station.update)
         except SynologyDSMAPIErrorException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
