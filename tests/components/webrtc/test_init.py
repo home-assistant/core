@@ -39,7 +39,7 @@ async def test_supported_stream_source(hass: HomeAssistant) -> None:
 
 
 async def test_setup_success(hass: HomeAssistant) -> None:
-    """Test successful setup."""
+    """Test successful setup and unload."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
@@ -57,7 +57,7 @@ async def test_setup_success(hass: HomeAssistant) -> None:
 
 
 async def test_invalid_config_entry(hass: HomeAssistant) -> None:
-    """Test successful setup."""
+    """Test a config entry with missing required fields."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
 
@@ -71,7 +71,7 @@ async def test_invalid_config_entry(hass: HomeAssistant) -> None:
 async def test_offer_for_stream_source(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test successful setup."""
+    """Test successful response from RTSPtoWebRTC server."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
@@ -88,10 +88,28 @@ async def test_offer_for_stream_source(
     assert answer_sdp == ANSWER_SDP
 
 
+async def test_response_missing_answer(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test invalid response from RTSPtoWebRTC server."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_webrtc(hass)
+
+    aioclient_mock.post(
+        f"{SERVER_URL}/stream",
+        json={},
+    )
+
+    with pytest.raises(HomeAssistantError, match=r".*missing SDP Answer.*"):
+        await webrtc.async_offer_for_stream_source(hass, OFFER_SDP, STREAM_SOURCE)
+
+
 async def test_offer_failure(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test successful setup."""
+    """Test a transient failure talking to RTSPtoWebRTC server."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
@@ -102,5 +120,15 @@ async def test_offer_failure(
         exc=aiohttp.ClientError,
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match=r"WebRTC server communication failure.*"
+    ):
+        await webrtc.async_offer_for_stream_source(hass, OFFER_SDP, STREAM_SOURCE)
+
+
+async def test_integration_not_loaded(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test invoking the integration when not loaded."""
+    with pytest.raises(HomeAssistantError, match=r"webrtc integration is not set up.*"):
         await webrtc.async_offer_for_stream_source(hass, OFFER_SDP, STREAM_SOURCE)
