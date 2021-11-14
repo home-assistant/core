@@ -43,11 +43,6 @@ class FluxEntity(CoordinatorEntity):
             )
 
     @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return cast(bool, self._device.is_on)
-
-    @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         return {"ip_address": self._device.ipaddr}
@@ -73,6 +68,11 @@ class FluxEntity(CoordinatorEntity):
 
 class FluxOnOffEntity(FluxEntity):
     """Representation of a Flux entity that supports on/off."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if device is on."""
+        return cast(bool, self._device.is_on)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified device on."""
