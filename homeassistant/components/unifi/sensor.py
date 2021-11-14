@@ -127,7 +127,7 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
 
 
 class UniFiUpTimeSensor(UniFiClient, SensorEntity):
-    """UniFi Network uptime sensor."""
+    """UniFi Network client uptime sensor."""
 
     DOMAIN = DOMAIN
     TYPE = UPTIME_SENSOR
