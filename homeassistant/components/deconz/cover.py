@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import ValuesView
+from typing import Any
 
 from pydeconz.light import Cover
 
@@ -100,8 +101,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
     @property
     def current_cover_position(self) -> int:
         """Return the current position of the cover."""
-        assert isinstance(self._device.lift, int)
-        return 100 - self._device.lift
+        return 100 - self._device.lift  # type: ignore[no-any-return]
 
     @property
     def is_closed(self) -> bool:
@@ -129,8 +129,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
     def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt position of the cover."""
         if self._device.tilt is not None:
-            assert isinstance(self._device.tilt, int)
-            return 100 - self._device.tilt
+            return 100 - self._device.tilt  # type: ignore[no-any-return]
         return None
 
     async def async_set_cover_tilt_position(self, **kwargs: int) -> None:
@@ -138,14 +137,14 @@ class DeconzCover(DeconzDevice, CoverEntity):
         position = 100 - kwargs[ATTR_TILT_POSITION]
         await self._device.set_position(tilt=position)
 
-    async def async_open_cover_tilt(self, **kwargs: None) -> None:
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open cover tilt."""
         await self._device.set_position(tilt=0)
 
-    async def async_close_cover_tilt(self, **kwargs: None) -> None:
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close cover tilt."""
         await self._device.set_position(tilt=100)
 
-    async def async_stop_cover_tilt(self, **kwargs: None) -> None:
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop cover tilt."""
         await self._device.stop()

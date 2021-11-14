@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import ValuesView
+from typing import Any
 
 from pydeconz.sensor import (
     THERMOSTAT_FAN_MODE_AUTO,
@@ -244,23 +245,20 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        assert isinstance(self._device.temperature, float)
-        return self._device.temperature
+        return self._device.temperature  # type: ignore[no-any-return]
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         if self._device.mode == THERMOSTAT_MODE_COOL and self._device.cooling_setpoint:
-            assert isinstance(self._device.cooling_setpoint, float)
-            return self._device.cooling_setpoint
+            return self._device.cooling_setpoint  # type: ignore[no-any-return]
 
         if self._device.heating_setpoint:
-            assert isinstance(self._device.heating_setpoint, float)
-            return self._device.heating_setpoint
+            return self._device.heating_setpoint  # type: ignore[no-any-return]
 
         return None
 
-    async def async_set_temperature(self, **kwargs: float | int) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
