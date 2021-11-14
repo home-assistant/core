@@ -49,16 +49,17 @@ async def validate_input(
     # Gen24 devices don't provide GetLoggerInfo
     try:
         inverter_info = await fronius.inverter_info()
+        first_inverter = next(inverter for inverter in inverter_info["inverters"])
     except FroniusError as err:
         _LOGGER.debug(err)
         raise CannotConnect from err
-    for inverter in inverter_info["inverters"]:
-        first_inverter_uid: str = inverter["unique_id"]["value"]
-        return first_inverter_uid, FroniusConfigEntryData(
-            host=host,
-            is_logger=False,
-        )
-    raise CannotConnect("No supported Fronius SolarNet device found.")
+    except StopIteration as err:
+        raise CannotConnect("No supported Fronius SolarNet device found.") from err
+    first_inverter_uid: str = first_inverter["unique_id"]["value"]
+    return first_inverter_uid, FroniusConfigEntryData(
+        host=host,
+        is_logger=False,
+    )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -89,8 +90,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 f"SolarNet {'Datalogger' if info['is_logger'] else 'Inverter'}"
                 f" at {info['host']}"
             )
-            entry = await self.async_set_unique_id(unique_id, raise_on_progress=False)
-            if entry is not None:
+            if entry := await self.async_set_unique_id(
+                unique_id, raise_on_progress=False
+            ):
                 if info.items() <= entry.data.items():
                     return self.async_abort(reason="already_configured")
                 self.hass.config_entries.async_update_entry(
