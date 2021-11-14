@@ -514,10 +514,6 @@ class Entity(ABC):
         if self.available:
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
-            # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
-            # Add warning in 2021.6, remove in 2021.10
-            if extra_state_attributes is None:
-                extra_state_attributes = self.device_state_attributes
             attr.update(extra_state_attributes or {})
 
         unit_of_measurement = self.unit_of_measurement
