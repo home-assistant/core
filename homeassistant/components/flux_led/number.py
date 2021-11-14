@@ -53,9 +53,10 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
         name: str,
     ) -> None:
         """Initialize the flux number."""
-        super().__init__(coordinator, unique_id, f"{name} Effect Speed")
+        super().__init__(coordinator, unique_id, name)
         self._attr_icon = "mdi:speedometer"
         self._attr_entity_category = ENTITY_CATEGORY_CONFIG
+        self._attr_name = f"{name} Effect Speed"
 
     @property
     def value(self) -> int | None:
