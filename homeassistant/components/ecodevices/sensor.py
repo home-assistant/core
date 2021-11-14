@@ -6,6 +6,12 @@ from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
+from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    ENERGY_WATT_HOUR,
+    POWER_VOLT_AMPERE,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -18,9 +24,9 @@ from .const import (
     CONF_C2_TOTAL_UNIT_OF_MEASUREMENT,
     CONF_C2_UNIT_OF_MEASUREMENT,
     CONF_T1_ENABLED,
-    CONF_T1_UNIT_OF_MEASUREMENT,
+    CONF_T1_HCHP,
     CONF_T2_ENABLED,
-    CONF_T2_UNIT_OF_MEASUREMENT,
+    CONF_T2_HCHP,
     CONTROLLER,
     COORDINATOR,
     DEFAULT_C1_NAME,
@@ -42,7 +48,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     options = config_entry.options
 
     t1_enabled = options.get(CONF_T1_ENABLED, config.get(CONF_T1_ENABLED))
+    t1_hchp = options.get(CONF_T1_HCHP, config.get(CONF_T1_HCHP))
     t2_enabled = options.get(CONF_T2_ENABLED, config.get(CONF_T2_ENABLED))
+    t2_hchp = options.get(CONF_T2_HCHP, config.get(CONF_T2_HCHP))
     c1_enabled = options.get(CONF_C1_ENABLED, config.get(CONF_C1_ENABLED))
     c2_enabled = options.get(CONF_C2_ENABLED, config.get(CONF_C2_ENABLED))
 
@@ -56,26 +64,62 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 coordinator,
                 input_name="t1",
                 name=DEFAULT_T1_NAME,
-                unit=options.get(
-                    CONF_T1_UNIT_OF_MEASUREMENT, config.get(CONF_T1_UNIT_OF_MEASUREMENT)
-                ),
-                device_class="power",
+                unit=POWER_VOLT_AMPERE,
+                device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
                 icon="mdi:flash",
             )
         )
-        entities.append(
-            T1TotalEdDevice(
-                controller,
-                coordinator,
-                input_name="t1_total",
-                name=DEFAULT_T1_NAME + " Total",
-                unit="Wh",
-                device_class="energy",
-                state_class=STATE_CLASS_TOTAL_INCREASING,
-                icon="mdi:flash",
+        if t1_hchp:
+            entities.append(
+                T1TotalHchpEdDevice(
+                    controller,
+                    coordinator,
+                    input_name="t1_total",
+                    name=DEFAULT_T1_NAME + " Total",
+                    unit=ENERGY_WATT_HOUR,
+                    device_class=DEVICE_CLASS_ENERGY,
+                    state_class=STATE_CLASS_TOTAL_INCREASING,
+                    icon="mdi:flash",
+                )
             )
-        )
+            entities.append(
+                T1TotalHcEdDevice(
+                    controller,
+                    coordinator,
+                    input_name="t1_total_hc",
+                    name=DEFAULT_T1_NAME + " HC Total",
+                    unit=ENERGY_WATT_HOUR,
+                    device_class=DEVICE_CLASS_ENERGY,
+                    state_class=STATE_CLASS_TOTAL_INCREASING,
+                    icon="mdi:flash",
+                )
+            )
+            entities.append(
+                T1TotalHpEdDevice(
+                    controller,
+                    coordinator,
+                    input_name="t1_total_hp",
+                    name=DEFAULT_T1_NAME + " HP Total",
+                    unit=ENERGY_WATT_HOUR,
+                    device_class=DEVICE_CLASS_ENERGY,
+                    state_class=STATE_CLASS_TOTAL_INCREASING,
+                    icon="mdi:flash",
+                )
+            )
+        else:
+            entities.append(
+                T1TotalEdDevice(
+                    controller,
+                    coordinator,
+                    input_name="t1_total",
+                    name=DEFAULT_T1_NAME + " Total",
+                    unit=ENERGY_WATT_HOUR,
+                    device_class=DEVICE_CLASS_ENERGY,
+                    state_class=STATE_CLASS_TOTAL_INCREASING,
+                    icon="mdi:flash",
+                )
+            )
     if t2_enabled:
         _LOGGER.debug("Add the teleinfo 2 entities")
         entities.append(
@@ -84,26 +128,62 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 coordinator,
                 input_name="t2",
                 name=DEFAULT_T2_NAME,
-                unit=options.get(
-                    CONF_T2_UNIT_OF_MEASUREMENT, config.get(CONF_T2_UNIT_OF_MEASUREMENT)
-                ),
-                device_class="power",
+                unit=POWER_VOLT_AMPERE,
+                device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
                 icon="mdi:flash",
             )
         )
-        entities.append(
-            T2TotalEdDevice(
-                controller,
-                coordinator,
-                input_name="t2_total",
-                name=DEFAULT_T2_NAME + " Total",
-                unit="Wh",
-                device_class="energy",
-                state_class=STATE_CLASS_TOTAL_INCREASING,
-                icon="mdi:flash",
+        if t2_hchp:
+            entities.append(
+                T2TotalHchpEdDevice(
+                    controller,
+                    coordinator,
+                    input_name="t2_total",
+                    name=DEFAULT_T2_NAME + " Total",
+                    unit=ENERGY_WATT_HOUR,
+                    device_class=DEVICE_CLASS_ENERGY,
+                    state_class=STATE_CLASS_TOTAL_INCREASING,
+                    icon="mdi:flash",
+                )
             )
-        )
+            entities.append(
+                T2TotalHcEdDevice(
+                    controller,
+                    coordinator,
+                    input_name="t2_total_hc",
+                    name=DEFAULT_T2_NAME + " HC Total",
+                    unit=ENERGY_WATT_HOUR,
+                    device_class=DEVICE_CLASS_ENERGY,
+                    state_class=STATE_CLASS_TOTAL_INCREASING,
+                    icon="mdi:flash",
+                )
+            )
+            entities.append(
+                T2TotalHpEdDevice(
+                    controller,
+                    coordinator,
+                    input_name="t2_total_hp",
+                    name=DEFAULT_T2_NAME + " HP Total",
+                    unit=ENERGY_WATT_HOUR,
+                    device_class=DEVICE_CLASS_ENERGY,
+                    state_class=STATE_CLASS_TOTAL_INCREASING,
+                    icon="mdi:flash",
+                )
+            )
+        else:
+            entities.append(
+                T2TotalEdDevice(
+                    controller,
+                    coordinator,
+                    input_name="t2_total",
+                    name=DEFAULT_T2_NAME + " Total",
+                    unit=ENERGY_WATT_HOUR,
+                    device_class="energy",
+                    state_class=STATE_CLASS_TOTAL_INCREASING,
+                    icon="mdi:flash",
+                )
+            )
     if c1_enabled:
         _LOGGER.debug("Add the meter 1 entities")
         entities.append(
@@ -270,6 +350,41 @@ class T1TotalEdDevice(EdDevice):
             return value
 
 
+class T1TotalHchpEdDevice(EdDevice):
+    """Initialize the T1 HCHP Total sensor."""
+
+    @property
+    def native_value(self):
+        """Return the total value if it's greater than 0."""
+        value_hc = float(self.coordinator.data["T1_HCHC"])
+        value_hp = float(self.coordinator.data["T1_HCHP"])
+        value = value_hc + value_hp
+        if value > 0:
+            return value
+
+
+class T1TotalHcEdDevice(EdDevice):
+    """Initialize the T1 HC Total sensor."""
+
+    @property
+    def native_value(self):
+        """Return the total value if it's greater than 0."""
+        value = float(self.coordinator.data["T1_HCHC"])
+        if value > 0:
+            return value
+
+
+class T1TotalHpEdDevice(EdDevice):
+    """Initialize the T1 HP Total sensor."""
+
+    @property
+    def native_value(self):
+        """Return the total value if it's greater than 0."""
+        value = float(self.coordinator.data["T1_HCHP"])
+        if value > 0:
+            return value
+
+
 class T2EdDevice(EdDevice):
     """Initialize the T2 sensor."""
 
@@ -313,6 +428,41 @@ class T2TotalEdDevice(EdDevice):
     def native_value(self):
         """Return the total value if it's greater than 0."""
         value = float(self.coordinator.data["T2_BASE"])
+        if value > 0:
+            return value
+
+
+class T2TotalHchpEdDevice(EdDevice):
+    """Initialize the T2 HCHP Total sensor."""
+
+    @property
+    def native_value(self):
+        """Return the total value if it's greater than 0."""
+        value_hc = float(self.coordinator.data["T2_HCHC"])
+        value_hp = float(self.coordinator.data["T2_HCHP"])
+        value = value_hc + value_hp
+        if value > 0:
+            return value
+
+
+class T2TotalHcEdDevice(EdDevice):
+    """Initialize the T2 HC Total sensor."""
+
+    @property
+    def native_value(self):
+        """Return the total value if it's greater than 0."""
+        value = float(self.coordinator.data["T2_HCHC"])
+        if value > 0:
+            return value
+
+
+class T2TotalHpEdDevice(EdDevice):
+    """Initialize the T2 HP Total sensor."""
+
+    @property
+    def native_value(self):
+        """Return the total value if it's greater than 0."""
+        value = float(self.coordinator.data["T2_HCHP"])
         if value > 0:
             return value
 

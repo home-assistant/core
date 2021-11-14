@@ -6,19 +6,29 @@ import aiohttp
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ecodevices import config_flow
 from homeassistant.components.ecodevices.const import (
+    CONF_C1_DEVICE_CLASS,
     CONF_C1_ENABLED,
+    CONF_C1_TOTAL_UNIT_OF_MEASUREMENT,
+    CONF_C1_UNIT_OF_MEASUREMENT,
     CONF_C2_ENABLED,
     CONF_T1_ENABLED,
-    CONF_T1_UNIT_OF_MEASUREMENT,
+    CONF_T1_HCHP,
     CONF_T2_ENABLED,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    DEVICE_CLASS_GAS,
+    VOLUME_CUBIC_METERS,
+)
 
 FIXTURE_USER_INPUT = {
     CONF_HOST: "127.0.0.1",
     CONF_PORT: 80,
     CONF_T1_ENABLED: True,
+    CONF_C1_ENABLED: True,
 }
 
 
@@ -76,7 +86,12 @@ async def test_complete_form_user(hass):
     ) as mock_setup_entry:
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_T1_UNIT_OF_MEASUREMENT: "kWh"},
+            {
+                CONF_T1_HCHP: False,
+                CONF_C1_DEVICE_CLASS: DEVICE_CLASS_GAS,
+                CONF_C1_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
+                CONF_C1_TOTAL_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
+            },
         )
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -84,19 +99,22 @@ async def test_complete_form_user(hass):
     assert result4["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 80,
-        CONF_C1_ENABLED: False,
+        CONF_C1_ENABLED: True,
         CONF_C2_ENABLED: False,
         CONF_T1_ENABLED: True,
         CONF_T2_ENABLED: False,
-        CONF_T1_UNIT_OF_MEASUREMENT: "kWh",
+        CONF_T1_HCHP: False,
         CONF_SCAN_INTERVAL: 5,
+        CONF_C1_DEVICE_CLASS: DEVICE_CLASS_GAS,
+        CONF_C1_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
+        CONF_C1_TOTAL_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_connection_error(hass, aioclient_mock):
-    """Test we show user form on AdGuard Home connection error."""
+    """Test we show user form on EcoDevices Home connection error."""
     aioclient_mock.get(
         f"http://{FIXTURE_USER_INPUT[CONF_HOST]}"
         f":{FIXTURE_USER_INPUT[CONF_PORT]}/status.xml",
