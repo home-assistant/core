@@ -28,7 +28,7 @@ async def async_setup_entry(
             continue
 
         for sensor in system.sensors.values():
-            if sensor.type == DeviceTypes.temperature:
+            if sensor.type == DeviceTypes.TEMPERATURE:
                 sensors.append(SimplisafeFreezeSensor(simplisafe, system, sensor))
 
     async_add_entities(sensors)
