@@ -135,6 +135,7 @@ class SynologyAuthProvider(AuthProvider):
 
         # Create new credentials.
         credential_data = {k: flow_result[k] for k in flow_result.keys()}
+        credential_data.update({"username": account})
         return self.async_create_credentials(credential_data)
 
     async def async_user_meta_for_credentials(
