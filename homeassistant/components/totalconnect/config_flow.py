@@ -28,9 +28,6 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
-        data_schema = vol.Schema(
-            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-        )
 
         if user_input is not None:
             # Validate user input
@@ -52,6 +49,10 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.password = password
                 self.client = client
                 return await self.async_step_locations()
+
+        data_schema = vol.Schema(
+            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+        )
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
