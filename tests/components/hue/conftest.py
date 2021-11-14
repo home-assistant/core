@@ -12,9 +12,11 @@ import pytest
 
 from homeassistant.components import hue
 from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.light.conftest import mock_light_profiles  # noqa: F401
+
+# from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture(autouse=True)
@@ -52,8 +54,8 @@ def create_mock_bridge(hass, api_version=1):
 
     bridge.async_initialize_bridge = async_initialize_bridge
 
-    async def async_request_call(task):
-        await task()
+    async def async_request_call(task, *args, **kwargs):
+        await task(*args, **kwargs)
 
     bridge.async_request_call = async_request_call
 
@@ -107,11 +109,11 @@ def create_mock_api_v1(hass):
     logger = logging.getLogger(__name__)
 
     api.config = Mock(
-        bridgeid="ff:ff:ff:ff:ff:ff",
-        mac="aa:bb:cc:dd:ee:ff",
-        modelid="BSB002",
+        bridge_id="ff:ff:ff:ff:ff:ff",
+        mac_address="aa:bb:cc:dd:ee:ff",
+        model_id="BSB002",
         apiversion="9.9.9",
-        swversion="1935144040",
+        software_version="1935144040",
     )
     api.config.name = "Home"
 
@@ -124,8 +126,19 @@ def create_mock_api_v1(hass):
 
 def create_mock_api_v2(hass):
     """Create a mock V2 API."""
-    api = Mock(spec=aiohue.HueBridgeV1)
+    api = Mock(spec=aiohue.HueBridgeV2)
     api.initialize = AsyncMock()
+    api.config = Mock(
+        bridge_id="ff:ff:ff:ff:ff:ff",
+        mac_address="aa:bb:cc:dd:ee:ff",
+        model_id="BSB002",
+        api_version="9.9.9",
+        software_version="1935144040",
+        bridge_device=Mock(
+            id="aabbccddeeffgghhiijj", product_data=Mock(manufacturer_name="Mock")
+        ),
+    )
+    api.config.name = "Home"
     return api
 
 
@@ -141,16 +154,54 @@ def mock_bridge_v2(hass):
     return create_mock_bridge(hass, api_version=2)
 
 
+@pytest.fixture
+def mock_config_entry_v1(hass):
+    """Mock a config entry for a Hue V1 bridge."""
+    return create_config_entry()
+
+
+@pytest.fixture
+def mock_config_entry_v2(hass):
+    """Mock a config entry."""
+    return create_config_entry(api_version=2)
+
+
+def create_config_entry(api_version=1, host="mock-host"):
+    """Mock a config entry for a Hue V2 bridge."""
+    return MockConfigEntry(
+        domain=hue.DOMAIN,
+        title=f"Mock bridge {api_version}",
+        data={"host": host, "api_version": api_version},
+    )
+
+
+async def setup_component(hass):
+    """Mock setup Hue component."""
+    with patch.object(hue, "async_setup_entry", return_value=True):
+        assert (
+            await async_setup_component(
+                hass,
+                hue.DOMAIN,
+                {},
+            )
+            is True
+        )
+
+
+async def setup_bridge(hass, mock_bridge, config_entry):
+    """Load the Hue integration with the provided bridge."""
+    mock_bridge.config_entry = config_entry
+    config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.hue.HueBridge", return_value=mock_bridge):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+
 async def setup_bridge_for_sensors(hass, mock_bridge_v1, hostname=None):
     """Load the Hue platform with the provided bridge for sensor-related platforms."""
     if hostname is None:
         hostname = "mock-host"
     hass.config.components.add(hue.DOMAIN)
-    config_entry = MockConfigEntry(
-        domain=hue.DOMAIN,
-        title="Mock Title",
-        data={"host": hostname, "api_version": 1},
-    )
+    config_entry = create_config_entry(host=hostname)
     mock_bridge_v1.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v1}
     await hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
