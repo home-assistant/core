@@ -81,8 +81,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 LOGGER.error("Could not find the gateway %s", bridge_id)
                 return
 
-        assert gateway
-
         if service == SERVICE_CONFIGURE_DEVICE:
             await async_configure_service(gateway, service_data)
 
