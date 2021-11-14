@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from aiolookin import Climate, Device, Remote
 
-from homeassistant.components.zeroconf import HaServiceInfo
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 DEVICE_ID = "98F33163"
 MODULE = "homeassistant.components.lookin"
@@ -17,7 +17,7 @@ DEFAULT_ENTRY_TITLE = DEVICE_NAME
 
 ZC_NAME = f"LOOKin_{DEVICE_ID}"
 ZC_TYPE = "_lookin._tcp."
-ZEROCONF_DATA: HaServiceInfo = {
+ZEROCONF_DATA: ZeroconfServiceInfo = {
     "host": IP_ADDRESS,
     "hostname": f"{ZC_NAME.lower()}.local.",
     "port": 80,

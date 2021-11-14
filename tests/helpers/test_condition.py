@@ -938,21 +938,6 @@ async def test_state_raises(hass):
     with pytest.raises(ConditionError, match="unknown entity.*window"):
         test(hass)
 
-    # Unknown attribute
-    with pytest.raises(ConditionError, match=r"attribute .* does not exist"):
-        test = await condition.async_from_config(
-            hass,
-            {
-                "condition": "state",
-                "entity_id": "sensor.door",
-                "attribute": "model",
-                "state": "acme",
-            },
-        )
-
-        hass.states.async_set("sensor.door", "open")
-        test(hass)
-
     # Unknown state entity
     with pytest.raises(ConditionError, match="input_text.missing"):
         test = await condition.async_from_config(
@@ -966,6 +951,36 @@ async def test_state_raises(hass):
 
         hass.states.async_set("sensor.door", "open")
         test(hass)
+
+
+async def test_state_unknown_attribute(hass):
+    """Test that state returns False on unknown attribute."""
+    # Unknown attribute
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "state",
+            "entity_id": "sensor.door",
+            "attribute": "model",
+            "state": "acme",
+        },
+    )
+
+    hass.states.async_set("sensor.door", "open")
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "message": "attribute 'model' of entity sensor.door does not exist",
+                    }
+                }
+            ],
+        }
+    )
 
 
 async def test_state_multiple_entities(hass):
@@ -1042,8 +1057,7 @@ async def test_state_attribute(hass):
     )
 
     hass.states.async_set("sensor.temperature", 100, {"unknown_attr": 200})
-    with pytest.raises(ConditionError):
-        test(hass)
+    assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 200})
     assert test(hass)
@@ -1077,8 +1091,7 @@ async def test_state_attribute_boolean(hass):
     assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"no_happening": 201})
-    with pytest.raises(ConditionError):
-        test(hass)
+    assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"happening": False})
     assert test(hass)
@@ -1180,9 +1193,37 @@ async def test_numeric_state_known_non_matching(hass):
     # Unavailable state
     assert not test(hass)
 
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "message": "value 'unavailable' is non-numeric and treated as False",
+                    }
+                }
+            ],
+        }
+    )
+
     # Unknown state
     hass.states.async_set("sensor.temperature", "unknown")
     assert not test(hass)
+
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "message": "value 'unknown' is non-numeric and treated as False",
+                    }
+                }
+            ],
+        }
+    )
 
 
 async def test_numeric_state_raises(hass):
@@ -1199,21 +1240,6 @@ async def test_numeric_state_raises(hass):
     with pytest.raises(ConditionError, match="unknown entity.*temperature"):
         test(hass)
     with pytest.raises(ConditionError, match="unknown entity.*humidity"):
-        test(hass)
-
-    # Unknown attribute
-    with pytest.raises(ConditionError, match=r"attribute .* does not exist"):
-        test = await condition.async_from_config(
-            hass,
-            {
-                "condition": "numeric_state",
-                "entity_id": "sensor.temperature",
-                "attribute": "temperature",
-                "above": 0,
-            },
-        )
-
-        hass.states.async_set("sensor.temperature", 50)
         test(hass)
 
     # Template error
@@ -1290,6 +1316,36 @@ async def test_numeric_state_raises(hass):
         test(hass)
 
 
+async def test_numeric_state_unknown_attribute(hass):
+    """Test that numeric_state returns False on unknown attribute."""
+    # Unknown attribute
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "numeric_state",
+            "entity_id": "sensor.temperature",
+            "attribute": "temperature",
+            "above": 0,
+        },
+    )
+
+    hass.states.async_set("sensor.temperature", 50)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "message": "attribute 'temperature' of entity sensor.temperature does not exist",
+                    }
+                }
+            ],
+        }
+    )
+
+
 async def test_numeric_state_multiple_entities(hass):
     """Test with multiple entities in condition."""
     test = await condition.async_from_config(
@@ -1338,8 +1394,7 @@ async def test_numeric_state_attribute(hass):
     )
 
     hass.states.async_set("sensor.temperature", 100, {"unknown_attr": 10})
-    with pytest.raises(ConditionError):
-        assert test(hass)
+    assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 49})
     assert test(hass)
@@ -1351,8 +1406,7 @@ async def test_numeric_state_attribute(hass):
     assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": None})
-    with pytest.raises(ConditionError):
-        assert test(hass)
+    assert not test(hass)
 
 
 async def test_numeric_state_using_input_number(hass):

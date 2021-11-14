@@ -164,6 +164,10 @@
             "off": "\u672a\u691c\u51fa",
             "on": "\u691c\u51fa"
         },
+        "update": {
+            "off": "\u6700\u65b0",
+            "on": "\u66f4\u65b0\u53ef\u80fd"
+        },
         "vibration": {
             "off": "\u30af\u30ea\u30a2",
             "on": "\u691c\u51fa"

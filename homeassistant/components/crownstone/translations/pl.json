@@ -81,7 +81,7 @@
                 "data": {
                     "usb_sphere": "Crownstone Sphere"
                 },
-                "description": "Wybierz USB w kt\u00f3rym znajduje si\u0119 Crownstone Sphere.",
+                "description": "Wybierz USB, w kt\u00f3rym znajduje si\u0119 Crownstone Sphere.",
                 "title": "USB Crownstone Sphere"
             },
             "usb_sphere_config_option": {

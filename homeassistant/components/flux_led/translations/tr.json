@@ -5,6 +5,9 @@
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "no_devices_found": "A\u011fda cihaz bulunamad\u0131"
         },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
         "flow_title": "{model} {id} ({ipaddr})",
         "step": {
             "discovery_confirm": {
@@ -12,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar"
+                    "host": "Ana bilgisayar"
                 },
                 "description": "Ana bilgisayar\u0131 bo\u015f b\u0131rak\u0131rsan\u0131z, cihazlar\u0131 bulmak i\u00e7in ke\u015fif kullan\u0131lacakt\u0131r."
             }

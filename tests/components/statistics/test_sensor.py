@@ -12,6 +12,7 @@ from homeassistant.components.statistics.sensor import DOMAIN, StatisticsSensor
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
@@ -103,12 +104,13 @@ class TestStatisticsSensor(unittest.TestCase):
 
         for value in self.values:
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-
         assert str(self.mean) == state.state
         assert self.min == state.attributes.get("min_value")
         assert self.max == state.attributes.get("max_value")
@@ -123,14 +125,37 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
 
-        # Source sensor is unavailable, unit and state should not change
-        self.hass.states.set("sensor.test_monitored", "unavailable", {})
+        # Source sensor turns unavailable, then available with valid value,
+        # statistics sensor should follow
+        state = self.hass.states.get("sensor.test")
+        self.hass.states.set(
+            "sensor.test_monitored",
+            STATE_UNAVAILABLE,
+            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        )
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert new_state.state == STATE_UNAVAILABLE
+        self.hass.states.set(
+            "sensor.test_monitored",
+            0,
+            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        )
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert new_state.state != STATE_UNAVAILABLE
+        assert new_state.attributes.get("count") == state.attributes.get("count") + 1
+
+        # Source sensor has a non-float state, unit and state should not change
+        state = self.hass.states.get("sensor.test")
+        self.hass.states.set("sensor.test_monitored", "beer", {})
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
         assert state == new_state
 
-        # Source sensor has a non float state, unit and state should not change
-        self.hass.states.set("sensor.test_monitored", "beer", {})
+        # Source sensor is removed, unit and state should not change
+        # This is equal to a None value being published
+        self.hass.states.remove("sensor.test_monitored")
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
         assert state == new_state
@@ -156,7 +181,9 @@ class TestStatisticsSensor(unittest.TestCase):
 
         for value in self.values:
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
 
@@ -186,7 +213,9 @@ class TestStatisticsSensor(unittest.TestCase):
 
         for value in self.values[-3:]:  # just the last 3 will do
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
 
@@ -356,6 +385,66 @@ class TestStatisticsSensor(unittest.TestCase):
         ) == state.attributes.get("max_age")
         assert self.change_rate == state.attributes.get("change_rate")
 
+    def test_precision_0(self):
+        """Test correct result with precision=0 as integer."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "precision": 0,
+                }
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in self.values:
+            self.hass.states.set(
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test")
+        assert state.state == str(int(state.attributes.get("mean")))
+
+    def test_precision_1(self):
+        """Test correct result with precision=1 rounded to one decimal."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "precision": 1,
+                }
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in self.values:
+            self.hass.states.set(
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test")
+        assert state.state == str(round(sum(self.values) / len(self.values), 1))
+
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
         # enable the recorder
@@ -365,7 +454,9 @@ class TestStatisticsSensor(unittest.TestCase):
         # store some values
         for value in self.values:
             self.hass.states.set(
-                "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             self.hass.block_till_done()
         # wait for the recorder to really store the data
