@@ -47,6 +47,9 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     _attr_min_value = 1
     _attr_max_value = 100
     _attr_step = 1
+    _attr_mode = MODE_SLIDER
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_icon = "mdi:speedometer"
 
     def __init__(
         self,
@@ -56,10 +59,7 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     ) -> None:
         """Initialize the flux number."""
         super().__init__(coordinator, unique_id, name)
-        self._attr_icon = "mdi:speedometer"
-        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
         self._attr_name = f"{name} Effect Speed"
-        self._attr_mode = MODE_SLIDER
 
     @property
     def value(self) -> float:
