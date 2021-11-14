@@ -71,6 +71,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.brightness = 128
     bulb.model_num = 0x35
     bulb.effect = None
+    bulb.speed = 50
     bulb.model = "Smart Bulb (0x35)"
     bulb.version_num = 8
     bulb.original_addressable = False
