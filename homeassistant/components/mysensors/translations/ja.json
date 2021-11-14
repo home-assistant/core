@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "invalid_ip": "\u7121\u52b9\u306aIP\u30a2\u30c9\u30ec\u30b9"
+        },
+        "error": {
+            "invalid_ip": "\u7121\u52b9\u306aIP\u30a2\u30c9\u30ec\u30b9"
+        },
+        "step": {
+            "gw_tcp": {
+                "data": {
+                    "device": "\u30b2\u30fc\u30c8\u30a6\u30a7\u30a4\u306eIP\u30a2\u30c9\u30ec\u30b9"
+                }
+            }
+        }
+    }
+}

@@ -4,6 +4,7 @@
             "user": {
                 "data": {
                     "cloud_id": "\u30af\u30e9\u30a6\u30c9ID",
+                    "host": "\u30db\u30b9\u30c8",
                     "install_code": "\u30a4\u30f3\u30b9\u30c8\u30fc\u30eb\u30b3\u30fc\u30c9"
                 }
             }

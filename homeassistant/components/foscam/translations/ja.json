@@ -6,6 +6,7 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "\u30db\u30b9\u30c8",
                     "stream": "\u30b9\u30c8\u30ea\u30fc\u30e0"
                 }
             }

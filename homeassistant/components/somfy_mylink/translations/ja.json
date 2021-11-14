@@ -1,6 +1,13 @@
 {
     "config": {
-        "flow_title": "{mac} ({ip})"
+        "flow_title": "{mac} ({ip})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
+            }
+        }
     },
     "options": {
         "step": {
