@@ -1,4 +1,6 @@
 """Test the ClimaCell config flow."""
+import pytest
+
 from homeassistant import data_entry_flow
 from homeassistant.components.climacell.const import (
     CONF_TIMESTEP,
@@ -13,7 +15,9 @@ from .const import API_V4_ENTRY_DATA
 from tests.common import MockConfigEntry
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
+async def test_options_flow(
+    hass: HomeAssistant, climacell_config_entry_update: pytest.fixture
+) -> None:
     """Test options config flow for climacell."""
     entry = MockConfigEntry(
         domain=DOMAIN,
