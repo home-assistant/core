@@ -240,7 +240,7 @@ class FanEntity(ToggleEntity):
     _attr_percentage: int | None
     _attr_preset_mode: str | None
     _attr_preset_modes: list[str] | None
-    _attr_speed_count: int | None = None
+    _attr_speed_count: int
     _attr_supported_features: int = 0
 
     @_fan_native
@@ -492,7 +492,7 @@ class FanEntity(ToggleEntity):
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        if self._attr_speed_count is not None:
+        if hasattr(self, "_attr_speed_count"):
             return self._attr_speed_count
 
         speed_list = speed_list_without_preset_modes(self.speed_list)
