@@ -668,7 +668,6 @@ omit =
     homeassistant/components/mutesync/binary_sensor.py
     homeassistant/components/nest/const.py
     homeassistant/components/mvglive/sensor.py
-    homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*
     homeassistant/components/mysensors/__init__.py
     homeassistant/components/mysensors/binary_sensor.py
@@ -1140,9 +1139,6 @@ omit =
     homeassistant/components/tuya/switch.py
     homeassistant/components/tuya/util.py
     homeassistant/components/tuya/vacuum.py
-    homeassistant/components/twentemilieu/__init__.py
-    homeassistant/components/twentemilieu/const.py
-    homeassistant/components/twentemilieu/sensor.py
     homeassistant/components/twilio_call/notify.py
     homeassistant/components/twilio_sms/notify.py
     homeassistant/components/twitter/notify.py
