@@ -2421,7 +2421,7 @@ wirelesstagpy==0.5.0
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.9.0
+wled==0.10.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
