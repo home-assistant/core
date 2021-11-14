@@ -1,4 +1,4 @@
-"""Integration to UniFi controllers and its various features."""
+"""Integration to UniFi Network Controllers and its various features."""
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
