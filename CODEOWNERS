@@ -186,7 +186,7 @@ homeassistant/components/freebox/* @hacf-fr @Quentame
 homeassistant/components/freedompro/* @stefano055415
 homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
 homeassistant/components/fritzbox/* @mib1185 @flabbamann
-homeassistant/components/fronius/* @nielstron
+homeassistant/components/fronius/* @nielstron @farmio
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/garages_amsterdam/* @klaasnicolaas
 homeassistant/components/gdacs/* @exxamalte

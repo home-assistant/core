@@ -1,13 +1,13 @@
 """Tests for the Fronius integration."""
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_RESOURCE
+from homeassistant.const import CONF_RESOURCE
 from homeassistant.setup import async_setup_component
 
 from .const import DOMAIN, MOCK_HOST
 
 
-async def setup_fronius_integration(hass, devices):
+async def setup_fronius_integration(hass):
     """Create the Fronius integration."""
     assert await async_setup_component(
         hass,
@@ -16,7 +16,6 @@ async def setup_fronius_integration(hass, devices):
             SENSOR_DOMAIN: {
                 "platform": DOMAIN,
                 CONF_RESOURCE: MOCK_HOST,
-                CONF_MONITORED_CONDITIONS: devices,
             }
         },
     )

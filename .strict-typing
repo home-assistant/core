@@ -49,6 +49,7 @@ homeassistant.components.flunearyou.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritzbox.*
+homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fritz.*
 homeassistant.components.geo_location.*

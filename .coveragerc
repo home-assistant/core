@@ -372,7 +372,6 @@ omit =
     homeassistant/components/fritzbox_callmonitor/const.py
     homeassistant/components/fritzbox_callmonitor/base.py
     homeassistant/components/fritzbox_callmonitor/sensor.py
-    homeassistant/components/fronius/sensor.py
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
