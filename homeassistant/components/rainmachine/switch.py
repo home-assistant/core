@@ -151,10 +151,10 @@ async def async_setup_entry(
 
     entities: list[RainMachineActivitySwitch | RainMachineEnabledSwitch] = []
 
-    for kind, coordinator, switch_class, switch_enabled_class in [
+    for kind, coordinator, switch_class, switch_enabled_class in (
         ("program", program_coordinator, RainMachineProgram, RainMachineProgramEnabled),
         ("zone", zone_coordinator, RainMachineZone, RainMachineZoneEnabled),
-    ]:
+    ):
         for uid, data in coordinator.data.items():
             # Add a switch to start/stop the program or zone:
             entities.append(
@@ -263,7 +263,7 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
         off right after turning it on.
         """
         if not self.coordinator.data[self.entity_description.uid]["active"]:
-            self._attr_is_off = False
+            self._attr_is_on = False
             self.async_write_ha_state()
             return
 
