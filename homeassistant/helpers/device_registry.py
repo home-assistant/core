@@ -75,6 +75,7 @@ class DeviceEntry:
     model: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
+    options: dict[str, Any] = attr.ib(factory=dict)
     suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
@@ -259,6 +260,7 @@ class DeviceRegistry:
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
+        options: dict[str, Any] | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device: tuple[str, str] | None = None,
@@ -314,6 +316,7 @@ class DeviceRegistry:
             merge_identifiers=identifiers or UNDEFINED,
             model=model,
             name=name,
+            options=options,
             suggested_area=suggested_area,
             sw_version=sw_version,
             via_device_id=via_device_id,
@@ -338,6 +341,7 @@ class DeviceRegistry:
         name_by_user: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
+        options: dict[str, Any] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
@@ -355,6 +359,7 @@ class DeviceRegistry:
             name_by_user=name_by_user,
             name=name,
             new_identifiers=new_identifiers,
+            options=options,
             remove_config_entry_id=remove_config_entry_id,
             suggested_area=suggested_area,
             sw_version=sw_version,
@@ -378,6 +383,7 @@ class DeviceRegistry:
         name_by_user: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
+        options: dict[str, Any] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
@@ -438,6 +444,7 @@ class DeviceRegistry:
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
+            ("options", options),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("via_device_id", via_device_id),
