@@ -2,6 +2,15 @@
     "config": {
         "abort": {
             "existing_instance_updated": "\u65e2\u5b58\u306e\u8a2d\u5b9a\u3092\u66f4\u65b0\u3057\u307e\u3057\u305f\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                },
+                "description": "\u76e3\u8996\u3068\u5236\u5fa1\u304c\u3067\u304d\u308b\u3088\u3046\u306b\u3001AdGuardHome\u30a4\u30f3\u30b9\u30bf\u30f3\u30b9\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3092\u3057\u307e\u3059\u3002"
+            }
         }
     }
 }

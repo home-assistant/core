@@ -9,7 +9,8 @@
         "step": {
             "setup_network": {
                 "data": {
-                    "dsmr_version": "DSMR\u30d0\u30fc\u30b8\u30e7\u30f3\u3092\u9078\u629e"
+                    "dsmr_version": "DSMR\u30d0\u30fc\u30b8\u30e7\u30f3\u3092\u9078\u629e",
+                    "host": "\u30db\u30b9\u30c8"
                 },
                 "title": "\u63a5\u7d9a\u30a2\u30c9\u30ec\u30b9\u306e\u9078\u629e"
             },

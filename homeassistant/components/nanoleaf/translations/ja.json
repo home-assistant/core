@@ -3,6 +3,11 @@
         "step": {
             "link": {
                 "title": "Nanoleaf\u3092\u30ea\u30f3\u30af\u3059\u308b"
+            },
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
             }
         }
     }

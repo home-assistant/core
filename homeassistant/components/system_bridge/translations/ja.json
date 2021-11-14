@@ -1,3 +1,12 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
+            }
+        }
+    },
     "title": "\u30b7\u30b9\u30c6\u30e0\u30d6\u30ea\u30c3\u30b8"
 }

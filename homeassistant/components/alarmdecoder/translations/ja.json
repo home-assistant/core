@@ -1,4 +1,14 @@
 {
+    "config": {
+        "step": {
+            "protocol": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "zone_details": {
