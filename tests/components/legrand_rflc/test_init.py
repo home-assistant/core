@@ -14,7 +14,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 COMPOSER: Final = lc7001.aio.Composer()
 
 
-async def test_security_setkey(hass):
+async def test_security_setkey(hass, socket_enabled):
     """Test security compliant LC7001 in [SETKEY] mode (factory reset)."""
     sessions = [
         [
@@ -34,7 +34,7 @@ async def test_security_setkey(hass):
     await Server(hass, sessions).start()
 
 
-async def test_security_hello(hass):
+async def test_security_hello(hass, socket_enabled):
     """Test security compliant LC7001 "Hello" challenge."""
     sessions = [
         Server.SECURITY_HELLO_AUTHENTICATION_OK
@@ -46,7 +46,7 @@ async def test_security_hello(hass):
     await Server(hass, sessions).start()
 
 
-async def test_security_non_compliant(hass):
+async def test_security_non_compliant(hass, socket_enabled):
     """Test security non-compliant LC7001 (no authentication)."""
     sessions = [
         [
@@ -58,7 +58,7 @@ async def test_security_non_compliant(hass):
     await Server(hass, sessions).start()
 
 
-async def test_security_hello_reload(hass):
+async def test_security_hello_reload(hass, socket_enabled):
     """Test security compliant LC7001 "Hello" challenge with reload."""
     sessions = [
         Server.SECURITY_HELLO_AUTHENTICATION_OK
@@ -75,7 +75,7 @@ async def test_security_hello_reload(hass):
     await Server(hass, sessions).start()
 
 
-async def test_security_hello_reauth(hass):
+async def test_security_hello_reauth(hass, socket_enabled):
     """Test security compliant LC7001 "Hello" challenge with reauth."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     sessions = [

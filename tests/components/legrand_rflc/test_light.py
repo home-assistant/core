@@ -26,7 +26,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 COMPOSER: Final = lc7001.aio.Composer()
 
 
-async def test_light(hass):
+async def test_light(hass, socket_enabled):
     """Test light platform."""
     sessions = [
         [

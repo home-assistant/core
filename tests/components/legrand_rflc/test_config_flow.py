@@ -93,7 +93,7 @@ async def test_step_user_invalid_host(hass):
     assert result["errors"] == {CONF_HOST: "invalid_host"}
 
 
-async def test_step_user_invalid_auth(hass):
+async def test_step_user_invalid_auth(hass, socket_enabled):
     """Test invalid auth user step in configuration flow."""
     sessions = [
         [
@@ -117,7 +117,7 @@ async def test_step_user_invalid_auth(hass):
     await hass.async_block_till_done()
 
 
-async def test_step_user_create_entry(hass):
+async def test_step_user_create_entry(hass, socket_enabled):
     """Test create entry user step in configuration flow."""
     sessions = [Server.SECURITY_HELLO_AUTHENTICATION_OK]
     server_port = await Server(hass, sessions).start(False)
@@ -139,7 +139,7 @@ async def test_step_user_create_entry(hass):
     await hass.async_block_till_done()
 
 
-async def test_step_reauth(hass):
+async def test_step_reauth(hass, socket_enabled):
     """Test reauth step in configuration flow."""
     sessions = [Server.SECURITY_HELLO_AUTHENTICATION_OK]
     server_port = await Server(hass, sessions).start(False)
@@ -167,7 +167,7 @@ async def test_step_reauth(hass):
         await hass.async_block_till_done()
 
 
-async def test_step_reauth_invalid_authentication(hass):
+async def test_step_reauth_invalid_authentication(hass, socket_enabled):
     """Test invalid authentication reauth step in configuration flow."""
     sessions = [Server.SECURITY_HELLO_AUTHENTICATION_INVALID]
     server_port = await Server(hass, sessions).start(False)
