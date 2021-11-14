@@ -8,7 +8,11 @@ import voluptuous as vol
 
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
@@ -191,11 +195,11 @@ class StatisticsSensor(SensorEntity):
             )
 
             if "recorder" in self.hass.config.components:
-                # Only use the database if it's configured
                 self.hass.async_create_task(self._initialize_from_database())
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_stats_sensor_startup
+            EVENT_HOMEASSISTANT_START,
+            async_stats_sensor_startup,
         )
 
     def _add_state_to_queue(self, new_state):
@@ -218,16 +222,19 @@ class StatisticsSensor(SensorEntity):
             )
             return
 
-        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        self._unit_of_measurement = self._derive_unit_of_measurement(new_state)
 
     def _derive_unit_of_measurement(self, new_state):
         base_unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if self._state_characteristic in (
+        if self.is_binary:
+            unit = None
+        elif self._state_characteristic in (
             ATTR_COUNT,
             ATTR_MIN_AGE,
             ATTR_MAX_AGE,
+            # ATTR_QUANTILES,
         ):
-            unit_of_measurement = None
+            unit = None
         elif self._state_characteristic in (
             ATTR_TOTAL,
             ATTR_MEAN,
@@ -237,17 +244,22 @@ class StatisticsSensor(SensorEntity):
             ATTR_MAX_VALUE,
             ATTR_CHANGE,
         ):
-            unit_of_measurement = base_unit
+            unit = base_unit
         elif self._state_characteristic == ATTR_VARIANCE:
-            unit_of_measurement = base_unit + "²"
+            unit = base_unit + "²"
         elif self._state_characteristic == ATTR_AVERAGE_CHANGE:
-            unit_of_measurement = base_unit + "/sample"
+            unit = base_unit + "/sample"
         elif self._state_characteristic == ATTR_CHANGE_RATE:
-            unit_of_measurement = base_unit + "/s"
+            unit = base_unit + "/s"
+        else:
+            _LOGGER.error(
+                "parsing error, unit can not be derived for %s",
+                self._state_characteristic,
+            )
 
         if not base_unit:
-            unit_of_measurement = None
-        return unit_of_measurement
+            unit = None
+        return unit
 
     @property
     def name(self):
@@ -255,11 +267,28 @@ class StatisticsSensor(SensorEntity):
         return self._name
 
     @property
+    def state_class(self):
+        """Return the state class of this entity, from STATE_CLASSES, if any."""
+        if self._state_characteristic in (
+            ATTR_MIN_AGE,
+            ATTR_MAX_AGE,
+            ATTR_QUANTILES,
+        ):
+            return None
+        return STATE_CLASS_MEASUREMENT
+
+    @property
     def native_value(self):
         """Return the state of the sensor."""
         if self.is_binary:
             return self.attr[ATTR_COUNT]
-        if self._precision == 0:
+        elif self._state_characteristic in (
+            ATTR_MIN_AGE,
+            ATTR_MAX_AGE,
+            ATTR_QUANTILES,
+        ):
+            return self.attr[self._state_characteristic]
+        elif self._precision == 0:
             with contextlib.suppress(TypeError, ValueError):
                 return int(self.attr[self._state_characteristic])
         return self.attr[self._state_characteristic]
@@ -267,7 +296,7 @@ class StatisticsSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement if not self.is_binary else None
+        return self._unit_of_measurement
 
     @property
     def available(self):
@@ -282,13 +311,12 @@ class StatisticsSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        if not self.is_binary:
-            return {
-                ATTR_SAMPLING_SIZE: self._sampling_size,
-                **self.attr,
-            }
-        else:
+        if self.is_binary:
             return None
+        return {
+            ATTR_SAMPLING_SIZE: self._sampling_size,
+            **self.attr,
+        }
 
     @property
     def icon(self):
@@ -325,83 +353,84 @@ class StatisticsSensor(SensorEntity):
             return self.ages[0] + self._samples_max_age
         return None
 
+    def update_characteristics(self):
+        """Calculate and update the various statistical characteristics."""
+        states_count = len(self.states)
+        self.attr[ATTR_COUNT] = states_count
+
+        if self.is_binary:
+            return
+
+        if states_count >= 2:
+            self.attr[ATTR_STANDARD_DEVIATION] = round(
+                statistics.stdev(self.states), self._precision
+            )
+            self.attr[ATTR_VARIANCE] = round(
+                statistics.variance(self.states), self._precision
+            )
+        else:
+            self.attr[ATTR_STANDARD_DEVIATION] = STATE_UNKNOWN
+            self.attr[ATTR_VARIANCE] = STATE_UNKNOWN
+
+        if states_count > self._quantile_intervals:
+            self.attr[ATTR_QUANTILES] = [
+                round(quantile, self._precision)
+                for quantile in statistics.quantiles(
+                    self.states,
+                    n=self._quantile_intervals,
+                    method=self._quantile_method,
+                )
+            ]
+        else:
+            self.attr[ATTR_QUANTILES] = STATE_UNKNOWN
+
+        if states_count == 0:
+            self.attr[ATTR_MEAN] = STATE_UNKNOWN
+            self.attr[ATTR_MEDIAN] = STATE_UNKNOWN
+            self.attr[ATTR_TOTAL] = STATE_UNKNOWN
+            self.attr[ATTR_MIN_VALUE] = self.attr[ATTR_MAX_VALUE] = STATE_UNKNOWN
+            self.attr[ATTR_MIN_AGE] = self.attr[ATTR_MAX_AGE] = STATE_UNKNOWN
+            self.attr[ATTR_CHANGE] = self.attr[ATTR_AVERAGE_CHANGE] = STATE_UNKNOWN
+            self.attr[ATTR_CHANGE_RATE] = STATE_UNKNOWN
+            return
+
+        self.attr[ATTR_MEAN] = round(statistics.mean(self.states), self._precision)
+        self.attr[ATTR_MEDIAN] = round(statistics.median(self.states), self._precision)
+
+        self.attr[ATTR_TOTAL] = round(sum(self.states), self._precision)
+        self.attr[ATTR_MIN_VALUE] = round(min(self.states), self._precision)
+        self.attr[ATTR_MAX_VALUE] = round(max(self.states), self._precision)
+
+        self.attr[ATTR_MIN_AGE] = self.ages[0]
+        self.attr[ATTR_MAX_AGE] = self.ages[-1]
+
+        self.attr[ATTR_CHANGE] = self.states[-1] - self.states[0]
+
+        self.attr[ATTR_AVERAGE_CHANGE] = self.attr[ATTR_CHANGE]
+        self.attr[ATTR_CHANGE_RATE] = 0
+        if states_count > 1:
+            self.attr[ATTR_AVERAGE_CHANGE] /= len(self.states) - 1
+
+            time_diff = (
+                self.attr[ATTR_MAX_AGE] - self.attr[ATTR_MIN_AGE]
+            ).total_seconds()
+            if time_diff > 0:
+                self.attr[ATTR_CHANGE_RATE] = self.attr[ATTR_CHANGE] / time_diff
+        self.attr[ATTR_CHANGE] = round(self.attr[ATTR_CHANGE], self._precision)
+        self.attr[ATTR_AVERAGE_CHANGE] = round(
+            self.attr[ATTR_AVERAGE_CHANGE], self._precision
+        )
+        self.attr[ATTR_CHANGE_RATE] = round(
+            self.attr[ATTR_CHANGE_RATE], self._precision
+        )
+
     async def async_update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("%s: updating statistics", self.entity_id)
         if self._samples_max_age is not None:
             self._purge_old()
 
-        self.attr[ATTR_COUNT] = len(self.states)
-
-        if not self.is_binary:
-            try:  # require only one data point
-                self.attr[ATTR_MEAN] = round(
-                    statistics.mean(self.states), self._precision
-                )
-                self.attr[ATTR_MEDIAN] = round(
-                    statistics.median(self.states), self._precision
-                )
-            except statistics.StatisticsError as err:
-                _LOGGER.debug("%s: %s", self.entity_id, err)
-                self.attr[ATTR_MEAN] = self.attr[ATTR_MEDIAN] = STATE_UNKNOWN
-
-            try:  # require at least two data points
-                self.attr[ATTR_STANDARD_DEVIATION] = round(
-                    statistics.stdev(self.states), self._precision
-                )
-                self.attr[ATTR_VARIANCE] = round(
-                    statistics.variance(self.states), self._precision
-                )
-                if self._quantile_intervals < self.attr[ATTR_COUNT]:
-                    self.attr[ATTR_QUANTILES] = [
-                        round(quantile, self._precision)
-                        for quantile in statistics.quantiles(
-                            self.states,
-                            n=self._quantile_intervals,
-                            method=self._quantile_method,
-                        )
-                    ]
-            except statistics.StatisticsError as err:
-                _LOGGER.debug("%s: %s", self.entity_id, err)
-                self.attr[ATTR_STANDARD_DEVIATION] = STATE_UNKNOWN
-                self.attr[ATTR_VARIANCE] = STATE_UNKNOWN
-                self.attr[ATTR_QUANTILES] = STATE_UNKNOWN
-
-            if self.states:
-                self.attr[ATTR_TOTAL] = round(sum(self.states), self._precision)
-                self.attr[ATTR_MIN_VALUE] = round(min(self.states), self._precision)
-                self.attr[ATTR_MAX_VALUE] = round(max(self.states), self._precision)
-
-                self.attr[ATTR_MIN_AGE] = self.ages[0]
-                self.attr[ATTR_MAX_AGE] = self.ages[-1]
-
-                self.attr[ATTR_CHANGE] = self.states[-1] - self.states[0]
-                self.attr[ATTR_AVERAGE_CHANGE] = self.attr[ATTR_CHANGE]
-                self.attr[ATTR_CHANGE_RATE] = 0
-
-                if len(self.states) > 1:
-                    self.attr[ATTR_AVERAGE_CHANGE] /= len(self.states) - 1
-
-                    time_diff = (
-                        self.attr[ATTR_MAX_AGE] - self.attr[ATTR_MIN_AGE]
-                    ).total_seconds()
-                    if time_diff > 0:
-                        self.attr[ATTR_CHANGE_RATE] = self.attr[ATTR_CHANGE] / time_diff
-
-                self.attr[ATTR_CHANGE] = round(self.attr[ATTR_CHANGE], self._precision)
-                self.attr[ATTR_AVERAGE_CHANGE] = round(
-                    self.attr[ATTR_AVERAGE_CHANGE], self._precision
-                )
-                self.attr[ATTR_CHANGE_RATE] = round(
-                    self.attr[ATTR_CHANGE_RATE], self._precision
-                )
-
-            else:
-                self.attr[ATTR_TOTAL] = STATE_UNKNOWN
-                self.attr[ATTR_MIN_VALUE] = self.attr[ATTR_MAX_VALUE] = STATE_UNKNOWN
-                self.attr[ATTR_MIN_AGE] = self.attr[ATTR_MAX_AGE] = dt_util.utcnow()
-                self.attr[ATTR_CHANGE] = self.attr[ATTR_AVERAGE_CHANGE] = STATE_UNKNOWN
-                self.attr[ATTR_CHANGE_RATE] = STATE_UNKNOWN
+        self.update_characteristics()
 
         # If max_age is set, ensure to update again after the defined interval.
         next_to_purge_timestamp = self._next_to_purge_timestamp()
