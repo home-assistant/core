@@ -56,6 +56,7 @@ async def async_setup_entry(
     ctrl_base: SensorsController = api.sensors
 
     # setup for each sensor-type hue resource
+    # pylint: disable=cell-var-from-loop
     for controller, sensor_class in (
         (ctrl_base.temperature, HueTemperatureSensor),
         (ctrl_base.light_level, HueLightLevelSensor),

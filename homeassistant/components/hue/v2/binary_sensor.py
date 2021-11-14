@@ -40,6 +40,7 @@ async def async_setup_entry(
     api: HueBridgeV2 = bridge.api
 
     # setup for each binary-sensor-type hue resource
+    # pylint: disable=cell-var-from-loop
     for controller, sensor_class in (
         (api.sensors.motion, HueMotionSensor),
         (api.config.entertainment_configuration, HueEntertainmentActiveSensor),

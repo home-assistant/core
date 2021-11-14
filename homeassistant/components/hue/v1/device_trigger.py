@@ -18,10 +18,10 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.device_registry import DeviceEntry
 
+from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
+
 if TYPE_CHECKING:
     from ..bridge import HueBridge
-
-from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}

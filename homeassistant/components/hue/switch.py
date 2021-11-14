@@ -32,6 +32,7 @@ async def async_setup_entry(
         # should not happen, but just in case
         raise NotImplementedError("Switch support is only available for V2 bridges")
 
+    # pylint: disable=cell-var-from-loop
     for controller in (api.sensors.motion, api.sensors.light_level):
         # add entities for all scenes
         @callback
