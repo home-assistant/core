@@ -232,7 +232,7 @@ class StatisticsSensor(SensorEntity):
             ATTR_COUNT,
             ATTR_MIN_AGE,
             ATTR_MAX_AGE,
-            # ATTR_QUANTILES,
+            ATTR_QUANTILES,
         ):
             unit = None
         elif self._state_characteristic in (
@@ -252,10 +252,12 @@ class StatisticsSensor(SensorEntity):
         elif self._state_characteristic == ATTR_CHANGE_RATE:
             unit = base_unit + "/s"
         else:
-            _LOGGER.error(
-                "parsing error, unit can not be derived for %s",
+            _LOGGER.debug(
+                "%s: parsing error, unit can not be derived for characteristic '%s'",
+                self.entity_id,
                 self._state_characteristic,
             )
+            unit = None
 
         if not base_unit:
             unit = None
@@ -314,7 +316,9 @@ class StatisticsSensor(SensorEntity):
         if self.is_binary:
             return None
         return {
-            ATTR_SAMPLING_SIZE: self._sampling_size,
+            "configuration_" + CONF_SAMPLING_SIZE: self._sampling_size,
+            "configuration_" + CONF_MAX_AGE: str(self._samples_max_age),
+            "configuration_" + CONF_STATE_CHARACTERISTIC: self._state_characteristic,
             **self.attr,
         }
 
