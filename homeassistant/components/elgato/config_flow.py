@@ -47,7 +47,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info[CONF_HOST]
-        self.port = discovery_info[CONF_PORT]  # type: ignore [assignment]
+        self.port = discovery_info[CONF_PORT] or 9123
 
         try:
             await self._get_elgato_serial_number()
