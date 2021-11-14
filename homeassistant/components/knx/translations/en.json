@@ -44,14 +44,18 @@
       "init": {
         "data": {
           "connection_type": "KNX Connection Type",
-          "host": "IP Address of KNX gateway",
-          "port": "Port of KNX gateway",
-          "route_back": "Route Back / NAT Mode",
           "individual_address": "Default individual address",
-          "multicast_group": "The multicast group used for routing",
-          "multicast_port": "The multicast port used for routing",
-          "state_updater": "Globally enables requesting current entity states from the KNX Bus",
-          "rate_limit": "Maximum number of telegrams to be sent to the bus per second"
+          "multicast_group": "Multicast group used for routing and discovery",
+          "multicast_port": "Multicast port used for routing and discovery",
+          "state_updater": "Globally enable reading states from the KNX Bus",
+          "rate_limit": "Maximum outgoing telegrams per second"
+        }
+      },
+      "tunnel": {
+        "data": {
+          "port": "Port of KNX gateway",
+          "host": "IP Address of KNX gateway",
+          "route_back": "Route Back / NAT Mode"
         }
       }
     }
