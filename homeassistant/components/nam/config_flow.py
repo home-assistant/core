@@ -53,7 +53,8 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self.host: str = ""
+        self.host: str
+        self.entry: config_entries.ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -169,7 +170,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
-            self.config_entry = entry
+            self.entry = entry
         self.host = data[CONF_HOST]
         self.context["title_placeholders"] = {"host": self.host}
         return await self.async_step_reauth_confirm()
@@ -189,9 +190,9 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_unsuccessful")
             else:
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data={**user_input, CONF_HOST: self.host}
+                    self.entry, data={**user_input, CONF_HOST: self.host}
                 )
-                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
