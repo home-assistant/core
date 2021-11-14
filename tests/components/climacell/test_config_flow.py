@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_options_flow(
-    hass: HomeAssistant, climacell_config_entry_update: pytest.fixture
+    hass: HomeAssistant, climacell_config_entry_update: None
 ) -> None:
     """Test options config flow for climacell."""
     entry = MockConfigEntry(
