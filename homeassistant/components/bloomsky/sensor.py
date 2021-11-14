@@ -106,12 +106,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     bloomsky = hass.data[DOMAIN]
 
+    entities = []
+
     for device in bloomsky.devices.values():
-        add_entities(BloomSkySensor(bloomsky, device, what) for what in SKY_SENSORS)
+        entities.extend(BloomSkySensor(bloomsky, device, what) for what in SKY_SENSORS)
         if "Storm" in device:
-            add_entities(
+            entities.extend(
                 BloomSkySensor(bloomsky, device, what) for what in STORM_SENSORS
             )
+    add_entities(entities, True)
 
 
 class BloomSkySensor(SensorEntity):
@@ -131,7 +134,6 @@ class BloomSkySensor(SensorEntity):
             self._attr_native_unit_of_measurement = SENSOR_UNITS_METRIC.get(
                 sensor_name, None
             )
-        self.update()
 
     @property
     def device_class(self):
@@ -142,8 +144,7 @@ class BloomSkySensor(SensorEntity):
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
         device = self._bloomsky.devices[self._device_id]
-        data = {}
-        data.update(device["Data"])
+        data = dict(device["Data"])
         # Storm supersedes sky data.
         data.update(device.get("Storm", {}))
         state = data[self._sensor_name]
