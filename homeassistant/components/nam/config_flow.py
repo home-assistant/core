@@ -166,13 +166,12 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, _: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self.config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert self.config_entry is not None
-        self.context["title_placeholders"] = {"host": self.config_entry.data[CONF_HOST]}
+        if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
+            self.config_entry = entry
+        self.host = data[CONF_HOST]
+        self.context["title_placeholders"] = {"host": self.host}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -182,24 +181,22 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            assert self.config_entry is not None
-            host = self.config_entry.data[CONF_HOST]
-
             try:
-                await async_get_mac(self.hass, host, user_input)
+                await async_get_mac(self.hass, self.host, user_input)
             except AuthFailed:
                 errors["base"] = "invalid_auth"
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 return self.async_abort(reason="reauth_unsuccessful")
             else:
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data={**user_input, CONF_HOST: host}
+                    self.config_entry, data={**user_input, CONF_HOST: self.host}
                 )
                 await self.hass.config_entries.async_reload(self.config_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
+            description_placeholders={"host": self.host},
             data_schema=AUTH_SCHEMA,
             errors=errors,
         )
