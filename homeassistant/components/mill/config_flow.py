@@ -36,8 +36,7 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input[CONNECTION_TYPE] == LOCAL:
             return await self.async_step_local()
-        else:
-            return await self.async_step_cloud()
+        return await self.async_step_cloud()
 
     async def async_step_local(self, user_input=None):
         """Handle the local step."""
@@ -60,7 +59,7 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="local",
                 data_schema=data_schema,
-                errors={"cannot_connect": "cannot_connect"}
+                errors={"base": "cannot_connect"},
             )
 
         return self.async_create_entry(
@@ -95,7 +94,7 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if not await mill_data_connection.connect():
-            errors["cannot_connect"] = "cannot_connect"
+            errors["base"] = "cannot_connect"
             return self.async_show_form(
                 step_id="cloud",
                 data_schema=data_schema,

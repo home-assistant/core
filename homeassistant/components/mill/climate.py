@@ -51,8 +51,7 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Mill climate."""
-
-    if entry.data[CONNECTION_TYPE] == LOCAL:
+    if entry.data.get(CONNECTION_TYPE) == LOCAL:
         mill_data_coordinator = hass.data[DOMAIN][LOCAL][entry.data[CONF_IP_ADDRESS]]
         async_add_entities([LocalMillHeater(mill_data_coordinator)])
         return

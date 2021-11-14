@@ -1,21 +1,12 @@
 """Tests for Mill config flow."""
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries
 from homeassistant.components.mill.const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import RESULT_TYPE_FORM
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(name="mill_setup", autouse=True)
-def mill_setup_fixture():
-    """Patch mill setup entry."""
-    with patch("homeassistant.components.mill.async_setup_entry", return_value=True):
-        yield
 
 
 async def test_show_config_form(hass):
@@ -129,7 +120,7 @@ async def test_connection_error(hass):
         )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"]["cannot_connect"] == "cannot_connect"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_local_create_entry(hass):
@@ -253,4 +244,4 @@ async def test_local_connection_error(hass):
         )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"]["cannot_connect"] == "cannot_connect"
+    assert result["errors"] == {"base": "cannot_connect"}

@@ -28,7 +28,7 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         update_interval: timedelta | None = None,
         *,
-        mill_data_connection: Mill,
+        mill_data_connection: Mill | MillLocal,
     ) -> None:
         """Initialize global Mill data updater."""
         self.mill_data_connection = mill_data_connection
@@ -46,7 +46,15 @@ async def async_setup_entry(hass, entry):
     """Set up the Mill heater."""
     hass.data.setdefault(DOMAIN, {LOCAL: {}, CLOUD: {}})
 
-    if entry.data[CONNECTION_TYPE] == CLOUD:
+    if entry.data.get(CONNECTION_TYPE) == LOCAL:
+        mill_data_connection = MillLocal(
+            entry.data[CONF_IP_ADDRESS],
+            websession=async_get_clientsession(hass),
+        )
+        update_interval = timedelta(seconds=15)
+        key = entry.data[CONF_IP_ADDRESS]
+        conn_type = LOCAL
+    else:
         mill_data_connection = Mill(
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
@@ -54,14 +62,7 @@ async def async_setup_entry(hass, entry):
         )
         update_interval = timedelta(seconds=30)
         key = entry.data[CONF_USERNAME]
-
-    else:
-        mill_data_connection = MillLocal(
-            entry.data[CONF_IP_ADDRESS],
-            websession=async_get_clientsession(hass),
-        )
-        update_interval = timedelta(seconds=15)
-        key = entry.data[CONF_IP_ADDRESS]
+        conn_type = CLOUD
 
     if not await mill_data_connection.connect():
         raise ConfigEntryNotReady
@@ -71,7 +72,7 @@ async def async_setup_entry(hass, entry):
         update_interval=update_interval,
     )
 
-    hass.data[DOMAIN][entry.data[CONNECTION_TYPE]][key] = data_coordinator
+    hass.data[DOMAIN][conn_type][key] = data_coordinator
     await data_coordinator.async_config_entry_first_refresh()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
