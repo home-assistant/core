@@ -87,6 +87,6 @@ class DeconzSiren(DeconzDevice, SirenEntity):
             data["duration"] = duration * 10
         await self._device.turn_on(**data)
 
-    async def async_turn_off(self, **kwargs: None) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
         await self._device.turn_off()
