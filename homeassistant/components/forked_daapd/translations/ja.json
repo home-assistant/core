@@ -1,4 +1,14 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                },
+                "title": "forked-daapd\u30c7\u30d0\u30a4\u30b9\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

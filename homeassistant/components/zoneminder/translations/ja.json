@@ -9,6 +9,9 @@
         "flow_title": "ZoneMinder",
         "step": {
             "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8\u3068\u30dd\u30fc\u30c8(\u4f8b: 10.10.0.4:8010)"
+                },
                 "title": "ZoneMinder\u30b5\u30fc\u30d0\u30fc\u3092\u8ffd\u52a0\u3057\u307e\u3059\u3002"
             }
         }

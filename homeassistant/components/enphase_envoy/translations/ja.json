@@ -1,5 +1,12 @@
 {
     "config": {
-        "flow_title": "{serial} ({host})"
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
+            }
+        }
     }
 }
