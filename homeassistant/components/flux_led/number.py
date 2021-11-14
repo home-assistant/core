@@ -65,4 +65,4 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Set the flux speed value."""
-        await self._device.async_set_effect(self._device.effect, value)
+        await self._device.async_set_effect(self._device.effect, int(value))
