@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import ValuesView
+from typing import Any
 
 from pydeconz.light import Light, Siren
 
