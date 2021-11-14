@@ -45,6 +45,7 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
 
     _attr_min_value = 1
     _attr_max_value = 100
+    _attr_step = 1
 
     def __init__(
         self,
@@ -57,10 +58,6 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
         self._attr_icon = "mdi:speedometer"
         self._attr_entity_category = ENTITY_CATEGORY_CONFIG
         self._attr_name = f"{name} Effect Speed"
-        if self._device.addressable or self._device.original_addressable:
-            self._attr_step = 1
-        else:
-            self._attr_step = 100 / 30
 
     @property
     def value(self) -> float | None:
@@ -69,9 +66,10 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Set the flux speed value."""
-        effect = self._device.effect
-        if not effect:
+        current_effect = self._device.effect
+        new_speed = int(value)
+        if not current_effect:
             raise HomeAssistantError(
                 "Speed can only be adjusted when an effect is active"
             )
-        await self._device.async_set_effect(effect, int(value))
+        await self._device.async_set_effect(current_effect, new_speed)
