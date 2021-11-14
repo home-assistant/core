@@ -614,14 +614,16 @@ class FanEntity(ToggleEntity):
             data[ATTR_OSCILLATING] = self.oscillating
 
         if supported_features & SUPPORT_SET_SPEED:
-            data[ATTR_SPEED] = self.speed
-            data[ATTR_PERCENTAGE] = self.percentage
+            if self.speed is not None:
+                data[ATTR_SPEED] = self.speed
+            if self.percentage is not None:
+                data[ATTR_PERCENTAGE] = self.percentage
             data[ATTR_PERCENTAGE_STEP] = self.percentage_step
 
         if (
             supported_features & SUPPORT_PRESET_MODE
             or supported_features & SUPPORT_SET_SPEED
-        ):
+        ) and self.preset_mode is not None:
             data[ATTR_PRESET_MODE] = self.preset_mode
 
         return data

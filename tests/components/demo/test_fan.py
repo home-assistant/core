@@ -169,7 +169,7 @@ async def test_turn_on_with_preset_mode_only(hass, fan_entity_id):
     )
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_OFF
-    assert state.attributes[fan.ATTR_PRESET_MODE] is None
+    assert fan.ATTR_PRESET_MODE not in state.attributes
 
     with pytest.raises(ValueError):
         await hass.services.async_call(
@@ -182,7 +182,7 @@ async def test_turn_on_with_preset_mode_only(hass, fan_entity_id):
 
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_OFF
-    assert state.attributes[fan.ATTR_PRESET_MODE] is None
+    assert fan.ATTR_PRESET_MODE not in state.attributes
 
 
 @pytest.mark.parametrize("fan_entity_id", FANS_WITH_PRESET_MODES)
@@ -199,7 +199,7 @@ async def test_turn_on_with_preset_mode_and_speed(hass, fan_entity_id):
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_SPEED] == PRESET_MODE_AUTO
-    assert state.attributes[fan.ATTR_PERCENTAGE] is None
+    assert fan.ATTR_PERCENTAGE not in state.attributes
     assert state.attributes[fan.ATTR_PRESET_MODE] == PRESET_MODE_AUTO
     assert state.attributes[fan.ATTR_SPEED_LIST] == [
         fan.SPEED_OFF,
@@ -228,7 +228,7 @@ async def test_turn_on_with_preset_mode_and_speed(hass, fan_entity_id):
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_HIGH
     assert state.attributes[fan.ATTR_PERCENTAGE] == 100
-    assert state.attributes[fan.ATTR_PRESET_MODE] is None
+    assert fan.ATTR_PRESET_MODE not in state.attributes
 
     await hass.services.async_call(
         fan.DOMAIN,
@@ -239,7 +239,7 @@ async def test_turn_on_with_preset_mode_and_speed(hass, fan_entity_id):
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_SPEED] == PRESET_MODE_SMART
-    assert state.attributes[fan.ATTR_PERCENTAGE] is None
+    assert fan.ATTR_PERCENTAGE not in state.attributes
     assert state.attributes[fan.ATTR_PRESET_MODE] == PRESET_MODE_SMART
 
     await hass.services.async_call(
@@ -249,7 +249,7 @@ async def test_turn_on_with_preset_mode_and_speed(hass, fan_entity_id):
     assert state.state == STATE_OFF
     assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_OFF
     assert state.attributes[fan.ATTR_PERCENTAGE] == 0
-    assert state.attributes[fan.ATTR_PRESET_MODE] is None
+    assert fan.ATTR_PRESET_MODE not in state.attributes
 
     with pytest.raises(ValueError):
         await hass.services.async_call(
@@ -264,7 +264,7 @@ async def test_turn_on_with_preset_mode_and_speed(hass, fan_entity_id):
     assert state.state == STATE_OFF
     assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_OFF
     assert state.attributes[fan.ATTR_PERCENTAGE] == 0
-    assert state.attributes[fan.ATTR_PRESET_MODE] is None
+    assert fan.ATTR_PRESET_MODE not in state.attributes
 
 
 @pytest.mark.parametrize("fan_entity_id", LIMITED_AND_FULL_FAN_ENTITY_IDS)
@@ -352,7 +352,7 @@ async def test_set_preset_mode(hass, fan_entity_id):
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_SPEED] == PRESET_MODE_AUTO
-    assert state.attributes[fan.ATTR_PERCENTAGE] is None
+    assert fan.ATTR_PERCENTAGE not in state.attributes
     assert state.attributes[fan.ATTR_PRESET_MODE] == PRESET_MODE_AUTO
 
 
