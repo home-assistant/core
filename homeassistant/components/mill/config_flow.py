@@ -36,8 +36,7 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input[CONNECTION_TYPE] == LOCAL:
             return await self.async_step_local()
-
-        if user_input[CONNECTION_TYPE] == CLOUD:
+        else:
             return await self.async_step_cloud()
 
     async def async_step_local(self, user_input=None):
