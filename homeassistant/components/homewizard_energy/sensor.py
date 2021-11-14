@@ -53,12 +53,12 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         key=ATTR_SMR_VERSION,
         name="SMR Version",
-        icon="mdi:wifi",
+        icon="mdi:counter",
     ),
     SensorEntityDescription(
         key=ATTR_METER_MODEL,
         name="Model",
-        icon="mdi:counter",
+        icon="mdi:gauge",
     ),
     SensorEntityDescription(
         key=ATTR_WIFI_SSID,
