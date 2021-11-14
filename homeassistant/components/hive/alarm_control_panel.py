@@ -31,11 +31,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("alarm_control_panel")
-    entities = []
     if devices:
-        for dev in devices:
-            entities.append(HiveAlarmControlPanelEntity(hive, dev))
-    async_add_entities(entities, True)
+        async_add_entities([HiveAlarmControlPanelEntity(hive, dev) for dev in devices], True)
 
 
 class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
