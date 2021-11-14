@@ -171,9 +171,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        if not self.config_entry:
-            return self.async_abort(reason="reauth_failed_existing")
-
+        assert self.config_entry is not None
         self.context["title_placeholders"] = {"host": self.config_entry.data[CONF_HOST]}
         return await self.async_step_reauth_confirm()
 
