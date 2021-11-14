@@ -46,7 +46,7 @@ async def test_binary_sensors(hass, aioclient_mock, mock_deconz_websocket):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 3
-    assert hass.states.get("number.presence_sensor_delay").state == "0.0"
+    assert hass.states.get("number.presence_sensor_delay").state == "0"
 
     event_changed_sensor = {
         "t": "event",
@@ -58,7 +58,7 @@ async def test_binary_sensors(hass, aioclient_mock, mock_deconz_websocket):
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert hass.states.get("number.presence_sensor_delay").state == "10.0"
+    assert hass.states.get("number.presence_sensor_delay").state == "10"
 
     # Verify service calls
 

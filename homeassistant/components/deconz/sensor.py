@@ -217,8 +217,7 @@ class DeconzSensor(DeconzDevice, SensorEntity):
     @property
     def native_value(self) -> bool | float | int | str | None:
         """Return the state of the sensor."""
-        assert isinstance(self._device.state, (bool, float, int, str))
-        return self._device.state
+        return self._device.state  # type: ignore[no-any-return]
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -283,8 +282,7 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
     @property
     def native_value(self) -> float:
         """Return the state of the sensor."""
-        assert isinstance(self._device.secondary_temperature, float)
-        return self._device.secondary_temperature
+        return self._device.secondary_temperature  # type: ignore[no-any-return]
 
 
 class DeconzBattery(DeconzDevice, SensorEntity):
@@ -326,8 +324,7 @@ class DeconzBattery(DeconzDevice, SensorEntity):
     @property
     def native_value(self) -> int:
         """Return the state of the battery."""
-        assert isinstance(self._device.battery, int)
-        return self._device.battery
+        return self._device.battery  # type: ignore[no-any-return]
 
     @property
     def extra_state_attributes(self) -> dict:

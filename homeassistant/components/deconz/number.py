@@ -129,7 +129,6 @@ class DeconzNumber(DeconzDevice, NumberEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the number value."""
-        assert isinstance(self.entity_description, DeconzNumberEntityDescription)
         keys = {self.entity_description.update_key, "reachable"}
         if self._device.changed_keys.intersection(keys):
             super().async_update_callback()
@@ -137,7 +136,7 @@ class DeconzNumber(DeconzDevice, NumberEntity):
     @property
     def value(self) -> float:
         """Return the value of the sensor property."""
-        return float(getattr(self._device, self.entity_description.device_property))
+        return getattr(self._device, self.entity_description.device_property)  # type: ignore[no-any-return]
 
     async def async_set_value(self, value: float) -> None:
         """Set sensor config."""
