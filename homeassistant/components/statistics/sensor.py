@@ -268,7 +268,7 @@ class StatisticsSensor(SensorEntity):
 
     @property
     def state_class(self):
-        """Return the state class of this entity, from STATE_CLASSES, if any."""
+        """Return the state class of this entity."""
         if self._state_characteristic in (
             STAT_MIN_AGE,
             STAT_MAX_AGE,
@@ -356,7 +356,7 @@ class StatisticsSensor(SensorEntity):
             return self.ages[0] + self._samples_max_age
         return None
 
-    def update_characteristics(self):
+    def _update_characteristics(self):
         """Calculate and update the various statistical characteristics."""
         states_count = len(self.states)
         self.attr[STAT_COUNT] = states_count
@@ -433,7 +433,7 @@ class StatisticsSensor(SensorEntity):
         if self._samples_max_age is not None:
             self._purge_old()
 
-        self.update_characteristics()
+        self._update_characteristics()
 
         # If max_age is set, ensure to update again after the defined interval.
         next_to_purge_timestamp = self._next_to_purge_timestamp()

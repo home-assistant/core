@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components import recorder
+from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.components.statistics.sensor import DOMAIN, StatisticsSensor
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -444,6 +445,68 @@ class TestStatisticsSensor(unittest.TestCase):
 
         state = self.hass.states.get("sensor.test")
         assert state.state == str(round(sum(self.values) / len(self.values), 1))
+
+    def test_state_characteristic_unit(self):
+        """Test statistics characteristic selection (via config).
+
+        The entity state follows one of the attributes.
+        Check unit of measurement and state class.
+        """
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test_max_age",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "max_age",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_change_rate",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "change_rate",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_unitless",
+                        "entity_id": "sensor.test_monitored_unitless",
+                        "state_characteristic": "change_rate",
+                    },
+                ]
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in self.values:
+            self.hass.states.set(
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.states.set(
+                "sensor.test_monitored_unitless",
+                value,
+            )
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test_max_age")
+        assert state.state == str(state.attributes.get("max_age"))
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+        assert state.attributes.get(ATTR_STATE_CLASS) is None
+        state = self.hass.states.get("sensor.test_change_rate")
+        assert state.state == str(state.attributes.get("change_rate"))
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS + "/s"
+        assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+        state = self.hass.states.get("sensor.test_unitless")
+        assert state.state == str(state.attributes.get("change_rate"))
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+        assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
 
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
