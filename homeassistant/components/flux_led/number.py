@@ -62,7 +62,7 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     @property
     def value(self) -> float | None:
         """Return the effect speed."""
-        return cast(int, self._device.speed)
+        return cast(float, self._device.speed)
 
     async def async_set_value(self, value: float) -> None:
         """Set the flux speed value."""
