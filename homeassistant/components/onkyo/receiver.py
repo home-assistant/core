@@ -285,13 +285,13 @@ class ReceiverZone:
         """Set HDMI out."""
         self.receiver.update_property(self._zone, "hdmi-output-selector", hdmi_output)
 
-    def register_callback(self, callback: Callable[[], None]) -> None:
+    def register_callback(self, update_callback: Callable[[], None]) -> None:
         """Register callback, called when the receiver pushes a change for this zone."""
-        self._callbacks.add(callback)
+        self._callbacks.add(update_callback)
 
-    def remove_callback(self, callback: Callable[[], None]) -> None:
+    def remove_callback(self, update_callback: Callable[[], None]) -> None:
         """Remove previously registered callback."""
-        self._callbacks.discard(callback)
+        self._callbacks.discard(update_callback)
 
     def stop_query_timer(self) -> None:
         """Cancel the query timer."""
@@ -354,8 +354,8 @@ class ReceiverZone:
             self._query_delayed_av_info()
 
         # Notify any listeners for the updated data.
-        for cb in self._callbacks:
-            cb()
+        for update_callback in self._callbacks:
+            update_callback()
 
     def _query_delayed_av_info(self) -> None:
         """Query new audio/video information after some delay."""
