@@ -17,6 +17,7 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     POWER_WATT,
     VOLUME_CUBIC_METERS,
@@ -54,16 +55,19 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         key=ATTR_SMR_VERSION,
         name="SMR Version",
         icon="mdi:counter",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_METER_MODEL,
         name="Model",
         icon="mdi:gauge",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_WIFI_SSID,
         name="Wifi SSID",
         icon="mdi:wifi",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_WIFI_STRENGTH,
@@ -71,6 +75,7 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key=ATTR_TOTAL_ENERGY_IMPORT_T1_KWH,
