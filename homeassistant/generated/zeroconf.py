@@ -13,6 +13,10 @@ ZEROCONF = {
     ],
     "_airplay._tcp.local.": [
         {
+            "domain": "apple_tv",
+            "model": "appletv*"
+        },
+        {
             "domain": "samsungtv",
             "manufacturer": "samsung*"
         }

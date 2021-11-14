@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
     type="_touch-able._tcp.local.",
-    name="dmapid.something",
+    name="dmapid._touch-able._tcp.local.",
     properties={"CtlN": "Apple TV"},
 )
 
@@ -24,7 +24,6 @@ DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
 @pytest.fixture(autouse=True)
 def use_mocked_zeroconf(mock_zeroconf):
     """Mock zeroconf in all tests."""
-    pass
 
 
 @pytest.fixture(autouse=True)
@@ -242,7 +241,7 @@ async def test_user_adds_existing_device(hass, mrp_device):
         {"device_input": "127.0.0.1"},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "already_configured_device"}
+    assert result2["errors"] == {"base": "already_configured"}
 
 
 async def test_user_connection_failed(hass, mrp_device, pairing_mock):
@@ -471,6 +470,7 @@ async def test_zeroconf_unsupported_service_aborts(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             type="_dummy._tcp.local.",
+            name="test",
             properties={},
         ),
     )

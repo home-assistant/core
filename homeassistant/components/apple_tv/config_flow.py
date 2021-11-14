@@ -129,7 +129,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except DeviceNotFound:
                 errors["base"] = "no_devices_found"
             except DeviceAlreadyConfigured:
-                errors["base"] = "already_configured_device"
+                errors["base"] = "already_configured"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
