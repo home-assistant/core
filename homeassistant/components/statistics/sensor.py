@@ -45,20 +45,19 @@ ATTR_MEDIAN = "median"
 ATTR_MIN_AGE = "min_age"
 ATTR_MIN_VALUE = "min_value"
 ATTR_QUANTILES = "quantiles"
-ATTR_SAMPLING_SIZE = "sampling_size"
 ATTR_STANDARD_DEVIATION = "standard_deviation"
 ATTR_TOTAL = "total"
 ATTR_VARIANCE = "variance"
 
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
-CONF_SAMPLING_SIZE = "sampling_size"
+CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
 CONF_PRECISION = "precision"
 CONF_QUANTILE_INTERVALS = "quantile_intervals"
 CONF_QUANTILE_METHOD = "quantile_method"
 
 DEFAULT_NAME = "Stats"
-DEFAULT_SIZE = 20
+DEFAULT_BUFFER_SIZE = 20
 DEFAULT_PRECISION = 2
 DEFAULT_QUANTILE_INTERVALS = 4
 DEFAULT_QUANTILE_METHOD = "exclusive"
@@ -86,9 +85,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 ATTR_VARIANCE,
             ]
         ),
-        vol.Optional(CONF_SAMPLING_SIZE, default=DEFAULT_SIZE): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
-        ),
+        vol.Optional(
+            CONF_SAMPLES_MAX_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE
+        ): vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
         vol.Optional(
@@ -112,8 +111,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 source_entity_id=config.get(CONF_ENTITY_ID),
                 name=config.get(CONF_NAME),
                 state_characteristic=config.get(CONF_STATE_CHARACTERISTIC),
-                sampling_size=config.get(CONF_SAMPLING_SIZE),
-                max_age=config.get(CONF_MAX_AGE),
+                samples_max_buffer_size=config.get(CONF_SAMPLES_MAX_BUFFER_SIZE),
+                samples_max_age=config.get(CONF_MAX_AGE),
                 precision=config.get(CONF_PRECISION),
                 quantile_intervals=config.get(CONF_QUANTILE_INTERVALS),
                 quantile_method=config.get(CONF_QUANTILE_METHOD),
@@ -132,8 +131,8 @@ class StatisticsSensor(SensorEntity):
         source_entity_id,
         name,
         state_characteristic,
-        sampling_size,
-        max_age,
+        samples_max_buffer_size,
+        samples_max_age,
         precision,
         quantile_intervals,
         quantile_method,
@@ -144,14 +143,14 @@ class StatisticsSensor(SensorEntity):
         self._name = name
         self._available = False
         self._state_characteristic = state_characteristic
-        self._sampling_size = sampling_size
-        self._samples_max_age = max_age
+        self._samples_max_buffer_size = samples_max_buffer_size
+        self._samples_max_age = samples_max_age
         self._precision = precision
         self._quantile_intervals = quantile_intervals
         self._quantile_method = quantile_method
         self._unit_of_measurement = None
-        self.states = deque(maxlen=self._sampling_size)
-        self.ages = deque(maxlen=self._sampling_size)
+        self.states = deque(maxlen=self._samples_max_buffer_size)
+        self.ages = deque(maxlen=self._samples_max_buffer_size)
         self.attr = {
             ATTR_COUNT: 0,
             ATTR_TOTAL: None,
@@ -316,7 +315,8 @@ class StatisticsSensor(SensorEntity):
         if self.is_binary:
             return None
         return {
-            "configuration_" + CONF_SAMPLING_SIZE: self._sampling_size,
+            "configuration_"
+            + CONF_SAMPLES_MAX_BUFFER_SIZE: self._samples_max_buffer_size,
             "configuration_" + CONF_MAX_AGE: str(self._samples_max_age),
             "configuration_" + CONF_STATE_CHARACTERISTIC: self._state_characteristic,
             **self.attr,
@@ -487,7 +487,7 @@ class StatisticsSensor(SensorEntity):
                 _LOGGER.debug("%s: retrieving all records", self.entity_id)
 
             query = query.order_by(States.last_updated.desc()).limit(
-                self._sampling_size
+                self._samples_max_buffer_size
             )
             states = execute(query, to_native=True, validate_entity_ids=False)
 
