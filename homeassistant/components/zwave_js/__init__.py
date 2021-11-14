@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from typing import Callable
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -110,56 +109,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@callback
-def register_node_in_dev_reg(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    dev_reg: device_registry.DeviceRegistry,
-    client: ZwaveClient,
-    node: ZwaveNode,
-    remove_device_func: Callable[[device_registry.DeviceEntry], None],
-) -> device_registry.DeviceEntry:
-    """Register node in dev reg."""
-    device_id = get_device_id(client, node)
-    device_id_ext = get_device_id_ext(client, node)
-    device = dev_reg.async_get_device({device_id})
-    device_name = device.name if device else None
-
-    # Replace the device if it can be determined that this node is not the
-    # same product as it was previously.
-    if (
-        device_id_ext
-        and device
-        and len(device.identifiers) == 2
-        and device_id_ext not in device.identifiers
-    ):
-        remove_device_func(device)
-        device = None
-
-    if device_id_ext:
-        ids = {device_id, device_id_ext}
-    else:
-        ids = {device_id}
-
-    params = {
-        ATTR_IDENTIFIERS: ids,
-        ATTR_SW_VERSION: node.firmware_version,
-        ATTR_NAME: node.name
-        or node.device_config.description
-        or device_name
-        or f"Node {node.node_id}",
-        ATTR_MODEL: node.device_config.label,
-        ATTR_MANUFACTURER: node.device_config.manufacturer,
-    }
-    if node.location:
-        params[ATTR_SUGGESTED_AREA] = node.location
-    device = dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
-
-    async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
-
-    return device
-
-
 async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: ConfigEntry
 ) -> bool:
@@ -185,6 +134,48 @@ async def async_setup_entry(  # noqa: C901
         dev_reg.async_remove_device(device.id)
         registered_unique_ids.pop(device.id, None)
         discovered_value_ids.pop(device.id, None)
+
+    @callback
+    def register_node_in_dev_reg(node: ZwaveNode) -> device_registry.DeviceEntry:
+        """Register node in dev reg."""
+        device_id = get_device_id(client, node)
+        device_id_ext = get_device_id_ext(client, node)
+        device = dev_reg.async_get_device({device_id})
+        device_name = device.name if device else None
+
+        # Replace the device if it can be determined that this node is not the
+        # same product as it was previously.
+        if (
+            device_id_ext
+            and device
+            and len(device.identifiers) == 2
+            and device_id_ext not in device.identifiers
+        ):
+            remove_device(device)
+            device = None
+
+        if device_id_ext:
+            ids = {device_id, device_id_ext}
+        else:
+            ids = {device_id}
+
+        params = {
+            ATTR_IDENTIFIERS: ids,
+            ATTR_SW_VERSION: node.firmware_version,
+            ATTR_NAME: node.name
+            or node.device_config.description
+            or device_name
+            or f"Node {node.node_id}",
+            ATTR_MODEL: node.device_config.label,
+            ATTR_MANUFACTURER: node.device_config.manufacturer,
+        }
+        if node.location:
+            params[ATTR_SUGGESTED_AREA] = node.location
+        device = dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
+
+        async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
+
+        return device
 
     async def async_handle_discovery_info(
         device: device_registry.DeviceEntry,
@@ -239,9 +230,7 @@ async def async_setup_entry(  # noqa: C901
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
         # register (or update) node in device registry
-        device = register_node_in_dev_reg(
-            hass, entry, dev_reg, client, node, remove_device
-        )
+        device = register_node_in_dev_reg(node)
         # We only want to create the defaultdict once, even on reinterviews
         if device.id not in registered_unique_ids:
             registered_unique_ids[device.id] = defaultdict(set)
@@ -318,7 +307,7 @@ async def async_setup_entry(  # noqa: C901
         )
         # we do submit the node to device registry so user has
         # some visual feedback that something is (in the process of) being added
-        register_node_in_dev_reg(hass, entry, dev_reg, client, node, remove_device)
+        register_node_in_dev_reg(node)
 
     async def async_on_value_added(
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
