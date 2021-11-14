@@ -49,6 +49,12 @@ async def test_setup_success(hass: HomeAssistant) -> None:
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.data.get(DOMAIN)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
 
 async def test_invalid_config_entry(hass: HomeAssistant) -> None:
     """Test successful setup."""

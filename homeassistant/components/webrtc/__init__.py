@@ -1,17 +1,19 @@
 """WebRTC integration with an external RTSPToWebRTC Server.
 
-Background: WebRTC uses a direct communication from the client (e.g. a web
-browser) to another WebRTC endpoint (e.g. direct support in a camera).
-Home Assistant acts as the signal path for initial set up, passing through the
-client offer and returning a camera answer, then the client and camera communicate
-directly.
+WebRTC uses a direct communication from the client (e.g. a web browser) to a
+camera device. Home Assistant acts as the signal path for initial set up,
+passing through the client offer and returning a camera answer, then the client
+and camera communicate directly.
 
-This integration is a shim for camera devices that support RTSP streams only,
-relying on an external RTSPToWebRTC server that is a proxy. Home Assistant does
-not participate in the offer/answer SDP protocol, other than as a signal path
-pass through.
+However, not all cameras natively support WebRTC. This integration is a shim
+for camera devices that support RTSP streams only, relying on an external
+server RTSPToWebRTC that is a proxy. Home Assistant does not participate in
+the offer/answer SDP protocol, other than as a signal path pass through.
 
-The webrtc integration is meant to be used with the camera integration.
+Other integrations may use this webrtc integration with these steps:
+- Check if this integration is loaded
+- Call is_suported_stream_source for compatibility
+- Call async_offer_for_stream_source to get back an answer for a client offer
 """
 
 from __future__ import annotations
@@ -54,6 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    del hass.data[DOMAIN]
     return True
 
 
