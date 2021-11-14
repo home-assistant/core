@@ -1,7 +1,7 @@
 """Test init of Nettigo Air Monitor integration."""
 from unittest.mock import patch
 
-from nettigo_air_monitor import ApiError
+from nettigo_air_monitor import ApiError, AuthFailed
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.components.nam.const import DOMAIN
@@ -32,13 +32,31 @@ async def test_config_not_ready(hass):
         data={"host": "10.10.2.3"},
     )
 
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.initialize",
         side_effect=ApiError("API Error"),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_auth_failed(hass):
+    """Test for setup failure if the auth fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="10.10.2.3",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data={"host": "10.10.2.3"},
+    )
+
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.initialize",
+        side_effect=AuthFailed("Authorization has failed"),
+    ):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unload_entry(hass):

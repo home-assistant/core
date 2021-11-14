@@ -190,10 +190,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except AuthFailed:
                 errors["base"] = "invalid_auth"
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                return self.async_abort(reason="reauth_unsuccessful")
             else:
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data={**user_input, CONF_HOST: host}

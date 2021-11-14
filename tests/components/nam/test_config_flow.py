@@ -54,7 +54,7 @@ async def test_form_create_entry_with_auth(hass):
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.initialize",
-        side_effect=AuthFailed("Authorization has failed"),
+        side_effect=AuthFailed("Auth Error"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -117,11 +117,74 @@ async def test_reauth_successful(hass):
         assert result["reason"] == "reauth_successful"
 
 
+async def test_reauth_unsuccessful(hass):
+    """Test starting a reauthentication flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="10.10.2.3",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data={"host": "10.10.2.3"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.initialize",
+        side_effect=ApiError("API Error"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=VALID_AUTH,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "reauth_unsuccessful"
+
+
+async def test_reauth_with_error(hass):
+    """Test starting a reauthentication flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="10.10.2.3",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data={"host": "10.10.2.3"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.initialize",
+        side_effect=AuthFailed("Auth Error"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=VALID_AUTH,
+        )
+
+        assert result["errors"] == {"base": "invalid_auth"}
+
+
 @pytest.mark.parametrize(
     "error",
     [
-        (ApiError("Invalid response from device 10.10.2.3: 404"), "cannot_connect"),
-        (AuthFailed("Authorization has failed"), "invalid_auth"),
+        (ApiError("API Error"), "cannot_connect"),
+        (AuthFailed("Auth Error"), "invalid_auth"),
         (asyncio.TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
@@ -131,7 +194,7 @@ async def test_form_with_auth_errors(hass, error):
     exc, base_error = error
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.initialize",
-        side_effect=AuthFailed("Authorization has failed"),
+        side_effect=AuthFailed("Auth Error"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -157,7 +220,7 @@ async def test_form_with_auth_errors(hass, error):
 @pytest.mark.parametrize(
     "error",
     [
-        (ApiError("Invalid response from device 10.10.2.3: 404"), "cannot_connect"),
+        (ApiError("API Error"), "cannot_connect"),
         (asyncio.TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
@@ -189,6 +252,34 @@ async def test_form_abort(hass):
             DOMAIN,
             context={"source": SOURCE_USER},
             data=VALID_CONFIG,
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "device_unsupported"
+
+
+async def test_form_with_auth_abort(hass):
+    """Test we handle abort after error."""
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.initialize",
+        side_effect=AuthFailed("Auth Error"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=VALID_CONFIG,
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "credentials"
+
+    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        side_effect=CannotGetMac("Cannot get MAC address from device"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_AUTH,
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -264,7 +355,7 @@ async def test_zeroconf_with_auth(hass):
     """Test that the zeroconf step with auth works."""
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.initialize",
-        side_effect=AuthFailed("Authorization has failed"),
+        side_effect=AuthFailed("Auth Error"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -316,7 +407,7 @@ async def test_zeroconf_host_already_configured(hass):
 @pytest.mark.parametrize(
     "error",
     [
-        (ApiError("Invalid response from device 10.10.2.3: 404"), "cannot_connect"),
+        (ApiError("API Error"), "cannot_connect"),
         (CannotGetMac("Cannot get MAC address from device"), "device_unsupported"),
     ],
 )
