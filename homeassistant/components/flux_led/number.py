@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import CONF_NAME, ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,7 +43,6 @@ async def async_setup_entry(
 class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     """Defines a flux_led speed number."""
 
-    _attr_step = 1
     _attr_min_value = 1
     _attr_max_value = 100
 
@@ -57,12 +57,21 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
         self._attr_icon = "mdi:speedometer"
         self._attr_entity_category = ENTITY_CATEGORY_CONFIG
         self._attr_name = f"{name} Effect Speed"
+        if self._device.addressable or self._device.original_addressable:
+            self._attr_step = 1
+        else:
+            self._attr_step = 100 / 30
 
     @property
-    def value(self) -> int | None:
+    def value(self) -> float | None:
         """Return the effect speed."""
         return cast(int, self._device.speed)
 
     async def async_set_value(self, value: float) -> None:
         """Set the flux speed value."""
-        await self._device.async_set_effect(self._device.effect, int(value))
+        effect = self._device.effect
+        if not effect:
+            raise HomeAssistantError(
+                "Speed can only be adjusted when an effect is active"
+            )
+        await self._device.async_set_effect(effect, int(value))
