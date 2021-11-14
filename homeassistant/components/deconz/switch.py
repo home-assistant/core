@@ -81,7 +81,7 @@ class DeconzPowerPlug(DeconzDevice, SwitchEntity):
         """Return true if switch is on."""
         return self._device.state  # type: ignore[no-any-return]
 
-    async def async_turn_on(self, **kwargs: None) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self._device.set_state(on=True)
 
