@@ -136,7 +136,7 @@ async def test_async_step_integration_discovery(
     hass: HomeAssistant, ezviz_config_flow, ezviz_test_rtsp_config_flow
 ) -> None:
     """Test discovery and confirm step."""
-    with patch("homeassistant.components.ezviz.PLATFORMS", []):
+    with patch("homeassistant.components.ezviz.PLATFORMS_BY_TYPE", []):
         await init_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -247,7 +247,7 @@ async def test_discover_exception_step1(
     ezviz_config_flow,
 ) -> None:
     """Test we handle unexpected exception on discovery."""
-    with patch("homeassistant.components.ezviz.PLATFORMS", []):
+    with patch("homeassistant.components.ezviz.PLATFORMS_BY_TYPE", []):
         await init_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -322,7 +322,7 @@ async def test_discover_exception_step3(
     ezviz_test_rtsp_config_flow,
 ) -> None:
     """Test we handle unexpected exception on discovery."""
-    with patch("homeassistant.components.ezviz.PLATFORMS", []):
+    with patch("homeassistant.components.ezviz.PLATFORMS_BY_TYPE", []):
         await init_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
