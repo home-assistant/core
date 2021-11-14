@@ -2,7 +2,15 @@
     "config": {
         "abort": {
             "no_udn": "SSDP\u691c\u51fa\u60c5\u5831\u306b\u3001UDN\u304c\u3042\u308a\u307e\u305b\u3093",
-            "not_keenetic_ndms2": "\u767a\u898b\u3055\u308c\u305f\u30a2\u30a4\u30c6\u30e0\u306fKeenetic\u306e\u30eb\u30fc\u30bf\u30fc\u3067\u306f\u3042\u308a\u307e\u305b\u3093"
+            "not_keenetic_ndms2": "\u767a\u898b\u3055\u308c\u305f\u30a2\u30a4\u30c6\u30e0\u306fKeenetic router\u3067\u306f\u3042\u308a\u307e\u305b\u3093"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                },
+                "title": "Keenetic NDMS2\u30eb\u30fc\u30bf\u30fc\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+            }
         }
     }
 }

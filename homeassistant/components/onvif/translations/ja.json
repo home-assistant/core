@@ -2,7 +2,15 @@
     "config": {
         "step": {
             "configure": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                },
                 "title": "ONVIF\u30c7\u30d0\u30a4\u30b9\u306e\u8a2d\u5b9a"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
             },
             "user": {
                 "data": {

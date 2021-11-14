@@ -3,6 +3,11 @@
         "step": {
             "auth": {
                 "title": "\u30c7\u30d0\u30a4\u30b9\u3078\u306e\u8a8d\u8a3c"
+            },
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
             }
         }
     }

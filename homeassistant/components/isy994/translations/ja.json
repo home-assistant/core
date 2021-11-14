@@ -1,4 +1,13 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "URL"
+                }
+            }
+        }
+    },
     "system_health": {
         "info": {
             "host_reachable": "\u30db\u30b9\u30c8\u5230\u9054\u53ef\u80fd",

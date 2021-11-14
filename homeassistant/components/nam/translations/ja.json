@@ -5,6 +5,9 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                },
                 "description": "Nettigo Air Monitor\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
             }
         }
