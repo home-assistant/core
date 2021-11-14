@@ -225,7 +225,9 @@ class StatisticsSensor(SensorEntity):
 
     def _derive_unit_of_measurement(self, new_state):
         base_unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if self.is_binary:
+        if not base_unit:
+            unit = None
+        elif self.is_binary:
             unit = None
         elif self._state_characteristic in (
             STAT_COUNT,
@@ -257,9 +259,6 @@ class StatisticsSensor(SensorEntity):
                 self._state_characteristic,
             )
             unit = None
-
-        if not base_unit:
-            unit = None
         return unit
 
     @property
@@ -283,13 +282,13 @@ class StatisticsSensor(SensorEntity):
         """Return the state of the sensor."""
         if self.is_binary:
             return self.attr[STAT_COUNT]
-        elif self._state_characteristic in (
+        if self._state_characteristic in (
             STAT_MIN_AGE,
             STAT_MAX_AGE,
             STAT_QUANTILES,
         ):
             return self.attr[self._state_characteristic]
-        elif self._precision == 0:
+        if self._precision == 0:
             with contextlib.suppress(TypeError, ValueError):
                 return int(self.attr[self._state_characteristic])
         return self.attr[self._state_characteristic]
