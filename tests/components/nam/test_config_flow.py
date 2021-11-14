@@ -149,37 +149,6 @@ async def test_reauth_unsuccessful(hass):
         assert result["reason"] == "reauth_unsuccessful"
 
 
-async def test_reauth_with_error(hass):
-    """Test starting a reauthentication flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="10.10.2.3",
-        unique_id="aa:bb:cc:dd:ee:ff",
-        data={"host": "10.10.2.3"},
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.initialize",
-        side_effect=AuthFailed("Auth Error"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data=entry.data,
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "reauth_confirm"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=VALID_AUTH,
-        )
-
-        assert result["errors"] == {"base": "invalid_auth"}
-
-
 @pytest.mark.parametrize(
     "error",
     [

@@ -183,9 +183,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await async_get_mac(self.hass, self.host, user_input)
-            except AuthFailed:
-                errors["base"] = "invalid_auth"
-            except (ApiError, ClientConnectorError, asyncio.TimeoutError):
+            except (ApiError, AuthFailed, ClientConnectorError, asyncio.TimeoutError):
                 return self.async_abort(reason="reauth_unsuccessful")
             else:
                 self.hass.config_entries.async_update_entry(
