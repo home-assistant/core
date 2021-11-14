@@ -1,7 +1,6 @@
 """Config flow for Bosch Smart Home Controller integration."""
 import logging
 from os import makedirs
-from typing import TYPE_CHECKING
 
 from boschshcpy import SHCRegisterClient, SHCSession
 from boschshcpy.exceptions import (
@@ -202,7 +201,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     continue
                 self.info = await self._get_info(host)
                 self.host = host
-            if self.host is None:
+            if self.info is None or self.host is None:
                 return self.async_abort(reason="cannot_connect")
         except SHCConnectionError:
             return self.async_abort(reason="cannot_connect")
@@ -210,8 +209,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         local_name = discovery_info[zeroconf.ATTR_HOSTNAME][:-1]
         node_name = local_name[: -len(".local")]
 
-        if TYPE_CHECKING:
-            assert self.info
         await self.async_set_unique_id(self.info["unique_id"])
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
         self.context["title_placeholders"] = {"name": node_name}
