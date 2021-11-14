@@ -63,7 +63,6 @@ def get_alarm_system_for_unique_id(
     """Retrieve alarm system unique ID is registered to."""
     for alarm_system in gateway.api.alarmsystems.values():
         if unique_id in alarm_system.devices:
-            assert isinstance(alarm_system, AlarmSystem)
             return alarm_system
     return None
 
@@ -151,7 +150,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     @property
     def state(self) -> str | None:
         """Return the state of the control panel."""
-        return DECONZ_TO_ALARM_STATE[self._device.panel]
+        return DECONZ_TO_ALARM_STATE.get(self._device.panel)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""

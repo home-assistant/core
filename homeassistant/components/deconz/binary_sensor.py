@@ -154,8 +154,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        assert isinstance(self._device.state, bool)
-        return self._device.state
+        return self._device.state  # type: ignore[no-any-return]
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -211,5 +210,4 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        assert isinstance(self._device.tampered, bool)
-        return self._device.tampered
+        return self._device.tampered  # type: ignore[no-any-return]
