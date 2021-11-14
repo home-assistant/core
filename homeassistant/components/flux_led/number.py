@@ -60,7 +60,7 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
         self._attr_name = f"{name} Effect Speed"
 
     @property
-    def value(self) -> float | None:
+    def value(self) -> float:
         """Return the effect speed."""
         return cast(float, self._device.speed)
 
