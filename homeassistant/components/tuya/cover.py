@@ -50,7 +50,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             name="Curtain",
             current_state=DPCode.SITUATION_SET,
-            current_position=DPCode.PERCENT_STATE,
+            current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=DEVICE_CLASS_CURTAIN,
         ),
@@ -117,7 +117,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "jdcljqr": (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
-            current_position=DPCode.PERCENT_CONTROL,
+            current_position=DPCode.PERCENT_STATE,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=DEVICE_CLASS_CURTAIN,
         ),
