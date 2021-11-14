@@ -4,7 +4,7 @@
 DOMAIN = "homewizard_energy"
 COORDINATOR = "coordinator"
 MANUFACTURER_NAME = "HomeWizard"
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "switch"]
 
 # Platform config.
 CONF_SERIAL = "serial"
