@@ -9,6 +9,7 @@
         }
       },
       "credentials": {
+        "description": "Please enter the correct username and password.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
