@@ -1,4 +1,14 @@
 {
+    "config": {
+        "flow_title": "{model} {id} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

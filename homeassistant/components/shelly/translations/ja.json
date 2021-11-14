@@ -1,4 +1,13 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
+            }
+        }
+    },
     "device_automation": {
         "trigger_subtype": {
             "button4": "4\u756a\u76ee\u306e\u30dc\u30bf\u30f3"

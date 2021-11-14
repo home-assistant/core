@@ -17,6 +17,16 @@
                     "model": "\u30c7\u30d0\u30a4\u30b9\u30e2\u30c7\u30eb"
                 }
             },
+            "device": {
+                "data": {
+                    "host": "IP\u30a2\u30c9\u30ec\u30b9"
+                }
+            },
+            "manual": {
+                "data": {
+                    "host": "IP\u30a2\u30c9\u30ec\u30b9"
+                }
+            },
             "select": {
                 "data": {
                     "select_device": "Miio\u30c7\u30d0\u30a4\u30b9"

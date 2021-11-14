@@ -10,6 +10,11 @@
         "step": {
             "link": {
                 "title": "deCONZ\u3068\u30ea\u30f3\u30af\u3059\u308b"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
             }
         }
     },
