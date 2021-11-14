@@ -362,10 +362,16 @@ async def test_zeroconf_with_auth(hass):
             data=DISCOVERY_INFO,
             context={"source": SOURCE_ZEROCONF},
         )
+        context = next(
+            flow["context"]
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["flow_id"] == result["flow_id"]
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "credentials"
     assert result["errors"] == {}
+    assert context["title_placeholders"]["host"] == "10.10.2.3"
 
     with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",

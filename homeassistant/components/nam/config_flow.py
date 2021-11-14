@@ -127,6 +127,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info[CONF_HOST]
+        self.context["title_placeholders"] = {"host": self.host}
 
         # Do not probe the device if the host is already configured
         self._async_abort_entries_match({CONF_HOST: self.host})
@@ -142,8 +143,6 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(format_mac(mac))
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
-
-        self.context["title_placeholders"] = {"host": self.host}
 
         return await self.async_step_confirm_discovery()
 
