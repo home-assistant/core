@@ -26,6 +26,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
 from .const import (
+    CONF_PROJECT_ID,
+    CONF_SUBSCRIBER_ID,
+    DATA_NEST_CONFIG,
     DATA_SDM,
     DATA_SUBSCRIBER,
     DOMAIN,
@@ -38,9 +41,6 @@ from .legacy import async_setup_legacy, async_setup_legacy_entry
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PROJECT_ID = "project_id"
-CONF_SUBSCRIBER_ID = "subscriber_id"
-DATA_NEST_CONFIG = "nest_config"
 DATA_NEST_UNAVAILABLE = "nest_unavailable"
 
 NEST_SETUP_NOTIFICATION = "nest_setup"
