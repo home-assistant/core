@@ -67,6 +67,18 @@ def get_device_id(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str]:
 
 
 @callback
+def get_device_id_ext(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str] | None:
+    """Get extended device registry identifier for Z-Wave node."""
+    if None in (node.manufacturer_id, node.product_type, node.product_id):
+        return None
+
+    return (
+        DOMAIN,
+        f"{client.driver.controller.home_id}-{node.node_id}-{node.manufacturer_id:04x}:{node.product_type:04x}:{node.product_id:04x}",
+    )
+
+
+@callback
 def get_home_and_node_id_from_device_id(device_id: tuple[str, ...]) -> list[str]:
     """
     Get home ID and node ID for Z-Wave device registry entry.
