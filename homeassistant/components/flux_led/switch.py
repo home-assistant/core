@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FluxLedUpdateCoordinator
 from .const import DOMAIN
-from .entity import FluxEntity
+from .entity import FluxOnOffEntity
 
 
 async def async_setup_entry(
@@ -33,7 +33,7 @@ async def async_setup_entry(
     )
 
 
-class FluxSwitch(FluxEntity, CoordinatorEntity, SwitchEntity):
+class FluxSwitch(FluxOnOffEntity, CoordinatorEntity, SwitchEntity):
     """Representation of a Flux switch."""
 
     async def _async_turn_on(self, **kwargs: Any) -> None:
