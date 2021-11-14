@@ -5,6 +5,7 @@ from typing import cast
 
 from homeassistant import config_entries
 from homeassistant.components.number import NumberEntity
+from homeassistant.components.number.const import MODE_SLIDER
 from homeassistant.const import CONF_NAME, ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -58,6 +59,7 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
         self._attr_icon = "mdi:speedometer"
         self._attr_entity_category = ENTITY_CATEGORY_CONFIG
         self._attr_name = f"{name} Effect Speed"
+        self._attr_mode = MODE_SLIDER
 
     @property
     def value(self) -> float:
