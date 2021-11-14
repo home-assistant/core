@@ -46,7 +46,6 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="local",
                 data_schema=data_schema,
-                errors={},
             )
 
         mill_data_connection = MillLocal(
