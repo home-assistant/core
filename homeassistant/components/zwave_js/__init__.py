@@ -122,16 +122,19 @@ def register_node_in_dev_reg(
     """Register node in dev reg."""
     device_id = get_device_id(client, node)
     device_id_ext = get_device_id_ext(client, node)
+    device = dev_reg.async_get_device({device_id})
+    device_name = device.name if device else None
 
     # Replace the device if it can be determined that this node is not the
     # same product as it was previously.
     if (
         device_id_ext
-        and (device := dev_reg.async_get_device({device_id}))
+        and device
         and len(device.identifiers) == 2
         and device_id_ext not in device.identifiers
     ):
         remove_device_func(device)
+        device = None
 
     if device_id_ext:
         ids = {device_id, device_id_ext}
@@ -143,6 +146,7 @@ def register_node_in_dev_reg(
         ATTR_SW_VERSION: node.firmware_version,
         ATTR_NAME: node.name
         or node.device_config.description
+        or device_name
         or f"Node {node.node_id}",
         ATTR_MODEL: node.device_config.label,
         ATTR_MANUFACTURER: node.device_config.manufacturer,
