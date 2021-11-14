@@ -23,6 +23,17 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+JOB_PRINTING_STATES = ["Printing from SD", "Printing"]
+
+
+def _is_printer_printing(printer: OctoprintPrinterInfo) -> bool:
+    return (
+        printer
+        and printer.state
+        and printer.state.flags
+        and printer.state.flags.printing
+    )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -151,7 +162,11 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
     def native_value(self):
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
-        if not job or not job.progress.print_time_left or job.state != "Printing":
+        if (
+            not job
+            or not job.progress.print_time_left
+            or not _is_printer_printing(self.coordinator.data["printer"])
+        ):
             return None
 
         read_time = self.coordinator.data["last_read_time"]
@@ -175,7 +190,11 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
 
-        if not job or not job.progress.print_time or job.state != "Printing":
+        if (
+            not job
+            or not job.progress.print_time
+            or not _is_printer_printing(self.coordinator.data["printer"])
+        ):
             return None
 
         read_time = self.coordinator.data["last_read_time"]
