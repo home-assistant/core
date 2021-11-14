@@ -57,14 +57,11 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mill_data_connection.device_ip)
         self._abort_if_unique_id_configured()
 
-        errors = {}
-
         if not await mill_data_connection.connect():
-            errors["cannot_connect"] = "cannot_connect"
             return self.async_show_form(
                 step_id="local",
                 data_schema=data_schema,
-                errors=errors,
+                errors={"cannot_connect": "cannot_connect"}
             )
 
         return self.async_create_entry(
