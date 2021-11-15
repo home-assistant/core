@@ -10,6 +10,7 @@ from screenlogicpy.const import (
     SL_GATEWAY_IP,
     SL_GATEWAY_NAME,
     SL_GATEWAY_PORT,
+    ScreenLogicWarning,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,8 +18,6 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -48,7 +47,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Screenlogic from a config entry."""
 
-    gateway = await async_get_new_gateway(hass, entry)
+    connect_info = await async_get_connect_info(hass, entry)
+
+    gateway = ScreenLogicGateway(**connect_info)
+
+    try:
+        await gateway.async_connect()
+    except ScreenLogicError as ex:
+        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
+        raise ConfigEntryNotReady from ex
 
     coordinator = ScreenlogicDataUpdateCoordinator(
         hass, config_entry=entry, gateway=gateway
@@ -71,7 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    # hass.data[DOMAIN][entry.entry_id]["listener"]()
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -85,10 +91,10 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
+async def async_get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
     """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id
-    # Attempt to re-discover named gateway to follow IP changes
+    # Attempt to find named gateway in discovered gateways to follow IP changes
     discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
     if mac in discovered_gateways:
         connect_info = discovered_gateways[mac]
@@ -102,20 +108,6 @@ def get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
         }
 
     return connect_info
-
-
-async def async_get_new_gateway(hass: HomeAssistant, entry: ConfigEntry):
-    """Instantiate a new ScreenLogicGateway, connect to it and return it to caller."""
-
-    connect_info = get_connect_info(hass, entry)
-
-    try:
-        gateway = ScreenLogicGateway(**connect_info)
-    except ScreenLogicError as ex:
-        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
-        raise ConfigEntryNotReady from ex
-
-    return gateway
 
 
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
@@ -135,34 +127,31 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=interval,
-            # We don't want an immediate refresh since the device
-            # takes a moment to reflect the state change
-            request_refresh_debouncer=Debouncer(
-                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
-            ),
         )
-
-    async def async_reconnect_gateway(self):
-        """Instantiate a new ScreenLogicGateway, connect to it and update. Return new gateway to caller."""
-
-        connect_info = get_connect_info(self.hass, self.config_entry)
-
-        try:
-            gateway = ScreenLogicGateway(**connect_info)
-            await gateway.async_update()
-        except ScreenLogicError as error:
-            raise UpdateFailed(error) from error
-
-        return gateway
 
     async def _async_update_data(self):
         """Fetch data from the Screenlogic gateway."""
         try:
             await self.gateway.async_update()
         except ScreenLogicError as error:
-            _LOGGER.warning("ScreenLogicError - attempting reconnect: %s", error)
+            _LOGGER.warning("Update error - attempting reconnect: %s", error)
 
-            self.gateway = await self.async_reconnect_gateway()
+            # Clean up the previous connection as we're about to create a new one
+            await self.gateway.async_disconnect()
+
+            connect_info = await async_get_connect_info(self.hass, self.config_entry)
+
+            self.gateway = ScreenLogicGateway(**connect_info)
+
+            try:
+                await self.gateway.async_update()
+            except ScreenLogicError as error:
+                raise UpdateFailed(error) from error
+            except ScreenLogicWarning as warn:
+                _LOGGER.warning("Update incomplete: %s", warn)
+
+        except ScreenLogicWarning as warn:
+            _LOGGER.warning("Update incomplete: %s", warn)
 
         return self.gateway.get_data()
 
