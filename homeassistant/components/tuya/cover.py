@@ -49,7 +49,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
             name="Curtain",
-            current_state=DPCode.SITUATION_SET,
+            current_state=DPCode.PERCENT_CONTROL,
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=DEVICE_CLASS_CURTAIN,
@@ -279,6 +279,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             return self.entity_description.current_state_inverse is not (
                 current_state in (False, "fully_close")
             )
+
         if (position := self.current_cover_position) is not None:
             return position == 0
 
@@ -291,17 +292,18 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             value = "open"
         self._send_command(
             [
-                {
-                    "code": self.entity_description.set_position,
-                    "value": round(
-                        self._set_position_type.remap_value_from(
-                            100, 0, 100, reverse=True
-                        )
-                    ),
-                },
                 {"code": self.entity_description.key, "value": value},
             ]
         )
+        if self.entity_description.set_position:
+            self._send_command(
+                [
+                    {
+                        "code": self.entity_description.set_position,
+                        "value": 0,
+                    },
+                ]
+            )
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -311,19 +313,21 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._send_command(
             [
                 {
-                    "code": self.entity_description.set_position,
-                    "value": round(
-                        self._set_position_type.remap_value_from(
-                            0, 0, 100, reverse=True
-                        )
-                    ),
-                },
-                {
                     "code": self.entity_description.key,
                     "value": value,
                 },
             ]
         )
+
+        if self.entity_description.set_position:
+            self._send_command(
+                [
+                    {
+                        "code": self.entity_description.set_position,
+                        "value": 100,
+                    },
+                ]
+            )
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -347,7 +351,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self._send_command([{"code": self.entity_description.key, "value": "stop"}])
+        self._send_command(
+            [
+                {"code": self.entity_description.key, "value": "stop"},
+            ]
+        )
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
