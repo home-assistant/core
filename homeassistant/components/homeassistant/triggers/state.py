@@ -75,11 +75,9 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
-    from_state = config.get(CONF_FROM, MATCH_ALL)
-    if from_state is None:
+    if (from_state := config.get(CONF_FROM)) is None:
         from_state = MATCH_ALL
-    to_state = config.get(CONF_TO, MATCH_ALL)
-    if to_state is None:
+    if (to_state := config.get(CONF_TO)) is None:
         to_state = MATCH_ALL
     time_delta = config.get(CONF_FOR)
     template.attach(hass, time_delta)
