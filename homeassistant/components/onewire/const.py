@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 
@@ -49,6 +50,7 @@ READ_MODE_INT = "int"
 
 PLATFORMS = [
     BINARY_SENSOR_DOMAIN,
+    BUTTON_DOMAIN,
     SENSOR_DOMAIN,
     SWITCH_DOMAIN,
 ]
