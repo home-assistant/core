@@ -76,7 +76,7 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         self.control_result: dict[str, Any] | None = None
 
         self._attr_name = self.wrapper.name
-        self._attr_unique_id = f"{self.wrapper.mac}-climate"
+        self._attr_unique_id = self.wrapper.mac
         self._attr_preset_modes: list[str] = [
             PRESET_NONE,
             *wrapper.device.settings["schedule_profile_names"]
