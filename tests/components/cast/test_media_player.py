@@ -1119,28 +1119,28 @@ async def test_entity_media_states_lovelace_app(hass: HomeAssistant):
     cast_status_cb(cast_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == "casting"
+    assert state.state == "playing"
 
     media_status = MagicMock(images=None)
     media_status.player_is_playing = True
     media_status_cb(media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == "casting"
+    assert state.state == "playing"
 
     media_status.player_is_playing = False
     media_status.player_is_paused = True
     media_status_cb(media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == "casting"
+    assert state.state == "playing"
 
     media_status.player_is_paused = False
     media_status.player_is_idle = True
     media_status_cb(media_status)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == "casting"
+    assert state.state == "playing"
 
     chromecast.app_id = pychromecast.IDLE_APP_ID
     media_status.player_is_idle = False
