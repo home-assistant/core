@@ -29,7 +29,7 @@ async def test_service_show_view(hass, mock_zeroconf):
     assert controller.hass_url == "https://example.com"
     assert controller.client_id is None
     # Verify user did not accidentally submit their dev app id
-    assert controller.supporting_app_id == "B12CE3CA"
+    assert controller.supporting_app_id == "A078F6B0"
     assert entity_id == "media_player.kitchen"
     assert view_path == "mock_path"
     assert url_path is None
