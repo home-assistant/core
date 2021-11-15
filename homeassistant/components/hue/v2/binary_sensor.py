@@ -39,13 +39,8 @@ async def async_setup_entry(
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
     api: HueBridgeV2 = bridge.api
 
-    # setup for each binary-sensor-type hue resource
-    # pylint: disable=cell-var-from-loop
-    for controller, sensor_class in (
-        (api.sensors.motion, HueMotionSensor),
-        (api.config.entertainment_configuration, HueEntertainmentActiveSensor),
-    ):
-
+    @callback
+    def register_items(controller: ControllerType, sensor_class: SensorType):
         @callback
         def async_add_sensor(event_type: EventType, resource: SensorType) -> None:
             """Add Hue Binary Sensor."""
@@ -61,6 +56,10 @@ async def async_setup_entry(
                 async_add_sensor, event_filter=EventType.RESOURCE_ADDED
             )
         )
+
+    # setup for each binary-sensor-type hue resource
+    register_items(api.sensors.motion, HueMotionSensor)
+    register_items(api.config.entertainment_configuration, HueEntertainmentActiveSensor)
 
 
 class HueBinarySensorBase(HueBaseEntity, BinarySensorEntity):

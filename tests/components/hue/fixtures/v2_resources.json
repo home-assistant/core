@@ -1907,7 +1907,7 @@
       "id": "d504e7a4-9a18-4854-90fd-c5b6ac102c40",
       "id_v1": "/sensors/67",
       "light": {
-        "light_level": 0,
+        "light_level": 18027,
         "light_level_valid": true
       },
       "owner": {

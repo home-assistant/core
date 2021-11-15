@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import aiohue.v1 as aiohue_v1
 import aiohue.v2 as aiohue_v2
+from aiohue.v2.controllers.events import EventType
+from aiohue.v2.models.clip import parse_clip_resource
 import pytest
 
 from homeassistant.components import hue
@@ -56,7 +58,7 @@ def create_mock_bridge(hass, api_version=1):
 
     bridge.async_initialize_bridge = async_initialize_bridge
 
-    async def async_request_call(task, *args, **kwargs):
+    async def async_request_call(task, *args, allowed_errors=None, **kwargs):
         await task(*args, **kwargs)
 
     bridge.async_request_call = async_request_call
@@ -146,11 +148,13 @@ def create_mock_api_v2(hass):
             id="4a507550-8742-4087-8bf5-c2334f29891c",
             product_data=Mock(manufacturer_name="Mock"),
         ),
+        spec=aiohue_v2.ConfigController,
     )
     api.config.name = "Home"
     api.mock_requests = []
 
     api.logger = logging.getLogger(__name__)
+    api.events = aiohue_v2.EventStream(api)
     api.devices = aiohue_v2.DevicesController(api)
     api.lights = aiohue_v2.LightsController(api)
     api.sensors = aiohue_v2.SensorsController(api)
@@ -161,16 +165,16 @@ def create_mock_api_v2(hass):
         kwargs["method"] = method
         kwargs["path"] = path
         api.mock_requests.append(kwargs)
-        return None
+        return kwargs.get("json")
 
     api.request = mock_request
 
     async def load_test_data(data):
-
-        # api.config = aiohue_v2.ConfigController(api)
+        """Load test data into controllers."""
+        # NOTE: we do not load the ConfigController and it's resources
+        # instead, we rely on our mocked implementation (see above)
 
         await asyncio.gather(
-            # api.config.initialize(data),
             api.devices.initialize(data),
             api.lights.initialize(data),
             api.scenes.initialize(data),
@@ -178,7 +182,12 @@ def create_mock_api_v2(hass):
             api.groups.initialize(data),
         )
 
+    def emit_event(event_type, data):
+        """Emit an event from a (hue resource) dict."""
+        api.events.emit(EventType(event_type), parse_clip_resource(data))
+
     api.load_test_data = load_test_data
+    api.emit_event = emit_event
     return api
 
 
@@ -211,7 +220,7 @@ def create_config_entry(api_version=1, host="mock-host"):
     return MockConfigEntry(
         domain=hue.DOMAIN,
         title=f"Mock bridge {api_version}",
-        data={"host": host, "api_version": api_version},
+        data={"host": host, "api_version": api_version, "api_key": ""},
     )
 
 

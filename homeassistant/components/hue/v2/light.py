@@ -156,7 +156,7 @@ class HueLight(HueBaseEntity, LightEntity):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is not None:
             # Hue uses a range of [0, 100] to control brightness.
-            brightness = round((brightness / 255) * 100)
+            brightness = float((brightness / 255) * 100)
         if transition is not None:
             # hue transition duration is in steps of 100 ms
             transition = int(transition * 100)

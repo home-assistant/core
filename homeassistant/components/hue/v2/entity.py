@@ -83,8 +83,13 @@ class HueBaseEntity(Entity):
     def available(self) -> bool:
         """Return entity availability."""
         if self.device is None:
+            # devices without a device attached should be always available
+            return True
+        if self.resource.type == ResourceTypes.ZIGBEE_CONNECTIVITY:
+            # the zigbee connectivity sensor itself should be always available
             return True
         if zigbee := self.bridge.api.devices.get_zigbee_connectivity(self.device.id):
+            # all device-attached entities get availability from the zigbee connectivity
             return zigbee.status == ConnectivityServiceStatus.CONNECTED
         return True
 

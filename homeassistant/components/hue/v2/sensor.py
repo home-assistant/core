@@ -55,15 +55,8 @@ async def async_setup_entry(
     api: HueBridgeV2 = bridge.api
     ctrl_base: SensorsController = api.sensors
 
-    # setup for each sensor-type hue resource
-    # pylint: disable=cell-var-from-loop
-    for controller, sensor_class in (
-        (ctrl_base.temperature, HueTemperatureSensor),
-        (ctrl_base.light_level, HueLightLevelSensor),
-        (ctrl_base.device_power, HueBatterySensor),
-        (ctrl_base.zigbee_connectivity, HueZigbeeConnectivitySensor),
-    ):
-
+    @callback
+    def register_items(controller: ControllerType, sensor_class: SensorType):
         @callback
         def async_add_sensor(event_type: EventType, resource: SensorType) -> None:
             """Add Hue Sensor."""
@@ -79,6 +72,12 @@ async def async_setup_entry(
                 async_add_sensor, event_filter=EventType.RESOURCE_ADDED
             )
         )
+
+    # setup for each sensor-type hue resource
+    register_items(ctrl_base.temperature, HueTemperatureSensor)
+    register_items(ctrl_base.light_level, HueLightLevelSensor)
+    register_items(ctrl_base.device_power, HueBatterySensor)
+    register_items(ctrl_base.zigbee_connectivity, HueZigbeeConnectivitySensor)
 
 
 class HueSensorBase(HueBaseEntity, SensorEntity):

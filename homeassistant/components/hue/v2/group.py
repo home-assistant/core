@@ -47,23 +47,30 @@ async def async_setup_entry(
     # to prevent race conditions (groupedlight is created before zone/room)
     # we create groupedlights from the room/zone and actually use the
     # underlying grouped_light resource for control
-    for controller in (api.groups.room, api.groups.zone):
 
-        @callback
-        def async_add_light(event_type: EventType, resource: Room | Zone) -> None:
-            """Add Grouped Light for Hue Room/Zone."""
-            if grouped_light_id := resource.grouped_light:
-                grouped_light = api.groups.grouped_light[grouped_light_id]
-                light = GroupedHueLight(bridge, grouped_light, resource)
-                async_add_entities([light])
+    @callback
+    def async_add_light(event_type: EventType, resource: Room | Zone) -> None:
+        """Add Grouped Light for Hue Room/Zone."""
+        if grouped_light_id := resource.grouped_light:
+            grouped_light = api.groups.grouped_light[grouped_light_id]
+            light = GroupedHueLight(bridge, grouped_light, resource)
+            async_add_entities([light])
 
-        for item in controller:
-            async_add_light(EventType.RESOURCE_ADDED, item)
+    # add current items
+    for item in api.groups.room.items + api.groups.zone.items:
+        async_add_light(EventType.RESOURCE_ADDED, item)
 
-        # register listener for new groups
-        config_entry.async_on_unload(
-            controller.subscribe(async_add_light, event_filter=EventType.RESOURCE_ADDED)
+    # register listener for new zones/rooms
+    config_entry.async_on_unload(
+        api.groups.room.subscribe(
+            async_add_light, event_filter=EventType.RESOURCE_ADDED
         )
+    )
+    config_entry.async_on_unload(
+        api.groups.zone.subscribe(
+            async_add_light, event_filter=EventType.RESOURCE_ADDED
+        )
+    )
 
 
 class GroupedHueLight(HueBaseEntity, LightGroup):
@@ -132,7 +139,7 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is not None:
             # Hue uses a range of [0, 100] to control brightness.
-            brightness = round((brightness / 255) * 100)
+            brightness = float((brightness / 255) * 100)
         if transition is not None:
             # hue transition duration is in steps of 100 ms
             transition = int(transition * 100)
