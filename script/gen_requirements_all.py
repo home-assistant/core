@@ -98,10 +98,6 @@ uuid==1000000000.0.0
 # until we have fixed the wheels builds for newer versions.
 pandas==1.3.0
 
-# httpcore 0.14.1 or later to fix socket leak
-# to fix https://github.com/encode/httpcore/issues/116
-httpcore>=0.14.1
-
 # regex causes segfault with version 2021.8.27
 # https://bitbucket.org/mrabarnett/mrab-regex/issues/421/2021827-results-in-fatal-python-error
 # This is fixed in 2021.8.28
