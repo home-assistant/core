@@ -1,4 +1,6 @@
 """Config flow to configure Goodwe inverters using their local API."""
+from __future__ import annotations
+
 import logging
 
 from goodwe import InverterError, connect
@@ -7,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -36,7 +39,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: dict | None = None) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -80,7 +83,7 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -91,8 +94,7 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except InverterError as err:
                 _LOGGER.error("Connection error during GoodWe config flow: %s", err)
                 errors["base"] = "connection_error"
-
-            if not errors:
+            else:
                 await self.async_set_unique_id(inverter.serial_number)
                 self._abort_if_unique_id_configured()
 

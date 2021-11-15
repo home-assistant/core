@@ -1,7 +1,9 @@
 """Constants for the Goodwe component."""
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+
 DOMAIN = "goodwe"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [SENSOR_DOMAIN]
 
 DEFAULT_NAME = "GoodWe"
 DEFAULT_SCAN_INTERVAL = 5
