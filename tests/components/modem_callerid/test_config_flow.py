@@ -1,5 +1,5 @@
 """Test Modem Caller ID config flow."""
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import phone_modem
 
@@ -25,14 +25,13 @@ DISCOVERY_INFO = {
 def _patch_setup():
     return patch(
         "homeassistant.components.modem_callerid.async_setup_entry",
-        return_value=True,
     )
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_flow_usb(hass: HomeAssistant):
     """Test usb discovery flow."""
-    with patch_config_flow_modem(AsyncMock()), _patch_setup():
+    with patch_config_flow_modem(), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USB},
@@ -52,7 +51,7 @@ async def test_flow_usb(hass: HomeAssistant):
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_flow_usb_cannot_connect(hass: HomeAssistant):
     """Test usb flow connection error."""
-    with patch_config_flow_modem(AsyncMock()) as modemmock:
+    with patch_config_flow_modem() as modemmock:
         modemmock.side_effect = phone_modem.exceptions.SerialError
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USB}, data=DISCOVERY_INFO
@@ -73,8 +72,7 @@ async def test_flow_user(hass: HomeAssistant):
         port.vid,
         port.pid,
     )
-    mocked_modem = AsyncMock()
-    with patch_config_flow_modem(mocked_modem), _patch_setup():
+    with patch_config_flow_modem(), _patch_setup():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
@@ -104,7 +102,7 @@ async def test_flow_user_error(hass: HomeAssistant):
         port.vid,
         port.pid,
     )
-    with patch_config_flow_modem(AsyncMock()) as modemmock:
+    with patch_config_flow_modem() as modemmock:
         modemmock.side_effect = phone_modem.exceptions.SerialError
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={CONF_DEVICE: port_select}
@@ -125,7 +123,7 @@ async def test_flow_user_error(hass: HomeAssistant):
 @patch("serial.tools.list_ports.comports", MagicMock())
 async def test_flow_user_no_port_list(hass: HomeAssistant):
     """Test user with no list of ports."""
-    with patch_config_flow_modem(AsyncMock()):
+    with patch_config_flow_modem():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
@@ -137,7 +135,7 @@ async def test_flow_user_no_port_list(hass: HomeAssistant):
 
 async def test_abort_user_with_existing_flow(hass: HomeAssistant):
     """Test user flow is aborted when another discovery has happened."""
-    with patch_config_flow_modem(AsyncMock()):
+    with patch_config_flow_modem():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USB},
