@@ -1,7 +1,7 @@
 """Config flow to configure the RainMachine component."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -15,7 +15,6 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_ZONE_RUN_TIME, DEFAULT_PORT, DEFAULT_ZONE_RUN, DOMAIN
 
@@ -55,7 +54,9 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return RainMachineOptionsFlowHandler(config_entry)
 
-    async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle a flow initialized by homekit discovery."""
         return await self.async_step_homekit_zeroconf(discovery_info)
 
@@ -63,10 +64,10 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle discovery via zeroconf."""
-        return await self.async_step_homekit_zeroconf(cast(dict, discovery_info))
+        return await self.async_step_homekit_zeroconf(discovery_info)
 
     async def async_step_homekit_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle discovery via zeroconf."""
         ip_address = discovery_info["host"]
