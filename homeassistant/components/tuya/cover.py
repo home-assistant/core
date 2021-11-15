@@ -305,7 +305,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if self.device.function[self.entity_description.key].type == "Enum":
             value = "open"
 
-        commands: dict[str, Any] = [
+        commands: list[dict[str, Any]] = [
             {"code": self.entity_description.key, "value": value}
         ]
 
@@ -325,7 +325,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if self.device.function[self.entity_description.key].type == "Enum":
             value = "close"
 
-        commands: dict[str, Any] = [
+        commands: list[dict[str, Any]] = [
             {"code": self.entity_description.key, "value": value}
         ]
 
