@@ -5,7 +5,8 @@
         },
         "step": {
             "reauth": {
-                "description": "\u7406\u7531: {details}"
+                "description": "\u7406\u7531: {details}",
+                "title": "Synology DSM\u518d\u8a8d\u8a3c\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3"
             },
             "reauth_confirm": {
                 "data": {
