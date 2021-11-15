@@ -13,7 +13,7 @@ import slugify as unicode_slug
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
