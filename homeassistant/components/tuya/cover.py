@@ -39,6 +39,7 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     current_state_inverse: bool = False
     current_position: DPCode | None = None
     set_position: DPCode | None = None
+    working_state: DPCode | None = None
 
 
 COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
@@ -49,10 +50,11 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
             name="Curtain",
-            current_state=DPCode.PERCENT_CONTROL,
-            current_position=DPCode.PERCENT_CONTROL,
+            current_state=DPCode.SITUATION_SET,
+            current_position=DPCode.PERCENT_STATE,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=DEVICE_CLASS_CURTAIN,
+            working_state=DPCode.WORK_STATE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
@@ -243,6 +245,18 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         ):
             return None
 
+        if (self.entity_description.working_state) is not None:
+            work_state = self.device.status.get("work_state")
+            current_position = self.device.status.get(
+                self.entity_description.current_position
+            )
+
+            if work_state == "closing" and current_position >= 0:
+                dpcode = self.entity_description.set_position
+
+            if work_state == "opening" and current_position == 0:
+                dpcode = self.entity_description.set_position
+
         if (position := self.device.status.get(dpcode)) is None:
             return None
 
@@ -290,44 +304,36 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         value: bool | str = True
         if self.device.function[self.entity_description.key].type == "Enum":
             value = "open"
-        self._send_command(
-            [
-                {"code": self.entity_description.key, "value": value},
-            ]
-        )
-        if self.entity_description.set_position:
-            self._send_command(
-                [
-                    {
-                        "code": self.entity_description.set_position,
-                        "value": 0,
-                    },
-                ]
+
+        commands = [{"code": self.entity_description.key, "value": value}]
+
+        if (self.entity_description.set_position) is not None:
+            commands.append(
+                {
+                    "code": self.entity_description.set_position,
+                    "value": 0,
+                }
             )
+
+        self._send_command(commands)
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         value: bool | str = True
         if self.device.function[self.entity_description.key].type == "Enum":
             value = "close"
-        self._send_command(
-            [
-                {
-                    "code": self.entity_description.key,
-                    "value": value,
-                },
-            ]
-        )
 
-        if self.entity_description.set_position:
-            self._send_command(
-                [
-                    {
-                        "code": self.entity_description.set_position,
-                        "value": 100,
-                    },
-                ]
+        commands = [{"code": self.entity_description.key, "value": value}]
+
+        if (self.entity_description.set_position) is not None:
+            commands.append(
+                {
+                    "code": self.entity_description.set_position,
+                    "value": 100,
+                }
             )
+
+        self._send_command(commands)
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -351,11 +357,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self._send_command(
-            [
-                {"code": self.entity_description.key, "value": "stop"},
-            ]
-        )
+        self._send_command([{"code": self.entity_description.key, "value": "stop"}])
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
