@@ -245,16 +245,20 @@ async def setup_bridge(hass, mock_bridge, config_entry):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
 
-async def setup_bridge_for_sensors(hass, mock_bridge_v1, hostname=None):
-    """Load the Hue platform with the provided bridge for sensor-related platforms."""
+async def setup_bridge_for_sensors(
+    hass, mock_bridge, hostname=None, platforms=["binary_sensor", "sensor"]
+):
+    """Load the Hue integration with the provided bridge for given platforms."""
     if hostname is None:
         hostname = "mock-host"
     hass.config.components.add(hue.DOMAIN)
-    config_entry = create_config_entry(host=hostname)
-    mock_bridge_v1.config_entry = config_entry
-    hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v1}
-    await hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
-    await hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
+    config_entry = create_config_entry(
+        api_version=mock_bridge.api_version, host=hostname
+    )
+    mock_bridge.config_entry = config_entry
+    hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}
+    for platform in platforms:
+        await hass.config_entries.async_forward_entry_setup(config_entry, platform)
     # simulate a full setup by manually adding the bridge config entry
     config_entry.add_to_hass(hass)
 

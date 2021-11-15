@@ -40,7 +40,7 @@ async def async_setup_hue_events(bridge: "HueBridge"):
 
         # Fire event
         data = {
-            # send slugified entity name as idfor= backwards compatibility with previous version
+            # send slugified entity name as id = backwards compatibility with previous version
             CONF_ID: slugify(f"{hue_device.metadata.name}: Button"),
             CONF_DEVICE_ID: device.id,  # type: ignore
             CONF_UNIQUE_ID: hue_resource.id,
