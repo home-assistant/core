@@ -107,7 +107,7 @@ ATTR_TIMESTAMP = "timestamp"
 
 DEFAULT_ENTITY_MODEL = "alarm_control_panel"
 DEFAULT_ENTITY_NAME = "Alarm Control Panel"
-DEFAULT_REST_API_ERROR_COUNT = 2
+DEFAULT_ERROR_THRESHOLD = 2
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
 
@@ -564,7 +564,11 @@ class SimpliSafeEntity(CoordinatorEntity):
         assert simplisafe.coordinator
         super().__init__(simplisafe.coordinator)
 
-        self._rest_api_errors = 0
+        # SimpliSafe can incorrectly return an error state when there isn't any
+        # error. This can lead to entities having an unknown state frequently.
+        # To protect against that, we measure an error count for each entity and only
+        # mark the state as unavailable if we detect a few in a row:
+        self._error_count = 0
 
         if device:
             model = device.type.name
@@ -629,23 +633,31 @@ class SimpliSafeEntity(CoordinatorEntity):
         else:
             system_offline = False
 
-        return (
-            self._rest_api_errors < DEFAULT_REST_API_ERROR_COUNT
+        # TODO: THIS IS DEBUG AND SHOULD BE REMOVED BEFORE PR:
+        available = (
+            self._error_count < DEFAULT_ERROR_THRESHOLD
             and self._online
             and not system_offline
         )
 
+        if not available:
+            LOGGER.debug(
+                '"%s" not available (error count: %s, online: %s, system offline: %s)',
+                self.name,
+                self._error_count,
+                self._online,
+                system_offline,
+            )
+
+        return available
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update the entity with new REST API data."""
-        # SimpliSafe can incorrectly return an error state when there isn't any
-        # error. This can lead to the system having an unknown state frequently.
-        # To protect against that, we measure how many "error states" we receive
-        # and only alter the state if we detect a few in a row:
         if self.coordinator.last_update_success:
-            self._rest_api_errors = 0
+            self.async_reset_error_count()
         else:
-            self._rest_api_errors += 1
+            self.async_increment_error_count()
 
         self.async_update_from_rest_api()
         self.async_write_ha_state()
@@ -712,6 +724,21 @@ class SimpliSafeEntity(CoordinatorEntity):
         )
 
         self.async_update_from_rest_api()
+
+    @callback
+    def async_increment_error_count(self) -> None:
+        """Increment this entity's error count."""
+        LOGGER.debug('Error for entity "%s" (total: %s)', self.name, self._error_count)
+        self._error_count += 1
+
+    @callback
+    def async_reset_error_count(self) -> None:
+        """Reset this entity's error count."""
+        if self._error_count == 0:
+            return
+
+        LOGGER.debug('Resetting error count for "%s"', self.name)
+        self._error_count = 0
 
     @callback
     def async_update_from_rest_api(self) -> None:
