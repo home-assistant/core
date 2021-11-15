@@ -145,7 +145,7 @@ async def test_zeroconf_snmp_error(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                hostname="example.local.", name="Brother Printer"
+                hostname="example.local.", name="Brother Printer", properties={}
             ),
         )
 
@@ -185,7 +185,7 @@ async def test_zeroconf_device_exists_abort(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                hostname="example.local.", name="Brother Printer"
+                hostname="example.local.", name="Brother Printer", properties={}
             ),
         )
 
@@ -223,7 +223,7 @@ async def test_zeroconf_confirm_create_entry(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                hostname="example.local.", name="Brother Printer"
+                hostname="example.local.", name="Brother Printer", properties={}
             ),
         )
 
