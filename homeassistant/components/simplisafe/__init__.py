@@ -633,23 +633,11 @@ class SimpliSafeEntity(CoordinatorEntity):
         else:
             system_offline = False
 
-        # TODO: THIS IS DEBUG AND SHOULD BE REMOVED BEFORE PR:
-        available = (
+        return (
             self._error_count < DEFAULT_ERROR_THRESHOLD
             and self._online
             and not system_offline
         )
-
-        if not available:
-            LOGGER.debug(
-                '"%s" not available (error count: %s, online: %s, system offline: %s)',
-                self.name,
-                self._error_count,
-                self._online,
-                system_offline,
-            )
-
-        return available
 
     @callback
     def _handle_coordinator_update(self) -> None:
