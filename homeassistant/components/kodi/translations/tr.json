@@ -22,7 +22,7 @@
                 "description": "L\u00fctfen Kodi kullan\u0131c\u0131 ad\u0131n\u0131z\u0131 ve \u015fifrenizi girin. Bunlar Sistem / Ayarlar / A\u011f / Hizmetler'de bulunabilir."
             },
             "discovery_confirm": {
-                "description": "Ev Asistan\u0131'na Kodi ('{name}') eklemek istiyor musunuz?",
+                "description": "Ev Asistan\u0131'na Kodi \"{name}\" eklemek istiyor musunuz?",
                 "title": "Ke\u015ffedilen Kodi"
             },
             "user": {
