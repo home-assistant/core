@@ -135,9 +135,9 @@ class DPCode(str, Enum):
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
+    ALARM_ARM = "arm"
     ALARM_DISARMED = "disarmed"
     ALARM_HOME = "home"
-    ALARM_ARM = "arm"
     ALARM_SOS = "sos"
     ALARM_STATE = "master_mode"
     ANGLE_HORIZONTAL = "angle_horizontal"

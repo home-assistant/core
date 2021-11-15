@@ -144,6 +144,10 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         """Send Arm command."""
         self._send_command([{"code": DPCode.ALARM_STATE, "value": DPCode.ALARM_ARM}])
 
+    def alarm_arm_night(self, code: str | None = None) -> None:
+        """Send arm night command."""
+        self._send_command([{"code": DPCode.ALARM_STATE, "value": DPCode.ALARM_ARM}])
+
     def alarm_trigger(self, code: str | None = None) -> None:
         """Send SOS command."""
         self._send_command([{"code": DPCode.ALARM_STATE, "value": DPCode.SOS}])
