@@ -77,7 +77,7 @@ async def test_routing_setup(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result3["title"] == "routing"
+        assert result3["title"] == CONF_KNX_ROUTING
         assert result3["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
