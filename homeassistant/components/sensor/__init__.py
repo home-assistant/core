@@ -51,6 +51,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.util.unit_system import TEMPERATURE_UNITS
 
 from .const import CONF_STATE_CLASS  # noqa: F401
 
@@ -260,7 +261,17 @@ class SensorEntity(Entity):
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
-        if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+        # Only convert Kelvin if the sensor is for temperature.
+        # Color temperature is measured in Kelvin, but shouldn't be a 'temperature' class.
+        is_temperature = (
+            native_unit_of_measurement in TEMPERATURE_UNITS
+            and self.device_class == DEVICE_CLASS_TEMPERATURE
+        ) or native_unit_of_measurement in (
+            TEMP_CELSIUS,
+            TEMP_FAHRENHEIT,
+        )
+
+        if is_temperature:
             return self.hass.config.units.temperature_unit
 
         return native_unit_of_measurement
@@ -272,10 +283,21 @@ class SensorEntity(Entity):
         unit_of_measurement = self.native_unit_of_measurement
         value = self.native_value
 
+        # Only convert Kelvin if the sensor is for temperature.
+        # Color temperature is measured in Kelvin, but shouldn't be a 'temperature' class.
+        is_temperature = (
+            unit_of_measurement in TEMPERATURE_UNITS
+            and self.device_class == DEVICE_CLASS_TEMPERATURE
+        ) or unit_of_measurement in (
+            TEMP_CELSIUS,
+            TEMP_FAHRENHEIT,
+        )
+
         units = self.hass.config.units
         if (
             value is not None
-            and unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            and unit_of_measurement is not None
+            and is_temperature
             and unit_of_measurement != units.temperature_unit
         ):
             if (

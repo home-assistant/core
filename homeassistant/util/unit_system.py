@@ -19,6 +19,7 @@ from homeassistant.const import (
     PRESSURE_PSI,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
     TEMPERATURE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
@@ -42,7 +43,7 @@ PRESSURE_UNITS = pressure_util.VALID_UNITS
 
 VOLUME_UNITS = volume_util.VALID_UNITS
 
-TEMPERATURE_UNITS: tuple[str, ...] = (TEMP_FAHRENHEIT, TEMP_CELSIUS)
+TEMPERATURE_UNITS: tuple[str, ...] = (TEMP_FAHRENHEIT, TEMP_CELSIUS, TEMP_KELVIN)
 
 
 def is_valid_unit(unit: str, unit_type: str) -> bool:

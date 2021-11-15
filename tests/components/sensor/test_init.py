@@ -8,6 +8,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -19,8 +20,10 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
     [
         (IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, TEMP_FAHRENHEIT, 100, 100),
         (IMPERIAL_SYSTEM, TEMP_CELSIUS, TEMP_FAHRENHEIT, 38, 100),
+        (IMPERIAL_SYSTEM, TEMP_KELVIN, TEMP_FAHRENHEIT, 311, 100),
         (METRIC_SYSTEM, TEMP_FAHRENHEIT, TEMP_CELSIUS, 100, 38),
         (METRIC_SYSTEM, TEMP_CELSIUS, TEMP_CELSIUS, 38, 38),
+        (METRIC_SYSTEM, TEMP_KELVIN, TEMP_CELSIUS, 311.15, 38),
     ],
 )
 async def test_temperature_conversion(
