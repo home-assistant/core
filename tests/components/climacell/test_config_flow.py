@@ -8,7 +8,7 @@ from homeassistant.components.climacell.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
-from .const import API_V4_ENTRY_DATA
+from .const import API_V3_ENTRY_DATA
 
 from tests.common import MockConfigEntry
 
@@ -19,7 +19,7 @@ async def test_options_flow(
     """Test options config flow for climacell."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=API_V4_ENTRY_DATA,
+        data=API_V3_ENTRY_DATA,
         source=SOURCE_USER,
         unique_id="test",
         version=1,
