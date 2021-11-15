@@ -317,7 +317,6 @@ class DPCode(str, Enum):
     WORK_STATE = "work_state"
 
 
-
 @dataclass
 class UnitOfMeasurement:
     """Describes a unit of measurement."""
