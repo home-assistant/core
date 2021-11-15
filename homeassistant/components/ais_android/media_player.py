@@ -386,16 +386,19 @@ class ADBDevice(MediaPlayerEntity):
         return ais_model
 
     async def async_execute_ais_command(self, cmd):
-        cmd_process = await asyncio.create_subprocess_shell(
-            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-
-        stdout, stderr = await cmd_process.communicate()
-
-        if stdout:
-            _LOGGER.info("stdout %s", stdout.decode())
-        if stderr:
-            _LOGGER.info("stderr %s", stderr.decode())
+        if self.aftv.host == "127.0.0.1":
+            # send command via console
+            cmd_process = await asyncio.create_subprocess_shell(
+                cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await cmd_process.communicate()
+            if stdout:
+                _LOGGER.info("stdout %s", stdout.decode())
+            if stderr:
+                _LOGGER.info("stderr %s", stderr.decode())
+        else:
+            # send command via adb
+            await self.aftv.adb_shell(cmd)
 
     async def async_added_to_hass(self):
         """Set config parameter when add to hass."""
@@ -443,6 +446,11 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def async_media_pause(self):
         """Send pause command."""
+        # ais -> https://dev.to/larsonzhong/most-complete-adb-commands-4pcg#media-control
+        if self._is_ais_gate():
+            await self.async_execute_ais_command("su -c 'input keyevent 127'")
+            return
+        # adb way
         await self.aftv.media_pause()
 
     @adb_decorator()
@@ -456,7 +464,7 @@ class ADBDevice(MediaPlayerEntity):
         # ais gate - do not turn off, only stop hdmi
         if self._is_ais_gate():
             self.ais_hdmi_off = False
-            await self.aftv.adb_shell(
+            await self.async_execute_ais_command(
                 "su -c 'echo 1 > /sys/class/amhdmitx/amhdmitx0/phy'"
             )
         else:
@@ -471,7 +479,7 @@ class ADBDevice(MediaPlayerEntity):
         # ais gate - do not turn off, only stop hdmi
         if self._is_ais_gate():
             self.ais_hdmi_off = True
-            await self.aftv.adb_shell(
+            await self.async_execute_ais_command(
                 "su -c 'echo 0 > /sys/class/amhdmitx/amhdmitx0/phy'"
             )
         else:
