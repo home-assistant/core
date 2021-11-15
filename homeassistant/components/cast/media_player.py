@@ -79,9 +79,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
 
-SUPPORT_CAST = (
-    SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_TURN_OFF
-)
+SUPPORT_CAST = SUPPORT_PLAY_MEDIA | SUPPORT_TURN_OFF
 
 ENTITY_SCHEMA = vol.All(
     vol.Schema(
@@ -699,7 +697,7 @@ class CastDevice(MediaPlayerEntity):
         ):
             support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
 
-        if media_status:
+        if media_status and self.app_id != CAST_APP_ID_HOMEASSISTANT_LOVELACE:
             support |= SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
             if media_status.supports_queue_next:
                 support |= SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
