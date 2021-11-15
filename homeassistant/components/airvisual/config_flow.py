@@ -108,9 +108,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             error_step = "geography_by_coords"
         else:
             coro = cloud_api.air_quality.city(
-                user_input[CONF_CITY],
-                user_input[CONF_STATE],
-                user_input[CONF_COUNTRY],
+                user_input[CONF_CITY], user_input[CONF_STATE], user_input[CONF_COUNTRY]
             )
             error_schema = GEOGRAPHY_NAME_SCHEMA
             error_step = "geography_by_name"
