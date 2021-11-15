@@ -1,8 +1,8 @@
 """Support for deCONZ fans."""
-
 from __future__ import annotations
 
 from collections.abc import ValuesView
+from typing import Any
 
 from pydeconz.light import (
     FAN_SPEED_25_PERCENT,
@@ -107,12 +107,10 @@ class DeconzFan(DeconzDevice, FanEntity):
         if self._device.speed in ORDERED_NAMED_FAN_SPEEDS:
             self._default_on_speed = self._device.speed
 
-        self._attr_supported_features = SUPPORT_SET_SPEED
-
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return bool(self._device.speed != FAN_SPEED_OFF)
+        return self._device.speed != FAN_SPEED_OFF  # type: ignore[no-any-return]
 
     @property
     def percentage(self) -> int | None:
@@ -168,8 +166,7 @@ class DeconzFan(DeconzDevice, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        assert self._attr_supported_features
-        return self._attr_supported_features
+        return SUPPORT_SET_SPEED
 
     @callback
     def async_update_callback(self) -> None:
@@ -199,7 +196,7 @@ class DeconzFan(DeconzDevice, FanEntity):
         speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
-        **kwargs: None,
+        **kwargs: Any,
     ) -> None:
         """Turn on fan."""
         new_speed = self._default_on_speed
@@ -211,6 +208,6 @@ class DeconzFan(DeconzDevice, FanEntity):
 
         await self._device.set_speed(new_speed)
 
-    async def async_turn_off(self, **kwargs: None) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off fan."""
         await self._device.set_speed(FAN_SPEED_OFF)

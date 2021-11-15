@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import ValuesView
+from typing import Any
 
 from pydeconz.group import DeconzGroup as Group
 from pydeconz.light import (
@@ -129,7 +130,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         """Set up light."""
         super().__init__(device, gateway)
 
-        self._attr_supported_color_modes: set = set()
+        self._attr_supported_color_modes: set[str] = set()
 
         if device.color_temp is not None:
             self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
@@ -172,53 +173,39 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        if self._device.brightness:
-            return int(self._device.brightness)
-        return None
+        return self._device.brightness  # type: ignore[no-any-return]
 
     @property
     def color_temp(self) -> int:
         """Return the CT color value."""
-        return int(self._device.color_temp)
+        return self._device.color_temp  # type: ignore[no-any-return]
 
     @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
-        return (
-            int(self._device.hue) / 65535 * 360,
-            int(self._device.saturation) / 255 * 100,
-        )
+        return (self._device.hue / 65535 * 360, self._device.saturation / 255 * 100)
 
     @property
     def xy_color(self) -> tuple[float, float] | None:
         """Return the XY color value."""
-        if self._device.xy is not None:
-            x_value: float = self._device.xy[0]
-            y_value: float = self._device.xy[1]
-            return (x_value, y_value)
-        return None
+        return self._device.xy  # type: ignore[no-any-return]
 
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return bool(self._device.state)
+        return self._device.state  # type: ignore[no-any-return]
 
-    async def async_turn_on(
-        self, **kwargs: bool | float | int | str | tuple[float, float]
-    ) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         data: dict[str, bool | float | int | str | tuple[float, float]] = {"on": True}
 
         if attr_brightness := kwargs.get(ATTR_BRIGHTNESS):
-            assert isinstance(attr_brightness, int)
             data["brightness"] = attr_brightness
 
         if attr_color_temp := kwargs.get(ATTR_COLOR_TEMP):
-            assert isinstance(attr_color_temp, int)
             data["color_temperature"] = attr_color_temp
 
         if attr_hs_color := kwargs.get(ATTR_HS_COLOR):
-            assert isinstance(attr_hs_color, tuple)
             if COLOR_MODE_XY in self._attr_supported_color_modes:
                 data["xy"] = color_hs_to_xy(*attr_hs_color)
             else:
@@ -229,27 +216,20 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
             data["xy"] = kwargs[ATTR_XY_COLOR]
 
         if attr_transition := kwargs.get(ATTR_TRANSITION):
-            assert isinstance(attr_transition, float)
             data["transition_time"] = int(attr_transition * 10)
         elif "IKEA" in self._device.manufacturer:
             data["transition_time"] = 0
 
-        if (
-            isinstance(flash := kwargs.get(ATTR_FLASH), str)
-            and (alert := FLASH_TO_DECONZ.get(flash)) is not None
-        ):
+        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH, ""))) is not None:
             data["alert"] = alert
             del data["on"]
 
-        if (
-            isinstance(attr_effect := kwargs.get(ATTR_EFFECT), str)
-            and (effect := EFFECT_TO_DECONZ.get(attr_effect)) is not None
-        ):
+        if (effect := EFFECT_TO_DECONZ.get(kwargs.get(ATTR_EFFECT, ""))) is not None:
             data["effect"] = effect
 
         await self._device.set_state(**data)
 
-    async def async_turn_off(self, **kwargs: int | str) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         if not self._device.state:
             return
@@ -260,17 +240,14 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
             data["brightness"] = 0
             data["transition_time"] = int(kwargs[ATTR_TRANSITION] * 10)
 
-        if (
-            isinstance(flash := kwargs.get(ATTR_FLASH), str)
-            and (alert := FLASH_TO_DECONZ.get(flash)) is not None
-        ):
+        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH, ""))) is not None:
             data["alert"] = alert
             del data["on"]
 
         await self._device.set_state(**data)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
         return {DECONZ_GROUP: isinstance(self._device, Group)}
 
@@ -318,7 +295,7 @@ class DeconzGroup(DeconzBaseLight):
         )
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
         attributes = dict(super().extra_state_attributes)
         attributes["all_on"] = self._device.all_on
