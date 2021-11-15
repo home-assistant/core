@@ -476,6 +476,7 @@ class ServicePlatform:
     async def _set_service_description(self, service: PlatformService) -> None:
         """Set service description for a service and domain."""
         service_description = service.service_description
+        # TODO: Allow platform integrations to load service dicts from their domain.
         integration = await async_get_integration(self.hass, self.domain)
         services_dict = cast(
             dict,
