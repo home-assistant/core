@@ -579,7 +579,7 @@ class SimpliSafeEntity(CoordinatorEntity):
 
         if raw_type := event.get("sensorType"):
             try:
-                device_type = DeviceTypes(raw_type.upper())
+                device_type = DeviceTypes(raw_type)
             except ValueError:
                 device_type = DeviceTypes.UNKNOWN
         else:
