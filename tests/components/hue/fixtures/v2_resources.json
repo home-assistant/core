@@ -1862,9 +1862,9 @@
         ]
       },
       "metadata": {
-        "name": "Entertainmentruimte 1"
+        "name": "Entertainmentroom 1"
       },
-      "name": "Entertainmentruimte 1",
+      "name": "Entertainmentroom 1",
       "status": "inactive",
       "stream_proxy": {
         "mode": "auto",

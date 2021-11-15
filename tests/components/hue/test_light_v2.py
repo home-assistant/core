@@ -23,7 +23,7 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     await setup_bridge(hass, mock_bridge_v2)
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
-    # 8 lights
+    # 8 entities should be created from test data
     assert len(hass.states.async_all()) == 8
 
     # test light which supports color and color temperature
@@ -334,11 +334,6 @@ async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):
             "update",
             {
                 "id": "1987ba66-c21d-48d0-98fb-121d939a71f3",
-                "mac_address": "00:17:88:01:09:aa:bb:65",
-                "owner": {
-                    "rid": "0b216218-d811-4c95-8c55-bbcda50f9d50",
-                    "rtype": "device",
-                },
                 "status": status,
                 "type": "zigbee_connectivity",
             },

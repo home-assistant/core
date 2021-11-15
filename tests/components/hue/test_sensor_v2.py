@@ -26,7 +26,7 @@ async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
     await setup_bridge(hass, mock_bridge_v2)
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
-    # 6 sensors should be created from demo data
+    # 6 entities should be created from test data
     assert len(hass.states.async_all()) == 6
 
     # test temperature sensor

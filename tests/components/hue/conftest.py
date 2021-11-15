@@ -171,10 +171,10 @@ def create_mock_api_v2(hass):
 
     async def load_test_data(data):
         """Load test data into controllers."""
-        # NOTE: we do not load the ConfigController and it's resources
-        # instead, we rely on our mocked implementation (see above)
+        api.config = aiohue_v2.ConfigController(api)
 
         await asyncio.gather(
+            api.config.initialize(data),
             api.devices.initialize(data),
             api.lights.initialize(data),
             api.scenes.initialize(data),

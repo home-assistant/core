@@ -17,6 +17,7 @@ FAKE_DEVICE = {
         {"rid": "fake_light_id_1", "rtype": "light"},
         {"rid": "fake_zigbee_connectivity_id_1", "rtype": "zigbee_connectivity"},
         {"rid": "fake_temperature_sensor_id_1", "rtype": "temperature"},
+        {"rid": "fake_motion_sensor_id_1", "rtype": "motion"},
     ],
     "type": "device",
 }
@@ -54,4 +55,13 @@ FAKE_SENSOR = {
     "owner": {"rid": "fake_device_id_1", "rtype": "device"},
     "temperature": {"temperature": 18.0, "temperature_valid": True},
     "type": "temperature",
+}
+
+FAKE_BINARY_SENSOR = {
+    "enabled": True,
+    "id": "fake_motion_sensor_id_1",
+    "id_v1": "/sensors/2",
+    "motion": {"motion": False, "motion_valid": True},
+    "owner": {"rid": "fake_device_id_1", "rtype": "device"},
+    "type": "motion",
 }
