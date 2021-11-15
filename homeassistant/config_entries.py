@@ -32,6 +32,7 @@ from homeassistant.util.decorator import Registry
 import homeassistant.util.uuid as uuid_util
 
 if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -1378,10 +1379,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self.async_step_discovery(cast(dict, discovery_info))
 
     async def async_step_dhcp(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by DHCP discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
     async def async_step_usb(
         self, discovery_info: DiscoveryInfoType
