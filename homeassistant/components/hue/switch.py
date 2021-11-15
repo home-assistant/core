@@ -1,7 +1,7 @@
 """Support for switch platform for Hue resources (V2 only)."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Union
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -18,6 +18,8 @@ from .bridge import HueBridge
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 
+ControllerType = Union[LightLevelController, MotionController]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -32,9 +34,8 @@ async def async_setup_entry(
         # should not happen, but just in case
         raise NotImplementedError("Switch support is only available for V2 bridges")
 
-    # pylint: disable=cell-var-from-loop
-    for controller in (api.sensors.motion, api.sensors.light_level):
-        # add entities for all scenes
+    @callback
+    def register_items(controller: ControllerType):
         @callback
         def async_add_entity(event_type: EventType, resource: SensingService) -> None:
             """Add entity from Hue resource."""
@@ -52,6 +53,10 @@ async def async_setup_entry(
                 async_add_entity, event_filter=EventType.RESOURCE_ADDED
             )
         )
+
+    # setup for each switch-type hue resource
+    register_items(api.sensors.motion)
+    register_items(api.sensors.light_level)
 
 
 class HueSensingServiceEnabledEntity(HueBaseEntity, SwitchEntity):

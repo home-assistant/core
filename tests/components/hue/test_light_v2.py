@@ -180,7 +180,7 @@ async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_da
     # verify the light is on before we start
     assert hass.states.get(test_light_id).state == "on"
 
-    # now call the HA turn_on service
+    # now call the HA turn_off service
     await hass.services.async_call(
         "light",
         "turn_off",

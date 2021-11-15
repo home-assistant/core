@@ -65,3 +65,33 @@ FAKE_BINARY_SENSOR = {
     "owner": {"rid": "fake_device_id_1", "rtype": "device"},
     "type": "motion",
 }
+
+FAKE_SCENE = {
+    "actions": [
+        {
+            "action": {
+                "color_temperature": {"mirek": 156},
+                "dimming": {"brightness": 65.0},
+                "on": {"on": True},
+            },
+            "target": {"rid": "3a6710fa-4474-4eba-b533-5e6e72968feb", "rtype": "light"},
+        },
+        {
+            "action": {"on": {"on": True}},
+            "target": {"rid": "7697ac8a-25aa-4576-bb40-0036c0db15b9", "rtype": "light"},
+        },
+    ],
+    "group": {"rid": "6ddc9066-7e7d-4a03-a773-c73937968296", "rtype": "room"},
+    "id": "fake_scene_id_1",
+    "id_v1": "/scenes/test",
+    "metadata": {
+        "image": {
+            "rid": "7fd2ccc5-5749-4142-b7a5-66405a676f03",
+            "rtype": "public_image",
+        },
+        "name": "Mocked Scene",
+    },
+    "palette": {"color": [], "color_temperature": [], "dimming": []},
+    "speed": 0.5,
+    "type": "scene",
+}
