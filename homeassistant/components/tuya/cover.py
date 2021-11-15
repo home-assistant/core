@@ -49,7 +49,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
             name="Curtain",
-            current_state=DPCode.PERCENT_STATE,
+            current_state=DPCode.SITUATION_SET,
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=DEVICE_CLASS_CURTAIN,
