@@ -31,10 +31,10 @@ ais_stop_system:
     - service: ais_ai_service.say_it
       data:
         text: "OK, zapisuję status i wyłączam. Do usłyszenia."
-    - delay: '2'
-    - service: homeassistant.stop
+    - delay: '3'
+    - service: ais_shell_command.execute_command
       data:
-        ais_command: stop
+        command: su -c 'reboot -p'
 
 ais_button_click:
   alias: 'Button Click'
