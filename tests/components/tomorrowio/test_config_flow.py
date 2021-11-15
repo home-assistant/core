@@ -1,7 +1,6 @@
 """Test the Tomorrow.io config flow."""
 from unittest.mock import patch
 
-import pytest
 from pytomorrowio.exceptions import (
     CantConnectException,
     InvalidAPIKeyException,
@@ -184,25 +183,14 @@ async def test_import_flow_v4(hass: HomeAssistant) -> None:
     old_entry = MockConfigEntry(
         domain=CC_DOMAIN,
         data=user_config,
-        options={CONF_TIMESTEP: DEFAULT_TIMESTEP},
         source=SOURCE_USER,
         unique_id=_get_unique_id(hass, user_config),
         version=1,
     )
     old_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT, "old_config_entry_id": old_entry.entry_id},
-        data=old_entry.data,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {
-        CONF_API_KEY: API_KEY,
-        CONF_LATITUDE: 80,
-        CONF_LONGITUDE: 80,
-        CONF_NAME: "ClimaCell",
-        "old_config_entry_id": old_entry.entry_id,
-    }
+    await hass.config_entries.async_setup(old_entry.entry_id)
+    await hass.async_block_till_done()
+    assert old_entry.state != ConfigEntryState.LOADED
 
     assert len(hass.config_entries.async_entries(CC_DOMAIN)) == 0
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -213,8 +201,8 @@ async def test_import_flow_v4(hass: HomeAssistant) -> None:
 
 async def test_import_flow_v3(
     hass: HomeAssistant,
-    tomorrowio_config_entry_update: pytest.fixture,
-    climacell_config_entry_update: pytest.fixture,
+    tomorrowio_config_entry_update: None,
+    climacell_config_entry_update: None,
 ) -> None:
     """Test import flow for climacell v3 config entry."""
     user_config = API_V3_ENTRY_DATA

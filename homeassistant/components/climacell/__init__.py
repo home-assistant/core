@@ -170,7 +170,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, PLATFORMS
     )
 
-    hass.data[DOMAIN].pop(config_entry.entry_id)
+    hass.data[DOMAIN].pop(config_entry.entry_id, None)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
 
