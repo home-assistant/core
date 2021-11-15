@@ -92,10 +92,10 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         """Return current temperature."""
         return cast(float, self.block.temp)
 
-    # @property
-    # def is_available(self) -> bool:
-    #     """Device a vailability."""
-    #     return not cast(bool, self.block.valveError)
+    @property
+    def available(self) -> bool:
+        """Device availability."""
+        return not cast(bool, self.block.valveError)
 
     @property
     def hvac_mode(self) -> str:
