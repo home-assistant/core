@@ -39,12 +39,14 @@ async def async_setup_entry(
         timedelta(seconds=30),
         plenticore,
     )
-    for (switch) in SWITCH_SETTINGS_DATA:
+    for switch in SWITCH_SETTINGS_DATA:
         if switch.module_id not in available_settings_data or switch.data_id not in (
             setting.id for setting in available_settings_data[switch.module_id]
         ):
             _LOGGER.debug(
-                "Skipping non existing setting data %s/%s", switch.module_id, switch.data_id
+                "Skipping non existing setting data %s/%s",
+                switch.module_id,
+                switch.data_id,
             )
             continue
 

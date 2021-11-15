@@ -632,7 +632,9 @@ SENSOR_SETTINGS_DATA = [
 #  - on Label (str)
 #  - off Value (str)
 #  - off Label (str)
-SWITCH = namedtuple('SWITCH', 'module_id data_id name is_on on_value on_label off_value off_label')
+SWITCH = namedtuple(
+    "SWITCH", "module_id data_id name is_on on_value on_label off_value off_label"
+)
 SWITCH_SETTINGS_DATA = [
     SWITCH(
         "devices:local",
@@ -648,11 +650,14 @@ SWITCH_SETTINGS_DATA = [
 
 
 class SelectData(NamedTuple):
+    """Representation of a SelectData tuple"""
+
     module_id: str
     data_id: str
     name: str
     options: list
     is_on: str
+
 
 # Defines all entities for select widgets.
 #

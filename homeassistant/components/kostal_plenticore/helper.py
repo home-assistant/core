@@ -5,7 +5,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Union, Iterable
+from typing import Union
 import logging
 
 from aiohttp.client_exceptions import ClientError
@@ -117,6 +117,36 @@ class Plenticore:
         _LOGGER.debug("Logged out from %s", self.host)
 
 
+class DataUpdateCoordinatorMixin:
+    async def async_read_data(self, module_id: str, data_id: str) -> [str, bool]:
+        """Write settings back to Plenticore."""
+        client = self._plenticore.client
+
+        if client is None:
+            return False
+
+        try:
+            val = await client.get_setting_values(module_id, data_id)
+        except PlenticoreApiException:
+            return False
+        else:
+            return val
+
+    async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
+        """Write settings back to Plenticore."""
+        client = self._plenticore.client
+
+        if client is None:
+            return False
+
+        try:
+            await client.set_setting_values(module_id, value)
+        except PlenticoreApiException:
+            return False
+        else:
+            return True
+
+
 class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
@@ -176,7 +206,9 @@ class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
         }
 
 
-class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
+class SettingDataUpdateCoordinator(
+    PlenticoreUpdateCoordinator, DataUpdateCoordinatorMixin
+):
     """Implementation of PlenticoreUpdateCoordinator for settings data."""
 
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
@@ -189,20 +221,6 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
 
         fetched_data = await client.get_setting_values(self._fetch)
         return fetched_data
-
-    async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
-        """Write settings back to Plenticore."""
-        client = self._plenticore.client
-
-        if not self._fetch or client is None:
-            return False
-
-        try:
-            await client.set_setting_values(module_id, value)
-        except PlenticoreApiException:
-            return False
-        else:
-            return True
 
 
 class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
@@ -245,7 +263,9 @@ class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
         self._fetch[module_id].remove(data_id)
 
 
-class SelectDataUpdateCoordinator(PlenticoreSelectUpdateCoordinator):
+class SelectDataUpdateCoordinator(
+    PlenticoreSelectUpdateCoordinator, DataUpdateCoordinatorMixin
+):
     """Implementation of PlenticoreUpdateCoordinator for select data."""
 
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
@@ -276,34 +296,6 @@ class SelectDataUpdateCoordinator(PlenticoreSelectUpdateCoordinator):
                             return fetched
 
             return {mid: {pids[0]: "None"}}
-
-    async def async_read_data(self, module_id: str, data_id: str) -> [str, bool]:
-        """Write settings back to Plenticore."""
-        client = self._plenticore.client
-
-        if client is None:
-            return False
-
-        try:
-            val = await client.get_setting_values(module_id, data_id)
-        except PlenticoreApiException:
-            return False
-        else:
-            return val
-
-    async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
-        """Write settings back to Plenticore."""
-        client = self._plenticore.client
-
-        if client is None:
-            return False
-
-        try:
-            await client.set_setting_values(module_id, value)
-        except PlenticoreApiException:
-            return False
-        else:
-            return True
 
 
 class PlenticoreDataFormatter:

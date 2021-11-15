@@ -40,7 +40,11 @@ async def async_setup_entry(
     )
     for select in SELECT_SETTINGS_DATA:
         if select.module_id not in available_settings_data:
-            _LOGGER.debug("Skipping non existing setting data %s/%s", select.module_id, select.name)
+            _LOGGER.debug(
+                "Skipping non existing setting data %s/%s",
+                select.module_id,
+                select.name,
+            )
             continue
         entities.append(
             PlenticoreDataSelect(
