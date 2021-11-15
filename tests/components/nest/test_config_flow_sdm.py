@@ -418,7 +418,7 @@ async def test_pubsub_subscription(hass, oauth, subscriber):
     await oauth.async_oauth_app_flow(result)
 
     with patch(
-        "homeassistant.components.nest.config_flow.GoogleNestSubscriber",
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
         return_value=subscriber,
     ):
         result = await oauth.async_configure(result, {"code": "1234"})
@@ -453,7 +453,7 @@ async def test_pubsub_subscription_auth_failure(hass, oauth):
     await oauth.async_oauth_app_flow(result)
     result = await oauth.async_configure(result, {"code": "1234"})
     with patch(
-        "homeassistant.components.nest.config_flow.GoogleNestSubscriber.create_subscription",
+        "homeassistant.components.nest.api.GoogleNestSubscriber.create_subscription",
         side_effect=AuthException(),
     ):
         await oauth.async_pubsub_flow(result)
@@ -478,7 +478,7 @@ async def test_pubsub_subscription_failure(hass, oauth):
     result = await oauth.async_configure(result, {"code": "1234"})
     await oauth.async_pubsub_flow(result)
     with patch(
-        "homeassistant.components.nest.config_flow.GoogleNestSubscriber.create_subscription",
+        "homeassistant.components.nest.api.GoogleNestSubscriber.create_subscription",
         side_effect=GoogleNestException(),
     ):
         result = await oauth.async_configure(
@@ -504,7 +504,7 @@ async def test_pubsub_subscription_configuration_failure(hass, oauth):
     result = await oauth.async_configure(result, {"code": "1234"})
     await oauth.async_pubsub_flow(result)
     with patch(
-        "homeassistant.components.nest.config_flow.GoogleNestSubscriber.create_subscription",
+        "homeassistant.components.nest.api.GoogleNestSubscriber.create_subscription",
         side_effect=ConfigurationException(),
     ):
         result = await oauth.async_configure(
@@ -565,7 +565,7 @@ async def test_pubsub_subscriber_config_entry_reauth(hass, oauth, subscriber):
 
     # Verify existing tokens are replaced
     with patch(
-        "homeassistant.components.nest.config_flow.GoogleNestSubscriber",
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
         return_value=subscriber,
     ):
         entry = await oauth.async_finish_setup(

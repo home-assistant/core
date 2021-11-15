@@ -41,16 +41,16 @@ from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import get_random_string
 from homeassistant.util.json import load_json
 
 from . import api
 from .const import (
+    CONF_CLOUD_PROJECT_ID,
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
     DATA_NEST_CONFIG,
@@ -63,7 +63,6 @@ from .const import (
 DATA_FLOW_IMPL = "nest_flow_implementation"
 SUBSCRIPTION_FORMAT = "projects/{cloud_project_id}/subscriptions/home-assistant-{rnd}"
 SUBSCRIPTION_RAND_LENGTH = 10
-CONF_CLOUD_PROJECT_ID = "cloud_project_id"
 CLOUD_CONSOLE_URL = "https://console.cloud.google.com/home/dashboard"
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,6 +153,15 @@ class NestFlowHandler(
             "prompt": "consent",
         }
 
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
+        """Complete OAuth setup and finish pubsub or finish."""
+        assert self.is_sdm_api(), "Step only supported for SDM API"
+        self._data.update(data)
+        if not self._configure_pubsub():
+            _LOGGER.debug("Skipping Pub/Sub configuration")
+            return await self.async_step_finish()
+        return await self.async_step_pubsub()
+
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -235,22 +243,10 @@ class NestFlowHandler(
         # No existing subscription configured, so create in config flow
         return True
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
-        """Complete OAuth setup and finish pubsub or finish."""
-        assert self.is_sdm_api(), "Step only supported for SDM API"
-        self._data.update(data)
-        if not self._configure_pubsub():
-            _LOGGER.debug("Skipping Pub/Sub configuration")
-            return await self.async_step_finish()
-        return await self.async_step_pubsub()
-
     async def async_step_pubsub(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Configure and create Pub/Sub subscriber."""
-        errors = {}
-        config = self.hass.data[DOMAIN][DATA_NEST_CONFIG]
-
         # Populate data from the previous config entry during reauth, then
         # overwrite with the user entered values.
         cloud_project_id = ""
@@ -263,6 +259,8 @@ class NestFlowHandler(
             if CONF_SUBSCRIBER_ID in data:
                 subscriber_id = data.get(CONF_SUBSCRIBER_ID, "")
 
+        errors = {}
+        config = self.hass.data[DOMAIN][DATA_NEST_CONFIG]
         if cloud_project_id == config[CONF_PROJECT_ID]:
             _LOGGER.error(
                 "Wrong Project ID. Device Access Project ID used, but expected Cloud Project ID"
@@ -275,7 +273,13 @@ class NestFlowHandler(
             if not subscriber_id:
                 subscriber_id = _generate_subscription_id(cloud_project_id)
             _LOGGER.debug("Creating subscriber id '%s'", subscriber_id)
-            subscriber = self._create_subscriber(subscriber_id)
+            # Create a placeholder ConfigEntry to use since with the auth we've already created.
+            entry = ConfigEntry(
+                version=1, domain=DOMAIN, title="", data=self._data, source=""
+            )
+            subscriber = await api.new_subscriber_with_impl(
+                self.hass, entry, subscriber_id, self.flow_impl
+            )
             try:
                 await subscriber.create_subscription()
             except AuthException as err:
@@ -310,22 +314,6 @@ class NestFlowHandler(
 
     def _create_subscriber(self, subscriber_id: str) -> GoogleNestSubscriber:
         """Create the GoogleNestSubscriber."""
-        config = self.hass.data[DOMAIN][DATA_NEST_CONFIG]
-        # OAuth credentials created during this flow, but a full ConfigEntry
-        # is not created yet so create a temp one here that is not persisted.
-        entry = ConfigEntry(
-            version=1, domain=DOMAIN, title="", data=self._data, source=""
-        )
-        session = config_entry_oauth2_flow.OAuth2Session(
-            self.hass, entry, self.flow_impl
-        )
-        auth = api.AsyncConfigEntryAuth(
-            aiohttp_client.async_get_clientsession(self.hass),
-            session,
-            config[CONF_CLIENT_ID],
-            config[CONF_CLIENT_SECRET],
-        )
-        return GoogleNestSubscriber(auth, config[CONF_PROJECT_ID], subscriber_id)
 
     async def async_step_finish(self, data: dict[str, Any] | None = None) -> FlowResult:
         """Create an entry for the SDM flow."""

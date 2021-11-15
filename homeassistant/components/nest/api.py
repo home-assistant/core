@@ -29,9 +29,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-# See https://developers.google.com/nest/device-access/registration
-
-
 class AsyncConfigEntryAuth(AbstractAuth):
     """Provide Google Nest Device Access authentication tied to an OAuth2 based config entry."""
 
@@ -84,7 +81,6 @@ async def new_subscriber(
             hass, entry
         )
     )
-
     config = hass.data[DOMAIN][DATA_NEST_CONFIG]
     if not (
         subscriber_id := entry.data.get(
@@ -93,7 +89,17 @@ async def new_subscriber(
     ):
         _LOGGER.error("Configuration option 'subscriber_id' required")
         return None
+    return await new_subscriber_with_impl(hass, entry, subscriber_id, implementation)
 
+
+async def new_subscriber_with_impl(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    subscriber_id: str,
+    implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
+) -> GoogleNestSubscriber:
+    """Create a GoogleNestSubscriber, used during ConfigFlow."""
+    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     auth = AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),

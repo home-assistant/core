@@ -1,7 +1,5 @@
 """Support for Nest devices."""
 
-from __future__ import annotations
-
 import logging
 
 from google_nest_sdm.event import EventMessage
