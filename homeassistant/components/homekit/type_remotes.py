@@ -99,7 +99,9 @@ class RemoteInputSelectAccessory(HomeAccessory):
             sources = state.attributes.get(source_list_key, [])
             if len(sources) > MAXIMUM_SOURCES:
                 _LOGGER.warning(
-                    "Reached maximum number of sources (%s)", MAXIMUM_SOURCES
+                    "%s: Reached maximum number of sources (%s)",
+                    self.entity_id,
+                    MAXIMUM_SOURCES,
                 )
             self.sources = sources[:MAXIMUM_SOURCES]
             if self.sources:
@@ -172,8 +174,8 @@ class RemoteInputSelectAccessory(HomeAccessory):
             if index >= MAXIMUM_SOURCES:
                 _LOGGER.debug(
                     "%s: Source %s and above are not supported",
-                    MAXIMUM_SOURCES,
                     self.entity_id,
+                    MAXIMUM_SOURCES,
                 )
             else:
                 _LOGGER.debug(
