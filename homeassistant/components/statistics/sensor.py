@@ -252,13 +252,6 @@ class StatisticsSensor(SensorEntity):
             unit = base_unit + "/sample"
         elif self._state_characteristic == STAT_CHANGE_RATE:
             unit = base_unit + "/s"
-        else:
-            _LOGGER.debug(
-                "%s: parsing error, unit can not be derived for characteristic '%s'",
-                self.entity_id,
-                self._state_characteristic,
-            )
-            unit = None
         return unit
 
     @property
