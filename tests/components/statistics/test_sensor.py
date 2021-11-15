@@ -65,11 +65,18 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "binary_sensor.test_monitored",
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "binary_sensor.test_monitored",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_unitless",
+                        "entity_id": "binary_sensor.test_monitored_unitless",
+                    },
+                ]
             },
         )
 
@@ -78,14 +85,21 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.block_till_done()
 
         for value in values:
-            self.hass.states.set("binary_sensor.test_monitored", value)
+            self.hass.states.set(
+                "binary_sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.states.set("binary_sensor.test_monitored_unitless", value)
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-
         assert state.state == str(len(values))
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+
+        state = self.hass.states.get("sensor.test_unitless")
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     def test_sensor_source(self):
         """Test if source is a sensor."""
