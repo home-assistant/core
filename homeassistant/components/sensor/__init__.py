@@ -73,7 +73,7 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_CURRENT,  # current (A)
     DEVICE_CLASS_DATE,  # date (ISO8601)
     DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
-    DEVICE_CLASS_FREQUENCY,  # frequency (Hz, MHz, GHz)
+    DEVICE_CLASS_FREQUENCY,  # frequency (Hz, kHz, MHz, GHz)
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_MONETARY,  # Amount of money (currency)
