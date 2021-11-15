@@ -1,9 +1,9 @@
-"""Errors for the UniFi component."""
+"""Errors for the UniFi Network component."""
 from homeassistant.exceptions import HomeAssistantError
 
 
 class UnifiException(HomeAssistantError):
-    """Base class for UniFi exceptions."""
+    """Base class for UniFi Network exceptions."""
 
 
 class AlreadyConfigured(UnifiException):

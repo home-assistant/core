@@ -82,7 +82,7 @@ def add_uptime_entities(controller, async_add_entities, clients):
 
 
 class UniFiBandwidthSensor(UniFiClient, SensorEntity):
-    """UniFi bandwidth sensor base class."""
+    """UniFi Network bandwidth sensor base class."""
 
     DOMAIN = DOMAIN
 

@@ -1,4 +1,4 @@
-"""Track both clients and devices using UniFi Network Controllers."""
+"""Track both clients and devices using UniFi Network application."""
 from datetime import timedelta
 
 from aiounifi.api import SOURCE_DATA, SOURCE_EVENT

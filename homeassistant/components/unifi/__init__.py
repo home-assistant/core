@@ -28,7 +28,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up the UniFi component."""
+    """Set up the UniFi Network component."""
     hass.data.setdefault(UNIFI_DOMAIN, {})
 
     # Flat configuration was introduced with 2021.3
@@ -53,7 +53,7 @@ async def async_setup_entry(hass, config_entry):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
     )
 
-    LOGGER.debug("UniFi config options %s", config_entry.options)
+    LOGGER.debug("UniFi Network config options %s", config_entry.options)
 
     if controller.mac is None:
         return True
@@ -64,8 +64,8 @@ async def async_setup_entry(hass, config_entry):
         configuration_url=controller.api.url,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
         default_manufacturer=ATTR_MANUFACTURER,
-        default_model="UniFi Controller",
-        default_name="UniFi Controller",
+        default_model="UniFi Network Application",
+        default_name="UniFi Network Application",
     )
 
     return True
