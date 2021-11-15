@@ -6,7 +6,11 @@ from dataclasses import dataclass
 
 from pydaikin.daikin_base import Appliance
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
@@ -51,6 +55,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_func=lambda device: device.inside_temperature,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_OUTSIDE_TEMPERATURE,
@@ -58,6 +63,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_func=lambda device: device.outside_temperature,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HUMIDITY,
@@ -65,6 +71,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         value_func=lambda device: device.humidity,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TARGET_HUMIDITY,
@@ -79,6 +86,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
         value_func=lambda device: round(device.current_total_power_consumption, 2),
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COOL_ENERGY,
@@ -87,6 +95,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_func=lambda device: round(device.last_hour_cool_energy_consumption, 2),
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HEAT_ENERGY,
@@ -95,6 +104,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_func=lambda device: round(device.last_hour_heat_energy_consumption, 2),
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COMPRESSOR_FREQUENCY,
