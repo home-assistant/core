@@ -132,5 +132,4 @@ class TuyaEntity(Entity):
 
     def _send_command(self, commands: list[dict[str, Any]]) -> None:
         """Send command to the device."""
-        _LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
         self.device_manager.send_commands(self.device.id, commands)
