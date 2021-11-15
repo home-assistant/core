@@ -157,7 +157,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         return self._device.state  # type: ignore[no-any-return]
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, bool | float | int | list | None]:
         """Return the state attributes of the sensor."""
         attr: dict[str, bool | float | int | list | None] = {}
 
