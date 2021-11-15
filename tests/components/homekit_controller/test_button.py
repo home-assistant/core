@@ -27,7 +27,7 @@ async def test_press_button(hass):
     # Helper will be for the primary entity, which is the outlet. Make a helper for the button.
     energy_helper = Helper(
         hass,
-        "button.testdevice",
+        "button.testdevice_setup",
         helper.pairing,
         helper.accessory,
         helper.config_entry,
@@ -39,8 +39,7 @@ async def test_press_button(hass):
     await hass.services.async_call(
         "button",
         "press",
-        {"entity_id": "button.testdevice"},
+        {"entity_id": "button.testdevice_setup"},
         blocking=True,
     )
-    # FIXME: setup.value is still ""
     assert setup.value == "#HAA@trcmd"
