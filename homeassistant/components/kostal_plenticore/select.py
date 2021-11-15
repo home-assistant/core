@@ -18,6 +18,7 @@ from .const import (
 )
 from .helper import (
     SelectDataUpdateCoordinator,
+    Plenticore,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,45 +26,28 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+) -> None:
     """Add kostal plenticore Select widget."""
-    plenticore = hass.data[DOMAIN][entry.entry_id]
+    plenticore: Plenticore = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    available_settings_data = await plenticore.client.get_settings()
-    select_data_update_coordinator = SelectDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Select Data",
-        timedelta(seconds=30),
-        plenticore,
-    )
-    for select in SELECT_SETTINGS_DATA:
-        if select.module_id not in available_settings_data:
-            _LOGGER.debug(
-                "Skipping non existing setting data %s/%s",
-                select.module_id,
-                select.name,
-            )
-            continue
-        entities.append(
-            PlenticoreDataSelect(
-                coordinator=select_data_update_coordinator,
-                entry_id=entry.entry_id,
-                platform_name=entry.title,
-                device_class="kostal_plenticore__battery",
-                module_id=select.module_id,
-                data_id=select.data_id,
-                name=select.name,
-                current_option="None",
-                options=select.options,
-                is_on=select.is_on,
-                device_info=plenticore.device_info,
-                unique_id=f"{entry.entry_id}_{select.module_id}",
-            )
+    async_add_entities(
+        PlenticoreDataSelect(
+            hass=hass,
+            plenticore=plenticore,
+            entry_id=entry.entry_id,
+            platform_name=entry.title,
+            device_class="kostal_plenticore__battery",
+            module_id=select.module_id,
+            data_id=select.data_id,
+            name=select.name,
+            current_option="None",
+            options=select.options,
+            is_on=select.is_on,
+            device_info=plenticore.device_info,
+            unique_id=f"{entry.entry_id}_{select.module_id}",
         )
-
-    async_add_entities(entities)
+        for select in SELECT_SETTINGS_DATA
+    )
 
 
 class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
@@ -71,7 +55,8 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
 
     def __init__(
         self,
-        coordinator,
+        hass: hass,
+        plenticore: Plenticore,
         entry_id: str,
         platform_name: str,
         device_class: str | None,
@@ -85,7 +70,16 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         unique_id: str,
     ):
         """Create a new switch Entity for Plenticore process data."""
-        super().__init__(coordinator)
+        super().__init__(
+            coordinator=SelectDataUpdateCoordinator(
+                hass,
+                _LOGGER,
+                "Select Data",
+                timedelta(seconds=30),
+                plenticore,
+            )
+        )
+        self.plenticore = plenticore
         self.entry_id = entry_id
         self.platform_name = platform_name
         self._attr_device_class = device_class
