@@ -17,7 +17,7 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "password": "\u015eifre"
+                    "password": "Parola"
                 },
                 "description": "{username} i\u00e7in \u015fifrenizi g\u00fcncelleyin",
                 "title": "Entegrasyonu Yeniden Do\u011frula"

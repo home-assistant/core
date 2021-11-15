@@ -402,8 +402,6 @@ omit =
     homeassistant/components/google_travel_time/sensor.py
     homeassistant/components/gpmdp/media_player.py
     homeassistant/components/gpsd/sensor.py
-    homeassistant/components/greeneye_monitor/*
-    homeassistant/components/greeneye_monitor/sensor.py
     homeassistant/components/greenwave/light.py
     homeassistant/components/group/notify.py
     homeassistant/components/growatt_server/sensor.py
@@ -505,7 +503,6 @@ omit =
     homeassistant/components/incomfort/*
     homeassistant/components/intesishome/*
     homeassistant/components/ios/*
-    homeassistant/components/iota/*
     homeassistant/components/iperf3/*
     homeassistant/components/iqvia/*
     homeassistant/components/irish_rail_transport/sensor.py
@@ -524,6 +521,8 @@ omit =
     homeassistant/components/isy994/switch.py
     homeassistant/components/itach/remote.py
     homeassistant/components/itunes/media_player.py
+    homeassistant/components/jellyfin/__init__.py
+    homeassistant/components/jellyfin/media_source.py
     homeassistant/components/joaoapps_join/*
     homeassistant/components/juicenet/__init__.py
     homeassistant/components/juicenet/const.py
@@ -672,7 +671,6 @@ omit =
     homeassistant/components/mutesync/binary_sensor.py
     homeassistant/components/nest/const.py
     homeassistant/components/mvglive/sensor.py
-    homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*
     homeassistant/components/mysensors/__init__.py
     homeassistant/components/mysensors/binary_sensor.py
@@ -1144,8 +1142,6 @@ omit =
     homeassistant/components/tuya/switch.py
     homeassistant/components/tuya/util.py
     homeassistant/components/tuya/vacuum.py
-    homeassistant/components/twentemilieu/const.py
-    homeassistant/components/twentemilieu/sensor.py
     homeassistant/components/twilio_call/notify.py
     homeassistant/components/twilio_sms/notify.py
     homeassistant/components/twitter/notify.py

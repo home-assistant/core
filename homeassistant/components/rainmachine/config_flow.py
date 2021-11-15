@@ -1,7 +1,7 @@
 """Config flow to configure the RainMachine component."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -9,6 +9,7 @@ from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant, callback
@@ -56,9 +57,15 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle a flow initialized by homekit discovery."""
-        return await self.async_step_zeroconf(discovery_info)
+        return await self.async_step_homekit_zeroconf(discovery_info)
 
     async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle discovery via zeroconf."""
+        return await self.async_step_homekit_zeroconf(cast(dict, discovery_info))
+
+    async def async_step_homekit_zeroconf(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle discovery via zeroconf."""

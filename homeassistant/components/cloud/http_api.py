@@ -33,8 +33,6 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
-    InvalidTrustedNetworks,
-    InvalidTrustedProxies,
     RequireRelink,
 )
 
@@ -42,14 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 _CLOUD_ERRORS = {
-    InvalidTrustedNetworks: (
-        HTTPStatus.INTERNAL_SERVER_ERROR,
-        "Remote UI not compatible with 127.0.0.1/::1 as a trusted network.",
-    ),
-    InvalidTrustedProxies: (
-        HTTPStatus.INTERNAL_SERVER_ERROR,
-        "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies.",
-    ),
     asyncio.TimeoutError: (
         HTTPStatus.BAD_GATEWAY,
         "Unable to reach the Home Assistant cloud.",

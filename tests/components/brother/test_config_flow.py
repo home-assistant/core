@@ -144,8 +144,8 @@ async def test_zeroconf_snmp_error(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
-                hostname="example.local.", name="Brother Printer"
+            data=zeroconf.ZeroconfServiceInfo(
+                hostname="example.local.", name="Brother Printer", properties={}
             ),
         )
 
@@ -159,7 +159,7 @@ async def test_zeroconf_unsupported_model(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
+            data=zeroconf.ZeroconfServiceInfo(
                 hostname="example.local.",
                 name="Brother Printer",
                 properties={"product": "MFC-8660DN"},
@@ -184,8 +184,8 @@ async def test_zeroconf_device_exists_abort(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
-                hostname="example.local.", name="Brother Printer"
+            data=zeroconf.ZeroconfServiceInfo(
+                hostname="example.local.", name="Brother Printer", properties={}
             ),
         )
 
@@ -201,7 +201,9 @@ async def test_zeroconf_no_probe_existing_device(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(hostname="localhost", name="Brother Printer"),
+            data=zeroconf.ZeroconfServiceInfo(
+                hostname="localhost", name="Brother Printer"
+            ),
         )
         await hass.async_block_till_done()
 
@@ -220,8 +222,8 @@ async def test_zeroconf_confirm_create_entry(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
-                hostname="example.local.", name="Brother Printer"
+            data=zeroconf.ZeroconfServiceInfo(
+                hostname="example.local.", name="Brother Printer", properties={}
             ),
         )
 

@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/adax",
   "requirements": [
-    "adax==0.1.1"
+    "adax==0.2.0"
   ],
   "codeowners": [
     "@danielhiversen"

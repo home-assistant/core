@@ -46,10 +46,10 @@ SENSORS: tuple[RDWSensorEntityDescription, ...] = (
         value_fn=lambda vehicle: vehicle.apk_expiration.isoformat(),
     ),
     RDWSensorEntityDescription(
-        key="name_registration_date",
-        name="Name Registration Date",
+        key="ascription_date",
+        name="Ascription Date",
         device_class=DEVICE_CLASS_DATE,
-        value_fn=lambda vehicle: vehicle.name_registration_date.isoformat(),
+        value_fn=lambda vehicle: vehicle.ascription_date.isoformat(),
     ),
 )
 

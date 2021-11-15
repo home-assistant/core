@@ -76,6 +76,7 @@ class Store:
         private: bool = False,
         *,
         encoder: type[JSONEncoder] | None = None,
+        atomic_writes: bool = False,
     ) -> None:
         """Initialize storage class."""
         self.version = version
@@ -88,6 +89,7 @@ class Store:
         self._write_lock = asyncio.Lock()
         self._load_task: asyncio.Future | None = None
         self._encoder = encoder
+        self._atomic_writes = atomic_writes
 
     @property
     def path(self):
@@ -238,7 +240,13 @@ class Store:
             os.makedirs(os.path.dirname(path))
 
         _LOGGER.debug("Writing data for %s to %s", self.key, path)
-        json_util.save_json(path, data, self._private, encoder=self._encoder)
+        json_util.save_json(
+            path,
+            data,
+            self._private,
+            encoder=self._encoder,
+            atomic_writes=self._atomic_writes,
+        )
 
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""

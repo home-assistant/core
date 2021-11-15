@@ -9,7 +9,7 @@ from aionotion import async_get_client
 from aionotion.errors import InvalidCredentialsError, NotionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -24,7 +24,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
@@ -39,9 +39,6 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Notion as a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_USERNAME]
@@ -99,7 +96,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinator
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -157,7 +155,7 @@ class NotionEntity(CoordinatorEntity):
             via_device=(DOMAIN, bridge.get("hardware_id")),
         )
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
         self._attr_name = f'{sensor["name"]}: {description.name}'
         self._attr_unique_id = (
             f'{sensor_id}_{coordinator.data["tasks"][task_id]["task_type"]}'

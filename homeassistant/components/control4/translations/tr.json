@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "\u0130p Adresi",
+                    "host": "IP Adresi",
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },

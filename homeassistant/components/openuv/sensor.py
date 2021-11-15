@@ -14,7 +14,6 @@ from homeassistant.util.dt import as_local, parse_datetime
 
 from . import OpenUvEntity
 from .const import (
-    DATA_CLIENT,
     DATA_UV,
     DOMAIN,
     TYPE_CURRENT_OZONE_LEVEL,
@@ -122,7 +121,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
-    openuv = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    openuv = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [OpenUvSensor(openuv, description) for description in SENSOR_DESCRIPTIONS]
     )

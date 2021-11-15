@@ -1,0 +1,7 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "long_push": "Pulsaci\u00f3n larga {subtype}"
+        }
+    }
+}

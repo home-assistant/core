@@ -112,6 +112,14 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def charge_start(service_call: ServiceCall) -> None:
         """Start charge."""
+        # The Renault start charge service has been replaced by a
+        # dedicated button entity and marked as deprecated
+        LOGGER.warning(
+            "The 'renault.charge_start' service is deprecated and "
+            "replaced by a dedicated start charge button entity; please "
+            "use that entity to start the charge instead"
+        )
+
         proxy = get_vehicle_proxy(service_call.data)
 
         LOGGER.debug("Charge start attempt")

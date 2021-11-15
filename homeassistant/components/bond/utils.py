@@ -82,6 +82,26 @@ class BondDevice:
         """Return True if this device supports any of the direction related commands."""
         return self._has_any_action({Action.SET_DIRECTION})
 
+    def supports_open(self) -> bool:
+        """Return True if this device supports opening."""
+        return self._has_any_action({Action.OPEN})
+
+    def supports_close(self) -> bool:
+        """Return True if this device supports closing."""
+        return self._has_any_action({Action.CLOSE})
+
+    def supports_tilt_open(self) -> bool:
+        """Return True if this device supports tilt opening."""
+        return self._has_any_action({Action.TILT_OPEN})
+
+    def supports_tilt_close(self) -> bool:
+        """Return True if this device supports tilt closing."""
+        return self._has_any_action({Action.TILT_CLOSE})
+
+    def supports_hold(self) -> bool:
+        """Return True if this device supports hold aka stop."""
+        return self._has_any_action({Action.HOLD})
+
     def supports_light(self) -> bool:
         """Return True if this device supports any of the light related commands."""
         return self._has_any_action({Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF})

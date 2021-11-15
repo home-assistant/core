@@ -43,7 +43,7 @@ from homeassistant.util.dt import as_utc, parse_datetime
 
 from .const import DEVICE_CLASS_CHARGE_STATE, DEVICE_CLASS_PLUG_STATE, DOMAIN
 from .renault_coordinator import T
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription
+from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
 
@@ -58,7 +58,9 @@ class RenaultSensorRequiredKeysMixin:
 
 @dataclass
 class RenaultSensorEntityDescription(
-    SensorEntityDescription, RenaultEntityDescription, RenaultSensorRequiredKeysMixin
+    SensorEntityDescription,
+    RenaultDataEntityDescription,
+    RenaultSensorRequiredKeysMixin,
 ):
     """Class describing Renault sensor entities."""
 
