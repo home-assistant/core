@@ -735,6 +735,7 @@ async def test_light_rgbw_individual(hass: HomeAssistant, knx: KNXTestKit):
     # turn OFF from KNX
     await knx.receive_write(test_red, (0,))
     await knx.receive_write(test_green, (0,))
+    await knx.xknx.task_registry.block_till_done()
     knx.assert_state("light.test", STATE_OFF)
     # turn ON from KNX
     await knx.receive_write(test_red, (0,))
