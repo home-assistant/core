@@ -96,7 +96,12 @@ class RemoteInputSelectAccessory(HomeAccessory):
         self.sources = []
         self.support_select_source = False
         if features & required_feature:
-            self.sources = state.attributes.get(source_list_key, [])
+            sources = state.attributes.get(source_list_key, [])
+            if len(sources) > MAXIMUM_SOURCES:
+                _LOGGER.warning(
+                    "Reached maximum number of sources (%s)", MAXIMUM_SOURCES
+                )
+            self.sources = sources[:MAXIMUM_SOURCES]
             if self.sources:
                 self.support_select_source = True
 
@@ -121,11 +126,6 @@ class RemoteInputSelectAccessory(HomeAccessory):
             CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source
         )
         for index, source in enumerate(self.sources):
-            if index == MAXIMUM_SOURCES:
-                _LOGGER.warning(
-                    "Reached maximum number of sources (%s)", MAXIMUM_SOURCES
-                )
-                break
             serv_input = self.add_preload_service(
                 SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME]
             )
@@ -168,22 +168,21 @@ class RemoteInputSelectAccessory(HomeAccessory):
 
         possible_sources = new_state.attributes.get(self.source_list_key, [])
         if source_name in possible_sources:
-            index = self.sources.index(source_name)
+            index = possible_sources.index(source_name)
             if index >= MAXIMUM_SOURCES:
                 _LOGGER.debug(
                     "%s: Source %s and above are not supported",
                     MAXIMUM_SOURCES,
                     self.entity_id,
                 )
-                self.char_input_source.set_value(0)
+            else:
+                _LOGGER.debug(
+                    "%s: Sources out of sync. Rebuilding Accessory",
+                    self.entity_id,
+                )
+                # Sources are out of sync, recreate the accessory
+                self.async_reset()
                 return
-            _LOGGER.debug(
-                "%s: Sources out of sync. Rebuilding Accessory",
-                self.entity_id,
-            )
-            # Sources are out of sync, recreate the accessory
-            self.async_reset()
-            return
 
         _LOGGER.debug(
             "%s: Source %s does not exist the source list: %s",
