@@ -7,6 +7,7 @@ ATTR_BUTTON = "button"
 ATTR_PAYLOAD = "payload"
 ATTR_SOUND_OUTPUT = "sound_output"
 
+CONF_FORCE_VOLUME_STEP_ONLY = "force_volume_step_only"
 CONF_ON_ACTION = "turn_on_action"
 CONF_SOURCES = "sources"
 

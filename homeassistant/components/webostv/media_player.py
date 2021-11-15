@@ -27,6 +27,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.webostv.const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
+    CONF_FORCE_VOLUME_STEP_ONLY,
     CONF_ON_ACTION,
     CONF_SOURCES,
     DOMAIN,
@@ -303,7 +304,10 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Flag media player features that are supported."""
         supported = SUPPORT_WEBOSTV
 
-        if self._client.sound_output in ("external_arc", "external_speaker"):
+        if (
+            self._client.sound_output in ("external_arc", "external_speaker")
+            or self._customize[CONF_FORCE_VOLUME_STEP_ONLY]
+        ):
             supported = supported | SUPPORT_WEBOSTV_VOLUME
         elif self._client.sound_output != "lineout":
             supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET

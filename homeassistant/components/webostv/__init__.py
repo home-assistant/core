@@ -26,6 +26,7 @@ from .const import (
     ATTR_BUTTON,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
+    CONF_FORCE_VOLUME_STEP_ONLY,
     CONF_ON_ACTION,
     CONF_SOURCES,
     DEFAULT_NAME,
@@ -37,7 +38,10 @@ from .const import (
 )
 
 CUSTOMIZE_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}
+    {
+        vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_FORCE_VOLUME_STEP_ONLY, default=False): cv.boolean,
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
