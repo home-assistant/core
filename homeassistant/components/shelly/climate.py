@@ -77,10 +77,10 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
 
         self._attr_name = self.wrapper.name
         self._attr_unique_id = f"{self.wrapper.mac}-climate"
-        self._attr_preset_modes: list[str] = wrapper.device.settings[
-            "schedule_profile_names"
+        self._attr_preset_modes: list[str] = [
+            PRESET_NONE,
+            *wrapper.device.settings["schedule_profile_names"]
         ]
-        self._attr_preset_modes.insert(0, PRESET_NONE)
 
     @property
     def target_temperature(self) -> float | None:
