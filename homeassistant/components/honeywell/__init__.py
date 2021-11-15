@@ -30,14 +30,14 @@ async def async_setup_entry(hass, config):
     loc_id = config.data.get(CONF_LOC_ID)
     dev_id = config.data.get(CONF_DEV_ID)
 
-    devices = []
+    devices = {}
 
     for location in client.locations_by_id.values():
         for device in location.devices_by_id.values():
             if (not loc_id or location.locationid == loc_id) and (
                 not dev_id or device.deviceid == dev_id
             ):
-                devices.append(device)
+                devices[device.deviceid] = device
 
     if len(devices) == 0:
         _LOGGER.debug("No devices found")
@@ -117,20 +117,15 @@ class HoneywellData:
             _LOGGER.error("Failed to find any devices after retry")
             return False
 
-        for configured_device in self.devices:
-            for refreshed_device in refreshed_devices:
-                if (
-                    configured_device.deviceid == refreshed_device.deviceid
-                    and configured_device.name == refreshed_device.name
-                ):
-                    configured_device = refreshed_device
+        for updated_device in refreshed_devices:
+            self.devices[updated_device.deviceid] = updated_device
 
         await self._hass.config_entries.async_reload(self._config.entry_id)
         return True
 
     async def _refresh_devices(self):
         """Refresh each enabled device."""
-        for device in self.devices:
+        for device in self.devices.values():
             await self._hass.async_add_executor_job(device.refresh)
             await asyncio.sleep(UPDATE_LOOP_SLEEP_TIME)
 
