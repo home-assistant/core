@@ -20,8 +20,8 @@
     },
     "state": {
         "_": {
-            "off": "off",
-            "on": "on"
+            "off": "OFF",
+            "on": "ON"
         }
     },
     "title": "Humidificador"

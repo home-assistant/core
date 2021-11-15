@@ -11,7 +11,8 @@
             "init": {
                 "data": {
                     "stream_url_template": "Stream URL\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8",
-                    "webhook_set_overwrite": "\u8a8d\u8b58\u3055\u308c\u3066\u3044\u306a\u3044Webhook\u3092\u4e0a\u66f8\u304d\u3059\u308b"
+                    "webhook_set": "Home Assistant\u306b\u30a4\u30d9\u30f3\u30c8\u3092\u5831\u544a\u3059\u308b\u3088\u3046\u306b\u3001motionEye webhooks\u3092\u8a2d\u5b9a\u3059\u308b",
+                    "webhook_set_overwrite": "\u8a8d\u8b58\u3055\u308c\u3066\u3044\u306a\u3044Webhooks\u3092\u4e0a\u66f8\u304d\u3059\u308b"
                 }
             }
         }

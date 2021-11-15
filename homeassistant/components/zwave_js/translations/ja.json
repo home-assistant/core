@@ -3,6 +3,7 @@
         "abort": {
             "discovery_requires_supervisor": "\u691c\u51fa\u306b\u306fSupervisor\u304c\u5fc5\u8981\u3067\u3059\u3002"
         },
+        "flow_title": "{name}",
         "step": {
             "configure_addon": {
                 "data": {
@@ -15,6 +16,9 @@
             },
             "hassio_confirm": {
                 "title": "Z-Wave JS\u30a2\u30c9\u30aa\u30f3\u3068Z-Wave JS\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+            },
+            "usb_confirm": {
+                "description": "Z-Wave JS\u30a2\u30c9\u30aa\u30f3\u3067 {name} \u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f"
             }
         }
     },
@@ -40,11 +44,15 @@
     },
     "options": {
         "abort": {
-            "different_device": "\u63a5\u7d9a\u3055\u308c\u3066\u3044\u308bUSB\u30c7\u30d0\u30a4\u30b9\u306f\u3001\u3053\u306e\u69cb\u6210\u30a8\u30f3\u30c8\u30ea\u3067\u4ee5\u524d\u306b\u69cb\u6210\u3055\u308c\u305f\u3082\u306e\u3068\u306f\u7570\u306a\u308a\u307e\u3059\u3002\u4ee3\u308f\u308a\u306b\u3001\u65b0\u3057\u3044\u30c7\u30d0\u30a4\u30b9\u7528\u306b\u65b0\u3057\u3044\u69cb\u6210\u30a8\u30f3\u30c8\u30ea\u3092\u4f5c\u6210\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+            "different_device": "\u63a5\u7d9a\u3055\u308c\u3066\u3044\u308bUSB\u30c7\u30d0\u30a4\u30b9\u306f\u3001\u3053\u306e\u69cb\u6210\u30a8\u30f3\u30c8\u30ea\u30fc\u3067\u4ee5\u524d\u306b\u69cb\u6210\u3057\u305f\u3082\u306e\u3068\u306f\u7570\u306a\u308a\u307e\u3059\u3002\u4ee3\u308f\u308a\u306b\u3001\u65b0\u3057\u3044\u30c7\u30d0\u30a4\u30b9\u7528\u306b\u65b0\u3057\u3044\u69cb\u6210\u30a8\u30f3\u30c8\u30ea\u30fc\u3092\u4f5c\u6210\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+        },
+        "error": {
+            "invalid_ws_url": "\u7121\u52b9\u306aWebSocket URL"
         },
         "step": {
             "configure_addon": {
                 "data": {
+                    "emulate_hardware": "\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\u306e\u30a8\u30df\u30e5\u30ec\u30fc\u30b7\u30e7\u30f3",
                     "log_level": "\u30ed\u30b0\u30ec\u30d9\u30eb",
                     "network_key": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af",
                     "s0_legacy_key": "S0\u30ad\u30fc (\u30ec\u30ac\u30b7\u30fc)",

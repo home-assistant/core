@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "unknown_entry": "\u65e2\u5b58\u306e\u30a8\u30f3\u30c8\u30ea\u30fc\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3002"
+        },
         "step": {
             "2fa": {
                 "data": {
