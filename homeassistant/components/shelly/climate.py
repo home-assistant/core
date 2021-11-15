@@ -57,7 +57,7 @@ async def async_setup_entry(
 
 
 class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
-    """Representation of a KNX climate device."""
+    """Representation of a Shelly climate device."""
 
     _attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_AUTO]
     _attr_icon = "mdi:thermostat"
