@@ -15,6 +15,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -23,7 +24,7 @@ from homeassistant.components.shelly.entity import ShellyBlockEntity
 from homeassistant.components.shelly.utils import get_device_entry_gen
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -49,12 +50,10 @@ async def async_setup_entry(
         return
 
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
-    blocks = [block for block in wrapper.device.blocks if hasattr(block, "targetTemp")]
-
-    if not blocks:
-        return
-
-    async_add_entities(ShellyClimate(wrapper, block) for block in blocks)
+    for block in wrapper.device.blocks:
+        if hasattr(block, "targetTemp"):
+            async_add_entities([ShellyClimate(wrapper, block)])
+            break
 
 
 class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
@@ -81,7 +80,7 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         self._attr_preset_modes: list[str] = wrapper.device.settings[
             "schedule_profile_names"
         ]
-        self._attr_preset_modes.insert(0, "None")
+        self._attr_preset_modes.insert(0, PRESET_NONE)
 
     @property
     def target_temperature(self) -> float | None:
@@ -90,7 +89,7 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
 
     @property
     def current_temperature(self) -> float | None:
-        """Set current temperature."""
+        """Return current temperature."""
         return cast(float, self.block.temp)
 
     # @property
@@ -125,23 +124,9 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
     def _check_is_off(self) -> bool:
         """Return if valve is off or on."""
         return bool(
-            not self.target_temperature
+            self.target_temperature is None
             or (self.target_temperature <= self._attr_min_temp)
         )
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to HASS."""
-        self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
-
-    async def async_update(self) -> None:
-        """Update entity with latest info."""
-        await self.wrapper.async_request_refresh()
-
-    @callback
-    def _update_callback(self) -> None:
-        """When device updates, clear control result that overrides state."""
-        self.control_result = None
-        super()._update_callback()
 
     async def set_state_full_path(self, path: str, **kwargs: Any) -> Any:
         """Set block state (HTTP request)."""
