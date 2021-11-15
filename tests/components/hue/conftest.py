@@ -1,20 +1,19 @@
 """Test helpers for Hue."""
+import asyncio
 from collections import deque
+import json
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 
-import aiohue
-from aiohue.v1.groups import Groups
-from aiohue.v1.lights import Lights
-from aiohue.v1.scenes import Scenes
-from aiohue.v1.sensors import Sensors
+import aiohue.v1 as aiohue_v1
+import aiohue.v2 as aiohue_v2
 import pytest
 
 from homeassistant.components import hue
 from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 # from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
@@ -37,8 +36,11 @@ def create_mock_bridge(hass, api_version=1):
         spec=hue.HueBridge,
     )
 
+    bridge.logger = logging.getLogger(__name__)
+
     if bridge.api_version == 2:
         bridge.api = create_mock_api_v2(hass)
+        bridge.mock_requests = bridge.api.mock_requests
     else:
         bridge.api = create_mock_api_v1(hass)
         bridge.sensor_manager = hue_sensor_base.SensorManager(bridge)
@@ -83,7 +85,7 @@ def mock_api_v2(hass):
 
 def create_mock_api_v1(hass):
     """Create a mock V1 API."""
-    api = Mock(spec=aiohue.HueBridgeV1)
+    api = Mock(spec=aiohue_v1.HueBridgeV1)
     api.initialize = AsyncMock()
     api.mock_requests = []
     api.mock_light_responses = deque()
@@ -117,28 +119,66 @@ def create_mock_api_v1(hass):
     )
     api.config.name = "Home"
 
-    api.lights = Lights(logger, {}, mock_request)
-    api.groups = Groups(logger, {}, mock_request)
-    api.sensors = Sensors(logger, {}, mock_request)
-    api.scenes = Scenes(logger, {}, mock_request)
+    api.lights = aiohue_v1.Lights(logger, {}, mock_request)
+    api.groups = aiohue_v1.Groups(logger, {}, mock_request)
+    api.sensors = aiohue_v1.Sensors(logger, {}, mock_request)
+    api.scenes = aiohue_v1.Scenes(logger, {}, mock_request)
     return api
+
+
+@pytest.fixture(scope="session")
+def v2_resources_test_data():
+    """Load V2 resources mock data."""
+    return json.loads(load_fixture("hue/v2_resources.json"))
 
 
 def create_mock_api_v2(hass):
     """Create a mock V2 API."""
-    api = Mock(spec=aiohue.HueBridgeV2)
+    api = Mock(spec=aiohue_v2.HueBridgeV2)
     api.initialize = AsyncMock()
     api.config = Mock(
-        bridge_id="ff:ff:ff:ff:ff:ff",
-        mac_address="aa:bb:cc:dd:ee:ff",
+        bridge_id="aabbccddeeffggh",
+        mac_address="00:17:88:01:aa:bb:fd:c7",
         model_id="BSB002",
         api_version="9.9.9",
         software_version="1935144040",
         bridge_device=Mock(
-            id="aabbccddeeffgghhiijj", product_data=Mock(manufacturer_name="Mock")
+            id="4a507550-8742-4087-8bf5-c2334f29891c",
+            product_data=Mock(manufacturer_name="Mock"),
         ),
     )
     api.config.name = "Home"
+    api.mock_requests = []
+
+    api.logger = logging.getLogger(__name__)
+    api.devices = aiohue_v2.DevicesController(api)
+    api.lights = aiohue_v2.LightsController(api)
+    api.sensors = aiohue_v2.SensorsController(api)
+    api.groups = aiohue_v2.GroupsController(api)
+    api.scenes = aiohue_v2.ScenesController(api)
+
+    async def mock_request(method, path, **kwargs):
+        kwargs["method"] = method
+        kwargs["path"] = path
+        api.mock_requests.append(kwargs)
+        return None
+
+    api.request = mock_request
+
+    async def load_test_data(data):
+
+        # api.config = aiohue_v2.ConfigController(api)
+
+        await asyncio.gather(
+            # api.config.initialize(data),
+            api.devices.initialize(data),
+            api.lights.initialize(data),
+            api.scenes.initialize(data),
+            api.sensors.initialize(data),
+            api.groups.initialize(data),
+        )
+
+    api.load_test_data = load_test_data
     return api
 
 
