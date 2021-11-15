@@ -1,6 +1,4 @@
 """Test the ClimaCell config flow."""
-import pytest
-
 from homeassistant import data_entry_flow
 from homeassistant.components.climacell.const import (
     CONF_TIMESTEP,
