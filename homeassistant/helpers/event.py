@@ -923,8 +923,8 @@ class _TrackTemplateResultInfo:
 
         last_result = self._last_result.get(template)
 
-        # Check to see if the result has changed
-        if result == last_result:
+        # Check to see if the result has changed or is new
+        if result == last_result and template in self._last_result:
             return True
 
         if isinstance(result, TemplateError) and isinstance(last_result, TemplateError):
