@@ -83,6 +83,8 @@ async def async_attach_trigger(
         to_state = MATCH_ALL
     time_delta = config.get(CONF_FOR)
     template.attach(hass, time_delta)
+    # If neither CONF_FROM or CONF_TO are specified,
+    # fire on all changes to the state or an attribute
     match_all = CONF_FROM not in config and CONF_TO not in config
     unsub_track_same = {}
     period: dict[str, timedelta] = {}
