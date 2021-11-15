@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import ValuesView
+from typing import Any
 
 from pydeconz.light import Lock
 from pydeconz.sensor import DoorLock
@@ -91,13 +92,12 @@ class DeconzLock(DeconzDevice, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        assert isinstance(self._device.is_locked, bool)
-        return self._device.is_locked
+        return self._device.is_locked  # type: ignore[no-any-return]
 
-    async def async_lock(self, **kwargs: None) -> None:
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._device.lock()
 
-    async def async_unlock(self, **kwargs: None) -> None:
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self._device.unlock()
