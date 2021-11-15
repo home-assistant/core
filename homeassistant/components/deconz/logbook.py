@@ -5,15 +5,11 @@ from collections.abc import Callable
 
 from homeassistant.const import ATTR_DEVICE_ID, CONF_EVENT
 from homeassistant.core import HomeAssistant, callback
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.event import Event
 
 from .const import CONF_GESTURE, DOMAIN as DECONZ_DOMAIN
-from .deconz_event import (
-    CONF_DECONZ_ALARM_EVENT,
-    CONF_DECONZ_EVENT,
-    DeconzAlarmEvent,
-    DeconzEvent,
-)
+from .deconz_event import CONF_DECONZ_ALARM_EVENT, CONF_DECONZ_EVENT
 from .device_trigger import (
     CONF_BOTH_BUTTONS,
     CONF_BOTTOM_BUTTONS,
@@ -57,7 +53,7 @@ from .device_trigger import (
     CONF_TURN_OFF,
     CONF_TURN_ON,
     REMOTES,
-    _get_deconz_event_from_device_id,
+    _get_deconz_event_from_device,
 )
 
 ACTIONS = {
@@ -108,7 +104,9 @@ INTERFACES = {
 }
 
 
-def _get_device_event_description(modelid: str, event: int) -> tuple:
+def _get_device_event_description(
+    modelid: str, event: int
+) -> tuple[str | None, str | None]:
     """Get device event description."""
     device_event_descriptions = REMOTES[modelid]
 
@@ -124,17 +122,16 @@ def _get_device_event_description(modelid: str, event: int) -> tuple:
 @callback
 def async_describe_events(
     hass: HomeAssistant,
-    async_describe_event: Callable[[str, str, Callable[[Event], dict]], None],
+    async_describe_event: Callable[[str, str, Callable[[Event], dict[str, str]]], None],
 ) -> None:
     """Describe logbook events."""
+    device_registry = dr.async_get(hass)
 
     @callback
-    def async_describe_deconz_alarm_event(event: Event) -> dict:
+    def async_describe_deconz_alarm_event(event: Event) -> dict[str, str]:
         """Describe deCONZ logbook alarm event."""
-        deconz_alarm_event: DeconzAlarmEvent | DeconzEvent | None = (
-            _get_deconz_event_from_device_id(hass, event.data[ATTR_DEVICE_ID])
-        )
-        assert deconz_alarm_event
+        device = device_registry.devices[event.data[ATTR_DEVICE_ID]]
+        deconz_alarm_event = _get_deconz_event_from_device(hass, device)
 
         data = event.data[CONF_EVENT]
 
@@ -144,12 +141,10 @@ def async_describe_events(
         }
 
     @callback
-    def async_describe_deconz_event(event: Event) -> dict:
+    def async_describe_deconz_event(event: Event) -> dict[str, str]:
         """Describe deCONZ logbook event."""
-        deconz_event: DeconzEvent | None = _get_deconz_event_from_device_id(
-            hass, event.data[ATTR_DEVICE_ID]
-        )
-        assert deconz_event
+        device = device_registry.devices[event.data[ATTR_DEVICE_ID]]
+        deconz_event = _get_deconz_event_from_device(hass, device)
 
         action = None
         interface = None
