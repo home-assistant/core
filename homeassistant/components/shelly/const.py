@@ -142,8 +142,8 @@ SHBLB_1_RGB_EFFECTS: Final = {
 }
 
 SHTRV_01_TEMPERATURE_SETTINGS: Final = {
-    "min": 5,
-    "max": 30,
+    "min": 4,
+    "max": 31,
     "step": 1,
 }
 
