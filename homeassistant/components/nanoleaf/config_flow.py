@@ -9,6 +9,7 @@ from aionanoleaf import InvalidToken, Nanoleaf, Unauthorized, Unavailable
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -88,11 +89,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_link()
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle Nanoleaf Zeroconf discovery."""
         _LOGGER.debug("Zeroconf discovered: %s", discovery_info)
-        return await self._async_homekit_zeroconf_discovery_handler(discovery_info)
+        return await self._async_homekit_zeroconf_discovery_handler(
+            cast(dict, discovery_info)
+        )
 
     async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle Nanoleaf Homekit discovery."""

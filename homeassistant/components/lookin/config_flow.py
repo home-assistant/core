@@ -9,10 +9,10 @@ from aiolookin import Device, LookInHttpProtocol, NoUsableService
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -28,7 +28,7 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Start a discovery flow from zeroconf."""
         uid: str = discovery_info["hostname"][: -len(".local.")]

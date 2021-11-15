@@ -5,6 +5,7 @@ import logging
 from typing import Any, Awaitable, Callable, Union
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import UNDEFINED, DiscoveryInfoType, UndefinedType
@@ -81,7 +82,17 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
         return await self.async_step_confirm()
 
-    async_step_zeroconf = async_step_discovery
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle a flow initialized by Zeroconf discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
+
+        return await self.async_step_confirm()
+
     async_step_ssdp = async_step_discovery
     async_step_mqtt = async_step_discovery
     async_step_homekit = async_step_discovery

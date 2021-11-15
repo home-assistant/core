@@ -20,7 +20,6 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import CONF_NOISE_PSK, DOMAIN, DomainData
 
@@ -139,7 +138,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Hostname is format: livingroom.local.

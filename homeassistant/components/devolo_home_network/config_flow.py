@@ -13,7 +13,7 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PRODUCT, SERIAL_NUMBER, TITLE
 
@@ -74,7 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zerooconf discovery."""
         if discovery_info[zeroconf.ATTR_PROPERTIES]["MT"] in ["2600", "2601"]:
