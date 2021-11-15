@@ -60,7 +60,7 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
     """Representation of a KNX climate device."""
 
     _attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_AUTO]
-    _attr_icon = "hass:thermostat"
+    _attr_icon = "mdi:thermostat"
     _attr_max_temp = SHTRV_01_TEMPERATURE_SETTINGS["max"]
     _attr_min_temp = SHTRV_01_TEMPERATURE_SETTINGS["min"]
     _attr_supported_features: int = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
@@ -79,7 +79,7 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         self._attr_unique_id = self.wrapper.mac
         self._attr_preset_modes: list[str] = [
             PRESET_NONE,
-            *wrapper.device.settings["schedule_profile_names"]
+            *wrapper.device.settings["schedule_profile_names"],
         ]
 
     @property
@@ -157,7 +157,6 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
             self.async_set_hvac_mode(
                 HVAC_MODE_AUTO if self.preset_mode else HVAC_MODE_HEAT
             )
-        self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
@@ -169,7 +168,6 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
             await self.set_state_full_path(
                 "settings", target_t_enabled=1, target_t=f"{self._attr_min_temp}"
             )
-        self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
@@ -187,4 +185,3 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
             await self.async_set_hvac_mode(HVAC_MODE_HEAT)
         else:
             await self.async_set_hvac_mode(HVAC_MODE_AUTO)
-        self.async_write_ha_state()
