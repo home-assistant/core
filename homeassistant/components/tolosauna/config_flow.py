@@ -1,17 +1,19 @@
 """Config flow for tolosauna."""
 
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from tololib import ToloClient
 import voluptuous as vol
 
+from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.device_registry import format_mac
 
-from ...helpers.device_registry import format_mac
-from ..dhcp import IP_ADDRESS, MAC_ADDRESS
 from .const import DEFAULT_NAME, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, DOMAIN
 
 DATA_SCHEMA_USER = vol.Schema({vol.Required(CONF_HOST): str})
@@ -27,7 +29,7 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize ToloSaunaConfigFlow."""
-        self._discovered_host: Optional[str] = None
+        self._discovered_host: str | None = None
 
     @staticmethod
     def _check_device_availability(host: str) -> bool:
@@ -38,7 +40,7 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
         return result is not None
 
     async def async_step_user(
-        self, user_input: Optional[Dict[str, Any]] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
@@ -61,7 +63,7 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
         )
 
-    async def async_step_dhcp(self, discovery_info: Dict[str, str]) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: dict[str, str]) -> FlowResult:
         """Handle a flow initialized by discovery."""
         await self.async_set_unique_id(format_mac(discovery_info[MAC_ADDRESS]))
         self._abort_if_unique_id_configured()
@@ -74,11 +76,10 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
         if device_available:
             self._discovered_host = discovery_info[IP_ADDRESS]
             return await self.async_step_confirm()
-        else:
-            return self.async_abort(reason="not_tolosauna_device")
+        return self.async_abort(reason="not_tolosauna_device")
 
     async def async_step_confirm(
-        self, user_input: Optional[Dict[str, Any]] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is not None:

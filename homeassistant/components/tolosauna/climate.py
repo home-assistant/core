@@ -97,10 +97,9 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         """Get current HVAC mode."""
         if self.status.power_on:
             return HVAC_MODE_HEAT
-        elif not self.status.power_on and self.status.fan_on:
+        if not self.status.power_on and self.status.fan_on:
             return HVAC_MODE_DRY
-        else:
-            return HVAC_MODE_OFF
+        return HVAC_MODE_OFF
 
     @property
     def hvac_action(self) -> str | None:
@@ -112,8 +111,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         if self.status.calefaction == Calefaction.INACTIVE:
             if self.status.fan_on:
                 return CURRENT_HVAC_DRY
-            else:
-                return CURRENT_HVAC_OFF
+            return CURRENT_HVAC_OFF
         return None
 
     @property
