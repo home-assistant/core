@@ -625,7 +625,6 @@ def _get_deconz_event_from_device(
     for gateway in hass.data.get(DOMAIN, {}).values():
         for deconz_event in gateway.events:
             if device.id == deconz_event.device_id:
-                assert isinstance(deconz_event, (DeconzAlarmEvent, DeconzEvent))
                 return deconz_event
 
     raise InvalidDeviceAutomationConfig(
