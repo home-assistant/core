@@ -133,7 +133,7 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         _LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                return await self.block.set_state_full_path(path, **kwargs)
+                return await self.wrapper.device.http_request("get", path, **kwargs)
         except (asyncio.TimeoutError, OSError) as err:
             _LOGGER.error(
                 "Setting state for entity %s failed, state: %s, error: %s",
