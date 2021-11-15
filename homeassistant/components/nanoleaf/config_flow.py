@@ -8,13 +8,11 @@ from typing import Any, Final, cast
 from aionanoleaf import InvalidToken, Nanoleaf, Unauthorized, Unavailable
 import voluptuous as vol
 
-from homeassistant.components import network
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_TOKEN
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util.json import load_json, save_json
 
@@ -32,10 +30,10 @@ USER_SCHEMA: Final = vol.Schema(
 )
 
 
-class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Nanoleaf config flow."""
 
-    reauth_entry: ConfigEntry | None = None
+    reauth_entry: config_entries.ConfigEntry | None = None
 
     VERSION = 1
 
@@ -83,7 +81,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
         """Handle Nanoleaf reauth flow if token is invalid."""
         self.reauth_entry = cast(
-            ConfigEntry,
+            config_entries.ConfigEntry,
             self.hass.config_entries.async_get_entry(self.context["entry_id"]),
         )
         self.nanoleaf = Nanoleaf(async_get_clientsession(self.hass), data[CONF_HOST])
@@ -91,11 +89,13 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_link()
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle Nanoleaf Zeroconf discovery."""
         _LOGGER.debug("Zeroconf discovered: %s", discovery_info)
-        return await self._async_homekit_zeroconf_discovery_handler(discovery_info)
+        return await self._async_homekit_zeroconf_discovery_handler(
+            cast(dict, discovery_info)
+        )
 
     async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle Nanoleaf Homekit discovery."""
@@ -240,73 +240,4 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self.nanoleaf.host,
                 CONF_TOKEN: self.nanoleaf.auth_token,
             },
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Return the Nanoleaf options flow handler."""
-        return NanoleafOptionsFlowHandler(config_entry)
-
-
-class NanoleafOptionsFlowHandler(OptionsFlow):
-    """Nanoleaf options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            data: dict[str, Any] = {}
-            port: int | None = user_input.get("local_port")
-            if port is not None:
-                data["local_port"] = port
-            if (adapter_ip := user_input.get("adapter_ip")) is not None:
-                data["adapter_ip"] = tuple(adapter_ip.split(" "))
-            return self.async_create_entry(title="", data=data)
-
-        schema = {}
-
-        local_port: int | None = self.config_entry.options.get("local_port")
-        if local_port is None:
-            schema[
-                vol.Optional("local_port", description={"suggested_value": None})
-            ] = cv.port
-            schema[vol.Optional("empty")] = str
-        else:
-            schema[
-                vol.Optional("local_port", description={"suggested_value": local_port})
-            ] = cv.port
-            schema[vol.Optional("empty")] = str
-
-        adapters = await network.async_get_adapters(self.hass)
-        if not network.async_only_default_interface_enabled(adapters):
-            # Only show adapter/ip option for users with a manual network configuration
-            adapters_with_ip = []
-            for adapter in adapters:
-                if adapter["enabled"]:
-                    for ip in adapter["ipv4"]:
-                        adapters_with_ip.append(f'{adapter["name"]} {ip["address"]}')
-
-            if (
-                configured_adapter_ip := self.config_entry.options.get("adapter_ip")
-            ) is None:
-                for adapter in adapters:
-                    if adapter["enabled"] and adapter["default"]:
-                        default = f'{adapter["name"]} {adapter["ipv4"][0]["address"]}'
-                        break
-            else:
-                default = f"{configured_adapter_ip[0]} {configured_adapter_ip[1]}"
-
-            schema[vol.Required("adapter_ip", default=default)] = vol.In(
-                adapters_with_ip
-            )
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(schema),
         )

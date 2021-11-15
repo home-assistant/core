@@ -24,15 +24,5 @@
                 }
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "local_port": "Event listener port (random if not set)"
-                },
-                "title": "Nanoleaf touch configuration"
-            }
-        }
     }
 }

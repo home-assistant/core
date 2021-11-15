@@ -8,7 +8,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import util
-from .const import IPV4_BROADCAST_ADDR
+from .const import IPV4_BROADCAST_ADDR, PUBLIC_TARGET_IP
 from .models import Adapter
 from .network import Network, async_get_network
 
@@ -21,7 +21,9 @@ async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
 
 
 @bind_hass
-async def async_get_source_ip(hass: HomeAssistant, target_ip: str) -> str:
+async def async_get_source_ip(
+    hass: HomeAssistant, target_ip: str = PUBLIC_TARGET_IP
+) -> str:
     """Get the source ip for a target ip."""
     adapters = await async_get_adapters(hass)
     all_ipv4s = []

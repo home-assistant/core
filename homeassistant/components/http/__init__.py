@@ -14,7 +14,6 @@ from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 import voluptuous as vol
 
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import storage
@@ -191,7 +190,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http = server
 
-    local_ip = await async_get_source_ip(hass, PUBLIC_TARGET_IP)
+    local_ip = await async_get_source_ip(hass)
 
     host = local_ip
     if server_host is not None:

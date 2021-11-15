@@ -4,11 +4,11 @@ import logging
 from random import randrange
 
 from pyatv import connect, exceptions, scan
-from pyatv.const import DeviceModel, Protocol
-from pyatv.convert import model_str
+from pyatv.const import Protocol
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_CONNECTIONS,
     ATTR_IDENTIFIERS,
@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     CONF_ADDRESS,
     CONF_NAME,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
@@ -30,13 +31,16 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
+from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Apple TV"
 
 BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
+
+NOTIFICATION_TITLE = "Apple TV Notification"
+NOTIFICATION_ID = "apple_tv_notification"
 
 SIGNAL_CONNECTED = "apple_tv_connected"
 SIGNAL_DISCONNECTED = "apple_tv_disconnected"
@@ -225,12 +229,7 @@ class AppleTVManager:
                 if conf:
                     await self._connect(conf)
             except exceptions.AuthenticationError:
-                self.config_entry.async_start_reauth(self.hass)
-                asyncio.create_task(self.disconnect())
-                _LOGGER.exception(
-                    "Authentication failed for %s, try reconfiguring device",
-                    self.config_entry.data[CONF_NAME],
-                )
+                self._auth_problem()
                 break
             except asyncio.CancelledError:
                 pass
@@ -250,37 +249,56 @@ class AppleTVManager:
         _LOGGER.debug("Connect loop ended")
         self._task = None
 
+    def _auth_problem(self):
+        """Problem to authenticate occurred that needs intervention."""
+        _LOGGER.debug("Authentication error, reconfigure integration")
+
+        name = self.config_entry.data[CONF_NAME]
+        identifier = self.config_entry.unique_id
+
+        self.hass.components.persistent_notification.create(
+            "An irrecoverable connection problem occurred when connecting to "
+            f"`{name}`. Please go to the Integrations page and reconfigure it",
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID,
+        )
+
+        # Add to event queue as this function is called from a task being
+        # cancelled from disconnect
+        asyncio.create_task(self.disconnect())
+
+        self.hass.async_create_task(
+            self.hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH},
+                data={CONF_NAME: name, CONF_IDENTIFIER: identifier},
+            )
+        )
+
     async def _scan(self):
         """Try to find device by scanning for it."""
-        identifiers = set(
-            self.config_entry.data.get(CONF_IDENTIFIERS, [self.config_entry.unique_id])
-        )
+        identifier = self.config_entry.unique_id
         address = self.config_entry.data[CONF_ADDRESS]
+        protocol = Protocol(self.config_entry.data[CONF_PROTOCOL])
 
-        # Only scan for and set up protocols that was successfully paired
-        protocols = {
-            Protocol(int(protocol))
-            for protocol in self.config_entry.data[CONF_CREDENTIALS]
-        }
-
-        _LOGGER.debug("Discovering device %s", self.config_entry.title)
+        _LOGGER.debug("Discovering device %s", identifier)
         atvs = await scan(
-            self.hass.loop, identifier=identifiers, protocol=protocols, hosts=[address]
+            self.hass.loop, identifier=identifier, protocol=protocol, hosts=[address]
         )
         if atvs:
             return atvs[0]
 
         _LOGGER.debug(
             "Failed to find device %s with address %s, trying to scan",
-            self.config_entry.title,
+            identifier,
             address,
         )
 
-        atvs = await scan(self.hass.loop, identifier=identifiers, protocol=protocols)
+        atvs = await scan(self.hass.loop, identifier=identifier, protocol=protocol)
         if atvs:
             return atvs[0]
 
-        _LOGGER.debug("Failed to find device %s, trying later", self.config_entry.title)
+        _LOGGER.debug("Failed to find device %s, trying later", identifier)
 
         return None
 
@@ -289,16 +307,8 @@ class AppleTVManager:
         credentials = self.config_entry.data[CONF_CREDENTIALS]
         session = async_get_clientsession(self.hass)
 
-        for protocol_int, creds in credentials.items():
-            protocol = Protocol(int(protocol_int))
-            if conf.get_service(protocol) is not None:
-                conf.set_credentials(protocol, creds)
-            else:
-                _LOGGER.warning(
-                    "Protocol %s not found for %s, functionality will be reduced",
-                    protocol.name,
-                    self.config_entry.data[CONF_NAME],
-                )
+        for protocol, creds in credentials.items():
+            conf.set_credentials(Protocol(int(protocol)), creds)
 
         _LOGGER.debug("Connecting to device %s", self.config_entry.data[CONF_NAME])
         self.atv = await connect(conf, self.hass.loop, session=session)
@@ -312,7 +322,7 @@ class AppleTVManager:
         self._connection_attempts = 0
         if self._connection_was_lost:
             _LOGGER.info(
-                'Connection was re-established to device "%s"',
+                'Connection was re-established to Apple TV "%s"',
                 self.config_entry.data[CONF_NAME],
             )
             self._connection_was_lost = False
@@ -335,9 +345,7 @@ class AppleTVManager:
             dev_info = self.atv.device_info
 
             attrs[ATTR_MODEL] = (
-                dev_info.raw_model
-                if dev_info.model == DeviceModel.Unknown and dev_info.raw_model
-                else model_str(dev_info.model)
+                DEFAULT_NAME + " " + dev_info.model.name.replace("Gen", "")
             )
             attrs[ATTR_SW_VERSION] = dev_info.version
 

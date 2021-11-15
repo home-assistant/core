@@ -7,9 +7,12 @@
             "flipr_id": {
                 "data": {
                     "flipr_id": "Flipr ID"
-                }
+                },
+                "description": "\u30ea\u30b9\u30c8\u306e\u4e2d\u304b\u3089FliprID\u3092\u9078\u3076",
+                "title": "Flipr\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044"
             },
             "user": {
+                "description": "\u3042\u306a\u305f\u306eFlipr\u30a2\u30ab\u30a6\u30f3\u30c8\u3092\u4f7f\u7528\u3057\u3066\u63a5\u7d9a\u3057\u307e\u3059\u3002",
                 "title": "Flipr\u306b\u63a5\u7d9a"
             }
         }

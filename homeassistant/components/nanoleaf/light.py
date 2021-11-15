@@ -5,6 +5,7 @@ import logging
 import math
 from typing import Any
 
+from aionanoleaf import Nanoleaf, Unavailable
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -33,7 +34,6 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-from .aionanoleaf import Nanoleaf, Unavailable
 from .const import DOMAIN
 
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
@@ -70,7 +70,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nanoleaf light."""
-    nanoleaf: Nanoleaf = hass.data[DOMAIN]["device"][entry.entry_id]
+    nanoleaf: Nanoleaf = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([NanoleafLight(nanoleaf)])
 
 
@@ -197,8 +197,3 @@ class NanoleafLight(LightEntity):
         if not self.available:
             _LOGGER.info("Fetching %s data recovered", self.name)
         self._attr_available = True
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity being added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.hass.data[DOMAIN]["light_entity"][self._nanoleaf.serial_no] = self

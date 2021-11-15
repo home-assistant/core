@@ -90,15 +90,15 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     @callback
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
+        self._attr_is_jammed = self._device.state == LockStates.JAMMED
+        self._attr_is_locked = self._device.state == LockStates.LOCKED
+
         self._attr_extra_state_attributes.update(
             {
                 ATTR_LOCK_LOW_BATTERY: self._device.lock_low_battery,
                 ATTR_PIN_PAD_LOW_BATTERY: self._device.pin_pad_low_battery,
             }
         )
-
-        self._attr_is_jammed = self._device.state == LockStates.jammed
-        self._attr_is_locked = self._device.state == LockStates.locked
 
     @callback
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:

@@ -24,17 +24,5 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Nanoleaf touch configuration",
-        "data": {
-          "local_port": "Event listener port (random if not set)",
-          "empty": "Unused textfield",
-          "adapter_ip": "Event listener adapter with IP"
-        }
-      }
-    }
   }
 }
