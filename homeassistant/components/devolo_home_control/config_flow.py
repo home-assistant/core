@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import configure_mydevolo
 from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, DOMAIN, SUPPORTED_MODEL_TYPES
@@ -46,14 +45,11 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_form(step_id="user", errors={"base": "invalid_auth"})
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Check if it is a gateway
-        if (
-            discovery_info.get(zeroconf.ATTR_PROPERTIES, {}).get("MT")
-            in SUPPORTED_MODEL_TYPES
-        ):
+        if discovery_info[zeroconf.ATTR_PROPERTIES].get("MT") in SUPPORTED_MODEL_TYPES:
             await self._async_handle_discovery_without_unique_id()
             return await self.async_step_zeroconf_confirm()
         return self.async_abort(reason="Not a devolo Home Control gateway.")
