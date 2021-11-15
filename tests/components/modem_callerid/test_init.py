@@ -11,8 +11,8 @@ from . import com_port, patch_init_modem
 from tests.common import MockConfigEntry
 
 
-async def test_setup_config(hass: HomeAssistant):
-    """Test Modem Caller ID setup."""
+async def test_setup_entry(hass: HomeAssistant):
+    """Test Modem Caller ID entry setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_DEVICE: com_port().device},
@@ -39,7 +39,7 @@ async def test_async_setup_entry_not_ready(hass: HomeAssistant):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_unload_config_entry(hass: HomeAssistant):
+async def test_unload_entry(hass: HomeAssistant):
     """Test unload."""
     entry = MockConfigEntry(
         domain=DOMAIN,
