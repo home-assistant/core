@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import mill
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -23,7 +24,7 @@ async def test_setup_with_cloud_config(hass):
     mock_entry.add_to_hass(hass)
     with patch("mill.Mill.fetch_heater_and_sensor_data", return_value={}) as mock_fetch:
         with patch("mill.Mill.connect", return_value=True) as mock_connect:
-            assert await mill.async_setup_entry(hass, mock_entry)
+            assert await async_setup_component(hass, "mill", mock_entry)
     assert len(mock_fetch.mock_calls) == 1
     assert len(mock_connect.mock_calls) == 1
 
@@ -58,7 +59,7 @@ async def test_setup_with_old_cloud_config(hass):
     with patch("mill.Mill.fetch_heater_and_sensor_data", return_value={}), patch(
         "mill.Mill.connect", return_value=True
     ) as mock_connect:
-        assert await mill.async_setup_entry(hass, mock_entry)
+        assert await async_setup_component(hass, "mill", mock_entry)
 
     assert len(mock_connect.mock_calls) == 1
 
@@ -74,9 +75,12 @@ async def test_setup_with_local_config(hass):
     )
     mock_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.mill.climate.async_setup_entry", return_value=None
-    ) as mock_setup, patch(
-        "mill_local.Mill.fetch_heater_and_sensor_data", return_value={}
+        "mill_local.Mill.fetch_heater_and_sensor_data",
+        return_value={
+            "ambient_temperature": 20,
+            "set_temperature": 22,
+            "current_power": 0,
+        },
     ) as mock_fetch, patch(
         "mill_local.Mill.connect",
         return_value={
@@ -86,10 +90,8 @@ async def test_setup_with_local_config(hass):
             "status": "ok",
         },
     ) as mock_connect:
-        assert await mill.async_setup_entry(hass, mock_entry)
-        await hass.async_block_till_done()
+        assert await async_setup_component(hass, "mill", mock_entry)
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_fetch.mock_calls) == 1
     assert len(mock_connect.mock_calls) == 1
 
@@ -109,7 +111,7 @@ async def test_unload_entry(hass):
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=mock_coro(True)
     ) as unload_entry, patch("mill.Mill.connect", return_value=True):
-        assert await mill.async_setup_entry(hass, mock_entry)
+        assert await async_setup_component(hass, "mill", mock_entry)
 
         assert await mill.async_unload_entry(hass, mock_entry)
         assert unload_entry.call_count == 2
