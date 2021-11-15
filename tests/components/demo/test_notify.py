@@ -8,11 +8,18 @@ import voluptuous as vol
 
 import homeassistant.components.demo.notify as demo
 import homeassistant.components.notify as notify
-from homeassistant.core import callback
+from homeassistant.components.notify.const import (
+    ATTR_DATA,
+    ATTR_MESSAGE,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    SERVICE_NOTIFY,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, async_capture_events
+from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
 
 CONFIG = {notify.DOMAIN: {"platform": "demo"}}
 
@@ -202,3 +209,30 @@ async def test_messages_to_targets_route(hass, calls, record_calls):
         "title": "my title",
         "data": {"hello": "world"},
     } == data
+
+
+async def test_notify_config_entry(hass: HomeAssistant, events) -> None:
+    """Test setting up demo notify from config entry."""
+    entry = MockConfigEntry(domain="demo")
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    service_name = f"demo_{SERVICE_NOTIFY}"
+    assert hass.services.has_service("notify", service_name)
+
+    service_data = {
+        ATTR_MESSAGE: "World",
+        ATTR_TITLE: "Hello",
+        ATTR_TARGET: ["target_one", "target_two"],
+        ATTR_DATA: {"data_one": 1},
+    }
+
+    await hass.services.async_call("notify", service_name, service_data, blocking=True)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert event.event_type == "notify"
+    assert event.data == service_data
