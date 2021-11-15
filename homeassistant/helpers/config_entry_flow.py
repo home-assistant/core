@@ -82,6 +82,17 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
         return await self.async_step_confirm()
 
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle a flow initialized by Homekit discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
+
+        return await self.async_step_confirm()
+
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
@@ -95,7 +106,6 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     async_step_ssdp = async_step_discovery
     async_step_mqtt = async_step_discovery
-    async_step_homekit = async_step_discovery
     async_step_dhcp = async_step_discovery
 
     async def async_step_import(self, _: dict[str, Any] | None) -> FlowResult:

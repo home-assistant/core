@@ -658,7 +658,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.24.21
+flux_led==0.24.24
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1324,7 +1324,7 @@ pyRFXtrx==0.27.0
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.19.1
+pyTibber==0.21.0
 
 # homeassistant.components.dlink
 pyW215==0.7.0
