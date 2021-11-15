@@ -355,16 +355,19 @@ async def test_step_reauth(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
 
+    new_api_key = "defgh67890"
+
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
     ), patch("pyairvisual.air_quality.AirQuality.nearest_city", return_value=True):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_API_KEY: "defgh67890"}
+            result["flow_id"], user_input={CONF_API_KEY: new_api_key}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "reauth_successful"
 
     assert len(hass.config_entries.async_entries()) == 1
+    assert hass.config_entries.async_entries()[0].data[CONF_API_KEY] == new_api_key
 
 
 async def test_step_user(hass):
