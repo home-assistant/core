@@ -321,6 +321,14 @@ class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
         return None
 
 
+@dataclass
+class NumericSensorDataTemplateData:
+    """Class to represent returned data from NumericSensorDataTemplate."""
+
+    entity_description_key: str | None = None
+    unit_of_measurement: str | None = None
+
+
 class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     """Data template class for Z-Wave Sensor entities."""
 
@@ -343,11 +351,11 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                     return key
         return None
 
-    def resolve_data(self, value: ZwaveValue) -> tuple[str | None, str | None]:
+    def resolve_data(self, value: ZwaveValue) -> NumericSensorDataTemplateData:
         """Resolve helper class data for a discovered value."""
 
         if value.command_class == CommandClass.BATTERY:
-            return (ENTITY_DESC_KEY_BATTERY, PERCENTAGE)
+            return NumericSensorDataTemplateData(ENTITY_DESC_KEY_BATTERY, PERCENTAGE)
 
         if value.command_class == CommandClass.METER:
             scale_type = get_meter_scale_type(value)
@@ -359,13 +367,15 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                 ElectricScale.KILOVOLT_AMPERE_HOUR,
                 ElectricScale.KILOVOLT_AMPERE_REACTIVE_HOUR,
             ):
-                return (ENTITY_DESC_KEY_TOTAL_INCREASING, unit)
+                return NumericSensorDataTemplateData(
+                    ENTITY_DESC_KEY_TOTAL_INCREASING, unit
+                )
             # We do this because even though these are power scales, they don't meet
             # the unit requirements for the power device class.
             if scale_type == ElectricScale.KILOVOLT_AMPERE_REACTIVE:
-                return (ENTITY_DESC_KEY_MEASUREMENT, unit)
+                return NumericSensorDataTemplateData(ENTITY_DESC_KEY_MEASUREMENT, unit)
 
-            return (
+            return NumericSensorDataTemplateData(
                 self.find_key_from_matching_set(scale_type, METER_DEVICE_CLASS_MAP),
                 unit,
             )
@@ -377,14 +387,16 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                 scale_type, MULTILEVEL_SENSOR_UNIT_MAP
             )
             if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
-                return (ENTITY_DESC_KEY_TARGET_TEMPERATURE, unit)
+                return NumericSensorDataTemplateData(
+                    ENTITY_DESC_KEY_TARGET_TEMPERATURE, unit
+                )
             key = self.find_key_from_matching_set(
                 sensor_type, MULTILEVEL_SENSOR_DEVICE_CLASS_MAP
             )
             if key:
-                return (key, unit)
+                return NumericSensorDataTemplateData(key, unit)
 
-        return (None, None)
+        return NumericSensorDataTemplateData()
 
 
 @dataclass

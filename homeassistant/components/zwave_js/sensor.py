@@ -25,6 +25,9 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.components.zwave_js.discovery_data_template import (
+    NumericSensorDataTemplateData,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -199,15 +202,21 @@ async def async_setup_entry(
         """Add Z-Wave Sensor."""
         entities: list[ZWaveBaseEntity] = []
 
+        base_entity_description = ZwaveSensorEntityDescription("base_sensor")
+
         if info.platform_data:
-            entity_description_key, unit = info.platform_data
+            data: NumericSensorDataTemplateData = info.platform_data
         else:
-            entity_description_key, unit = None, None
-        entity_description = ENTITY_DESCRIPTION_KEY_MAP.get(
-            entity_description_key
-        ) or ZwaveSensorEntityDescription("base_sensor")
+            data = NumericSensorDataTemplateData()
+        entity_description = (
+            ENTITY_DESCRIPTION_KEY_MAP.get(
+                data.entity_description_key, base_entity_description
+            )
+            if data.entity_description_key is not None
+            else base_entity_description
+        )
         entity_description.info = info
-        entity_description.native_unit_of_measurement = unit
+        entity_description.native_unit_of_measurement = data.unit_of_measurement
 
         if info.platform_hint == "string_sensor":
             entities.append(ZWaveStringSensor(config_entry, client, entity_description))
