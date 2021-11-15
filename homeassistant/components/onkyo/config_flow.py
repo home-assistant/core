@@ -24,8 +24,8 @@ from .const import (
     DEFAULT_SOURCE_NAMES,
     DEFAULT_SOURCES,
     DISCOVER_TIMEOUT,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 
 class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -107,29 +107,27 @@ class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Connect to the network receiver."""
-        if self._connection:
-            await self.async_set_unique_id(self._connection.identifier)
-            self._abort_if_unique_id_configured()
+        conn: Connection = self._connection
+        await self.async_set_unique_id(conn.identifier)
+        self._abort_if_unique_id_configured()
 
-            try:
-                with async_timeout.timeout(CONNECT_TIMEOUT):
-                    await self._connection.connect()
+        try:
+            with async_timeout.timeout(CONNECT_TIMEOUT):
+                await conn.connect()
 
-            except asyncio.TimeoutError:
-                return self.async_abort(reason="cannot_connect")
+        except asyncio.TimeoutError:
+            return self.async_abort(reason="cannot_connect")
 
-            # Close the test connection as setup entry will create one.
-            self._connection.close()
-            return self.async_create_entry(
-                title=self._connection.name,
-                data={
-                    CONF_IDENTIFIER: self._connection.identifier,
-                    CONF_HOST: self._connection.host,
-                    CONF_NAME: self._connection.name,
-                },
-            )
-
-        return self.async_abort(reason="unknown")
+        # Close the test connection as setup entry will create one.
+        conn.close()
+        return self.async_create_entry(
+            title=conn.name,
+            data={
+                CONF_IDENTIFIER: conn.identifier,
+                CONF_HOST: conn.host,
+                CONF_NAME: conn.name,
+            },
+        )
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -197,23 +195,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self._options[CONF_SOURCES] = user_input
             return self.async_create_entry(title="", data=self._options)
 
-        sources = self._options[CONF_SOURCES]
-        if isinstance(sources, dict):
-            source_names_schema = vol.Schema(
-                {
-                    vol.Optional(
-                        key,
-                        default=source_name,
-                    ): str
-                    for key, source_name in sources.items()
-                }
-            )
+        source_names_schema = vol.Schema(
+            {
+                vol.Optional(
+                    key,
+                    default=source_name,
+                ): str
+                for key, source_name in self._options[CONF_SOURCES].items()  # type: ignore
+            }
+        )
 
-            return self.async_show_form(
-                step_id="source_names", data_schema=source_names_schema
-            )
-
-        return self.async_abort(reason="unknown")
+        return self.async_show_form(
+            step_id="source_names", data_schema=source_names_schema
+        )
 
 
 async def _discover_connections(timeout: int) -> list[Connection]:

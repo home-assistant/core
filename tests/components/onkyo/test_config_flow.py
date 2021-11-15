@@ -164,7 +164,7 @@ async def test_config_flow_manual_single_avr_success(hass: core.HomeAssistant):
 
 
 async def test_config_flow_manual_dual_avrs_success(hass: core.HomeAssistant):
-    """Test if a manual flow succeeds when discovering a two connections."""
+    """Test if a manual flow succeeds when discovering two connections."""
     mock_connection_1 = get_mock_connection(TEST_HOST_1, TEST_NAME_1, TEST_IDENTIFIER_1)
     mock_connection_2 = get_mock_connection(TEST_HOST_2, TEST_NAME_2, TEST_IDENTIFIER_2)
 
