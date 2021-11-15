@@ -11,7 +11,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_LIBRESPOT_JAVA_PORT,
@@ -157,7 +156,7 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Prepare configuration for a discovered forked-daapd device."""
         version_num = 0
@@ -189,7 +188,7 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         zeroconf_data = {
             CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
-            CONF_PORT: int(discovery_info[zeroconf.ATTR_PORT]),
+            CONF_PORT: discovery_info[zeroconf.ATTR_PORT],
             CONF_NAME: discovery_info[zeroconf.ATTR_PROPERTIES]["Machine Name"],
         }
         self.discovery_schema = vol.Schema(fill_in_schema_dict(zeroconf_data))
