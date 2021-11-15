@@ -113,15 +113,15 @@ class DeconzCover(DeconzDevice, CoverEntity):
         position = 100 - kwargs[ATTR_POSITION]
         await self._device.set_position(lift=position)
 
-    async def async_open_cover(self, **kwargs: None) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         await self._device.open()
 
-    async def async_close_cover(self, **kwargs: None) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self._device.close()
 
-    async def async_stop_cover(self, **kwargs: None) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
         await self._device.stop()
 

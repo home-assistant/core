@@ -181,7 +181,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         )
 
     @property
-    def fan_modes(self) -> list:
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan operation modes."""
         return list(FAN_MODE_TO_DECONZ)
 
@@ -206,7 +206,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         )
 
     @property
-    def hvac_modes(self) -> list:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         return list(self._hvac_mode_to_deconz)
 
@@ -270,7 +270,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         await self._device.set_config(**data)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, bool | int]:
         """Return the state attributes of the thermostat."""
         attr = {}
 
