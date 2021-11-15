@@ -10,7 +10,7 @@ from typing import Any
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
 
-from .file import write_utf8_file
+from .file import write_utf8_file, write_utf8_file_atomic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +49,7 @@ def save_json(
     private: bool = False,
     *,
     encoder: type[json.JSONEncoder] | None = None,
+    atomic_writes: bool = False,
 ) -> None:
     """Save JSON data to a file.
 
@@ -61,7 +62,10 @@ def save_json(
         _LOGGER.error(msg)
         raise SerializationError(msg) from error
 
-    write_utf8_file(filename, json_data, private)
+    if atomic_writes:
+        write_utf8_file_atomic(filename, json_data, private)
+    else:
+        write_utf8_file(filename, json_data, private)
 
 
 def format_unserializable_data(data: dict[str, Any]) -> str:
