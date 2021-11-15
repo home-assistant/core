@@ -153,7 +153,7 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
         elif percentage == 0:
             zwave_speed = 0
         else:
-            assert percentage >= 0 and percentage <= 100
+            assert 0 <= percentage <= 100
             zwave_speed = self.speed_configuration[
                 math.ceil(percentage / self.percentage_step) - 1
             ]

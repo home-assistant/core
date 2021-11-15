@@ -264,6 +264,7 @@ class FanSpeedDataTemplate:
         Values should indicate the highest allowed device setting for each
         actual speed.
         """
+        # pylint: disable=no-self-use
         return None
 
 
