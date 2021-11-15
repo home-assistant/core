@@ -251,3 +251,101 @@ class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
     def current_tilt_value(resolved_data: dict[str, Any]) -> ZwaveValue | None:
         """Get current tilt ZwaveValue from resolved data."""
         return resolved_data["tilt_value"]
+
+
+@dataclass
+class FanSpeedDataTemplate:
+    """Mixin to define get_speed_config."""
+
+    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
+        """
+        Get the fan speed configuration for this device.
+
+        Values should indicate the highest allowed device setting for each
+        actual speed.
+        """
+        return None
+
+
+@dataclass
+class FixedFanSpeedDataTemplate(BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate):
+    """
+    Specifies a fixed set of fan speeds.
+
+    Example:
+      ZWaveDiscoverySchema(
+          platform="fan",
+          hint="configured_fan_speed",
+          ...
+          data_template=FixedFanSpeedDataTemplate(
+              speeds=[32,65,99]
+          ),
+      ),
+
+    `speeds` indicates the maximum setting on the underlying fan controller
+    for each actual speed.
+    """
+
+    speeds: list[int] = field(default_factory=list)
+
+    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
+        """Get the fan speed configuration for this device."""
+        return self.speeds
+
+
+@dataclass
+class ConfigurableFanSpeedDataTemplate(
+    BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate
+):
+    """
+    Gets fan speeds based on a configuration value.
+
+    Example:
+      ZWaveDiscoverySchema(
+          platform="fan",
+          hint="configured_fan_speed",
+          ...
+          data_template=ConfigurableFanSpeedDataTemplate(
+            configuration_option=ZwaveValueID(
+                5, CommandClass.CONFIGURATION, endpoint=0
+            ),
+            configuration_value_to_speeds={0: [32, 65, 99], 1: [24, 49, 74, 99]},
+          ),
+      ),
+
+    `configuration_option` is a reference to the setting that determines how
+    many speeds are supported.
+
+    `configuration_value_to_speeds` maps the values from `configuration_option`
+    to a list of speeds.  The specified speeds indicate the maximum setting on
+    the underlying switch for each actual speed.
+    """
+
+    configuration_option: ZwaveValueID | None = None
+    configuration_value_to_speeds: dict[int, list[int]] = field(default_factory=dict)
+
+    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+        """Resolve helper class data for a discovered value."""
+        if not self.configuration_option:
+            raise ValueError("Invalid discovery data template")
+
+        data: dict[str, Any] = {
+            "configuration_value": self._get_value_from_id(
+                value.node, self.configuration_option
+            ),
+        }
+        return data
+
+    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+        """Return list of all ZwaveValues that should be watched."""
+        return [
+            resolved_data["configuration_value"],
+        ]
+
+    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
+        """Get current speed configuration from resolved data."""
+        configuration_value: ZwaveValue | None = resolved_data["configuration_value"]
+        if configuration_value:
+            return self.configuration_value_to_speeds.get(configuration_value.value)
+
+        return None
