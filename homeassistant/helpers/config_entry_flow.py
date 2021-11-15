@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable, Union, cast
+from typing import Any, Awaitable, Callable, Coroutine, Union, cast
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
@@ -82,11 +82,11 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
         return await self.async_step_confirm()
 
-    async def async_step_zeroconf(
+    def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> Coroutine[Any, Any, FlowResult]:
         """Handle a flow initialized by Zeroconf discovery."""
-        return await self.async_step_discovery(cast(dict, discovery_info))
+        return self.async_step_discovery(cast(dict, discovery_info))
 
     async_step_ssdp = async_step_discovery
     async_step_mqtt = async_step_discovery
