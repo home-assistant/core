@@ -164,13 +164,11 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         if (current_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.set_state_full_path(
-            "settings?target_t_enabled=1", target_t=f"{current_temp}"
+            "settings", target_t_enabled=1, target_t=f"{current_temp}"
         )
         if self._check_is_off():
-            self._hvac_action = CURRENT_HVAC_OFF
             self.async_set_hvac_mode(HVAC_MODE_OFF)
         else:
-            self._hvac_action = CURRENT_HVAC_HEAT
             self.async_set_hvac_mode(
                 HVAC_MODE_AUTO if self.preset_mode else HVAC_MODE_HEAT
             )
@@ -179,27 +177,29 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
-            await self.set_state_full_path("settings", schedule_profile=1)
+            await self.set_state_full_path("settings", schedule=1)
         else:
-            await self.set_state_full_path("settings", schedule_profile=0)
+            await self.set_state_full_path("settings", schedule=0)
         if hvac_mode == HVAC_MODE_OFF:
             await self.set_state_full_path(
-                "settings?target_t_enabled=1", target_t=f"{self._attr_min_temp}"
+                "settings", target_t_enabled=1, target_t=f"{self._attr_min_temp}"
             )
-            self._hvac_action = CURRENT_HVAC_OFF
         self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         if not self._attr_preset_modes:
             return
-        if preset_mode == "None":
-            await self.set_state_full_path("settings", schedule_profile=0)
+
+        preset_index = self._attr_preset_modes.index(preset_mode)
+        await self.set_state_full_path(
+            "settings",
+            schedule=(0 if preset_index == 0 else 1),
+            schedule_profile=f"{preset_index}",
+        )
+
+        if preset_index == 0:
             await self.async_set_hvac_mode(HVAC_MODE_HEAT)
         else:
-            await self.set_state_full_path(
-                "settings",
-                schedule_profile=f"{self._attr_preset_modes.index(preset_mode)}",
-            )
             await self.async_set_hvac_mode(HVAC_MODE_AUTO)
         self.async_write_ha_state()
