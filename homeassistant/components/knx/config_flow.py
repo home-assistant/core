@@ -331,7 +331,11 @@ class KNXOptionsFlowHandler(OptionsFlow):
             self.general_settings = user_input
             return await self.async_step_tunnel()
 
-        supported_connection_types = await get_supported_connection_types()
+        supported_connection_types = [
+            CONF_KNX_AUTOMATIC,
+            CONF_KNX_TUNNELING,
+            CONF_KNX_ROUTING,
+        ]
         self.current_config = self.config_entry.data  # type: ignore
 
         data_schema = {
@@ -392,12 +396,3 @@ async def scan_for_gateways(stop_on_found: int = 0) -> list:
         xknx, stop_on_found=stop_on_found, timeout_in_seconds=2
     )
     return await gatewayscanner.scan()
-
-
-async def get_supported_connection_types() -> list:
-    """Obtain a list of supported connection types."""
-    supported_connection_types = CONF_KNX_INITIAL_CONNECTION_TYPES.copy()
-    if await scan_for_gateways(1):
-        supported_connection_types.insert(0, CONF_KNX_AUTOMATIC)
-
-    return supported_connection_types
