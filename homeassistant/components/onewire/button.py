@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_SYSTEM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -26,6 +27,7 @@ class OneWireButtonEntityDescription(ButtonEntityDescription):
 ENTRY_BUTTON_TYPES = {
     "cleanup_registry": OneWireButtonEntityDescription(
         key="cleanup_registry",
+        entity_category=ENTITY_CATEGORY_SYSTEM,
         icon="mdi:broom",
         name="Cleanup 1-Wire devices on {}",
     )
