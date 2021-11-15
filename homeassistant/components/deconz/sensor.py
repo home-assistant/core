@@ -52,6 +52,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
@@ -215,12 +216,12 @@ class DeconzSensor(DeconzDevice, SensorEntity):
             super().async_update_callback()
 
     @property
-    def native_value(self) -> bool | float | int | str | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._device.state  # type: ignore[no-any-return]
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, bool | float | int | None]:
         """Return the state attributes of the sensor."""
         attr = {}
 
@@ -280,7 +281,7 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
             super().async_update_callback()
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._device.secondary_temperature  # type: ignore[no-any-return]
 
@@ -322,12 +323,12 @@ class DeconzBattery(DeconzDevice, SensorEntity):
         return f"{self.serial}-battery"
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> StateType:
         """Return the state of the battery."""
         return self._device.battery  # type: ignore[no-any-return]
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the battery."""
         attr = {}
 
