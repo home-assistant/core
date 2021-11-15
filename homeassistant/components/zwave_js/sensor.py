@@ -208,12 +208,8 @@ async def async_setup_entry(
             data: NumericSensorDataTemplateData = info.platform_data
         else:
             data = NumericSensorDataTemplateData()
-        entity_description = (
-            ENTITY_DESCRIPTION_KEY_MAP.get(
-                data.entity_description_key, base_entity_description
-            )
-            if data.entity_description_key is not None
-            else base_entity_description
+        entity_description = ENTITY_DESCRIPTION_KEY_MAP.get(
+            data.entity_description_key or "", base_entity_description
         )
         entity_description.info = info
         entity_description.native_unit_of_measurement = data.unit_of_measurement
