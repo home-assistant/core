@@ -48,6 +48,11 @@ _MAIN_SENSORS = (
     "active_power",
     "battery_soc",
     "e_day",
+    "e_total",
+    "meter_e_total_exp",
+    "meter_e_total_imp",
+    "e_bat_charge_total",
+    "e_bat_discharge_total",
 )
 
 _ICONS = {
