@@ -63,21 +63,23 @@ async def async_setup_entry(
 class ZwaveFan(ZWaveBaseEntity, FanEntity):
     """Representation of a Z-Wave fan."""
 
-    async def async_set_percentage(self, percentage: int | None) -> None:
-        """Set the speed percentage of the fan."""
-        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize the fan."""
+        super().__init__(config_entry, client, info)
+        self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
-        if percentage is None:
-            # Value 255 tells device to return to previous value
-            zwave_speed = 255
-        elif percentage == 0:
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        if percentage == 0:
             zwave_speed = 0
         else:
             zwave_speed = math.ceil(
                 percentage_to_ranged_value(DEFAULT_SPEED_RANGE, percentage)
             )
 
-        await self.info.node.async_set_value(target_value, zwave_speed)
+        await self.info.node.async_set_value(self._target_value, zwave_speed)
 
     async def async_turn_on(
         self,
@@ -87,12 +89,15 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        await self.async_set_percentage(percentage)
+        if percentage is None:
+            # Value 255 tells device to return to previous value
+            await self.info.node.async_set_value(self._target_value, 255)
+        else:
+            await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
-        await self.info.node.async_set_value(target_value, 0)
+        await self.info.node.async_set_value(self._target_value, 0)
 
     @property
     def is_on(self) -> bool | None:  # type: ignore
@@ -140,25 +145,19 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
             FanSpeedDataTemplate, self.info.platform_data_template
         )
 
-    async def async_set_percentage(self, percentage: int | None) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
-
         # Entity should be unavailable if this isn't set
         assert self.speed_configuration
 
-        if percentage is None:
-            # Value 255 tells device to return to previous value
-            zwave_speed = 255
-        elif percentage == 0:
+        if percentage == 0:
             zwave_speed = 0
         else:
-            assert 0 <= percentage <= 100
             zwave_speed = self.speed_configuration[
                 math.ceil(percentage / self.percentage_step) - 1
             ]
 
-        await self.info.node.async_set_value(target_value, zwave_speed)
+        await self.info.node.async_set_value(self._target_value, zwave_speed)
 
     @property
     def available(self) -> bool:

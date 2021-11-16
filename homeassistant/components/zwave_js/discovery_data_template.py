@@ -265,11 +265,20 @@ class FanSpeedDataTemplate:
         actual speed.
         """
         # pylint: disable=no-self-use
-        return None
+        raise NotImplementedError
 
 
 @dataclass
-class FixedFanSpeedDataTemplate(BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate):
+class FixedFanSpeedValueMix:
+    """Mixin data class for defining supported fan speeds."""
+
+    speeds: list[int]
+
+
+@dataclass
+class FixedFanSpeedDataTemplate(
+    BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate, FixedFanSpeedValueMix
+):
     """
     Specifies a fixed set of fan speeds.
 
@@ -287,16 +296,22 @@ class FixedFanSpeedDataTemplate(BaseDiscoverySchemaDataTemplate, FanSpeedDataTem
     for each actual speed.
     """
 
-    speeds: list[int] = field(default_factory=list)
-
     def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
         """Get the fan speed configuration for this device."""
         return self.speeds
 
 
 @dataclass
+class ConfigurableFanSpeedValueMix:
+    """Mixin data class for defining configurable fan speeds."""
+
+    configuration_option: ZwaveValueID
+    configuration_value_to_speeds: dict[int, list[int]]
+
+
+@dataclass
 class ConfigurableFanSpeedDataTemplate(
-    BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate
+    BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate, ConfigurableFanSpeedValueMix
 ):
     """
     Gets fan speeds based on a configuration value.
@@ -321,9 +336,6 @@ class ConfigurableFanSpeedDataTemplate(
     to a list of speeds.  The specified speeds indicate the maximum setting on
     the underlying switch for each actual speed.
     """
-
-    configuration_option: ZwaveValueID | None = None
-    configuration_value_to_speeds: dict[int, list[int]] = field(default_factory=dict)
 
     def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
         """Resolve helper class data for a discovered value."""
