@@ -432,6 +432,7 @@ async def test_options_flow(
         assert mock_config_entry.data == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.255",
+            CONF_HOST: "",
             ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
             ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
             ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
@@ -532,6 +533,7 @@ async def test_advanced_options(
         assert mock_config_entry.data == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+            CONF_HOST: "",
             ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
             ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
             ConnectionSchema.CONF_KNX_RATE_LIMIT: 25,

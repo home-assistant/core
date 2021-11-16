@@ -311,6 +311,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
         entry_data = {
             **DEFAULT_ENTRY_DATA,
             **self.general_settings,
+            CONF_HOST: self.current_config.get(CONF_HOST, ""),
         }
 
         if user_input is not None:
@@ -319,7 +320,11 @@ class KNXOptionsFlowHandler(OptionsFlow):
                 **user_input,
             }
 
-        self.hass.config_entries.async_update_entry(self.config_entry, data=entry_data)
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            data=entry_data,
+            title=entry_data[CONF_KNX_CONNECTION_TYPE].capitalize(),
+        )
 
         return self.async_create_entry(title="", data={})
 
