@@ -1,0 +1,17 @@
+{
+    "state": {
+        "tuya__basic_nightvision": {
+            "1": "Inactif",
+            "2": "Actif"
+        },
+        "tuya__light_mode": {
+            "none": "Inactif"
+        },
+        "tuya__relay_status": {
+            "off": "Inactif",
+            "on": "Actif",
+            "power_off": "Inactif",
+            "power_on": "Actif"
+        }
+    }
+}
