@@ -83,7 +83,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         state = self._state
         if (
             state is not None
-            and isinstance(state, float)
+            and not isinstance(state, str)
             and self.entity_description.unit_imperial is not None
             and self.entity_description.metric_conversion != 1.0
             and self.entity_description.is_metric_check is not None
