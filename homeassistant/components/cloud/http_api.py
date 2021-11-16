@@ -264,8 +264,8 @@ class CloudForgotPasswordView(HomeAssistantView):
         return self.json_message("ok")
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command({vol.Required("type"): "cloud/status"})
+@websocket_api.async_response
 async def websocket_cloud_status(hass, connection, msg):
     """Handle request for account info.
 
@@ -298,8 +298,8 @@ def _require_cloud_login(handler):
 
 
 @_require_cloud_login
-@websocket_api.async_response
 @websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
+@websocket_api.async_response
 async def websocket_subscription(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
@@ -372,6 +372,7 @@ async def websocket_update_prefs(hass, connection, msg):
         vol.Required("webhook_id"): str,
     }
 )
+@websocket_api.async_response
 async def websocket_hook_create(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
@@ -387,6 +388,7 @@ async def websocket_hook_create(hass, connection, msg):
         vol.Required("webhook_id"): str,
     }
 )
+@websocket_api.async_response
 async def websocket_hook_delete(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
