@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 import functools
+from itertools import chain
 from types import ModuleType
 from typing import Any, Awaitable, Callable, cast
 
@@ -254,74 +255,111 @@ async def ws_get_fossil_energy_consumption(
         connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
         return
 
-    # Fetch energy statistics
-    energy_statistics = await hass.async_add_executor_job(
-        recorder.statistics.statistics_during_period,
-        hass,
-        start_time,
-        end_time,
-        msg["energy_statistic_ids"],
-        "hour",
-        True,
-    )
+    statistic_ids = list(msg["energy_statistic_ids"])
+    statistic_ids.append(msg["co2_statistic_id"])
 
-    # Fetch CO2 statistics
-    co2_statistics = await hass.async_add_executor_job(
+    # Fetch energy + CO2 statistics
+    statistics = await hass.async_add_executor_job(
         recorder.statistics.statistics_during_period,
         hass,
         start_time,
         end_time,
-        [msg["co2_statistic_id"]],
+        statistic_ids,
         "hour",
         True,
     )
 
     def _combine_sum_statistics(
-        stats: dict[str, list[dict[str, Any]]]
+        stats: dict[str, list[dict[str, Any]]], statistic_ids: list[str]
     ) -> dict[datetime, float]:
         """Combine multiple statistics, returns a dict indexed by start time."""
         result: defaultdict[datetime, float] = defaultdict(float)
 
-        for stat in stats.values():
+        for statistics_id, stat in stats.items():
+            if statistics_id not in statistic_ids:
+                continue
             for period in stat:
                 if period["sum"] is None:
                     continue
                 result[period["start"]] += period["sum"]
 
-        return dict(result)
+        return {key: result[key] for key in sorted(result)}
 
-    merged_energy_statistics = _combine_sum_statistics(energy_statistics)
+    def _calculate_deltas(sums: dict[datetime, float]) -> dict[datetime, float]:
+        prev: float | None = None
+        result: dict[datetime, float] = {}
+        for period, sum_ in sums.items():
+            if prev is not None:
+                result[period] = sum_ - prev
+            prev = sum_
+        return result
+
+    def _reduce_deltas(
+        stat_list: list[dict[str, Any]],
+        same_period: Callable[[datetime, datetime], bool],
+        period_start_end: Callable[[datetime], tuple[datetime, datetime]],
+        period: timedelta,
+    ) -> list[dict[str, Any]]:
+        """Reduce hourly deltas to daily or monthly deltas."""
+        result: list[dict[str, Any]] = []
+        deltas: list[float] = []
+        prev_stat: dict[str, Any] = stat_list[0]
+
+        # Loop over the hourly deltas + a fake entry to end the period
+        for statistic in chain(
+            stat_list, ({"start": stat_list[-1]["start"] + period},)
+        ):
+            if not same_period(prev_stat["start"], statistic["start"]):
+                start, _ = period_start_end(prev_stat["start"])
+                # The previous statistic was the last entry of the period
+                result.append(
+                    {
+                        "start": start.isoformat(),
+                        "delta": sum(deltas),
+                    }
+                )
+                deltas = []
+            if statistic.get("delta") is not None:
+                deltas.append(statistic["delta"])
+            prev_stat = statistic
+
+        return result
+
+    merged_energy_statistics = _combine_sum_statistics(
+        statistics, msg["energy_statistic_ids"]
+    )
+    energy_deltas = _calculate_deltas(merged_energy_statistics)
     indexed_co2_statistics = {
         period["start"]: period["mean"]
-        for period in co2_statistics.get(msg["co2_statistic_id"], {})
+        for period in statistics.get(msg["co2_statistic_id"], {})
     }
 
     # Calculate amount of fossil based energy, assume 100% fossil if missing
     fossil_energy = [
-        {"start": start, "sum": sum * indexed_co2_statistics.get(start, 100) / 100}
-        for start, sum in merged_energy_statistics.items()
+        {"start": start, "delta": delta * indexed_co2_statistics.get(start, 100) / 100}
+        for start, delta in energy_deltas.items()
     ]
 
     if msg["period"] == "hour":
-        result = {
-            period["start"].isoformat(): period["sum"] for period in fossil_energy
-        }
-        connection.send_result(msg["id"], result)
+        reduced_fossil_energy = [
+            {"start": period["start"].isoformat(), "delta": period["delta"]}
+            for period in fossil_energy
+        ]
 
-    if msg["period"] == "day":
-        reduced_fossil_energy = recorder.statistics.reduce_statistics_per_day(
-            {"combined": fossil_energy}
+    elif msg["period"] == "day":
+        reduced_fossil_energy = _reduce_deltas(
+            fossil_energy,
+            recorder.statistics.same_day,
+            recorder.statistics.day_start_end,
+            timedelta(days=1),
         )
-        result = {
-            period["start"]: period["sum"]
-            for period in reduced_fossil_energy["combined"]
-        }
-        connection.send_result(msg["id"], result)
+    else:
+        reduced_fossil_energy = _reduce_deltas(
+            fossil_energy,
+            recorder.statistics.same_month,
+            recorder.statistics.month_start_end,
+            timedelta(days=1),
+        )
 
-    reduced_fossil_energy = recorder.statistics.reduce_statistics_per_month(
-        {"combined": fossil_energy}
-    )
-    result = {
-        period["start"]: period["sum"] for period in reduced_fossil_energy["combined"]
-    }
+    result = {period["start"]: period["delta"] for period in reduced_fossil_energy}
     connection.send_result(msg["id"], result)

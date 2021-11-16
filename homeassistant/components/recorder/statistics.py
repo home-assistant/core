@@ -716,50 +716,54 @@ def _reduce_statistics(
     return result
 
 
-def reduce_statistics_per_day(
+def same_day(time1: datetime, time2: datetime) -> bool:
+    """Return True if time1 and time2 are in the same date."""
+    date1 = dt_util.as_local(time1).date()
+    date2 = dt_util.as_local(time2).date()
+    return date1 == date2
+
+
+def day_start_end(time: datetime) -> tuple[datetime, datetime]:
+    """Return the start and end of the period (day) time is within."""
+    start = dt_util.as_utc(
+        dt_util.as_local(time).replace(hour=0, minute=0, second=0, microsecond=0)
+    )
+    end = start + timedelta(days=1)
+    return (start, end)
+
+
+def _reduce_statistics_per_day(
     stats: dict[str, list[dict[str, Any]]]
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to daily statistics."""
 
-    def same_period(time1: datetime, time2: datetime) -> bool:
-        """Return True if time1 and time2 are in the same date."""
-        date1 = dt_util.as_local(time1).date()
-        date2 = dt_util.as_local(time2).date()
-        return date1 == date2
-
-    def period_start_end(time: datetime) -> tuple[datetime, datetime]:
-        """Return the start and end of the period (day) time is within."""
-        start = dt_util.as_utc(
-            dt_util.as_local(time).replace(hour=0, minute=0, second=0, microsecond=0)
-        )
-        end = start + timedelta(days=1)
-        return (start, end)
-
-    return _reduce_statistics(stats, same_period, period_start_end, timedelta(days=1))
+    return _reduce_statistics(stats, same_day, day_start_end, timedelta(days=1))
 
 
-def reduce_statistics_per_month(
-    stats: dict[str, list[dict[str, Any]]]
+def same_month(time1: datetime, time2: datetime) -> bool:
+    """Return True if time1 and time2 are in the same year and month."""
+    date1 = dt_util.as_local(time1).date()
+    date2 = dt_util.as_local(time2).date()
+    return (date1.year, date1.month) == (date2.year, date2.month)
+
+
+def month_start_end(time: datetime) -> tuple[datetime, datetime]:
+    """Return the start and end of the period (month) time is within."""
+    start_local = dt_util.as_local(time).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    start = dt_util.as_utc(start_local)
+    end_local = (start_local + timedelta(days=31)).replace(day=1)
+    end = dt_util.as_utc(end_local)
+    return (start, end)
+
+
+def _reduce_statistics_per_month(
+    stats: dict[str, list[dict[str, Any]]],
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to monthly statistics."""
 
-    def same_period(time1: datetime, time2: datetime) -> bool:
-        """Return True if time1 and time2 are in the same year and month."""
-        date1 = dt_util.as_local(time1).date()
-        date2 = dt_util.as_local(time2).date()
-        return (date1.year, date1.month) == (date2.year, date2.month)
-
-    def period_start_end(time: datetime) -> tuple[datetime, datetime]:
-        """Return the start and end of the period (month) time is within."""
-        start_local = dt_util.as_local(time).replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        start = dt_util.as_utc(start_local)
-        end_local = (start_local + timedelta(days=31)).replace(day=1)
-        end = dt_util.as_utc(end_local)
-        return (start, end)
-
-    return _reduce_statistics(stats, same_period, period_start_end, timedelta(days=31))
+    return _reduce_statistics(stats, same_month, month_start_end, timedelta(days=31))
 
 
 def statistics_during_period(
@@ -825,9 +829,9 @@ def statistics_during_period(
         )
 
         if period == "day":
-            return reduce_statistics_per_day(result)
+            return _reduce_statistics_per_day(result)
 
-        return reduce_statistics_per_month(result)
+        return _reduce_statistics_per_month(result)
 
 
 def get_last_statistics(
