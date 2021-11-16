@@ -12,14 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DOMAIN,
-    SELECT_SETTINGS_DATA,
-)
-from .helper import (
-    SelectDataUpdateCoordinator,
-    Plenticore,
-)
+from .const import DOMAIN, SELECT_SETTINGS_DATA
+from .helper import Plenticore, SelectDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +49,7 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
 
     def __init__(
         self,
-        hass: hass,
+        hass: HomeAssistant,
         plenticore: Plenticore,
         entry_id: str,
         platform_name: str,
@@ -68,7 +62,7 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         is_on: str,
         device_info: DeviceInfo,
         unique_id: str,
-    ):
+    ) -> None:
         """Create a new switch Entity for Plenticore process data."""
         super().__init__(
             coordinator=SelectDataUpdateCoordinator(

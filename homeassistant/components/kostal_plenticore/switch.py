@@ -1,9 +1,9 @@
 ﻿"""Platform for Kostal Plenticore switches."""
 from __future__ import annotations
 
-import logging
 from abc import ABC
 from datetime import timedelta
+import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -12,13 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DOMAIN,
-    SWITCH_SETTINGS_DATA,
-)
-from .helper import (
-    SettingDataUpdateCoordinator,
-)
+from .const import DOMAIN, SWITCH_SETTINGS_DATA
+from .helper import SettingDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,7 +125,7 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         self.coordinator.stop_fetch_data(self.module_id, self.data_id)
         await super().async_will_remove_from_hass()
 
-    async def async_turn_on(self) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn device on."""
         if await self.coordinator.async_write_data(
             self.module_id, {self.data_id: self.on_value}
@@ -141,7 +136,7 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         else:
             self._last_run_success = False
 
-    async def async_turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn device off."""
         if await self.coordinator.async_write_data(
             self.module_id, {self.data_id: self.off_value}
