@@ -625,6 +625,41 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     assert mocked_bulb.async_set_brightness.mock_calls == []
     mocked_bulb.async_set_rgb.reset_mock()
 
+    mocked_bulb.last_properties["flowing"] = "1"
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_RGB_COLOR: (red, green, blue)},
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == []
+    assert mocked_bulb.async_set_rgb.mock_calls == [
+        call(255, 0, 0, duration=350, light_type=ANY)
+    ]
+    assert mocked_bulb.async_set_color_temp.mock_calls == []
+    assert mocked_bulb.async_set_brightness.mock_calls == []
+    mocked_bulb.async_set_rgb.reset_mock()
+    mocked_bulb.last_properties["flowing"] = "0"
+
+    mocked_bulb.model = "color"  # color model needs a workaround (see MODELS_WITH_DELAYED_ON_TRANSITION)
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            ATTR_BRIGHTNESS_PCT: PROPERTIES["bright"],
+        },
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == []
+    assert mocked_bulb.async_set_rgb.mock_calls == []
+    assert mocked_bulb.async_set_color_temp.mock_calls == []
+    assert mocked_bulb.async_set_brightness.mock_calls == [
+        call(pytest.approx(50.1, 0.1), duration=350, light_type=ANY)
+    ]
+    mocked_bulb.async_set_brightness.reset_mock()
+
+    mocked_bulb.model = "colora"  # colora does not need a workaround
     await hass.services.async_call(
         "light",
         SERVICE_TURN_ON,
@@ -666,6 +701,23 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     assert mocked_bulb.async_set_color_temp.mock_calls == []
     assert mocked_bulb.async_set_brightness.mock_calls == []
 
+    mocked_bulb.last_properties["flowing"] = "1"
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP: 250},
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == []
+    assert mocked_bulb.async_set_rgb.mock_calls == []
+    assert mocked_bulb.async_set_color_temp.mock_calls == [
+        call(4000, duration=350, light_type=ANY)
+    ]
+    assert mocked_bulb.async_set_brightness.mock_calls == []
+    mocked_bulb.async_set_color_temp.reset_mock()
+    mocked_bulb.last_properties["flowing"] = "0"
+
     mocked_bulb.last_properties["color_mode"] = 3
     # This last change should generate a call even though
     # the color mode is the same since the HSV has changed
@@ -681,6 +733,33 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     assert mocked_bulb.async_set_rgb.mock_calls == []
     assert mocked_bulb.async_set_color_temp.mock_calls == []
     assert mocked_bulb.async_set_brightness.mock_calls == []
+    mocked_bulb.async_set_hsv.reset_mock()
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_HS_COLOR: (100, 35)},
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == []
+    assert mocked_bulb.async_set_rgb.mock_calls == []
+    assert mocked_bulb.async_set_color_temp.mock_calls == []
+    assert mocked_bulb.async_set_brightness.mock_calls == []
+
+    mocked_bulb.last_properties["flowing"] = "1"
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_HS_COLOR: (100, 35)},
+        blocking=True,
+    )
+    assert mocked_bulb.async_set_hsv.mock_calls == [
+        call(100.0, 35.0, duration=350, light_type=ANY)
+    ]
+    assert mocked_bulb.async_set_rgb.mock_calls == []
+    assert mocked_bulb.async_set_color_temp.mock_calls == []
+    assert mocked_bulb.async_set_brightness.mock_calls == []
+    mocked_bulb.last_properties["flowing"] = "0"
 
 
 async def test_device_types(hass: HomeAssistant, caplog):
@@ -692,7 +771,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
     mocked_bulb.last_properties = properties
 
     async def _async_setup(config_entry):
-        with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+        with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
             assert await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
             # We use asyncio.create_task now to avoid

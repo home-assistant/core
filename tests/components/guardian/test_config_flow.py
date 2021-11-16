@@ -4,6 +4,7 @@ from unittest.mock import patch
 from aioguardian.errors import GuardianError
 
 from homeassistant import data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.guardian import CONF_UID, DOMAIN
 from homeassistant.components.guardian.config_flow import (
@@ -83,14 +84,14 @@ async def test_step_user(hass, ping_client):
 
 async def test_step_zeroconf(hass, ping_client):
     """Test the zeroconf step."""
-    zeroconf_data = {
-        "host": "192.168.1.100",
-        "port": 7777,
-        "hostname": "GVC1-ABCD.local.",
-        "type": "_api._udp.local.",
-        "name": "Guardian Valve Controller API._api._udp.local.",
-        "properties": {"_raw": {}},
-    }
+    zeroconf_data = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.100",
+        port=7777,
+        hostname="GVC1-ABCD.local.",
+        type="_api._udp.local.",
+        name="Guardian Valve Controller API._api._udp.local.",
+        properties={"_raw": {}},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_data
@@ -112,14 +113,14 @@ async def test_step_zeroconf(hass, ping_client):
 
 async def test_step_zeroconf_already_in_progress(hass):
     """Test the zeroconf step aborting because it's already in progress."""
-    zeroconf_data = {
-        "host": "192.168.1.100",
-        "port": 7777,
-        "hostname": "GVC1-ABCD.local.",
-        "type": "_api._udp.local.",
-        "name": "Guardian Valve Controller API._api._udp.local.",
-        "properties": {"_raw": {}},
-    }
+    zeroconf_data = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.100",
+        port=7777,
+        hostname="GVC1-ABCD.local.",
+        type="_api._udp.local.",
+        name="Guardian Valve Controller API._api._udp.local.",
+        properties={"_raw": {}},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_data

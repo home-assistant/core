@@ -63,7 +63,7 @@ class Data:
         """Initialize the user data store."""
         self.hass = hass
         self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True
+            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._data: dict[str, Any] | None = None
         # Legacy mode will allow usernames to start/end with whitespace

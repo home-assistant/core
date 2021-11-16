@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_XY,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
@@ -109,7 +110,7 @@ class DeconzEvent(DeconzBase):
         self._device.remove_callback(self.async_update_callback)
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self):
         """Fire the event if reason is that state is updated."""
         if (
             self.gateway.ignore_state_updates
@@ -142,9 +143,7 @@ class DeconzEvent(DeconzBase):
         if not self.device_info:
             return
 
-        device_registry = (
-            await self.gateway.hass.helpers.device_registry.async_get_registry()
-        )
+        device_registry = dr.async_get(self.gateway.hass)
 
         entry = device_registry.async_get_or_create(
             config_entry_id=self.gateway.config_entry.entry_id, **self.device_info
@@ -156,7 +155,7 @@ class DeconzAlarmEvent(DeconzEvent):
     """Alarm control panel companion event when user interacts with a keypad."""
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self):
         """Fire the event if reason is new action is updated."""
         if (
             self.gateway.ignore_state_updates

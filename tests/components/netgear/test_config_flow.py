@@ -1,5 +1,4 @@
 """Tests for the Netgear config flow."""
-import logging
 from unittest.mock import Mock, patch
 
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
@@ -18,8 +17,6 @@ from homeassistant.const import (
 )
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 URL = "http://routerlogin.net"
 SERIAL = "5ER1AL0000001"

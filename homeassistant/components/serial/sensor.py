@@ -81,8 +81,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     rtscts = config.get(CONF_RTSCTS)
     dsrdtr = config.get(CONF_DSRDTR)
 
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
+    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
         value_template.hass = hass
 
     sensor = SerialSensor(

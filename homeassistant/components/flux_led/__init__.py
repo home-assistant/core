@@ -182,7 +182,7 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=self.device.ipaddr,
-            update_interval=timedelta(seconds=5),
+            update_interval=timedelta(seconds=10),
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
             request_refresh_debouncer=Debouncer(

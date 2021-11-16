@@ -60,8 +60,7 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorEntity):
     def extra_state_attributes(self):
         """Return the device state attributes."""
         attr = {}
-        super_attr = super().extra_state_attributes
-        if super_attr is not None:
+        if (super_attr := super().extra_state_attributes) is not None:
             attr.update(super_attr)
 
         if self._battery is not None:

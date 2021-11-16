@@ -70,8 +70,7 @@ def websocket_setup_mfa(
         """Return a setup flow for mfa auth module."""
         flow_manager = hass.data[DATA_SETUP_FLOW_MGR]
 
-        flow_id = msg.get("flow_id")
-        if flow_id is not None:
+        if (flow_id := msg.get("flow_id")) is not None:
             result = await flow_manager.async_configure(flow_id, msg.get("user_input"))
             connection.send_message(
                 websocket_api.result_message(msg["id"], _prepare_result_json(result))
@@ -139,8 +138,7 @@ def _prepare_result_json(result):
 
     data = result.copy()
 
-    schema = data["data_schema"]
-    if schema is None:
+    if (schema := data["data_schema"]) is None:
         data["data_schema"] = []
     else:
         data["data_schema"] = voluptuous_serialize.convert(schema)

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "owserver": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
+            },
+            "user": {
+                "title": "1-Wire\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+            }
+        }
+    }
+}

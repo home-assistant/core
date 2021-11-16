@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import Counter
 import itertools
+import logging
 from typing import Any, Set, cast
 
 import voluptuous as vol
@@ -65,6 +66,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SUPPORT_GROUP_LIGHT = (
     SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_TRANSITION | SUPPORT_WHITE_VALUE
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -151,6 +154,8 @@ class LightGroup(GroupEntity, light.LightEntity):
             key: value for key, value in kwargs.items() if key in FORWARDED_ATTRIBUTES
         }
         data[ATTR_ENTITY_ID] = self._entity_ids
+
+        _LOGGER.debug("Forwarded turn_on command: %s", data)
 
         await self.hass.services.async_call(
             light.DOMAIN,

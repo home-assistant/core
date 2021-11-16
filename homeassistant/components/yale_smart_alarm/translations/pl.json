@@ -18,7 +18,7 @@
             "user": {
                 "data": {
                     "area_id": "Identyfikator obszaru",
-                    "name": "[%key::common::config_flow::data::name%]",
+                    "name": "Nazwa",
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 }

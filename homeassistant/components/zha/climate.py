@@ -405,8 +405,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
             # occupancy attribute is an unreportable attribute, but if we get
             # an attribute update for an "occupied" setpoint, there's a chance
             # occupancy has changed
-            occupancy = await self._thrm.get_occupancy()
-            if occupancy is True:
+            if await self._thrm.get_occupancy() is True:
                 self._preset = PRESET_NONE
 
         self.debug("Attribute '%s' = %s update", record.attr_name, record.value)
@@ -580,8 +579,7 @@ class ZenWithinThermostat(Thermostat):
     def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
-        running_state = self._thrm.running_state
-        if running_state is None:
+        if (running_state := self._thrm.running_state) is None:
             return None
         if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
             return CURRENT_HVAC_HEAT

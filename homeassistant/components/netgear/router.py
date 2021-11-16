@@ -16,17 +16,16 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -61,7 +60,7 @@ def get_api(
 
 @callback
 def async_setup_netgear_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
     entity_class_generator: Callable[[NetgearRouter, dict], list],
@@ -103,7 +102,7 @@ def async_add_new_entities(router, async_add_entities, tracked, entity_class_gen
 class NetgearRouter:
     """Representation of a Netgear router."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a Netgear router."""
         self.hass = hass
         self.entry = entry
@@ -199,6 +198,9 @@ class NetgearRouter:
         ntg_devices = await self.async_get_attached_devices()
         now = dt_util.utcnow()
 
+        if ntg_devices is None:
+            return
+
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("Netgear scan result: \n%s", ntg_devices)
 
@@ -270,14 +272,14 @@ class NetgearDeviceEntity(Entity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "default_name": self._device_name,
-            "default_model": self._device["device_model"],
-            "via_device": (DOMAIN, self._router.unique_id),
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            default_name=self._device_name,
+            default_model=self._device["device_model"],
+            via_device=(DOMAIN, self._router.unique_id),
+        )
 
     @property
     def should_poll(self) -> bool:

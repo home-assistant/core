@@ -1,8 +1,9 @@
 """Support for Z-Wave cover devices."""
 from __future__ import annotations
 
+import asyncio
 import logging
-from typing import Any
+from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_STATE_PROPERTY, TARGET_VALUE_PROPERTY
@@ -19,13 +20,19 @@ from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     DEVICE_CLASS_BLIND,
     DEVICE_CLASS_GARAGE,
     DEVICE_CLASS_SHUTTER,
     DEVICE_CLASS_WINDOW,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
+    SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -35,6 +42,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
+from .discovery_data_template import CoverTiltDataTemplate
 from .entity import ZWaveBaseEntity
 
 LOGGER = logging.getLogger(__name__)
@@ -54,6 +62,8 @@ async def async_setup_entry(
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "motorized_barrier":
             entities.append(ZwaveMotorizedBarrier(config_entry, client, info))
+        elif info.platform_hint == "window_shutter_tilt":
+            entities.append(ZWaveTiltCover(config_entry, client, info))
         else:
             entities.append(ZWaveCover(config_entry, client, info))
         async_add_entities(entities)
@@ -77,6 +87,26 @@ def percent_to_zwave_position(value: int) -> int:
     return 0
 
 
+def percent_to_zwave_tilt(value: int) -> int:
+    """Convert position in 0-100 scale to 0-99 scale.
+
+    `value` -- (int) Position byte value from 0-100.
+    """
+    if value > 0:
+        return round((value / 100) * 99)
+    return 0
+
+
+def zwave_tilt_to_percent(value: int) -> int:
+    """Convert 0-99 scale to position in 0-100 scale.
+
+    `value` -- (int) Position byte value from 0-99.
+    """
+    if value > 0:
+        return round((value / 99) * 100)
+    return 0
+
+
 class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
 
@@ -91,7 +121,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
         # Entity class attributes
         self._attr_device_class = DEVICE_CLASS_WINDOW
-        if self.info.platform_hint == "window_shutter":
+        if self.info.platform_hint in ("window_shutter", "window_shutter_tilt"):
             self._attr_device_class = DEVICE_CLASS_SHUTTER
         if self.info.platform_hint == "window_blind":
             self._attr_device_class = DEVICE_CLASS_BLIND
@@ -148,6 +178,64 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         if close_value:
             # Stop the cover if it's closing
             await self.info.node.async_set_value(close_value, False)
+
+
+class ZWaveTiltCover(ZWaveCover):
+    """Representation of a Fibaro Z-Wave cover device."""
+
+    _attr_supported_features = (
+        SUPPORT_OPEN
+        | SUPPORT_CLOSE
+        | SUPPORT_STOP
+        | SUPPORT_SET_POSITION
+        | SUPPORT_OPEN_TILT
+        | SUPPORT_CLOSE_TILT
+        | SUPPORT_SET_TILT_POSITION
+    )
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveCover entity."""
+        super().__init__(config_entry, client, info)
+        self.data_template = cast(
+            CoverTiltDataTemplate, self.info.platform_data_template
+        )
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return current position of cover tilt.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        value = self.data_template.current_tilt_value(self.info.platform_data)
+        return zwave_tilt_to_percent(value.value) if value else None
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover tilt to a specific position."""
+        tilt_value = self.data_template.current_tilt_value(self.info.platform_data)
+        if tilt_value:
+            await self.info.node.async_set_value(
+                tilt_value,
+                percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
+            )
+            # The following 2 lines are a workaround for this issue:
+            # https://github.com/zwave-js/node-zwave-js/issues/3611
+            # As soon as the issue is fixed, and minimum server schema is bumped
+            # the 2 lines should be removed.
+            await asyncio.sleep(2.5)
+            await self.info.node.async_refresh_cc_values(tilt_value.command_class)
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        await self.async_set_cover_tilt_position(tilt_position=100)
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        await self.async_set_cover_tilt_position(tilt_position=0)
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):

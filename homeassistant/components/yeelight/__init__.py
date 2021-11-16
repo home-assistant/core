@@ -6,7 +6,6 @@ import contextlib
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
-import socket
 from urllib.parse import urlparse
 
 from async_upnp_client.search import SsdpSearchListener
@@ -36,6 +35,20 @@ _LOGGER = logging.getLogger(__name__)
 STATE_CHANGE_TIME = 0.40  # seconds
 POWER_STATE_CHANGE_TIME = 1  # seconds
 
+#
+# These models do not transition correctly when turning on, and
+# yeelight is no longer updating the firmware on older devices
+#
+# https://github.com/home-assistant/core/issues/58315
+#
+# The problem can be worked around by always setting the brightness
+# even when the bulb is reporting the brightness is already at the
+# desired level.
+#
+MODELS_WITH_DELAYED_ON_TRANSITION = {
+    "color",  # YLDP02YL
+}
+
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN
 DATA_UPDATED = "yeelight_{}_data_updated"
@@ -47,6 +60,7 @@ DEFAULT_SAVE_ON_CHANGE = False
 DEFAULT_NIGHTLIGHT_SWITCH = False
 
 CONF_MODEL = "model"
+CONF_DETECTED_MODEL = "detected_model"
 CONF_TRANSITION = "transition"
 CONF_SAVE_ON_CHANGE = "save_on_change"
 CONF_MODE_MUSIC = "use_music_mode"
@@ -80,7 +94,7 @@ SSDP_TARGET = ("239.255.255.250", 1982)
 SSDP_ST = "wifi_bulb"
 DISCOVERY_ATTEMPTS = 3
 DISCOVERY_SEARCH_INTERVAL = timedelta(seconds=2)
-DISCOVERY_TIMEOUT = 2
+DISCOVERY_TIMEOUT = 8
 
 
 YEELIGHT_RGB_TRANSITION = "RGBTransition"
@@ -163,9 +177,6 @@ UPDATE_REQUEST_PROPERTIES = [
     "active_mode",
 ]
 
-BULB_NETWORK_EXCEPTIONS = (socket.error,)
-BULB_EXCEPTIONS = (BulbException, asyncio.TimeoutError, *BULB_NETWORK_EXCEPTIONS)
-
 
 PLATFORMS = ["binary_sensor", "light"]
 
@@ -207,15 +218,12 @@ async def _async_initialize(
 
     if (
         device.capabilities
-        and entry.options.get(CONF_MODEL) != device.capabilities["model"]
+        and entry.data.get(CONF_DETECTED_MODEL) != device.capabilities["model"]
     ):
         hass.config_entries.async_update_entry(
-            entry, options={**entry.options, CONF_MODEL: device.capabilities["model"]}
+            entry,
+            data={**entry.data, CONF_DETECTED_MODEL: device.capabilities["model"]},
         )
-
-    # fetch initial state
-    await device.async_update()
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
 
 @callback
@@ -232,10 +240,13 @@ def _async_normalize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> No
             data={
                 CONF_HOST: entry.data.get(CONF_HOST),
                 CONF_ID: entry.data.get(CONF_ID) or entry.unique_id,
+                CONF_DETECTED_MODEL: entry.data.get(CONF_DETECTED_MODEL),
             },
             options={
                 CONF_NAME: entry.data.get(CONF_NAME, ""),
-                CONF_MODEL: entry.data.get(CONF_MODEL, ""),
+                CONF_MODEL: entry.data.get(
+                    CONF_MODEL, entry.data.get(CONF_DETECTED_MODEL, "")
+                ),
                 CONF_TRANSITION: entry.data.get(CONF_TRANSITION, DEFAULT_TRANSITION),
                 CONF_MODE_MUSIC: entry.data.get(CONF_MODE_MUSIC, DEFAULT_MODE_MUSIC),
                 CONF_SAVE_ON_CHANGE: entry.data.get(
@@ -270,10 +281,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
         await _async_initialize(hass, entry, device)
-    except BULB_EXCEPTIONS as ex:
+    except (asyncio.TimeoutError, OSError, BulbException) as ex:
         raise ConfigEntryNotReady from ex
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    # Wait to install the reload listener until everything was successfully initialized
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     return True
 
@@ -497,7 +511,6 @@ class YeelightDevice:
         self._device_type = None
         self._available = True
         self._initialized = False
-        self._did_first_update = False
         self._name = None
 
     @property
@@ -565,7 +578,7 @@ class YeelightDevice:
     @property
     def is_color_flow_enabled(self) -> bool:
         """Return true / false if color flow is currently running."""
-        return int(self._color_flow) == ACTIVE_COLOR_FLOWING
+        return self._color_flow and int(self._color_flow) == ACTIVE_COLOR_FLOWING
 
     @property
     def _active_mode(self):
@@ -594,13 +607,20 @@ class YeelightDevice:
             self._available = True
             if not self._initialized:
                 self._initialized = True
-        except BULB_NETWORK_EXCEPTIONS as ex:
+        except OSError as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
                     "Unable to update device %s, %s: %s", self._host, self.name, ex
                 )
             self._available = False
-        except BULB_EXCEPTIONS as ex:
+        except asyncio.TimeoutError as ex:
+            _LOGGER.debug(
+                "timed out while trying to update device %s, %s: %s",
+                self._host,
+                self.name,
+                ex,
+            )
+        except BulbException as ex:
             _LOGGER.debug(
                 "Unable to update device %s, %s: %s", self._host, self.name, ex
             )
@@ -622,7 +642,6 @@ class YeelightDevice:
 
     async def async_update(self, force=False):
         """Update device properties and send data updated signal."""
-        self._did_first_update = True
         if not force and self._initialized and self._available:
             # No need to poll unless force, already connected
             return
@@ -639,7 +658,7 @@ class YeelightDevice:
         was_available = self._available
         self._available = data.get(KEY_CONNECTED, True)
         if update_needs_bg_power_workaround(data) or (
-            self._did_first_update and not was_available and self._available
+            not was_available and self._available
         ):
             # On reconnect the properties may be out of sync
             #
@@ -655,10 +674,19 @@ class YeelightDevice:
 class YeelightEntity(Entity):
     """Represents single Yeelight entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: YeelightDevice, entry: ConfigEntry) -> None:
         """Initialize the entity."""
         self._device = device
         self._unique_id = entry.unique_id or entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            name=self._device.name,
+            manufacturer="Yeelight",
+            model=self._device.model,
+            sw_version=self._device.fw_version,
+        )
 
     @property
     def unique_id(self) -> str:
@@ -666,25 +694,9 @@ class YeelightEntity(Entity):
         return self._unique_id
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": self._device.name,
-            "manufacturer": "Yeelight",
-            "model": self._device.model,
-            "sw_version": self._device.fw_version,
-        }
-
-    @property
     def available(self) -> bool:
         """Return if bulb is available."""
         return self._device.available
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     async def async_update(self) -> None:
         """Update the entity."""
@@ -695,7 +707,7 @@ async def _async_get_device(
     hass: HomeAssistant, host: str, entry: ConfigEntry
 ) -> YeelightDevice:
     # Get model from config and capabilities
-    model = entry.options.get(CONF_MODEL)
+    model = entry.options.get(CONF_MODEL) or entry.data.get(CONF_DETECTED_MODEL)
 
     # Set up device
     bulb = AsyncBulb(host, model=model or None)
@@ -720,5 +732,21 @@ async def _async_get_device(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_listen_task)
     )
     entry.async_on_unload(_async_stop_listen_on_unload)
+
+    # fetch initial state
+    await device.async_update()
+
+    if (
+        # Must have last_properties
+        not device.bulb.last_properties
+        # Must have at least a power property
+        or (
+            "main_power" not in device.bulb.last_properties
+            and "power" not in device.bulb.last_properties
+        )
+    ):
+        raise ConfigEntryNotReady(
+            "Could not fetch initial state; try power cycling the device"
+        )
 
     return device
