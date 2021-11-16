@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -38,6 +39,7 @@ class DiffuserBatteryChargingBinarySensor(DiffuserEntity, BinarySensorEntity):
     """Representation of a diffuser battery charging binary sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY_CHARGING
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
