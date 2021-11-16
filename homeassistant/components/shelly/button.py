@@ -98,3 +98,4 @@ class ShellyOtaUpdateBetaButton(ShellyOtaUpdateBaseButton):
     ) -> None:
         """Initialize Shelly OTA update button."""
         super().__init__(wrapper, entry, "OTA Update Beta", True, "mdi:flask-outline")
+        self._attr_entity_registry_enabled_default = False
