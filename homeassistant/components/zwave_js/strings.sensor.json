@@ -1,0 +1,10 @@
+{
+  "state": {
+    "zwave_js__status": {
+      "wake up": "Wake up",
+      "sleep": "Sleep",
+      "dead": "Dead",
+      "alive": "Alive"
+    }
+  }
+}

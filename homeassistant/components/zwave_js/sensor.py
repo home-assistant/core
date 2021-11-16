@@ -457,6 +457,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
 
     _attr_should_poll = False
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_device_class = "zwave_js__status"
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, node: ZwaveNode
