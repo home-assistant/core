@@ -67,19 +67,21 @@ class LitterRobotControlEntity(LitterRobotEntity):
         self, action: MethodType, *args: Any, **kwargs: Any
     ) -> bool:
         """Perform an action and initiates a refresh of the robot data after a few seconds."""
+        success = False
 
         try:
-            await action(*args, **kwargs)
+            success = await action(*args, **kwargs)
         except InvalidCommandException as ex:  # pragma: no cover
             # this exception should only occur if the underlying API for commands changes
             _LOGGER.error(ex)
-            return False
+            success = False
 
-        self.async_cancel_refresh_callback()
-        self._refresh_callback = async_call_later(
-            self.hass, REFRESH_WAIT_TIME_SECONDS, self.async_call_later_callback
-        )
-        return True
+        if success:
+            self.async_cancel_refresh_callback()
+            self._refresh_callback = async_call_later(
+                self.hass, REFRESH_WAIT_TIME_SECONDS, self.async_call_later_callback
+            )
+        return success
 
     async def async_call_later_callback(self, *_) -> None:
         """Perform refresh request on callback."""
@@ -118,3 +120,16 @@ class LitterRobotConfigEntity(LitterRobotControlEntity):
     """A Litter-Robot entity that can control configuration of the unit."""
 
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
+
+    def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
+        """Init a Litter-Robot control entity."""
+        super().__init__(robot=robot, entity_type=entity_type, hub=hub)
+        self._assumed_state: Any = None
+
+    async def perform_action_and_assume_state(
+        self, action: MethodType, assumed_state: Any
+    ) -> bool:
+        """Perform an action and assume the state passed in if call is successful."""
+        if await self.perform_action_and_refresh(action, assumed_state):
+            self._assumed_state = assumed_state
+            self.async_write_ha_state()
