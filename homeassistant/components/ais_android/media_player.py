@@ -441,6 +441,9 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def async_media_play(self):
         """Send play command."""
+        if self._is_ais_gate():
+            await self.async_execute_ais_command("su -c 'input keyevent 126'")
+            return
         await self.aftv.media_play()
 
     @adb_decorator()
