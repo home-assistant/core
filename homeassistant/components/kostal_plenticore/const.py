@@ -650,7 +650,7 @@ SWITCH_SETTINGS_DATA = [
 
 
 class SelectData(NamedTuple):
-    """Representation of a SelectData tuple"""
+    """Representation of a SelectData tuple."""
 
     module_id: str
     data_id: str
