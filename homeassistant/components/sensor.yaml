@@ -1,8 +1,0 @@
-- platform: template
-  sensors:
-    stacco:
-      friendly_name: "Avviso distacco"
-      value_template: >
-          {% if (states('sensor.data_evento') | int ) > 4294967294 %} Nessun avviso
-          {% else %} {{ (states('sensor.data_evento') | int + (states('sensor.tempo_residuo_distacco') | int))  | timestamp_local }}
-          {% endif %}
