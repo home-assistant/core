@@ -207,7 +207,7 @@ aiolifx_effects==0.2.2
 aiolip==1.1.6
 
 # homeassistant.components.lookin
-aiolookin==0.0.3
+aiolookin==0.0.4
 
 # homeassistant.components.lyric
 aiolyric==1.0.7
@@ -652,7 +652,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.24.17
+flux_led==0.24.24
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -747,7 +747,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==0.12.3
+greeclimate==0.12.5
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
@@ -1312,7 +1312,7 @@ pyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.8.3
+pyMetno==0.8.4
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.27.0
@@ -2465,7 +2465,7 @@ youtube_dl==2021.06.06
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.11
+zeroconf==0.36.13
 
 # homeassistant.components.zha
 zha-quirks==0.0.63
