@@ -365,7 +365,6 @@ async def websocket_update_prefs(hass, connection, msg):
 
 
 @_require_cloud_login
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "cloud/cloudhook/create",
@@ -373,6 +372,7 @@ async def websocket_update_prefs(hass, connection, msg):
     }
 )
 @websocket_api.async_response
+@_ws_handle_cloud_errors
 async def websocket_hook_create(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
@@ -381,7 +381,6 @@ async def websocket_hook_create(hass, connection, msg):
 
 
 @_require_cloud_login
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "cloud/cloudhook/delete",
@@ -389,6 +388,7 @@ async def websocket_hook_create(hass, connection, msg):
     }
 )
 @websocket_api.async_response
+@_ws_handle_cloud_errors
 async def websocket_hook_delete(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
@@ -430,9 +430,9 @@ async def _account_data(cloud):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command({"type": "cloud/remote/connect"})
 @websocket_api.async_response
+@_ws_handle_cloud_errors
 async def websocket_remote_connect(hass, connection, msg):
     """Handle request for connect remote."""
     cloud = hass.data[DOMAIN]
@@ -442,9 +442,9 @@ async def websocket_remote_connect(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command({"type": "cloud/remote/disconnect"})
 @websocket_api.async_response
+@_ws_handle_cloud_errors
 async def websocket_remote_disconnect(hass, connection, msg):
     """Handle request for disconnect remote."""
     cloud = hass.data[DOMAIN]
@@ -454,9 +454,9 @@ async def websocket_remote_disconnect(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command({"type": "cloud/google_assistant/entities"})
 @websocket_api.async_response
+@_ws_handle_cloud_errors
 async def google_assistant_list(hass, connection, msg):
     """List all google assistant entities."""
     cloud = hass.data[DOMAIN]
@@ -479,7 +479,6 @@ async def google_assistant_list(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command(
     {
         "type": "cloud/google_assistant/entities/update",
@@ -491,6 +490,7 @@ async def google_assistant_list(hass, connection, msg):
     }
 )
 @websocket_api.async_response
+@_ws_handle_cloud_errors
 async def google_assistant_update(hass, connection, msg):
     """Update google assistant config."""
     cloud = hass.data[DOMAIN]
@@ -507,9 +507,9 @@ async def google_assistant_update(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command({"type": "cloud/alexa/entities"})
 @websocket_api.async_response
+@_ws_handle_cloud_errors
 async def alexa_list(hass, connection, msg):
     """List all alexa entities."""
     cloud = hass.data[DOMAIN]
@@ -532,7 +532,6 @@ async def alexa_list(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command(
     {
         "type": "cloud/alexa/entities/update",
@@ -541,6 +540,7 @@ async def alexa_list(hass, connection, msg):
     }
 )
 @websocket_api.async_response
+@_ws_handle_cloud_errors
 async def alexa_update(hass, connection, msg):
     """Update alexa entity config."""
     cloud = hass.data[DOMAIN]
