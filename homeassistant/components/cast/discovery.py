@@ -20,7 +20,9 @@ from .helpers import ChromecastInfo, ChromeCastZeroconf
 _LOGGER = logging.getLogger(__name__)
 
 
-def discover_chromecast(hass: HomeAssistant, cast_info: pychromecast.models.CastInfo):
+def discover_chromecast(
+    hass: HomeAssistant, cast_info: pychromecast.models.CastInfo
+) -> None:
     """Discover a Chromecast."""
 
     info = ChromecastInfo(
