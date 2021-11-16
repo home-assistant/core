@@ -193,10 +193,10 @@ async def test_hs_fan(hass, client, hs_fc200, integration):
 
         client.async_send_command.reset_mock()
 
-    await assert_speed_translation(1, 32)
-    await assert_speed_translation(31, 32)
-    await assert_speed_translation(32, 32)
-    await assert_speed_translation(33, 32)
+    await assert_speed_translation(1, 33)
+    await assert_speed_translation(31, 33)
+    await assert_speed_translation(32, 33)
+    await assert_speed_translation(33, 33)
     await assert_speed_translation(34, 66)
     await assert_speed_translation(65, 66)
     await assert_speed_translation(66, 66)
