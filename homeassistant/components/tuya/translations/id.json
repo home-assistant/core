@@ -12,13 +12,13 @@
         "step": {
             "user": {
                 "data": {
-                    "country_code": "Kode negara akun Anda (mis., 1 untuk AS atau 86 untuk China)",
+                    "country_code": "Negara",
                     "password": "Kata Sandi",
                     "platform": "Aplikasi tempat akun Anda terdaftar",
-                    "username": "Nama Pengguna"
+                    "username": "Akun"
                 },
                 "description": "Masukkan kredensial Tuya Anda.",
-                "title": "Tuya"
+                "title": "Integrasi Tuya"
             }
         }
     },
