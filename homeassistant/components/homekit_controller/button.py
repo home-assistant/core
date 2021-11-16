@@ -81,8 +81,7 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        name = super().name
-        if name:
+        if name := super().name:
             return f"{name} - {self.entity_description.name}"
         return f"{self.entity_description.name}"
 
