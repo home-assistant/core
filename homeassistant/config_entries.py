@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from homeassistant.components.dhcp import DhcpServiceInfo
     from homeassistant.components.mqtt.discovery import MqttServiceInfo
     from homeassistant.components.usb import UsbServiceInfo
+    from homeassistant.components.ssdp import SsdpServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -1369,10 +1370,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self.async_step_discovery(cast(dict, discovery_info))
 
     async def async_step_ssdp(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: SsdpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by SSDP discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
