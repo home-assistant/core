@@ -5,14 +5,13 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Union
 import logging
 
 from aiohttp.client_exceptions import ClientError
 from kostal.plenticore import (
     PlenticoreApiClient,
-    PlenticoreAuthenticationException,
     PlenticoreApiException,
+    PlenticoreAuthenticationException,
 )
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
@@ -118,6 +117,8 @@ class Plenticore:
 
 
 class DataUpdateCoordinatorMixin:
+    """Base implementation for read and write data."""
+
     async def async_read_data(self, module_id: str, data_id: str) -> [str, bool]:
         """Write settings back to Plenticore."""
         client = self._plenticore.client
@@ -282,7 +283,7 @@ class SelectDataUpdateCoordinator(
 
     async def async_get_currentoption(
         self,
-        module_id: Union[str, dict[str, Iterable[str]]],
+        module_id: str | dict[str, Iterable[str]],
     ) -> dict[str, dict[str, str]]:
         """Get current option."""
         for mid, pids in module_id.items():
