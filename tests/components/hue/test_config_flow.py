@@ -33,15 +33,15 @@ def create_mock_api_discovery(aioclient_mock, bridges):
         URL_NUPNP,
         json=[{"internalipaddress": host, "id": id} for (host, id) in bridges],
     )
-    for (host, id) in bridges:
+    for (host, bridge_id) in bridges:
         aioclient_mock.get(
             f"http://{host}/api/config",
-            json={"bridgeid": id},
+            json={"bridgeid": bridge_id},
         )
         # mock v2 support if v2 found in id
         aioclient_mock.get(
             f"https://{host}/clip/v2/resources",
-            status=403 if "v2" in id else 404,
+            status=403 if "v2" in bridge_id else 404,
         )
 
 

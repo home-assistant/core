@@ -15,7 +15,12 @@ from homeassistant.components import hue
 from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_mock_service,
+    load_fixture,
+    mock_device_registry,
+)
 
 # from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
@@ -188,6 +193,9 @@ def create_mock_api_v2(hass):
 
     api.load_test_data = load_test_data
     api.emit_event = emit_event
+    # mock context manager too
+    api.__aenter__ = AsyncMock(return_value=api)
+    api.__aexit__ = AsyncMock()
     return api
 
 
@@ -248,14 +256,12 @@ async def setup_bridge(hass, mock_bridge, config_entry):
 async def setup_platform(
     hass,
     mock_bridge,
-    platform,
+    platforms,
     hostname=None,
 ):
     """Load the Hue integration with the provided bridge for given platform(s)."""
-    if not isinstance(platform, (list, tuple)):
-        platforms = [platform]
-    else:
-        platforms = platform
+    if not isinstance(platforms, (list, tuple)):
+        platforms = [platforms]
     if hostname is None:
         hostname = "mock-host"
     hass.config.components.add(hue.DOMAIN)
@@ -275,3 +281,31 @@ async def setup_platform(
 
     # and make sure it completes before going further
     await hass.async_block_till_done()
+
+
+@pytest.fixture
+def mock_bridge_setup():
+    """Mock bridge setup."""
+    with patch.object(hue, "HueBridge") as mock_bridge:
+        mock_bridge.return_value.async_initialize_bridge = AsyncMock(return_value=True)
+        mock_bridge.return_value.api_version = 1
+        mock_bridge.return_value.api.config = Mock(
+            bridge_id="mock-id",
+            mac_address="00:00:00:00:00:00",
+            software_version="1.0.0",
+            model_id="BSB002",
+        )
+        mock_bridge.return_value.api.config.name = "Mock Hue bridge"
+        yield mock_bridge.return_value
+
+
+@pytest.fixture(name="device_reg")
+def get_device_reg(hass):
+    """Return an empty, loaded, registry."""
+    return mock_device_registry(hass)
+
+
+@pytest.fixture(name="calls")
+def track_calls(hass):
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")

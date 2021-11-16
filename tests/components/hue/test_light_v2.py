@@ -203,7 +203,7 @@ async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):
     assert test_light.state == "on"
 
     # Change availability by modififying the zigbee_connectivity status
-    for status in ["connectivity_issue", "disconnected", "connected"]:
+    for status in ("connectivity_issue", "disconnected", "connected"):
         mock_bridge_v2.api.emit_event(
             "update",
             {
@@ -233,7 +233,7 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     await setup_platform(hass, mock_bridge_v2, "light")
 
     # test if entities for hue groups are created and disabled by default
-    for entity_id in ["light.test_zone", "light.test_room"]:
+    for entity_id in ("light.test_zone", "light.test_room"):
         ent_reg = er.async_get(hass)
         entity_entry = ent_reg.async_get(entity_id)
 

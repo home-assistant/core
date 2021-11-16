@@ -1,6 +1,5 @@
 """The tests for Philips Hue device triggers for V2 bridge."""
 from aiohue.v2.models.button import ButtonEvent
-import pytest
 
 from homeassistant.components import hue
 from homeassistant.components.hue.v2.device import async_setup_devices
@@ -12,22 +11,7 @@ from tests.common import (
     assert_lists_same,
     async_capture_events,
     async_get_device_automations,
-    async_mock_service,
-    mock_device_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_hue_event(hass, mock_bridge_v2, v2_resources_test_data):

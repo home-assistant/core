@@ -1,35 +1,15 @@
 """The tests for Philips Hue device triggers for V1 bridge."""
-import pytest
 
-from homeassistant.components import hue
-import homeassistant.components.automation as automation
+from homeassistant.components import automation, hue
 from homeassistant.components.hue.v1 import device_trigger
 from homeassistant.setup import async_setup_component
 
 from .conftest import setup_platform
 from .test_sensor_v1 import HUE_DIMMER_REMOTE_1, HUE_TAP_REMOTE_1
 
-from tests.common import (
-    assert_lists_same,
-    async_get_device_automations,
-    async_mock_service,
-    mock_device_registry,
-)
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.common import assert_lists_same, async_get_device_automations
 
 REMOTES_RESPONSE = {"7": HUE_TAP_REMOTE_1, "8": HUE_DIMMER_REMOTE_1}
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_triggers(hass, mock_bridge_v1, device_reg):

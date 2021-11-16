@@ -10,8 +10,8 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_bridge_setup():
+@pytest.fixture(name="mock_bridge_setup")
+def get_mock_bridge_setup():
     """Mock bridge setup."""
     with patch.object(hue, "HueBridge") as mock_bridge:
         mock_bridge.return_value.async_initialize_bridge = AsyncMock(return_value=True)

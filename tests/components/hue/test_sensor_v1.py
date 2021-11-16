@@ -3,7 +3,6 @@ import asyncio
 from unittest.mock import Mock
 
 import aiohue
-import pytest
 
 from homeassistant.components import hue
 from homeassistant.components.hue.const import ATTR_HUE_EVENT
@@ -14,18 +13,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import create_mock_bridge, setup_platform
 
-from tests.common import (
-    async_capture_events,
-    async_fire_time_changed,
-    mock_device_registry,
-)
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
+from tests.common import async_capture_events, async_fire_time_changed
 
 PRESENCE_SENSOR_1_PRESENT = {
     "state": {"presence": True, "lastupdated": "2019-01-01T01:00:00"},
