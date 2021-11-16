@@ -34,7 +34,7 @@ ais_stop_system:
     - delay: '3'
     - service: ais_shell_command.execute_command
       data:
-        command: su -c 'reboot -p'
+        command: su -c 'input keyevent 26'
 
 ais_button_click:
   alias: 'Button Click'
