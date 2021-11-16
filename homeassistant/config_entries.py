@@ -34,6 +34,7 @@ import homeassistant.util.uuid as uuid_util
 if TYPE_CHECKING:
     from homeassistant.components.dhcp import DhcpServiceInfo
     from homeassistant.components.mqtt.discovery import MqttServiceInfo
+    from homeassistant.components.usb import UsbServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -1386,10 +1387,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self.async_step_discovery(cast(dict, discovery_info))
 
     async def async_step_usb(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: UsbServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by USB discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
     @callback
     def async_create_entry(  # pylint: disable=arguments-differ
