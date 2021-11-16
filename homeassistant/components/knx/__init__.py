@@ -306,6 +306,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unloading the KNX platforms."""
+    #  if not loaded directly return
+    if not hass.data.get(DOMAIN):
+        return True
+
     knx_module: KNXModule = hass.data[DOMAIN]
     for exposure in knx_module.exposures:
         exposure.shutdown()
