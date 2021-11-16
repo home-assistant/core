@@ -528,6 +528,7 @@ homeassistant/components/system_bridge/* @timmo001
 homeassistant/components/tado/* @michaelarnauts @noltari
 homeassistant/components/tag/* @balloob @dmulcahey
 homeassistant/components/tahoma/* @philklei
+homeassistant/components/tailscale/* @frenck
 homeassistant/components/tankerkoenig/* @guillempages
 homeassistant/components/tapsaff/* @bazwilliams
 homeassistant/components/tasmota/* @emontnemery
