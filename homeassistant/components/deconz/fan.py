@@ -99,6 +99,8 @@ class DeconzFan(DeconzDevice, FanEntity):
     TYPE = DOMAIN
     _device: Fan
 
+    _attr_supported_features = SUPPORT_SET_SPEED
+
     def __init__(self, device: Fan, gateway: DeconzGateway) -> None:
         """Set up fan."""
         super().__init__(device, gateway)
@@ -162,11 +164,6 @@ class DeconzFan(DeconzDevice, FanEntity):
             percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage),
             SPEED_MEDIUM,
         )
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
 
     @callback
     def async_update_callback(self) -> None:
