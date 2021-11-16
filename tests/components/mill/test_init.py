@@ -2,10 +2,8 @@
 
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components import mill
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
@@ -13,7 +11,7 @@ from tests.common import MockConfigEntry, mock_coro
 
 async def test_setup_with_cloud_config(hass):
     """Test setup of cloud config."""
-    mock_entry = MockConfigEntry(
+    entry = MockConfigEntry(
         domain=mill.DOMAIN,
         data={
             mill.CONF_USERNAME: "user",
@@ -21,17 +19,18 @@ async def test_setup_with_cloud_config(hass):
             mill.CONNECTION_TYPE: mill.CLOUD,
         },
     )
-    mock_entry.add_to_hass(hass)
-    with patch("mill.Mill.fetch_heater_and_sensor_data", return_value={}) as mock_fetch:
-        with patch("mill.Mill.connect", return_value=True) as mock_connect:
-            assert await async_setup_component(hass, "mill", mock_entry)
+    entry.add_to_hass(hass)
+    with patch(
+        "mill.Mill.fetch_heater_and_sensor_data", return_value={}
+    ) as mock_fetch, patch("mill.Mill.connect", return_value=True) as mock_connect:
+        assert await async_setup_component(hass, "mill", entry)
     assert len(mock_fetch.mock_calls) == 1
     assert len(mock_connect.mock_calls) == 1
 
 
 async def test_setup_with_cloud_config_fails(hass):
     """Test setup of cloud config."""
-    mock_entry = MockConfigEntry(
+    entry = MockConfigEntry(
         domain=mill.DOMAIN,
         data={
             mill.CONF_USERNAME: "user",
@@ -39,41 +38,40 @@ async def test_setup_with_cloud_config_fails(hass):
             mill.CONNECTION_TYPE: mill.CLOUD,
         },
     )
-    mock_entry.add_to_hass(hass)
-    with patch("mill.Mill.connect", return_value=False), pytest.raises(
-        ConfigEntryNotReady
-    ):
-        assert not await mill.async_setup_entry(hass, mock_entry)
+    entry.add_to_hass(hass)
+    with patch("mill.Mill.connect", return_value=False):
+        assert await async_setup_component(hass, "mill", entry)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_with_old_cloud_config(hass):
     """Test setup of old cloud config."""
-    mock_entry = MockConfigEntry(
+    entry = MockConfigEntry(
         domain=mill.DOMAIN,
         data={
             mill.CONF_USERNAME: "user",
             mill.CONF_PASSWORD: "pswd",
         },
     )
-    mock_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
     with patch("mill.Mill.fetch_heater_and_sensor_data", return_value={}), patch(
         "mill.Mill.connect", return_value=True
     ) as mock_connect:
-        assert await async_setup_component(hass, "mill", mock_entry)
+        assert await async_setup_component(hass, "mill", entry)
 
     assert len(mock_connect.mock_calls) == 1
 
 
 async def test_setup_with_local_config(hass):
     """Test setup of local config."""
-    mock_entry = MockConfigEntry(
+    entry = MockConfigEntry(
         domain=mill.DOMAIN,
         data={
             mill.CONF_IP_ADDRESS: "192.168.1.59",
             mill.CONNECTION_TYPE: mill.LOCAL,
         },
     )
-    mock_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
     with patch(
         "mill_local.Mill.fetch_heater_and_sensor_data",
         return_value={
@@ -90,7 +88,7 @@ async def test_setup_with_local_config(hass):
             "status": "ok",
         },
     ) as mock_connect:
-        assert await async_setup_component(hass, "mill", mock_entry)
+        assert await async_setup_component(hass, "mill", entry)
 
     assert len(mock_fetch.mock_calls) == 1
     assert len(mock_connect.mock_calls) == 1
@@ -98,7 +96,7 @@ async def test_setup_with_local_config(hass):
 
 async def test_unload_entry(hass):
     """Test removing mill client."""
-    mock_entry = MockConfigEntry(
+    entry = MockConfigEntry(
         domain=mill.DOMAIN,
         data={
             mill.CONF_USERNAME: "user",
@@ -106,13 +104,18 @@ async def test_unload_entry(hass):
             mill.CONNECTION_TYPE: mill.CLOUD,
         },
     )
-    mock_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
 
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=mock_coro(True)
-    ) as unload_entry, patch("mill.Mill.connect", return_value=True):
-        assert await async_setup_component(hass, "mill", mock_entry)
+    ) as unload_entry, patch(
+        "mill.Mill.fetch_heater_and_sensor_data", return_value={}
+    ), patch(
+        "mill.Mill.connect", return_value=True
+    ):
+        assert await async_setup_component(hass, "mill", entry)
 
-        assert await mill.async_unload_entry(hass, mock_entry)
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
         assert unload_entry.call_count == 2
-        assert mock_entry.entry_id not in hass.data[mill.DOMAIN]
+        assert entry.entry_id not in hass.data[mill.DOMAIN]
