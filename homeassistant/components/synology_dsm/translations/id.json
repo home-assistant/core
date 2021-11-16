@@ -32,6 +32,7 @@
             },
             "reauth": {
                 "data": {
+                    "password": "Kata Sandi",
                     "username": "Nama Pengguna"
                 },
                 "title": "Autentikasi Ulang Integrasi Synology DSM"

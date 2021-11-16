@@ -10,6 +10,9 @@
                 "data": {
                     "camera_audio": "\u97f3\u58f0\u306b\u5bfe\u5fdc\u3057\u305f\u30ab\u30e1\u30e9"
                 }
+            },
+            "yaml": {
+                "description": "\u3053\u306e\u30a8\u30f3\u30c8\u30ea\u30fc\u306fYAML\u3092\u4ecb\u3057\u3066\u5236\u5fa1\u3055\u308c\u307e\u3059"
             }
         }
     }

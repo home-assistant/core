@@ -10,7 +10,7 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "Ev Asistan\u0131'na Volumio ('{name}') eklemek istiyor musunuz?",
+                "description": "Home Asistan\u0131'na Volumio \"{name}\" eklemek istiyor musunuz?",
                 "title": "Bulunan Volumio"
             },
             "user": {

@@ -1,10 +1,14 @@
 {
     "config": {
+        "error": {
+            "invalid_host": "\u30db\u30b9\u30c8\u30a8\u30f3\u30c8\u30ea\u306f\u304d\u3061\u3093\u3068\u3057\u305fURL\u5f62\u5f0f\u3067\u306f\u3042\u308a\u307e\u305b\u3093\u3067\u3057\u305f \u4f8b: http://192.168.10.100:80"
+        },
         "step": {
             "user": {
                 "data": {
                     "host": "URL"
-                }
+                },
+                "description": "\u30db\u30b9\u30c8\u30a8\u30f3\u30c8\u30ea\u306f\u304d\u3061\u3093\u3068\u3057\u305fURL\u5f62\u5f0f\u3067\u3042\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059 \u4f8b: http://192.168.10.100:80"
             }
         }
     },

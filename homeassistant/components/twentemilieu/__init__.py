@@ -46,7 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # For backwards compat, set unique ID
     if entry.unique_id is None:
-        hass.config_entries.async_update_entry(entry, unique_id=entry.data[CONF_ID])
+        hass.config_entries.async_update_entry(
+            entry, unique_id=str(entry.data[CONF_ID])
+        )
 
     hass.data.setdefault(DOMAIN, {})[entry.data[CONF_ID]] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -58,5 +60,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Twente Milieu config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
+        del hass.data[DOMAIN][entry.data[CONF_ID]]
     return unload_ok

@@ -1,6 +1,9 @@
 {
     "state": {
         "_": {
+            "armed": "\u8b66\u6212",
+            "disarmed": "\u89e3\u9664",
+            "disarming": "\u89e3\u9664",
             "pending": "\u4fdd\u7559\u4e2d",
             "triggered": "\u30c8\u30ea\u30ac\u30fc"
         }

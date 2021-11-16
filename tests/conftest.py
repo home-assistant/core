@@ -598,7 +598,7 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     return component
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_get_source_ip():
     """Mock network util's async_get_source_ip."""
     with patch(
