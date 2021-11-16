@@ -6,7 +6,7 @@ from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import threading
-from typing import TypedDict
+from typing import Final, TypedDict
 
 from aiodiscover import DiscoverHosts
 from aiodiscover.discovery import (
@@ -46,9 +46,9 @@ from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
 MESSAGE_TYPE = "message-type"
-HOSTNAME = "hostname"
-MAC_ADDRESS = "macaddress"
-IP_ADDRESS = "ip"
+HOSTNAME: Final = "hostname"
+MAC_ADDRESS: Final = "macaddress"
+IP_ADDRESS: Final = "ip"
 DHCP_REQUEST = 3
 SCAN_INTERVAL = timedelta(minutes=60)
 
