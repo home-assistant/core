@@ -2490,9 +2490,6 @@ wled==0.13.0
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
 
-# homeassistant.components.xbee
-xbee-helper==0.0.7
-
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
 
