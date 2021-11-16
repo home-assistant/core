@@ -143,3 +143,9 @@ def _print_deprecation_warning(obj: Any, replacement: str, description: str) -> 
             description,
             replacement,
         )
+
+
+def warn_deprecated(logger: logging.Logger, msg: str, *args: Any) -> None:
+    """Log a deprecation warning message."""
+
+    logger.warning(msg, *args)
