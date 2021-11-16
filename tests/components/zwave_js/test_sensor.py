@@ -169,6 +169,7 @@ async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integrati
 
     assert not entity_entry.disabled
     assert entity_entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+    assert entity_entry.device_class == "zwave_js__status"
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
 
     # Test transitions work
