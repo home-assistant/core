@@ -332,11 +332,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Update a given config entry."""
-    unload_ok = await async_unload_entry(hass, entry)
-    if unload_ok:
-        return await async_setup_entry(hass, entry)
-
-    return False
+    return await hass.config_entries.async_reload(entry.entry_id)
 
 
 class KNXModule:
