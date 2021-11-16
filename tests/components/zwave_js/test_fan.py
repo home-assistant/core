@@ -176,7 +176,7 @@ async def test_standard_fan(hass, client, in_wall_smart_fan_control, integration
 async def test_hs_fan(hass, client, hs_fc200, integration):
     """Test a fan entity with configurable speeds."""
 
-    async def assert_speed_translation(percentage, zwave_speed, reported_percentage):
+    async def assert_speed_translation(percentage, zwave_speed):
         """Assert that a percentage input is translated to a specific Zwave speed."""
         await hass.services.async_call(
             "fan",
