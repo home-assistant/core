@@ -243,7 +243,9 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge = bridge
         return await self.async_step_link()
 
-    async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle a discovered Hue bridge on HomeKit.
 
         The bridge ID communicated over HomeKit differs, so we cannot use that

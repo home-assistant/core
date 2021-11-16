@@ -1,25 +1,14 @@
 """Philips Hue switch platform tests for V2 bridge/api."""
 
-from homeassistant.components import hue
-
-from .conftest import create_config_entry
+from .conftest import setup_platform
 from .const import FAKE_BINARY_SENSOR, FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY
-
-
-async def setup_bridge(hass, mock_bridge_v2):
-    """Load the Hue switch platform with the provided bridge."""
-    hass.config.components.add(hue.DOMAIN)
-    config_entry = create_config_entry(api_version=2)
-    mock_bridge_v2.config_entry = config_entry
-    hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v2}
-    await hass.config_entries.async_forward_entry_setup(config_entry, "switch")
 
 
 async def test_switch(hass, mock_bridge_v2, v2_resources_test_data):
     """Test if (config) switches get created."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_bridge(hass, mock_bridge_v2)
+    await setup_platform(hass, mock_bridge_v2, "switch")
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
     # 2 entities should be created from test data
@@ -37,7 +26,7 @@ async def test_switch_turn_on_service(hass, mock_bridge_v2, v2_resources_test_da
     """Test calling the turn on service on a switch."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_bridge(hass, mock_bridge_v2)
+    await setup_platform(hass, mock_bridge_v2, "switch")
 
     test_entity_id = "switch.hue_motion_sensor_motion"
 
@@ -59,7 +48,7 @@ async def test_switch_turn_off_service(hass, mock_bridge_v2, v2_resources_test_d
     """Test calling the turn off service on a switch."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_bridge(hass, mock_bridge_v2)
+    await setup_platform(hass, mock_bridge_v2, "switch")
 
     test_entity_id = "switch.hue_motion_sensor_motion"
 
@@ -93,7 +82,7 @@ async def test_switch_added(hass, mock_bridge_v2):
     """Test new switch added to bridge."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
 
-    await setup_bridge(hass, mock_bridge_v2)
+    await setup_platform(hass, mock_bridge_v2, "switch")
 
     test_entity_id = "switch.hue_mocked_device_motion"
 

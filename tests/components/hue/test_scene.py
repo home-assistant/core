@@ -1,25 +1,15 @@
 """Philips Hue scene platform tests for V2 bridge/api."""
 
-from homeassistant.components import hue
 
-from .conftest import create_config_entry
+from .conftest import setup_platform
 from .const import FAKE_SCENE
-
-
-async def setup_bridge(hass, mock_bridge_v2):
-    """Load the Hue scene platform with the provided bridge."""
-    hass.config.components.add(hue.DOMAIN)
-    config_entry = create_config_entry(api_version=2)
-    mock_bridge_v2.config_entry = config_entry
-    hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v2}
-    await hass.config_entries.async_forward_entry_setup(config_entry, "scene")
 
 
 async def test_scene(hass, mock_bridge_v2, v2_resources_test_data):
     """Test if (config) scenes get created."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_bridge(hass, mock_bridge_v2)
+    await setup_platform(hass, mock_bridge_v2, "scene")
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
     # 2 entities should be created from test data
@@ -54,7 +44,7 @@ async def test_scene_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     """Test calling the turn on service on a scene."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_bridge(hass, mock_bridge_v2)
+    await setup_platform(hass, mock_bridge_v2, "scene")
 
     test_entity_id = "scene.test_room_regular_test_scene"
 
@@ -89,7 +79,7 @@ async def test_scene_updates(hass, mock_bridge_v2, v2_resources_test_data):
     """Test scene events from bridge."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_bridge(hass, mock_bridge_v2)
+    await setup_platform(hass, mock_bridge_v2, "scene")
 
     test_entity_id = "scene.test_room_mocked_scene"
 

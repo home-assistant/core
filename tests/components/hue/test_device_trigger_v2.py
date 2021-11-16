@@ -6,7 +6,7 @@ from homeassistant.components import hue
 from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.components.hue.v2.hue_event import async_setup_hue_events
 
-from .conftest import setup_bridge_for_sensors as setup_bridge
+from .conftest import setup_platform
 
 from tests.common import (
     assert_lists_same,
@@ -33,7 +33,7 @@ def calls(hass):
 async def test_hue_event(hass, mock_bridge_v2, v2_resources_test_data):
     """Test hue button events."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
-    await setup_bridge(hass, mock_bridge_v2)
+    await setup_platform(hass, mock_bridge_v2, ["binary_sensor", "sensor"])
     await async_setup_devices(mock_bridge_v2)
     await async_setup_hue_events(mock_bridge_v2)
 
@@ -61,7 +61,7 @@ async def test_hue_event(hass, mock_bridge_v2, v2_resources_test_data):
 async def test_get_triggers(hass, mock_bridge_v2, v2_resources_test_data, device_reg):
     """Test we get the expected triggers from a hue remote."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
-    await setup_bridge(hass, mock_bridge_v2)
+    await setup_platform(hass, mock_bridge_v2, ["binary_sensor", "sensor"])
 
     # Get triggers for `Wall switch with 2 controls`
     hue_wall_switch_device = device_reg.async_get_device(

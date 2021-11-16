@@ -1,29 +1,18 @@
 """Philips Hue sensor platform tests for V2 bridge/api."""
 
-from unittest.mock import Mock, patch
-
 from homeassistant.components import hue
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import create_config_entry
+from .conftest import setup_bridge, setup_platform
 from .const import FAKE_DEVICE, FAKE_SENSOR, FAKE_ZIGBEE_CONNECTIVITY
-
-
-async def setup_bridge(hass, mock_bridge_v2):
-    """Load the Hue sensor platform with the provided bridge."""
-    hass.config.components.add(hue.DOMAIN)
-    config_entry = create_config_entry(api_version=2)
-    mock_bridge_v2.config_entry = config_entry
-    hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v2}
-    await hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
 
 
 async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
     """Test if all v2 sensors get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_bridge(hass, mock_bridge_v2)
+    await setup_platform(hass, mock_bridge_v2, "sensor")
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
     # 6 entities should be created from test data
@@ -70,51 +59,46 @@ async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
     assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
 
 
-async def test_enable_sensor(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_enable_sensor(
+    hass, mock_bridge_v2, v2_resources_test_data, mock_config_entry_v2
+):
     """Test enabling of the by default disabled zigbee_connectivity sensor."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
-    config_entry = create_config_entry(api_version=2)
-    mock_bridge_v2.config_entry = config_entry
-    config_entry.add_to_hass(hass)
+    await setup_bridge(hass, mock_bridge_v2, mock_config_entry_v2)
 
-    with patch.object(
-        hue,
-        "HueBridge",
-        Mock(return_value=mock_bridge_v2),
-    ):
-        assert await async_setup_component(hass, hue.DOMAIN, {}) is True
-        await hass.async_block_till_done()
-        await hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
+    assert await async_setup_component(hass, hue.DOMAIN, {}) is True
+    await hass.async_block_till_done()
+    await hass.config_entries.async_forward_entry_setup(mock_config_entry_v2, "sensor")
 
-        entity_id = "sensor.wall_switch_with_2_controls_zigbee_connectivity"
-        ent_reg = er.async_get(hass)
-        entity_entry = ent_reg.async_get(entity_id)
+    entity_id = "sensor.wall_switch_with_2_controls_zigbee_connectivity"
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(entity_id)
 
-        assert entity_entry
-        assert entity_entry.disabled
-        assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entity_entry
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
 
-        # enable the entity
-        updated_entry = ent_reg.async_update_entity(
-            entity_entry.entity_id, **{"disabled_by": None}
-        )
-        assert updated_entry != entity_entry
-        assert updated_entry.disabled is False
+    # enable the entity
+    updated_entry = ent_reg.async_update_entity(
+        entity_entry.entity_id, **{"disabled_by": None}
+    )
+    assert updated_entry != entity_entry
+    assert updated_entry.disabled is False
 
-        # reload platform and check if entity is correctly there
-        await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-        await hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-        await hass.async_block_till_done()
+    # reload platform and check if entity is correctly there
+    await hass.config_entries.async_forward_entry_unload(mock_config_entry_v2, "sensor")
+    await hass.config_entries.async_forward_entry_setup(mock_config_entry_v2, "sensor")
+    await hass.async_block_till_done()
 
-        state = hass.states.get(entity_id)
-        assert state.state == "connected"
-        assert state.attributes["mac_address"] == "00:17:88:01:0b:aa:bb:99"
+    state = hass.states.get(entity_id)
+    assert state.state == "connected"
+    assert state.attributes["mac_address"] == "00:17:88:01:0b:aa:bb:99"
 
 
 async def test_sensor_add_update(hass, mock_bridge_v2):
     """Test if sensors get added/updated from events."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
-    await setup_bridge(hass, mock_bridge_v2)
+    await setup_platform(hass, mock_bridge_v2, "sensor")
 
     test_entity_id = "sensor.hue_mocked_device_temperature"
 
