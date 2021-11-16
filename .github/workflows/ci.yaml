@@ -191,7 +191,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
+          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements.txt -r requirements_test.txt
       - name: Generate partial pre-commit restore key
         id: generate-pre-commit-key
@@ -583,7 +583,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip<20.3" setuptools wheel
+          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements_all.txt
           pip install --cache-dir=$PIP_CACHE -r requirements_test.txt
           pip install -e .
