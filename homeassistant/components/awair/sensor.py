@@ -131,6 +131,7 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         # for users with first-gen devices that are upgrading.
         if (
             self.entity_description.key == API_PM25
+            and self._air_data
             and API_DUST in self._air_data.sensors
         ):
             unique_id_tag = "DUST"
@@ -163,6 +164,9 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state, rounding off to reasonable values."""
+        if not self._air_data:
+            return None
+
         state: float
         sensor_type = self.entity_description.key
 
@@ -206,6 +210,8 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         """
         sensor_type = self.entity_description.key
         attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        if not self._air_data:
+            return attrs
         if sensor_type in self._air_data.indices:
             attrs["awair_index"] = abs(self._air_data.indices[sensor_type])
         elif sensor_type in DUST_ALIASES and API_DUST in self._air_data.indices:
