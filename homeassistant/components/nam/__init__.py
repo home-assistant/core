@@ -117,6 +117,8 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
             # get the data 4 times, so we use a longer than usual timeout here.
             async with async_timeout.timeout(30):
                 data = await self.nam.async_update()
+        # We do not need to catch AuthFailed exception here because sensor data is
+        # always available without authorization.
         except (ApiError, ClientConnectorError, InvalidSensorData) as error:
             raise UpdateFailed(error) from error
 
