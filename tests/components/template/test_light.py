@@ -210,7 +210,7 @@ async def test_templatex_state_boolean(hass, expected_state, start_ha):
 )
 async def test_template_syntax_error(hass, start_ha):
     """Test templating syntax error."""
-    assert hass.states.async_all() == []
+    assert hass.states.async_all("light") == []
 
 
 SET_VAL1 = '"value_template": "{{ 1== 1}}",'
@@ -241,9 +241,9 @@ SET_VAL3 = '"turn_off": {"service": "light.turn_off","entity_id": "light.test_st
 async def test_missing_key(hass, count, start_ha):
     """Test missing template."""
     if count:
-        assert hass.states.async_all() != []
+        assert hass.states.async_all("light") != []
     else:
-        assert hass.states.async_all() == []
+        assert hass.states.async_all("light") == []
 
 
 @pytest.mark.parametrize("count,domain", [(1, light.DOMAIN)])
@@ -685,6 +685,7 @@ async def test_level_action_no_template(hass, start_ha, calls):
         (None, {"replace4": '"{{x - 12}}"'}),
         (None, {"replace4": '"{{ none }}"'}),
         (None, {"replace4": '""'}),
+        (None, {"replace4": "\"{{ state_attr('light.nolight', 'brightness') }}\""}),
     ],
 )
 @pytest.mark.parametrize(
@@ -1471,4 +1472,4 @@ async def test_invalid_availability_template_keeps_component_available(
 )
 async def test_unique_id(hass, start_ha):
     """Test unique_id option only creates one light per id."""
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("light")) == 1

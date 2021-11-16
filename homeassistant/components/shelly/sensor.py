@@ -12,6 +12,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -22,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import SHAIR_MAX_WORK_HOURS
+from .const import CONF_SLEEP_PERIOD, SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
@@ -45,6 +46,7 @@ SENSORS: Final = {
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
         available=lambda block: cast(int, block.battery) != -1,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
@@ -53,6 +55,7 @@ SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("emeter", "current"): BlockAttributeDescription(
         name="Current",
@@ -82,6 +85,14 @@ SENSORS: Final = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
+    ),
+    ("device", "voltage"): BlockAttributeDescription(
+        name="Voltage",
+        unit=ELECTRIC_POTENTIAL_VOLT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_VOLTAGE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        default_enabled=False,
     ),
     ("emeter", "voltage"): BlockAttributeDescription(
         name="Voltage",
@@ -174,7 +185,7 @@ SENSORS: Final = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        available=lambda block: cast(int, block.extTemp) != 999,
+        available=lambda block: cast(int, block.humidity) != 999,
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",
@@ -197,6 +208,7 @@ SENSORS: Final = {
         extra_state_attributes=lambda block: {
             "Operational hours": round(cast(int, block.totalWorkTime) / 3600, 1)
         },
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("adc", "adc"): BlockAttributeDescription(
         name="ADC",
@@ -221,12 +233,14 @@ REST_SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "uptime": RestAttributeDescription(
         name="Uptime",
         value=lambda status, last: get_device_uptime(status["uptime"], last),
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
@@ -234,52 +248,60 @@ REST_SENSORS: Final = {
 RPC_SENSORS: Final = {
     "power": RpcAttributeDescription(
         key="switch",
+        sub_key="apower",
         name="Power",
         unit=POWER_WATT,
-        value=lambda status, _: round(float(status["apower"]), 1),
+        value=lambda status, _: round(float(status), 1),
         device_class=sensor.DEVICE_CLASS_POWER,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     "voltage": RpcAttributeDescription(
         key="switch",
+        sub_key="voltage",
         name="Voltage",
         unit=ELECTRIC_POTENTIAL_VOLT,
-        value=lambda status, _: round(float(status["voltage"]), 1),
+        value=lambda status, _: round(float(status), 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
+        default_enabled=False,
     ),
     "energy": RpcAttributeDescription(
         key="switch",
+        sub_key="aenergy",
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
-        value=lambda status, _: round(status["aenergy"]["total"] / 1000, 2),
+        value=lambda status, _: round(status["total"] / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
         state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     "temperature": RpcAttributeDescription(
         key="switch",
+        sub_key="temperature",
         name="Temperature",
         unit=TEMP_CELSIUS,
-        value=lambda status, _: round(status["temperature"]["tC"], 1),
+        value=lambda status, _: round(status["tC"], 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
     ),
     "rssi": RpcAttributeDescription(
         key="wifi",
+        sub_key="rssi",
         name="RSSI",
         unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        value=lambda status, _: status["rssi"],
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "uptime": RpcAttributeDescription(
         key="sys",
+        sub_key="uptime",
         name="Uptime",
-        value=lambda status, last: get_device_uptime(status["uptime"], last),
+        value=get_device_uptime,
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
@@ -295,7 +317,7 @@ async def async_setup_entry(
             hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
         )
 
-    if config_entry.data["sleep_period"]:
+    if config_entry.data[CONF_SLEEP_PERIOD]:
         await async_setup_entry_attribute_entities(
             hass, config_entry, async_add_entities, SENSORS, BlockSleepingSensor
         )

@@ -5,6 +5,7 @@ import math
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import TARGET_VALUE_PROPERTY
 
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
@@ -59,7 +60,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int | None) -> None:
         """Set the speed percentage of the fan."""
-        target_value = self.get_zwave_value("targetValue")
+        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
         if percentage is None:
             # Value 255 tells device to return to previous value
@@ -83,7 +84,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        target_value = self.get_zwave_value("targetValue")
+        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
         await self.info.node.async_set_value(target_value, 0)
 
     @property
@@ -101,6 +102,11 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
             # guard missing value
             return None
         return ranged_value_to_percentage(SPEED_RANGE, self.info.primary_value.value)
+
+    @property
+    def percentage_step(self) -> float:
+        """Return the step size for percentage."""
+        return 1
 
     @property
     def speed_count(self) -> int:

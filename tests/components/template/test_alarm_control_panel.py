@@ -204,7 +204,7 @@ async def test_no_action_scripts(hass, start_ha):
                     "platform": "template",
                     "panels": {
                         "bad name here": {
-                            "value_template": "{{ disarmed }}",
+                            "value_template": "disarmed",
                             "arm_away": {
                                 "service": "alarm_control_panel.alarm_arm_away",
                                 "entity_id": "alarm_control_panel.test",
@@ -246,11 +246,45 @@ async def test_no_action_scripts(hass, start_ha):
             },
             "required key not provided @ data['panels']",
         ),
+        (
+            {
+                "alarm_control_panel": {
+                    "platform": "template",
+                    "panels": {
+                        "test_template_panel": {
+                            "value_template": "disarmed",
+                            "arm_away": {
+                                "service": "alarm_control_panel.alarm_arm_away",
+                                "entity_id": "alarm_control_panel.test",
+                                "data": {"code": "1234"},
+                            },
+                            "arm_home": {
+                                "service": "alarm_control_panel.alarm_arm_home",
+                                "entity_id": "alarm_control_panel.test",
+                                "data": {"code": "1234"},
+                            },
+                            "arm_night": {
+                                "service": "alarm_control_panel.alarm_arm_night",
+                                "entity_id": "alarm_control_panel.test",
+                                "data": {"code": "1234"},
+                            },
+                            "disarm": {
+                                "service": "alarm_control_panel.alarm_disarm",
+                                "entity_id": "alarm_control_panel.test",
+                                "data": {"code": "1234"},
+                            },
+                            "code_format": "bad_format",
+                        }
+                    },
+                }
+            },
+            "value must be one of ['no_code', 'number', 'text']",
+        ),
     ],
 )
 async def test_template_syntax_error(hass, msg, start_ha, caplog_setup_text):
     """Test templating syntax error."""
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all("alarm_control_panel")) == 0
     assert (msg) in caplog_setup_text
 
 
@@ -264,7 +298,7 @@ async def test_template_syntax_error(hass, msg, start_ha, caplog_setup_text):
                 "panels": {
                     "test_template_panel": {
                         "name": "Template Alarm Panel",
-                        "value_template": "{{ disarmed }}",
+                        "value_template": "disarmed",
                         "arm_away": {
                             "service": "alarm_control_panel.alarm_arm_away",
                             "entity_id": "alarm_control_panel.test",
@@ -451,3 +485,77 @@ async def test_arm_home_action(hass, func, start_ha, calls):
 async def test_unique_id(hass, start_ha):
     """Test unique_id option only creates one alarm control panel per id."""
     assert len(hass.states.async_all()) == 1
+
+
+@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(
+    "config,code_format,code_arm_required",
+    [
+        (
+            {
+                "alarm_control_panel": {
+                    "platform": "template",
+                    "panels": {
+                        "test_template_panel": {
+                            "value_template": "disarmed",
+                        }
+                    },
+                }
+            },
+            "number",
+            True,
+        ),
+        (
+            {
+                "alarm_control_panel": {
+                    "platform": "template",
+                    "panels": {
+                        "test_template_panel": {
+                            "value_template": "disarmed",
+                            "code_format": "text",
+                        }
+                    },
+                }
+            },
+            "text",
+            True,
+        ),
+        (
+            {
+                "alarm_control_panel": {
+                    "platform": "template",
+                    "panels": {
+                        "test_template_panel": {
+                            "value_template": "disarmed",
+                            "code_format": "no_code",
+                            "code_arm_required": False,
+                        }
+                    },
+                }
+            },
+            None,
+            False,
+        ),
+        (
+            {
+                "alarm_control_panel": {
+                    "platform": "template",
+                    "panels": {
+                        "test_template_panel": {
+                            "value_template": "disarmed",
+                            "code_format": "text",
+                            "code_arm_required": False,
+                        }
+                    },
+                }
+            },
+            "text",
+            False,
+        ),
+    ],
+)
+async def test_code_config(hass, code_format, code_arm_required, start_ha):
+    """Test configuration options related to alarm code."""
+    state = hass.states.get(TEMPLATE_NAME)
+    assert state.attributes.get("code_format") == code_format
+    assert state.attributes.get("code_arm_required") == code_arm_required

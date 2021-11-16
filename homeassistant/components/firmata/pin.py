@@ -1,6 +1,8 @@
 """Code to handle pins on a Firmata board."""
+from __future__ import annotations
+
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 from .board import FirmataBoard, FirmataPinType
 from .const import PIN_MODE_INPUT, PIN_MODE_PULLUP, PIN_TYPE_ANALOG

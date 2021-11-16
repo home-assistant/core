@@ -23,6 +23,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import aiohttp_client, device_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -110,9 +111,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def validate_mazda_device_id(device_id):
         """Check that a device ID exists in the registry and has at least one 'mazda' identifier."""
         dev_reg = device_registry.async_get(hass)
-        device_entry = dev_reg.async_get(device_id)
 
-        if device_entry is None:
+        if (device_entry := dev_reg.async_get(device_id)) is None:
             raise vol.Invalid("Invalid device ID")
 
         mazda_identifiers = [
@@ -198,7 +198,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -230,14 +230,14 @@ class MazdaEntity(CoordinatorEntity):
         return self.coordinator.data[self.index]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for the Mazda entity."""
-        return {
-            "identifiers": {(DOMAIN, self.vin)},
-            "name": self.get_vehicle_name(),
-            "manufacturer": "Mazda",
-            "model": f"{self.data['modelYear']} {self.data['carlineName']}",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.vin)},
+            manufacturer="Mazda",
+            model=f"{self.data['modelYear']} {self.data['carlineName']}",
+            name=self.get_vehicle_name(),
+        )
 
     def get_vehicle_name(self):
         """Return the vehicle name, to be used as a prefix for names of other entities."""

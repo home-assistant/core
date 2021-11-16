@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 from json import JSONEncoder
 import logging
 import os
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
@@ -36,10 +37,8 @@ async def async_migrator(
 
     async def old_conf_migrate_func(old_data)
     """
-    store_data = await store.async_load()
-
     # If we already have store data we have already migrated in the past.
-    if store_data is not None:
+    if (store_data := await store.async_load()) is not None:
         return store_data
 
     def load_old_config():
@@ -77,6 +76,7 @@ class Store:
         private: bool = False,
         *,
         encoder: type[JSONEncoder] | None = None,
+        atomic_writes: bool = False,
     ) -> None:
         """Initialize storage class."""
         self.version = version
@@ -89,6 +89,7 @@ class Store:
         self._write_lock = asyncio.Lock()
         self._load_task: asyncio.Future | None = None
         self._encoder = encoder
+        self._atomic_writes = atomic_writes
 
     @property
     def path(self):
@@ -239,7 +240,13 @@ class Store:
             os.makedirs(os.path.dirname(path))
 
         _LOGGER.debug("Writing data for %s to %s", self.key, path)
-        json_util.save_json(path, data, self._private, encoder=self._encoder)
+        json_util.save_json(
+            path,
+            data,
+            self._private,
+            encoder=self._encoder,
+            atomic_writes=self._atomic_writes,
+        )
 
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
@@ -14,7 +14,7 @@
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "K\u00e9rj\u00fck, addig nyomja a Bosch Smart Home Controller el\u00fcls\u0151 gombj\u00e1t, am\u00edg a LED villogni nem kezd.\n K\u00e9szen \u00e1ll a (z) {model} @ {host} be\u00e1ll\u00edt\u00e1s\u00e1nak folytat\u00e1s\u00e1ra a Home Assistant seg\u00edts\u00e9g\u00e9vel?"
+                "description": "K\u00e9rj\u00fck, addig nyomja a Bosch Smart Home Controller el\u00fcls\u0151 gombj\u00e1t, am\u00edg a LED villogni nem kezd.\nK\u00e9szen \u00e1ll {model} @ {host} be\u00e1ll\u00edt\u00e1s\u00e1nak folytat\u00e1s\u00e1ra Home Assistant seg\u00edts\u00e9g\u00e9vel?"
             },
             "credentials": {
                 "data": {
@@ -27,9 +27,9 @@
             },
             "user": {
                 "data": {
-                    "host": "Hoszt"
+                    "host": "C\u00edm"
                 },
-                "description": "\u00c1ll\u00edtsa be a Bosch intelligens otthoni vez\u00e9rl\u0151t, hogy lehet\u0151v\u00e9 tegye a fel\u00fcgyeletet \u00e9s a vez\u00e9rl\u00e9st a Home Assistant seg\u00edts\u00e9g\u00e9vel.",
+                "description": "\u00c1ll\u00edtsa be a Bosch intelligens otthoni vez\u00e9rl\u0151t, hogy lehet\u0151v\u00e9 tegye a fel\u00fcgyeletet \u00e9s a vez\u00e9rl\u00e9st Home Assistant seg\u00edts\u00e9g\u00e9vel.",
                 "title": "SHC hiteles\u00edt\u00e9si param\u00e9terek"
             }
         }

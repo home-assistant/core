@@ -2,7 +2,7 @@
 import json
 import logging
 
-from plexapi.exceptions import NotFound
+from plexapi.exceptions import BadRequest, NotFound
 import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
@@ -107,8 +107,7 @@ def lookup_plex_media(hass, content_type, content_id):
     plex_server_name = content.pop("plex_server", None)
     plex_server = get_plex_server(hass, plex_server_name)
 
-    playqueue_id = content.pop("playqueue_id", None)
-    if playqueue_id:
+    if playqueue_id := content.pop("playqueue_id", None):
         try:
             playqueue = plex_server.get_playqueue(playqueue_id)
         except NotFound as err:
@@ -133,7 +132,13 @@ def play_on_sonos(hass, content_type, content_id, speaker_name):
     Called by Sonos 'media_player.play_media' service.
     """
     media, plex_server = lookup_plex_media(hass, content_type, content_id)
-    sonos_speaker = plex_server.account.sonos_speaker(speaker_name)
+    try:
+        sonos_speaker = plex_server.account.sonos_speaker(speaker_name)
+    except BadRequest as exc:
+        raise HomeAssistantError(
+            "Sonos speakers not linked to Plex account, complete this step in the Plex app"
+        ) from exc
+
     if sonos_speaker is None:
         message = f"Sonos speaker '{speaker_name}' is not associated with '{plex_server.friendly_name}'"
         _LOGGER.error(message)

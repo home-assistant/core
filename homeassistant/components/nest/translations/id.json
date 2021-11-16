@@ -18,6 +18,11 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Token Akses"
+                }
+            },
             "init": {
                 "data": {
                     "flow_impl": "Penyedia"

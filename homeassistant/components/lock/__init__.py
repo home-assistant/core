@@ -162,8 +162,7 @@ class LockEntity(Entity):
         """Return the state attributes."""
         state_attr = {}
         for prop, attr in PROP_TO_ATTR.items():
-            value = getattr(self, prop)
-            if value is not None:
+            if (value := getattr(self, prop)) is not None:
                 state_attr[attr] = value
         return state_attr
 
@@ -177,8 +176,7 @@ class LockEntity(Entity):
             return STATE_LOCKING
         if self.is_unlocking:
             return STATE_UNLOCKING
-        locked = self.is_locked
-        if locked is None:
+        if (locked := self.is_locked) is None:
             return None
         return STATE_LOCKED if locked else STATE_UNLOCKED
 

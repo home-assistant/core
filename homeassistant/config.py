@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 import logging
 import os
 from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import Any, Callable
+from typing import Any
 from urllib.parse import urlparse
 
 from awesomeversion import AwesomeVersion

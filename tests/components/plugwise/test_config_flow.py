@@ -8,7 +8,6 @@ from plugwise.exceptions import (
 )
 import pytest
 
-from homeassistant import setup
 from homeassistant.components.plugwise.const import (
     API,
     DEFAULT_PORT,
@@ -79,7 +78,7 @@ def mock_smile():
 
 async def test_form_flow_gateway(hass):
     """Test we get the form for Plugwise Gateway product type."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
@@ -97,7 +96,7 @@ async def test_form_flow_gateway(hass):
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={FLOW_TYPE: FLOW_NET}
     )
@@ -132,7 +131,7 @@ async def test_form(hass):
 
 async def test_zeroconf_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
@@ -169,7 +168,7 @@ async def test_zeroconf_form(hass):
 
 async def test_zeroconf_stretch_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
@@ -204,9 +203,32 @@ async def test_zeroconf_stretch_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_zercoconf_discovery_update_configuration(hass):
+    """Test if a discovered device is configured and updated with new host."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=CONF_NAME,
+        data={CONF_HOST: "0.0.0.0", CONF_PASSWORD: TEST_PASSWORD},
+        unique_id=TEST_HOSTNAME,
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.data[CONF_HOST] == "0.0.0.0"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_ZEROCONF},
+        data=TEST_DISCOVERY,
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+
+
 async def test_form_username(hass):
     """Test we get the username data back."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={FLOW_TYPE: FLOW_NET}
     )

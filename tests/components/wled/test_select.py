@@ -7,10 +7,11 @@ from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.select.const import ATTR_OPTION, ATTR_OPTIONS
-from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.wled.const import SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
+    ENTITY_CATEGORY_CONFIG,
     SERVICE_SELECT_OPTION,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -22,31 +23,8 @@ import homeassistant.util.dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
-@pytest.fixture
-async def enable_all(hass: HomeAssistant) -> None:
-    """Enable all disabled by default select entities."""
-    registry = er.async_get(hass)
-
-    # Pre-create registry entries for disabled by default sensors
-    registry.async_get_or_create(
-        SELECT_DOMAIN,
-        DOMAIN,
-        "aabbccddeeff_palette_0",
-        suggested_object_id="wled_rgb_light_color_palette",
-        disabled_by=None,
-    )
-
-    registry.async_get_or_create(
-        SELECT_DOMAIN,
-        DOMAIN,
-        "aabbccddeeff_palette_1",
-        suggested_object_id="wled_rgb_light_segment_1_color_palette",
-        disabled_by=None,
-    )
-
-
 async def test_color_palette_state(
-    hass: HomeAssistant, enable_all: None, init_integration: MockConfigEntry
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test the creation and values of the WLED selects."""
     entity_registry = er.async_get(hass)
@@ -112,11 +90,11 @@ async def test_color_palette_state(
     entry = entity_registry.async_get("select.wled_rgb_light_segment_1_color_palette")
     assert entry
     assert entry.unique_id == "aabbccddeeff_palette_1"
+    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
 
 
 async def test_color_palette_segment_change_state(
     hass: HomeAssistant,
-    enable_all: None,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
@@ -141,7 +119,6 @@ async def test_color_palette_segment_change_state(
 @pytest.mark.parametrize("mock_wled", ["wled/rgb_single_segment.json"], indirect=True)
 async def test_color_palette_dynamically_handle_segments(
     hass: HomeAssistant,
-    enable_all: None,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
@@ -182,7 +159,6 @@ async def test_color_palette_dynamically_handle_segments(
 
 async def test_color_palette_select_error(
     hass: HomeAssistant,
-    enable_all: None,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
     caplog: pytest.LogCaptureFixture,
@@ -211,7 +187,6 @@ async def test_color_palette_select_error(
 
 async def test_color_palette_select_connection_error(
     hass: HomeAssistant,
-    enable_all: None,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
     caplog: pytest.LogCaptureFixture,
@@ -476,25 +451,3 @@ async def test_playlist_select_connection_error(
     assert "Error communicating with API" in caplog.text
     assert mock_wled.playlist.call_count == 1
     mock_wled.playlist.assert_called_with(playlist="Playlist 2")
-
-
-@pytest.mark.parametrize(
-    "entity_id",
-    (
-        "select.wled_rgb_light_color_palette",
-        "select.wled_rgb_light_segment_1_color_palette",
-    ),
-)
-async def test_disabled_by_default_selects(
-    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
-) -> None:
-    """Test the disabled by default WLED selects."""
-    registry = er.async_get(hass)
-
-    state = hass.states.get(entity_id)
-    assert state is None
-
-    entry = registry.async_get(entity_id)
-    assert entry
-    assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION

@@ -11,11 +11,11 @@ from systembridge.exceptions import BridgeAuthenticationException
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
 
@@ -148,7 +148,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info["properties"].get("ip")

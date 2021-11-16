@@ -2,14 +2,17 @@
 from __future__ import annotations
 
 import datetime as dt
+from datetime import datetime
+from typing import cast
 
 import hdate
+from hdate.zmanim import Zmanim
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -29,7 +32,7 @@ async def async_setup_platform(
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
-):
+) -> None:
     """Set up the Jewish Calendar binary sensor devices."""
     if discovery_info is None:
         return
@@ -42,7 +45,11 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, data, description: BinarySensorEntityDescription) -> None:
+    def __init__(
+        self,
+        data: dict[str, str | bool | int | float],
+        description: BinarySensorEntityDescription,
+    ) -> None:
         """Initialize the binary sensor."""
         self._attr_name = f"{data['name']} {description.name}"
         self._attr_unique_id = f"{data['prefix']}_{description.key}"
@@ -50,14 +57,14 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
-        self._update_unsub = None
+        self._update_unsub: CALLBACK_TYPE | None = None
 
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        return self._get_zmanim().issur_melacha_in_effect
+        return cast(bool, self._get_zmanim().issur_melacha_in_effect)
 
-    def _get_zmanim(self):
+    def _get_zmanim(self) -> Zmanim:
         """Return the Zmanim object for now()."""
         return hdate.Zmanim(
             date=dt_util.now(),
@@ -73,13 +80,13 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         self._schedule_update()
 
     @callback
-    def _update(self, now=None):
+    def _update(self, now: datetime | None = None) -> None:
         """Update the state of the sensor."""
         self._update_unsub = None
         self._schedule_update()
         self.async_write_ha_state()
 
-    def _schedule_update(self):
+    def _schedule_update(self) -> None:
         """Schedule the next update of the sensor."""
         now = dt_util.now()
         zmanim = self._get_zmanim()

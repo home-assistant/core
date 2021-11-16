@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch, sentinel
 
 import serial.tools.list_ports
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.rfxtrx import DOMAIN, config_flow
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -277,7 +277,6 @@ async def test_setup_serial_manual_fail(com_mock, hass):
 
 async def test_options_global(hass):
     """Test if we can set global options."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -310,7 +309,6 @@ async def test_options_global(hass):
 
 async def test_options_add_device(hass):
     """Test we can add a device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -376,7 +374,6 @@ async def test_options_add_device(hass):
 
 async def test_options_add_duplicate_device(hass):
     """Test we can add a device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -413,7 +410,6 @@ async def test_options_add_duplicate_device(hass):
 
 async def test_options_add_remove_device(hass):
     """Test we can add a device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -497,7 +493,6 @@ async def test_options_add_remove_device(hass):
 
 async def test_options_replace_sensor_device(hass):
     """Test we can replace a sensor device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -658,7 +653,6 @@ async def test_options_replace_sensor_device(hass):
 
 async def test_options_replace_control_device(hass):
     """Test we can replace a control device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -767,7 +761,6 @@ async def test_options_replace_control_device(hass):
 
 async def test_options_remove_multiple_devices(hass):
     """Test we can add a device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -838,7 +831,6 @@ async def test_options_remove_multiple_devices(hass):
 
 async def test_options_add_and_configure_device(hass):
     """Test we can add a device."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -960,7 +952,6 @@ async def test_options_add_and_configure_device(hass):
 
 async def test_options_configure_rfy_cover_device(hass):
     """Test we can configure the venetion blind mode of an Rfy cover."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(
         domain=DOMAIN,

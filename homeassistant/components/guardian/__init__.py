@@ -8,10 +8,10 @@ from typing import cast
 from aioguardian import Client
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -29,7 +29,6 @@ from .const import (
     DATA_COORDINATOR,
     DATA_COORDINATOR_PAIRED_SENSOR,
     DATA_PAIRED_SENSOR_MANAGER,
-    DATA_UNSUB_DISPATCHER_CONNECT,
     DOMAIN,
     LOGGER,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
@@ -41,28 +40,14 @@ PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
-    hass.data.setdefault(
-        DOMAIN,
-        {
-            DATA_CLIENT: {},
-            DATA_COORDINATOR: {},
-            DATA_COORDINATOR_PAIRED_SENSOR: {},
-            DATA_PAIRED_SENSOR_MANAGER: {},
-            DATA_UNSUB_DISPATCHER_CONNECT: {},
-        },
-    )
-    client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = Client(
-        entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT]
-    )
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
-    hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][entry.entry_id] = {}
-    hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id] = []
+    client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
 
     # The valve controller's UDP-based API can't handle concurrent requests very well,
     # so we use a lock to ensure that only one API request is reaching it at a time:
     api_lock = asyncio.Lock()
 
     # Set up DataUpdateCoordinators for the valve controller:
+    coordinators: dict[str, GuardianDataUpdateCoordinator] = {}
     init_valve_controller_tasks = []
     for api, api_coro in (
         (API_SENSOR_PAIR_DUMP, client.sensor.pair_dump),
@@ -71,9 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         (API_VALVE_STATUS, client.valve.status),
         (API_WIFI_STATUS, client.wifi.status),
     ):
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-            api
-        ] = GuardianDataUpdateCoordinator(
+        coordinator = coordinators[api] = GuardianDataUpdateCoordinator(
             hass,
             client=client,
             api_name=api,
@@ -87,10 +70,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Set up an object to evaluate each batch of paired sensor UIDs and add/remove
     # devices as appropriate:
-    paired_sensor_manager = hass.data[DOMAIN][DATA_PAIRED_SENSOR_MANAGER][
-        entry.entry_id
-    ] = PairedSensorManager(hass, entry, client, api_lock)
+    paired_sensor_manager = PairedSensorManager(hass, entry, client, api_lock)
     await paired_sensor_manager.async_process_latest_paired_sensor_uids()
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CLIENT: client,
+        DATA_COORDINATOR: coordinators,
+        DATA_COORDINATOR_PAIRED_SENSOR: {},
+        DATA_PAIRED_SENSOR_MANAGER: paired_sensor_manager,
+    }
 
     @callback
     def async_process_paired_sensor_uids() -> None:
@@ -99,9 +88,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             paired_sensor_manager.async_process_latest_paired_sensor_uids()
         )
 
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-        API_SENSOR_PAIR_DUMP
-    ].async_add_listener(async_process_paired_sensor_uids)
+    coordinators[API_SENSOR_PAIR_DUMP].async_add_listener(
+        async_process_paired_sensor_uids
+    )
 
     # Set up all of the Guardian entity platforms:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -113,12 +102,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-        hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR].pop(entry.entry_id)
-        for unsub in hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id]:
-            unsub()
-        hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -146,8 +130,8 @@ class PairedSensorManager:
 
         self._paired_uids.add(uid)
 
-        coordinator = self._hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
-            self._entry.entry_id
+        coordinator = self._hass.data[DOMAIN][self._entry.entry_id][
+            DATA_COORDINATOR_PAIRED_SENSOR
         ][uid] = GuardianDataUpdateCoordinator(
             self._hass,
             client=self._client,
@@ -170,7 +154,7 @@ class PairedSensorManager:
         """Process a list of new UIDs."""
         try:
             uids = set(
-                self._hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
+                self._hass.data[DOMAIN][self._entry.entry_id][DATA_COORDINATOR][
                     API_SENSOR_PAIR_DUMP
                 ].data["paired_uids"]
             )
@@ -197,8 +181,8 @@ class PairedSensorManager:
 
         # Clear out objects related to this paired sensor:
         self._paired_uids.remove(uid)
-        self._hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
-            self._entry.entry_id
+        self._hass.data[DOMAIN][self._entry.entry_id][
+            DATA_COORDINATOR_PAIRED_SENSOR
         ].pop(uid)
 
         # Remove the paired sensor device from the device registry (which will
@@ -217,8 +201,8 @@ class GuardianEntity(CoordinatorEntity):
         self, entry: ConfigEntry, description: EntityDescription
     ) -> None:
         """Initialize."""
-        self._attr_device_info = {"manufacturer": "Elexa"}
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
+        self._attr_device_info = DeviceInfo(manufacturer="Elexa")
+        self._attr_extra_state_attributes = {}
         self._entry = entry
         self.entity_description = description
 
@@ -244,11 +228,11 @@ class PairedSensorEntity(GuardianEntity):
         super().__init__(entry, description)
 
         paired_sensor_uid = coordinator.data["uid"]
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, paired_sensor_uid)},
-            "name": f"Guardian Paired Sensor {paired_sensor_uid}",
-            "via_device": (DOMAIN, entry.data[CONF_UID]),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, paired_sensor_uid)},
+            name=f"Guardian Paired Sensor {paired_sensor_uid}",
+            via_device=(DOMAIN, entry.data[CONF_UID]),
+        )
         self._attr_name = (
             f"Guardian Paired Sensor {paired_sensor_uid}: {description.name}"
         )
@@ -272,11 +256,11 @@ class ValveControllerEntity(GuardianEntity):
         """Initialize."""
         super().__init__(entry, description)
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.data[CONF_UID])},
-            "name": f"Guardian Valve Controller {entry.data[CONF_UID]}",
-            "model": coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.data[CONF_UID])},
+            model=coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
+            name=f"Guardian Valve Controller {entry.data[CONF_UID]}",
+        )
         self._attr_name = f"Guardian {entry.data[CONF_UID]}: {description.name}"
         self._attr_unique_id = f"{entry.data[CONF_UID]}_{description.key}"
         self.coordinators = coordinators

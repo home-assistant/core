@@ -1,11 +1,12 @@
 """Support for GTFS (Google/General Transport Format Schema)."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import datetime
 import logging
 import os
 import threading
-from typing import Any, Callable
+from typing import Any
 
 import pygtfs
 from sqlalchemy.sql import text

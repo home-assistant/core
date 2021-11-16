@@ -1,6 +1,7 @@
 """Support for Locative."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 
 from aiohttp import web
@@ -12,7 +13,6 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_WEBHOOK_ID,
-    HTTP_UNPROCESSABLE_ENTITY,
     STATE_NOT_HOME,
 )
 from homeassistant.helpers import config_entry_flow
@@ -68,7 +68,9 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
-        return web.Response(text=error.error_message, status=HTTP_UNPROCESSABLE_ENTITY)
+        return web.Response(
+            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
+        )
 
     device = data[ATTR_DEVICE_ID]
     location_name = data.get(ATTR_ID, data[ATTR_TRIGGER]).lower()
@@ -105,7 +107,7 @@ async def handle_webhook(hass, webhook_id, request):
     _LOGGER.error("Received unidentified message from Locative: %s", direction)
     return web.Response(
         text=f"Received unidentified message: {direction}",
-        status=HTTP_UNPROCESSABLE_ENTITY,
+        status=HTTPStatus.UNPROCESSABLE_ENTITY,
     )
 
 

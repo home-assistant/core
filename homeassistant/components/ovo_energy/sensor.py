@@ -1,9 +1,10 @@
 """Support for OVO Energy sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Callable, Final
+from typing import Final
 
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
@@ -57,7 +58,7 @@ SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
         name="OVO Last Electricity Cost",
         device_class=DEVICE_CLASS_MONETARY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        value=lambda usage: usage.electricity[-1].consumption,
+        value=lambda usage: usage.electricity[-1].cost.amount,
     ),
     OVOEnergySensorEntityDescription(
         key="last_electricity_start_time",
@@ -91,7 +92,7 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_MONETARY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         icon="mdi:cash-multiple",
-        value=lambda usage: usage.gas[-1].consumption,
+        value=lambda usage: usage.gas[-1].cost.amount,
     ),
     OVOEnergySensorEntityDescription(
         key="last_gas_start_time",

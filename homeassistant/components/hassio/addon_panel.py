@@ -1,11 +1,12 @@
 """Implement the Ingress Panel feature for Hass.io Add-ons."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import ATTR_ICON, HTTP_BAD_REQUEST
+from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 
 from .const import ATTR_ADMIN, ATTR_ENABLE, ATTR_PANELS, ATTR_TITLE
@@ -20,8 +21,7 @@ async def async_setup_addon_panel(hass: HomeAssistant, hassio):
     hass.http.register_view(hassio_addon_panel)
 
     # If panels are exists
-    panels = await hassio_addon_panel.get_panels()
-    if not panels:
+    if not (panels := await hassio_addon_panel.get_panels()):
         return
 
     # Register available panels
@@ -53,7 +53,7 @@ class HassIOAddonPanel(HomeAssistantView):
         # Panel exists for add-on slug
         if addon not in panels or not panels[addon][ATTR_ENABLE]:
             _LOGGER.error("Panel is not enable for %s", addon)
-            return web.Response(status=HTTP_BAD_REQUEST)
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
         data = panels[addon]
 
         # Register panel

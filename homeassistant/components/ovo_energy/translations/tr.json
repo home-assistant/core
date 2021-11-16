@@ -5,11 +5,11 @@
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
         },
-        "flow_title": "OVO Enerji: {username}",
+        "flow_title": "{username}",
         "step": {
             "reauth": {
                 "data": {
-                    "password": "\u015eifre"
+                    "password": "Parola"
                 },
                 "description": "OVO Energy i\u00e7in kimlik do\u011frulama ba\u015far\u0131s\u0131z oldu. L\u00fctfen mevcut kimlik bilgilerinizi girin.",
                 "title": "Yeniden kimlik do\u011frulama"
@@ -18,7 +18,9 @@
                 "data": {
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "description": "Enerji kullan\u0131m\u0131n\u0131za eri\u015fmek i\u00e7in bir OVO Energy \u00f6rne\u011fi ayarlay\u0131n.",
+                "title": "OVO Enerji Hesab\u0131 Ekle"
             }
         }
     }

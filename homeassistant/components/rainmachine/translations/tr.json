@@ -6,13 +6,15 @@
         "error": {
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
         },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {
                     "ip_address": "Ana makine ad\u0131 veya IP adresi",
                     "password": "Parola",
                     "port": "Port"
-                }
+                },
+                "title": "Bilgilerinizi doldurun"
             }
         }
     },
