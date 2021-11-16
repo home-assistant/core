@@ -1,0 +1,153 @@
+- name: Potenza Attiva Prelevata Istantanea
+  device_class: power
+  unit_of_measurement: W
+  state_class: measurement
+  data_type: uint16
+  address: 2
+  count: 1
+- name: Potenza Attiva Immessa Istantanea
+  device_class: power
+  unit_of_measurement: W
+  state_class: measurement
+  data_type: uint16
+  address: 12
+  count: 1
+- name: Potenza Attiva Prodotta Istantanea
+  device_class: power
+  unit_of_measurement: W
+  state_class: measurement
+  data_type: uint16
+  address: 921
+  count: 1
+- name: Energia Attiva Prelevata Totale
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 5
+  count: 2
+- name: Energia Attiva Immessa Totale
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 15
+  count: 2
+- name: Energia Attiva Prodotta Totale
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 924
+  count: 2
+- name: Pot Att Prel Quart Media
+  device_class: power
+  unit_of_measurement: W
+  state_class: measurement
+  data_type: uint16
+  address: 9
+  count: 1
+- name: Pot Att Imm Quart Media
+  device_class: power
+  unit_of_measurement: W
+  state_class: measurement
+  data_type: uint16
+  address: 19
+  count: 1
+- name: Tot Energ Att Prel Giorno-1 F1
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 30
+  count: 2
+- name: Tot Energ Att Prel Giorno-1 F2
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 32
+  count: 2
+- name: Tot Energ Att Prel Giorno-1 F3
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 34
+  count: 2
+- name: Tot Energ Att Prel Giorno-1 F4
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 36
+  count: 2
+- name: Tot Energ Att Prel Giorno-1 F5
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 38
+  count: 2
+- name: Tot Energ Att Prel Giorno-1 F6
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 40
+  count: 2
+- name: Tot Energ Att Imm Giorno-1 F1
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 54
+  count: 2
+- name: Tot Energ Att Imm Giorno-1 F2
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 56
+  count: 2
+- name: Tot Energ Att Imm Giorno-1 F3
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 58
+  count: 2
+- name: Tot Energ Att Imm Giorno-1 F4
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 60
+  count: 2
+- name: Tot Energ Att Imm Giorno-1 F5
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 62
+  count: 2
+- name: Tot Energ Att Imm Giorno-1 F6
+  device_class: energy
+  unit_of_measurement: Wh
+  state_class: total_increasing
+  data_type: uint32
+  address: 64
+  count: 2
+- name: Fascia oraria corrente
+  data_type: uint16
+  address: 203
+  count: 1
+- name: Data evento
+  device_class: date
+  data_type: uint32
+  address: 780
+  count: 2
+- name: Tempo residuo distacco
+  data_type: uint16
+  address: 782
+  count: 1

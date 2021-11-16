@@ -1,0 +1,9 @@
+{
+    "domain": "alfa",
+    "name": "Alfa",
+    "documentation": "https://www.example.com",
+    "dependencies": [],
+    "codeowners": [],
+    "requirements": [],
+    "iot_class": "local_polling"
+  }
