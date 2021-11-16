@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wiz_light",
   "requirements": [
-    "pywizlight==0.4.12"
+    "pywizlight==0.4.13"
   ],
   "ssdp": [],
   "zeroconf": [],

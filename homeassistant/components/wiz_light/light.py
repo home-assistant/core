@@ -401,8 +401,7 @@ class WizBulb(LightEntity):
 
     async def update_scene_list(self):
         """Update the scene list."""
-        _value = await self._light.getSupportedScenes()
-        self._scenes = list(_value.values())
+        self._scenes = await self._light.getSupportedScenes()
 
     async def get_mac(self):
         """Get the mac from the bulb."""
