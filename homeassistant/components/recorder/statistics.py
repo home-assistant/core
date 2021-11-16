@@ -716,7 +716,7 @@ def _reduce_statistics(
     return result
 
 
-def _reduce_statistics_per_day(
+def reduce_statistics_per_day(
     stats: dict[str, list[dict[str, Any]]]
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to daily statistics."""
@@ -738,7 +738,7 @@ def _reduce_statistics_per_day(
     return _reduce_statistics(stats, same_period, period_start_end, timedelta(days=1))
 
 
-def _reduce_statistics_per_month(
+def reduce_statistics_per_month(
     stats: dict[str, list[dict[str, Any]]]
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to monthly statistics."""
@@ -825,9 +825,9 @@ def statistics_during_period(
         )
 
         if period == "day":
-            return _reduce_statistics_per_day(result)
+            return reduce_statistics_per_day(result)
 
-        return _reduce_statistics_per_month(result)
+        return reduce_statistics_per_month(result)
 
 
 def get_last_statistics(

@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 import functools
 from types import ModuleType
-from typing import Any, Awaitable, Callable, DefaultDict, cast
+from typing import Any, Awaitable, Callable, cast
 
 import voluptuous as vol
 
@@ -280,7 +280,7 @@ async def ws_get_fossil_energy_consumption(
         stats: dict[str, list[dict[str, Any]]]
     ) -> dict[datetime, float]:
         """Combine multiple statistics, returns a dict indexed by start time."""
-        result: DefaultDict[datetime, float] = defaultdict(float)
+        result: defaultdict[datetime, float] = defaultdict(float)
 
         for stat in stats.values():
             for period in stat:
@@ -309,7 +309,7 @@ async def ws_get_fossil_energy_consumption(
         connection.send_result(msg["id"], result)
 
     if msg["period"] == "day":
-        reduced_fossil_energy = recorder.statistics._reduce_statistics_per_day(
+        reduced_fossil_energy = recorder.statistics.reduce_statistics_per_day(
             {"combined": fossil_energy}
         )
         result = {
@@ -318,7 +318,7 @@ async def ws_get_fossil_energy_consumption(
         }
         connection.send_result(msg["id"], result)
 
-    reduced_fossil_energy = recorder.statistics._reduce_statistics_per_month(
+    reduced_fossil_energy = recorder.statistics.reduce_statistics_per_month(
         {"combined": fossil_energy}
     )
     result = {
