@@ -118,7 +118,12 @@ class HoneywellData:
             return False
 
         for updated_device in refreshed_devices:
-            self.devices[updated_device.deviceid] = updated_device
+            if updated_device.deviceid in self.devices:
+                self.devices[updated_device.deviceid] = updated_device
+            else:
+                _LOGGER.info(
+                    "New device with ID %s detected, reload the honeywell integration if you want to access it in Home Assistant"
+                )
 
         await self._hass.config_entries.async_reload(self._config.entry_id)
         return True
