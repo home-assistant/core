@@ -39,7 +39,6 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     current_state_inverse: bool = False
     current_position: DPCode | None = None
     set_position: DPCode | None = None
-    working_state: DPCode | None = None
 
 
 COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
@@ -54,7 +53,6 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_STATE,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=DEVICE_CLASS_CURTAIN,
-            working_state=DPCode.WORK_STATE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
@@ -238,27 +236,27 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             return None
 
         if not (
-            dpcode := (
-                self.entity_description.current_position
-                or self.entity_description.set_position
-            )
+            self.entity_description.current_position
+            or self.entity_description.set_position
         ):
             return None
 
-        if (self.entity_description.working_state) is not None:
-            work_state = self.device.status.get("work_state")
-            current_position = self.device.status.get(
+        if (
+            current_position := self.device.status.get(
                 self.entity_description.current_position
             )
+        ) is None:
+            current_position = 0
 
-            if work_state == "closing" and current_position >= 0:
-                dpcode = self.entity_description.set_position
+        if (
+            set_position := self.device.status.get(self.entity_description.set_position)
+        ) is None:
+            set_position = 0
 
-            if work_state == "opening" and current_position == 0:
-                dpcode = self.entity_description.set_position
-
-        if (position := self.device.status.get(dpcode)) is None:
-            return None
+        if current_position == 0 and set_position != 0:
+            position = set_position
+        else:
+            position = current_position
 
         return round(
             self._current_position_type.remap_value_to(position, 0, 100, reverse=True)
