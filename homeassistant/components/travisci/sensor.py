@@ -172,8 +172,7 @@ class TravisCISensor(SensorEntity):
         self._build = self._data.build(repo.last_build_id)
 
         if self._build:
-            sensor_type = self.entity_description.key
-            if sensor_type == "state":
+            if (sensor_type := self.entity_description.key) == "state":
                 branch_stats = self._data.branch(self._branch, self._repo_name)
                 self._attr_native_value = branch_stats.state
 

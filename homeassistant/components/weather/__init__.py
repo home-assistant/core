@@ -185,28 +185,22 @@ class WeatherEntity(Entity):
                 self.hass, self.temperature, self.temperature_unit, self.precision
             )
 
-        humidity = self.humidity
-        if humidity is not None:
+        if (humidity := self.humidity) is not None:
             data[ATTR_WEATHER_HUMIDITY] = round(humidity)
 
-        ozone = self.ozone
-        if ozone is not None:
+        if (ozone := self.ozone) is not None:
             data[ATTR_WEATHER_OZONE] = ozone
 
-        pressure = self.pressure
-        if pressure is not None:
+        if (pressure := self.pressure) is not None:
             data[ATTR_WEATHER_PRESSURE] = pressure
 
-        wind_bearing = self.wind_bearing
-        if wind_bearing is not None:
+        if (wind_bearing := self.wind_bearing) is not None:
             data[ATTR_WEATHER_WIND_BEARING] = wind_bearing
 
-        wind_speed = self.wind_speed
-        if wind_speed is not None:
+        if (wind_speed := self.wind_speed) is not None:
             data[ATTR_WEATHER_WIND_SPEED] = wind_speed
 
-        visibility = self.visibility
-        if visibility is not None:
+        if (visibility := self.visibility) is not None:
             data[ATTR_WEATHER_VISIBILITY] = visibility
 
         if self.forecast is not None:

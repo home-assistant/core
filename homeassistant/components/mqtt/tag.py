@@ -29,7 +29,6 @@ from .mixins import (
     async_setup_entry_helper,
     cleanup_device_registry,
     device_info_from_config,
-    validate_device_has_at_least_one_identifier,
 )
 from .util import valid_subscribe_topic
 
@@ -45,7 +44,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
-    validate_device_has_at_least_one_identifier,
+    extra=vol.REMOVE_EXTRA,
 )
 
 

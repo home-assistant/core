@@ -1,4 +1,5 @@
 """Test config flow."""
+from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 from homeassistant.components.hassio.handler import HassioAPIError
@@ -154,7 +155,7 @@ async def test_hassio_discovery_webhook(hass, aioclient_mock, hassio_client):
         )
         await hass.async_block_till_done()
 
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         assert aioclient_mock.call_count == 2
         assert mock_mqtt.called
         mock_mqtt.assert_called_with(

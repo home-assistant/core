@@ -1,7 +1,10 @@
 """Config flow for Logitech Harmony Hub integration."""
+import asyncio
 import logging
 from urllib.parse import urlparse
 
+from aioharmony.hubconnector_websocket import HubConnector
+import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -94,16 +97,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: friendly_name,
         }
 
-        harmony = await get_harmony_client_if_available(parsed_url.hostname)
+        connector = HubConnector(parsed_url.hostname, asyncio.Queue())
+        try:
+            remote_id = await connector.get_remote_id()
+        except aiohttp.ClientError:
+            return self.async_abort(reason="cannot_connect")
+        finally:
+            await connector.async_close_session()
 
-        if harmony:
-            unique_id = find_unique_id_for_remote(harmony)
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: self.harmony_config[CONF_HOST]}
-            )
-            self.harmony_config[UNIQUE_ID] = unique_id
-
+        unique_id = str(remote_id)
+        await self.async_set_unique_id(str(unique_id))
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.harmony_config[CONF_HOST]}
+        )
+        self.harmony_config[UNIQUE_ID] = unique_id
         return await self.async_step_link()
 
     async def async_step_link(self, user_input=None):

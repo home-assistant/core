@@ -476,7 +476,10 @@ class _ScriptRun:
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
             wait_var = self._variables["wait"]
-            wait_var["remaining"] = to_context.remaining if to_context else timeout
+            if to_context and to_context.deadline:
+                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            else:
+                wait_var["remaining"] = timeout
             wait_var["completed"] = True
             done.set()
 
@@ -777,7 +780,10 @@ class _ScriptRun:
 
         async def async_done(variables, context=None):
             wait_var = self._variables["wait"]
-            wait_var["remaining"] = to_context.remaining if to_context else timeout
+            if to_context and to_context.deadline:
+                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            else:
+                wait_var["remaining"] = timeout
             wait_var["trigger"] = variables["trigger"]
             done.set()
 
@@ -953,8 +959,7 @@ class Script:
         variables: ScriptVariables | None = None,
     ) -> None:
         """Initialize the script."""
-        all_scripts = hass.data.get(DATA_SCRIPTS)
-        if not all_scripts:
+        if not (all_scripts := hass.data.get(DATA_SCRIPTS)):
             all_scripts = hass.data[DATA_SCRIPTS] = []
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, partial(_async_stop_scripts_at_shutdown, hass)
@@ -1156,7 +1161,6 @@ class Script:
             elif action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
                     for cond in choice[CONF_CONDITIONS]:
-                        _LOGGER.error("Extracting entities from: %s", cond)
                         referenced |= condition.async_extract_entities(cond)
                     Script._find_referenced_entities(referenced, choice[CONF_SEQUENCE])
                 if CONF_DEFAULT in step:
@@ -1274,8 +1278,7 @@ class Script:
             config_cache_key = config.template
         else:
             config_cache_key = frozenset((k, str(v)) for k, v in config.items())
-        cond = self._config_cache.get(config_cache_key)
-        if not cond:
+        if not (cond := self._config_cache.get(config_cache_key)):
             cond = await condition.async_from_config(self._hass, config, False)
             self._config_cache[config_cache_key] = cond
         return cond
@@ -1298,8 +1301,7 @@ class Script:
         return sub_script
 
     def _get_repeat_script(self, step: int) -> Script:
-        sub_script = self._repeat_script.get(step)
-        if not sub_script:
+        if not (sub_script := self._repeat_script.get(step)):
             sub_script = self._prep_repeat_script(step)
             self._repeat_script[step] = sub_script
         return sub_script
@@ -1352,8 +1354,7 @@ class Script:
         return {"choices": choices, "default": default_script}
 
     async def _async_get_choose_data(self, step: int) -> _ChooseData:
-        choose_data = self._choose_data.get(step)
-        if not choose_data:
+        if not (choose_data := self._choose_data.get(step)):
             choose_data = await self._async_prep_choose_data(step)
             self._choose_data[step] = choose_data
         return choose_data

@@ -1,7 +1,8 @@
 {
     "state": {
         "_": {
-            "idle": "\u30a2\u30a4\u30c9\u30eb"
+            "idle": "\u30a2\u30a4\u30c9\u30eb",
+            "streaming": "\u30b9\u30c8\u30ea\u30fc\u30df\u30f3\u30b0"
         }
     },
     "title": "\u30ab\u30e1\u30e9"

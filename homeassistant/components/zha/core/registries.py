@@ -4,7 +4,6 @@ from __future__ import annotations
 import collections
 from collections.abc import Callable
 import dataclasses
-import logging
 from typing import Dict, List
 
 import attr
@@ -29,7 +28,6 @@ from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-impo
 from .decorators import CALLABLE_T, DictRegistry, SetRegistry
 from .typing import ChannelType
 
-_LOGGER = logging.getLogger(__name__)
 GROUP_ENTITY_DOMAINS = [LIGHT, SWITCH, FAN]
 
 PHILLIPS_REMOTE_CLUSTER = 0xFC00
@@ -84,6 +82,8 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.measurement.OccupancySensing.cluster_id: BINARY_SENSOR,
     zcl.clusters.measurement.PressureMeasurement.cluster_id: SENSOR,
     zcl.clusters.measurement.RelativeHumidity.cluster_id: SENSOR,
+    zcl.clusters.measurement.SoilMoisture.cluster_id: SENSOR,
+    zcl.clusters.measurement.LeafWetness.cluster_id: SENSOR,
     zcl.clusters.measurement.TemperatureMeasurement.cluster_id: SENSOR,
     zcl.clusters.security.IasZone.cluster_id: BINARY_SENSOR,
 }

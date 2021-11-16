@@ -8,14 +8,32 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_ICON, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import (
+    ATTR_CONFIGURATION_URL,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_SW_VERSION,
+    ATTR_VIA_DEVICE,
+    CONF_DEVICE,
+    CONF_ENTITY_CATEGORY,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import (
+    ENTITY_CATEGORIES_SCHEMA,
+    DeviceInfo,
+    Entity,
+    async_generate_entity_id,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import DATA_MQTT, debug_info, publish, subscription
@@ -68,6 +86,8 @@ CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
+CONF_CONFIGURATION_URL = "configuration_url"
+CONF_OBJECT_ID = "object_id"
 
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
@@ -75,6 +95,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "context_recent_time",
     "device_class",
     "device_info",
+    "entity_category",
     "entity_picture",
     "entity_registry_enabled_default",
     "extra_state_attributes",
@@ -154,6 +175,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
             vol.Optional(CONF_SUGGESTED_AREA): cv.string,
+            vol.Optional(CONF_CONFIGURATION_URL): cv.url,
         }
     ),
     validate_device_has_at_least_one_identifier,
@@ -163,9 +185,11 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
+        vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
+        vol.Optional(CONF_OBJECT_ID): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -191,6 +215,14 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
     )
+
+
+def init_entity_id_from_config(hass, entity, config, entity_id_format):
+    """Set entity_id from object_id if defined in config."""
+    if CONF_OBJECT_ID in config:
+        entity.entity_id = async_generate_entity_id(
+            entity_id_format, config[CONF_OBJECT_ID], None, hass
+        )
 
 
 class MqttAttributes(Entity):
@@ -503,33 +535,36 @@ class MqttDiscoveryUpdate(Entity):
             self._remove_signal = None
 
 
-def device_info_from_config(config):
+def device_info_from_config(config) -> DeviceInfo | None:
     """Return a device description for device registry."""
     if not config:
         return None
 
-    info = {
-        "identifiers": {(DOMAIN, id_) for id_ in config[CONF_IDENTIFIERS]},
-        "connections": {tuple(x) for x in config[CONF_CONNECTIONS]},
-    }
+    info = DeviceInfo(
+        identifiers={(DOMAIN, id_) for id_ in config[CONF_IDENTIFIERS]},
+        connections={(conn_[0], conn_[1]) for conn_ in config[CONF_CONNECTIONS]},
+    )
 
     if CONF_MANUFACTURER in config:
-        info["manufacturer"] = config[CONF_MANUFACTURER]
+        info[ATTR_MANUFACTURER] = config[CONF_MANUFACTURER]
 
     if CONF_MODEL in config:
-        info["model"] = config[CONF_MODEL]
+        info[ATTR_MODEL] = config[CONF_MODEL]
 
     if CONF_NAME in config:
-        info["name"] = config[CONF_NAME]
+        info[ATTR_NAME] = config[CONF_NAME]
 
     if CONF_SW_VERSION in config:
-        info["sw_version"] = config[CONF_SW_VERSION]
+        info[ATTR_SW_VERSION] = config[CONF_SW_VERSION]
 
     if CONF_VIA_DEVICE in config:
-        info["via_device"] = (DOMAIN, config[CONF_VIA_DEVICE])
+        info[ATTR_VIA_DEVICE] = (DOMAIN, config[CONF_VIA_DEVICE])
 
     if CONF_SUGGESTED_AREA in config:
-        info["suggested_area"] = config[CONF_SUGGESTED_AREA]
+        info[ATTR_SUGGESTED_AREA] = config[CONF_SUGGESTED_AREA]
+
+    if CONF_CONFIGURATION_URL in config:
+        info[ATTR_CONFIGURATION_URL] = config[CONF_CONFIGURATION_URL]
 
     return info
 
@@ -550,11 +585,12 @@ class MqttEntityDeviceInfo(Entity):
         device_info = self.device_info
 
         if config_entry_id is not None and device_info is not None:
-            device_info["config_entry_id"] = config_entry_id
-            device_registry.async_get_or_create(**device_info)
+            device_registry.async_get_or_create(
+                config_entry_id=config_entry_id, **device_info
+            )
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         return device_info_from_config(self._device_config)
 
@@ -567,6 +603,8 @@ class MqttEntity(
 ):
     """Representation of an MQTT entity."""
 
+    _entity_id_format: str
+
     def __init__(self, hass, config, config_entry, discovery_data):
         """Init the MQTT Entity."""
         self.hass = hass
@@ -577,11 +615,20 @@ class MqttEntity(
         # Load config
         self._setup_from_config(self._config)
 
+        # Initialize entity_id from config
+        self._init_entity_id()
+
         # Initialize mixin classes
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
+
+    def _init_entity_id(self):
+        """Set entity_id from object_id if defined in config."""
+        init_entity_id_from_config(
+            self.hass, self, self._config, self._entity_id_format
+        )
 
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
@@ -624,6 +671,11 @@ class MqttEntity(
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._config[CONF_ENABLED_BY_DEFAULT]
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return the entity category if any."""
+        return self._config.get(CONF_ENTITY_CATEGORY)
 
     @property
     def icon(self):

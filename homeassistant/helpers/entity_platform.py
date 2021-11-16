@@ -5,10 +5,10 @@ import asyncio
 from collections.abc import Callable, Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-import logging
-from logging import Logger
+from logging import Logger, getLogger
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Protocol
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -59,7 +59,7 @@ PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = getLogger(__name__)
 
 
 class AddEntitiesCallback(Protocol):
@@ -458,7 +458,9 @@ class EntityPlatform:
             device_id = None
 
             if config_entry_id is not None and device_info is not None:
-                processed_dev_info = {"config_entry_id": config_entry_id}
+                processed_dev_info: dict[str, str | None] = {
+                    "config_entry_id": config_entry_id
+                }
                 for key in (
                     "connections",
                     "default_manufacturer",
@@ -475,6 +477,23 @@ class EntityPlatform:
                 ):
                     if key in device_info:
                         processed_dev_info[key] = device_info[key]  # type: ignore[misc]
+
+                if "configuration_url" in device_info:
+                    if device_info["configuration_url"] is None:
+                        processed_dev_info["configuration_url"] = None
+                    else:
+                        configuration_url = str(device_info["configuration_url"])
+                        if urlparse(configuration_url).scheme in [
+                            "http",
+                            "https",
+                            "homeassistant",
+                        ]:
+                            processed_dev_info["configuration_url"] = configuration_url
+                        else:
+                            _LOGGER.warning(
+                                "Ignoring invalid device configuration_url '%s'",
+                                configuration_url,
+                            )
 
                 try:
                     device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
@@ -501,6 +520,7 @@ class EntityPlatform:
                 unit_of_measurement=entity.unit_of_measurement,
                 original_name=entity.name,
                 original_icon=entity.icon,
+                entity_category=entity.entity_category,
             )
 
             entity.registry_entry = entry
@@ -716,8 +736,7 @@ current_platform: ContextVar[EntityPlatform | None] = ContextVar(
 @callback
 def async_get_current_platform() -> EntityPlatform:
     """Get the current platform from context."""
-    platform = current_platform.get()
-    if platform is None:
+    if (platform := current_platform.get()) is None:
         raise RuntimeError("Cannot get non-set current platform")
     return platform
 

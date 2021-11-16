@@ -1,10 +1,11 @@
 """Config flow for Wallbox integration."""
 import voluptuous as vol
+from wallbox import Wallbox
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from . import InvalidAuth, WallboxHub
+from . import InvalidAuth, WallboxCoordinator
 from .const import CONF_STATION, DOMAIN
 
 COMPONENT_DOMAIN = DOMAIN
@@ -23,9 +24,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    hub = WallboxHub(data["station"], data["username"], data["password"], hass)
+    wallbox = Wallbox(data["username"], data["password"])
+    wallbox_coordinator = WallboxCoordinator(data["station"], wallbox, hass)
 
-    await hub.async_get_data()
+    await wallbox_coordinator.async_validate_input()
 
     # Return info that you want to store in the config entry.
     return {"title": "Wallbox Portal"}
@@ -33,6 +35,18 @@ async def validate_input(hass: core.HomeAssistant, data):
 
 class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
     """Handle a config flow for Wallbox."""
+
+    def __init__(self):
+        """Start the Wallbox config flow."""
+        self._reauth_entry = None
+
+    async def async_step_reauth(self, user_input=None):
+        """Perform reauth upon an API authentication error."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+
+        return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -45,14 +59,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
         errors = {}
 
         try:
-            info = await validate_input(self.hass, user_input)
+            await self.async_set_unique_id(user_input["station"])
+            if not self._reauth_entry:
+                self._abort_if_unique_id_configured()
+                info = await validate_input(self.hass, user_input)
+                return self.async_create_entry(title=info["title"], data=user_input)
+            if user_input["station"] == self._reauth_entry.data[CONF_STATION]:
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry, data=user_input, unique_id=user_input["station"]
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                )
+                return self.async_abort(reason="reauth_successful")
+            errors["base"] = "reauth_invalid"
         except ConnectionError:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        else:
-            return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )

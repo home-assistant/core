@@ -33,9 +33,8 @@ def with_store(orig_func: Callable) -> Callable:
         """Provide user specific data and store to function."""
         stores, data = hass.data[DATA_STORAGE]
         user_id = connection.user.id
-        store = stores.get(user_id)
 
-        if store is None:
+        if (store := stores.get(user_id)) is None:
             store = stores[user_id] = hass.helpers.storage.Store(
                 STORAGE_VERSION_USER_DATA, f"frontend.user_data_{connection.user.id}"
             )

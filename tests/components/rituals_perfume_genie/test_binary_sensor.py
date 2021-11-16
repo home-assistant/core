@@ -1,7 +1,7 @@
 """Tests for the Rituals Perfume Genie binary sensor platform."""
 from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
 from homeassistant.components.rituals_perfume_genie.binary_sensor import CHARGING_SUFFIX
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_ON
+from homeassistant.const import ATTR_DEVICE_CLASS, ENTITY_CATEGORY_DIAGNOSTIC, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 
@@ -28,3 +28,4 @@ async def test_binary_sensors(hass: HomeAssistant) -> None:
     entry = registry.async_get("binary_sensor.genie_battery_charging")
     assert entry
     assert entry.unique_id == f"{hublot}{CHARGING_SUFFIX}"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC

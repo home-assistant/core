@@ -12,6 +12,9 @@
         "step": {
             "login": {
                 "data": {
+                    "country_code": "Code pays",
+                    "endpoint": "Zone de disponibilit\u00e9",
+                    "password": "Mot de passe",
                     "tuya_app_type": "Application mobile",
                     "username": "Compte"
                 },

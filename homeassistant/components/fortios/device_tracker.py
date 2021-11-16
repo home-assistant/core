@@ -102,9 +102,7 @@ class FortiOSDeviceScanner(DeviceScanner):
 
         device = device.lower()
 
-        data = self._clients_json
-
-        if data == 0:
+        if (data := self._clients_json) == 0:
             _LOGGER.error("No json results to get device names")
             return None
 

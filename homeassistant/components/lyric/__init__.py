@@ -93,6 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> Lyric:
         """Fetch data from Lyric."""
+        await oauth_session.async_ensure_token_valid()
         try:
             async with async_timeout.timeout(60):
                 await lyric.get_locations()
@@ -170,9 +171,9 @@ class LyricDeviceEntity(LyricEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Honeywell Lyric instance."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
-            "manufacturer": "Honeywell",
-            "model": self.device.deviceModel,
-            "name": self.device.name,
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
+            manufacturer="Honeywell",
+            model=self.device.deviceModel,
+            name=self.device.name,
+        )

@@ -8,6 +8,7 @@ from pygti.exceptions import InvalidAuth
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ID, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
 from homeassistant.util.dt import get_time_zone, utcnow
 
@@ -158,8 +159,8 @@ class HVVDepartureSensor(SensorEntity):
     @property
     def device_info(self):
         """Return the device info for this sensor."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (
                     DOMAIN,
                     self.config_entry.entry_id,
@@ -167,9 +168,9 @@ class HVVDepartureSensor(SensorEntity):
                     self.config_entry.data[CONF_STATION]["type"],
                 )
             },
-            "name": self._name,
-            "manufacturer": MANUFACTURER,
-        }
+            manufacturer=MANUFACTURER,
+            name=self._name,
+        )
 
     @property
     def name(self):

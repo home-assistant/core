@@ -1,5 +1,6 @@
 """Test the Shelly config flow."""
 import asyncio
+from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
@@ -325,8 +326,14 @@ async def test_form_firmware_unsupported(hass):
 @pytest.mark.parametrize(
     "error",
     [
-        (aiohttp.ClientResponseError(Mock(), (), status=400), "cannot_connect"),
-        (aiohttp.ClientResponseError(Mock(), (), status=401), "invalid_auth"),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST),
+            "cannot_connect",
+        ),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.UNAUTHORIZED),
+            "invalid_auth",
+        ),
         (asyncio.TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
@@ -480,7 +487,10 @@ async def test_zeroconf_sleeping_device(hass):
 @pytest.mark.parametrize(
     "error",
     [
-        (aiohttp.ClientResponseError(Mock(), (), status=400), "cannot_connect"),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST),
+            "cannot_connect",
+        ),
         (asyncio.TimeoutError, "cannot_connect"),
     ],
 )

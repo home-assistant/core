@@ -272,14 +272,10 @@ async def async_get_still_stream(
 
 def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     """Get camera component from entity_id."""
-    component = hass.data.get(DOMAIN)
-
-    if component is None:
+    if (component := hass.data.get(DOMAIN)) is None:
         raise HomeAssistantError("Camera integration not set up")
 
-    camera = component.get_entity(entity_id)
-
-    if camera is None:
+    if (camera := component.get_entity(entity_id)) is None:
         raise HomeAssistantError("Camera not found")
 
     if not camera.is_on:
@@ -424,7 +420,7 @@ class Camera(Entity):
         return MIN_STREAM_INTERVAL
 
     @property
-    def stream_type(self) -> str | None:
+    def frontend_stream_type(self) -> str | None:
         """Return the type of stream supported by this camera.
 
         A camera may have a single stream type which is used to inform the
@@ -572,8 +568,8 @@ class Camera(Entity):
         if self.motion_detection_enabled:
             attrs["motion_detection"] = self.motion_detection_enabled
 
-        if self.stream_type:
-            attrs["stream_type"] = self.stream_type
+        if self.frontend_stream_type:
+            attrs["frontend_stream_type"] = self.frontend_stream_type
 
         return attrs
 
@@ -596,9 +592,7 @@ class CameraView(HomeAssistantView):
 
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
-        camera = self.component.get_entity(entity_id)
-
-        if camera is None:
+        if (camera := self.component.get_entity(entity_id)) is None:
             raise web.HTTPNotFound()
 
         camera = cast(Camera, camera)
@@ -653,8 +647,7 @@ class CameraMjpegStream(CameraView):
 
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
-        interval_str = request.query.get("interval")
-        if interval_str is None:
+        if (interval_str := request.query.get("interval")) is None:
             stream = await camera.handle_async_mjpeg_stream(request)
             if stream is None:
                 raise web.HTTPBadGateway()
@@ -749,11 +742,11 @@ async def ws_camera_web_rtc_offer(
     entity_id = msg["entity_id"]
     offer = msg["offer"]
     camera = _get_camera_from_entity_id(hass, entity_id)
-    if camera.stream_type != STREAM_TYPE_WEB_RTC:
+    if camera.frontend_stream_type != STREAM_TYPE_WEB_RTC:
         connection.send_error(
             msg["id"],
             "web_rtc_offer_failed",
-            f"Camera does not support WebRTC, stream_type={camera.stream_type}",
+            f"Camera does not support WebRTC, frontend_stream_type={camera.frontend_stream_type}",
         )
         return
     try:

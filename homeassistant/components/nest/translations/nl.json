@@ -18,6 +18,13 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Toegangstoken"
+                },
+                "description": "Om uw Google account te koppelen, [authoriseer uw account]({url}).\n\nNa autorisatie, copy-paste u de gegeven toegangstoken hieronder.",
+                "title": "Link Google Account"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Leverancier"

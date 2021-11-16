@@ -154,8 +154,7 @@ class ConversationProcessView(http.HomeAssistantView):
 
 async def _get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
     """Get the active conversation agent."""
-    agent = hass.data.get(DATA_AGENT)
-    if agent is None:
+    if (agent := hass.data.get(DATA_AGENT)) is None:
         agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
         await agent.async_initialize(hass.data.get(DATA_CONFIG))
     return agent

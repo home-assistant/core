@@ -332,7 +332,7 @@ class ZigbeeChannel(LogMixin):
         if ch_specific_init:
             await ch_specific_init(from_cache=from_cache)
 
-        self.debug("finished channel configuration")
+        self.debug("finished channel initialization")
         self._status = ChannelStatus.INITIALIZED
 
     @callback

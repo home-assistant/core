@@ -60,6 +60,7 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    CONF_TOPIC,
     CONF_WILL_MESSAGE,
     DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
@@ -106,6 +107,7 @@ DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_TLS_PROTOCOL = "auto"
 
+ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
 
 MAX_RECONNECT_WAIT = 300  # seconds
@@ -220,15 +222,19 @@ MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 # Service call validation schema
-MQTT_PUBLISH_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
-        vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
-        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-    },
-    required=True,
+MQTT_PUBLISH_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Exclusive(ATTR_TOPIC, CONF_TOPIC): valid_publish_topic,
+            vol.Exclusive(ATTR_TOPIC_TEMPLATE, CONF_TOPIC): cv.string,
+            vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
+            vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
+            vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+            vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        },
+        required=True,
+    ),
+    cv.has_at_least_one_key(ATTR_TOPIC, ATTR_TOPIC_TEMPLATE),
 )
 
 
@@ -245,39 +251,16 @@ def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
     return data
 
 
-@bind_hass
-def publish(hass: HomeAssistant, topic, payload, qos=None, retain=None) -> None:
+def publish(hass: HomeAssistant, topic, payload, qos=0, retain=False) -> None:
     """Publish message to an MQTT topic."""
     hass.add_job(async_publish, hass, topic, payload, qos, retain)
 
 
-@callback
-@bind_hass
-def async_publish(
-    hass: HomeAssistant, topic: Any, payload, qos=None, retain=None
+async def async_publish(
+    hass: HomeAssistant, topic: Any, payload, qos=0, retain=False
 ) -> None:
     """Publish message to an MQTT topic."""
-    data = _build_publish_data(topic, qos, retain)
-    data[ATTR_PAYLOAD] = payload
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
-
-
-@bind_hass
-def publish_template(
-    hass: HomeAssistant, topic, payload_template, qos=None, retain=None
-) -> None:
-    """Publish message to an MQTT topic."""
-    hass.add_job(async_publish_template, hass, topic, payload_template, qos, retain)
-
-
-@bind_hass
-def async_publish_template(
-    hass: HomeAssistant, topic, payload_template, qos=None, retain=None
-) -> None:
-    """Publish message to an MQTT topic using a template payload."""
-    data = _build_publish_data(topic, qos, retain)
-    data[ATTR_PAYLOAD_TEMPLATE] = payload_template
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
+    await hass.data[DATA_MQTT].async_publish(topic, str(payload), qos, retain)
 
 
 AsyncDeprecatedMessageCallbackType = Callable[
@@ -473,11 +456,36 @@ async def async_setup_entry(hass, entry):
 
     async def async_publish_service(call: ServiceCall):
         """Handle MQTT publish service calls."""
-        msg_topic: str = call.data[ATTR_TOPIC]
+        msg_topic = call.data.get(ATTR_TOPIC)
+        msg_topic_template = call.data.get(ATTR_TOPIC_TEMPLATE)
         payload = call.data.get(ATTR_PAYLOAD)
         payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
+        if msg_topic_template is not None:
+            try:
+                rendered_topic = template.Template(
+                    msg_topic_template, hass
+                ).async_render(parse_result=False)
+                msg_topic = valid_publish_topic(rendered_topic)
+            except (template.jinja2.TemplateError, TemplateError) as exc:
+                _LOGGER.error(
+                    "Unable to publish: rendering topic template of %s "
+                    "failed because %s",
+                    msg_topic_template,
+                    exc,
+                )
+                return
+            except vol.Invalid as err:
+                _LOGGER.error(
+                    "Unable to publish: topic template '%s' produced an "
+                    "invalid topic '%s' after rendering (%s)",
+                    msg_topic_template,
+                    rendered_topic,
+                    err,
+                )
+                return
+
         if payload_template is not None:
             try:
                 payload = template.Template(payload_template, hass).async_render(
@@ -598,8 +606,7 @@ class MQTT:
         """
         self = hass.data[DATA_MQTT]
 
-        conf = hass.data.get(DATA_MQTT_CONFIG)
-        if conf is None:
+        if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
             conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
 
         self.conf = _merge_config(entry, conf)
@@ -622,8 +629,7 @@ class MQTT:
         else:
             proto = mqtt.MQTTv311
 
-        client_id = self.conf.get(CONF_CLIENT_ID)
-        if client_id is None:
+        if (client_id := self.conf.get(CONF_CLIENT_ID)) is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
@@ -637,9 +643,7 @@ class MQTT:
         if username is not None:
             self._mqttc.username_pw_set(username, password)
 
-        certificate = self.conf.get(CONF_CERTIFICATE)
-
-        if certificate == "auto":
+        if (certificate := self.conf.get(CONF_CERTIFICATE)) == "auto":
             certificate = certifi.where()
 
         client_key = self.conf.get(CONF_CLIENT_KEY)
@@ -1002,8 +1006,7 @@ async def websocket_remove_device(hass, connection, msg):
     device_id = msg["device_id"]
     dev_registry = await hass.helpers.device_registry.async_get_registry()
 
-    device = dev_registry.async_get(device_id)
-    if not device:
+    if not (device := dev_registry.async_get(device_id)):
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
         )

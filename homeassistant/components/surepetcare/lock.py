@@ -1,7 +1,6 @@
 """Support for Sure PetCare Flaps locks."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from surepy.entities import SurepyEntity
@@ -15,8 +14,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import SurePetcareDataCoordinator
 from .const import DOMAIN
 from .entity import SurePetcareEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
