@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "The inverter must be connected via an RS485 adaptor, please select serial port and the inverter's address as configured on the LCD panel",
+        "data": {
+          "port": "RS485 or USB-RS485 Adaptor Port",
+          "address": "Inverter Address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect, please check serial port, address, electrical connection and that inverter is on (in daylight)",
+      "invalid_serial_port": "Serial port is not a valid device or could not be openned",
+      "cannot_open_serial_port": "Cannot open serial port, please check and try again"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_serial_ports": "No com ports found.  Need a valid RS485 device to communicate."
+    }
+  }
+}

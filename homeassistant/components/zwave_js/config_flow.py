@@ -31,8 +31,15 @@ from .const import (
     CONF_ADDON_EMULATE_HARDWARE,
     CONF_ADDON_LOG_LEVEL,
     CONF_ADDON_NETWORK_KEY,
+    CONF_ADDON_S0_LEGACY_KEY,
+    CONF_ADDON_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_S2_AUTHENTICATED_KEY,
+    CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_INTEGRATION_CREATED_ADDON,
-    CONF_NETWORK_KEY,
+    CONF_S0_LEGACY_KEY,
+    CONF_S2_ACCESS_CONTROL_KEY,
+    CONF_S2_AUTHENTICATED_KEY,
+    CONF_S2_UNAUTHENTICATED_KEY,
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DOMAIN,
@@ -59,7 +66,10 @@ ADDON_LOG_LEVELS = {
 }
 ADDON_USER_INPUT_MAP = {
     CONF_ADDON_DEVICE: CONF_USB_PATH,
-    CONF_ADDON_NETWORK_KEY: CONF_NETWORK_KEY,
+    CONF_ADDON_S0_LEGACY_KEY: CONF_S0_LEGACY_KEY,
+    CONF_ADDON_S2_ACCESS_CONTROL_KEY: CONF_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_S2_AUTHENTICATED_KEY: CONF_S2_AUTHENTICATED_KEY,
+    CONF_ADDON_S2_UNAUTHENTICATED_KEY: CONF_S2_UNAUTHENTICATED_KEY,
     CONF_ADDON_LOG_LEVEL: CONF_LOG_LEVEL,
     CONF_ADDON_EMULATE_HARDWARE: CONF_EMULATE_HARDWARE,
 }
@@ -113,7 +123,10 @@ class BaseZwaveJSFlow(FlowHandler):
 
     def __init__(self) -> None:
         """Set up flow instance."""
-        self.network_key: str | None = None
+        self.s0_legacy_key: str | None = None
+        self.s2_access_control_key: str | None = None
+        self.s2_authenticated_key: str | None = None
+        self.s2_unauthenticated_key: str | None = None
         self.usb_path: str | None = None
         self.ws_address: str | None = None
         self.restart_addon: bool = False
@@ -302,6 +315,18 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return OptionsFlowHandler(config_entry)
 
+    async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
+        """Handle imported data.
+
+        This step will be used when importing data
+        during Z-Wave to Z-Wave JS migration.
+        """
+        # Note that the data comes from the zwave integration.
+        # So we don't use our constants here.
+        self.s0_legacy_key = data.get("network_key")
+        self.usb_path = data.get("usb_path")
+        return await self.async_step_user()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -450,7 +475,16 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         if addon_info.state == AddonState.RUNNING:
             addon_config = addon_info.options
             self.usb_path = addon_config[CONF_ADDON_DEVICE]
-            self.network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, "")
+            self.s0_legacy_key = addon_config.get(CONF_ADDON_S0_LEGACY_KEY, "")
+            self.s2_access_control_key = addon_config.get(
+                CONF_ADDON_S2_ACCESS_CONTROL_KEY, ""
+            )
+            self.s2_authenticated_key = addon_config.get(
+                CONF_ADDON_S2_AUTHENTICATED_KEY, ""
+            )
+            self.s2_unauthenticated_key = addon_config.get(
+                CONF_ADDON_S2_UNAUTHENTICATED_KEY, ""
+            )
             return await self.async_step_finish_addon_setup()
 
         if addon_info.state == AddonState.NOT_RUNNING:
@@ -466,13 +500,19 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         addon_config = addon_info.options
 
         if user_input is not None:
-            self.network_key = user_input[CONF_NETWORK_KEY]
+            self.s0_legacy_key = user_input[CONF_S0_LEGACY_KEY]
+            self.s2_access_control_key = user_input[CONF_S2_ACCESS_CONTROL_KEY]
+            self.s2_authenticated_key = user_input[CONF_S2_AUTHENTICATED_KEY]
+            self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
             self.usb_path = user_input[CONF_USB_PATH]
 
             new_addon_config = {
                 **addon_config,
                 CONF_ADDON_DEVICE: self.usb_path,
-                CONF_ADDON_NETWORK_KEY: self.network_key,
+                CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
+                CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
             }
 
             if new_addon_config != addon_config:
@@ -481,12 +521,32 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_start_addon()
 
         usb_path = self.usb_path or addon_config.get(CONF_ADDON_DEVICE) or ""
-        network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, self.network_key or "")
+        s0_legacy_key = addon_config.get(
+            CONF_ADDON_S0_LEGACY_KEY, self.s0_legacy_key or ""
+        )
+        s2_access_control_key = addon_config.get(
+            CONF_ADDON_S2_ACCESS_CONTROL_KEY, self.s2_access_control_key or ""
+        )
+        s2_authenticated_key = addon_config.get(
+            CONF_ADDON_S2_AUTHENTICATED_KEY, self.s2_authenticated_key or ""
+        )
+        s2_unauthenticated_key = addon_config.get(
+            CONF_ADDON_S2_UNAUTHENTICATED_KEY, self.s2_unauthenticated_key or ""
+        )
 
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_USB_PATH, default=usb_path): str,
-                vol.Optional(CONF_NETWORK_KEY, default=network_key): str,
+                vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
+                vol.Optional(
+                    CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
+                ): str,
+                vol.Optional(
+                    CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key
+                ): str,
+                vol.Optional(
+                    CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
+                ): str,
             }
         )
 
@@ -521,7 +581,10 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             updates={
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
-                CONF_NETWORK_KEY: self.network_key,
+                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
+                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
             }
         )
         return self._async_create_entry_from_vars()
@@ -538,7 +601,10 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
-                CONF_NETWORK_KEY: self.network_key,
+                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
+                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
                 CONF_USE_ADDON: self.use_addon,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
@@ -648,13 +714,19 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
         addon_config = addon_info.options
 
         if user_input is not None:
-            self.network_key = user_input[CONF_NETWORK_KEY]
+            self.s0_legacy_key = user_input[CONF_S0_LEGACY_KEY]
+            self.s2_access_control_key = user_input[CONF_S2_ACCESS_CONTROL_KEY]
+            self.s2_authenticated_key = user_input[CONF_S2_AUTHENTICATED_KEY]
+            self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
             self.usb_path = user_input[CONF_USB_PATH]
 
             new_addon_config = {
                 **addon_config,
                 CONF_ADDON_DEVICE: self.usb_path,
-                CONF_ADDON_NETWORK_KEY: self.network_key,
+                CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
+                CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
                 CONF_ADDON_LOG_LEVEL: user_input[CONF_LOG_LEVEL],
                 CONF_ADDON_EMULATE_HARDWARE: user_input[CONF_EMULATE_HARDWARE],
             }
@@ -664,6 +736,8 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
                     self.restart_addon = True
                 # Copy the add-on config to keep the objects separate.
                 self.original_addon_config = dict(addon_config)
+                # Remove legacy network_key
+                new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
                 await self._async_set_addon_config(new_addon_config)
 
             if addon_info.state == AddonState.RUNNING and not self.restart_addon:
@@ -679,14 +753,34 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
             return await self.async_step_start_addon()
 
         usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
-        network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, self.network_key or "")
+        s0_legacy_key = addon_config.get(
+            CONF_ADDON_S0_LEGACY_KEY, self.s0_legacy_key or ""
+        )
+        s2_access_control_key = addon_config.get(
+            CONF_ADDON_S2_ACCESS_CONTROL_KEY, self.s2_access_control_key or ""
+        )
+        s2_authenticated_key = addon_config.get(
+            CONF_ADDON_S2_AUTHENTICATED_KEY, self.s2_authenticated_key or ""
+        )
+        s2_unauthenticated_key = addon_config.get(
+            CONF_ADDON_S2_UNAUTHENTICATED_KEY, self.s2_unauthenticated_key or ""
+        )
         log_level = addon_config.get(CONF_ADDON_LOG_LEVEL, "info")
         emulate_hardware = addon_config.get(CONF_ADDON_EMULATE_HARDWARE, False)
 
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_USB_PATH, default=usb_path): str,
-                vol.Optional(CONF_NETWORK_KEY, default=network_key): str,
+                vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
+                vol.Optional(
+                    CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
+                ): str,
+                vol.Optional(
+                    CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key
+                ): str,
+                vol.Optional(
+                    CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
+                ): str,
                 vol.Optional(CONF_LOG_LEVEL, default=log_level): vol.In(
                     ADDON_LOG_LEVELS
                 ),
@@ -736,7 +830,10 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
                 **self.config_entry.data,
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
-                CONF_NETWORK_KEY: self.network_key,
+                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
+                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
                 CONF_USE_ADDON: True,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             }
@@ -769,6 +866,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
         addon_config_input = {
             ADDON_USER_INPUT_MAP[addon_key]: addon_val
             for addon_key, addon_val in self.original_addon_config.items()
+            if addon_key in ADDON_USER_INPUT_MAP
         }
         _LOGGER.debug("Reverting add-on options, reason: %s", reason)
         return await self.async_step_configure_addon(addon_config_input)

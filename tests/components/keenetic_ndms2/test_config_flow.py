@@ -211,6 +211,56 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_ssdp_ignored(hass: HomeAssistant) -> None:
+    """Test unique ID ignored and discovered."""
+
+    entry = MockConfigEntry(
+        domain=keenetic.DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id=MOCK_SSDP_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN],
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        keenetic.DOMAIN,
+        context={CONF_SOURCE: config_entries.SOURCE_SSDP},
+        data=discovery_info,
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_ssdp_update_host(hass: HomeAssistant) -> None:
+    """Test unique ID configured and discovered with the new host."""
+
+    entry = MockConfigEntry(
+        domain=keenetic.DOMAIN,
+        data=MOCK_DATA,
+        options=MOCK_OPTIONS,
+        unique_id=MOCK_SSDP_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN],
+    )
+    entry.add_to_hass(hass)
+
+    new_ip = "10.10.10.10"
+
+    discovery_info = {
+        **MOCK_SSDP_DISCOVERY_INFO,
+        ssdp.ATTR_SSDP_LOCATION: f"http://{new_ip}/",
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        keenetic.DOMAIN,
+        context={CONF_SOURCE: config_entries.SOURCE_SSDP},
+        data=discovery_info,
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == new_ip
+
+
 async def test_ssdp_reject_no_udn(hass: HomeAssistant) -> None:
     """Discovered device has no UDN."""
 

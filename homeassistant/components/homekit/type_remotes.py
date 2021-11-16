@@ -207,8 +207,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
-        key_name = REMOTE_KEYS.get(value)
-        if key_name is None:
+        if (key_name := REMOTE_KEYS.get(value)) is None:
             _LOGGER.warning("%s: Unhandled key press for %s", self.entity_id, value)
             return
         self.hass.bus.async_fire(

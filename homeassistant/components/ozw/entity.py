@@ -13,12 +13,13 @@ from openzwavemqtt.const import (
 from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
 
+from homeassistant.const import ATTR_NAME, ATTR_SW_VERSION, ATTR_VIA_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from . import const
 from .const import DOMAIN, PLATFORMS
@@ -184,7 +185,7 @@ class ZWaveDeviceEntity(Entity):
         )
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information for the device registry."""
         node = self.values.primary.node
         node_instance = self.values.primary.instance
@@ -192,20 +193,20 @@ class ZWaveDeviceEntity(Entity):
         node_firmware = node.get_value(
             CommandClass.VERSION, ValueIndex.VERSION_APPLICATION
         )
-        device_info = {
-            "identifiers": {(DOMAIN, dev_id)},
-            "name": create_device_name(node),
-            "manufacturer": node.node_manufacturer_name,
-            "model": node.node_product_name,
-        }
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, dev_id)},
+            name=create_device_name(node),
+            manufacturer=node.node_manufacturer_name,
+            model=node.node_product_name,
+        )
         if node_firmware is not None:
-            device_info["sw_version"] = node_firmware.value
+            device_info[ATTR_SW_VERSION] = node_firmware.value
 
         # device with multiple instances is split up into virtual devices for each instance
         if node_instance > 1:
             parent_dev_id = create_device_id(node)
-            device_info["name"] += f" - Instance {node_instance}"
-            device_info["via_device"] = (DOMAIN, parent_dev_id)
+            device_info[ATTR_NAME] += f" - Instance {node_instance}"
+            device_info[ATTR_VIA_DEVICE] = (DOMAIN, parent_dev_id)
         return device_info
 
     @property

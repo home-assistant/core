@@ -131,9 +131,7 @@ class ZhaStorage:
 @bind_hass
 async def async_get_registry(hass: HomeAssistant) -> ZhaStorage:
     """Return zha device storage instance."""
-    task = hass.data.get(DATA_REGISTRY)
-
-    if task is None:
+    if (task := hass.data.get(DATA_REGISTRY)) is None:
 
         async def _load_reg() -> ZhaStorage:
             registry = ZhaStorage(hass)

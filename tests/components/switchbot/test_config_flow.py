@@ -14,13 +14,10 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.setup import async_setup_component
 
 from . import (
     USER_INPUT,
     USER_INPUT_CURTAIN,
-    USER_INPUT_INVALID,
-    USER_INPUT_UNSUPPORTED_DEVICE,
     YAML_CONFIG,
     _patch_async_setup_entry,
     init_integration,
@@ -31,7 +28,6 @@ DOMAIN = "switchbot"
 
 async def test_user_form_valid_mac(hass):
     """Test the user initiated form with password and valid mac."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -57,24 +53,6 @@ async def test_user_form_valid_mac(hass):
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-
-    # test duplicate device creation fails.
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured_device"
 
     # test curtain device creation.
 
@@ -103,52 +81,17 @@ async def test_user_form_valid_mac(hass):
 
     assert len(mock_setup_entry.mock_calls) == 1
 
-
-async def test_user_form_unsupported_device(hass):
-    """Test the user initiated form for unsupported device type."""
-    await async_setup_component(hass, "persistent_notification", {})
+    # tests abort if no unconfigured devices are found.
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT_UNSUPPORTED_DEVICE,
-    )
-    await hass.async_block_till_done()
-
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "switchbot_unsupported_type"
-
-
-async def test_user_form_invalid_device(hass):
-    """Test the user initiated form for invalid device type."""
-    await async_setup_component(hass, "persistent_notification", {})
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT_INVALID,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["reason"] == "no_unconfigured_devices"
 
 
 async def test_async_step_import(hass):
     """Test the config import flow."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -167,7 +110,6 @@ async def test_async_step_import(hass):
 
 async def test_user_form_exception(hass, switchbot_config_flow):
     """Test we handle exception on user form."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     switchbot_config_flow.side_effect = NotConnectedError
 
@@ -175,20 +117,13 @@ async def test_user_form_exception(hass, switchbot_config_flow):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
 
     switchbot_config_flow.side_effect = Exception
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == RESULT_TYPE_ABORT

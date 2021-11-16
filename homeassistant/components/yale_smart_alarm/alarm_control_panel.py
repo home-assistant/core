@@ -12,15 +12,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -96,12 +88,12 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
-        return {
-            ATTR_NAME: str(self.name),
-            ATTR_MANUFACTURER: MANUFACTURER,
-            ATTR_MODEL: MODEL,
-            ATTR_IDENTIFIERS: {(DOMAIN, self._identifier)},
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._identifier)},
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            name=str(self.name),
+        )
 
     @property
     def state(self):

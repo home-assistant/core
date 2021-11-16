@@ -90,6 +90,7 @@ class SonosData:
         self.discovery_ignored: set[str] = set()
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
+        self.mdns_names: dict[str, str] = {}
 
 
 async def async_setup(hass, config):
@@ -120,8 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hosts = config.get(CONF_HOSTS, [])
     _LOGGER.debug("Reached async_setup_entry, config=%s", config)
 
-    advertise_addr = config.get(CONF_ADVERTISE_ADDR)
-    if advertise_addr:
+    if advertise_addr := config.get(CONF_ADVERTISE_ADDR):
         soco_config.EVENT_ADVERTISE_IP = advertise_addr
 
     if deprecated_address := config.get(CONF_INTERFACE_ADDR):
@@ -273,12 +273,12 @@ class SonosDiscoveryManager:
         if uid.startswith("uuid:"):
             uid = uid[5:]
         self.async_discovered_player(
-            "SSDP", info, discovered_ip, uid, boot_seqnum, info.get("modelName")
+            "SSDP", info, discovered_ip, uid, boot_seqnum, info.get("modelName"), None
         )
 
     @callback
     def async_discovered_player(
-        self, source, info, discovered_ip, uid, boot_seqnum, model
+        self, source, info, discovered_ip, uid, boot_seqnum, model, mdns_name
     ):
         """Handle discovery via ssdp or zeroconf."""
         if model in DISCOVERY_IGNORED_MODELS:
@@ -287,6 +287,9 @@ class SonosDiscoveryManager:
         if boot_seqnum:
             boot_seqnum = int(boot_seqnum)
             self.data.boot_counts.setdefault(uid, boot_seqnum)
+        if mdns_name:
+            self.data.mdns_names[uid] = mdns_name
+
         if uid not in self.data.discovery_known:
             _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)

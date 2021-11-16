@@ -1,6 +1,7 @@
 """The tests for the Prometheus exporter."""
 from dataclasses import dataclass
 import datetime
+from http import HTTPStatus
 import unittest.mock as mock
 
 import pytest
@@ -106,7 +107,7 @@ async def test_view_empty_namespace(hass, hass_client):
     client = await prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
     body = body.split("\n")
@@ -234,7 +235,7 @@ async def test_view_default_namespace(hass, hass_client):
     client = await prometheus_client(hass, hass_client, None)
     resp = await client.get(prometheus.API_ENDPOINT)
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
     body = body.split("\n")

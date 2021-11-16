@@ -21,7 +21,8 @@
             "init": {
                 "data": {
                     "show_inactive": "Etkin Olmayan Karolar\u0131 G\u00f6ster"
-                }
+                },
+                "title": "Tile'yi Yap\u0131land\u0131r\u0131n"
             }
         }
     }

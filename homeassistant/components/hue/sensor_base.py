@@ -61,7 +61,7 @@ class SensorManager:
     async def async_update_data(self):
         """Update sensor data."""
         try:
-            with async_timeout.timeout(4):
+            async with async_timeout.timeout(4):
                 return await self.bridge.async_request_call(
                     self.bridge.api.sensors.update
                 )

@@ -50,6 +50,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_OFF
     assert state.attributes["percentage"] is None
@@ -101,6 +102,7 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_OFF
     await hass.async_block_till_done()
@@ -167,6 +169,7 @@ async def test_invalid_fan_speed_percentage(hass, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_OFF
     await hass.async_block_till_done()

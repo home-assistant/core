@@ -1,12 +1,13 @@
 """TemplateEntity utility class."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON
 from homeassistant.core import EVENT_HOMEASSISTANT_START, CoreState, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -19,7 +20,19 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.template import Template, result_as_boolean
 
+from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
+
 _LOGGER = logging.getLogger(__name__)
+
+
+TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
+        vol.Optional(CONF_ICON): cv.template,
+        vol.Optional(CONF_PICTURE): cv.template,
+    }
+)
 
 
 class _TemplateAttribute:
@@ -124,16 +137,23 @@ class TemplateEntity(Entity):
         icon_template=None,
         entity_picture_template=None,
         attribute_templates=None,
+        config=None,
     ):
         """Template Entity."""
         self._template_attrs = {}
         self._async_update = None
-        self._attribute_templates = attribute_templates
         self._attr_extra_state_attributes = {}
-        self._availability_template = availability_template
-        self._icon_template = icon_template
-        self._entity_picture_template = entity_picture_template
         self._self_ref_update_count = 0
+        if config is None:
+            self._attribute_templates = attribute_templates
+            self._availability_template = availability_template
+            self._icon_template = icon_template
+            self._entity_picture_template = entity_picture_template
+        else:
+            self._attribute_templates = config.get(CONF_ATTRIBUTES)
+            self._availability_template = config.get(CONF_AVAILABILITY)
+            self._icon_template = config.get(CONF_ICON)
+            self._entity_picture_template = config.get(CONF_PICTURE)
 
     @callback
     def _update_available(self, result):
@@ -232,13 +252,27 @@ class TemplateEntity(Entity):
 
     async def _async_template_startup(self, *_) -> None:
         template_var_tups = []
+        has_availability_template = False
         for template, attributes in self._template_attrs.items():
-            template_var_tups.append(TrackTemplate(template, None))
+            template_var_tup = TrackTemplate(template, None)
+            is_availability_template = False
             for attribute in attributes:
+                # pylint: disable-next=protected-access
+                if attribute._attribute == "_attr_available":
+                    has_availability_template = True
+                    is_availability_template = True
                 attribute.async_setup()
+            # Insert the availability template first in the list
+            if is_availability_template:
+                template_var_tups.insert(0, template_var_tup)
+            else:
+                template_var_tups.append(template_var_tup)
 
         result_info = async_track_template_result(
-            self.hass, template_var_tups, self._handle_results
+            self.hass,
+            template_var_tups,
+            self._handle_results,
+            has_super_template=has_availability_template,
         )
         self.async_on_remove(result_info.async_remove)
         self._async_update = result_info.async_refresh

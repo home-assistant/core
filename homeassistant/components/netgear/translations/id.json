@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (Opsional)",
+                    "password": "Kata Sandi",
+                    "port": "Port (Opsional)",
+                    "ssl": "Menggunakan sertifikat SSL",
+                    "username": "Nama Pengguna (Opsional)"
+                }
+            }
+        }
+    }
+}
