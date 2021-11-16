@@ -48,6 +48,8 @@
   },
   "info": {
     "ver": "0.8.5",
+    "version_latest_stable": "0.12.0",
+    "version_latest_beta": "0.13.0b1",
     "vid": 1909122,
     "leds": {
       "count": 30,
