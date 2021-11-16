@@ -164,3 +164,13 @@ async def test_button_upgrade_stay_beta(
     await hass.async_block_till_done()
     assert mock_wled.upgrade.call_count == 1
     mock_wled.upgrade.assert_called_with(version="0.8.6b2")
+
+
+@pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
+async def test_button_no_upgrade_available(
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
+) -> None:
+    """Test the upgrade button. There is no update available."""
+    state = hass.states.get("button.wled_websocket_upgrade")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
