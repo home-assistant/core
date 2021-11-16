@@ -76,6 +76,9 @@ async def async_setup_entry(
 class GroupedHueLight(HueBaseEntity, LightGroup):
     """Representation of a Grouped Hue light."""
 
+    # Entities for Hue groups are disabled by default
+    _attr_entity_registry_enabled_default = False
+
     def __init__(
         self, bridge: HueBridge, resource: GroupedLight, group: Room | Zone
     ) -> None:
@@ -87,6 +90,7 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
         self.controller = controller
         self.api: HueBridgeV2 = bridge.api
         self._attr_supported_features |= SUPPORT_TRANSITION
+
         self._update_values()
 
     async def async_added_to_hass(self) -> None:

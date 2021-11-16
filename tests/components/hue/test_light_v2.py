@@ -1,6 +1,7 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
 
 from homeassistant.components.light import COLOR_MODE_COLOR_TEMP, COLOR_MODE_XY
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
 from .const import FAKE_DEVICE, FAKE_LIGHT, FAKE_ZIGBEE_CONNECTIVITY
@@ -13,8 +14,8 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     await setup_platform(hass, mock_bridge_v2, "light")
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
-    # 8 entities should be created from test data
-    assert len(hass.states.async_all()) == 8
+    # 6 entities should be created from test data (grouped_lights are disabled by default)
+    assert len(hass.states.async_all()) == 6
 
     # test light which supports color and color temperature
     light_1 = hass.states.get("light.hue_light_with_color_and_color_temperature_1")
@@ -67,44 +68,6 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert light_4.state == "off"
     assert light_4.attributes["mode"] == "normal"
     assert light_4.attributes["supported_color_modes"] == []
-
-    # test light created for hue zone
-    light_5 = hass.states.get("light.test_zone")
-    assert light_5 is not None
-    assert light_5.attributes["friendly_name"] == "Test Zone"
-    assert light_5.state == "on"
-    assert light_5.attributes["brightness"] == 119
-    assert light_5.attributes["color_mode"] == COLOR_MODE_XY
-    assert set(light_5.attributes["supported_color_modes"]) == {
-        COLOR_MODE_COLOR_TEMP,
-        COLOR_MODE_XY,
-    }
-    assert light_5.attributes["min_mireds"] == 153
-    assert light_5.attributes["max_mireds"] == 500
-    assert light_5.attributes["is_hue_group"] is True
-    assert light_5.attributes["hue_scenes"] == {"Dynamic Test Scene"}
-    assert light_5.attributes["hue_type"] == "zone"
-    assert light_5.attributes["lights"] == {
-        "Hue light with color and color temperature 1",
-        "Hue light with color and color temperature gradient",
-        "Hue light with color and color temperature 2",
-    }
-
-    # test light created for hue room
-    light_6 = hass.states.get("light.test_room")
-    assert light_6 is not None
-    assert light_6.attributes["friendly_name"] == "Test Room"
-    assert light_6.state == "off"
-    assert light_6.attributes["supported_color_modes"] == [COLOR_MODE_COLOR_TEMP]
-    assert light_6.attributes["min_mireds"] == 153
-    assert light_6.attributes["max_mireds"] == 454
-    assert light_6.attributes["is_hue_group"] is True
-    assert light_6.attributes["hue_scenes"] == {"Regular Test Scene"}
-    assert light_6.attributes["hue_type"] == "room"
-    assert light_6.attributes["lights"] == {
-        "Hue on/off light",
-        "Hue light with color temperature only",
-    }
 
 
 async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_data):
@@ -204,85 +167,6 @@ async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_da
     assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 600
 
 
-async def test_grouped_light_turn_on_service(
-    hass, mock_bridge_v2, v2_resources_test_data
-):
-    """Test calling the turn on service on a grouped light."""
-    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
-
-    await setup_platform(hass, mock_bridge_v2, "light")
-
-    test_light_id = "light.test_zone"
-
-    await hass.services.async_call(
-        "light",
-        "turn_on",
-        {"entity_id": test_light_id, "brightness_pct": 100, "xy_color": (0.123, 0.123)},
-        blocking=True,
-    )
-
-    # PUT request should have been sent to ALL group lights with correct params
-    assert len(mock_bridge_v2.mock_requests) == 3
-    for index in range(0, 3):
-        assert mock_bridge_v2.mock_requests[index]["json"]["on"]["on"] is True
-        assert (
-            mock_bridge_v2.mock_requests[index]["json"]["dimming"]["brightness"] == 100
-        )
-        assert mock_bridge_v2.mock_requests[index]["json"]["color"]["xy"]["x"] == 0.123
-        assert mock_bridge_v2.mock_requests[index]["json"]["color"]["xy"]["y"] == 0.123
-
-    # Now generate update events by emitting the json we've sent as incoming events
-    for index in range(0, 3):
-        mock_bridge_v2.api.emit_event(
-            "update", mock_bridge_v2.mock_requests[index]["json"]
-        )
-    await hass.async_block_till_done()
-
-    # the light should now be on and have the properties we've set
-    test_light = hass.states.get(test_light_id)
-    assert test_light is not None
-    assert test_light.state == "on"
-    assert test_light.attributes["color_mode"] == COLOR_MODE_XY
-    assert test_light.attributes["brightness"] == 255
-    assert test_light.attributes["xy_color"] == (0.123, 0.123)
-
-
-async def test_grouped_light_turn_off_service(
-    hass, mock_bridge_v2, v2_resources_test_data
-):
-    """Test calling the turn off service on a grouped light."""
-    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
-
-    await setup_platform(hass, mock_bridge_v2, "light")
-
-    test_light_id = "light.test_zone"
-
-    # verify the light is on before we start
-    assert hass.states.get(test_light_id).state == "on"
-
-    # now call the HA turn_on service
-    await hass.services.async_call(
-        "light",
-        "turn_off",
-        {"entity_id": test_light_id},
-        blocking=True,
-    )
-
-    # PUT request should have been sent to ONLY the grouped_light resource with correct params
-    assert len(mock_bridge_v2.mock_requests) == 1
-    assert mock_bridge_v2.mock_requests[0]["method"] == "put"
-    assert mock_bridge_v2.mock_requests[0]["json"]["on"]["on"] is False
-
-    # Now generate update event by emitting the json we've sent as incoming event
-    mock_bridge_v2.api.emit_event("update", mock_bridge_v2.mock_requests[0]["json"])
-    await hass.async_block_till_done()
-
-    # the light should now be off
-    test_light = hass.states.get(test_light_id)
-    assert test_light is not None
-    assert test_light.state == "off"
-
-
 async def test_light_added(hass, mock_bridge_v2):
     """Test new light added to bridge."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
@@ -340,3 +224,130 @@ async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):
         # the entity should now be available only when zigbee is connected
         test_light = hass.states.get(test_light_id)
         assert test_light.state == "on" if status == "connected" else "unavailable"
+
+
+async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
+    """Test if all v2 grouped lights get created with correct features."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    await setup_platform(hass, mock_bridge_v2, "light")
+
+    # test if entities for hue groups are created and disabled by default
+    for entity_id in ["light.test_zone", "light.test_room"]:
+        ent_reg = er.async_get(hass)
+        entity_entry = ent_reg.async_get(entity_id)
+
+        assert entity_entry
+        assert entity_entry.disabled
+        assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+
+        # enable the entity
+        updated_entry = ent_reg.async_update_entity(
+            entity_entry.entity_id, **{"disabled_by": None}
+        )
+        assert updated_entry != entity_entry
+        assert updated_entry.disabled is False
+
+    # reload platform and check if entities are correctly there
+    await hass.config_entries.async_forward_entry_unload(
+        mock_bridge_v2.config_entry, "light"
+    )
+    await hass.config_entries.async_forward_entry_setup(
+        mock_bridge_v2.config_entry, "light"
+    )
+    await hass.async_block_till_done()
+
+    # test light created for hue zone
+    test_entity = hass.states.get("light.test_zone")
+    assert test_entity is not None
+    assert test_entity.attributes["friendly_name"] == "Test Zone"
+    assert test_entity.state == "on"
+    assert test_entity.attributes["brightness"] == 119
+    assert test_entity.attributes["color_mode"] == COLOR_MODE_XY
+    assert set(test_entity.attributes["supported_color_modes"]) == {
+        COLOR_MODE_COLOR_TEMP,
+        COLOR_MODE_XY,
+    }
+    assert test_entity.attributes["min_mireds"] == 153
+    assert test_entity.attributes["max_mireds"] == 500
+    assert test_entity.attributes["is_hue_group"] is True
+    assert test_entity.attributes["hue_scenes"] == {"Dynamic Test Scene"}
+    assert test_entity.attributes["hue_type"] == "zone"
+    assert test_entity.attributes["lights"] == {
+        "Hue light with color and color temperature 1",
+        "Hue light with color and color temperature gradient",
+        "Hue light with color and color temperature 2",
+    }
+
+    # test light created for hue room
+    test_entity = hass.states.get("light.test_room")
+    assert test_entity is not None
+    assert test_entity.attributes["friendly_name"] == "Test Room"
+    assert test_entity.state == "off"
+    assert test_entity.attributes["supported_color_modes"] == [COLOR_MODE_COLOR_TEMP]
+    assert test_entity.attributes["min_mireds"] == 153
+    assert test_entity.attributes["max_mireds"] == 454
+    assert test_entity.attributes["is_hue_group"] is True
+    assert test_entity.attributes["hue_scenes"] == {"Regular Test Scene"}
+    assert test_entity.attributes["hue_type"] == "room"
+    assert test_entity.attributes["lights"] == {
+        "Hue on/off light",
+        "Hue light with color temperature only",
+    }
+
+    # Test calling the turn on service on a grouped light
+    test_light_id = "light.test_zone"
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "brightness_pct": 100, "xy_color": (0.123, 0.123)},
+        blocking=True,
+    )
+
+    # PUT request should have been sent to ALL group lights with correct params
+    assert len(mock_bridge_v2.mock_requests) == 3
+    for index in range(0, 3):
+        assert mock_bridge_v2.mock_requests[index]["json"]["on"]["on"] is True
+        assert (
+            mock_bridge_v2.mock_requests[index]["json"]["dimming"]["brightness"] == 100
+        )
+        assert mock_bridge_v2.mock_requests[index]["json"]["color"]["xy"]["x"] == 0.123
+        assert mock_bridge_v2.mock_requests[index]["json"]["color"]["xy"]["y"] == 0.123
+
+    # Now generate update events by emitting the json we've sent as incoming events
+    for index in range(0, 3):
+        mock_bridge_v2.api.emit_event(
+            "update", mock_bridge_v2.mock_requests[index]["json"]
+        )
+    await hass.async_block_till_done()
+
+    # the light should now be on and have the properties we've set
+    test_light = hass.states.get(test_light_id)
+    assert test_light is not None
+    assert test_light.state == "on"
+    assert test_light.attributes["color_mode"] == COLOR_MODE_XY
+    assert test_light.attributes["brightness"] == 255
+    assert test_light.attributes["xy_color"] == (0.123, 0.123)
+
+    # Test calling the turn off service on a grouped light.
+    mock_bridge_v2.mock_requests.clear()
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": test_light_id},
+        blocking=True,
+    )
+
+    # PUT request should have been sent to ONLY the grouped_light resource with correct params
+    assert len(mock_bridge_v2.mock_requests) == 1
+    assert mock_bridge_v2.mock_requests[0]["method"] == "put"
+    assert mock_bridge_v2.mock_requests[0]["json"]["on"]["on"] is False
+
+    # Now generate update event by emitting the json we've sent as incoming event
+    mock_bridge_v2.api.emit_event("update", mock_bridge_v2.mock_requests[0]["json"])
+    await hass.async_block_till_done()
+
+    # the light should now be off
+    test_light = hass.states.get(test_light_id)
+    assert test_light is not None
+    assert test_light.state == "off"

@@ -265,12 +265,13 @@ async def setup_platform(
     mock_bridge.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}
 
+    # simulate a full setup by manually adding the bridge config entry
     await setup_bridge(hass, mock_bridge, config_entry)
+    assert await async_setup_component(hass, hue.DOMAIN, {}) is True
+    await hass.async_block_till_done()
 
     for platform in platforms:
         await hass.config_entries.async_forward_entry_setup(config_entry, platform)
-    # simulate a full setup by manually adding the bridge config entry
-    # config_entry.add_to_hass(hass)
 
     # and make sure it completes before going further
     await hass.async_block_till_done()
