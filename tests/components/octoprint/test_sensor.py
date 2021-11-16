@@ -11,7 +11,7 @@ async def test_sensors(hass):
     """Test the underlying sensors."""
     printer = {
         "state": {
-            "flags": {},
+            "flags": {"printing": True},
             "text": "Operational",
         },
         "temperature": {"tool1": {"actual": 18.83136, "target": 37.83136}},
@@ -82,7 +82,7 @@ async def test_sensors_no_target_temp(hass):
     """Test the underlying sensors."""
     printer = {
         "state": {
-            "flags": {},
+            "flags": {"printing": True, "paused": False},
             "text": "Operational",
         },
         "temperature": {"tool1": {"actual": 18.83136, "target": None}},
@@ -107,3 +107,39 @@ async def test_sensors_no_target_temp(hass):
     assert state.name == "OctoPrint target tool1 temp"
     entry = entity_registry.async_get("sensor.octoprint_target_tool1_temp")
     assert entry.unique_id == "target tool1 temp-uuid"
+
+
+async def test_sensors_paused(hass):
+    """Test the underlying sensors."""
+    printer = {
+        "state": {
+            "flags": {"printing": False},
+            "text": "Operational",
+        },
+        "temperature": {"tool1": {"actual": 18.83136, "target": None}},
+    }
+    job = {
+        "job": {},
+        "progress": {"completion": 50, "printTime": 600, "printTimeLeft": 6000},
+        "state": "Paused",
+    }
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=datetime(2020, 2, 20, 9, 10, 0)
+    ):
+        await init_integration(hass, "sensor", printer=printer, job=job)
+
+    entity_registry = er.async_get(hass)
+
+    state = hass.states.get("sensor.octoprint_start_time")
+    assert state is not None
+    assert state.state == "unknown"
+    assert state.name == "OctoPrint Start Time"
+    entry = entity_registry.async_get("sensor.octoprint_start_time")
+    assert entry.unique_id == "Start Time-uuid"
+
+    state = hass.states.get("sensor.octoprint_estimated_finish_time")
+    assert state is not None
+    assert state.state == "unknown"
+    assert state.name == "OctoPrint Estimated Finish Time"
+    entry = entity_registry.async_get("sensor.octoprint_estimated_finish_time")
+    assert entry.unique_id == "Estimated Finish Time-uuid"

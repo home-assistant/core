@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Ingin memulai penyiapan?"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

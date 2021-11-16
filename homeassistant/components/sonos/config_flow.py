@@ -1,12 +1,14 @@
 """Config flow for SONOS."""
+from typing import cast
+
 import soco
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
 from .helpers import hostname_to_uid
@@ -26,7 +28,7 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
         super().__init__(DOMAIN, "Sonos", _async_has_devices)
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf."""
         hostname = discovery_info["hostname"]
@@ -43,7 +45,7 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
             discovery_manager.async_discovered_player(
                 "Zeroconf", properties, host, uid, boot_seqnum, model, mdns_name
             )
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
 
 config_entries.HANDLERS.register(DOMAIN)(SonosDiscoveryFlowHandler)

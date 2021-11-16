@@ -11,11 +11,11 @@ from nettigo_air_monitor import ApiError, CannotGetMac, NettigoAirMonitor
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -69,7 +69,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info[CONF_HOST]
@@ -78,7 +78,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: self.host})
 
         try:
-            mac = await self._async_get_mac(cast(str, self.host))
+            mac = await self._async_get_mac(self.host)
         except (ApiError, ClientConnectorError, asyncio.TimeoutError):
             return self.async_abort(reason="cannot_connect")
         except CannotGetMac:
