@@ -1,6 +1,10 @@
 """Test KNX light."""
 from __future__ import annotations
 
+from datetime import timedelta
+
+from xknx.devices.light import Light as XknxLight
+
 from homeassistant.components.knx.const import CONF_STATE_ADDRESS, KNX_ADDRESS
 from homeassistant.components.knx.schema import LightSchema
 from homeassistant.components.light import (
@@ -19,8 +23,11 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt
 
 from .conftest import KNXTestKit
+
+from tests.common import async_fire_time_changed
 
 
 async def test_light_simple(hass: HomeAssistant, knx: KNXTestKit):
@@ -735,6 +742,12 @@ async def test_light_rgbw_individual(hass: HomeAssistant, knx: KNXTestKit):
     # turn OFF from KNX
     await knx.receive_write(test_red, (0,))
     await knx.receive_write(test_green, (0,))
+    # # individual color debounce takes 0.2 seconds if not all 4 addresses received
+    knx.assert_state("light.test", STATE_ON)
+    async_fire_time_changed(
+        hass, dt.utcnow() + timedelta(seconds=XknxLight.DEBOUNCE_TIMEOUT)
+    )
+    await knx.xknx.task_registry.block_till_done()
     knx.assert_state("light.test", STATE_OFF)
     # turn ON from KNX
     await knx.receive_write(test_red, (0,))

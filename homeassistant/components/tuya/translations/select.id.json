@@ -1,0 +1,13 @@
+{
+    "state": {
+        "tuya__light_mode": {
+            "none": "Mati"
+        },
+        "tuya__relay_status": {
+            "off": "Mati",
+            "on": "Nyala",
+            "power_off": "Mati",
+            "power_on": "Nyala"
+        }
+    }
+}

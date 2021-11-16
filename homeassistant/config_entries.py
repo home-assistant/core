@@ -1354,10 +1354,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self.async_step_discovery(discovery_info)
 
     async def async_step_homekit(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Homekit discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
     async def async_step_mqtt(
         self, discovery_info: DiscoveryInfoType

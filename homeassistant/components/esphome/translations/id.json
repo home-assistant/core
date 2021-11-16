@@ -22,6 +22,11 @@
                 "description": "Ingin menambahkan node ESPHome `{name}` ke Home Assistant?",
                 "title": "Perangkat node ESPHome yang ditemukan"
             },
+            "encryption_key": {
+                "data": {
+                    "noise_psk": "Kunci enkripsi"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",
