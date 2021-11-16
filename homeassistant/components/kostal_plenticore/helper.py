@@ -119,7 +119,7 @@ class Plenticore:
 class DataUpdateCoordinatorMixin:
     """Base implementation for read and write data."""
 
-    async def async_read_data(self, module_id: str, data_id: str) -> [str, bool]:
+    async def async_read_data(self, module_id: str, data_id: str) -> list[str, bool]:
         """Write settings back to Plenticore."""
         client = self._plenticore.client
 
