@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from aiohue import AiohueException, Unauthorized
-from aiohue.sensors import TYPE_ZLL_PRESENCE
+from aiohue.v1.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
@@ -14,13 +14,13 @@ from homeassistant.core import callback
 from homeassistant.helpers import debounce, entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import REQUEST_REFRESH_DELAY
+from ..const import REQUEST_REFRESH_DELAY
 from .helpers import remove_devices
 from .hue_event import EVENT_CONFIG_MAP
 from .sensor_device import GenericHueDevice
 
 SENSOR_CONFIG_MAP: dict[str, Any] = {}
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def _device_id(aiohue_sensor):
@@ -49,12 +49,12 @@ class SensorManager:
         self._enabled_platforms = ("binary_sensor", "sensor")
         self.coordinator = DataUpdateCoordinator(
             bridge.hass,
-            _LOGGER,
+            LOGGER,
             name="sensor",
             update_method=self.async_update_data,
             update_interval=self.SCAN_INTERVAL,
             request_refresh_debouncer=debounce.Debouncer(
-                bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+                bridge.hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
             ),
         )
 
@@ -76,7 +76,7 @@ class SensorManager:
         self._component_add_entities[platform] = async_add_entities
 
         if len(self._component_add_entities) < len(self._enabled_platforms):
-            _LOGGER.debug("Aborting start with %s, waiting for the rest", platform)
+            LOGGER.debug("Aborting start with %s, waiting for the rest", platform)
             return
 
         # We have all components available, start the updating.
@@ -173,7 +173,7 @@ class GenericHueSensor(GenericHueDevice, entity.Entity):
     def available(self):
         """Return if sensor is available."""
         return self.bridge.sensor_manager.coordinator.last_update_success and (
-            self.bridge.allow_unreachable
+            self.allow_unreachable
             # remotes like Hue Tap (ZGPSwitchSensor) have no _reachability_
             or self.sensor.config.get("reachable", True)
         )

@@ -1,7 +1,11 @@
 """Support for the Philips Hue sensor devices."""
 from homeassistant.helpers import entity
 
-from .const import DOMAIN as HUE_DOMAIN
+from ..const import (
+    CONF_ALLOW_UNREACHABLE,
+    DEFAULT_ALLOW_UNREACHABLE,
+    DOMAIN as HUE_DOMAIN,
+)
 
 
 class GenericHueDevice(entity.Entity):
@@ -13,6 +17,9 @@ class GenericHueDevice(entity.Entity):
         self._name = name
         self._primary_sensor = primary_sensor
         self.bridge = bridge
+        self.allow_unreachable = bridge.config_entry.options.get(
+            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
+        )
 
     @property
     def primary_sensor(self):
@@ -53,12 +60,3 @@ class GenericHueDevice(entity.Entity):
             sw_version=self.primary_sensor.swversion,
             via_device=(HUE_DOMAIN, self.bridge.api.config.bridgeid),
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity being added to Home Assistant."""
-        self.async_on_remove(
-            self.bridge.listen_updates(
-                self.sensor.ITEM_TYPE, self.sensor.id, self.async_write_ha_state
-            )
-        )
-        await super().async_added_to_hass()
