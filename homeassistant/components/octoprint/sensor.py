@@ -48,7 +48,7 @@ async def async_setup_entry(
                     x,
                     device_id,
                 )
-                for x in ["actual", "target"]
+                for x in ("actual", "target")
             ]
         )
 
