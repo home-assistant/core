@@ -275,7 +275,6 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Connect to panel and get config."""
-        errors = {}
         if user_input:
             # build config info and wait for user confirmation
             self.data[CONF_HOST] = user_input[CONF_HOST]
@@ -288,7 +287,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, self.data[CONF_HOST], self.data[CONF_PORT]
                 )
             except CannotConnect:
-                errors["base"] = "cannot_connect"
+                _LOGGER.error("Unable to connect to panel")
             else:
                 self.data[CONF_ID] = status.get(
                     "chipId", status["mac"].replace(":", "")
@@ -302,20 +301,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
                 return await self.async_step_confirm()
 
-        return self.async_show_form(
-            step_id="user",
-            description_placeholders={
-                "host": self.data.get(CONF_HOST, "Unknown"),
-                "port": self.data.get(CONF_PORT, "Unknown"),
-            },
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=self.data.get(CONF_HOST)): str,
-                    vol.Required(CONF_PORT, default=self.data.get(CONF_PORT)): int,
-                }
-            ),
-            errors=errors,
-        )
+        return self.async_abort(reason="unknown")
 
     async def async_step_confirm(self, user_input=None):
         """Attempt to link with the Konnected panel.
