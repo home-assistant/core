@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nama",
+                    "password": "Kata Sandi",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

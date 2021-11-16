@@ -11,6 +11,7 @@
             "cannot_connect": "Gagal terhubung",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

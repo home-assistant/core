@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "title": "Autentikasi Ulang Integrasi"
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    }
+}
