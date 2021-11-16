@@ -3,29 +3,17 @@ import asyncio
 from unittest.mock import Mock
 
 import aiohue
-import pytest
 
 from homeassistant.components import hue
-from homeassistant.components.hue import sensor_base
-from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
+from homeassistant.components.hue.const import ATTR_HUE_EVENT
+from homeassistant.components.hue.v1 import sensor_base
 from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
-from .conftest import create_mock_bridge, setup_bridge_for_sensors as setup_bridge
+from .conftest import create_mock_bridge, setup_platform
 
-from tests.common import (
-    async_capture_events,
-    async_fire_time_changed,
-    mock_device_registry,
-)
-
-
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
+from tests.common import async_capture_events, async_fire_time_changed
 
 PRESENCE_SENSOR_1_PRESENT = {
     "state": {"presence": True, "lastupdated": "2019-01-01T01:00:00"},
@@ -293,18 +281,17 @@ SENSOR_RESPONSE = {
 }
 
 
-async def test_no_sensors(hass, mock_bridge):
+async def test_no_sensors(hass, mock_bridge_v1):
     """Test the update_items function when no sensors are found."""
-    mock_bridge.allow_groups = True
-    mock_bridge.mock_sensor_responses.append({})
-    await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
+    mock_bridge_v1.mock_sensor_responses.append({})
+    await setup_platform(hass, mock_bridge_v1, ["binary_sensor", "sensor"])
+    assert len(mock_bridge_v1.mock_requests) == 1
     assert len(hass.states.async_all()) == 0
 
 
-async def test_sensors_with_multiple_bridges(hass, mock_bridge):
+async def test_sensors_with_multiple_bridges(hass, mock_bridge_v1):
     """Test the update_items function with some sensors."""
-    mock_bridge_2 = create_mock_bridge(hass)
+    mock_bridge_2 = create_mock_bridge(hass, api_version=1)
     mock_bridge_2.mock_sensor_responses.append(
         {
             "1": PRESENCE_SENSOR_3_PRESENT,
@@ -312,21 +299,23 @@ async def test_sensors_with_multiple_bridges(hass, mock_bridge):
             "3": TEMPERATURE_SENSOR_3,
         }
     )
-    mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
-    await setup_bridge(hass, mock_bridge)
-    await setup_bridge(hass, mock_bridge_2, hostname="mock-bridge-2")
+    mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
+    await setup_platform(hass, mock_bridge_v1, ["binary_sensor", "sensor"])
+    await setup_platform(
+        hass, mock_bridge_2, ["binary_sensor", "sensor"], "mock-bridge-2"
+    )
 
-    assert len(mock_bridge.mock_requests) == 1
+    assert len(mock_bridge_v1.mock_requests) == 1
     assert len(mock_bridge_2.mock_requests) == 1
     # 3 "physical" sensors with 3 virtual sensors each + 1 battery sensor
     assert len(hass.states.async_all()) == 10
 
 
-async def test_sensors(hass, mock_bridge):
+async def test_sensors(hass, mock_bridge_v1):
     """Test the update_items function with some sensors."""
-    mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
-    await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
+    mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
+    await setup_platform(hass, mock_bridge_v1, ["binary_sensor", "sensor"])
+    assert len(mock_bridge_v1.mock_requests) == 1
     # 2 "physical" sensors with 3 virtual sensors each
     assert len(hass.states.async_all()) == 7
 
@@ -366,23 +355,23 @@ async def test_sensors(hass, mock_bridge):
     )
 
 
-async def test_unsupported_sensors(hass, mock_bridge):
+async def test_unsupported_sensors(hass, mock_bridge_v1):
     """Test that unsupported sensors don't get added and don't fail."""
     response_with_unsupported = dict(SENSOR_RESPONSE)
     response_with_unsupported["7"] = UNSUPPORTED_SENSOR
-    mock_bridge.mock_sensor_responses.append(response_with_unsupported)
-    await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
+    mock_bridge_v1.mock_sensor_responses.append(response_with_unsupported)
+    await setup_platform(hass, mock_bridge_v1, ["binary_sensor", "sensor"])
+    assert len(mock_bridge_v1.mock_requests) == 1
     # 2 "physical" sensors with 3 virtual sensors each + 1 battery sensor
     assert len(hass.states.async_all()) == 7
 
 
-async def test_new_sensor_discovered(hass, mock_bridge):
+async def test_new_sensor_discovered(hass, mock_bridge_v1):
     """Test if 2nd update has a new sensor."""
-    mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
+    mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
 
-    await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
+    await setup_platform(hass, mock_bridge_v1, ["binary_sensor", "sensor"])
+    assert len(mock_bridge_v1.mock_requests) == 1
     assert len(hass.states.async_all()) == 7
 
     new_sensor_response = dict(SENSOR_RESPONSE)
@@ -394,13 +383,13 @@ async def test_new_sensor_discovered(hass, mock_bridge):
         }
     )
 
-    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+    mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert len(mock_bridge.mock_requests) == 2
+    assert len(mock_bridge_v1.mock_requests) == 2
     assert len(hass.states.async_all()) == 10
 
     presence = hass.states.get("binary_sensor.bedroom_sensor_motion")
@@ -411,25 +400,25 @@ async def test_new_sensor_discovered(hass, mock_bridge):
     assert temperature.state == "17.75"
 
 
-async def test_sensor_removed(hass, mock_bridge):
+async def test_sensor_removed(hass, mock_bridge_v1):
     """Test if 2nd update has removed sensor."""
-    mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
+    mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
 
-    await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
+    await setup_platform(hass, mock_bridge_v1, ["binary_sensor", "sensor"])
+    assert len(mock_bridge_v1.mock_requests) == 1
     assert len(hass.states.async_all()) == 7
 
-    mock_bridge.mock_sensor_responses.clear()
+    mock_bridge_v1.mock_sensor_responses.clear()
     keys = ("1", "2", "3")
-    mock_bridge.mock_sensor_responses.append({k: SENSOR_RESPONSE[k] for k in keys})
+    mock_bridge_v1.mock_sensor_responses.append({k: SENSOR_RESPONSE[k] for k in keys})
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
 
     # To flush out the service call to update the group
     await hass.async_block_till_done()
 
-    assert len(mock_bridge.mock_requests) == 2
+    assert len(mock_bridge_v1.mock_requests) == 2
     assert len(hass.states.async_all()) == 3
 
     sensor = hass.states.get("binary_sensor.living_room_sensor_motion")
@@ -439,31 +428,31 @@ async def test_sensor_removed(hass, mock_bridge):
     assert removed_sensor is None
 
 
-async def test_update_timeout(hass, mock_bridge):
+async def test_update_timeout(hass, mock_bridge_v1):
     """Test bridge marked as not available if timeout error during update."""
-    mock_bridge.api.sensors.update = Mock(side_effect=asyncio.TimeoutError)
-    await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 0
+    mock_bridge_v1.api.sensors.update = Mock(side_effect=asyncio.TimeoutError)
+    await setup_platform(hass, mock_bridge_v1, ["binary_sensor", "sensor"])
+    assert len(mock_bridge_v1.mock_requests) == 0
     assert len(hass.states.async_all()) == 0
 
 
-async def test_update_unauthorized(hass, mock_bridge):
+async def test_update_unauthorized(hass, mock_bridge_v1):
     """Test bridge marked as not authorized if unauthorized during update."""
-    mock_bridge.api.sensors.update = Mock(side_effect=aiohue.Unauthorized)
-    await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 0
+    mock_bridge_v1.api.sensors.update = Mock(side_effect=aiohue.Unauthorized)
+    await setup_platform(hass, mock_bridge_v1, ["binary_sensor", "sensor"])
+    assert len(mock_bridge_v1.mock_requests) == 0
     assert len(hass.states.async_all()) == 0
-    assert len(mock_bridge.handle_unauthorized_error.mock_calls) == 1
+    assert len(mock_bridge_v1.handle_unauthorized_error.mock_calls) == 1
 
 
-async def test_hue_events(hass, mock_bridge, device_reg):
+async def test_hue_events(hass, mock_bridge_v1, device_reg):
     """Test that hue remotes fire events when pressed."""
-    mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
+    mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
 
-    events = async_capture_events(hass, CONF_HUE_EVENT)
+    events = async_capture_events(hass, ATTR_HUE_EVENT)
 
-    await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
+    await setup_platform(hass, mock_bridge_v1, ["binary_sensor", "sensor"])
+    assert len(mock_bridge_v1.mock_requests) == 1
     assert len(hass.states.async_all()) == 7
     assert len(events) == 0
 
@@ -471,8 +460,8 @@ async def test_hue_events(hass, mock_bridge, device_reg):
         {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
 
-    mock_bridge.api.sensors["7"].last_event = {"type": "button"}
-    mock_bridge.api.sensors["8"].last_event = {"type": "button"}
+    mock_bridge_v1.api.sensors["7"].last_event = {"type": "button"}
+    mock_bridge_v1.api.sensors["8"].last_event = {"type": "button"}
 
     new_sensor_response = dict(SENSOR_RESPONSE)
     new_sensor_response["7"] = dict(new_sensor_response["7"])
@@ -480,7 +469,7 @@ async def test_hue_events(hass, mock_bridge, device_reg):
         "buttonevent": 18,
         "lastupdated": "2019-12-28T22:58:03",
     }
-    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+    mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
     async_fire_time_changed(
@@ -488,7 +477,7 @@ async def test_hue_events(hass, mock_bridge, device_reg):
     )
     await hass.async_block_till_done()
 
-    assert len(mock_bridge.mock_requests) == 2
+    assert len(mock_bridge_v1.mock_requests) == 2
     assert len(hass.states.async_all()) == 7
     assert len(events) == 1
     assert events[-1].data == {
@@ -509,7 +498,7 @@ async def test_hue_events(hass, mock_bridge, device_reg):
         "buttonevent": 3002,
         "lastupdated": "2019-12-28T22:58:03",
     }
-    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+    mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
     async_fire_time_changed(
@@ -517,7 +506,7 @@ async def test_hue_events(hass, mock_bridge, device_reg):
     )
     await hass.async_block_till_done()
 
-    assert len(mock_bridge.mock_requests) == 3
+    assert len(mock_bridge_v1.mock_requests) == 3
     assert len(hass.states.async_all()) == 7
     assert len(events) == 2
     assert events[-1].data == {
@@ -535,7 +524,7 @@ async def test_hue_events(hass, mock_bridge, device_reg):
         "buttonevent": 18,
         "lastupdated": "2019-12-28T22:58:02",
     }
-    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+    mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
     async_fire_time_changed(
@@ -543,7 +532,7 @@ async def test_hue_events(hass, mock_bridge, device_reg):
     )
     await hass.async_block_till_done()
 
-    assert len(mock_bridge.mock_requests) == 4
+    assert len(mock_bridge_v1.mock_requests) == 4
     assert len(hass.states.async_all()) == 7
     assert len(events) == 2
 
@@ -580,7 +569,7 @@ async def test_hue_events(hass, mock_bridge, device_reg):
             ],
         },
     }
-    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+    mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
     async_fire_time_changed(
@@ -588,13 +577,13 @@ async def test_hue_events(hass, mock_bridge, device_reg):
     )
     await hass.async_block_till_done()
 
-    assert len(mock_bridge.mock_requests) == 5
+    assert len(mock_bridge_v1.mock_requests) == 5
     assert len(hass.states.async_all()) == 8
     assert len(events) == 2
 
     # A new press fires the event
     new_sensor_response["21"]["state"]["lastupdated"] = "2020-01-31T15:57:19"
-    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+    mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
     async_fire_time_changed(
@@ -606,7 +595,7 @@ async def test_hue_events(hass, mock_bridge, device_reg):
         {(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
     )
 
-    assert len(mock_bridge.mock_requests) == 6
+    assert len(mock_bridge_v1.mock_requests) == 6
     assert len(hass.states.async_all()) == 8
     assert len(events) == 3
     assert events[-1].data == {
