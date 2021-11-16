@@ -5,6 +5,7 @@ import asyncio
 from collections import OrderedDict
 import datetime
 from enum import Enum
+from functools import partial
 import logging
 import socket
 from urllib.parse import urlparse
@@ -22,17 +23,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .alarms import SonosAlarms
 from .const import (
+    AVAILABILITY_CHECK_INTERVAL,
     DATA_SONOS,
     DATA_SONOS_DISCOVERY_MANAGER,
     DISCOVERY_INTERVAL,
     DOMAIN,
     PLATFORMS,
+    SONOS_CHECK_ACTIVITY,
     SONOS_REBOOTED,
-    SONOS_SEEN,
     UPNP_ST,
 )
 from .favorites import SonosFavorites
@@ -228,10 +230,7 @@ class SonosDiscoveryManager:
                 ),
                 None,
             )
-
-            if known_uid:
-                dispatcher_send(self.hass, f"{SONOS_SEEN}-{known_uid}")
-            else:
+            if not known_uid:
                 soco = self._create_soco(ip_addr, SoCoCreationSource.CONFIGURED)
                 if soco and soco.is_visible:
                     self._discovered_player(soco)
@@ -260,8 +259,6 @@ class SonosDiscoveryManager:
                     self._create_soco, discovered_ip, SoCoCreationSource.REBOOTED
                 ):
                     async_dispatcher_send(self.hass, f"{SONOS_REBOOTED}-{uid}", soco)
-            else:
-                async_dispatcher_send(self.hass, f"{SONOS_SEEN}-{uid}")
 
     async def _async_ssdp_discovered_player(self, info, change):
         if change == ssdp.SsdpChange.BYEBYE:
@@ -323,5 +320,16 @@ class SonosDiscoveryManager:
         self.entry.async_on_unload(
             await ssdp.async_register_callback(
                 self.hass, self._async_ssdp_discovered_player, {"st": UPNP_ST}
+            )
+        )
+
+        self.entry.async_on_unload(
+            self.hass.helpers.event.async_track_time_interval(
+                partial(
+                    async_dispatcher_send,
+                    self.hass,
+                    SONOS_CHECK_ACTIVITY,
+                ),
+                AVAILABILITY_CHECK_INTERVAL,
             )
         )
