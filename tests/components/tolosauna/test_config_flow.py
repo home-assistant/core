@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from tololib.errors import ResponseTimedOutError
 
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.tolosauna.const import DOMAIN
@@ -52,8 +53,25 @@ async def test_user_with_valid_host(hass: HomeAssistant, toloclient: Mock):
 
 
 async def test_user_with_unreachable_host(hass: HomeAssistant, toloclient: Mock):
-    """Test a user initiated config flow with provided host."""
+    """Test a user initiated config flow with provided host which is not reachable."""
     toloclient().get_status_info.side_effect = lambda *args, **kwargs: None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: "127.0.0.1"},
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock):
+    """Test a user initiated config flow with provided host which times out."""
+    toloclient().get_status_info.side_effect = lambda *args, **kwargs: (
+        _ for _ in ()
+    ).throw(ResponseTimedOutError())
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

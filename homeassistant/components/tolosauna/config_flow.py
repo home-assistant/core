@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from tololib import ToloClient
+from tololib.errors import ResponseTimedOutError
 import voluptuous as vol
 
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
@@ -16,9 +17,6 @@ from homeassistant.helpers.device_registry import format_mac
 
 from .const import DEFAULT_NAME, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, DOMAIN
 
-DATA_SCHEMA_USER = vol.Schema({vol.Required(CONF_HOST): str})
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -27,17 +25,18 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize ToloSaunaConfigFlow."""
-        self._discovered_host: str | None = None
+    _discovered_host: str | None = None
 
     @staticmethod
     def _check_device_availability(host: str) -> bool:
         client = ToloClient(host)
-        result = client.get_status_info(
-            resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
-        )
-        return result is not None
+        try:
+            result = client.get_status_info(
+                resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
+            )
+            return result is not None
+        except ResponseTimedOutError:
+            return False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -60,7 +59,9 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            errors=errors,
         )
 
     async def async_step_dhcp(self, discovery_info: dict[str, str]) -> FlowResult:

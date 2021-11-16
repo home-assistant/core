@@ -29,12 +29,10 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up tolosauna from a config entry."""
-    client = ToloClient(entry.data[CONF_HOST])
     coordinator = ToloSaunaUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {"client": client, "coordinator": coordinator}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -61,7 +59,7 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize ToloSaunaUpdateCoordinator."""
-        self._config_entry = entry
+        self.client = ToloClient(entry.data[CONF_HOST])
         super().__init__(
             hass=hass,
             logger=_LOGGER,
@@ -70,12 +68,11 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
         )
 
     async def _async_update_data(self) -> ToloSaunaData:
-        client = ToloClient(self._config_entry.data[CONF_HOST])
         try:
-            status = client.get_status_info(
+            status = self.client.get_status_info(
                 resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
             )
-            settings = client.get_settings_info(
+            settings = self.client.get_settings_info(
                 resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
             )
             return ToloSaunaData(status, settings)
@@ -92,34 +89,10 @@ class ToloSaunaCoordinatorEntity(CoordinatorEntity):
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
     ) -> None:
         """Initialize ToloSaunaCoordinatorEntity."""
-        self._config_entry = entry
         super().__init__(coordinator)
-
-    @property
-    def status(self) -> StatusInfo:
-        """Return TOLO Sauna status info."""
-        return self.coordinator.data.status
-
-    @property
-    def settings(self) -> SettingsInfo:
-        """Return TOLO Sauna settings info."""
-        return self.coordinator.data.settings
-
-    @property
-    def client(self) -> ToloClient:
-        """Return ToloClient instance."""
-
-        client: ToloClient = self.hass.data[DOMAIN][self._config_entry.entry_id][
-            "client"
-        ]
-        return client
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             name="TOLO Sauna",
-            identifiers={(DOMAIN, self._config_entry.entry_id)},
+            identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="SteamTec",
-            model=str(self.status.model.name).capitalize(),
+            model=self.coordinator.data.status.model.name.capitalize(),
         )
