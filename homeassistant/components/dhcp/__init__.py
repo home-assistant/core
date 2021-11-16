@@ -6,6 +6,7 @@ from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import threading
+from typing import Final, TypedDict
 
 from aiodiscover import DiscoverHosts
 from aiodiscover.discovery import (
@@ -45,13 +46,21 @@ from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
 MESSAGE_TYPE = "message-type"
-HOSTNAME = "hostname"
-MAC_ADDRESS = "macaddress"
-IP_ADDRESS = "ip"
+HOSTNAME: Final = "hostname"
+MAC_ADDRESS: Final = "macaddress"
+IP_ADDRESS: Final = "ip"
 DHCP_REQUEST = 3
 SCAN_INTERVAL = timedelta(minutes=60)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class DhcpServiceInfo(TypedDict):
+    """Prepared info from dhcp entries."""
+
+    ip: str
+    hostname: str
+    macaddress: str
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -150,11 +159,11 @@ class WatcherBase:
                 self.hass,
                 entry["domain"],
                 {"source": config_entries.SOURCE_DHCP},
-                {
-                    IP_ADDRESS: ip_address,
-                    HOSTNAME: lowercase_hostname,
-                    MAC_ADDRESS: data[MAC_ADDRESS],
-                },
+                DhcpServiceInfo(
+                    ip=ip_address,
+                    hostname=lowercase_hostname,
+                    macaddress=data[MAC_ADDRESS],
+                ),
             )
 
 
