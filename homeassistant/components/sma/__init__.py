@@ -29,7 +29,6 @@ from .const import (
     CONF_GROUP,
     CONF_KEY,
     CONF_UNIT,
-    DEFAULT_MANUFACTURER,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
@@ -148,12 +147,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sma_device_info = await sma.device_info()
         device_info = DeviceInfo(
             configuration_url=url,
-            default_manufacturer=DEFAULT_MANUFACTURER,
             identifiers={(DOMAIN, entry.unique_id)},
-            manufacturer=sma_device_info.get("manufacturer"),
-            model=sma_device_info.get("type"),
-            name=sma_device_info.get("name"),
-            sw_version=sma_device_info.get("sw_version"),
+            manufacturer=sma_device_info["manufacturer"],
+            model=sma_device_info["type"],
+            name=sma_device_info["name"],
+            sw_version=sma_device_info["sw_version"],
         )
         # Get all device sensors
         sensor_def = await sma.get_sensors()
