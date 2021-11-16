@@ -516,13 +516,14 @@ class Entity(ABC):
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
             # Warning added in 2021.12, will be removed in 2022.4
-            report_issue = self._suggest_report_issue()
-            _LOGGER.warning(
-                "Entity %s (%s) implements device_state_attributes. Please %s",
-                self.entity_id,
-                type(self),
-                report_issue,
-            )
+            if self.device_state_attributes is not None:
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Entity %s (%s) implements device_state_attributes. Please %s",
+                    self.entity_id,
+                    type(self),
+                    report_issue,
+                )
             if extra_state_attributes is None:
                 extra_state_attributes = self.device_state_attributes
             attr.update(extra_state_attributes or {})
