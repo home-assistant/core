@@ -339,9 +339,6 @@ class ConfigurableFanSpeedDataTemplate(
 
     def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
         """Resolve helper class data for a discovered value."""
-        if not self.configuration_option:
-            raise ValueError("Invalid discovery data template")
-
         data: dict[str, Any] = {
             "configuration_value": self._get_value_from_id(
                 value.node, self.configuration_option
