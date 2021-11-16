@@ -12,7 +12,6 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_OFF,
-    HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_NONE,
@@ -59,7 +58,7 @@ async def async_setup_entry(
 class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
     """Representation of a Shelly climate device."""
 
-    _attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_AUTO]
+    _attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
     _attr_icon = "mdi:thermostat"
     _attr_max_temp = SHTRV_01_TEMPERATURE_SETTINGS["max"]
     _attr_min_temp = SHTRV_01_TEMPERATURE_SETTINGS["min"]
@@ -103,8 +102,6 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         if not hasattr(self.block, "mode") or self._check_is_off():
             return HVAC_MODE_OFF
 
-        if cast(int, self.block.mode) != 0:
-            return HVAC_MODE_AUTO
         return HVAC_MODE_HEAT
 
     @property
@@ -154,16 +151,10 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         if self._check_is_off():
             self.async_set_hvac_mode(HVAC_MODE_OFF)
         else:
-            self.async_set_hvac_mode(
-                HVAC_MODE_AUTO if self.preset_mode else HVAC_MODE_HEAT
-            )
+            self.async_set_hvac_mode(HVAC_MODE_HEAT)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
-        if hvac_mode == HVAC_MODE_AUTO:
-            await self.set_state_full_path("settings", schedule=1)
-        else:
-            await self.set_state_full_path("settings", schedule=0)
         if hvac_mode == HVAC_MODE_OFF:
             await self.set_state_full_path(
                 "settings", target_t_enabled=1, target_t=f"{self._attr_min_temp}"
@@ -181,7 +172,4 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
             schedule_profile=f"{preset_index}",
         )
 
-        if preset_index == 0:
-            await self.async_set_hvac_mode(HVAC_MODE_HEAT)
-        else:
-            await self.async_set_hvac_mode(HVAC_MODE_AUTO)
+        await self.async_set_hvac_mode(HVAC_MODE_HEAT)
