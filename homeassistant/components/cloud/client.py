@@ -67,9 +67,8 @@ class CloudClient(Interface):
         return self._websession
 
     @property
-    def aiohttp_runner(self) -> aiohttp.web.AppRunner:
+    def aiohttp_runner(self) -> aiohttp.web.AppRunner | None:
         """Return client webinterface aiohttp application."""
-        assert self._hass.http.runner is not None
         return self._hass.http.runner
 
     @property
