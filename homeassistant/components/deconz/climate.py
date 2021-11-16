@@ -256,7 +256,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         """Return the state attributes of the thermostat."""
         attr = {}
 
-        if self._device.offset:
+        if self._device.offset is not None:
             attr[ATTR_OFFSET] = self._device.offset
 
         if self._device.valve is not None:
