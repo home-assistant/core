@@ -17,7 +17,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -28,6 +27,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.start import async_at_start
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN, PLATFORMS
@@ -196,10 +196,7 @@ class StatisticsSensor(SensorEntity):
             if "recorder" in self.hass.config.components:
                 self.hass.async_create_task(self._initialize_from_database())
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START,
-            async_stats_sensor_startup,
-        )
+        async_at_start(self.hass, async_stats_sensor_startup)
 
     def _add_state_to_queue(self, new_state):
         """Add the state to the queue."""
@@ -306,13 +303,7 @@ class StatisticsSensor(SensorEntity):
         """Return the state attributes of the sensor."""
         if self.is_binary:
             return None
-        return {
-            "configuration_"
-            + CONF_SAMPLES_MAX_BUFFER_SIZE: self._samples_max_buffer_size,
-            "configuration_" + CONF_MAX_AGE: str(self._samples_max_age),
-            "configuration_" + CONF_STATE_CHARACTERISTIC: self._state_characteristic,
-            **self.attr,
-        }
+        return self.attr
 
     @property
     def icon(self):
