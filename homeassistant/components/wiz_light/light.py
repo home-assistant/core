@@ -13,7 +13,6 @@ from pywizlight.exceptions import (
 )
 import voluptuous as vol
 
-# Import the device class from the component
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
