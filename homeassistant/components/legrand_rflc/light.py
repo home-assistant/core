@@ -7,6 +7,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
     COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     SUPPORT_TRANSITION,
     LightEntity,
 )
@@ -49,6 +50,9 @@ async def async_setup_entry(
 
 class _LegrandRflcSwitch(LightEntity):
     _attr_should_poll = False
+
+    _attr_color_mode = COLOR_MODE_ONOFF
+    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
 
     def __init__(self, hub, zid: int, properties: Mapping):
         self._hub = hub
