@@ -196,7 +196,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template binary sensor."""
-        super().__init__(hass, config=config)
+        super().__init__(hass, config=config, unique_id=unique_id)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
@@ -210,7 +210,6 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         self._delay_on_raw = config.get(CONF_DELAY_ON)
         self._delay_off = None
         self._delay_off_raw = config.get(CONF_DELAY_OFF)
-        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -269,11 +268,6 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         delay = (self._delay_on if state else self._delay_off).total_seconds()
         # state with delay. Cancelled if template result changes.
         self._delay_cancel = async_call_later(self.hass, delay, _set_state)
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this binary sensor."""
-        return self._unique_id
 
     @property
     def is_on(self):

@@ -138,7 +138,9 @@ class TemplateFan(TemplateEntity, FanEntity):
         unique_id,
     ):
         """Initialize the fan."""
-        super().__init__(hass, config=config, fallback_name=object_id)
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
@@ -205,13 +207,6 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._supported_features |= SUPPORT_OSCILLATE
         if self._direction_template:
             self._supported_features |= SUPPORT_DIRECTION
-
-        self._unique_id = unique_id
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this fan."""
-        return self._unique_id
 
     @property
     def supported_features(self) -> int:
