@@ -331,19 +331,6 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
             brightness = self.brightness
 
-        if not self.is_on:
-            await self._device.async_turn_on()
-            if not kwargs:
-                return
-            # If the brightness was previously 0, the light
-            # will not turn on unless brightness is at least 1
-            if not brightness:
-                brightness = 1
-        elif not brightness:
-            # If the device was on and brightness was not
-            # set, it means it was masked by an effect
-            brightness = 255
-
         # Handle switch to CCT Color Mode
         if ATTR_COLOR_TEMP in kwargs:
             color_temp_mired = kwargs[ATTR_COLOR_TEMP]
@@ -432,6 +419,19 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
             await self._device.async_set_levels(w=brightness)
             return
         raise ValueError(f"Unsupported color mode {self.color_mode}")
+
+        if not self.is_on:
+            await self._device.async_turn_on()
+            if not kwargs:
+                return
+            # If the brightness was previously 0, the light
+            # will not turn on unless brightness is at least 1
+            if not brightness:
+                brightness = 1
+        elif not brightness:
+            # If the device was on and brightness was not
+            # set, it means it was masked by an effect
+            brightness = 255
 
     async def async_set_custom_effect(
         self, colors: list[tuple[int, int, int]], speed_pct: int, transition: str
