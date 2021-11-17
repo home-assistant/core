@@ -6,7 +6,10 @@ import os
 import platform
 import socket
 
+import async_timeout
 import requests
+
+from homeassistant.helpers import aiohttp_client
 
 # AIS HOST
 AIS_HOST = "powiedz.co"
@@ -262,6 +265,24 @@ def get_pass_for_ssid(ssid):
 
 
 # say the text without Home Assistant
+async def async_say_direct(hass, text):
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    j_data = {
+        "text": text,
+        "pitch": GLOBAL_TTS_PITCH,
+        "rate": GLOBAL_TTS_RATE,
+        "voice": GLOBAL_TTS_VOICE,
+    }
+    with async_timeout.timeout(10):
+        try:
+            await web_session.post(
+                G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1") + "/text_to_speech",
+                json=j_data,
+            )
+        except Exception as e:
+            pass
+
+
 def say_direct(text):
     j_data = {
         "text": text,
@@ -279,21 +300,23 @@ def say_direct(text):
         pass
 
 
-def get_ais_gate_model():
+async def async_get_ais_gate_model(hass, text):
     global G_AIS_GATE_MODEL
     if G_AIS_GATE_MODEL is not None:
         return G_AIS_GATE_MODEL
 
-    try:
-        ws_resp = requests.get(
-            G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1"), timeout=10
-        )
-        data = ws_resp.json()
-        ais_model = data.get("Model")
-        G_AIS_GATE_MODEL = ais_model
-    except Exception:
-        ais_model = platform.machine()
-    return ais_model
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    with async_timeout.timeout(10):
+        try:
+            ws_resp = await web_session.get(
+                G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1")
+            )
+            data = ws_resp.json()
+            ais_model = data.get("Model")
+            G_AIS_GATE_MODEL = ais_model
+        except Exception:
+            ais_model = platform.machine()
+        return ais_model
 
 
 def get_sercure_android_id_dom():

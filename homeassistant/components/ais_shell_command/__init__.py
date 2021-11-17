@@ -5,13 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/shell_command/
 """
 import asyncio
-
-import async_timeout
 import logging
 import multiprocessing
 import os
 import platform
 import subprocess
+
+import async_timeout
 
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.helpers import aiohttp_client
@@ -154,8 +154,7 @@ async def _change_host_name(hass, call):
         return
     new_host_name = call.data["hostname"]
     command = 'su -c "setprop net.hostname ' + new_host_name + '"'
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)  # nosec
-    process.wait()
+    await _run(command)
 
 
 async def _change_remote_access(hass, call):
@@ -186,30 +185,49 @@ async def _change_remote_access(hass, call):
         # delete old tunnel
         await _run("pm2 delete tunnel")
 
-        if not os.path.isfile("/data/data/pl.sviete.dom/files/home/.cloudflared/config.yaml"):
+        if not os.path.isfile(
+            "/data/data/pl.sviete.dom/files/home/.cloudflared/config.yaml"
+        ):
             await _run("mkdir -p /data/data/pl.sviete.dom/files/home/.cloudflared")
             with async_timeout.timeout(20):
                 web_session = aiohttp_client.async_get_clientsession(hass)
                 # store file
-                async with web_session.get("https://ai-speaker.com/ota/ais_cloudflared") as resp:
+                async with web_session.get(
+                    "https://ai-speaker.com/ota/ais_cloudflared"
+                ) as resp:
                     if resp.status == 200:
                         body = await resp.read()
-                        f = open('/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem', mode='wb')
+                        f = open(
+                            "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem",
+                            mode="wb",
+                        )
                         f.write(body)
                         f.close()
             # create named tunnel
-            await _run("/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
-                       "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel delete -f " + gate_id)
-            await _run("/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
-                       "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel create " + gate_id)
+            await _run(
+                "/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
+                "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel delete -f "
+                + gate_id
+            )
+            await _run(
+                "/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
+                "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel create "
+                + gate_id
+            )
             # rename credentials file
-            await _run("mv /data/data/pl.sviete.dom/files/home/.cloudflared/*.json "
-                       "/data/data/pl.sviete.dom/files/home/.cloudflared/key.json")
+            await _run(
+                "mv /data/data/pl.sviete.dom/files/home/.cloudflared/*.json "
+                "/data/data/pl.sviete.dom/files/home/.cloudflared/key.json"
+            )
 
             # create config.yaml
-            f = open('/data/data/pl.sviete.dom/files/home/.cloudflared/config.yaml', mode='w')
+            f = open(
+                "/data/data/pl.sviete.dom/files/home/.cloudflared/config.yaml", mode="w"
+            )
             f.write("tunnel: " + gate_id + "\n")
-            f.write("credentials-file: /data/data/pl.sviete.dom/files/home/.cloudflared/key.json\n")
+            f.write(
+                "credentials-file: /data/data/pl.sviete.dom/files/home/.cloudflared/key.json\n"
+            )
             f.write("ingress:\n")
             f.write("  - hostname: " + gate_id + ".paczka.pro\n")
             f.write("    service: http://localhost:8180\n")
@@ -217,9 +235,14 @@ async def _change_remote_access(hass, call):
             f.close()
 
             # route traffic
-            await _run("/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
-                       "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel route dns -f " + gate_id
-                       + " " + gate_id + ".paczka.pro")
+            await _run(
+                "/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
+                "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel route dns -f "
+                + gate_id
+                + " "
+                + gate_id
+                + ".paczka.pro"
+            )
 
             # delete cert file
             await _run("rm /data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem")
@@ -411,12 +434,7 @@ async def _key_event(hass, call):
         return
     key_code = call.data["key_code"]
 
-    subprocess.Popen(
-        "su -c 'input keyevent " + key_code + "'",
-        shell=True,  # nosec
-        stdout=None,
-        stderr=None,
-    )
+    await _run("su -c 'input keyevent " + key_code + "'")
 
 
 async def _led(hass, call):
@@ -429,12 +447,7 @@ async def _led(hass, call):
     script = str(os.path.dirname(__file__))
     script += "/scripts/led.sh"
 
-    subprocess.Popen(
-        "su -c ' " + script + " " + str(brightness) + "'",
-        shell=True,  # nosec
-        stdout=None,
-        stderr=None,
-    )
+    await _run("su -c ' " + script + " " + str(brightness) + "'")
 
 
 async def _set_ais_secure_android_id_dom(hass, call):
@@ -457,7 +470,7 @@ async def _init_local_sdcard(hass, call):
         return
     script = str(os.path.dirname(__file__))
     script += "/scripts/init_local_sdcard.sh"
-    subprocess.Popen(script, shell=True, stdout=None, stderr=None)  # nosec
+    await _run(script)
 
 
 async def _execute_command(hass, call):
@@ -478,13 +491,15 @@ async def _execute_command(hass, call):
     if "icon" in call.data:
         icon = call.data["icon"]
 
-    process = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE  # nosec
+    process = await asyncio.create_subprocess_shell(
+        command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
-    output, err = process.communicate()
+    output, err = await process.communicate()
     if ret_entity is not None:
         hass.states.async_set(
-            ret_entity, output.decode("utf-8"), {"friendly_name": friendly_name, "icon": icon}
+            ret_entity,
+            output.decode("utf-8"),
+            {"friendly_name": friendly_name, "icon": icon},
         )
 
 
@@ -499,15 +514,13 @@ async def _execute_script(hass, call):
         script += "/scripts/reset_usb.sh"
         ais_global.G_USB_INTERNAL_MIC_RESET = True
 
-    process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)  # nosec
-    process.wait()
+    await _run(script)
 
 
 async def _execute_restart(hass, call):
     if not ais_global.has_root():
         return
-
-    subprocess.Popen("su -c reboot", shell=True, stdout=None, stderr=None)  # nosec
+    await _run("su -c reboot")
 
 
 async def _restart_pm2_service(hass, call):
@@ -535,8 +548,7 @@ async def _restart_pm2_service(hass, call):
 async def _execute_stop(hass, call):
     if not ais_global.has_root():
         return
-
-    subprocess.Popen("su -c 'reboot -p'", shell=True, stdout=None, stderr=None)  # nosec
+    await _run("su -c 'reboot -p'")
 
 
 async def _flush_logs(hass, call):
@@ -642,12 +654,7 @@ async def _install_zwave(hass, call):
     script = str(os.path.dirname(__file__))
     script += "/scripts/install_zwave.sh"
 
-    subprocess.Popen(
-        "su -c ' " + script + " " + "'",
-        shell=True,  # nosec
-        stdout=None,
-        stderr=None,
-    )
+    await _run("su -c ' " + script + " " + "'")
 
 
 async def _start_sip_server(hass, call):

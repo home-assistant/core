@@ -60,7 +60,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
-from homeassistant.helpers import config_validation as cv, event, intent
+from homeassistant.helpers import aiohttp_client, config_validation as cv, event, intent
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
@@ -3329,21 +3329,17 @@ async def _publish_command_to_frame(hass, key, val, ip=None):
                     #           " --name tunnel --output /dev/null --error /dev/null" \
                     #           " --restart-delay=150000 -- --hostname http://{}.paczka.pro" \
                     #           " --url http://localhost:8180".format(gate_id)
-                    # subprocess.Popen(
-                    #     command,
-                    #     shell=True,  # nosec
-                    #     stdout=None,
-                    #     stderr=None,
-                    # )
             except Exception:
                 pass
 
     else:
         requests_json = {key: val, "ip": ip}
-    try:
-        requests.post(url + "/command", json=requests_json, timeout=2)
-    except Exception:
-        pass
+    with async_timeout.timeout(2):
+        try:
+            web_session = aiohttp_client.async_get_clientsession(hass)
+            await web_session.post(url + "/command", json=requests_json)
+        except Exception as e:
+            pass
 
 
 def _wifi_rssi_to_info(rssi):
