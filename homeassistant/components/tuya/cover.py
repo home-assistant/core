@@ -37,9 +37,8 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
 
     current_state: DPCode | None = None
     current_state_inverse: bool = False
-    current_position: DPCode | None = None
+    current_position: DPCode | tuple[DPCode, ...] | None = None
     set_position: DPCode | None = None
-    current_position_fallback: DPCode | None = None
 
 
 COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
@@ -51,24 +50,21 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             name="Curtain",
             current_state=DPCode.SITUATION_SET,
-            current_position=DPCode.PERCENT_CONTROL,
-            current_position_fallback=DPCode.PERCENT_STATE,
+            current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
             set_position=DPCode.PERCENT_CONTROL,
             device_class=DEVICE_CLASS_CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
             name="Curtain 2",
-            current_position=DPCode.PERCENT_CONTROL_2,
-            current_position_fallback=DPCode.PERCENT_STATE_2,
+            current_position=(DPCode.PERCENT_CONTROL_2, DPCode.PERCENT_STATE_2),
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=DEVICE_CLASS_CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_3,
             name="Curtain 3",
-            current_position=DPCode.PERCENT_CONTROL_3,
-            current_position_fallback=DPCode.PERCENT_STATE_3,
+            current_position=(DPCode.PERCENT_CONTROL_3, DPCode.PERCENT_STATE_3),
             set_position=DPCode.PERCENT_CONTROL_3,
             device_class=DEVICE_CLASS_CURTAIN,
         ),
@@ -232,13 +228,6 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             self._tilt_type = IntegerTypeData.from_json(
                 device.status_range[tilt_dpcode].values
             )
-
-        # Revert to state if current_position value is None
-        if (self.device.status.get(self.entity_description.current_position)) is None:
-            if self.entity_description.current_position_fallback:
-                self.entity_description.current_position = (
-                    self.entity_description.current_position_fallback
-                )
 
     @property
     def current_cover_position(self) -> int | None:
