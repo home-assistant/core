@@ -14,8 +14,8 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import DiscoveryInfoType
 
-from ...helpers.typing import DiscoveryInfoType
 from .const import DEFAULT_NAME, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
