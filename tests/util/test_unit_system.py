@@ -102,7 +102,7 @@ def test_invalid_value():
     with pytest.raises(TypeError):
         METRIC_SYSTEM.pressure("50Pa", PRESSURE_PA)
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.pressure("50mm", LENGTH_MILLIMETERS)
+        METRIC_SYSTEM.accumulated_precipitation("50mm", LENGTH_MILLIMETERS)
 
 
 def test_as_dict():
