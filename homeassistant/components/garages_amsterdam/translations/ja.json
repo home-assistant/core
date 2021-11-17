@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "garage_name": "\u30ac\u30ec\u30fc\u30b8\u540d"
+                }
+            }
+        }
+    }
+}

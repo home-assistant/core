@@ -1,15 +1,29 @@
 """Support for HomeMatic sensors."""
+from __future__ import annotations
+
+from copy import copy
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
+    ATTR_NAME,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     DEVICE_CLASS_CO2,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_MILLIAMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
@@ -24,7 +38,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 
-from .const import ATTR_DISCOVER_DEVICES
+from .const import ATTR_DISCOVER_DEVICES, ATTR_PARAM
 from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,54 +59,174 @@ HM_STATE_HA_CAST = {
     "IPLockDLD": {0: None, 1: "locked", 2: "unlocked"},
 }
 
-HM_UNIT_HA_CAST = {
-    "HUMIDITY": PERCENTAGE,
-    "TEMPERATURE": TEMP_CELSIUS,
-    "ACTUAL_TEMPERATURE": TEMP_CELSIUS,
-    "BRIGHTNESS": "#",
-    "POWER": POWER_WATT,
-    "CURRENT": ELECTRIC_CURRENT_MILLIAMPERE,
-    "VOLTAGE": ELECTRIC_POTENTIAL_VOLT,
-    "ENERGY_COUNTER": ENERGY_WATT_HOUR,
-    "GAS_POWER": VOLUME_CUBIC_METERS,
-    "GAS_ENERGY_COUNTER": VOLUME_CUBIC_METERS,
-    "IEC_POWER": POWER_WATT,
-    "IEC_ENERGY_COUNTER": ENERGY_WATT_HOUR,
-    "LUX": LIGHT_LUX,
-    "ILLUMINATION": LIGHT_LUX,
-    "CURRENT_ILLUMINATION": LIGHT_LUX,
-    "AVERAGE_ILLUMINATION": LIGHT_LUX,
-    "LOWEST_ILLUMINATION": LIGHT_LUX,
-    "HIGHEST_ILLUMINATION": LIGHT_LUX,
-    "RAIN_COUNTER": LENGTH_MILLIMETERS,
-    "WIND_SPEED": SPEED_KILOMETERS_PER_HOUR,
-    "WIND_DIRECTION": DEGREE,
-    "WIND_DIRECTION_RANGE": DEGREE,
-    "SUNSHINEDURATION": "#",
-    "AIR_PRESSURE": PRESSURE_HPA,
-    "FREQUENCY": FREQUENCY_HERTZ,
-    "VALUE": "#",
-    "VALVE_STATE": PERCENTAGE,
-    "CARRIER_SENSE_LEVEL": PERCENTAGE,
-    "DUTY_CYCLE_LEVEL": PERCENTAGE,
-    "CONCENTRATION": CONCENTRATION_PARTS_PER_MILLION,
+
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    "HUMIDITY": SensorEntityDescription(
+        key="HUMIDITY",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "ACTUAL_TEMPERATURE": SensorEntityDescription(
+        key="ACTUAL_TEMPERATURE",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "TEMPERATURE": SensorEntityDescription(
+        key="TEMPERATURE",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "LUX": SensorEntityDescription(
+        key="LUX",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "CURRENT_ILLUMINATION": SensorEntityDescription(
+        key="CURRENT_ILLUMINATION",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "ILLUMINATION": SensorEntityDescription(
+        key="ILLUMINATION",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "AVERAGE_ILLUMINATION": SensorEntityDescription(
+        key="AVERAGE_ILLUMINATION",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "LOWEST_ILLUMINATION": SensorEntityDescription(
+        key="LOWEST_ILLUMINATION",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "HIGHEST_ILLUMINATION": SensorEntityDescription(
+        key="HIGHEST_ILLUMINATION",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "POWER": SensorEntityDescription(
+        key="POWER",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "IEC_POWER": SensorEntityDescription(
+        key="IEC_POWER",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "CURRENT": SensorEntityDescription(
+        key="CURRENT",
+        native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
+        device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "CONCENTRATION": SensorEntityDescription(
+        key="CONCENTRATION",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=DEVICE_CLASS_CO2,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "ENERGY_COUNTER": SensorEntityDescription(
+        key="ENERGY_COUNTER",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    "IEC_ENERGY_COUNTER": SensorEntityDescription(
+        key="IEC_ENERGY_COUNTER",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    "VOLTAGE": SensorEntityDescription(
+        key="VOLTAGE",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "GAS_POWER": SensorEntityDescription(
+        key="GAS_POWER",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        device_class=DEVICE_CLASS_GAS,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "GAS_ENERGY_COUNTER": SensorEntityDescription(
+        key="GAS_ENERGY_COUNTER",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        device_class=DEVICE_CLASS_GAS,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    "RAIN_COUNTER": SensorEntityDescription(
+        key="RAIN_COUNTER",
+        native_unit_of_measurement=LENGTH_MILLIMETERS,
+    ),
+    "WIND_SPEED": SensorEntityDescription(
+        key="WIND_SPEED",
+        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        icon="mdi:weather-windy",
+    ),
+    "WIND_DIRECTION": SensorEntityDescription(
+        key="WIND_DIRECTION",
+        native_unit_of_measurement=DEGREE,
+    ),
+    "WIND_DIRECTION_RANGE": SensorEntityDescription(
+        key="WIND_DIRECTION_RANGE",
+        native_unit_of_measurement=DEGREE,
+    ),
+    "SUNSHINEDURATION": SensorEntityDescription(
+        key="SUNSHINEDURATION",
+        native_unit_of_measurement="#",
+    ),
+    "AIR_PRESSURE": SensorEntityDescription(
+        key="AIR_PRESSURE",
+        native_unit_of_measurement=PRESSURE_HPA,
+        device_class=DEVICE_CLASS_PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "FREQUENCY": SensorEntityDescription(
+        key="FREQUENCY",
+        native_unit_of_measurement=FREQUENCY_HERTZ,
+    ),
+    "VALUE": SensorEntityDescription(
+        key="VALUE",
+        native_unit_of_measurement="#",
+    ),
+    "VALVE_STATE": SensorEntityDescription(
+        key="VALVE_STATE",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    "CARRIER_SENSE_LEVEL": SensorEntityDescription(
+        key="CARRIER_SENSE_LEVEL",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    "DUTY_CYCLE_LEVEL": SensorEntityDescription(
+        key="DUTY_CYCLE_LEVEL",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    "BRIGHTNESS": SensorEntityDescription(
+        key="BRIGHTNESS",
+        native_unit_of_measurement="#",
+        icon="mdi:invert-colors",
+    ),
 }
 
-HM_DEVICE_CLASS_HA_CAST = {
-    "HUMIDITY": DEVICE_CLASS_HUMIDITY,
-    "TEMPERATURE": DEVICE_CLASS_TEMPERATURE,
-    "ACTUAL_TEMPERATURE": DEVICE_CLASS_TEMPERATURE,
-    "LUX": DEVICE_CLASS_ILLUMINANCE,
-    "CURRENT_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
-    "AVERAGE_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
-    "LOWEST_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
-    "HIGHEST_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
-    "POWER": DEVICE_CLASS_POWER,
-    "CURRENT": DEVICE_CLASS_POWER,
-    "CONCENTRATION": DEVICE_CLASS_CO2,
-}
-
-HM_ICON_HA_CAST = {"WIND_SPEED": "mdi:weather-windy", "BRIGHTNESS": "mdi:invert-colors"}
+DEFAULT_SENSOR_DESCRIPTION = SensorEntityDescription(
+    key="",
+    entity_registry_enabled_default=True,
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -102,7 +236,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devices = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = HMSensor(conf)
+        state = conf.get(ATTR_PARAM)
+        entity_desc = SENSOR_DESCRIPTIONS.get(state)
+        if entity_desc is None:
+            name = conf.get(ATTR_NAME)
+            _LOGGER.warning(
+                "Sensor (%s) entity description is missing. Sensor state (%s) needs to be maintained",
+                name,
+                state,
+            )
+            entity_desc = copy(DEFAULT_SENSOR_DESCRIPTION)
+
+        new_device = HMSensor(conf, entity_desc)
         devices.append(new_device)
 
     add_entities(devices, True)
@@ -121,21 +266,6 @@ class HMSensor(HMDevice, SensorEntity):
 
         # No cast, return original value
         return self._hm_get_state()
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return HM_UNIT_HA_CAST.get(self._state)
-
-    @property
-    def device_class(self):
-        """Return the device class to use in the frontend, if any."""
-        return HM_DEVICE_CLASS_HA_CAST.get(self._state)
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return HM_ICON_HA_CAST.get(self._state)
 
     def _init_data_struct(self):
         """Generate a data dictionary (self._data) from metadata."""

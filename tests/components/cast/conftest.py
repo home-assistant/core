@@ -10,10 +10,6 @@ import pytest
 def dial_mock():
     """Mock pychromecast dial."""
     dial_mock = MagicMock()
-    dial_mock.get_device_status.return_value.uuid = "fake_uuid"
-    dial_mock.get_device_status.return_value.manufacturer = "fake_manufacturer"
-    dial_mock.get_device_status.return_value.model_name = "fake_model_name"
-    dial_mock.get_device_status.return_value.friendly_name = "fake_friendly_name"
     dial_mock.get_multizone_status.return_value.dynamic_groups = []
     return dial_mock
 
@@ -40,7 +36,9 @@ def mz_mock():
 def pycast_mock(castbrowser_mock, castbrowser_constructor_mock):
     """Mock pychromecast."""
     pycast_mock = MagicMock()
+    pycast_mock.IDLE_APP_ID = pychromecast.IDLE_APP_ID
     pycast_mock.IGNORE_CEC = []
+    pycast_mock.const = pychromecast.const
     pycast_mock.discovery.CastBrowser = castbrowser_constructor_mock
     pycast_mock.discovery.CastBrowser.return_value = castbrowser_mock
     pycast_mock.discovery.AbstractCastListener = (

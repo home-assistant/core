@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import DEGREE, ENTITY_CATEGORY_CONFIG, TIME_MINUTES
@@ -178,7 +177,7 @@ NUMBER_TYPES = {
         icon="mdi:star-cog",
         unit_of_measurement="rpm",
         min_value=300,
-        max_value=2300,
+        max_value=2200,
         step=10,
         method="async_set_favorite_rpm",
         entity_category=ENTITY_CATEGORY_CONFIG,
@@ -284,14 +283,6 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         ):
             return False
         return super().available
-
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
 
     async def async_set_value(self, value):
         """Set an option of the miio device."""

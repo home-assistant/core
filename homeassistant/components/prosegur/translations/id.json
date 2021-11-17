@@ -19,7 +19,8 @@
             "user": {
                 "data": {
                     "country": "Negara",
-                    "password": "Kata Sandi"
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
                 }
             }
         }

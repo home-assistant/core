@@ -27,14 +27,12 @@ from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
-    CONF_AUTO_START,
     DEFAULT_PORT,
     DOMAIN,
     HOMEKIT,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODE_BRIDGE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
-    SERVICE_HOMEKIT_START,
     SERVICE_HOMEKIT_UNPAIR,
 )
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
@@ -45,7 +43,6 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
     DEVICE_CLASS_BATTERY,
@@ -71,7 +68,7 @@ from homeassistant.util import json as json_util
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_fixture_path
 
 IP_ADDRESS = "127.0.0.1"
 
@@ -182,63 +179,6 @@ async def test_setup_min(hass, mock_zeroconf):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert mock_homekit().async_start.called is True
-
-
-async def test_setup_auto_start_disabled(hass, mock_zeroconf):
-    """Test async_setup with auto start disabled and test service calls."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_NAME: "Test Name", CONF_PORT: 11111, CONF_IP_ADDRESS: "172.0.0.0"},
-        options={CONF_AUTO_START: False},
-    )
-    entry.add_to_hass(hass)
-
-    with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
-        mock_homekit.return_value = homekit = Mock()
-        type(homekit).async_start = AsyncMock()
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    mock_homekit.assert_any_call(
-        hass,
-        "Test Name",
-        11111,
-        "172.0.0.0",
-        ANY,
-        ANY,
-        {},
-        HOMEKIT_MODE_BRIDGE,
-        None,
-        entry.entry_id,
-        entry.title,
-        devices=[],
-    )
-
-    # Test auto_start disabled
-    homekit.reset_mock()
-    homekit.async_start.reset_mock()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-    assert homekit.async_start.called is False
-
-    # Test start call with driver is ready
-    homekit.reset_mock()
-    homekit.async_start.reset_mock()
-    homekit.status = STATUS_READY
-
-    await hass.services.async_call(DOMAIN, SERVICE_HOMEKIT_START, blocking=True)
-    await hass.async_block_till_done()
-    assert homekit.async_start.called is True
-
-    # Test start call with driver started
-    homekit.reset_mock()
-    homekit.async_start.reset_mock()
-    homekit.status = STATUS_STOPPED
-
-    await hass.services.async_call(DOMAIN, SERVICE_HOMEKIT_START, blocking=True)
-    await hass.async_block_till_done()
-    assert homekit.async_start.called is False
 
 
 async def test_homekit_setup(hass, hk_driver, mock_zeroconf):
@@ -1596,11 +1536,7 @@ async def test_reload(hass, mock_zeroconf):
         entry.title,
         devices=[],
     )
-    yaml_path = os.path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "homekit/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "homekit")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
         f"{PATH_HOMEKIT}.HomeKit"
     ) as mock_homekit2, patch.object(homekit.bridge, "add_accessory"), patch(
@@ -1635,10 +1571,6 @@ async def test_reload(hass, mock_zeroconf):
         entry.title,
         devices=[],
     )
-
-
-def _get_fixtures_base_path():
-    return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 
 async def test_homekit_start_in_accessory_mode(

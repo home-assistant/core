@@ -30,13 +30,14 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
+    ATTR_WHITE,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_ONOFF,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
-    EFFECT_COLORLOOP,
+    COLOR_MODE_WHITE,
     EFFECT_RANDOM,
     PLATFORM_SCHEMA,
     SUPPORT_EFFECT,
@@ -100,7 +101,6 @@ FLUX_COLOR_MODE_TO_HASS: Final = {
     FLUX_COLOR_MODE_RGBW: COLOR_MODE_RGBW,
     FLUX_COLOR_MODE_RGBWW: COLOR_MODE_RGBWW,
     FLUX_COLOR_MODE_CCT: COLOR_MODE_COLOR_TEMP,
-    FLUX_COLOR_MODE_DIM: COLOR_MODE_BRIGHTNESS,
 }
 
 EFFECT_SUPPORT_MODES = {COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
@@ -109,54 +109,7 @@ EFFECT_SUPPORT_MODES = {COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
 # Warm-white and Cool-white modes
 COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF: Final = 285
 
-# List of supported effects which aren't already declared in LIGHT
-EFFECT_RED_FADE: Final = "red_fade"
-EFFECT_GREEN_FADE: Final = "green_fade"
-EFFECT_BLUE_FADE: Final = "blue_fade"
-EFFECT_YELLOW_FADE: Final = "yellow_fade"
-EFFECT_CYAN_FADE: Final = "cyan_fade"
-EFFECT_PURPLE_FADE: Final = "purple_fade"
-EFFECT_WHITE_FADE: Final = "white_fade"
-EFFECT_RED_GREEN_CROSS_FADE: Final = "rg_cross_fade"
-EFFECT_RED_BLUE_CROSS_FADE: Final = "rb_cross_fade"
-EFFECT_GREEN_BLUE_CROSS_FADE: Final = "gb_cross_fade"
-EFFECT_COLORSTROBE: Final = "colorstrobe"
-EFFECT_RED_STROBE: Final = "red_strobe"
-EFFECT_GREEN_STROBE: Final = "green_strobe"
-EFFECT_BLUE_STROBE: Final = "blue_strobe"
-EFFECT_YELLOW_STROBE: Final = "yellow_strobe"
-EFFECT_CYAN_STROBE: Final = "cyan_strobe"
-EFFECT_PURPLE_STROBE: Final = "purple_strobe"
-EFFECT_WHITE_STROBE: Final = "white_strobe"
-EFFECT_COLORJUMP: Final = "colorjump"
 EFFECT_CUSTOM: Final = "custom"
-
-EFFECT_MAP: Final = {
-    EFFECT_COLORLOOP: 0x25,
-    EFFECT_RED_FADE: 0x26,
-    EFFECT_GREEN_FADE: 0x27,
-    EFFECT_BLUE_FADE: 0x28,
-    EFFECT_YELLOW_FADE: 0x29,
-    EFFECT_CYAN_FADE: 0x2A,
-    EFFECT_PURPLE_FADE: 0x2B,
-    EFFECT_WHITE_FADE: 0x2C,
-    EFFECT_RED_GREEN_CROSS_FADE: 0x2D,
-    EFFECT_RED_BLUE_CROSS_FADE: 0x2E,
-    EFFECT_GREEN_BLUE_CROSS_FADE: 0x2F,
-    EFFECT_COLORSTROBE: 0x30,
-    EFFECT_RED_STROBE: 0x31,
-    EFFECT_GREEN_STROBE: 0x32,
-    EFFECT_BLUE_STROBE: 0x33,
-    EFFECT_YELLOW_STROBE: 0x34,
-    EFFECT_CYAN_STROBE: 0x35,
-    EFFECT_PURPLE_STROBE: 0x36,
-    EFFECT_WHITE_STROBE: 0x37,
-    EFFECT_COLORJUMP: 0x38,
-}
-EFFECT_ID_NAME: Final = {v: k for k, v in EFFECT_MAP.items()}
-EFFECT_CUSTOM_CODE: Final = 0x60
-
-FLUX_EFFECT_LIST: Final = sorted(EFFECT_MAP) + [EFFECT_RANDOM]
 
 SERVICE_CUSTOM_EFFECT: Final = "set_custom_effect"
 
@@ -164,7 +117,7 @@ CUSTOM_EFFECT_DICT: Final = {
     vol.Required(CONF_COLORS): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=16),
-        [vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple))],
+        [vol.All(vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte)))],
     ),
     vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
         vol.Range(min=0, max=100), vol.Coerce(int)
@@ -193,6 +146,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
     }
 )
+
+
+def _flux_color_mode_to_hass(flux_color_mode: str, flux_color_modes: set[str]) -> str:
+    """Map the flux color mode to Home Assistant color mode."""
+    if flux_color_mode == FLUX_COLOR_MODE_DIM:
+        if len(flux_color_modes) > 1:
+            return COLOR_MODE_WHITE
+        return COLOR_MODE_BRIGHTNESS
+    return FLUX_COLOR_MODE_TO_HASS.get(flux_color_mode, COLOR_MODE_ONOFF)
 
 
 async def async_setup_platform(
@@ -300,14 +262,14 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
         )  # for rounding
         self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
         self._attr_supported_color_modes = {
-            FLUX_COLOR_MODE_TO_HASS.get(mode, COLOR_MODE_ONOFF)
+            _flux_color_mode_to_hass(mode, self._device.color_modes)
             for mode in self._device.color_modes
         }
         if self._attr_supported_color_modes.intersection(EFFECT_SUPPORT_MODES):
             self._attr_supported_features |= SUPPORT_EFFECT
-            self._attr_effect_list = FLUX_EFFECT_LIST
+            self._attr_effect_list = [*self._device.effect_list, EFFECT_RANDOM]
             if custom_effect_colors:
-                self._attr_effect_list = [*FLUX_EFFECT_LIST, EFFECT_CUSTOM]
+                self._attr_effect_list.append(EFFECT_CUSTOM)
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
@@ -352,24 +314,35 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
     @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        return FLUX_COLOR_MODE_TO_HASS.get(self._device.color_mode, COLOR_MODE_ONOFF)
+        return _flux_color_mode_to_hass(
+            self._device.color_mode, self._device.color_modes
+        )
 
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        if (current_mode := self._device.preset_pattern_num) == EFFECT_CUSTOM_CODE:
-            return EFFECT_CUSTOM
-        return EFFECT_ID_NAME.get(current_mode)
+        effect = self._device.effect
+        if effect is None:
+            return None
+        return cast(str, effect)
 
     async def _async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
+            brightness = self.brightness
+
         if not self.is_on:
             await self._device.async_turn_on()
             if not kwargs:
                 return
-
-        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
-            brightness = self.brightness
+            # If the brightness was previously 0, the light
+            # will not turn on unless brightness is at least 1
+            if not brightness:
+                brightness = 1
+        elif not brightness:
+            # If the device was on and brightness was not
+            # set, it means it was masked by an effect
+            brightness = 255
 
         # Handle switch to CCT Color Mode
         if ATTR_COLOR_TEMP in kwargs:
@@ -410,6 +383,9 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
                 rgbcw = kwargs[ATTR_RGBWW_COLOR]
             await self._device.async_set_levels(*rgbcw_to_rgbwc(rgbcw))
             return
+        if ATTR_WHITE in kwargs:
+            await self._device.async_set_levels(w=kwargs[ATTR_WHITE])
+            return
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
             # Random color effect
@@ -429,13 +405,9 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
                         self._custom_effect_transition,
                     )
                 return
-            # Effect selection
-            if effect in EFFECT_MAP:
-                await self._device.async_set_preset_pattern(
-                    EFFECT_MAP[effect], DEFAULT_EFFECT_SPEED
-                )
-                return
-            raise ValueError(f"Unknown effect {effect}")
+            await self._device.async_set_effect(effect, DEFAULT_EFFECT_SPEED)
+            return
+
         # Handle brightness adjustment in CCT Color Mode
         if self.color_mode == COLOR_MODE_COLOR_TEMP:
             await self._device.async_set_white_temp(self._device.color_temp, brightness)
@@ -456,7 +428,7 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
             await self._device.async_set_levels(*rgbww_brightness(rgbwc, brightness))
             return
         # Handle Brightness Only Color Mode
-        if self.color_mode == COLOR_MODE_BRIGHTNESS:
+        if self.color_mode in {COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS}:
             await self._device.async_set_levels(w=brightness)
             return
         raise ValueError(f"Unsupported color mode {self.color_mode}")

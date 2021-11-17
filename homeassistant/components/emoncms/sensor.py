@@ -1,5 +1,6 @@
 """Support for monitoring emoncms feeds."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
@@ -20,7 +21,6 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
-    HTTP_OK,
     POWER_WATT,
     STATE_UNKNOWN,
 )
@@ -256,7 +256,7 @@ class EmonCmsData:
             _LOGGER.error(exception)
             return
         else:
-            if req.status_code == HTTP_OK:
+            if req.status_code == HTTPStatus.OK:
                 self.data = req.json()
             else:
                 _LOGGER.error(

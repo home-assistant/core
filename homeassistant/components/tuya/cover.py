@@ -36,6 +36,7 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     """Describe an Tuya cover entity."""
 
     current_state: DPCode | None = None
+    current_state_inverse: bool = False
     current_position: DPCode | None = None
     set_position: DPCode | None = None
 
@@ -75,18 +76,21 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.SWITCH_1,
             name="Door",
             current_state=DPCode.DOORCONTACT_STATE,
+            current_state_inverse=True,
             device_class=DEVICE_CLASS_GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_2,
             name="Door 2",
             current_state=DPCode.DOORCONTACT_STATE_2,
+            current_state_inverse=True,
             device_class=DEVICE_CLASS_GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_3,
             name="Door 3",
             current_state=DPCode.DOORCONTACT_STATE_3,
+            current_state_inverse=True,
             device_class=DEVICE_CLASS_GARAGE,
         ),
     ),
@@ -239,8 +243,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         ):
             return None
 
-        position = self.device.status.get(dpcode)
-        if position is None:
+        if (position := self.device.status.get(dpcode)) is None:
             return None
 
         return round(
@@ -256,15 +259,14 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if self._tilt_dpcode is None or self._tilt_type is None:
             return None
 
-        angle = self.device.status.get(self._tilt_dpcode)
-        if angle is None:
+        if (angle := self.device.status.get(self._tilt_dpcode)) is None:
             return None
 
         return round(self._tilt_type.remap_value_to(angle, 0, 100))
 
     @property
     def is_closed(self) -> bool | None:
-        """Return is cover is closed."""
+        """Return true if cover is closed."""
         if (
             self.entity_description.current_state is not None
             and (
@@ -274,7 +276,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             )
             is not None
         ):
-            return current_state in (True, "fully_close")
+            return self.entity_description.current_state_inverse is not (
+                current_state in (False, "fully_close")
+            )
 
         if (position := self.current_cover_position) is not None:
             return position == 0

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from enum import Enum
 from functools import partial
 import logging
 
@@ -473,14 +472,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         ):
             return False
         return super().available
-
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on an option of the miio device."""

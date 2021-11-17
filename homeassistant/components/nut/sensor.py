@@ -5,12 +5,8 @@ import logging
 
 from homeassistant.components.nut import PyNUTData
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_NAME,
-    CONF_RESOURCES,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -39,9 +35,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     unique_id = pynut_data[PYNUT_UNIQUE_ID]
     status = coordinator.data
 
-    enabled_resources = [
-        resource.lower() for resource in config_entry.data[CONF_RESOURCES]
-    ]
     resources = [sensor_id for sensor_id in SENSOR_TYPES if sensor_id in status]
     # Display status is a special case that falls back to the status value
     # of the UPS instead.
@@ -54,7 +47,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             SENSOR_TYPES[sensor_type],
             data,
             unique_id,
-            sensor_type in enabled_resources,
         )
         for sensor_type in resources
     ]
@@ -71,20 +63,18 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
         sensor_description: SensorEntityDescription,
         data: PyNUTData,
         unique_id: str,
-        enabled_default: bool,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = sensor_description
 
         device_name = data.name.title()
-        self._attr_entity_registry_enabled_default = enabled_default
         self._attr_name = f"{device_name} {sensor_description.name}"
         self._attr_unique_id = f"{unique_id}_{sensor_description.key}"
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, unique_id)},
-            ATTR_NAME: device_name,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=device_name,
+        )
         self._attr_device_info.update(data.device_info)
 
     @property

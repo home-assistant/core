@@ -35,6 +35,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -60,9 +61,11 @@ from .core.const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
+    CHANNEL_LEAF_WETNESS,
     CHANNEL_POWER_CONFIGURATION,
     CHANNEL_PRESSURE,
     CHANNEL_SMARTENERGY_METERING,
+    CHANNEL_SOIL_MOISTURE,
     CHANNEL_TEMPERATURE,
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
@@ -223,6 +226,23 @@ class Battery(Sensor):
     _device_class = DEVICE_CLASS_BATTERY
     _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Unlike any other entity, PowerConfiguration cluster may not support
+        battery_percent_remaining attribute, but zha-device-handlers takes care of it
+        so create the entity regardless
+        """
+        return cls(unique_id, zha_device, channels, **kwargs)
 
     @staticmethod
     def formatter(value: int) -> int:
@@ -327,6 +347,28 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
 @STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)
 class Humidity(Sensor):
     """Humidity sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_HUMIDITY
+    _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
+    _unit = PERCENTAGE
+
+
+@STRICT_MATCH(channel_names=CHANNEL_SOIL_MOISTURE)
+class SoilMoisture(Sensor):
+    """Soil Moisture sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_HUMIDITY
+    _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
+    _unit = PERCENTAGE
+
+
+@STRICT_MATCH(channel_names=CHANNEL_LEAF_WETNESS)
+class LeafWetness(Sensor):
+    """Leaf Wetness sensor."""
 
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY

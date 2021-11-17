@@ -3,7 +3,7 @@
         "abort": {
             "all_configured": "M\u00e1r minden Philips Hue bridge konfigur\u00e1lt",
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van.",
+            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "discover_timeout": "Nem tal\u00e1lhat\u00f3 a Hue bridge",
             "no_bridges": "Nem tal\u00e1lhat\u00f3 Philips Hue bridget",

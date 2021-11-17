@@ -11,6 +11,11 @@
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
                 }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
             }
         }
     }

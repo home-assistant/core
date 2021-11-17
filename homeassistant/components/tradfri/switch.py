@@ -26,11 +26,9 @@ async def async_setup_entry(
     api = tradfri_data[KEY_API]
     devices = tradfri_data[DEVICES]
 
-    switches = [dev for dev in devices if dev.has_socket_control]
-    if switches:
-        async_add_entities(
-            TradfriSwitch(switch, api, gateway_id) for switch in switches
-        )
+    async_add_entities(
+        TradfriSwitch(dev, api, gateway_id) for dev in devices if dev.has_socket_control
+    )
 
 
 class TradfriSwitch(TradfriBaseDevice, SwitchEntity):
@@ -46,13 +44,12 @@ class TradfriSwitch(TradfriBaseDevice, SwitchEntity):
         super().__init__(device, api, gateway_id)
         self._attr_unique_id = f"{gateway_id}-{device.id}"
 
-    def _refresh(self, device: Command) -> None:
+    def _refresh(self, device: Command, write_ha: bool = True) -> None:
         """Refresh the switch data."""
-        super()._refresh(device)
-
         # Caching of switch control and switch object
         self._device_control = device.socket_control
         self._device_data = device.socket_control.sockets[0]
+        super()._refresh(device, write_ha=write_ha)
 
     @property
     def is_on(self) -> bool:

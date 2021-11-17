@@ -270,7 +270,7 @@ async def async_setup(hass, config):
         )
 
         try:
-            with async_timeout.timeout(CONNECTION_TIMEOUT):
+            async with async_timeout.timeout(CONNECTION_TIMEOUT):
                 transport, protocol = await connection
 
         except (
@@ -580,9 +580,7 @@ class SwitchableRflinkDevice(RflinkCommand, RestoreEntity):
     async def async_added_to_hass(self):
         """Restore RFLink device state (ON/OFF)."""
         await super().async_added_to_hass()
-
-        old_state = await self.async_get_last_state()
-        if old_state is not None:
+        if (old_state := await self.async_get_last_state()) is not None:
             self._state = old_state.state == STATE_ON
 
     def _handle_event(self, event):

@@ -86,8 +86,7 @@ class AdaxDevice(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self._adax_data_handler.set_room_target_temperature(
             self._device_id, temperature, True

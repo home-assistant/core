@@ -9,18 +9,10 @@ from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSO
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-    CONF_HOST,
-    CONF_NAME,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_MODEL, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -34,6 +26,7 @@ from .const import (
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
     DOMAIN,
+    MANUFACTURER,
     MIN_TIME_BETWEEN_UPDATES,
 )
 
@@ -109,10 +102,11 @@ class YetiEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
-            ATTR_MANUFACTURER: "Goal Zero",
-            ATTR_NAME: self._name,
-            ATTR_MODEL: self.api.sysdata[ATTR_MODEL],
-            ATTR_SW_VERSION: self.api.data["firmwareVersion"],
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.api.sysdata["macAddress"])},
+            identifiers={(DOMAIN, self._server_unique_id)},
+            manufacturer=MANUFACTURER,
+            model=self.api.sysdata[ATTR_MODEL],
+            name=self._name,
+            sw_version=self.api.data["firmwareVersion"],
+        )

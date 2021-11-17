@@ -68,9 +68,7 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up for Vera controllers."""
     hass.data[DOMAIN] = {}
 
-    config = base_config.get(DOMAIN)
-
-    if not config:
+    if not (config := base_config.get(DOMAIN)):
         return True
 
     hass.async_create_task(

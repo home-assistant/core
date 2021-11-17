@@ -22,7 +22,6 @@ ABBREVIATIONS = {
     "clr_temp_cmd_tpl": "color_temp_command_template",
     "bat_lev_t": "battery_level_topic",
     "bat_lev_tpl": "battery_level_template",
-    "cu": "configuration_url",
     "chrg_t": "charging_topic",
     "chrg_tpl": "charging_template",
     "clrm": "color_mode",
@@ -98,6 +97,7 @@ ABBREVIATIONS = {
     "mode_stat_tpl": "mode_state_template",
     "modes": "modes",
     "name": "name",
+    "obj_id": "object_id",
     "off_dly": "off_delay",
     "on_cmd_type": "on_command_type",
     "ops": "options",
@@ -135,6 +135,7 @@ ABBREVIATIONS = {
     "pl_osc_off": "payload_oscillation_off",
     "pl_osc_on": "payload_oscillation_on",
     "pl_paus": "payload_pause",
+    "pl_prs": "payload_press",
     "pl_rst": "payload_reset",
     "pl_rst_hum": "payload_reset_humidity",
     "pl_rst_mode": "payload_reset_mode",
@@ -246,6 +247,7 @@ ABBREVIATIONS = {
 
 DEVICE_ABBREVIATIONS = {
     "cns": "connections",
+    "cu": "configuration_url",
     "ids": "identifiers",
     "name": "name",
     "mf": "manufacturer",

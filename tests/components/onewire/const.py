@@ -3,7 +3,12 @@ from pi1wire import InvalidCRCException, UnsupportResponseException
 from pyownet.protocol import Error as ProtocolError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.onewire.const import DOMAIN, PRESSURE_CBAR
+from homeassistant.components.onewire.const import (
+    DOMAIN,
+    MANUFACTURER_EDS,
+    MANUFACTURER_HOBBYBOARDS,
+    MANUFACTURER_MAXIM,
+)
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -20,16 +25,16 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_CURRENT,
+    ATTR_VIA_DEVICE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
+    PRESSURE_CBAR,
     PRESSURE_MBAR,
     STATE_OFF,
     STATE_ON,
@@ -42,15 +47,21 @@ ATTR_DEVICE_FILE = "device_file"
 ATTR_DEVICE_INFO = "device_info"
 ATTR_INJECT_READS = "inject_reads"
 ATTR_UNIQUE_ID = "unique_id"
+ATTR_UNKNOWN_DEVICE = "unknown_device"
 
-MANUFACTURER = "Maxim Integrated"
+FIXED_ATTRIBUTES = (
+    ATTR_DEVICE_CLASS,
+    ATTR_STATE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+)
+
 
 MOCK_OWPROXY_DEVICES = {
     "00.111111111111": {
         ATTR_INJECT_READS: [
             b"",  # read device type
         ],
-        SENSOR_DOMAIN: [],
+        ATTR_UNKNOWN_DEVICE: True,
     },
     "05.111111111111": {
         ATTR_INJECT_READS: [
@@ -58,19 +69,17 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "05.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2405",
             ATTR_NAME: "05.111111111111",
         },
         SWITCH_DOMAIN: [
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.05_111111111111_pio",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/05.111111111111/PIO",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
         ],
     },
@@ -80,7 +89,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "10.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS18S20",
             ATTR_NAME: "10.111111111111",
         },
@@ -102,28 +111,24 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "12.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2406",
             ATTR_NAME: "12.111111111111",
         },
         BINARY_SENSOR_DOMAIN: [
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.12_111111111111_sensed_a",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/12.111111111111/sensed.A",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.12_111111111111_sensed_b",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/12.111111111111/sensed.B",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
         ],
         SENSOR_DOMAIN: [
@@ -151,39 +156,31 @@ MOCK_OWPROXY_DEVICES = {
         SWITCH_DOMAIN: [
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.12_111111111111_pio_a",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/12.111111111111/PIO.A",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.12_111111111111_pio_b",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/12.111111111111/PIO.B",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.12_111111111111_latch_a",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/12.111111111111/latch.A",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.12_111111111111_latch_b",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/12.111111111111/latch.B",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
         ],
     },
@@ -193,13 +190,12 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2423",
             ATTR_NAME: "1D.111111111111",
         },
         SENSOR_DOMAIN: [
             {
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "sensor.1d_111111111111_counter_a",
                 ATTR_INJECT_READS: b"    251123",
                 ATTR_STATE: "251123",
@@ -208,7 +204,6 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: "count",
             },
             {
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "sensor.1d_111111111111_counter_b",
                 ATTR_INJECT_READS: b"    248125",
                 ATTR_STATE: "248125",
@@ -222,12 +217,21 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"DS2409",  # read device type
         ],
-        ATTR_DEVICE_INFO: {
-            ATTR_IDENTIFIERS: {(DOMAIN, "1F.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
-            ATTR_MODEL: "DS2409",
-            ATTR_NAME: "1F.111111111111",
-        },
+        ATTR_DEVICE_INFO: [
+            {
+                ATTR_IDENTIFIERS: {(DOMAIN, "1F.111111111111")},
+                ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
+                ATTR_MODEL: "DS2409",
+                ATTR_NAME: "1F.111111111111",
+            },
+            {
+                ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
+                ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
+                ATTR_MODEL: "DS2423",
+                ATTR_NAME: "1D.111111111111",
+                ATTR_VIA_DEVICE: (DOMAIN, "1F.111111111111"),
+            },
+        ],
         "branches": {
             "aux": {},
             "main": {
@@ -235,15 +239,8 @@ MOCK_OWPROXY_DEVICES = {
                     ATTR_INJECT_READS: [
                         b"DS2423",  # read device type
                     ],
-                    ATTR_DEVICE_INFO: {
-                        ATTR_IDENTIFIERS: {(DOMAIN, "1D.111111111111")},
-                        ATTR_MANUFACTURER: MANUFACTURER,
-                        ATTR_MODEL: "DS2423",
-                        ATTR_NAME: "1D.111111111111",
-                    },
                     SENSOR_DOMAIN: [
                         {
-                            ATTR_DEVICE_CLASS: None,
                             ATTR_DEVICE_FILE: "/1F.111111111111/main/1D.111111111111/counter.A",
                             ATTR_ENTITY_ID: "sensor.1d_111111111111_counter_a",
                             ATTR_INJECT_READS: b"    251123",
@@ -253,7 +250,6 @@ MOCK_OWPROXY_DEVICES = {
                             ATTR_UNIT_OF_MEASUREMENT: "count",
                         },
                         {
-                            ATTR_DEVICE_CLASS: None,
                             ATTR_DEVICE_FILE: "/1F.111111111111/main/1D.111111111111/counter.B",
                             ATTR_ENTITY_ID: "sensor.1d_111111111111_counter_b",
                             ATTR_INJECT_READS: b"    248125",
@@ -273,7 +269,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "22.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS1822",
             ATTR_NAME: "22.111111111111",
         },
@@ -295,7 +291,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "26.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2438",
             ATTR_NAME: "26.111111111111",
         },
@@ -401,13 +397,22 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-                ATTR_ENTITY_ID: "sensor.26_111111111111_current",
-                ATTR_INJECT_READS: b"       1",
-                ATTR_STATE: "1.0",
+                ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
+                ATTR_ENTITY_ID: "sensor.26_111111111111_vis",
+                ATTR_INJECT_READS: b"    0.12",
+                ATTR_STATE: "0.1",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+                ATTR_UNIQUE_ID: "/26.111111111111/vis",
+                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            },
+        ],
+        SWITCH_DOMAIN: [
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_ID: "switch.26_111111111111_iad",
+                ATTR_INJECT_READS: b"    1",
+                ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/26.111111111111/IAD",
-                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
             },
         ],
     },
@@ -417,7 +422,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "28.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS18B20",
             ATTR_NAME: "28.111111111111",
         },
@@ -439,228 +444,180 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "29.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2408",
             ATTR_NAME: "29.111111111111",
         },
         BINARY_SENSOR_DOMAIN: [
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_0",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/sensed.0",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_1",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/sensed.1",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_2",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/sensed.2",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_3",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/sensed.3",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_4",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/sensed.4",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_5",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/sensed.5",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_6",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/sensed.6",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_7",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/sensed.7",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
         ],
         SWITCH_DOMAIN: [
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_pio_0",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.0",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_pio_1",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.1",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_pio_2",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.2",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_pio_3",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.3",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_pio_4",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
-                ATTR_UNIT_OF_MEASUREMENT: None,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.4",
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_pio_5",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.5",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_pio_6",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.6",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_pio_7",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/PIO.7",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_latch_0",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/latch.0",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_latch_1",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/latch.1",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_latch_2",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/latch.2",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_latch_3",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/latch.3",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_latch_4",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/latch.4",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_latch_5",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/latch.5",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_latch_6",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/29.111111111111/latch.6",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.29_111111111111_latch_7",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/29.111111111111/latch.7",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
         ],
     },
@@ -670,48 +627,40 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "3A.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS2413",
             ATTR_NAME: "3A.111111111111",
         },
         BINARY_SENSOR_DOMAIN: [
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.3a_111111111111_sensed_a",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/3A.111111111111/sensed.A",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "binary_sensor.3a_111111111111_sensed_b",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/3A.111111111111/sensed.B",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
         ],
         SWITCH_DOMAIN: [
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.3a_111111111111_pio_a",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/3A.111111111111/PIO.A",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: None,
                 ATTR_ENTITY_ID: "switch.3a_111111111111_pio_b",
                 ATTR_INJECT_READS: b"    0",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "/3A.111111111111/PIO.B",
-                ATTR_UNIT_OF_MEASUREMENT: None,
             },
         ],
     },
@@ -721,7 +670,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "3B.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS1825",
             ATTR_NAME: "3B.111111111111",
         },
@@ -743,7 +692,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "42.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "DS28EA00",
             ATTR_NAME: "42.111111111111",
         },
@@ -765,7 +714,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "EF.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_HOBBYBOARDS,
             ATTR_MODEL: "HobbyBoards_EF",
             ATTR_NAME: "EF.111111111111",
         },
@@ -809,7 +758,7 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "EF.111111111112")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_HOBBYBOARDS,
             ATTR_MODEL: "HB_MOISTURE_METER",
             ATTR_NAME: "EF.111111111112",
         },
@@ -859,8 +808,8 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "7E.111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
-            ATTR_MODEL: "EDS",
+            ATTR_MANUFACTURER: MANUFACTURER_EDS,
+            ATTR_MODEL: "EDS0068",
             ATTR_NAME: "7E.111111111111",
         },
         SENSOR_DOMAIN: [
@@ -909,8 +858,8 @@ MOCK_OWPROXY_DEVICES = {
         ],
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "7E.222222222222")},
-            ATTR_MANUFACTURER: MANUFACTURER,
-            ATTR_MODEL: "EDS",
+            ATTR_MANUFACTURER: MANUFACTURER_EDS,
+            ATTR_MODEL: "EDS0066",
             ATTR_NAME: "7E.222222222222",
         },
         SENSOR_DOMAIN: [
@@ -938,12 +887,12 @@ MOCK_OWPROXY_DEVICES = {
 
 MOCK_SYSBUS_DEVICES = {
     "00-111111111111": {
-        SENSOR_DOMAIN: [],
+        ATTR_UNKNOWN_DEVICE: True,
     },
     "10-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "10-111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "10",
             ATTR_NAME: "10-111111111111",
         },
@@ -959,20 +908,14 @@ MOCK_SYSBUS_DEVICES = {
             },
         ],
     },
-    "12-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
-    "1D-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
     "22-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "22-111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "22",
             ATTR_NAME: "22-111111111111",
         },
-        "sensor": [
+        SENSOR_DOMAIN: [
             {
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.22_111111111111_temperature",
@@ -984,13 +927,10 @@ MOCK_SYSBUS_DEVICES = {
             },
         ],
     },
-    "26-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
     "28-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "28-111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "28",
             ATTR_NAME: "28-111111111111",
         },
@@ -1006,16 +946,10 @@ MOCK_SYSBUS_DEVICES = {
             },
         ],
     },
-    "29-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
-    "3A-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
     "3B-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "3B-111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "3B",
             ATTR_NAME: "3B-111111111111",
         },
@@ -1034,7 +968,7 @@ MOCK_SYSBUS_DEVICES = {
     "42-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "42-111111111111")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "42",
             ATTR_NAME: "42-111111111111",
         },
@@ -1053,7 +987,7 @@ MOCK_SYSBUS_DEVICES = {
     "42-111111111112": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "42-111111111112")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "42",
             ATTR_NAME: "42-111111111112",
         },
@@ -1072,7 +1006,7 @@ MOCK_SYSBUS_DEVICES = {
     "42-111111111113": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "42-111111111113")},
-            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MANUFACTURER: MANUFACTURER_MAXIM,
             ATTR_MODEL: "42",
             ATTR_NAME: "42-111111111113",
         },
@@ -1087,11 +1021,5 @@ MOCK_SYSBUS_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
         ],
-    },
-    "EF-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
-    "EF-111111111112": {
-        SENSOR_DOMAIN: [],
     },
 }

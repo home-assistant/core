@@ -446,8 +446,7 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
 
     def get_live_measurement(self):
         """Get live measurement data."""
-        errors = self.data.get("errors")
-        if errors:
+        if errors := self.data.get("errors"):
             _LOGGER.error(errors[0])
             return None
         return self.data.get("data", {}).get("liveMeasurement")
