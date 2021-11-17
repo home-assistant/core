@@ -20,6 +20,9 @@ media_player:
     name: wbudowany_glosnik
     ip_address: localhost
     unique_id: "1111111111111111111"
+  - platform: ais_android
+    name: android_tv_127_0_0_1
+    host: 127.0.0.1
 
 input_number:
   media_player_speed:
