@@ -32,7 +32,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][entry.entry_id][CONF_RECEIVER].disconnect()
+    await hass.data[DOMAIN][entry.entry_id][CONF_RECEIVER].async_disconnect()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

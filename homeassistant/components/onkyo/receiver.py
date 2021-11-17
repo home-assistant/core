@@ -50,9 +50,7 @@ class OnkyoNetworkReceiver:
         if not network_receiver:
 
             @callback
-            def _connection_update_callback(
-                message: tuple[str, str, Any], host: str
-            ) -> None:
+            def _update_callback(message: tuple[str, str, Any], host: str) -> None:
                 """Received callback with new data from receiver."""
                 receiver = cls._receivers.get(host, None)
                 if receiver:
@@ -62,19 +60,28 @@ class OnkyoNetworkReceiver:
                         receiver.update_received_callback(message)
                     elif zone in ZONES:
                         receiver.zone_discovered_callback(zone)
+                        receiver.update_received_callback(message)
 
             @callback
-            def _connection_connected_callback(host: str) -> None:
+            def _connected_callback(host: str) -> None:
                 """Receiver (re)connected."""
                 receiver = cls._receivers.get(host, None)
                 if receiver:
                     receiver.connected_callback()
 
+            @callback
+            def _disconnected_callback(host: str) -> None:
+                """Handle a disconnect from the receiver."""
+                receiver = cls._receivers.get(host, None)
+                if receiver:
+                    receiver.disconnected_callback()
+
             connection: Connection = await Connection.create(
                 host=entry.data[CONF_HOST],
-                update_callback=_connection_update_callback,
-                connect_callback=_connection_connected_callback,
-                auto_connect=True,
+                update_callback=_update_callback,
+                connect_callback=_connected_callback,
+                disconnect_callback=_disconnected_callback,
+                auto_connect=False,
             )
 
             # When manually creating a connection instead of discovering,
@@ -94,15 +101,17 @@ class OnkyoNetworkReceiver:
         self._hass: HomeAssistant = hass
         self._connection: Connection = connection
         self._identifier: str = self._connection.identifier
+        self._event: asyncio.Event = asyncio.Event()
+        self._closing: bool = False
         self.online: bool = False
         self.name: str = self._connection.name
         self.host: str = self._connection.host
         self.zones: dict[str, ReceiverZone] = {
             "main": ReceiverZone(
                 self._hass,
-                f"{self._connection.identifier}_main",
+                f"{self._identifier}_main",
                 "main",
-                f"{self.name}",
+                self.name,
                 self,
             )
         }
@@ -142,14 +151,18 @@ class OnkyoNetworkReceiver:
         await asyncio.sleep(DISCOVER_ZONES_TIMEOUT)
         return True
 
-    def disconnect(self) -> None:
+    async def async_disconnect(self) -> None:
         """Disconnect from the receiver."""
-        for zone in self.zones.values():
-            zone.stop_query_timer()
-
         if self.online:
+            self._closing = True
+            self._event.clear()
             self._connection.close()
-            self.online = False
+            try:
+                with async_timeout.timeout(CONNECT_TIMEOUT):
+                    await self._event.wait()
+
+            except asyncio.TimeoutError:
+                self.disconnected_callback()
 
     def update_property(self, zone_name: str, property_name: str, value: str) -> None:
         """Update a property in the connected receiver."""
@@ -167,7 +180,7 @@ class OnkyoNetworkReceiver:
         if zone not in self.zones:
             self.zones[zone] = ReceiverZone(
                 self._hass,
-                f"{self._connection.identifier}_{zone}",
+                f"{self._identifier}_{zone}",
                 zone,
                 f"{self.name} {ZONES[zone]}",
                 self,
@@ -184,8 +197,25 @@ class OnkyoNetworkReceiver:
     @callback
     def connected_callback(self) -> None:
         """Handle a (re)connect from the receiver."""
+        if not self.online:
+            _LOGGER.info("Connected to Network Receiver at %s", self.host)
+            self.online = True
+
         for zone in self.zones.values():
             zone.connected_callback()
+
+    @callback
+    def disconnected_callback(self) -> None:
+        """Handle a disconnect from the receiver."""
+        self.online = False
+        for zone in self.zones.values():
+            zone.disconnected_callback()
+
+        if self._closing:
+            self._closing = False
+            self._event.set()
+        else:
+            _LOGGER.warning("Connection to Network Receiver at %s closed", self.host)
 
 
 class ReceiverZone:
@@ -293,12 +323,6 @@ class ReceiverZone:
         """Remove previously registered callback."""
         self._callbacks.discard(update_callback)
 
-    def stop_query_timer(self) -> None:
-        """Cancel the query timer."""
-        if self._query_timer:
-            self._query_timer.cancel()
-            self._query_timer = None
-
     @callback
     def connected_callback(self) -> None:
         """Get the receiver to send all the info we care about.
@@ -319,6 +343,16 @@ class ReceiverZone:
         else:
             self.receiver.query_property(self._zone, "muting")
             self.receiver.query_property(self._zone, "selector")
+
+    @callback
+    def disconnected_callback(self) -> None:
+        """Handle a disconnect of the receiver."""
+        if self._query_timer:
+            self._query_timer.cancel()
+            self._query_timer = None
+
+        for update_callback in self._callbacks:
+            update_callback()
 
     @callback
     def update_received_callback(self, command: str, value: Any) -> None:
