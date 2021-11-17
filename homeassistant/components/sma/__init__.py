@@ -145,14 +145,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         # Get updated device info
         sma_device_info = await sma.device_info()
-        device_info = DeviceInfo(
-            configuration_url=url,
-            identifiers={(DOMAIN, entry.unique_id)},
-            manufacturer=sma_device_info["manufacturer"],
-            model=sma_device_info["type"],
-            name=sma_device_info["name"],
-            sw_version=sma_device_info["sw_version"],
-        )
         # Get all device sensors
         sensor_def = await sma.get_sensors()
     except (
@@ -160,6 +152,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         pysma.exceptions.SmaConnectionException,
     ) as exc:
         raise ConfigEntryNotReady from exc
+
+    # Create DeviceInfo object from sma_device_info
+    device_info = DeviceInfo(
+        configuration_url=url,
+        identifiers={(DOMAIN, entry.unique_id)},
+        manufacturer=sma_device_info["manufacturer"],
+        model=sma_device_info["type"],
+        name=sma_device_info["name"],
+        sw_version=sma_device_info["sw_version"],
+    )
 
     # Parse legacy options if initial setup was done from yaml
     if entry.source == SOURCE_IMPORT:
