@@ -192,13 +192,13 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info[ssdp.ATTR_SSDP_LOCATION]
         ).hostname
         try:
-            self._port_ui = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).port
+            self._port_ui = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).port  # type: ignore [assignment]
         except ValueError:
             self._port_ui = const.DEFAULT_PORT_UI
 
         try:
             self._data[CONF_PORT] = int(
-                discovery_info.get("ports", {}).get(
+                discovery_info.get("ports", {}).get(  # type: ignore [attr-defined]
                     "jsonServer", const.DEFAULT_PORT_JSON
                 )
             )

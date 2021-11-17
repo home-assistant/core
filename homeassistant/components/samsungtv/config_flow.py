@@ -260,7 +260,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
-        model_name: str = discovery_info.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
+        model_name: str = discovery_info.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""  # type: ignore [assignment]
         self._udn = _strip_uuid(discovery_info[ssdp.ATTR_UPNP_UDN])
         if hostname := urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname:
             self._host = hostname

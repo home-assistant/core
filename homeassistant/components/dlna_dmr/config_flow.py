@@ -221,7 +221,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_dmr")
         discovery_service_ids = {
             service.get("serviceId")
-            for service in discovery_service_list.get("service") or []
+            for service in discovery_service_list.get("service") or []  # type: ignore [attr-defined]
         }
         if not DmrDevice.SERVICE_IDS.issubset(discovery_service_ids):
             return self.async_abort(reason="not_dmr")
