@@ -37,6 +37,18 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+TEMPLATE_ENTITY_AVAILABILITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_AVAILABILITY): cv.template,
+    }
+)
+
+TEMPLATE_ENTITY_ICON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ICON): cv.template,
+    }
+)
+
 TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
