@@ -27,6 +27,7 @@ from .const import (
     DATA_GROUP_MANAGER,
     DATA_SOURCE_MANAGER,
     DOMAIN,
+    SIGNAL_HEOS_PLAYER_ADDED,
     SIGNAL_HEOS_UPDATED,
 )
 
@@ -312,6 +313,7 @@ class GroupManager:
         if event in (
             heos_const.EVENT_GROUPS_CHANGED,
             heos_const.EVENT_CONNECTED,
+            SIGNAL_HEOS_PLAYER_ADDED,
         ):
             groups = await self.async_get_group_membership()
             if groups:
@@ -331,9 +333,13 @@ class GroupManager:
             heos_const.SIGNAL_HEOS_EVENT, self.async_update_groups
         )
 
-    def force_update_groups(self):
-        """Update group membership, regardless of any HEOS event."""
-        self._hass.add_job(self.async_update_groups, heos_const.EVENT_GROUPS_CHANGED)
+        # When adding a new HEOS player we need to update the groups.
+        async def _async_handle_player_added():
+            await self.async_update_groups(SIGNAL_HEOS_PLAYER_ADDED)
+
+        self._hass.helpers.dispatcher.async_dispatcher_connect(
+            SIGNAL_HEOS_PLAYER_ADDED, _async_handle_player_added
+        )
 
     @property
     def group_membership(self):

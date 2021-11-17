@@ -40,6 +40,7 @@ from .const import (
     DATA_GROUP_MANAGER,
     DATA_SOURCE_MANAGER,
     DOMAIN as HEOS_DOMAIN,
+    SIGNAL_HEOS_PLAYER_ADDED,
     SIGNAL_HEOS_UPDATED,
 )
 
@@ -138,7 +139,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         self.hass.data[HEOS_DOMAIN][DATA_ENTITY_ID_MAP][
             self._player.player_id
         ] = self.entity_id
-        self._group_manager.force_update_groups()
+        self.hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_HEOS_PLAYER_ADDED)
 
     @log_command_error("clear playlist")
     async def async_clear_playlist(self):
