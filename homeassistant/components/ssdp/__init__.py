@@ -132,7 +132,7 @@ class UpnpDescription(_UpnpDescriptionBase, total=False):
     modelNumber: str
     modelURL: str
     serialNumber: str
-    serviceList: str
+    serviceList: list[list[dict[str, str]]]
     UPC: str
     presentationURL: str
 
