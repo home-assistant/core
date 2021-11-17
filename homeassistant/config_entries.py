@@ -34,8 +34,8 @@ import homeassistant.util.uuid as uuid_util
 if TYPE_CHECKING:
     from homeassistant.components.dhcp import DhcpServiceInfo
     from homeassistant.components.mqtt.discovery import MqttServiceInfo
-    from homeassistant.components.usb import UsbServiceInfo
     from homeassistant.components.ssdp import SsdpServiceInfo
+    from homeassistant.components.usb import UsbServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
