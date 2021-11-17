@@ -50,6 +50,7 @@ from homeassistant.helpers import (
     entity_registry,
     location as loc_helper,
 )
+from homeassistant.helpers.entity import SOURCE_CONFIG_ENTRY, entity_sources
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -933,8 +934,8 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     )
     return [
         entity_id
-        for entity_id, info in hass.data.get("entity_info", {}).items()
-        if (conf_entry is not None and info.get("config_entry") == conf_entry)
+        for entity_id, info in entity_sources(hass).items()
+        if (conf_entry is not None and info.get(SOURCE_CONFIG_ENTRY) == conf_entry)
         or (info["domain"] == entry_name)
     ]
 
