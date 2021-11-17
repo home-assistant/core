@@ -916,27 +916,23 @@ def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
-def integration_entities(
-    hass: HomeAssistant, entry_name: str, platform: str | None = None
-) -> Iterable[str]:
+def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     """
     Get entity ids for entities tied to an integration/domain.
 
     Provide entry_name as domain to get all entity id's for a integration/domain
     or provide a config entry title for filtering between instances of the same integration.
-    Optionally provide platform to only return entities for that platform.
     """
     entity_reg = entity_registry.async_get(hass)
     conf_entries = [
         entry.entry_id
         for entry in hass.config_entries.async_entries()
-        if entry.domain == entry_name or entry.title == entry_name
+        if entry_name in (entry.domain, entry.title)
     ]
     return [
         item.entity_id
         for item in entity_reg.entities.values()
         if item.config_entry_id in conf_entries
-        and (platform is None or item.domain == platform)
     ]
 
 
