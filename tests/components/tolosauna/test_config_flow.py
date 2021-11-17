@@ -84,6 +84,40 @@ async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_user_walkthrough(hass: HomeAssistant, toloclient: Mock):
+    """Test complete user flow with first wrong and then correct host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
+    assert "flow_id" in result
+
+    toloclient().get_status_info.side_effect = lambda *args, **kwargs: None
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.2"},
+    )
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == SOURCE_USER
+    assert result2["errors"] == {"base": "cannot_connect"}
+    assert "flow_id" in result2
+
+    toloclient().get_status_info.side_effect = lambda *args, **kwargs: object()
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1"},
+    )
+
+    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["title"] == "TOLO Sauna"
+    assert result3["data"][CONF_HOST] == "127.0.0.1"
+
+
 async def test_dhcp(hass: HomeAssistant, toloclient: Mock):
     """Test starting a flow from discovery."""
     toloclient().get_status_info.side_effect = lambda *args, **kwargs: object()
