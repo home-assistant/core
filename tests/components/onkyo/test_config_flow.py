@@ -52,7 +52,7 @@ async def test_discover_single_connection(hass):
 
     with patch(
         "pyeiscp.Connection.discover",
-        side_effect=lambda discovery_callback, timeout: asyncio.ensure_future(
+        side_effect=lambda host, discovery_callback, timeout: asyncio.ensure_future(
             discovery_callback(mock_connection)
         ),
     ):
@@ -72,11 +72,11 @@ async def test_discover_single_connection(hass):
     }
 
 
-async def test_config_flow_manual_none_discovered(hass):
-    """Test if a manual flow returns a discovery error when no connections are discovered."""
+async def test_config_flow_manual_not_discovered(hass):
+    """Test if a manual flow returns a discovery error when no connection is discovered."""
 
     with patch(
-        "homeassistant.components.onkyo.config_flow._discover_connections",
+        "homeassistant.components.onkyo.config_flow.OnkyoConfigFlow._discover_unique_connections",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -84,8 +84,55 @@ async def test_config_flow_manual_none_discovered(hass):
         )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.onkyo.config_flow.OnkyoConfigFlow._discover_unique_connections",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST_1},
+        )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "manual"
     assert result["errors"] == {"base": "discovery_error"}
+
+
+async def test_config_flow_manual_discovered(hass):
+    """Test if a manual flow succeeds when a connection is discovered."""
+    mock_connection = get_mock_connection(TEST_HOST_1, TEST_NAME_1, TEST_IDENTIFIER_1)
+
+    with patch(
+        "homeassistant.components.onkyo.config_flow.OnkyoConfigFlow._discover_unique_connections",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.onkyo.config_flow.OnkyoConfigFlow._discover_unique_connections",
+        return_value=[mock_connection],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST_1},
+        )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == TEST_NAME_1
+    assert result["data"] == {
+        CONF_IDENTIFIER: TEST_IDENTIFIER_1,
+        CONF_HOST: TEST_HOST_1,
+        CONF_NAME: TEST_NAME_1,
+    }
 
 
 async def test_config_flow_manual_single_avr_cannot_connect(hass: core.HomeAssistant):
@@ -93,7 +140,7 @@ async def test_config_flow_manual_single_avr_cannot_connect(hass: core.HomeAssis
     mock_connection = get_mock_connection(TEST_HOST_1, TEST_NAME_1, TEST_IDENTIFIER_1)
 
     with patch(
-        "homeassistant.components.onkyo.config_flow._discover_connections",
+        "homeassistant.components.onkyo.config_flow.OnkyoConfigFlow._discover_unique_connections",
         return_value=[mock_connection],
     ):
         mock_connection.connect.side_effect = asyncio.TimeoutError()
@@ -108,43 +155,12 @@ async def test_config_flow_manual_single_avr_cannot_connect(hass: core.HomeAssis
     assert result["reason"] == "cannot_connect"
 
 
-async def test_config_flow_manual_single_avr_already_added(hass: core.HomeAssistant):
-    """Test if a manual flow returns a discovery error when the discovered connection is already added."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_IDENTIFIER_1,
-        data={
-            CONF_IDENTIFIER: TEST_IDENTIFIER_1,
-            CONF_HOST: TEST_HOST_1,
-            CONF_NAME: TEST_NAME_1,
-        },
-        title=TEST_NAME_1,
-    )
-    config_entry.add_to_hass(hass)
-
-    mock_connection = get_mock_connection(TEST_HOST_1, TEST_NAME_1, TEST_IDENTIFIER_1)
-
-    with patch(
-        "homeassistant.components.onkyo.config_flow._discover_connections",
-        return_value=[mock_connection],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    assert len(mock_connection.connect.mock_calls) == 0
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "discovery_error"}
-
-
 async def test_config_flow_manual_single_avr_success(hass: core.HomeAssistant):
     """Test if a manual flow succeeds when discovering a single connection."""
     mock_connection = get_mock_connection(TEST_HOST_1, TEST_NAME_1, TEST_IDENTIFIER_1)
 
     with patch(
-        "homeassistant.components.onkyo.config_flow._discover_connections",
+        "homeassistant.components.onkyo.config_flow.OnkyoConfigFlow._discover_unique_connections",
         return_value=[mock_connection],
     ):
         result = await hass.config_entries.flow.async_init(
@@ -169,7 +185,7 @@ async def test_config_flow_manual_dual_avrs_success(hass: core.HomeAssistant):
     mock_connection_2 = get_mock_connection(TEST_HOST_2, TEST_NAME_2, TEST_IDENTIFIER_2)
 
     with patch(
-        "homeassistant.components.onkyo.config_flow._discover_connections",
+        "homeassistant.components.onkyo.config_flow.OnkyoConfigFlow._discover_unique_connections",
         return_value=[mock_connection_1, mock_connection_2],
     ):
         result = await hass.config_entries.flow.async_init(

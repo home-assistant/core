@@ -27,6 +27,8 @@ from .const import (
     DOMAIN,
 )
 
+MANUAL_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+
 
 class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the Onkyo component."""
@@ -50,31 +52,42 @@ class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        errors: dict[str, str] = {}
         if not self._discovered_connections:
-            # Discover connections and filter out already configured entries.
-            self._discovered_connections = [
-                conn
-                for conn in await _discover_connections(DISCOVER_TIMEOUT)
-                if conn.identifier
-                not in [
-                    entity.unique_id
-                    for entity in self._async_current_entries(include_ignore=True)
-                ]
-            ]
+            self._discovered_connections = await self._discover_unique_connections()
 
-        if len(self._discovered_connections) == 1:
+        if len(self._discovered_connections) == 0:
+            # No connections discovered, switch to manual host input.
+            return await self.async_step_manual()
+
+        elif len(self._discovered_connections) == 1:
             # One connection discovered, immediately connect.
             self._connection = self._discovered_connections[0]
             return await self.async_step_connect()
-        if len(self._discovered_connections) > 1:
-            # Multiple connections discovered, let user select.
-            return await self.async_step_select()
 
-        errors["base"] = "discovery_error"
+        # Multiple connections discovered, let user select.
+        return await self.async_step_select()
+
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Discover a receiver using a manually set host."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            # Run discovery for specified host.
+            self._connection = next(
+                iter(
+                    await self._discover_unique_connections(host=user_input[CONF_HOST])
+                ),
+                None,
+            )
+
+            if self._connection:
+                return await self.async_step_connect()
+
+            errors["base"] = "discovery_error"
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema({}), errors=errors
+            step_id="manual", data_schema=MANUAL_SCHEMA, errors=errors
         )
 
     async def async_step_select(
@@ -85,9 +98,12 @@ class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Get selected connection and go to the connect step.
             self._connection = next(
-                conn
-                for conn in self._discovered_connections
-                if conn.name == user_input["select_receiver"]
+                (
+                    conn
+                    for conn in self._discovered_connections
+                    if conn.name == user_input["select_receiver"]
+                ),
+                None,
             )
             return await self.async_step_connect()
 
@@ -111,15 +127,9 @@ class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(conn.identifier)
         self._abort_if_unique_id_configured()
 
-        try:
-            with async_timeout.timeout(CONNECT_TIMEOUT):
-                await conn.connect()
-
-        except asyncio.TimeoutError:
+        if not await _validate_connection(conn):
             return self.async_abort(reason="cannot_connect")
 
-        # Close the test connection as setup entry will create one.
-        conn.close()
         return self.async_create_entry(
             title=conn.name,
             data={
@@ -128,6 +138,34 @@ class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_NAME: conn.name,
             },
         )
+
+    async def _discover_unique_connections(
+        self, timeout: int = DISCOVER_TIMEOUT, host: str | None = None
+    ) -> list[Connection]:
+        """Discover all unique available connections on the network."""
+        connections: dict[str, Connection] = {}
+
+        @callback
+        async def _discovery_callback(connection: Connection) -> None:
+            """Handle a discovered connection."""
+            if (
+                connection.identifier not in connections
+                and connection.identifier
+                not in [
+                    entity.unique_id
+                    for entity in self._async_current_entries(include_ignore=True)
+                ]
+            ):
+                connections[connection.identifier] = connection
+
+        await Connection.discover(
+            host=host,
+            discovery_callback=_discovery_callback,
+            timeout=timeout,
+        )
+
+        await asyncio.sleep(timeout)
+        return list(connections.values())
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -210,20 +248,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-async def _discover_connections(timeout: int) -> list[Connection]:
-    """Discover available connections on the network."""
-    connections: dict[str, Connection] = {}
+async def _validate_connection(connection: Connection) -> bool:
+    """Validate if we can connect to a connection."""
+    try:
+        with async_timeout.timeout(CONNECT_TIMEOUT):
+            await connection.connect()
 
-    @callback
-    async def _discovery_callback(connection: Connection) -> None:
-        """Handle a discovered connection."""
-        if connection.identifier not in connections:
-            connections[connection.identifier] = connection
+    except asyncio.TimeoutError:
+        return False
 
-    await Connection.discover(
-        discovery_callback=_discovery_callback,
-        timeout=timeout,
-    )
-
-    await asyncio.sleep(timeout)
-    return list(connections.values())
+    connection.close()
+    return True

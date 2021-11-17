@@ -1,6 +1,13 @@
 {
   "config": {
     "step": {
+      "manual": {
+        "title": "Onkyo & Pioneer Network Receivers",
+        "description": "No receivers discovered, please set the IP manually",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        }
+      },
       "select": {
         "title": "Multiple network receivers discovered",
         "description": "Run the setup again to connect to additional receivers",
