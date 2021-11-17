@@ -9,7 +9,7 @@
     "webhook"
   ],
   "requirements": [
-    "motioneye-client==0.3.11"
+    "motioneye-client==0.3.12"
   ],
   "codeowners": [
     "@dermotduffy"
