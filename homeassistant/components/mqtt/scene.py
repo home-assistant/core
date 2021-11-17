@@ -15,10 +15,12 @@ from . import PLATFORMS
 from .. import mqtt
 from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, DOMAIN
 from .mixins import (
+    CONF_OBJECT_ID,
     MQTT_AVAILABILITY_SCHEMA,
     MqttAvailability,
     MqttDiscoveryUpdate,
     async_setup_entry_helper,
+    init_entity_id_from_config,
 )
 
 DEFAULT_NAME = "MQTT Scene"
@@ -32,6 +34,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(CONF_OBJECT_ID): cv.string,
     }
 ).extend(MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -43,22 +46,22 @@ async def async_setup_platform(
 ):
     """Set up MQTT scene through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(async_add_entities, config)
+    await _async_setup_entity(hass, async_add_entities, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT scene dynamically through MQTT discovery."""
     setup = functools.partial(
-        _async_setup_entity, async_add_entities, config_entry=config_entry
+        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
     await async_setup_entry_helper(hass, scene.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
-    async_add_entities, config, config_entry=None, discovery_data=None
+    hass, async_add_entities, config, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT scene."""
-    async_add_entities([MqttScene(config, config_entry, discovery_data)])
+    async_add_entities([MqttScene(hass, config, config_entry, discovery_data)])
 
 
 class MqttScene(
@@ -68,8 +71,11 @@ class MqttScene(
 ):
     """Representation of a scene that can be activated using MQTT."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    _entity_id_format = scene.DOMAIN + ".{}"
+
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT scene."""
+        self.hass = hass
         self._state = False
         self._sub_state = None
 
@@ -78,8 +84,17 @@ class MqttScene(
         # Load config
         self._setup_from_config(config)
 
+        # Initialize entity_id from config
+        self._init_entity_id()
+
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
+
+    def _init_entity_id(self):
+        """Set entity_id from object_id if defined in config."""
+        init_entity_id_from_config(
+            self.hass, self, self._config, self._entity_id_format
+        )
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""

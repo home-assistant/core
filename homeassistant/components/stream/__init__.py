@@ -120,6 +120,7 @@ def filter_libav_logging() -> None:
         "libav.rtsp",
         "libav.tcp",
         "libav.tls",
+        "libav.mpegts",
         "libav.NULL",
     ):
         logging.getLogger(logging_namespace).addFilter(libav_filter)

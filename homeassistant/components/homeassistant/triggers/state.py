@@ -39,8 +39,8 @@ BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 TRIGGER_STATE_SCHEMA = BASE_SCHEMA.extend(
     {
         # These are str on purpose. Want to catch YAML conversions
-        vol.Optional(CONF_FROM): vol.Any(str, [str]),
-        vol.Optional(CONF_TO): vol.Any(str, [str]),
+        vol.Optional(CONF_FROM): vol.Any(str, [str], None),
+        vol.Optional(CONF_TO): vol.Any(str, [str], None),
     }
 )
 
@@ -75,11 +75,15 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
-    from_state = config.get(CONF_FROM, MATCH_ALL)
-    to_state = config.get(CONF_TO, MATCH_ALL)
+    if (from_state := config.get(CONF_FROM)) is None:
+        from_state = MATCH_ALL
+    if (to_state := config.get(CONF_TO)) is None:
+        to_state = MATCH_ALL
     time_delta = config.get(CONF_FOR)
     template.attach(hass, time_delta)
-    match_all = from_state == MATCH_ALL and to_state == MATCH_ALL
+    # If neither CONF_FROM or CONF_TO are specified,
+    # fire on all changes to the state or an attribute
+    match_all = CONF_FROM not in config and CONF_TO not in config
     unsub_track_same = {}
     period: dict[str, timedelta] = {}
     match_from_state = process_state_match(from_state)

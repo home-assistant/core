@@ -923,8 +923,8 @@ class _TrackTemplateResultInfo:
 
         last_result = self._last_result.get(template)
 
-        # Check to see if the result has changed
-        if result == last_result:
+        # Check to see if the result has changed or is new
+        if result == last_result and template in self._last_result:
             return True
 
         if isinstance(result, TemplateError) and isinstance(last_result, TemplateError):
@@ -1483,7 +1483,7 @@ def async_track_time_change(
     minute: Any | None = None,
     second: Any | None = None,
 ) -> CALLBACK_TYPE:
-    """Add a listener that will fire if UTC time matches a pattern."""
+    """Add a listener that will fire if local time matches a pattern."""
     return async_track_utc_time_change(hass, action, hour, minute, second, local=True)
 
 

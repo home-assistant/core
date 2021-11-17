@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/venstar",
   "requirements": [
-    "venstarcolortouch==0.14"
+    "venstarcolortouch==0.15"
   ],
   "codeowners": ["@garbled1"],
   "iot_class": "local_polling"

@@ -12,14 +12,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafe, SimpliSafeEntity
-from .const import DATA_CLIENT, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up SimpliSafe freeze sensors based on a config entry."""
-    simplisafe = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    simplisafe = hass.data[DOMAIN][entry.entry_id]
     sensors = []
 
     for system in simplisafe.systems.values():
@@ -28,7 +28,7 @@ async def async_setup_entry(
             continue
 
         for sensor in system.sensors.values():
-            if sensor.type == DeviceTypes.temperature:
+            if sensor.type == DeviceTypes.TEMPERATURE:
                 sensors.append(SimplisafeFreezeSensor(simplisafe, system, sensor))
 
     async_add_entities(sensors)

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 from itertools import chain
 import re
 from typing import Tuple, Type, Union, cast
@@ -303,10 +304,8 @@ async def async_update_device_config(
     device_connection: DeviceConnectionType, device_config: ConfigType
 ) -> None:
     """Fill missing values in device_config with infos from LCN bus."""
-    is_group = device_config[CONF_ADDRESS][2]
-
     # fetch serial info if device is module
-    if not is_group:  # is module
+    if not (is_group := device_config[CONF_ADDRESS][2]):  # is module
         await device_connection.serial_known
         if device_config[CONF_HARDWARE_SERIAL] == -1:
             device_config[CONF_HARDWARE_SERIAL] = device_connection.hardware_serial
@@ -336,8 +335,9 @@ async def async_update_config_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Fill missing values in config_entry with infos from LCN bus."""
+    device_configs = deepcopy(config_entry.data[CONF_DEVICES])
     coros = []
-    for device_config in config_entry.data[CONF_DEVICES]:
+    for device_config in device_configs:
         device_connection = get_device_connection(
             hass, device_config[CONF_ADDRESS], config_entry
         )
@@ -345,8 +345,10 @@ async def async_update_config_entry(
 
     await asyncio.gather(*coros)
 
+    new_data = {**config_entry.data, CONF_DEVICES: device_configs}
+
     # schedule config_entry for save
-    hass.config_entries.async_update_entry(config_entry)
+    hass.config_entries.async_update_entry(config_entry, data=new_data)
 
 
 def has_unique_host_names(hosts: list[ConfigType]) -> list[ConfigType]:
@@ -381,8 +383,7 @@ def is_address(value: str) -> tuple[AddressType, str]:
         myhome.0.g11
         myhome.s0.g11
     """
-    matcher = PATTERN_ADDRESS.match(value)
-    if matcher:
+    if matcher := PATTERN_ADDRESS.match(value):
         is_group = matcher.group("type") == "g"
         addr = (int(matcher.group("seg_id")), int(matcher.group("id")), is_group)
         conn_id = matcher.group("conn_id")

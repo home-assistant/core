@@ -3,7 +3,7 @@
   "name": "Philips Hue",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hue",
-  "requirements": ["aiohue==2.6.3"],
+  "requirements": ["aiohue==3.0.1"],
   "ssdp": [
     {
       "manufacturer": "Royal Philips Electronics",
@@ -22,7 +22,7 @@
     "models": ["BSB002"]
   },
   "zeroconf": ["_hue._tcp.local."],
-  "codeowners": ["@balloob", "@frenck"],
+  "codeowners": ["@balloob", "@frenck", "@marcelveldt"],
   "quality_scale": "platinum",
   "iot_class": "local_push"
 }

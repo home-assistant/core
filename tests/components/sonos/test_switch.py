@@ -1,7 +1,10 @@
 """Tests for the Sonos Alarm switch platform."""
 from copy import copy
+from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.sonos import DOMAIN
+from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER
 from homeassistant.components.sonos.switch import (
     ATTR_DURATION,
     ATTR_ID,
@@ -10,9 +13,15 @@ from homeassistant.components.sonos.switch import (
     ATTR_RECURRENCE,
     ATTR_VOLUME,
 )
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_TIME, STATE_ON
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
+
+from .conftest import SonosMockEvent
+
+from tests.common import async_fire_time_changed
 
 
 async def setup_platform(hass, config_entry, config):
@@ -67,7 +76,36 @@ async def test_switch_attributes(hass, config_entry, config, soco):
     crossfade_state = hass.states.get(crossfade.entity_id)
     assert crossfade_state.state == STATE_ON
 
+    # Ensure switches are disabled
     status_light = entity_registry.entities["switch.sonos_zone_a_status_light"]
+    assert hass.states.get(status_light.entity_id) is None
+
+    touch_controls = entity_registry.entities["switch.sonos_zone_a_touch_controls"]
+    assert hass.states.get(touch_controls.entity_id) is None
+
+    # Enable disabled switches
+    for entity in (status_light, touch_controls):
+        entity_registry.async_update_entity(
+            entity_id=entity.entity_id, disabled_by=None
+        )
+    await hass.async_block_till_done()
+
+    # Fire event to cancel poll timer and avoid triggering errors during time jump
+    service = soco.contentDirectory
+    empty_event = SonosMockEvent(soco, service, {})
+    subscription = service.subscribe.return_value
+    subscription.callback(event=empty_event)
+    await hass.async_block_till_done()
+
+    # Mock shutdown calls during config entry reload
+    with patch.object(hass.data[DATA_SONOS_DISCOVERY_MANAGER], "async_shutdown") as m:
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
+        await hass.async_block_till_done()
+        assert m.called
+
     status_light_state = hass.states.get(status_light.entity_id)
     assert status_light_state.state == STATE_ON
 

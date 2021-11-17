@@ -36,6 +36,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
+from .const import DOMAIN
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -158,18 +159,17 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         self._disarm_script = None
         self._code_arm_required = code_arm_required
         self._code_format = code_format
-        domain = __name__.split(".")[-2]
         if disarm_action is not None:
-            self._disarm_script = Script(hass, disarm_action, name, domain)
+            self._disarm_script = Script(hass, disarm_action, name, DOMAIN)
         self._arm_away_script = None
         if arm_away_action is not None:
-            self._arm_away_script = Script(hass, arm_away_action, name, domain)
+            self._arm_away_script = Script(hass, arm_away_action, name, DOMAIN)
         self._arm_home_script = None
         if arm_home_action is not None:
-            self._arm_home_script = Script(hass, arm_home_action, name, domain)
+            self._arm_home_script = Script(hass, arm_home_action, name, DOMAIN)
         self._arm_night_script = None
         if arm_night_action is not None:
-            self._arm_night_script = Script(hass, arm_night_action, name, domain)
+            self._arm_night_script = Script(hass, arm_night_action, name, DOMAIN)
 
         self._state = None
         self._unique_id = unique_id

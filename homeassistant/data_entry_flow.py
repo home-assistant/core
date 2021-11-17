@@ -5,7 +5,7 @@ import abc
 import asyncio
 from collections.abc import Iterable, Mapping
 from types import MappingProxyType
-from typing import Any, Final, TypedDict
+from typing import Any, TypedDict
 import uuid
 
 import voluptuous as vol
@@ -20,9 +20,6 @@ RESULT_TYPE_EXTERNAL_STEP = "external"
 RESULT_TYPE_EXTERNAL_STEP_DONE = "external_done"
 RESULT_TYPE_SHOW_PROGRESS = "progress"
 RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
-
-STEP_ID_INIT: Final = "init"
-STEP_ID_USER: Final = "user"
 
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
@@ -293,8 +290,7 @@ class FlowManager(abc.ABC):
     @callback
     def _async_remove_flow_progress(self, flow_id: str) -> None:
         """Remove a flow from in progress."""
-        flow = self._progress.pop(flow_id, None)
-        if flow is None:
+        if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
         handler = flow.handler
         self._handler_progress_index[handler].remove(flow.flow_id)

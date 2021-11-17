@@ -81,8 +81,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("async_step_user: user_input: %s", user_input)
 
         if user_input is not None:
-            host = user_input.get(CONF_HOST)
-            if not host:
+            if not (host := user_input.get(CONF_HOST)):
                 # No device chosen, user might want to directly enter an URL
                 return await self.async_step_manual()
             # User has chosen a device, ask for confirmation
@@ -90,8 +89,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self._async_set_info_from_discovery(discovery)
             return self._create_entry()
 
-        discoveries = await self._async_get_discoveries()
-        if not discoveries:
+        if not (discoveries := await self._async_get_discoveries()):
             # Nothing found, maybe the user knows an URL to try
             return await self.async_step_manual()
 
@@ -469,6 +467,22 @@ def _is_ignored_device(discovery_info: Mapping[str, Any]) -> bool:
 
     # Is the root device not a DMR?
     if discovery_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) not in DmrDevice.DEVICE_TYPES:
+        return True
+
+    # Special cases for devices with other discovery methods (e.g. mDNS), or
+    # that advertise multiple unrelated (sent in separate discovery packets)
+    # UPnP devices.
+    manufacturer = discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER, "").lower()
+    model = discovery_info.get(ssdp.ATTR_UPNP_MODEL_NAME, "").lower()
+
+    if manufacturer.startswith("xbmc") or model == "kodi":
+        # kodi
+        return True
+    if manufacturer.startswith("samsung") and "tv" in model:
+        # samsungtv
+        return True
+    if manufacturer.startswith("lg") and "tv" in model:
+        # webostv
         return True
 
     return False

@@ -67,11 +67,12 @@ def test_save_and_load_private():
     assert stats.st_mode & 0o77 == 0
 
 
-def test_overwrite_and_reload():
+@pytest.mark.parametrize("atomic_writes", [True, False])
+def test_overwrite_and_reload(atomic_writes):
     """Test that we can overwrite an existing file and read back."""
     fname = _path_for("test3")
-    save_json(fname, TEST_JSON_A)
-    save_json(fname, TEST_JSON_B)
+    save_json(fname, TEST_JSON_A, atomic_writes=atomic_writes)
+    save_json(fname, TEST_JSON_B, atomic_writes=atomic_writes)
     data = load_json(fname)
     assert data == TEST_JSON_B
 

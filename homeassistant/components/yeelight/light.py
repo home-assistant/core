@@ -63,6 +63,7 @@ from . import (
     DATA_DEVICE,
     DATA_UPDATED,
     DOMAIN,
+    MODELS_WITH_DELAYED_ON_TRANSITION,
     POWER_STATE_CHANGE_TIME,
     YEELIGHT_FLOW_TRANSITION_SCHEMA,
     YeelightEntity,
@@ -180,20 +181,20 @@ SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
 SERVICE_SCHEMA_SET_COLOR_SCENE = {
     vol.Required(ATTR_RGB_COLOR): vol.All(
-        vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
     ),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_HSV_SCENE = {
     vol.Required(ATTR_HS_COLOR): vol.All(
+        vol.Coerce(tuple),
         vol.ExactSequence(
             (
                 vol.All(vol.Coerce(float), vol.Range(min=0, max=359)),
                 vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
             )
         ),
-        vol.Coerce(tuple),
     ),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
@@ -464,8 +465,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def color_temp(self) -> int:
         """Return the color temperature."""
-        temp_in_k = self._get_property("ct")
-        if temp_in_k:
+        if temp_in_k := self._get_property("ct"):
             self._color_temp = kelvin_to_mired(int(temp_in_k))
         return self._color_temp
 
@@ -529,9 +529,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def rgb_color(self) -> tuple:
         """Return the color property."""
-        rgb = self._get_property("rgb")
-
-        if rgb is None:
+        if (rgb := self._get_property("rgb")) is None:
             return None
 
         rgb = int(rgb)
@@ -614,7 +612,10 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Set bulb brightness."""
         if not brightness:
             return
-        if math.floor(self.brightness) == math.floor(brightness):
+        if (
+            math.floor(self.brightness) == math.floor(brightness)
+            and self._bulb.model not in MODELS_WITH_DELAYED_ON_TRANSITION
+        ):
             _LOGGER.debug("brightness already set to: %s", brightness)
             # Already set, and since we get pushed updates
             # we avoid setting it again to ensure we do not

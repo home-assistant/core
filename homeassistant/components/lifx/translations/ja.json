@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "description": "LIFX\u306e\u8a2d\u5b9a\u3092\u3057\u307e\u3059\u304b\uff1f"
+            }
+        }
+    }
+}

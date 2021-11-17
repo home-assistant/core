@@ -49,7 +49,9 @@ class AreaRegistry:
         """Initialize the area registry."""
         self.hass = hass
         self.areas: MutableMapping[str, AreaEntry] = {}
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = hass.helpers.storage.Store(
+            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        )
         self._normalized_name_area_idx: dict[str, str] = {}
 
     @callback
@@ -73,8 +75,7 @@ class AreaRegistry:
     @callback
     def async_get_or_create(self, name: str) -> AreaEntry:
         """Get or create an area."""
-        area = self.async_get_area_by_name(name)
-        if area:
+        if area := self.async_get_area_by_name(name):
             return area
         return self.async_create(name)
 

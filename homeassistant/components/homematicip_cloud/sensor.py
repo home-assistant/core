@@ -282,8 +282,7 @@ class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
         state_attr = super().extra_state_attributes
 
         for attr, attr_key in ILLUMINATION_DEVICE_ATTRIBUTES.items():
-            attr_value = getattr(self._device, attr, None)
-            if attr_value:
+            if attr_value := getattr(self._device, attr, None):
                 state_attr[attr_key] = attr_value
 
         return state_attr

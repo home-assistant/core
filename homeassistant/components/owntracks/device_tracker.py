@@ -130,9 +130,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         if self._data:
             return
 
-        state = await self.async_get_last_state()
-
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             return
 
         attr = state.attributes
