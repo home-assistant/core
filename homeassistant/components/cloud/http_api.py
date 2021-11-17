@@ -264,8 +264,8 @@ class CloudForgotPasswordView(HomeAssistantView):
         return self.json_message("ok")
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command({vol.Required("type"): "cloud/status"})
+@websocket_api.async_response
 async def websocket_cloud_status(hass, connection, msg):
     """Handle request for account info.
 
@@ -298,8 +298,8 @@ def _require_cloud_login(handler):
 
 
 @_require_cloud_login
-@websocket_api.async_response
 @websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
+@websocket_api.async_response
 async def websocket_subscription(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
@@ -315,7 +315,6 @@ async def websocket_subscription(hass, connection, msg):
 
 
 @_require_cloud_login
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "cloud/update_prefs",
@@ -331,6 +330,7 @@ async def websocket_subscription(hass, connection, msg):
         ),
     }
 )
+@websocket_api.async_response
 async def websocket_update_prefs(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
@@ -365,14 +365,14 @@ async def websocket_update_prefs(hass, connection, msg):
 
 
 @_require_cloud_login
-@websocket_api.async_response
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "cloud/cloudhook/create",
         vol.Required("webhook_id"): str,
     }
 )
+@websocket_api.async_response
+@_ws_handle_cloud_errors
 async def websocket_hook_create(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
@@ -381,14 +381,14 @@ async def websocket_hook_create(hass, connection, msg):
 
 
 @_require_cloud_login
-@websocket_api.async_response
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "cloud/cloudhook/delete",
         vol.Required("webhook_id"): str,
     }
 )
+@websocket_api.async_response
+@_ws_handle_cloud_errors
 async def websocket_hook_delete(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
@@ -430,9 +430,9 @@ async def _account_data(cloud):
 
 @websocket_api.require_admin
 @_require_cloud_login
+@websocket_api.websocket_command({"type": "cloud/remote/connect"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-@websocket_api.websocket_command({"type": "cloud/remote/connect"})
 async def websocket_remote_connect(hass, connection, msg):
     """Handle request for connect remote."""
     cloud = hass.data[DOMAIN]
@@ -442,9 +442,9 @@ async def websocket_remote_connect(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
+@websocket_api.websocket_command({"type": "cloud/remote/disconnect"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-@websocket_api.websocket_command({"type": "cloud/remote/disconnect"})
 async def websocket_remote_disconnect(hass, connection, msg):
     """Handle request for disconnect remote."""
     cloud = hass.data[DOMAIN]
@@ -454,9 +454,9 @@ async def websocket_remote_disconnect(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
+@websocket_api.websocket_command({"type": "cloud/google_assistant/entities"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-@websocket_api.websocket_command({"type": "cloud/google_assistant/entities"})
 async def google_assistant_list(hass, connection, msg):
     """List all google assistant entities."""
     cloud = hass.data[DOMAIN]
@@ -479,8 +479,6 @@ async def google_assistant_list(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@websocket_api.async_response
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command(
     {
         "type": "cloud/google_assistant/entities/update",
@@ -491,6 +489,8 @@ async def google_assistant_list(hass, connection, msg):
         vol.Optional("disable_2fa"): bool,
     }
 )
+@websocket_api.async_response
+@_ws_handle_cloud_errors
 async def google_assistant_update(hass, connection, msg):
     """Update google assistant config."""
     cloud = hass.data[DOMAIN]
@@ -507,9 +507,9 @@ async def google_assistant_update(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
+@websocket_api.websocket_command({"type": "cloud/alexa/entities"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-@websocket_api.websocket_command({"type": "cloud/alexa/entities"})
 async def alexa_list(hass, connection, msg):
     """List all alexa entities."""
     cloud = hass.data[DOMAIN]
@@ -532,8 +532,6 @@ async def alexa_list(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@websocket_api.async_response
-@_ws_handle_cloud_errors
 @websocket_api.websocket_command(
     {
         "type": "cloud/alexa/entities/update",
@@ -541,6 +539,8 @@ async def alexa_list(hass, connection, msg):
         vol.Optional("should_expose"): vol.Any(None, bool),
     }
 )
+@websocket_api.async_response
+@_ws_handle_cloud_errors
 async def alexa_update(hass, connection, msg):
     """Update alexa entity config."""
     cloud = hass.data[DOMAIN]
@@ -557,8 +557,8 @@ async def alexa_update(hass, connection, msg):
 
 @websocket_api.require_admin
 @_require_cloud_login
-@websocket_api.async_response
 @websocket_api.websocket_command({"type": "cloud/alexa/sync"})
+@websocket_api.async_response
 async def alexa_sync(hass, connection, msg):
     """Sync with Alexa."""
     cloud = hass.data[DOMAIN]
@@ -581,8 +581,8 @@ async def alexa_sync(hass, connection, msg):
         connection.send_error(msg["id"], ws_const.ERR_UNKNOWN_ERROR, "Unknown error")
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command({"type": "cloud/thingtalk/convert", "query": str})
+@websocket_api.async_response
 async def thingtalk_convert(hass, connection, msg):
     """Convert a query."""
     cloud = hass.data[DOMAIN]
