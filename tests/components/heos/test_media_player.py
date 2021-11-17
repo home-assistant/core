@@ -6,7 +6,6 @@ from pyheos.error import HeosError
 
 from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import (
-    DATA_GROUP_MANAGER,
     DATA_SOURCE_MANAGER,
     DOMAIN,
     SIGNAL_HEOS_UPDATED,
@@ -850,7 +849,6 @@ async def test_media_player_group_members(
 ):
     """Test group_members attribute."""
     await setup_platform(hass, config_entry, config)
-    hass.data[DOMAIN][DATA_GROUP_MANAGER].force_update_groups()
     await hass.async_block_till_done()
     player_entity = hass.states.get("media_player.test_player")
     assert player_entity.attributes[ATTR_GROUP_MEMBERS] == [
@@ -860,10 +858,17 @@ async def test_media_player_group_members(
     controller.get_groups.assert_called()
     assert "Unable to get HEOS group info" not in caplog.text
 
+
+async def test_media_player_group_members_error(
+    hass, config_entry, config, controller, caplog
+):
+    """Test error in HEOS API."""
     controller.get_groups.side_effect = HeosError("error")
-    hass.data[DOMAIN][DATA_GROUP_MANAGER].force_update_groups()
+    await setup_platform(hass, config_entry, config)
     await hass.async_block_till_done()
     assert "Unable to get HEOS group info" in caplog.text
+    player_entity = hass.states.get("media_player.test_player")
+    assert player_entity.attributes[ATTR_GROUP_MEMBERS] == []
 
 
 async def test_media_player_unjoin_group(
