@@ -6,8 +6,7 @@ from urllib.parse import urlsplit
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
     CONF_HOST,
@@ -153,13 +152,13 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_dhcp(self, discovery_info: dict):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Prepare configuration for a DHCP discovered Axis device."""
         return await self._process_discovered_device(
             {
-                CONF_HOST: discovery_info[IP_ADDRESS],
-                CONF_MAC: format_mac(discovery_info.get(MAC_ADDRESS, "")),
-                CONF_NAME: discovery_info.get(HOSTNAME),
+                CONF_HOST: discovery_info[dhcp.IP_ADDRESS],
+                CONF_MAC: format_mac(discovery_info[dhcp.MAC_ADDRESS]),
+                CONF_NAME: discovery_info[dhcp.HOSTNAME],
                 CONF_PORT: DEFAULT_PORT,
             }
         )

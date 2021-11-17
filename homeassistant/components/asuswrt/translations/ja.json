@@ -14,7 +14,8 @@
         "step": {
             "init": {
                 "data": {
-                    "dnsmasq": "dnsmasq.leases\u30d5\u30a1\u30a4\u30eb\u306e\u30eb\u30fc\u30bf\u30fc\u5185\u306e\u5834\u6240"
+                    "dnsmasq": "dnsmasq.leases\u30d5\u30a1\u30a4\u30eb\u306e\u30eb\u30fc\u30bf\u30fc\u5185\u306e\u5834\u6240",
+                    "interface": "\u7d71\u8a08\u3092\u53d6\u5f97\u3057\u305f\u3044\u30a4\u30f3\u30bf\u30d5\u30a7\u30fc\u30b9(\u4f8b: eth0\u3001eth1\u306a\u3069)"
                 }
             }
         }

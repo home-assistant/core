@@ -27,6 +27,7 @@
         "step": {
             "init": {
                 "data": {
+                    "show_all_sources": "\u3059\u3079\u3066\u306e\u30bd\u30fc\u30b9\u3092\u8868\u793a",
                     "zone2": "\u30be\u30fc\u30f32\u306e\u8a2d\u5b9a",
                     "zone3": "\u30be\u30fc\u30f33\u306e\u8a2d\u5b9a"
                 },

@@ -128,7 +128,7 @@ aiohomekit==0.6.3
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.6.3
+aiohue==3.0.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -1299,7 +1299,7 @@ speedtest-cli==2.1.3
 spiderpy==1.6.1
 
 # homeassistant.components.spotify
-spotipy==2.18.0
+spotipy==2.19.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql

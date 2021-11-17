@@ -1,7 +1,7 @@
 """Representation of a Hue remote firing events for button presses."""
 import logging
 
-from aiohue.sensors import (
+from aiohue.v1.sensors import (
     EVENT_BUTTON,
     TYPE_ZGP_SWITCH,
     TYPE_ZLL_ROTARY,
@@ -12,11 +12,11 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_EVENT, CONF_ID, CONF_UNIQUE
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util, slugify
 
+from ..const import ATTR_HUE_EVENT
 from .sensor_device import GenericHueDevice
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
-CONF_HUE_EVENT = "hue_event"
 CONF_LAST_UPDATED = "last_updated"
 
 EVENT_NAME_FORMAT = "{}"
@@ -42,11 +42,6 @@ class HueEvent(GenericHueDevice):
         self.bridge.reset_jobs.append(
             self.bridge.sensor_manager.coordinator.async_add_listener(
                 self.async_update_callback
-            )
-        )
-        self.bridge.reset_jobs.append(
-            self.bridge.listen_updates(
-                self.sensor.ITEM_TYPE, self.sensor.id, self.async_update_callback
             )
         )
 
@@ -90,7 +85,7 @@ class HueEvent(GenericHueDevice):
             CONF_EVENT: state,
             CONF_LAST_UPDATED: self.sensor.lastupdated,
         }
-        self.bridge.hass.bus.async_fire(CONF_HUE_EVENT, data)
+        self.bridge.hass.bus.async_fire(ATTR_HUE_EVENT, data)
 
     async def async_update_device_registry(self):
         """Update device registry."""
@@ -102,7 +97,7 @@ class HueEvent(GenericHueDevice):
             config_entry_id=self.bridge.config_entry.entry_id, **self.device_info
         )
         self.device_registry_id = entry.id
-        _LOGGER.debug(
+        LOGGER.debug(
             "Event registry with entry_id: %s and device_id: %s",
             self.device_registry_id,
             self.device_id,

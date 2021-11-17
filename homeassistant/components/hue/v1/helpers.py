@@ -1,9 +1,9 @@
 """Helper functions for Philips Hue."""
-from homeassistant import config_entries
+
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
 
-from .const import DOMAIN
+from ..const import DOMAIN
 
 
 async def remove_devices(bridge, api_ids, current):
@@ -30,14 +30,3 @@ async def remove_devices(bridge, api_ids, current):
 
     for item_id in removed_items:
         del current[item_id]
-
-
-def create_config_flow(hass, host):
-    """Start a config flow."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"host": host},
-        )
-    )
