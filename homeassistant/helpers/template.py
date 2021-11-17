@@ -923,16 +923,19 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     Provide entry_name as domain to get all entity id's for a integration/domain
     or provide a config entry title for filtering between instances of the same integration.
     """
-    entity_reg = entity_registry.async_get(hass)
-    conf_entries = [
-        entry.entry_id
-        for entry in hass.config_entries.async_entries()
-        if entry_name in (entry.domain, entry.title)
-    ]
+    conf_entry = next(
+        (
+            entry.entry_id
+            for entry in hass.config_entries.async_entries()
+            if entry_name == entry.title
+        ),
+        None,
+    )
     return [
-        item.entity_id
-        for item in entity_reg.entities.values()
-        if item.config_entry_id in conf_entries
+        entity_id
+        for entity_id, info in hass.data.get("entity_info", {}).items()
+        if (conf_entry is not None and info.get("config_entry") == conf_entry)
+        or (info["domain"] == entry_name)
     ]
 
 
