@@ -273,35 +273,39 @@ class GroupManager:
     async def async_join_players(
         self, leader_entity_id: str, member_entity_ids: list[str]
     ) -> None:
-        """Create a group with `leader_entity_id` as group leader and `member_entities` as member players."""
+        """Create a group with `leader_entity_id` as group leader and `member_entity_ids` as member players."""
         entity_id_to_player_id_map = self._get_entity_id_to_player_id_map()
         leader_id = entity_id_to_player_id_map.get(leader_entity_id)
         member_ids = [
-            entity_id_to_player_id_map.get(member) for member in member_entity_ids
+            entity_id_to_player_id_map[member]
+            for member in member_entity_ids
+            if member in entity_id_to_player_id_map
         ]
 
-        try:
-            await self.controller.create_group(leader_id, member_ids)
-        except HeosError as err:
-            _LOGGER.error(
-                "Failed to group %s with %s: %s",
-                leader_entity_id,
-                member_entity_ids,
-                err,
-            )
+        if leader_id:
+            try:
+                await self.controller.create_group(leader_id, member_ids)
+            except HeosError as err:
+                _LOGGER.error(
+                    "Failed to group %s with %s: %s",
+                    leader_entity_id,
+                    member_entity_ids,
+                    err,
+                )
 
     async def async_unjoin_player(self, player_entity_id: str):
-        """Remove `player_entity` from any group."""
+        """Remove `player_entity_id` from any group."""
         player_id = self._get_entity_id_to_player_id_map().get(player_entity_id)
 
-        try:
-            await self.controller.create_group(player_id, [])
-        except HeosError as err:
-            _LOGGER.error(
-                "Failed to ungroup %s: %s",
-                player_entity_id,
-                err,
-            )
+        if player_id:
+            try:
+                await self.controller.create_group(player_id, [])
+            except HeosError as err:
+                _LOGGER.error(
+                    "Failed to ungroup %s: %s",
+                    player_entity_id,
+                    err,
+                )
 
     async def async_update_groups(self, event, data=None):
         """Update the group membership from the controller."""
