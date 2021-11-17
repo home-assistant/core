@@ -1,4 +1,4 @@
-﻿"""Platform for Kostal Plenticore select widgets."""
+"""Platform for Kostal Plenticore select widgets."""
 from __future__ import annotations
 
 from abc import ABC
