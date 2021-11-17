@@ -37,7 +37,7 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
 
     current_state: DPCode | None = None
     current_state_inverse: bool = False
-    current_position: DPCode | None = None
+    current_position: DPCode | tuple[DPCode, ...] | None = None
     set_position: DPCode | None = None
 
 
@@ -50,7 +50,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             name="Curtain",
             current_state=DPCode.SITUATION_SET,
-            current_position=DPCode.PERCENT_STATE,
+            current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
             set_position=DPCode.PERCENT_CONTROL,
             device_class=DEVICE_CLASS_CURTAIN,
         ),
@@ -235,12 +235,23 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if self._current_position_type is None:
             return None
 
-        if not (
-            dpcode := (
+        # Determine current_position DPCodes
+        if isinstance(self.entity_description.current_position, DPCode):
+            dpcode = (
                 self.entity_description.current_position
                 or self.entity_description.set_position
             )
-        ):
+        elif isinstance(self.entity_description.current_position, tuple):
+            dpcode = next(
+                (
+                    dpcode
+                    for dpcode in self.entity_description.current_position
+                    if self.device.status.get(dpcode) is not None
+                ),
+                None,
+            )
+
+        if not (dpcode):
             return None
 
         if (position := self.device.status.get(dpcode)) is None:
@@ -290,14 +301,40 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         value: bool | str = True
         if self.device.function[self.entity_description.key].type == "Enum":
             value = "open"
-        self._send_command([{"code": self.entity_description.key, "value": value}])
+
+        commands: list[dict[str, str | int]] = [
+            {"code": self.entity_description.key, "value": value}
+        ]
+
+        if (self.entity_description.set_position) is not None:
+            commands.append(
+                {
+                    "code": self.entity_description.set_position,
+                    "value": 0,
+                }
+            )
+
+        self._send_command(commands)
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         value: bool | str = True
         if self.device.function[self.entity_description.key].type == "Enum":
             value = "close"
-        self._send_command([{"code": self.entity_description.key, "value": value}])
+
+        commands: list[dict[str, str | int]] = [
+            {"code": self.entity_description.key, "value": value}
+        ]
+
+        if (self.entity_description.set_position) is not None:
+            commands.append(
+                {
+                    "code": self.entity_description.set_position,
+                    "value": 100,
+                }
+            )
+
+        self._send_command(commands)
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
