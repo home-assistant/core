@@ -85,14 +85,13 @@ class _LegrandRflcSwitch(LightEntity):
         self._zone_properties_changed_switch(message)
         self.async_write_ha_state()
 
+    async def _async_switch_handle(self, message: Mapping):
+        self._hub.StatusError(message).raise_if()
+
     async def _async_switch(self, power: bool) -> None:
-        hub = self._hub
-
-        async def handle(message: Mapping):
-            hub.StatusError(message).raise_if()
-
-        await hub.handle_send(
-            handle, hub.compose_set_zone_properties(self._zid, power=power)
+        await self._hub.handle_send(
+            self._async_switch_handle,
+            self._hub.compose_set_zone_properties(self._zid, power=power),
         )
 
     async def async_turn_on(self, **kwargs) -> None:
