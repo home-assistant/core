@@ -72,17 +72,25 @@ async def test_async_response_request_context(hass, websocket_client):
 async def test_additional_validators(hass, websocket_client):
     """Test that additional validators can be applied."""
 
-    @websocket_api.websocket_command({"type": "test"}, cv.has_at_least_one_key("test"))
+    @websocket_api.websocket_command(
+        {"type": "additional-validators"}, cv.has_at_least_one_key("test")
+    )
     @websocket_api.async_response
-    async def async_test_command(hass, connection, msg):
+    async def async_additional_validators(hass, connection, msg):
         connection.send_result(msg["id"], "ok")
 
-    websocket_api.async_register_command(hass, async_test_command)
+    @websocket_api.websocket_command({"type": "no-additional-validators"})
+    @websocket_api.async_response
+    async def async_no_additional_validators(hass, connection, msg):
+        connection.send_result(msg["id"], "ok")
+
+    websocket_api.async_register_command(hass, async_additional_validators)
+    websocket_api.async_register_command(hass, async_no_additional_validators)
 
     await websocket_client.send_json(
         {
             "id": 1,
-            "type": "test",
+            "type": "additional-validators",
         }
     )
 
@@ -90,3 +98,14 @@ async def test_additional_validators(hass, websocket_client):
     assert msg["id"] == 1
     assert not msg["success"]
     assert msg["error"]["code"] == "invalid_format"
+
+    await websocket_client.send_json(
+        {
+            "id": 2,
+            "type": "no-additional-validators",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 2
+    assert msg["success"]
