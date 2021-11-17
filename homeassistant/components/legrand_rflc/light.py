@@ -35,9 +35,9 @@ async def async_setup_entry(
             properties = message[hub.PROPERTY_LIST]
             device_type = properties[hub.DEVICE_TYPE]
             if device_type == hub.DIMMER:
-                async_add_entities([_LegrandRflcDimmer(hub, zid, properties)], False)
+                async_add_entities([LegrandRflcDimmer(hub, zid, properties)], False)
             elif device_type == hub.SWITCH:
-                async_add_entities([_LegrandRflcSwitch(hub, zid, properties)], False)
+                async_add_entities([LegrandRflcSwitch(hub, zid, properties)], False)
 
         hub.StatusError(message).raise_if()
         for item in message[hub.ZONE_LIST]:
@@ -48,13 +48,16 @@ async def async_setup_entry(
     await hub.handle_send(zones, hub.compose_list_zones())
 
 
-class _LegrandRflcSwitch(LightEntity):
+class LegrandRflcSwitch(LightEntity):
+    """A Legrand RFLC Switch is based on a Home Assistant LightEntity."""
+
     _attr_should_poll = False
 
     _attr_color_mode = COLOR_MODE_ONOFF
     _attr_supported_color_modes = {COLOR_MODE_ONOFF}
 
     def __init__(self, hub, zid: int, properties: Mapping):
+        """Initialize the Legrand RFLC Switch."""
         self._hub = hub
         self._attr_name = properties[hub.NAME]
         self._attr_is_on = properties[hub.POWER]
@@ -70,10 +73,12 @@ class _LegrandRflcSwitch(LightEntity):
 
     @property
     def unique_id(self) -> str:
+        """Return the unique id of this hub's switch."""
         return f"{self._hub.host()}:{self._zid}"
 
     @property
     def available(self) -> bool:
+        """Yes, if we can communicate with its hub."""
         return self._hub.connected and self._hub.authenticated
 
     async def _available(self) -> None:
@@ -100,13 +105,17 @@ class _LegrandRflcSwitch(LightEntity):
         )
 
     async def async_turn_on(self, **kwargs) -> None:
+        """Turn switch on."""
         await self._async_switch(True)
 
     async def async_turn_off(self, **kwargs) -> None:
+        """Turn switch off."""
         await self._async_switch(False)
 
 
-class _LegrandRflcDimmer(_LegrandRflcSwitch):
+class LegrandRflcDimmer(LegrandRflcSwitch):
+    """A Legrand RFLC Dimmer is based on a Legrand RFLC Switch."""
+
     _attr_color_mode = COLOR_MODE_BRIGHTNESS
     _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
     _attr_supported_features = SUPPORT_TRANSITION
@@ -127,19 +136,20 @@ class _LegrandRflcDimmer(_LegrandRflcSwitch):
 
     @staticmethod
     def _to_ha(value: int) -> int:
-        return _LegrandRflcDimmer._quantize(
-            _LegrandRflcDimmer._normalize(value, _LegrandRflcDimmer.US),
-            _LegrandRflcDimmer.HA,
+        return LegrandRflcDimmer._quantize(
+            LegrandRflcDimmer._normalize(value, LegrandRflcDimmer.US),
+            LegrandRflcDimmer.HA,
         )
 
     @staticmethod
     def _from_ha(value) -> int:
-        return _LegrandRflcDimmer._quantize(
-            _LegrandRflcDimmer._normalize(value, _LegrandRflcDimmer.HA),
-            _LegrandRflcDimmer.US,
+        return LegrandRflcDimmer._quantize(
+            LegrandRflcDimmer._normalize(value, LegrandRflcDimmer.HA),
+            LegrandRflcDimmer.US,
         )
 
     def __init__(self, hub, zid: int, properties: Mapping):
+        """Initialize the Legrand RFLC Dimmer."""
         super().__init__(hub, zid, properties)
         self._attr_brightness = self._to_ha(properties[hub.POWER_LEVEL])
 
@@ -178,7 +188,9 @@ class _LegrandRflcDimmer(_LegrandRflcSwitch):
         )
 
     async def async_turn_on(self, **kwargs) -> None:
+        """Turn dimmer on."""
         await self._async_dimmer(True, **kwargs)
 
     async def async_turn_off(self, **kwargs) -> None:
+        """Turn dimmer off."""
         await self._async_dimmer(False, **kwargs)
