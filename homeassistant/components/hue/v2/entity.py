@@ -36,9 +36,7 @@ class HueBaseEntity(Entity):
         self.bridge = bridge
         self.controller = controller
         self.resource = resource
-        self.device = (
-            controller.get_device(resource.id) or bridge.api.config.bridge_device
-        )
+        self.device = controller.get_device(resource.id)
         self.logger = bridge.logger.getChild(resource.type.value)
 
         # Entity class attributes
