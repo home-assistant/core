@@ -27,6 +27,7 @@ from .const import (
 from .schema import ConnectionSchema
 
 CONF_KNX_GATEWAY: Final = "gateway"
+CONF_MAX_RATE_LIMIT: Final = 60
 
 DEFAULT_ENTRY_DATA: Final = {
     ConnectionSchema.CONF_KNX_STATE_UPDATER: ConnectionSchema.CONF_KNX_DEFAULT_STATE_UPDATER,
@@ -219,9 +220,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         data = {
-            ConnectionSchema.CONF_KNX_RATE_LIMIT: config[
-                ConnectionSchema.CONF_KNX_RATE_LIMIT
-            ],
+            ConnectionSchema.CONF_KNX_RATE_LIMIT: min(
+                config[ConnectionSchema.CONF_KNX_RATE_LIMIT], CONF_MAX_RATE_LIMIT
+            ),
             ConnectionSchema.CONF_KNX_STATE_UPDATER: config[
                 ConnectionSchema.CONF_KNX_STATE_UPDATER
             ],
@@ -384,7 +385,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
                         ConnectionSchema.CONF_KNX_DEFAULT_RATE_LIMIT,
                     ),
                 )
-            ] = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
+            ] = vol.All(vol.Coerce(int), vol.Range(min=1, max=CONF_MAX_RATE_LIMIT))
 
         return self.async_show_form(
             step_id="init",

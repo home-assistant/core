@@ -355,6 +355,38 @@ async def test_import_config_automatic(hass: HomeAssistant) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_import_rate_limit_out_of_range(hass: HomeAssistant) -> None:
+    """Test automatic import from config.yaml."""
+    config = {
+        CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,  # has a default in the original config
+        ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,  # has a default in the original config
+        ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,  # has a default in the original config
+        ConnectionSchema.CONF_KNX_RATE_LIMIT: 80,
+        ConnectionSchema.CONF_KNX_STATE_UPDATER: True,  # has a default in the original config
+    }
+
+    with patch(
+        "homeassistant.components.knx.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == CONF_KNX_AUTOMATIC
+        assert result["data"] == {
+            CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
+            CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
+            ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
+            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+            ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
+            ConnectionSchema.CONF_KNX_RATE_LIMIT: 60,
+        }
+
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_import_options(hass: HomeAssistant) -> None:
     """Test import from config.yaml with options."""
     config = {
