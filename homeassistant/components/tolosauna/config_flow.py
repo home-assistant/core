@@ -15,6 +15,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
+from ...helpers.typing import DiscoveryInfoType
 from .const import DEFAULT_NAME, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info: dict[str, str]) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle a flow initialized by discovery."""
         await self.async_set_unique_id(format_mac(discovery_info[MAC_ADDRESS]))
         self._abort_if_unique_id_configured()
