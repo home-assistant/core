@@ -50,7 +50,7 @@ from homeassistant.components.zwave_js.api import (
     NODE_ID,
     OPTED_IN,
     PIN,
-    PLANNED_PROVISIIONING_ENTRY,
+    PLANNED_PROVISIONING_ENTRY,
     PRODUCT_ID,
     PRODUCT_TYPE,
     PROPERTY,
@@ -572,7 +572,7 @@ async def test_add_node(
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
-            PLANNED_PROVISIIONING_ENTRY: {
+            PLANNED_PROVISIONING_ENTRY: {
                 DSK: "test",
                 SECURITY_CLASSES: [0],
             },
@@ -670,10 +670,40 @@ async def test_add_node(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
-    # Test ValueError is caught as failure
+    # Test Smart Start QR provisioning information with S2 inclusion strategy fails
     await ws_client.send_json(
         {
             ID: 5,
+            TYPE: "zwave_js/add_node",
+            ENTRY_ID: entry.entry_id,
+            INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
+            QR_PROVISIONING_INFORMATION: {
+                VERSION: 1,
+                SECURITY_CLASSES: [0],
+                DSK: "test",
+                GENERIC_DEVICE_CLASS: 1,
+                SPECIFIC_DEVICE_CLASS: 1,
+                INSTALLER_ICON_TYPE: 1,
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 1,
+                PRODUCT_ID: 1,
+                APPLICATION_VERSION: "test",
+            },
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 0
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {" success": True}
+
+    # Test ValueError is caught as failure
+    await ws_client.send_json(
+        {
+            ID: 6,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
@@ -693,7 +723,7 @@ async def test_add_node(
     ):
         await ws_client.send_json(
             {
-                ID: 6,
+                ID: 7,
                 TYPE: "zwave_js/add_node",
                 ENTRY_ID: entry.entry_id,
             }
@@ -709,7 +739,7 @@ async def test_add_node(
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 7, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
+        {ID: 8, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
@@ -818,7 +848,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
             ID: 2,
             TYPE: "zwave_js/provision_smart_start_node",
             ENTRY_ID: entry.entry_id,
-            PLANNED_PROVISIIONING_ENTRY: {
+            PLANNED_PROVISIONING_ENTRY: {
                 DSK: "test",
                 SECURITY_CLASSES: [0],
             },
@@ -1004,6 +1034,23 @@ async def test_unprovision_smart_start_node(hass, integration, client, hass_ws_c
         "command": "controller.unprovision_smart_start_node",
         "dskOrNodeId": "test",
     }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {}
+
+    # Test not including DSK or node ID as input fails
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/unprovision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 0
 
     # Test FailedZWaveCommand is caught
     with patch(
@@ -1573,7 +1620,7 @@ async def test_replace_failed_node(
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
-            PLANNED_PROVISIIONING_ENTRY: {
+            PLANNED_PROVISIONING_ENTRY: {
                 DSK: "test",
                 SECURITY_CLASSES: [0],
             },
@@ -1676,10 +1723,39 @@ async def test_replace_failed_node(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
-    # Test ValueError is caught as failure
+    # Test S2 QR provisioning information with Smart Start inclusion strategy fails
     await ws_client.send_json(
         {
             ID: 5,
+            TYPE: "zwave_js/replace_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+            INCLUSION_STRATEGY: InclusionStrategy.SMART_START.value,
+            QR_PROVISIONING_INFORMATION: {
+                VERSION: 0,
+                SECURITY_CLASSES: [0],
+                DSK: "test",
+                GENERIC_DEVICE_CLASS: 1,
+                SPECIFIC_DEVICE_CLASS: 1,
+                INSTALLER_ICON_TYPE: 1,
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 1,
+                PRODUCT_ID: 1,
+                APPLICATION_VERSION: "test",
+            },
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    # Test ValueError is caught as failure
+    await ws_client.send_json(
+        {
+            ID: 6,
             TYPE: "zwave_js/replace_failed_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,
@@ -1700,7 +1776,7 @@ async def test_replace_failed_node(
     ):
         await ws_client.send_json(
             {
-                ID: 6,
+                ID: 7,
                 TYPE: "zwave_js/replace_failed_node",
                 ENTRY_ID: entry.entry_id,
                 NODE_ID: 67,
@@ -1718,7 +1794,7 @@ async def test_replace_failed_node(
 
     await ws_client.send_json(
         {
-            ID: 7,
+            ID: 8,
             TYPE: "zwave_js/replace_failed_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,

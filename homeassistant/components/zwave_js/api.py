@@ -118,7 +118,7 @@ INCLUSION_STRATEGY = "inclusion_strategy"
 PIN = "pin"
 PROVISIONING = "provisioning"
 FORCE_SECURITY = "force_security"
-PLANNED_PROVISIIONING_ENTRY = "planned_provisioning_entry"
+PLANNED_PROVISIONING_ENTRY = "planned_provisioning_entry"
 QR_PROVISIONING_INFORMATION = "qr_provisioning_information"
 QR_CODE_STRING = "qr_code_string"
 
@@ -142,7 +142,9 @@ UNPROVISION = "unprovision"
 PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.Schema(
     {
         vol.Required(DSK): str,
-        vol.Required(SECURITY_CLASSES): vol.All(cv.ensure_list, [int]),
+        vol.Required(SECURITY_CLASSES): vol.All(
+            cv.ensure_list, [vol.All(int, vol.In([val.value for val in SecurityClass]))]
+        ),
     },
     # Provisioning entries can have extra keys for SmartStart
     extra=vol.ALLOW_EXTRA,
@@ -150,8 +152,12 @@ PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.Schema(
 
 QR_PROVISIONING_INFORMATION_SCHEMA = vol.Schema(
     {
-        vol.Required(VERSION): int,
-        vol.Required(SECURITY_CLASSES): vol.All(cv.ensure_list, [int]),
+        vol.Required(VERSION): vol.All(
+            int, vol.In([val.value for val in QRCodeVersion])
+        ),
+        vol.Required(SECURITY_CLASSES): vol.All(
+            cv.ensure_list, [vol.All(int, vol.In([val.value for val in SecurityClass]))]
+        ),
         vol.Required(DSK): str,
         vol.Required(GENERIC_DEVICE_CLASS): int,
         vol.Required(SPECIFIC_DEVICE_CLASS): int,
@@ -162,7 +168,9 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.Schema(
         vol.Required(APPLICATION_VERSION): str,
         vol.Optional(MAX_INCLUSION_REQUEST_INTERVAL): int,
         vol.Optional(UUID): str,
-        vol.Optional(SUPPORTED_PROTOCOLS): vol.All(cv.ensure_list, [int]),
+        vol.Optional(SUPPORTED_PROTOCOLS): vol.All(
+            cv.ensure_list, [vol.All(int, vol.In([val.value for val in Protocols]))]
+        ),
     }
 )
 
@@ -245,9 +253,10 @@ def async_handle_failed_command(orig_func: Callable) -> Callable:
 
 def get_provisioning_info(
     msg: dict,
+    inclusion_strategy: InclusionStrategy | None = None,
 ) -> str | ProvisioningEntry | QRProvisioningInformation | None:
     """Process provisioning parameters and return the appropriate value."""
-    if planned_provisioning_entry := msg.get(PLANNED_PROVISIIONING_ENTRY):
+    if planned_provisioning_entry := msg.get(PLANNED_PROVISIONING_ENTRY):
         return ProvisioningEntry(
             dsk=planned_provisioning_entry[DSK],
             security_classes=[
@@ -266,7 +275,7 @@ def get_provisioning_info(
             Protocols(proto)
             for proto in qr_provisioning_information.get(SUPPORTED_PROTOCOLS, [])
         ]
-        return QRProvisioningInformation(
+        provisioning = QRProvisioningInformation(
             version=QRCodeVersion(qr_provisioning_information[VERSION]),
             security_classes=[
                 SecurityClass(sec_cls)
@@ -286,6 +295,21 @@ def get_provisioning_info(
             uuid=qr_provisioning_information.get(UUID),
             supported_protocols=protocols if protocols else None,
         )
+        if inclusion_strategy is None:
+            return provisioning
+        if (
+            provisioning.version == QRCodeVersion.SMART_START
+            and inclusion_strategy != InclusionStrategy.SMART_START
+        ):
+            raise TypeError(
+                "SmartStart QR code provided for a non Smart Start inclusion strategy"
+            )
+        if provisioning.version == QRCodeVersion.S2 and inclusion_strategy not in (
+            InclusionStrategy.DEFAULT,
+            InclusionStrategy.SECURITY_S2,
+        ):
+            raise TypeError("S2 QR code provided for a non S2 inclusion strategy")
+        return provisioning
 
     if qr_code_string := msg.get(QR_CODE_STRING):
         return qr_code_string
@@ -553,7 +577,7 @@ async def websocket_ping_node(
         ),
         vol.Optional(FORCE_SECURITY): bool,
         vol.Exclusive(
-            PLANNED_PROVISIIONING_ENTRY, "options"
+            PLANNED_PROVISIONING_ENTRY, "options"
         ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
         vol.Exclusive(
             QR_PROVISIONING_INFORMATION, "options"
@@ -575,7 +599,11 @@ async def websocket_add_node(
     controller = client.driver.controller
     inclusion_strategy = InclusionStrategy(msg[INCLUSION_STRATEGY])
     force_security = msg.get(FORCE_SECURITY)
-    provisioning = get_provisioning_info(msg)
+    try:
+        provisioning = get_provisioning_info(msg, inclusion_strategy)
+    except TypeError as err:
+        connection.send_error(msg[ID], ERR_INVALID_FORMAT, err.args[0])
+        return
 
     @callback
     def async_cleanup() -> None:
@@ -705,7 +733,7 @@ async def websocket_grant_security_classes(
     entry: ConfigEntry,
     client: Client,
 ) -> None:
-    """Chooes SecurityClass grants as part of S2 inclusion process."""
+    """Choose SecurityClass grants as part of S2 inclusion process."""
     inclusion_grant = InclusionGrant(
         [SecurityClass(sec_cls) for sec_cls in msg[SECURITY_CLASSES]],
         msg[CLIENT_SIDE_AUTH],
@@ -743,7 +771,7 @@ async def websocket_validate_dsk_and_enter_pin(
         vol.Required(TYPE): "zwave_js/provision_smart_start_node",
         vol.Required(ENTRY_ID): str,
         vol.Exclusive(
-            PLANNED_PROVISIIONING_ENTRY, "options"
+            PLANNED_PROVISIONING_ENTRY, "options"
         ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
         vol.Exclusive(
             QR_PROVISIONING_INFORMATION, "options"
@@ -768,7 +796,7 @@ async def websocket_provision_smart_start_node(
             msg[ID],
             ERR_INVALID_FORMAT,
             (
-                f"Either {PLANNED_PROVISIIONING_ENTRY}, {QR_PROVISIONING_INFORMATION}, "
+                f"Either {PLANNED_PROVISIONING_ENTRY}, {QR_PROVISIONING_INFORMATION}, "
                 f"or {QR_CODE_STRING} must be provided"
             ),
         )
@@ -984,7 +1012,7 @@ async def websocket_remove_node(
         ),
         vol.Optional(FORCE_SECURITY): bool,
         vol.Exclusive(
-            PLANNED_PROVISIIONING_ENTRY, "options"
+            PLANNED_PROVISIONING_ENTRY, "options"
         ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
         vol.Exclusive(
             QR_PROVISIONING_INFORMATION, "options"
@@ -1007,7 +1035,11 @@ async def websocket_replace_failed_node(
     node_id = msg[NODE_ID]
     inclusion_strategy = InclusionStrategy(msg[INCLUSION_STRATEGY])
     force_security = msg.get(FORCE_SECURITY)
-    provisioning = get_provisioning_info(msg)
+    try:
+        provisioning = get_provisioning_info(msg, inclusion_strategy)
+    except TypeError as err:
+        connection.send_error(msg[ID], ERR_INVALID_FORMAT, err.args[0])
+        return
 
     @callback
     def async_cleanup() -> None:
