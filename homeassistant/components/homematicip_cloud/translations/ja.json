@@ -16,6 +16,9 @@
                     "hapid": "\u30a2\u30af\u30bb\u30b9\u30dd\u30a4\u30f3\u30c8ID (SGTIN)",
                     "pin": "PIN\u30b3\u30fc\u30c9"
                 }
+            },
+            "link": {
+                "description": "\u30a2\u30af\u30bb\u30b9\u30dd\u30a4\u30f3\u30c8\u306e\u9752\u3044\u30dc\u30bf\u30f3\u3092\u62bc\u3057\u3066\u3001\u9001\u4fe1\u30dc\u30bf\u30f3\u3092\u62bc\u3059\u3068\u3001Home Assistant\u306bHomematicIP\u304c\u767b\u9332\u3055\u308c\u307e\u3059\u3002\n\n![\u30d6\u30ea\u30c3\u30b8\u306e\u30dc\u30bf\u30f3\u306e\u4f4d\u7f6e](/static/images/config_flows/config_homematicip_cloud.png)"
             }
         }
     }

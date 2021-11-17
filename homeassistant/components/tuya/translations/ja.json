@@ -38,7 +38,8 @@
             "device": {
                 "data": {
                     "brightness_range_mode": "\u30c7\u30d0\u30a4\u30b9\u304c\u4f7f\u7528\u3059\u308b\u8f1d\u5ea6\u7bc4\u56f2",
-                    "support_color": "\u5f37\u5236\u7684\u306b\u30ab\u30e9\u30fc\u3092\u30b5\u30dd\u30fc\u30c8"
+                    "support_color": "\u5f37\u5236\u7684\u306b\u30ab\u30e9\u30fc\u3092\u30b5\u30dd\u30fc\u30c8",
+                    "unit_of_measurement": "\u30c7\u30d0\u30a4\u30b9\u304c\u4f7f\u7528\u3059\u308b\u6e29\u5ea6\u5358\u4f4d"
                 },
                 "title": "Tuya\u30c7\u30d0\u30a4\u30b9\u306e\u8a2d\u5b9a"
             },
