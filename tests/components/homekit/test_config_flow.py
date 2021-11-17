@@ -365,7 +365,24 @@ async def test_options_flow_devices(
     mock_hap, hass, demo_cleanup, device_reg, entity_reg, mock_get_source_ip
 ):
     """Test devices can be bridged."""
-    config_entry = _mock_config_entry_with_options_populated()
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            "devices": ["notexist"],
+            "filter": {
+                "include_domains": [
+                    "fan",
+                    "humidifier",
+                    "vacuum",
+                    "media_player",
+                    "climate",
+                    "alarm_control_panel",
+                ],
+                "exclude_entities": ["climate.front_gate"],
+            },
+        },
+    )
     config_entry.add_to_hass(hass)
 
     demo_config_entry = MockConfigEntry(domain="domain")
