@@ -86,7 +86,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
             if connection_type == CONF_KNX_AUTOMATIC:
                 return self.async_create_entry(
-                    title=CONF_KNX_AUTOMATIC, data={**DEFAULT_ENTRY_DATA, **user_input}
+                    title=CONF_KNX_AUTOMATIC.capitalize(),
+                    data={**DEFAULT_ENTRY_DATA, **user_input},
                 )
 
             if connection_type == CONF_KNX_ROUTING:
@@ -109,7 +110,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=user_input[CONF_HOST],
+                title=f"{CONF_KNX_TUNNELING.capitalize()} @ {user_input[CONF_HOST]}",
                 data={
                     **DEFAULT_ENTRY_DATA,
                     CONF_HOST: user_input[CONF_HOST],
@@ -178,7 +179,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=CONF_KNX_ROUTING,
+                title=CONF_KNX_ROUTING.capitalize(),
                 data={
                     **DEFAULT_ENTRY_DATA,
                     ConnectionSchema.CONF_KNX_MCAST_GRP: user_input[
@@ -237,7 +238,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if CONF_KNX_TUNNELING in config:
             return self.async_create_entry(
-                title=config[CONF_KNX_TUNNELING][CONF_HOST],
+                title=f"{CONF_KNX_TUNNELING.capitalize()} @ {config[CONF_KNX_TUNNELING][CONF_HOST]}",
                 data={
                     **DEFAULT_ENTRY_DATA,
                     CONF_HOST: config[CONF_KNX_TUNNELING][CONF_HOST],
@@ -252,7 +253,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if CONF_KNX_ROUTING in config:
             return self.async_create_entry(
-                title=CONF_KNX_ROUTING,
+                title=CONF_KNX_ROUTING.capitalize(),
                 data={
                     **DEFAULT_ENTRY_DATA,
                     CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
@@ -261,7 +262,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=CONF_KNX_AUTOMATIC,
+            title=CONF_KNX_AUTOMATIC.capitalize(),
             data={
                 **DEFAULT_ENTRY_DATA,
                 CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
@@ -321,10 +322,14 @@ class KNXOptionsFlowHandler(OptionsFlow):
                 **user_input,
             }
 
+        entry_title = entry_data[CONF_KNX_CONNECTION_TYPE].capitalize()
+        if entry_data[CONF_KNX_CONNECTION_TYPE] == CONF_KNX_TUNNELING:
+            entry_title = f"{CONF_KNX_TUNNELING.capitalize()} @ {entry_data[CONF_HOST]}"
+
         self.hass.config_entries.async_update_entry(
             self.config_entry,
             data=entry_data,
-            title=entry_data[CONF_KNX_CONNECTION_TYPE].capitalize(),
+            title=entry_title,
         )
 
         return self.async_create_entry(title="", data={})

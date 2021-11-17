@@ -77,7 +77,7 @@ async def test_routing_setup(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result3["title"] == CONF_KNX_ROUTING
+        assert result3["title"] == CONF_KNX_ROUTING.capitalize()
         assert result3["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
@@ -124,7 +124,7 @@ async def test_tunneling_setup(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result3["title"] == "192.168.0.1"
+        assert result3["title"] == "Tunneling @ 192.168.0.1"
         assert result3["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
@@ -238,7 +238,7 @@ async def test_form_with_automatic_connection_handling(hass: HomeAssistant) -> N
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == CONF_KNX_AUTOMATIC
+    assert result2["title"] == CONF_KNX_AUTOMATIC.capitalize()
     assert result2["data"] == {
         **DEFAULT_ENTRY_DATA,
         CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
@@ -274,7 +274,7 @@ async def test_import_config_tunneling(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "192.168.1.1"
+        assert result["title"] == "Tunneling @ 192.168.1.1"
         assert result["data"] == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
             CONF_HOST: "192.168.1.1",
@@ -310,7 +310,7 @@ async def test_import_config_routing(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONF_KNX_ROUTING
+        assert result["title"] == CONF_KNX_ROUTING.capitalize()
         assert result["data"] == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
             CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
@@ -342,7 +342,7 @@ async def test_import_config_automatic(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONF_KNX_AUTOMATIC
+        assert result["title"] == CONF_KNX_AUTOMATIC.capitalize()
         assert result["data"] == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
@@ -374,7 +374,7 @@ async def test_import_rate_limit_out_of_range(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONF_KNX_AUTOMATIC
+        assert result["title"] == CONF_KNX_AUTOMATIC.capitalize()
         assert result["data"] == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
@@ -406,7 +406,7 @@ async def test_import_options(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONF_KNX_AUTOMATIC
+        assert result["title"] == CONF_KNX_AUTOMATIC.capitalize()
         assert result["data"] == {
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_INDIVIDUAL_ADDRESS: "15.15.250",
