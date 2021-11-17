@@ -300,23 +300,20 @@ def say_direct(text):
         pass
 
 
-async def async_get_ais_gate_model(hass, text):
+def get_ais_gate_model():
     global G_AIS_GATE_MODEL
     if G_AIS_GATE_MODEL is not None:
         return G_AIS_GATE_MODEL
-
-    web_session = aiohttp_client.async_get_clientsession(hass)
-    with async_timeout.timeout(10):
-        try:
-            ws_resp = await web_session.get(
-                G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1")
-            )
-            data = ws_resp.json()
-            ais_model = data.get("Model")
-            G_AIS_GATE_MODEL = ais_model
-        except Exception:
-            ais_model = platform.machine()
-        return ais_model
+    try:
+        ws_resp = requests.get(
+            G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1"), timeout=10
+        )
+        data = ws_resp.json()
+        ais_model = data.get("Model")
+        G_AIS_GATE_MODEL = ais_model
+    except Exception:
+        ais_model = platform.machine()
+    return ais_model
 
 
 def get_sercure_android_id_dom():
