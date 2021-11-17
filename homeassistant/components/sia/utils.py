@@ -1,16 +1,63 @@
 """Helper functions for the SIA integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
 from pysiaalarm import SIAEvent
 
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityDescription,
+)
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.util.dt import utcnow
 
-from .const import ATTR_CODE, ATTR_ID, ATTR_MESSAGE, ATTR_TIMESTAMP, ATTR_ZONE
+from .const import (
+    ATTR_CODE,
+    ATTR_ID,
+    ATTR_MESSAGE,
+    ATTR_TIMESTAMP,
+    ATTR_ZONE,
+    SIA_NAME_FORMAT,
+    SIA_NAME_FORMAT_HUB,
+)
 
 PING_INTERVAL_MARGIN = 30
+
+
+@dataclass
+class SIARequiredKeysMixin:
+    """Mixin for required keys."""
+
+    port: int
+    account: str
+    zone: int | None
+    ping_interval: int
+    code_consequences: dict[str, Any]
+
+
+@dataclass
+class SIAAlarmControlPanelEntityDescription(
+    AlarmControlPanelEntityDescription,
+    SIARequiredKeysMixin,
+):
+    """Describes SIA alarm control panel entity."""
+
+
+@dataclass
+class SIABinarySensorEntityDescription(
+    BinarySensorEntityDescription,
+    SIARequiredKeysMixin,
+):
+    """Describes SIA sensor entity."""
+
+
+def get_name(port: int, account: str, zone: int | None, device_class: str) -> str:
+    """Return the name of the zone."""
+    if zone is None or zone == 0:
+        return SIA_NAME_FORMAT_HUB.format(port, account, device_class)
+    return SIA_NAME_FORMAT.format(port, account, zone, device_class)
 
 
 def get_unavailability_interval(ping: int) -> float:
