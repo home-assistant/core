@@ -71,7 +71,7 @@ async def test_light(hass, socket_enabled):
                 [SWITCH, STATE_ON],
                 [SWITCH, STATE_OFF],
                 [DIMMER, STATE_ON, 255],
-                [DIMMER, STATE_ON, 127],
+                [DIMMER, STATE_ON, 128],
                 [DIMMER, STATE_OFF],
             ]
 
