@@ -26,12 +26,7 @@ def discover_chromecast(
     """Discover a Chromecast."""
 
     info = ChromecastInfo(
-        services=cast_info.services,
-        uuid=cast_info.uuid,
-        model_name=cast_info.model_name,
-        friendly_name=cast_info.friendly_name,
-        cast_type=cast_info.cast_type,
-        manufacturer=cast_info.manufacturer,
+        cast_info=cast_info,
     )
 
     if info.uuid is None:
@@ -76,12 +71,7 @@ def setup_internal_discovery(hass: HomeAssistant, config_entry) -> None:
             _remove_chromecast(
                 hass,
                 ChromecastInfo(
-                    services=cast_info.services,
-                    uuid=cast_info.uuid,
-                    model_name=cast_info.model_name,
-                    friendly_name=cast_info.friendly_name,
-                    cast_type=cast_info.cast_type,
-                    manufacturer=cast_info.manufacturer,
+                    cast_info=cast_info,
                 ),
             )
 
