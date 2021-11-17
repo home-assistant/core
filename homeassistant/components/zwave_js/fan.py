@@ -147,16 +147,7 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        # Entity should be unavailable if this isn't set
-        assert self.speed_configuration
-
-        if percentage == 0:
-            zwave_speed = 0
-        else:
-            zwave_speed = self.speed_configuration[
-                math.ceil(percentage / self.percentage_step) - 1
-            ]
-
+        zwave_speed = self.percentage_to_zwave_speed(percentage)
         await self.info.node.async_set_value(self._target_value, zwave_speed)
 
     @property
@@ -171,19 +162,7 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
             # guard missing value
             return None
 
-        if self.info.primary_value.value == 0:
-            return 0
-
-        # Entity should be unavailable if this isn't set
-        assert self.speed_configuration
-
-        percentage = 0.0
-        for speed_limit in self.speed_configuration:
-            percentage += self.percentage_step
-            if self.info.primary_value.value <= speed_limit:
-                break
-
-        return round(percentage)
+        return self.zwave_speed_to_percentage(self.info.primary_value.value)
 
     @property
     def percentage_step(self) -> float:
@@ -206,3 +185,41 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
         assert self.speed_configuration
 
         return len(self.speed_configuration)
+
+    def percentage_to_zwave_speed(self, percentage: int) -> int:
+        """Map a percentage to a ZWave speed."""
+        if percentage == 0:
+            return 0
+
+        # Entity should be unavailable if this isn't set
+        assert self.speed_configuration
+
+        # Since the percentage steps are computed with rounding, we have to
+        # search to find the appropriate speed.
+        for speed_limit in self.speed_configuration:
+            step_percentage = self.zwave_speed_to_percentage(speed_limit)
+            if percentage <= step_percentage:
+                return speed_limit
+
+        # This shouldn't actually happen; the last entry in
+        # `self.speed_configuration` should map to 100%.
+        return 100
+
+    def zwave_speed_to_percentage(self, zwave_speed: int) -> int:
+        """Convert a Zwave speed to a percentage."""
+        if zwave_speed == 0:
+            return 0
+
+        # Entity should be unavailable if this isn't set
+        assert self.speed_configuration
+
+        percentage = 0.0
+        for speed_limit in self.speed_configuration:
+            percentage += self.percentage_step
+            if zwave_speed <= speed_limit:
+                break
+
+        # This choice of rounding function is to provide consistency with how
+        # the UI handles steps e.g., for a 3-speed fan, you get steps at 33,
+        # 67, and 100.
+        return round(percentage)
