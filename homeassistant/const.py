@@ -421,6 +421,7 @@ ATTR_TEMPERATURE: Final = "temperature"
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
 POWER_VOLT_AMPERE: Final = "VA"
+POWER_BTU_PER_HOUR: Final = "BTU/h"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
@@ -472,6 +473,7 @@ LENGTH_MILES: Final = "mi"
 
 # Frequency units
 FREQUENCY_HERTZ: Final = "Hz"
+FREQUENCY_KILOHERTZ: Final = "kHz"
 FREQUENCY_MEGAHERTZ: Final = "MHz"
 FREQUENCY_GIGAHERTZ: Final = "GHz"
 
@@ -482,6 +484,7 @@ PRESSURE_KPA: Final = "kPa"
 PRESSURE_BAR: Final = "bar"
 PRESSURE_CBAR: Final = "cbar"
 PRESSURE_MBAR: Final = "mbar"
+PRESSURE_MMHG: Final = "mmHg"
 PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
 
