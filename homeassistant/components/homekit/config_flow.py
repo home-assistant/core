@@ -330,13 +330,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=self.hk_options)
 
         all_supported_devices = await _async_get_supported_devices(self.hass)
+        # Strip out devices that no longer exist to prevent error in the UI
+        devices = [
+            device_id
+            for device_id in self.hk_options.get(CONF_DEVICES, [])
+            if device_id in all_supported_devices
+        ]
         return self.async_show_form(
             step_id="advanced",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_DEVICES, default=self.hk_options.get(CONF_DEVICES, [])
-                    ): cv.multi_select(all_supported_devices)
+                    vol.Optional(CONF_DEVICES, default=devices): cv.multi_select(
+                        all_supported_devices
+                    )
                 }
             ),
         )
