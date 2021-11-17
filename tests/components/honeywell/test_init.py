@@ -29,3 +29,16 @@ async def test_setup_multiple_thermostats(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.async_entity_ids_count() == 2
+
+
+@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
+async def test_setup_multiple_thermostats_with_same_deviceid(
+    hass: HomeAssistant, config_entry: MockConfigEntry, location, device
+) -> None:
+    """Test that the config form is shown."""
+    location.devices_by_id[device.deviceid] = device
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.async_entity_ids_count() == 1

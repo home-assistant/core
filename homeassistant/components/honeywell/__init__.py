@@ -33,11 +33,10 @@ async def async_setup_entry(hass, config):
     devices = {}
 
     for location in client.locations_by_id.values():
-        for device in location.devices_by_id.values():
-            if (not loc_id or location.locationid == loc_id) and (
-                not dev_id or device.deviceid == dev_id
-            ):
-                devices[device.deviceid] = device
+        if not loc_id or location.locationid == loc_id:
+            for device in location.devices_by_id.values():
+                if not dev_id or device.deviceid == dev_id:
+                    devices[device.deviceid] = device
 
     if len(devices) == 0:
         _LOGGER.debug("No devices found")
