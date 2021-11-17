@@ -14,6 +14,10 @@ from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -189,7 +193,7 @@ class ControllerManager:
         if event == heos_const.EVENT_PLAYERS_CHANGED:
             self.update_ids(data[heos_const.DATA_MAPPED_IDS])
         # Update players
-        self._hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_HEOS_UPDATED)
+        async_dispatcher_send(self._hass, SIGNAL_HEOS_UPDATED)
 
     async def _heos_event(self, event):
         """Handle connection event."""
@@ -201,7 +205,7 @@ class ControllerManager:
             except HeosError as ex:
                 _LOGGER.error("Unable to refresh players: %s", ex)
         # Update players
-        self._hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_HEOS_UPDATED)
+        async_dispatcher_send(self._hass, SIGNAL_HEOS_UPDATED)
 
     def update_ids(self, mapped_ids: dict[int, int]):
         """Update the IDs in the device and entity registry."""
@@ -320,7 +324,7 @@ class GroupManager:
                 self._group_membership = groups
                 _LOGGER.debug("Groups updated due to change event")
                 # Let players know to update
-                self._hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_HEOS_UPDATED)
+                async_dispatcher_send(self._hass, SIGNAL_HEOS_UPDATED)
             else:
                 _LOGGER.debug("Groups empty")
 
@@ -337,8 +341,8 @@ class GroupManager:
         async def _async_handle_player_added():
             await self.async_update_groups(SIGNAL_HEOS_PLAYER_ADDED)
 
-        self._hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_HEOS_PLAYER_ADDED, _async_handle_player_added
+        async_dispatcher_connect(
+            self._hass, SIGNAL_HEOS_PLAYER_ADDED, _async_handle_player_added
         )
 
     @property
@@ -466,7 +470,7 @@ class SourceManager:
                     self.source_list = self._build_source_list()
                     _LOGGER.debug("Sources updated due to changed event")
                     # Let players know to update
-                    hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_HEOS_UPDATED)
+                    async_dispatcher_send(hass, SIGNAL_HEOS_UPDATED)
 
         controller.dispatcher.connect(
             heos_const.SIGNAL_CONTROLLER_EVENT, update_sources

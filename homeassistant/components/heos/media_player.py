@@ -32,6 +32,10 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import utcnow
 
@@ -131,15 +135,13 @@ class HeosMediaPlayer(MediaPlayerEntity):
         )
         # Update state when heos changes
         self._signals.append(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_HEOS_UPDATED, self._heos_updated
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_HEOS_UPDATED, self._heos_updated)
         )
         # Register this player's entity_id so it can be resolved by the group manager
         self.hass.data[HEOS_DOMAIN][DATA_ENTITY_ID_MAP][
             self._player.player_id
         ] = self.entity_id
-        self.hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_HEOS_PLAYER_ADDED)
+        async_dispatcher_send(self.hass, SIGNAL_HEOS_PLAYER_ADDED)
 
     @log_command_error("clear playlist")
     async def async_clear_playlist(self):
