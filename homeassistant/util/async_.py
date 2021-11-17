@@ -128,20 +128,35 @@ def check_loop() -> None:
         extra = " to the custom component author"
     else:
         extra = ""
-    if not integration.startswith("ais_") and not integration == "google":
-        _LOGGER.warning(
-            "Detected I/O inside the event loop. This is causing stability issues. Please report issue%s for %s doing "
-            "I/O at %s, line %s: %s",
-            extra,
-            integration,
-            found_frame.filename[index:],
-            found_frame.lineno,
-            found_frame.line.strip(),
-        )
-        raise RuntimeError(
-            f"I/O must be done in the executor; Use `await hass.async_add_executor_job()` "
-            f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {found_frame.line.strip()}"
-        )
+    # if not integration.startswith("ais_") and not integration == "google":
+    #     _LOGGER.warning(
+    #       "Detected I/O inside the event loop. This is causing stability issues. Please report issue%s for %s doing "
+    #         "I/O at %s, line %s: %s",
+    #         extra,
+    #         integration,
+    #         found_frame.filename[index:],
+    #         found_frame.lineno,
+    #         found_frame.line.strip(),
+    #     )
+    #     raise RuntimeError(
+    #         f"I/O must be done in the executor; Use `await hass.async_add_executor_job()` "
+    #         f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {found_frame.line.strip()}"
+    #     )
+    # TEST START
+    _LOGGER.warning(
+        f"I/O must be done in the executor; Use `await hass.async_add_executor_job()` "
+        f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {found_frame.line.strip()}"
+    )
+    _LOGGER.warning(
+        "Detected I/O inside the event loop. This is causing stability issues. Please report issue%s for %s doing "
+        "I/O at %s, line %s: %s",
+        extra,
+        integration,
+        found_frame.filename[index:],
+        found_frame.lineno,
+        found_frame.line.strip(),
+    )
+    # TEST STOP
 
 
 def protect_loop(func: Callable) -> Callable:
