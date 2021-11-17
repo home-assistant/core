@@ -128,7 +128,7 @@ class LegrandRflcDimmer(LegrandRflcSwitch):
     @staticmethod
     def _quantize(value: float, ceiling: int) -> int:
         """Quantize [0.0, 1.0] to [0, ceiling]."""
-        return int(value * ceiling)
+        return round(value * ceiling)
 
     # dimming ceilings for homeassistant and us (LC7001)
     HA: Final[int] = 255
