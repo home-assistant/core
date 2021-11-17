@@ -1,4 +1,6 @@
 """Test Modem Caller ID integration."""
+from unittest.mock import AsyncMock, patch
+
 from phone_modem import exceptions
 
 from homeassistant.components.modem_callerid.const import DOMAIN
@@ -18,7 +20,10 @@ async def test_setup_entry(hass: HomeAssistant):
         data={CONF_DEVICE: com_port().device},
     )
     entry.add_to_hass(hass)
-    with patch_init_modem():
+    with patch("aioserial.AioSerial", return_value=AsyncMock()), patch(
+        "homeassistant.components.modem_callerid.PhoneModem._get_response",
+        return_value="OK",
+    ), patch("phone_modem.PhoneModem._modem_sm"):
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state == ConfigEntryState.LOADED
 
