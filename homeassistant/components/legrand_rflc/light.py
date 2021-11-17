@@ -16,6 +16,36 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: config_entries.ConfigEntry,
+    async_add_entities,
+) -> None:
+    """Set up the Legrand RFLC integration light platform.
+
+    Adds a Dimmer or Switch for each like zone on this entry's hub.
+    """
+    hub = hass.data[DOMAIN][entry.entry_id]
+
+    async def zones(message: Mapping) -> None:
+        async def zone(message: Mapping) -> None:
+            zid = message[hub.ZID]
+            properties = message[hub.PROPERTY_LIST]
+            device_type = properties[hub.DEVICE_TYPE]
+            if device_type == hub.DIMMER:
+                async_add_entities([_LegrandRflcDimmer(hub, zid, properties)], False)
+            elif device_type == hub.SWITCH:
+                async_add_entities([_LegrandRflcSwitch(hub, zid, properties)], False)
+
+        hub.StatusError(message).raise_if()
+        for item in message[hub.ZONE_LIST]:
+            await hub.handle_send(
+                zone, hub.compose_report_zone_properties(item[hub.ZID])
+            )
+
+    await hub.handle_send(zones, hub.compose_list_zones())
+
+
 class _LegrandRflcSwitch(LightEntity):
     _attr_should_poll = False
 
@@ -148,33 +178,3 @@ class _LegrandRflcDimmer(_LegrandRflcSwitch):
 
     async def async_turn_off(self, **kwargs) -> None:
         await self._async_dimmer(False, **kwargs)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities,
-) -> None:
-    """Set up the Legrand RFLC integration light platform.
-
-    Adds a Dimmer or Switch for each like zone on this entry's hub.
-    """
-    hub = hass.data[DOMAIN][entry.entry_id]
-
-    async def zones(message: Mapping) -> None:
-        async def zone(message: Mapping) -> None:
-            zid = message[hub.ZID]
-            properties = message[hub.PROPERTY_LIST]
-            device_type = properties[hub.DEVICE_TYPE]
-            if device_type == hub.DIMMER:
-                async_add_entities([_LegrandRflcDimmer(hub, zid, properties)], False)
-            elif device_type == hub.SWITCH:
-                async_add_entities([_LegrandRflcSwitch(hub, zid, properties)], False)
-
-        hub.StatusError(message).raise_if()
-        for item in message[hub.ZONE_LIST]:
-            await hub.handle_send(
-                zone, hub.compose_report_zone_properties(item[hub.ZID])
-            )
-
-    await hub.handle_send(zones, hub.compose_list_zones())
