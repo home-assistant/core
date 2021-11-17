@@ -12,7 +12,7 @@ from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_D
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -281,36 +281,42 @@ class GroupManager:
         """Create a group with `leader_entity_id` as group leader and `member_entity_ids` as member players."""
         entity_id_to_player_id_map = self._get_entity_id_to_player_id_map()
         leader_id = entity_id_to_player_id_map.get(leader_entity_id)
+        if not leader_id:
+            raise HomeAssistantError(
+                f"The group leader {leader_entity_id} could not be resolved to a HEOS player."
+            )
         member_ids = [
             entity_id_to_player_id_map[member]
             for member in member_entity_ids
             if member in entity_id_to_player_id_map
         ]
 
-        if leader_id:
-            try:
-                await self.controller.create_group(leader_id, member_ids)
-            except HeosError as err:
-                _LOGGER.error(
-                    "Failed to group %s with %s: %s",
-                    leader_entity_id,
-                    member_entity_ids,
-                    err,
-                )
+        try:
+            await self.controller.create_group(leader_id, member_ids)
+        except HeosError as err:
+            _LOGGER.error(
+                "Failed to group %s with %s: %s",
+                leader_entity_id,
+                member_entity_ids,
+                err,
+            )
 
     async def async_unjoin_player(self, player_entity_id: str):
         """Remove `player_entity_id` from any group."""
         player_id = self._get_entity_id_to_player_id_map().get(player_entity_id)
+        if not player_id:
+            raise HomeAssistantError(
+                f"The player {player_entity_id} could not be resolved to a HEOS player."
+            )
 
-        if player_id:
-            try:
-                await self.controller.create_group(player_id, [])
-            except HeosError as err:
-                _LOGGER.error(
-                    "Failed to ungroup %s: %s",
-                    player_entity_id,
-                    err,
-                )
+        try:
+            await self.controller.create_group(player_id, [])
+        except HeosError as err:
+            _LOGGER.error(
+                "Failed to ungroup %s: %s",
+                player_entity_id,
+                err,
+            )
 
     async def async_update_groups(self, event, data=None):
         """Update the group membership from the controller."""
