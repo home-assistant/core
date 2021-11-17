@@ -25,7 +25,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import IntegrationError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_CALLBACK_URL_OVERRIDE,
@@ -205,7 +204,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="import_turn_on", errors=errors)
 
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by SSDP discovery."""
         LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 

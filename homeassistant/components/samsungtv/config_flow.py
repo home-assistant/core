@@ -10,13 +10,7 @@ import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
-    ATTR_UPNP_MANUFACTURER,
-    ATTR_UPNP_MODEL_NAME,
-    ATTR_UPNP_UDN,
-)
+from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -27,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .bridge import (
     SamsungTVBridge,
@@ -263,16 +256,16 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
 
     async def async_step_ssdp(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: ssdp.SsdpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
-        model_name: str = discovery_info.get(ATTR_UPNP_MODEL_NAME) or ""
-        self._udn = _strip_uuid(discovery_info[ATTR_UPNP_UDN])
-        if hostname := urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname:
+        model_name: str = discovery_info.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
+        self._udn = _strip_uuid(discovery_info[ssdp.ATTR_UPNP_UDN])
+        if hostname := urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname:
             self._host = hostname
         await self._async_set_unique_id_from_udn()
-        self._manufacturer = discovery_info[ATTR_UPNP_MANUFACTURER]
+        self._manufacturer = discovery_info[ssdp.ATTR_UPNP_MANUFACTURER]
         self._abort_if_manufacturer_is_not_samsung()
         if not await self._async_get_and_check_device_info():
             # If we cannot get device info for an SSDP discovery
