@@ -81,31 +81,20 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Perform reauth upon an API authentication error."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
-        return await self.async_step_reauth_input()
-
-    async def async_step_reauth_input(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the reauth input."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         assert self._reauth_entry
         username = self._reauth_entry.data[CONF_USERNAME]
         if user_input is None:
             return self.async_show_form(
-                step_id="reauth_input",
+                step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
                 description_placeholders={"username": username},
             )
@@ -113,7 +102,7 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = await validate_input(user_input)
         if errors is not None:
             return self.async_show_form(
-                step_id="reauth_input",
+                step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
                 errors=errors,
                 description_placeholders={"username": username},

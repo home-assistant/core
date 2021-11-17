@@ -135,8 +135,20 @@ async def test_form_error(hass, side_effect, error_message):
         assert result["errors"] == {"base": error_message}
 
 
-@pytest.mark.parametrize("side_effect", [None, Exception])
-async def test_reauth(hass, side_effect):
+@pytest.mark.parametrize(
+    "side_effect, result_type, password, step_id, reason",
+    [
+        (None, data_entry_flow.RESULT_TYPE_ABORT, "test", None, "reauth_successful"),
+        (
+            Exception,
+            data_entry_flow.RESULT_TYPE_FORM,
+            CONFIG[CONF_PASSWORD],
+            "reauth_confirm",
+            None,
+        ),
+    ],
+)
+async def test_reauth(hass, side_effect, result_type, password, step_id, reason):
     """Test uniqueness of username."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -145,27 +157,17 @@ async def test_reauth(hass, side_effect):
         unique_id="test-username",
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
-        side_effect=ClientResponseError(None, None, status=403),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "unique_id": entry.unique_id,
-                "entry_id": entry.entry_id,
-            },
-            data=None,
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "reauth_confirm"
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={},
-        )
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result2["step_id"] == "reauth_input"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": entry.unique_id,
+            "entry_id": entry.entry_id,
+        },
+        data=None,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth_confirm"
     with patch(
         "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
         return_value=None,
@@ -175,12 +177,7 @@ async def test_reauth(hass, side_effect):
             result["flow_id"],
             user_input={"password": "test"},
         )
-        if side_effect is None:
-            assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
-            assert result3["reason"] == "reauth_successful"
-            assert entry.data["username"] == "test-username"
-            assert entry.data["password"] == "test"
-        else:
-            assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
-            assert result3["step_id"] == "reauth_input"
-            assert result3["errors"] == {"base": "unknown"}
+        assert result3["type"] == result_type
+        assert entry.data["password"] == password
+        assert result3.get("step_id", None) == step_id
+        assert result3.get("reason", None) == reason
