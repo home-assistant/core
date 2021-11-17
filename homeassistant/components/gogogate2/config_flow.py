@@ -40,9 +40,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle homekit discovery."""
-        await self.async_set_unique_id(
-            discovery_info[zeroconf.ATTR_PROPERTIES][zeroconf.ATTR_PROPERTIES_ID]
-        )
+        await self.async_set_unique_id(discovery_info[zeroconf.ATTR_PROPERTIES]["id"])
         return await self._async_discovery_handler(discovery_info[zeroconf.ATTR_HOST])
 
     async def async_step_dhcp(self, discovery_info):

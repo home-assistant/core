@@ -68,8 +68,6 @@ ATTR_PORT: Final = "port"
 ATTR_PROPERTIES: Final = "properties"
 ATTR_TYPE: Final = "type"
 
-# Attributes for ZeroconfServiceInfo["properties"]
-ATTR_PROPERTIES_ID: Final = "id"
 
 CONFIG_SCHEMA = vol.Schema(
     {
