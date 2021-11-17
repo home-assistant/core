@@ -445,13 +445,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         data_schema = {}
-        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-        if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
-            entity_schema = vol.In
-        else:
-            if entities:
-                include_exclude_mode = MODE_INCLUDE
-            else:
+        entity_schema = vol.In
+        # Strip out entities that no longer exist to prevent error in the UI
+        entities = [
+            entity_id
+            for entity_id in entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+            if entity_id in all_supported_entities
+        ]
+        if self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_ACCESSORY:
+            include_exclude_mode = MODE_INCLUDE
+            if not entities:
                 include_exclude_mode = MODE_EXCLUDE
                 entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
             data_schema[
