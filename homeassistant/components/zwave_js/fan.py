@@ -183,7 +183,7 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
             if self.info.primary_value.value <= speed_limit:
                 break
 
-        return int(percentage)
+        return round(percentage)
 
     @property
     def percentage_step(self) -> float:
