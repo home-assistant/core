@@ -16,7 +16,7 @@
                 "title": "Hue bridge\u3092\u30d4\u30c3\u30af\u30a2\u30c3\u30d7"
             },
             "link": {
-                "description": "\u30d6\u30ea\u30c3\u30b8\u306e\u30dc\u30bf\u30f3\u3092\u62bc\u3059\u3068\u3001Philips Hue\u304cHome Assistant\u306b\u767b\u9332\u3055\u308c\u307e\u3059\u3002\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
+                "description": "\u30d6\u30ea\u30c3\u30b8\u306e\u30dc\u30bf\u30f3\u3092\u62bc\u3059\u3068\u3001Philips Hue\u304cHome Assistant\u306b\u767b\u9332\u3055\u308c\u307e\u3059\u3002\n\n![\u30d6\u30ea\u30c3\u30b8\u306e\u30dc\u30bf\u30f3\u306e\u4f4d\u7f6e](/static/images/config_philips_hue.jpg)",
                 "title": "\u30ea\u30f3\u30af\u30cf\u30d6"
             },
             "manual": {
