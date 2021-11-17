@@ -9,12 +9,12 @@ from tololib import ToloClient
 from tololib.errors import ResponseTimedOutError
 import voluptuous as vol
 
+from homeassistant.components import dhcp
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DEFAULT_NAME, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, DOMAIN
 
@@ -65,7 +65,7 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle a flow initialized by discovery."""
         await self.async_set_unique_id(format_mac(discovery_info[MAC_ADDRESS]))
         self._abort_if_unique_id_configured()
