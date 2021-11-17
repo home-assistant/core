@@ -94,11 +94,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PORT in user_input
             ):  # for testing using server emulation on localhost
                 kwargs["port"] = user_input[CONF_PORT]
-            task = self.hass.async_create_task(
-                lc7001.aio.Connector(host, **kwargs).loop()
-            )
             try:
-                mac = await task
+                mac = await lc7001.aio.Connector(host, **kwargs).loop()
             except OSError:
                 errors[CONF_HOST] = self.ERROR_INVALID_HOST
             except lc7001.aio.Authenticator.Error:
