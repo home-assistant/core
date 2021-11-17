@@ -474,7 +474,8 @@ LENGTH_MILES: Final = "mi"
 FREQUENCY_HERTZ: Final = "Hz"
 FREQUENCY_MEGAHERTZ: Final = "MHz"
 FREQUENCY_GIGAHERTZ: Final = "GHz"
-
+FREQUENCY_RPM: Final = "rpm"
+    
 # Pressure units
 PRESSURE_PA: Final = "Pa"
 PRESSURE_HPA: Final = "hPa"
