@@ -8,6 +8,7 @@ from uuid import UUID
 
 import attr
 import pychromecast
+from pychromecast.const import CAST_TYPE_CHROMECAST, CAST_TYPE_GROUP
 import pytest
 
 from homeassistant.components import media_player, tts
@@ -70,10 +71,10 @@ def get_fake_chromecast_info(
                     ChromecastInfo(
                         services=self.services,
                         uuid=self.uuid,
-                        manufacturer=self.manufacturer,
                         model_name=self.model_name,
                         friendly_name=self.friendly_name,
-                        is_audio_group=self.is_audio_group,
+                        cast_type=self.cast_type,
+                        manufacturer=self.manufacturer,
                         is_dynamic_group=self.is_dynamic_group,
                     )
                     == other
@@ -83,10 +84,12 @@ def get_fake_chromecast_info(
     return ExtendedChromecastInfo(
         host=host,
         port=port,
-        uuid=uuid,
-        friendly_name="Speaker",
         services={"the-service"},
-        is_audio_group=port != 8009,
+        uuid=uuid,
+        model_name="Chromecast",
+        friendly_name="Speaker",
+        cast_type=CAST_TYPE_GROUP if port != 8009 else CAST_TYPE_CHROMECAST,
+        manufacturer="Nabu Casa",
     )
 
 
@@ -142,6 +145,8 @@ async def async_setup_cast_internal_discovery(hass, config=None):
             info.friendly_name,
             info.host,
             info.port,
+            info.cast_type,
+            info.manufacturer,
         )
         discovery_callback(info.uuid, service_name)
 
@@ -157,6 +162,8 @@ async def async_setup_cast_internal_discovery(hass, config=None):
                 info.friendly_name,
                 info.host,
                 info.port,
+                info.cast_type,
+                info.manufacturer,
             ),
         )
 
@@ -195,6 +202,8 @@ async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInf
             info.friendly_name,
             info.host,
             info.port,
+            info.cast_type,
+            info.manufacturer,
         )
         discovery_callback(info.uuid, service_name)
 
@@ -211,6 +220,8 @@ async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInf
                 info.friendly_name,
                 info.host,
                 info.port,
+                info.cast_type,
+                info.manufacturer,
             )
             discovery_callback(info.uuid, service_name)
 
@@ -243,64 +254,6 @@ async def test_start_discovery_called_once(hass, castbrowser_mock):
 
     await async_setup_cast(hass)
     assert castbrowser_mock.start_discovery.call_count == 1
-
-
-async def test_internal_discovery_callback_fill_out(hass):
-    """Test internal discovery automatically filling out information."""
-    discover_cast, _, _ = await async_setup_cast_internal_discovery(hass)
-    info = get_fake_chromecast_info(host="host1")
-    zconf = get_fake_zconf(host="host1", port=8009)
-    full_info = attr.evolve(
-        info,
-        model_name="google home",
-        friendly_name="Speaker",
-        uuid=FakeUUID,
-        manufacturer="Nabu Casa",
-    )
-
-    with patch(
-        "homeassistant.components.cast.helpers.dial.get_device_status",
-        return_value=full_info,
-    ), patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf,
-    ):
-        signal = MagicMock()
-
-        async_dispatcher_connect(hass, "cast_discovered", signal)
-        discover_cast("the-service", info)
-        await hass.async_block_till_done()
-
-        # when called with incomplete info, it should use HTTP to get missing
-        discover = signal.mock_calls[0][1][0]
-        assert discover == full_info
-
-
-async def test_internal_discovery_callback_fill_out_default_manufacturer(hass):
-    """Test internal discovery automatically filling out information."""
-    discover_cast, _, _ = await async_setup_cast_internal_discovery(hass)
-    info = get_fake_chromecast_info(host="host1")
-    zconf = get_fake_zconf(host="host1", port=8009)
-    full_info = attr.evolve(
-        info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
-    )
-
-    with patch(
-        "homeassistant.components.cast.helpers.dial.get_device_status",
-        return_value=full_info,
-    ), patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf,
-    ):
-        signal = MagicMock()
-
-        async_dispatcher_connect(hass, "cast_discovered", signal)
-        discover_cast("the-service", info)
-        await hass.async_block_till_done()
-
-        # when called with incomplete info, it should use HTTP to get missing
-        discover = signal.mock_calls[0][1][0]
-        assert discover == attr.evolve(full_info, manufacturer="Google Inc.")
 
 
 async def test_internal_discovery_callback_fill_out_fail(hass):
@@ -337,7 +290,7 @@ async def test_internal_discovery_callback_fill_out_group(hass):
     zconf = get_fake_zconf(host="host1", port=12345)
     full_info = attr.evolve(
         info,
-        model_name="",
+        model_name="Chromecast",
         friendly_name="Speaker",
         uuid=FakeUUID,
         is_dynamic_group=False,
