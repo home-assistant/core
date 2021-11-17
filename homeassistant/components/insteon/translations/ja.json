@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "add_x10": {
+                "data": {
+                    "unitcode": "\u30e6\u30cb\u30c3\u30c8\u30b3\u30fc\u30c9(1\u301c16)"
+                }
+            }
+        }
+    }
+}

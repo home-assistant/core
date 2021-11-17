@@ -18,6 +18,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.network.const import MDNS_TARGET_IP
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -118,8 +119,6 @@ STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
-
-MDNS_TARGET_IP = "224.0.0.251"
 
 _HOMEKIT_CONFIG_UPDATE_TIME = (
     5  # number of seconds to wait for homekit to see the c# change

@@ -5,7 +5,10 @@
         },
         "step": {
             "user": {
-                "title": "Axis\u30c7\u30d0\u30a4\u30b9\u306e\u8a2d\u5b9a"
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                },
+                "title": "Axis\u30c7\u30d0\u30a4\u30b9\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
             }
         }
     }

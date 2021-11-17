@@ -8,7 +8,6 @@ from homeassistant.components.onewire.const import (
     MANUFACTURER_EDS,
     MANUFACTURER_HOBBYBOARDS,
     MANUFACTURER_MAXIM,
-    PRESSURE_CBAR,
 )
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -27,16 +26,15 @@ from homeassistant.const import (
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
     ATTR_VIA_DEVICE,
-    DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
+    PRESSURE_CBAR,
     PRESSURE_MBAR,
     STATE_OFF,
     STATE_ON,
@@ -49,6 +47,7 @@ ATTR_DEVICE_FILE = "device_file"
 ATTR_DEVICE_INFO = "device_info"
 ATTR_INJECT_READS = "inject_reads"
 ATTR_UNIQUE_ID = "unique_id"
+ATTR_UNKNOWN_DEVICE = "unknown_device"
 
 FIXED_ATTRIBUTES = (
     ATTR_DEVICE_CLASS,
@@ -62,7 +61,7 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: [
             b"",  # read device type
         ],
-        SENSOR_DOMAIN: [],
+        ATTR_UNKNOWN_DEVICE: True,
     },
     "05.111111111111": {
         ATTR_INJECT_READS: [
@@ -398,13 +397,22 @@ MOCK_OWPROXY_DEVICES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-                ATTR_ENTITY_ID: "sensor.26_111111111111_current",
-                ATTR_INJECT_READS: b"       1",
-                ATTR_STATE: "1.0",
+                ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
+                ATTR_ENTITY_ID: "sensor.26_111111111111_vis",
+                ATTR_INJECT_READS: b"    0.12",
+                ATTR_STATE: "0.1",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+                ATTR_UNIQUE_ID: "/26.111111111111/vis",
+                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            },
+        ],
+        SWITCH_DOMAIN: [
+            {
+                ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_ID: "switch.26_111111111111_iad",
+                ATTR_INJECT_READS: b"    1",
+                ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "/26.111111111111/IAD",
-                ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
             },
         ],
     },
@@ -879,7 +887,7 @@ MOCK_OWPROXY_DEVICES = {
 
 MOCK_SYSBUS_DEVICES = {
     "00-111111111111": {
-        SENSOR_DOMAIN: [],
+        ATTR_UNKNOWN_DEVICE: True,
     },
     "10-111111111111": {
         ATTR_DEVICE_INFO: {
@@ -900,12 +908,6 @@ MOCK_SYSBUS_DEVICES = {
             },
         ],
     },
-    "12-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
-    "1D-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
     "22-111111111111": {
         ATTR_DEVICE_INFO: {
             ATTR_IDENTIFIERS: {(DOMAIN, "22-111111111111")},
@@ -913,7 +915,7 @@ MOCK_SYSBUS_DEVICES = {
             ATTR_MODEL: "22",
             ATTR_NAME: "22-111111111111",
         },
-        "sensor": [
+        SENSOR_DOMAIN: [
             {
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.22_111111111111_temperature",
@@ -924,9 +926,6 @@ MOCK_SYSBUS_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
         ],
-    },
-    "26-111111111111": {
-        SENSOR_DOMAIN: [],
     },
     "28-111111111111": {
         ATTR_DEVICE_INFO: {
@@ -946,12 +945,6 @@ MOCK_SYSBUS_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
         ],
-    },
-    "29-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
-    "3A-111111111111": {
-        SENSOR_DOMAIN: [],
     },
     "3B-111111111111": {
         ATTR_DEVICE_INFO: {
@@ -1028,11 +1021,5 @@ MOCK_SYSBUS_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
         ],
-    },
-    "EF-111111111111": {
-        SENSOR_DOMAIN: [],
-    },
-    "EF-111111111112": {
-        SENSOR_DOMAIN: [],
     },
 }

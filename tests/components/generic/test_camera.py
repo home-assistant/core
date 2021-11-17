@@ -3,7 +3,9 @@ import asyncio
 from http import HTTPStatus
 from unittest.mock import patch
 
+import aiohttp
 import httpx
+import pytest
 import respx
 
 from homeassistant import config as hass_config
@@ -132,10 +134,13 @@ async def test_limit_refetch(hass, hass_client):
 
     hass.states.async_set("sensor.temp", "5")
 
-    with patch("async_timeout.timeout", side_effect=asyncio.TimeoutError()):
+    with pytest.raises(aiohttp.ServerTimeoutError), patch(
+        "async_timeout.timeout", side_effect=asyncio.TimeoutError()
+    ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
-        assert respx.calls.call_count == 0
-        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+    assert respx.calls.call_count == 0
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     hass.states.async_set("sensor.temp", "10")
 

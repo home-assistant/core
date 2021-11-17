@@ -20,11 +20,28 @@ DOMAIN = "onewire"
 DEVICE_KEYS_0_7 = range(8)
 DEVICE_KEYS_A_B = ("A", "B")
 
+DEVICE_SUPPORT_OWSERVER = {
+    "05": (),
+    "10": (),
+    "12": (),
+    "1D": (),
+    "1F": (),
+    "22": (),
+    "26": (),
+    "28": (),
+    "29": (),
+    "3A": (),
+    "3B": (),
+    "42": (),
+    "7E": ("EDS0066", "EDS0068"),
+    "EF": ("HB_MOISTURE_METER", "HobbyBoards_EF"),
+}
+DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
+
+
 MANUFACTURER_MAXIM = "Maxim Integrated"
 MANUFACTURER_HOBBYBOARDS = "Hobby Boards"
 MANUFACTURER_EDS = "Embedded Data Systems"
-
-PRESSURE_CBAR = "cbar"
 
 READ_MODE_BOOL = "bool"
 READ_MODE_FLOAT = "float"

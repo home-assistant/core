@@ -17,6 +17,7 @@ from homeassistant.components.binary_sensor import (
     STATE_ON,
     BinarySensorEntity,
 )
+from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
@@ -125,6 +126,7 @@ REST_SENSORS: Final = {
         extra_state_attributes=lambda status: {
             "latest_stable_version": status["update"]["new_version"],
             "installed_version": status["update"]["old_version"],
+            "beta_version": status["update"].get("beta_version", ""),
         },
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
@@ -174,7 +176,7 @@ async def async_setup_entry(
             hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
         )
 
-    if config_entry.data["sleep_period"]:
+    if config_entry.data[CONF_SLEEP_PERIOD]:
         await async_setup_entry_attribute_entities(
             hass,
             config_entry,

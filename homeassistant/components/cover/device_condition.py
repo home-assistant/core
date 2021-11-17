@@ -18,12 +18,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    condition,
-    config_validation as cv,
-    entity_registry,
-    template,
-)
+from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -148,22 +143,19 @@ def async_condition_from_config(
         return test_is_state
 
     if config[CONF_TYPE] == "is_position":
-        position = "current_position"
+        position_attr = "current_position"
     if config[CONF_TYPE] == "is_tilt_position":
-        position = "current_tilt_position"
+        position_attr = "current_tilt_position"
     min_pos = config.get(CONF_ABOVE)
     max_pos = config.get(CONF_BELOW)
-    value_template = template.Template(  # type: ignore
-        f"{{{{ state.attributes.{position} }}}}"
-    )
 
     @callback
-    def template_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
-        """Validate template based if-condition."""
-        value_template.hass = hass
-
+    def check_numeric_state(
+        hass: HomeAssistant, variables: TemplateVarsType = None
+    ) -> bool:
+        """Return whether the criteria are met."""
         return condition.async_numeric_state(
-            hass, config[ATTR_ENTITY_ID], max_pos, min_pos, value_template
+            hass, config[ATTR_ENTITY_ID], max_pos, min_pos, attribute=position_attr
         )
 
-    return template_if
+    return check_numeric_state

@@ -18,6 +18,7 @@ from .const import (
     ATTR_SETTINGS,
     AUDIO_CODECS,
     DOMAIN,
+    HLS_PROVIDER,
     MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
     PACKETS_TO_WAIT_FOR_AUDIO,
@@ -25,6 +26,7 @@ from .const import (
     SOURCE_TIMEOUT,
 )
 from .core import Part, Segment, StreamOutput, StreamSettings
+from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,18 +104,18 @@ class SegmentBuffer:
                         # The LL-HLS spec allows for a fragment's duration to be within the range [0.85x,1.0x]
                         # of the part target duration. We use the frag_duration option to tell ffmpeg to try to
                         # cut the fragments when they reach frag_duration. However, the resulting fragments can
-                        # have variability in their durations and can end up being too short or too long. If
-                        # there are two tracks, as in the case of a video feed with audio, the fragment cut seems
-                        # to be done on the first track that crosses the desired threshold, and cutting on the
-                        # audio track may result in a shorter video fragment than desired. Conversely, with a
+                        # have variability in their durations and can end up being too short or too long. With a
                         # video track with no audio, the discrete nature of frames means that the frame at the
                         # end of a fragment will sometimes extend slightly beyond the desired frag_duration.
-                        # Given this, our approach is to use a frag_duration near the upper end of the range for
-                        # outputs with audio using a frag_duration at the lower end of the range for outputs with
-                        # only video.
+                        # If there are two tracks, as in the case of a video feed with audio, there is an added
+                        # wrinkle as the fragment cut seems to be done on the first track that crosses the desired
+                        # threshold, and cutting on the audio track may also result in a shorter video fragment
+                        # than desired.
+                        # Given this, our approach is to give ffmpeg a frag_duration somewhere in the middle
+                        # of the range, hoping that the parts stay pretty well bounded, and we adjust the part
+                        # durations a bit in the hls metadata so that everything "looks" ok.
                         "frag_duration": str(
-                            self._stream_settings.part_target_duration
-                            * (98e4 if add_audio else 9e5)
+                            self._stream_settings.part_target_duration * 9e5
                         ),
                     }
                     if self._stream_settings.ll_hls
@@ -279,6 +281,9 @@ class SegmentBuffer:
         # the discontinuity sequence number.
         self._stream_id += 1
         self._start_time = datetime.datetime.utcnow()
+        # Call discontinuity to remove incomplete segment from the HLS output
+        if hls_output := self._outputs_callback().get(HLS_PROVIDER):
+            cast(HlsStreamOutput, hls_output).discontinuity()
 
     def close(self) -> None:
         """Close stream buffer."""

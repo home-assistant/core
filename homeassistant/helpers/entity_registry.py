@@ -155,7 +155,9 @@ class EntityRegistry:
         self.hass = hass
         self.entities: dict[str, RegistryEntry]
         self._index: dict[tuple[str, str, str], str] = {}
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = hass.helpers.storage.Store(
+            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        )
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
         )

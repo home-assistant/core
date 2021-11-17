@@ -18,6 +18,13 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Access Token"
+                },
+                "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below.",
+                "title": "Link Google Account"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Provider"

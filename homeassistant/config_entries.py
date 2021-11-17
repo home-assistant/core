@@ -8,7 +8,7 @@ from enum import Enum
 import functools
 import logging
 from types import MappingProxyType, MethodType
-from typing import Any, Callable, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Optional, cast
 import weakref
 
 from homeassistant import data_entry_flow, loader
@@ -30,6 +30,12 @@ from homeassistant.helpers.typing import (
 from homeassistant.setup import async_process_deps_reqs, async_setup_component
 from homeassistant.util.decorator import Registry
 import homeassistant.util.uuid as uuid_util
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
+    from homeassistant.components.mqtt.discovery import MqttServiceInfo
+    from homeassistant.components.usb import UsbServiceInfo
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1351,16 +1357,16 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self.async_step_discovery(discovery_info)
 
     async def async_step_homekit(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Homekit discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
     async def async_step_mqtt(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: MqttServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by MQTT discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
     async def async_step_ssdp(
         self, discovery_info: DiscoveryInfoType
@@ -1369,22 +1375,22 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self.async_step_discovery(discovery_info)
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
     async def async_step_dhcp(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by DHCP discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
     async def async_step_usb(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: UsbServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by USB discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(cast(dict, discovery_info))
 
     @callback
     def async_create_entry(  # pylint: disable=arguments-differ

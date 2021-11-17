@@ -87,6 +87,8 @@ async def _async_setup_entity(
 class MqttBinarySensor(MqttEntity, BinarySensorEntity):
     """Representation a binary sensor that is updated by MQTT."""
 
+    _entity_id_format = binary_sensor.ENTITY_ID_FORMAT
+
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT binary sensor."""
         self._state = None

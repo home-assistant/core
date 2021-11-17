@@ -419,7 +419,7 @@ class UniFiController:
     async def async_reconnect(self) -> None:
         """Try to reconnect UniFi session."""
         try:
-            with async_timeout.timeout(5):
+            async with async_timeout.timeout(5):
                 await self.api.login()
                 self.api.start_websocket()
 
@@ -488,7 +488,7 @@ async def get_controller(
     )
 
     try:
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             await controller.check_unifi_os()
             await controller.login()
         return controller

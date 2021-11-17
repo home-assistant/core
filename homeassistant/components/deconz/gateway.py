@@ -152,7 +152,7 @@ class DeconzGateway:
         # Gateway service
         configuration_url = f"http://{self.host}:{self.config_entry.data[CONF_PORT]}"
         if self.config_entry.source == SOURCE_HASSIO:
-            configuration_url = None
+            configuration_url = "homeassistant://hassio/ingress/core_deconz"
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             configuration_url=configuration_url,
@@ -276,7 +276,7 @@ async def get_gateway(
         connection_status=async_connection_status_callback,
     )
     try:
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             await deconz.refresh_state()
         return deconz
 

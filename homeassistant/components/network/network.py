@@ -1,23 +1,35 @@
 """Network helper class for the network integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any, cast
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.singleton import singleton
 
 from .const import (
     ATTR_CONFIGURED_ADAPTERS,
+    DATA_NETWORK,
     DEFAULT_CONFIGURED_ADAPTERS,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
 from .models import Adapter
-from .util import (
-    adapters_with_exernal_addresses,
-    async_load_adapters,
-    enable_adapters,
-    enable_auto_detected_adapters,
-)
+from .util import async_load_adapters, enable_adapters, enable_auto_detected_adapters
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@singleton(DATA_NETWORK)
+@callback
+async def async_get_network(hass: HomeAssistant) -> Network:
+    """Get network singleton."""
+    network = Network(hass)
+    await network.async_setup()
+    network.async_configure()
+
+    _LOGGER.debug("Adapters: %s", network.adapters)
+    return network
 
 
 class Network:
@@ -25,7 +37,9 @@ class Network:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Network class."""
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = hass.helpers.storage.Store(
+            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        )
         self._data: dict[str, Any] = {}
         self.adapters: list[Adapter] = []
 
@@ -38,21 +52,6 @@ class Network:
         """Set up the network config."""
         await self.async_load()
         self.adapters = await async_load_adapters()
-
-    async def async_migrate_from_zeroconf(self, zc_config: dict[str, Any]) -> None:
-        """Migrate configuration from zeroconf."""
-        if self._data or not zc_config:
-            return
-
-        from homeassistant.components.zeroconf import (  # pylint: disable=import-outside-toplevel
-            CONF_DEFAULT_INTERFACE,
-        )
-
-        if zc_config.get(CONF_DEFAULT_INTERFACE) is False:
-            self._data[ATTR_CONFIGURED_ADAPTERS] = adapters_with_exernal_addresses(
-                self.adapters
-            )
-            await self._async_save()
 
     @callback
     def async_configure(self) -> None:

@@ -335,10 +335,11 @@ def async_numeric_state(  # noqa: C901
         entity_id = entity.entity_id
 
     if attribute is not None and attribute not in entity.attributes:
-        raise ConditionErrorMessage(
-            "numeric_state",
-            f"attribute '{attribute}' (of entity {entity_id}) does not exist",
+        condition_trace_set_result(
+            False,
+            message=f"attribute '{attribute}' of entity {entity_id} does not exist",
         )
+        return False
 
     value: Any = None
     if value_template is None:
@@ -356,8 +357,12 @@ def async_numeric_state(  # noqa: C901
                 "numeric_state", f"template error: {ex}"
             ) from ex
 
-    # Known states that never match the numeric condition
-    if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+    # Known states or attribute values that never match the numeric condition
+    if value in (None, STATE_UNAVAILABLE, STATE_UNKNOWN):
+        condition_trace_set_result(
+            False,
+            message=f"value '{value}' is non-numeric and treated as False",
+        )
         return False
 
     try:
@@ -501,9 +506,11 @@ def state(
         entity_id = entity.entity_id
 
     if attribute is not None and attribute not in entity.attributes:
-        raise ConditionErrorMessage(
-            "state", f"attribute '{attribute}' (of entity {entity_id}) does not exist"
+        condition_trace_set_result(
+            False,
+            message=f"attribute '{attribute}' of entity {entity_id} does not exist",
         )
+        return False
 
     assert isinstance(entity, State)
 

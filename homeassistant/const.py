@@ -240,6 +240,7 @@ DEVICE_CLASS_CO2: Final = "carbon_dioxide"
 DEVICE_CLASS_CURRENT: Final = "current"
 DEVICE_CLASS_DATE: Final = "date"
 DEVICE_CLASS_ENERGY: Final = "energy"
+DEVICE_CLASS_FREQUENCY: Final = "frequency"
 DEVICE_CLASS_HUMIDITY: Final = "humidity"
 DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
 DEVICE_CLASS_MONETARY: Final = "monetary"
@@ -479,6 +480,7 @@ PRESSURE_PA: Final = "Pa"
 PRESSURE_HPA: Final = "hPa"
 PRESSURE_KPA: Final = "kPa"
 PRESSURE_BAR: Final = "bar"
+PRESSURE_CBAR: Final = "cbar"
 PRESSURE_MBAR: Final = "mbar"
 PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
@@ -660,21 +662,6 @@ URL_API_ERROR_LOG: Final = "/api/error_log"
 URL_API_LOG_OUT: Final = "/api/log_out"
 URL_API_TEMPLATE: Final = "/api/template"
 
-HTTP_OK: Final = 200
-HTTP_CREATED: Final = 201
-HTTP_ACCEPTED: Final = 202
-HTTP_MOVED_PERMANENTLY: Final = 301
-HTTP_BAD_REQUEST: Final = 400
-HTTP_UNAUTHORIZED: Final = 401
-HTTP_FORBIDDEN: Final = 403
-HTTP_NOT_FOUND: Final = 404
-HTTP_METHOD_NOT_ALLOWED: Final = 405
-HTTP_UNPROCESSABLE_ENTITY: Final = 422
-HTTP_TOO_MANY_REQUESTS: Final = 429
-HTTP_INTERNAL_SERVER_ERROR: Final = 500
-HTTP_BAD_GATEWAY: Final = 502
-HTTP_SERVICE_UNAVAILABLE: Final = 503
-
 HTTP_BASIC_AUTHENTICATION: Final = "basic"
 HTTP_BEARER_AUTHENTICATION: Final = "bearer_token"
 HTTP_DIGEST_AUTHENTICATION: Final = "digest"
@@ -695,7 +682,7 @@ MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"
 TEMPERATURE: Final = "temperature"
-SPEED_MS: Final = "speed_ms"
+SPEED: Final = "speed"
 ILLUMINANCE: Final = "illuminance"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
@@ -709,9 +696,6 @@ PRECISION_TENTHS: Final = 0.1
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
-# The ID of the Home Assistant Cast App
-CAST_APP_ID_HOMEASSISTANT: Final = "B12CE3CA"
-
 ENTITY_CATEGORY_CONFIG: Final = "config"
 ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
 ENTITY_CATEGORY_SYSTEM: Final = "system"
@@ -724,3 +708,8 @@ ENTITY_CATEGORIES: Final[list[str]] = [
     ENTITY_CATEGORY_DIAGNOSTIC,
     ENTITY_CATEGORY_SYSTEM,
 ]
+
+# The ID of the Home Assistant Media Player Cast App
+CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
+# The ID of the Home Assistant Lovelace Cast App
+CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"

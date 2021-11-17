@@ -9,7 +9,6 @@ from pyopenuv.errors import OpenUvError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
     CONF_ELEVATION,
@@ -30,7 +29,6 @@ from homeassistant.helpers.service import verify_domain_control
 from .const import (
     CONF_FROM_WINDOW,
     CONF_TO_WINDOW,
-    DATA_CLIENT,
     DATA_PROTECTION_WINDOW,
     DATA_UV,
     DEFAULT_FROM_WINDOW,
@@ -51,9 +49,6 @@ PLATFORMS = ["binary_sensor", "sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenUV as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     try:
@@ -73,7 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = openuv
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = openuv
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @_verify_domain_control
@@ -175,7 +172,7 @@ class OpenUvEntity(Entity):
 
     def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
         """Initialize."""
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
         self._attr_unique_id = (
             f"{openuv.client.latitude}_{openuv.client.longitude}_{description.key}"

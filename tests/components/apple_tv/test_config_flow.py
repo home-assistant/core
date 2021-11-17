@@ -12,7 +12,7 @@ from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
 
 from tests.common import MockConfigEntry
 
-DMAP_SERVICE = zeroconf.HaServiceInfo(
+DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
     type="_touch-able._tcp.local.",
     name="dmapid.something",
     properties={"CtlN": "Apple TV"},
@@ -400,7 +400,7 @@ async def test_zeroconf_unsupported_service_aborts(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.HaServiceInfo(
+        data=zeroconf.ZeroconfServiceInfo(
             type="_dummy._tcp.local.",
             properties={},
         ),
@@ -414,7 +414,7 @@ async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.HaServiceInfo(
+        data=zeroconf.ZeroconfServiceInfo(
             type="_mediaremotetv._tcp.local.",
             properties={"UniqueIdentifier": "mrpid", "Name": "Kitchen"},
         ),

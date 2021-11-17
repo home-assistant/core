@@ -1,6 +1,12 @@
 {
     "config": {
         "step": {
+            "user_validate": {
+                "data": {
+                    "login_method": "\u30ed\u30b0\u30a4\u30f3\u65b9\u6cd5"
+                },
+                "description": "\u30ed\u30b0\u30a4\u30f3\u65b9\u6cd5\u304c \"\u96fb\u5b50\u30e1\u30fc\u30eb\" \u306e\u5834\u5408\u3001\u30e6\u30fc\u30b6\u30fc\u540d\u306f\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9\u3067\u3059\u3002\u30ed\u30b0\u30a4\u30f3\u65b9\u6cd5\u304c \"\u96fb\u8a71\" \u306e\u5834\u5408\u3001\u30e6\u30fc\u30b6\u30fc\u540d\u306f \"+NNNNNNNNN\" \u5f62\u5f0f\u306e\u96fb\u8a71\u756a\u53f7\u3067\u3059\u3002"
+            },
             "validation": {
                 "title": "2\u8981\u7d20\u8a8d\u8a3c"
             }

@@ -24,9 +24,6 @@ PLATFORMS: list[str] = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ridwell from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     session = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -67,8 +64,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id][DATA_ACCOUNT] = accounts
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinator
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_ACCOUNT: accounts,
+        DATA_COORDINATOR: coordinator,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
