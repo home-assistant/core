@@ -120,6 +120,7 @@ def ws_require_user(
 
 def websocket_command(
     schema: dict[vol.Marker, Any],
+    *additional_validators: tuple[vol.Schema],
 ) -> Callable[[const.WebSocketCommandHandler], const.WebSocketCommandHandler]:
     """Tag a function as a websocket command."""
     command = schema["type"]
@@ -127,7 +128,10 @@ def websocket_command(
     def decorate(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate ws command function."""
         # pylint: disable=protected-access
-        func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]
+        func._ws_schema = vol.All(  # type: ignore[attr-defined]
+            messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema),
+            *additional_validators,
+        )
         func._ws_command = command  # type: ignore[attr-defined]
         return func
 

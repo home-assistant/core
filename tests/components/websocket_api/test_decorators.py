@@ -1,5 +1,6 @@
 """Test decorators."""
 from homeassistant.components import http, websocket_api
+import homeassistant.helpers.config_validation as cv
 
 
 async def test_async_response_request_context(hass, websocket_client):
@@ -66,3 +67,26 @@ async def test_async_response_request_context(hass, websocket_client):
     assert msg["id"] == 7
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
+
+
+async def test_additional_validators(hass, websocket_client):
+    """Test that additional validators can be applied."""
+
+    @websocket_api.websocket_command({"type": "test"}, cv.has_at_least_one_key("test"))
+    @websocket_api.async_response
+    async def async_test_command(hass, connection, msg):
+        connection.send_result(msg["id"], "ok")
+
+    websocket_api.async_register_command(hass, async_test_command)
+
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "test",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 1
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
