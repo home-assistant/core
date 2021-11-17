@@ -19,12 +19,6 @@ from .const import DOMAIN
 PLATFORMS: Final = ["light"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up Legrand RFLC integration."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
@@ -37,7 +31,7 @@ async def async_setup_entry(
         kwargs["key"] = bytes.fromhex(data[CONF_AUTHENTICATION])
     if CONF_PORT in data:  # for testing only (server emulation on localhost)
         kwargs["port"] = data[CONF_PORT]
-    hass.data[DOMAIN][entry_id] = hub = lc7001.aio.Hub(host, **kwargs)
+    hass.data.setdefault(DOMAIN, {})[entry_id] = hub = lc7001.aio.Hub(host, **kwargs)
 
     async def setup_platforms() -> None:
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
