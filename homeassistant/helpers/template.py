@@ -916,6 +916,30 @@ def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
+def integration_entities(
+    hass: HomeAssistant, entry_name: str, platform: str | None = None
+) -> Iterable[str]:
+    """
+    Get entity ids for entities tied to an integration/domain.
+
+    Provide entry_name as domain to get all entity id's for a integration/domain
+    or provide a config entry title for filtering between instances of the same integration.
+    Optionally provide platform to only return entities for that platform.
+    """
+    entity_reg = entity_registry.async_get(hass)
+    conf_entries = [
+        entry.entry_id
+        for entry in hass.config_entries.async_entries()
+        if entry.domain == entry_name or entry.title == entry_name
+    ]
+    return [
+        item.entity_id
+        for item in entity_reg.entities.values()
+        if item.config_entry_id in conf_entries
+        and (platform is None or item.domain == platform)
+    ]
+
+
 def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     """Get a device ID from an entity ID or device name."""
     entity_reg = entity_registry.async_get(hass)
@@ -1852,6 +1876,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = pass_context(self.globals["area_devices"])
+
+        self.globals["integration_entities"] = hassfunction(integration_entities)
+        self.filters["integration_entities"] = pass_context(
+            self.globals["integration_entities"]
+        )
 
         if limited:
             # Only device_entities is available to limited templates, mark other
