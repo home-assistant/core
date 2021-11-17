@@ -790,17 +790,18 @@ async def websocket_provision_smart_start_node(
     client: Client,
 ) -> None:
     """Pre-provision a smart start node."""
-    provisioning_info = get_provisioning_info(msg)
-    if provisioning_info is None:
+    try:
+        cv.has_at_least_one_key(
+            PLANNED_PROVISIONING_ENTRY, QR_PROVISIONING_INFORMATION, QR_CODE_STRING
+        )(msg)
+    except vol.Invalid as err:
         connection.send_error(
             msg[ID],
             ERR_INVALID_FORMAT,
-            (
-                f"Either {PLANNED_PROVISIONING_ENTRY}, {QR_PROVISIONING_INFORMATION}, "
-                f"or {QR_CODE_STRING} must be provided"
-            ),
+            err.args[0],
         )
         return
+    provisioning_info = get_provisioning_info(msg)
     await client.driver.controller.async_provision_smart_start_node(provisioning_info)
     connection.send_result(msg[ID])
 
@@ -825,14 +826,16 @@ async def websocket_unprovision_smart_start_node(
     client: Client,
 ) -> None:
     """Unprovision a smart start node."""
-    dsk_or_node_id = msg.get(DSK) or msg.get(NODE_ID)
-    if dsk_or_node_id is None:
+    try:
+        cv.has_at_least_one_key(DSK, NODE_ID)(msg)
+    except vol.Invalid as err:
         connection.send_error(
             msg[ID],
             ERR_INVALID_FORMAT,
-            f"Either {DSK} or {NODE_ID} must be provided",
+            err.args[0],
         )
         return
+    dsk_or_node_id = msg.get(DSK) or msg.get(NODE_ID)
     await client.driver.controller.async_unprovision_smart_start_node(dsk_or_node_id)
     connection.send_result(msg[ID])
 
