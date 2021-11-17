@@ -17,6 +17,9 @@
                 "data": {
                     "block_client": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30a2\u30af\u30bb\u30b9\u5236\u5fa1\u30af\u30e9\u30a4\u30a2\u30f3\u30c8"
                 }
+            },
+            "statistics_sensors": {
+                "description": "\u7d71\u8a08\u30bb\u30f3\u30b5\u30fc\u306e\u8a2d\u5b9a"
             }
         }
     }

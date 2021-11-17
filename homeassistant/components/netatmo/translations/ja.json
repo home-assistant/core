@@ -8,10 +8,22 @@
     },
     "options": {
         "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "\u30a8\u30ea\u30a2\u540d",
+                    "mode": "\u8a08\u7b97",
+                    "show_on_map": "\u5730\u56f3\u306b\u8868\u793a"
+                },
+                "description": "\u30a8\u30ea\u30a2\u306e\u30d1\u30d6\u30ea\u30c3\u30af\u6c17\u8c61\u30bb\u30f3\u30b5\u30fc\u3092\u8a2d\u5b9a\u3059\u308b\u3002",
+                "title": "Netatmo\u30d1\u30d6\u30ea\u30c3\u30af\u6c17\u8c61\u30bb\u30f3\u30b5\u30fc"
+            },
             "public_weather_areas": {
                 "data": {
+                    "new_area": "\u30a8\u30ea\u30a2\u540d",
                     "weather_areas": "\u5929\u6c17\u4e88\u5831\u306e\u30a8\u30ea\u30a2"
-                }
+                },
+                "description": "\u30d1\u30d6\u30ea\u30c3\u30af\u6c17\u8c61\u30bb\u30f3\u30b5\u30fc\u3092\u8a2d\u5b9a\u3059\u308b\u3002",
+                "title": "Netatmo\u30d1\u30d6\u30ea\u30c3\u30af\u6c17\u8c61\u30bb\u30f3\u30b5\u30fc"
             }
         }
     }
