@@ -263,9 +263,10 @@ class GroupManager:
             ]
             # Make sure the group leader is always the first element
             group_info = [leader_entity_id, *member_entity_ids]
-            group_info_by_entity_id[leader_entity_id] = group_info
-            for member_entity_id in member_entity_ids:
-                group_info_by_entity_id[member_entity_id] = group_info
+            if leader_entity_id:
+                group_info_by_entity_id[leader_entity_id] = group_info
+                for member_entity_id in member_entity_ids:
+                    group_info_by_entity_id[member_entity_id] = group_info
 
         return group_info_by_entity_id
 
