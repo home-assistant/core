@@ -77,7 +77,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
         self._active = self._device["active"]
-        if self._device[self._attribute] is not None:
-            self._state = self._device.get(self._attribute)
+        if self._device.get(self._attribute) is not None:
+            self._state = self._device[self._attribute]
 
         self.async_write_ha_state()
