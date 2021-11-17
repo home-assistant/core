@@ -35,7 +35,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 IPV4_BROADCAST = IPv4Address("255.255.255.255")
 
 # Attributes for accessing info from SSDP response
-ATTR_SSDP_LOCATION = "ssdp_location"
+ATTR_SSDP_LOCATION: Final = "ssdp_location"
 ATTR_SSDP_ST = "ssdp_st"
 ATTR_SSDP_NT = "ssdp_nt"
 ATTR_SSDP_UDN = "ssdp_udn"
