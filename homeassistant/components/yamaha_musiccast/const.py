@@ -9,7 +9,11 @@ from homeassistant.components.media_player.const import (
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
 )
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.const import (
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORY_SYSTEM,
+)
 
 DOMAIN = "yamaha_musiccast"
 
@@ -50,4 +54,5 @@ ENTITY_CATEGORY_MAPPING = {
     EntityTypes.CONFIG: ENTITY_CATEGORY_CONFIG,
     EntityTypes.REGULAR: None,
     EntityTypes.DIAGNOSTIC: ENTITY_CATEGORY_DIAGNOSTIC,
+    EntityTypes.SYSTEM: ENTITY_CATEGORY_SYSTEM,
 }
