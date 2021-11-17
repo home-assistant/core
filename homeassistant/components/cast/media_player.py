@@ -235,6 +235,8 @@ class CastDevice(MediaPlayerEntity):
                 self._cast_info.friendly_name,
                 None,
                 None,
+                self._cast_info.cast_type,
+                self._cast_info.manufacturer,
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )
@@ -833,6 +835,8 @@ class DynamicCastGroup:
                 self._cast_info.friendly_name,
                 None,
                 None,
+                self._cast_info.cast_type,
+                self._cast_info.manufacturer,
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )

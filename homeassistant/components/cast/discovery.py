@@ -11,7 +11,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from .const import (
     CAST_BROWSER_KEY,
     CONF_KNOWN_HOSTS,
-    DEFAULT_PORT,
     INTERNAL_DISCOVERY_RUNNING_KEY,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
@@ -21,15 +20,18 @@ from .helpers import ChromecastInfo, ChromeCastZeroconf
 _LOGGER = logging.getLogger(__name__)
 
 
-def discover_chromecast(hass: HomeAssistant, device_info):
+def discover_chromecast(
+    hass: HomeAssistant, cast_info: pychromecast.models.CastInfo
+) -> None:
     """Discover a Chromecast."""
 
     info = ChromecastInfo(
-        services=device_info.services,
-        uuid=device_info.uuid,
-        model_name=device_info.model_name,
-        friendly_name=device_info.friendly_name,
-        is_audio_group=device_info.port != DEFAULT_PORT,
+        services=cast_info.services,
+        uuid=cast_info.uuid,
+        model_name=cast_info.model_name,
+        friendly_name=cast_info.friendly_name,
+        cast_type=cast_info.cast_type,
+        manufacturer=cast_info.manufacturer,
     )
 
     if info.uuid is None:
@@ -78,6 +80,8 @@ def setup_internal_discovery(hass: HomeAssistant, config_entry) -> None:
                     uuid=cast_info.uuid,
                     model_name=cast_info.model_name,
                     friendly_name=cast_info.friendly_name,
+                    cast_type=cast_info.cast_type,
+                    manufacturer=cast_info.manufacturer,
                 ),
             )
 
