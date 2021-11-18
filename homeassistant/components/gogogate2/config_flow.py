@@ -7,6 +7,7 @@ from ismartgate.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
@@ -35,10 +36,12 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         self._ip_address = None
         self._device_type = None
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle homekit discovery."""
-        await self.async_set_unique_id(discovery_info["properties"]["id"])
-        return await self._async_discovery_handler(discovery_info["host"])
+        await self.async_set_unique_id(discovery_info[zeroconf.ATTR_PROPERTIES]["id"])
+        return await self._async_discovery_handler(discovery_info[zeroconf.ATTR_HOST])
 
     async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
