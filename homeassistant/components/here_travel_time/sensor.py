@@ -10,8 +10,6 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_MODE,
     CONF_API_KEY,
     CONF_MODE,
@@ -22,10 +20,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     TIME_MINUTES,
 )
-from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import location
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import dt
 
@@ -313,62 +311,14 @@ class HERETravelTimeSensor(SensorEntity):
         """Update Sensor Information."""
         # Convert device_trackers to HERE friendly location
         if self._origin_entity_id is not None:
-            self._here_data.origin = await self._get_location_from_entity(
-                self._origin_entity_id
-            )
+            self._here_data.origin = find_coordinates(self.hass, self._origin_entity_id)
 
         if self._destination_entity_id is not None:
-            self._here_data.destination = await self._get_location_from_entity(
-                self._destination_entity_id
+            self._here_data.destination = find_coordinates(
+                self.hass, self._destination_entity_id
             )
 
         await self.hass.async_add_executor_job(self._here_data.update)
-
-    async def _get_location_from_entity(self, entity_id: str) -> str | None:
-        """Get the location from the entity state or attributes."""
-        if (entity := self.hass.states.get(entity_id)) is None:
-            _LOGGER.error("Unable to find entity %s", entity_id)
-            return None
-
-        # Check if the entity has location attributes
-        if location.has_location(entity):
-            return self._get_location_from_attributes(entity)
-
-        # Check if device is in a zone
-        zone_entity = self.hass.states.get(f"zone.{entity.state}")
-        if location.has_location(zone_entity):
-            _LOGGER.debug(
-                "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
-            )
-            return self._get_location_from_attributes(zone_entity)
-
-        # Check if state is valid coordinate set
-        if self._entity_state_is_valid_coordinate_set(entity.state):
-            return entity.state
-
-        _LOGGER.error(
-            "The state of %s is not a valid set of coordinates: %s",
-            entity_id,
-            entity.state,
-        )
-        return None
-
-    @staticmethod
-    def _entity_state_is_valid_coordinate_set(state: str) -> bool:
-        """Check that the given string is a valid set of coordinates."""
-        schema = vol.Schema(cv.gps)
-        try:
-            coordinates = state.split(",")
-            schema(coordinates)
-            return True
-        except (vol.MultipleInvalid):
-            return False
-
-    @staticmethod
-    def _get_location_from_attributes(entity: State) -> str:
-        """Get the lat/long string from an entities attributes."""
-        attr = entity.attributes
-        return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"
 
 
 class HERETravelTimeData:
