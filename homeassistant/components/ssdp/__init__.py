@@ -117,23 +117,25 @@ class SsdpDescription(_SsdpDescriptionBase, total=False):
 class _UpnpDescriptionBase(TypedDict, total=True):
     """Compulsory keys for UPnP info."""
 
+    deviceType: str
+    friendlyName: str
+    manufacturer: str
+    modelName: str
     UDN: str
 
 
 class UpnpDescription(_UpnpDescriptionBase, total=False):
     """UPnP info with optional keys."""
 
-    deviceType: str
-    friendlyName: str
-    manufacturer: str
     manufacturerURL: str
     modelDescription: str
-    modelName: str
     modelNumber: str
     modelURL: str
     serialNumber: str
-    serviceList: list[list[dict[str, str]]]
     UPC: str
+    iconList: dict[str, list[dict[str, str]]]
+    serviceList: dict[str, list[dict[str, str]]]
+    deviceList: dict[str, Any]
     presentationURL: str
 
 
