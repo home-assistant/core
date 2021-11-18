@@ -1,6 +1,7 @@
 """Support for esphome sensors."""
 from __future__ import annotations
 
+from datetime import datetime
 import math
 
 from aioesphomeapi import (
@@ -78,14 +79,14 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         return self._static_info.force_update
 
     @esphome_state_property
-    def native_value(self) -> str | None:
+    def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
         if self._state.missing_state:
             return None
         if self.device_class == DEVICE_CLASS_TIMESTAMP:
-            return dt.utc_from_timestamp(self._state.state).isoformat()
+            return dt.utc_from_timestamp(self._state.state)
         return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
 
     @property
