@@ -147,7 +147,6 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
                         ent.unique_id,
                         new_unique_id,
                     )
-                    ent_reg.async_get_entity_id
                     try:
                         ent_reg.async_update_entity(
                             ent.entity_id, new_unique_id=sensor.id
