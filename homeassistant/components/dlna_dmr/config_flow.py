@@ -468,19 +468,15 @@ def _is_ignored_device(discovery_info: Mapping[str, Any]) -> bool:
         return True
 
     # Is the root device not a DMR?
-    if (
-        discovery_info[ssdp.ATTR_UPNP].get(ssdp.ATTR_UPNP_DEVICE_TYPE)
-        not in DmrDevice.DEVICE_TYPES
-    ):
+    upnp_info = discovery_info[ssdp.ATTR_UPNP]
+    if upnp_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) not in DmrDevice.DEVICE_TYPES:
         return True
 
     # Special cases for devices with other discovery methods (e.g. mDNS), or
     # that advertise multiple unrelated (sent in separate discovery packets)
     # UPnP devices.
-    manufacturer = (
-        discovery_info[ssdp.ATTR_UPNP].get(ssdp.ATTR_UPNP_MANUFACTURER, "").lower()
-    )
-    model = discovery_info[ssdp.ATTR_UPNP].get(ssdp.ATTR_UPNP_MODEL_NAME, "").lower()
+    manufacturer = upnp_info.get(ssdp.ATTR_UPNP_MANUFACTURER, "").lower()
+    model = upnp_info.get(ssdp.ATTR_UPNP_MODEL_NAME, "").lower()
 
     if manufacturer.startswith("xbmc") or model == "kodi":
         # kodi
