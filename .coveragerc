@@ -138,7 +138,9 @@ omit =
     homeassistant/components/broadlink/updater.py
     homeassistant/components/brottsplatskartan/sensor.py
     homeassistant/components/browser/*
+    homeassistant/components/brunt/__init__.py
     homeassistant/components/brunt/cover.py
+    homeassistant/components/brunt/const.py
     homeassistant/components/bsblan/climate.py
     homeassistant/components/bt_home_hub_5/device_tracker.py
     homeassistant/components/bt_smarthub/device_tracker.py
