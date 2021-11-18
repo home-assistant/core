@@ -329,8 +329,8 @@ class SensorEntity(Entity):
                 return value.isoformat()  # type: ignore
             except (AttributeError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid date: {self.entity_id} provides a {type(value)}"
-                    "state, however, does not have a date device class"
+                    f"Invalid date: {self.entity_id} has a date device class"
+                    f"but does not provide a date state but {type(value)}"
                 ) from err
 
         units = self.hass.config.units
