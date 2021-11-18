@@ -51,7 +51,6 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         super().__init__(channel)
         self._is_counter: bool = counter
         # define the unique id
-        self._attr_unique_id = super().unique_id
         if self._is_counter:
             self._attr_unique_id = f"{self._attr_unique_id}-counter"
         # define the name
