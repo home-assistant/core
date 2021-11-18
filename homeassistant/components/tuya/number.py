@@ -21,6 +21,16 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 # default instructions set of each category end up being a number.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
+    # Robot Vacuum
+    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
+    "sd": (
+        NumberEntityDescription(
+            key=DPCode.VOLUME_SET,
+            name="Volume Setting",
+            icon="mdi:volume-high",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Smart Kettle
     # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
     "bh": (
