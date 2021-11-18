@@ -45,6 +45,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.count = len(self.values)
         self.min = min(self.values)
         self.max = max(self.values)
+        self.difference = self.max - self.min
         self.total = sum(self.values)
         self.mean = round(sum(self.values) / len(self.values), 2)
         self.median = round(statistics.median(self.values), 2)
@@ -56,6 +57,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.change = round(self.values[-1] - self.values[0], 2)
         self.average_change = round(self.change / (len(self.values) - 1), 2)
         self.change_rate = round(self.change / (60 * (self.count - 1)), 2)
+        self.noisiness = round(sum([3, 4.8, 10.2, 1.2, 5.4, 2.5, 7.3, 8]) / 8, 2)
         self.addCleanup(self.hass.stop)
 
     def test_binary_sensor_source(self):
@@ -131,6 +133,7 @@ class TestStatisticsSensor(unittest.TestCase):
         assert str(self.mean) == state.state
         assert self.min == state.attributes.get("min_value")
         assert self.max == state.attributes.get("max_value")
+        assert self.difference == state.attributes.get("difference")
         assert self.variance == state.attributes.get("variance")
         assert self.median == state.attributes.get("median")
         assert self.deviation == state.attributes.get("standard_deviation")
@@ -140,6 +143,9 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.total == state.attributes.get("total")
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
+        assert self.noisiness == state.attributes.get("noisiness")
+
+        assert state.attributes.get("age_usage_ratio") == STATE_UNKNOWN
 
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -252,6 +258,7 @@ class TestStatisticsSensor(unittest.TestCase):
         assert state.attributes.get("variance") == STATE_UNKNOWN
         assert state.attributes.get("standard_deviation") == STATE_UNKNOWN
         assert state.attributes.get("quantiles") == STATE_UNKNOWN
+        assert state.attributes.get("noisiness") == STATE_UNKNOWN
 
     def test_max_age(self):
         """Test value deprecation."""
@@ -274,7 +281,7 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
-                        "max_age": {"minutes": 3},
+                        "max_age": {"seconds": 150},
                     }
                 },
             )
@@ -290,13 +297,16 @@ class TestStatisticsSensor(unittest.TestCase):
                     {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
                 )
                 self.hass.block_till_done()
-                # insert the next value one minute later
-                mock_data["return_time"] += timedelta(minutes=1)
+                mock_data["return_time"] += timedelta(seconds=60)
 
             state = self.hass.states.get("sensor.test")
 
+        assert state.attributes.get("count") == 3
         assert state.attributes.get("min_value") == 6
         assert state.attributes.get("max_value") == 14
+        assert state.attributes.get("age_range") == (3 - 1) * 60
+        assert state.attributes.get("age_usage_ratio") == 100 / 150 * 120
+        assert state.attributes.get("buffer_usage_ratio") == 100 / 20 * 3
 
     def test_max_age_without_sensor_change(self):
         """Test value deprecation."""
@@ -478,6 +488,18 @@ class TestStatisticsSensor(unittest.TestCase):
                     },
                     {
                         "platform": "statistics",
+                        "name": "test_age_range",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "age_range",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_buffer_usage_ratio",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "buffer_usage_ratio",
+                    },
+                    {
+                        "platform": "statistics",
                         "name": "test_variance",
                         "entity_id": "sensor.test_monitored",
                         "state_characteristic": "variance",
@@ -508,15 +530,17 @@ class TestStatisticsSensor(unittest.TestCase):
                 value,
                 {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
-            self.hass.states.set(
-                "sensor.test_monitored_unitless",
-                value,
-            )
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test_min_age")
         assert state.state == str(state.attributes.get("min_age"))
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+        state = self.hass.states.get("sensor.test_age_range")
+        assert state.state == str(state.attributes.get("age_range"))
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "s"
+        state = self.hass.states.get("sensor.test_buffer_usage_ratio")
+        assert state.state == str(state.attributes.get("buffer_usage_ratio"))
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
         state = self.hass.states.get("sensor.test_variance")
         assert state.state == str(state.attributes.get("variance"))
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS + "²"

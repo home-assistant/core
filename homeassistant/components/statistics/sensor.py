@@ -34,20 +34,31 @@ from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
+STAT_AGE_RANGE = "age_range"
+STAT_AGE_USAGE_RATIO = "age_usage_ratio"
 STAT_AVERAGE_CHANGE = "average_change"
+STAT_BUFFER_USAGE_RATIO = "buffer_usage_ratio"
 STAT_CHANGE = "change"
 STAT_CHANGE_RATE = "change_rate"
 STAT_COUNT = "count"
+STAT_DIFFERENCE = "difference"
 STAT_MAX_AGE = "max_age"
 STAT_MAX_VALUE = "max_value"
 STAT_MEAN = "mean"
 STAT_MEDIAN = "median"
 STAT_MIN_AGE = "min_age"
 STAT_MIN_VALUE = "min_value"
+STAT_NOISINESS = "noisiness"
 STAT_QUANTILES = "quantiles"
 STAT_STANDARD_DEVIATION = "standard_deviation"
 STAT_TOTAL = "total"
 STAT_VARIANCE = "variance"
+
+STATS_NOT_A_NUMBER = (
+    STAT_MIN_AGE,
+    STAT_MAX_AGE,
+    STAT_QUANTILES,
+)
 
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
@@ -69,16 +80,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_STATE_CHARACTERISTIC, default=STAT_MEAN): vol.In(
             [
+                STAT_AGE_RANGE,
+                STAT_AGE_USAGE_RATIO,
                 STAT_AVERAGE_CHANGE,
+                STAT_BUFFER_USAGE_RATIO,
                 STAT_CHANGE,
                 STAT_CHANGE_RATE,
                 STAT_COUNT,
+                STAT_DIFFERENCE,
                 STAT_MAX_AGE,
                 STAT_MAX_VALUE,
                 STAT_MEAN,
                 STAT_MEDIAN,
                 STAT_MIN_AGE,
                 STAT_MIN_VALUE,
+                STAT_NOISINESS,
                 STAT_QUANTILES,
                 STAT_STANDARD_DEVIATION,
                 STAT_TOTAL,
@@ -152,20 +168,25 @@ class StatisticsSensor(SensorEntity):
         self.states = deque(maxlen=self._samples_max_buffer_size)
         self.ages = deque(maxlen=self._samples_max_buffer_size)
         self.attr = {
-            STAT_COUNT: 0,
-            STAT_TOTAL: None,
-            STAT_MEAN: None,
-            STAT_MEDIAN: None,
-            STAT_STANDARD_DEVIATION: None,
-            STAT_VARIANCE: None,
-            STAT_MIN_VALUE: None,
-            STAT_MAX_VALUE: None,
-            STAT_MIN_AGE: None,
-            STAT_MAX_AGE: None,
-            STAT_CHANGE: None,
-            STAT_AVERAGE_CHANGE: None,
-            STAT_CHANGE_RATE: None,
-            STAT_QUANTILES: None,
+            STAT_AGE_USAGE_RATIO: STATE_UNKNOWN,
+            STAT_BUFFER_USAGE_RATIO: STATE_UNKNOWN,
+            STAT_COUNT: STATE_UNKNOWN,
+            STAT_TOTAL: STATE_UNKNOWN,
+            STAT_MEAN: STATE_UNKNOWN,
+            STAT_MEDIAN: STATE_UNKNOWN,
+            STAT_STANDARD_DEVIATION: STATE_UNKNOWN,
+            STAT_VARIANCE: STATE_UNKNOWN,
+            STAT_MIN_VALUE: STATE_UNKNOWN,
+            STAT_MAX_VALUE: STATE_UNKNOWN,
+            STAT_DIFFERENCE: STATE_UNKNOWN,
+            STAT_MIN_AGE: STATE_UNKNOWN,
+            STAT_MAX_AGE: STATE_UNKNOWN,
+            STAT_AGE_RANGE: STATE_UNKNOWN,
+            STAT_CHANGE: STATE_UNKNOWN,
+            STAT_AVERAGE_CHANGE: STATE_UNKNOWN,
+            STAT_CHANGE_RATE: STATE_UNKNOWN,
+            STAT_NOISINESS: STATE_UNKNOWN,
+            STAT_QUANTILES: STATE_UNKNOWN,
         }
         self._update_listener = None
 
@@ -227,22 +248,31 @@ class StatisticsSensor(SensorEntity):
         elif self.is_binary:
             unit = None
         elif self._state_characteristic in (
+            STAT_CHANGE,
+            STAT_DIFFERENCE,
+            STAT_MAX_VALUE,
+            STAT_MEAN,
+            STAT_MEDIAN,
+            STAT_MIN_VALUE,
+            STAT_STANDARD_DEVIATION,
+            STAT_TOTAL,
+            STAT_NOISINESS,
+        ):
+            unit = base_unit
+        elif self._state_characteristic in (
             STAT_COUNT,
             STAT_MIN_AGE,
             STAT_MAX_AGE,
             STAT_QUANTILES,
         ):
             unit = None
+        elif self._state_characteristic in (STAT_AGE_RANGE,):
+            unit = "s"
         elif self._state_characteristic in (
-            STAT_TOTAL,
-            STAT_MEAN,
-            STAT_MEDIAN,
-            STAT_STANDARD_DEVIATION,
-            STAT_MIN_VALUE,
-            STAT_MAX_VALUE,
-            STAT_CHANGE,
+            STAT_AGE_USAGE_RATIO,
+            STAT_BUFFER_USAGE_RATIO,
         ):
-            unit = base_unit
+            unit = "%"
         elif self._state_characteristic == STAT_VARIANCE:
             unit = base_unit + "²"
         elif self._state_characteristic == STAT_AVERAGE_CHANGE:
@@ -259,29 +289,23 @@ class StatisticsSensor(SensorEntity):
     @property
     def state_class(self):
         """Return the state class of this entity."""
-        if self._state_characteristic in (
-            STAT_MIN_AGE,
-            STAT_MAX_AGE,
-            STAT_QUANTILES,
-        ):
+        if self._state_characteristic in STATS_NOT_A_NUMBER:
             return None
         return STATE_CLASS_MEASUREMENT
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
+        value = self.attr[self._state_characteristic]
         if self.is_binary:
             return self.attr[STAT_COUNT]
-        if self._state_characteristic in (
-            STAT_MIN_AGE,
-            STAT_MAX_AGE,
-            STAT_QUANTILES,
-        ):
-            return self.attr[self._state_characteristic]
-        if self._precision == 0:
-            with contextlib.suppress(TypeError, ValueError):
-                return int(self.attr[self._state_characteristic])
-        return self.attr[self._state_characteristic]
+        if self._state_characteristic in STATS_NOT_A_NUMBER:
+            return value
+        with contextlib.suppress(TypeError):
+            value = round(value, self._precision)
+            if self._precision == 0:
+                value = int(value)
+        return value
 
     @property
     def native_unit_of_measurement(self):
@@ -303,7 +327,15 @@ class StatisticsSensor(SensorEntity):
         """Return the state attributes of the sensor."""
         if self.is_binary:
             return None
-        return self.attr
+        attributes = {}
+        for stat, value in self.attr.items():
+            if value == STATE_UNKNOWN:
+                attributes[stat] = STATE_UNKNOWN
+            elif stat in STATS_NOT_A_NUMBER:
+                attributes[stat] = value
+            else:
+                attributes[stat] = round(value, self._precision)
+        return attributes
 
     @property
     def icon(self):
@@ -349,15 +381,18 @@ class StatisticsSensor(SensorEntity):
             return
 
         if states_count >= 2:
-            self.attr[STAT_STANDARD_DEVIATION] = round(
-                statistics.stdev(self.states), self._precision
-            )
-            self.attr[STAT_VARIANCE] = round(
-                statistics.variance(self.states), self._precision
-            )
+            self.attr[STAT_STANDARD_DEVIATION] = statistics.stdev(self.states)
+            self.attr[STAT_VARIANCE] = statistics.variance(self.states)
         else:
             self.attr[STAT_STANDARD_DEVIATION] = STATE_UNKNOWN
             self.attr[STAT_VARIANCE] = STATE_UNKNOWN
+
+        if states_count >= 2:
+            self.attr[STAT_NOISINESS] = sum(
+                abs(j - i) for i, j in zip(list(self.states), list(self.states)[1:])
+            ) / (self.attr[STAT_COUNT] - 1)
+        else:
+            self.attr[STAT_NOISINESS] = STATE_UNKNOWN
 
         if states_count > self._quantile_intervals:
             self.attr[STAT_QUANTILES] = [
@@ -376,39 +411,52 @@ class StatisticsSensor(SensorEntity):
             self.attr[STAT_MEDIAN] = STATE_UNKNOWN
             self.attr[STAT_TOTAL] = STATE_UNKNOWN
             self.attr[STAT_MIN_VALUE] = self.attr[STAT_MAX_VALUE] = STATE_UNKNOWN
+            self.attr[STAT_DIFFERENCE] = STATE_UNKNOWN
             self.attr[STAT_MIN_AGE] = self.attr[STAT_MAX_AGE] = STATE_UNKNOWN
+            self.attr[STAT_AGE_RANGE] = STATE_UNKNOWN
             self.attr[STAT_CHANGE] = self.attr[STAT_AVERAGE_CHANGE] = STATE_UNKNOWN
             self.attr[STAT_CHANGE_RATE] = STATE_UNKNOWN
+            self.attr[STAT_AGE_USAGE_RATIO] = STATE_UNKNOWN
+            self.attr[STAT_BUFFER_USAGE_RATIO] = 0
             return
 
-        self.attr[STAT_MEAN] = round(statistics.mean(self.states), self._precision)
-        self.attr[STAT_MEDIAN] = round(statistics.median(self.states), self._precision)
+        self.attr[STAT_MEAN] = statistics.mean(self.states)
+        self.attr[STAT_MEDIAN] = statistics.median(self.states)
 
-        self.attr[STAT_TOTAL] = round(sum(self.states), self._precision)
-        self.attr[STAT_MIN_VALUE] = round(min(self.states), self._precision)
-        self.attr[STAT_MAX_VALUE] = round(max(self.states), self._precision)
+        self.attr[STAT_TOTAL] = sum(self.states)
+        self.attr[STAT_MIN_VALUE] = min(self.states)
+        self.attr[STAT_MAX_VALUE] = max(self.states)
+        self.attr[STAT_DIFFERENCE] = (
+            self.attr[STAT_MAX_VALUE] - self.attr[STAT_MIN_VALUE]
+        )
 
         self.attr[STAT_MIN_AGE] = self.ages[0]
         self.attr[STAT_MAX_AGE] = self.ages[-1]
+        self.attr[STAT_AGE_RANGE] = (
+            self.attr[STAT_MAX_AGE] - self.attr[STAT_MIN_AGE]
+        ).total_seconds()
 
         self.attr[STAT_CHANGE] = self.states[-1] - self.states[0]
-
         self.attr[STAT_AVERAGE_CHANGE] = self.attr[STAT_CHANGE]
         self.attr[STAT_CHANGE_RATE] = 0
         if states_count > 1:
             self.attr[STAT_AVERAGE_CHANGE] /= len(self.states) - 1
+            if self.attr[STAT_AGE_RANGE] > 0:
+                self.attr[STAT_CHANGE_RATE] = (
+                    self.attr[STAT_CHANGE] / self.attr[STAT_AGE_RANGE]
+                )
+        self.attr[STAT_CHANGE] = self.attr[STAT_CHANGE]
+        self.attr[STAT_AVERAGE_CHANGE] = self.attr[STAT_AVERAGE_CHANGE]
+        self.attr[STAT_CHANGE_RATE] = self.attr[STAT_CHANGE_RATE]
 
-            time_diff = (
-                self.attr[STAT_MAX_AGE] - self.attr[STAT_MIN_AGE]
-            ).total_seconds()
-            if time_diff > 0:
-                self.attr[STAT_CHANGE_RATE] = self.attr[STAT_CHANGE] / time_diff
-        self.attr[STAT_CHANGE] = round(self.attr[STAT_CHANGE], self._precision)
-        self.attr[STAT_AVERAGE_CHANGE] = round(
-            self.attr[STAT_AVERAGE_CHANGE], self._precision
-        )
-        self.attr[STAT_CHANGE_RATE] = round(
-            self.attr[STAT_CHANGE_RATE], self._precision
+        if self._samples_max_age is not None:
+            self.attr[STAT_AGE_USAGE_RATIO] = (
+                100 * self.attr[STAT_AGE_RANGE] / self._samples_max_age.total_seconds()
+            )
+        else:
+            self.attr[STAT_AGE_USAGE_RATIO] = STATE_UNKNOWN
+        self.attr[STAT_BUFFER_USAGE_RATIO] = (
+            100 * self.attr[STAT_COUNT] / self._samples_max_buffer_size
         )
 
     async def async_update(self):
