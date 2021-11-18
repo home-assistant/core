@@ -158,6 +158,7 @@ class Store:
                 self.version,
             )
             if len(inspect.signature(self._async_migrate_func).parameters) == 2:
+                # pylint: disable-next=no-value-for-parameter
                 stored = await self._async_migrate_func(data["version"], data["data"])
             else:
                 try:
