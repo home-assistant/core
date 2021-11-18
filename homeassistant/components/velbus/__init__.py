@@ -174,20 +174,18 @@ class VelbusEntity(Entity):
     def __init__(self, channel: VelbusChannel) -> None:
         """Initialize a Velbus entity."""
         self._channel = channel
-        self._attr_name = self._channel.get_name()
+        self._attr_name = channel.get_name()
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, str(self._channel.get_module_address())),
+                (DOMAIN, str(channel.get_module_address())),
             },
             manufacturer="Velleman",
-            model=self._channel.get_module_type_name(),
-            name=self._channel.get_full_name(),
-            sw_version=self._channel.get_module_sw_version(),
+            model=channel.get_module_type_name(),
+            name=channel.get_full_name(),
+            sw_version=channel.get_module_sw_version(),
         )
-        serial = self._channel.get_module_serial() or str(
-            self._channel.get_module_address()
-        )
-        self._attr_unique_id = f"{serial}-{self._channel.get_channel_number()}"
+        serial = channel.get_module_serial() or str(channel.get_module_address())
+        self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
 
     async def async_added_to_hass(self) -> None:
         """Add listener for state changes."""

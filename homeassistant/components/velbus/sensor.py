@@ -55,23 +55,18 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         if self._is_counter:
             self._attr_unique_id = f"{self._attr_unique_id}-counter"
         # define the name
-        self._attr_name = super().name
         if self._is_counter:
             self._attr_name = f"{self._attr_name}-counter"
         # define the device class
         if self._is_counter:
             self._attr_device_class = DEVICE_CLASS_ENERGY
-        elif self._channel.is_counter_channel():
+        elif channel.is_counter_channel():
             self._attr_device_class = DEVICE_CLASS_POWER
-        elif self._channel.is_temperature():
+        elif channel.is_temperature():
             self._attr_device_class = DEVICE_CLASS_TEMPERATURE
-        else:
-            self._attr_device_class = None
         # define the icon
         if self._is_counter:
             self._attr_icon = "mdi:counter"
-        else:
-            self._attr_icon = None
         # the state class
         if self._is_counter:
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
@@ -79,9 +74,9 @@ class VelbusSensor(VelbusEntity, SensorEntity):
             self._attr_state_class = STATE_CLASS_MEASUREMENT
         # unit
         if self._is_counter:
-            self._attr_native_unit_of_measurement = self._channel.get_counter_unit()
+            self._attr_native_unit_of_measurement = channel.get_counter_unit()
         else:
-            self._attr_native_unit_of_measurement = self._channel.get_unit()
+            self._attr_native_unit_of_measurement = channel.get_unit()
 
     @property
     def native_value(self) -> float | int | None:
