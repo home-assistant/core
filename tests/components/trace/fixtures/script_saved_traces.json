@@ -1,5 +1,6 @@
 {
     "version": 1,
+    "minor_version": 1,
     "key": "trace.saved_traces",
     "data": {
         "script.sun": [
