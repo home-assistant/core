@@ -152,10 +152,10 @@ class EntityRegistryStore(storage.Store):
     """Store entity registry data."""
 
     async def _async_migrate_func(
-        self, old_major_version: int, old_minor_version: int, data: dict
+        self, old_major_version: int, old_minor_version: int, old_data: dict
     ) -> dict:
         """Migrate to the new version."""
-        return await _async_migrate(old_major_version, old_minor_version, data)
+        return await _async_migrate(old_major_version, old_minor_version, old_data)
 
 
 class EntityRegistry:
