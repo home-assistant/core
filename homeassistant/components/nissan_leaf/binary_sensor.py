@@ -2,9 +2,9 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_PLUG,
+    BinarySensorEntity,
 )
 
 from . import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity
