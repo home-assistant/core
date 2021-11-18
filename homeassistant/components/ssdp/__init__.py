@@ -7,7 +7,7 @@ from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable, Final, Mapping, cast
+from typing import Any, Callable, Final, Mapping, TypedDict, cast
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
@@ -15,9 +15,6 @@ from async_upnp_client.description_cache import DescriptionCache
 from async_upnp_client.ssdp import SSDP_PORT
 from async_upnp_client.ssdp_listener import SsdpDevice, SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
-
-# Import from typing_extensions due to pylint(inherit-non-class) issue
-from typing_extensions import TypedDict
 
 from homeassistant import config_entries
 from homeassistant.components import network
@@ -59,7 +56,7 @@ ATTR_UPNP_UDN = "UDN"
 ATTR_UPNP_UPC = "UPC"
 ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 # Attributes for accessing info added by Home Assistant
-ATTR_HA_MATCHING_DOMAINS: Final = "x-homeassistant-matching-domains"
+ATTR_HA_MATCHING_DOMAINS: Final = "x_homeassistant_matching_domains"
 
 PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
 
@@ -88,13 +85,10 @@ SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
 _LOGGER = logging.getLogger(__name__)
 
 
-_HaServiceInfoDescription = TypedDict(
-    "_HaServiceInfoDescription",
-    {
-        "x-homeassistant-matching-domains": set,
-    },
-    total=True,
-)
+class _HaServiceInfoDescription(TypedDict, total=True):
+    """Keys added by HA."""
+
+    x_homeassistant_matching_domains: set[str]
 
 
 class _SsdpDescriptionBase(TypedDict, total=True):
