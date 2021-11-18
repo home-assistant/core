@@ -61,7 +61,7 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         if self.entity_description.state is None:
             state: StateType | datetime = getattr(
@@ -70,6 +70,4 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
         else:
             state = self.entity_description.state(self.coordinator.data)
 
-        if isinstance(state, datetime):
-            return state.isoformat()
         return state
