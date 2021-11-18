@@ -35,6 +35,7 @@ class SIARequiredKeysMixin:
     zone: int | None
     ping_interval: int
     code_consequences: dict[str, Any]
+    always_reset_availability: bool
 
 
 @dataclass

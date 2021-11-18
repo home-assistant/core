@@ -79,6 +79,7 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                 zone=SIA_HUB_ZONE,
                 ping_interval=account_data[CONF_PING_INTERVAL],
                 code_consequences=CC_CONNECTIVITY,
+                always_reset_availability=False,
             ),
         )
         yield SIABinarySensor(
@@ -102,6 +103,7 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                 zone=SIA_HUB_ZONE,
                 ping_interval=account_data[CONF_PING_INTERVAL],
                 code_consequences=CC_POWER,
+                always_reset_availability=True,
             ),
         )
         zones = entry.options[CONF_ACCOUNTS][account_data[CONF_ACCOUNT]][CONF_ZONES]
@@ -127,6 +129,7 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                     zone=zone,
                     ping_interval=account_data[CONF_PING_INTERVAL],
                     code_consequences=CC_SMOKE,
+                    always_reset_availability=True,
                 ),
             )
             yield SIABinarySensor(
@@ -150,6 +153,7 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                     zone=zone,
                     ping_interval=account_data[CONF_PING_INTERVAL],
                     code_consequences=CC_MOISTURE,
+                    always_reset_availability=True,
                 ),
             )
 
@@ -178,12 +182,14 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
             elif last_state.state == STATE_UNAVAILABLE:
                 self._attr_available = False
 
-    def update_state(self, sia_event: SIAEvent) -> None:
+    def update_state(self, sia_event: SIAEvent) -> bool:
         """Update the state of the binary sensor."""
         new_state = self.entity_description.code_consequences.get(sia_event.code, None)
-        if new_state is not None:
-            _LOGGER.debug("New state will be %s", new_state)
-            self._attr_is_on = new_state
+        if new_state is None:
+            return False
+        _LOGGER.debug("New state will be %s", new_state)
+        self._attr_is_on = new_state
+        return True
 
     @callback
     def async_set_unavailable(self, _) -> None:

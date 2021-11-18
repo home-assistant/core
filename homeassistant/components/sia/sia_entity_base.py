@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, SIA_EVENT
+from .const import DOMAIN, SIA_EVENT, SIA_HUB_ZONE
 from .utils import (
     SIAAlarmControlPanelEntityDescription,
     SIABinarySensorEntityDescription,
@@ -77,18 +77,19 @@ class SIABaseEntity(RestoreEntity):
     def async_handle_event(self, sia_event: SIAEvent) -> None:
         """Listen to dispatcher events for this port and account and update state and attributes.
 
-        If the zone matches it means it is online and can therefore be set to available.
+        If the zone matches or the message is for the hub zone (0) it means the entity is online and can therefore be set to available.
         """
         _LOGGER.debug("Received event: %s", sia_event)
-        if int(sia_event.ri) != self.entity_description.zone:
+        if int(sia_event.ri) not in (self.entity_description.zone, SIA_HUB_ZONE):
             return
         self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
-        self.update_state(sia_event)
-        self.async_reset_availability_cb()
+        state_changed = self.update_state(sia_event)
+        if state_changed or self.entity_description.always_reset_availability:
+            self.async_reset_availability_cb()
         self.async_write_ha_state()
 
     @abstractmethod
-    def update_state(self, sia_event: SIAEvent) -> None:
+    def update_state(self, sia_event: SIAEvent) -> bool:
         """Do the entity specific state updates."""
 
     @callback

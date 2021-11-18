@@ -87,6 +87,7 @@ async def async_setup_entry(
                 zone=zone,
                 ping_interval=account_data[CONF_PING_INTERVAL],
                 code_consequences=CODE_CONSEQUENCES,
+                always_reset_availability=True,
             ),
         )
         for account_data in entry.data[CONF_ACCOUNTS]
@@ -108,20 +109,21 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
     ) -> None:
         """Create SIAAlarmControlPanel object."""
         super().__init__(entity_description)
-        # self.entity_description = entity_description
 
         self._attr_state: StateType = None
         self._old_state: StateType = None
         self._attr_supported_features = 0
 
-    def update_state(self, sia_event: SIAEvent) -> None:
+    def update_state(self, sia_event: SIAEvent) -> bool:
         """Update the state of the alarm control panel."""
         new_state = self.entity_description.code_consequences.get(sia_event.code, None)
-        if new_state is not None:
-            _LOGGER.debug("New state will be %s", new_state)
-            if new_state == PREVIOUS_STATE:
-                new_state = self._old_state
-            self._attr_state, self._old_state = new_state, self._attr_state
+        if new_state is None:
+            return False
+        _LOGGER.debug("New state will be %s", new_state)
+        if new_state == PREVIOUS_STATE:
+            new_state = self._old_state
+        self._attr_state, self._old_state = new_state, self._attr_state
+        return True
 
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
