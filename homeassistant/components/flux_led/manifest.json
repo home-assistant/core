@@ -25,6 +25,10 @@
     "hostname": "[ba][lk]*"
   },
   {
+    "macaddress": "F0FE6B*",
+    "hostname": "[ba][lk]*"
+  },
+  {
     "macaddress": "8CCE4E*",
     "hostname": "lwip*"
   },
