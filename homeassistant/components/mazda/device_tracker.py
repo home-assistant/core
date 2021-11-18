@@ -22,14 +22,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MazdaDeviceTracker(MazdaEntity, TrackerEntity):
     """Class for the device tracker."""
 
+    _attr_icon = "mdi:car"
+    _attr_force_update = False
+
     def __init__(self, client, coordinator, index) -> None:
         """Initialize Mazda device tracker."""
         super().__init__(client, coordinator, index)
 
         self._attr_name = f"{self.vehicle_name} Device Tracker"
         self._attr_unique_id = self.vin
-        self._attr_icon = "mdi:car"
-        self._attr_force_update = False
 
     @property
     def source_type(self):
