@@ -43,8 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     solar_net = FroniusSolarNet(hass, entry, fronius)
     await solar_net.init_devices()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = solar_net
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = solar_net
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
