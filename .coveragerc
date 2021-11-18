@@ -549,6 +549,8 @@ omit =
     homeassistant/components/kostal_plenticore/const.py
     homeassistant/components/kostal_plenticore/helper.py
     homeassistant/components/kostal_plenticore/sensor.py
+    homeassistant/components/kostal_plenticore/switch.py
+    homeassistant/components/kostal_plenticore/select.py
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lametric/*
