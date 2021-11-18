@@ -22,6 +22,7 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
     DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
@@ -114,6 +115,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data.get(CONF_USERNAME),
                 data.get(CONF_PASSWORD),
                 data.get(CONF_PROTOCOL),
+                data.get(CONF_TRANSPORT),
             )
 
             if can_connect:
@@ -125,6 +127,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
                         CONF_PROTOCOL: data.get(CONF_PROTOCOL),
+                        CONF_TRANSPORT: data.get(CONF_TRANSPORT),
                         CONF_DISCOVERY: DEFAULT_DISCOVERY,
                     },
                 )
@@ -320,7 +323,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-def try_connection(broker, port, username, password, protocol="3.1"):
+def try_connection(broker, port, username, password, protocol="3.1", transport="tcp"):
     """Test if we can connect to an MQTT broker."""
     # pylint: disable=import-outside-toplevel
     import paho.mqtt.client as mqtt
@@ -330,7 +333,7 @@ def try_connection(broker, port, username, password, protocol="3.1"):
     else:
         proto = mqtt.MQTTv311
 
-    client = mqtt.Client(protocol=proto)
+    client = mqtt.Client(protocol=proto, transport=transport)
     if username and password:
         client.username_pw_set(username, password)
 

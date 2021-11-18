@@ -147,6 +147,7 @@ async def test_hassio_confirm(
             "username": "mock-user",
             "password": "mock-pass",
             "protocol": "3.1.1",
+            "transport": "tcp",
         },
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -165,6 +166,7 @@ async def test_hassio_confirm(
         "username": "mock-user",
         "password": "mock-pass",
         "protocol": "3.1.1",
+        "transport": "tcp",
         "discovery": True,
     }
     # Check we tried the connection

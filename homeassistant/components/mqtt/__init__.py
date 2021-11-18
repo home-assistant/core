@@ -61,7 +61,10 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     CONF_TOPIC,
+    CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
+    CONF_WS_HEADERS,
+    CONF_WS_PATH,
     DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
@@ -102,9 +105,13 @@ CONF_TLS_VERSION = "tls_version"
 
 PROTOCOL_31 = "3.1"
 
+TRANSPORT_TCP = "tcp"
+TRANSPORT_WEBSOCKETS = "websockets"
+
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
+DEFAULT_TRANSPORT = TRANSPORT_TCP
 DEFAULT_TLS_PROTOCOL = "auto"
 
 ATTR_TOPIC_TEMPLATE = "topic_template"
@@ -181,6 +188,11 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
                         cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
                     ),
+                    vol.Optional(CONF_TRANSPORT, default=DEFAULT_TRANSPORT): vol.All(
+                        cv.string, vol.In([TRANSPORT_TCP, TRANSPORT_WEBSOCKETS])
+                    ),
+                    vol.Optional(CONF_WS_PATH, default="/"): cv.string,
+                    vol.Optional(CONF_WS_HEADERS): {cv.string: cv.template},
                     vol.Optional(
                         CONF_WILL_MESSAGE, default=DEFAULT_WILL
                     ): MQTT_WILL_BIRTH_SCHEMA,
@@ -628,12 +640,18 @@ class MQTT:
             proto: int = mqtt.MQTTv31
         else:
             proto = mqtt.MQTTv311
+        transport = self.conf.get(CONF_TRANSPORT)
 
         if (client_id := self.conf.get(CONF_CLIENT_ID)) is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        self._mqttc = mqtt.Client(client_id, protocol=proto)
+        self._mqttc = mqtt.Client(client_id, protocol=proto, transport=transport)
+
+        if transport == TRANSPORT_WEBSOCKETS:
+            ws_path = self.conf.get(CONF_WS_PATH)
+            ws_headers = self.conf.get(CONF_WS_HEADERS)
+            self._mqttc.ws_set_options(ws_path, ws_headers)
 
         # Enable logging
         self._mqttc.enable_logger()

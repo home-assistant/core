@@ -17,7 +17,10 @@ CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
 CONF_STATE_TOPIC = "state_topic"
 CONF_TOPIC = "topic"
+CONF_TRANSPORT = "transport"
 CONF_WILL_MESSAGE = "will_message"
+CONF_WS_HEADERS = "ws_headers"
+CONF_WS_PATH = "ws_path"
 
 DATA_MQTT_CONFIG = "mqtt_config"
 
