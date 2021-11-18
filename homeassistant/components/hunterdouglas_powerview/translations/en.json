@@ -19,5 +19,14 @@
                 "title": "Connect to the PowerView Hub"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "create_seperate_entities": "Create seperate entities for blinds that allow top/down bottom/up functionality"
+                }
+            }
+        }
     }
 }
