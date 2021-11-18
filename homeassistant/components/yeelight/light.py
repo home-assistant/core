@@ -406,7 +406,9 @@ def _async_setup_services(hass: HomeAssistant):
         SERVICE_SET_MUSIC_MODE, SERVICE_SCHEMA_SET_MUSIC_MODE, "async_set_music_mode"
     )
     platform.async_register_entity_service(
-        SERVICE_FORCE_UPDATE, {}, "async_force_update",
+        SERVICE_FORCE_UPDATE,
+        {},
+        "async_force_update",
     )
 
 
