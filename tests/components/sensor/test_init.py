@@ -1,11 +1,16 @@
 """The test for sensor device automation."""
+from datetime import date, datetime, timezone
+
 import pytest
 from pytest import approx
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_DATE,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -106,4 +111,69 @@ async def test_deprecated_unit_of_measurement(hass, caplog, enable_custom_integr
     assert (
         "tests.components.sensor.test_init is setting 'unit_of_measurement' on an "
         "instance of SensorEntityDescription"
+    ) in caplog.text
+
+
+async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
+    """Test conversion of datetime."""
+    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)
+    test_date = date(2017, 12, 19)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test", native_value=test_timestamp, device_class=DEVICE_CLASS_TIMESTAMP
+    )
+    platform.ENTITIES["1"] = platform.MockSensor(
+        name="Test", native_value=test_date, device_class=DEVICE_CLASS_DATE
+    )
+    platform.ENTITIES["2"] = platform.MockSensor(
+        name="Test", native_value=None, device_class=DEVICE_CLASS_TIMESTAMP
+    )
+    platform.ENTITIES["3"] = platform.MockSensor(
+        name="Test", native_value=None, device_class=DEVICE_CLASS_DATE
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(platform.ENTITIES["0"].entity_id)
+    assert state.state == test_timestamp.isoformat()
+
+    state = hass.states.get(platform.ENTITIES["1"].entity_id)
+    assert state.state == test_date.isoformat()
+
+    state = hass.states.get(platform.ENTITIES["2"].entity_id)
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get(platform.ENTITIES["3"].entity_id)
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "device_class,native_value",
+    [
+        (DEVICE_CLASS_DATE, "2021-11-09"),
+        (DEVICE_CLASS_TIMESTAMP, "2021-01-09T12:00:00+00:00"),
+    ],
+)
+async def test_deprecated_datetime_str(
+    hass, caplog, enable_custom_integrations, device_class, native_value
+):
+    """Test warning on deprecated str for a date(time) value."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test", native_value=native_value, device_class=device_class
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == native_value
+    assert (
+        "is providing a string for its state, while the device class is "
+        f"'{device_class}', this is not valid and will be unsupported "
+        "from Home Assistant 2022.2."
     ) in caplog.text

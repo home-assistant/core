@@ -4,11 +4,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import inspect
 import logging
 from typing import Any, Final, cast, final
 
+import ciso8601
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -182,6 +183,9 @@ class SensorEntity(Entity):
     _last_reset_reported = False
     _temperature_conversion_reported = False
 
+    # Temporary private attribute to track if deprecation has been logged.
+    __datetime_as_string_deprecation_logged = False
+
     @property
     def state_class(self) -> str | None:
         """Return the state class of this entity, from STATE_CLASSES, if any."""
@@ -236,7 +240,7 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | date | datetime:
         """Return the value reported by the sensor."""
         return self._attr_native_value
 
@@ -273,6 +277,61 @@ class SensorEntity(Entity):
         """Return the state of the sensor and perform unit conversions, if needed."""
         unit_of_measurement = self.native_unit_of_measurement
         value = self.native_value
+        device_class = self.device_class
+
+        # We have an old non-datetime value, warn about it and convert it during
+        # the deprecation period.
+        if (
+            value is not None
+            and device_class in (DEVICE_CLASS_DATE, DEVICE_CLASS_TIMESTAMP)
+            and not isinstance(value, (date, datetime))
+        ):
+            # Deprecation warning for date/timestamp device classes
+            if not self.__datetime_as_string_deprecation_logged:
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "%s is providing a string for its state, while the device "
+                    "class is '%s', this is not valid and will be unsupported "
+                    "from Home Assistant 2022.2. Please %s",
+                    self.entity_id,
+                    device_class,
+                    report_issue,
+                )
+                self.__datetime_as_string_deprecation_logged = True
+
+            # Anyways, lets validate the date at least..
+            try:
+                value = ciso8601.parse_datetime(str(value))
+            except (ValueError, IndexError) as error:
+                raise ValueError(
+                    f"Invalid date/datetime: {self.entity_id} provide state '{value}', "
+                    f"while it has device class '{device_class}'"
+                ) from error
+
+            # Convert the date object to a standardized state string.
+            if device_class == DEVICE_CLASS_DATE:
+                return value.date().isoformat()
+            return value.isoformat(timespec="seconds")
+
+        # Received a datetime
+        if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
+            try:
+                return value.isoformat(timespec="seconds")  # type: ignore
+            except (AttributeError, TypeError) as err:
+                raise ValueError(
+                    f"Invalid datetime: {self.entity_id} has a timestamp device class"
+                    f"but does not provide a datetime state but {type(value)}"
+                ) from err
+
+        # Received a date value
+        if value is not None and device_class == DEVICE_CLASS_DATE:
+            try:
+                return value.isoformat()  # type: ignore
+            except (AttributeError, TypeError) as err:
+                raise ValueError(
+                    f"Invalid date: {self.entity_id} has a date device class"
+                    f"but does not provide a date state but {type(value)}"
+                ) from err
 
         units = self.hass.config.units
         if (
@@ -304,7 +363,7 @@ class SensorEntity(Entity):
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
-                temp = units.temperature(float(value), unit_of_measurement)
+                temp = units.temperature(float(value), unit_of_measurement)  # type: ignore
                 value = round(temp) if prec == 0 else round(temp, prec)
 
         return value
