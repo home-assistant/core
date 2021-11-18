@@ -54,7 +54,7 @@ class ShutterControlCover(SHCEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
-        return self.current_cover_position == 0.0
+        return self.current_cover_position == 0
 
     @property
     def is_opening(self):
