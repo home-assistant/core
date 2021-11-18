@@ -1,11 +1,11 @@
-#                                                                                  
-#    #####   #         ##     ####   #    # 
-#    #    #  #        #  #   #    #  #   #  
-#    #####   #       #    #  #       ####   
-#    #    #  #       ######  #       #  #   
-#    #    #  #       #    #  #    #  #   #  
-#    #####   ######  #    #   ####   #    #  
-#                                                                         
+#
+#    #####   #         ##     ####   #    #
+#    #    #  #        #  #   #    #  #   #
+#    #####   #       #    #  #       ####
+#    #    #  #       ######  #       #  #
+#    #    #  #       #    #  #    #  #   #
+#    #####   ######  #    #   ####   #    #
+#
 
 AIS Black Rose:
 
@@ -67,22 +67,22 @@ AIS Black Rose:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -94,8 +94,6 @@ AIS Black Rose:
   hacs-chip-color: var(--primary-color)
 
 ##########################################
-
-
 
 AIS Black Purple:
 
@@ -157,22 +155,22 @@ AIS Black Purple:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -183,11 +181,7 @@ AIS Black Purple:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Blue:
 
@@ -249,22 +243,22 @@ AIS Black Blue:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -275,11 +269,7 @@ AIS Black Blue:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Aqua:
 
@@ -341,22 +331,22 @@ AIS Black Aqua:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -367,11 +357,7 @@ AIS Black Aqua:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Green:
 
@@ -433,22 +419,22 @@ AIS Black Green:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -459,11 +445,7 @@ AIS Black Green:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Yellow:
 
@@ -525,22 +507,22 @@ AIS Black Yellow:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -551,11 +533,7 @@ AIS Black Yellow:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Orange:
 
@@ -617,22 +595,22 @@ AIS Black Orange:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -643,11 +621,7 @@ AIS Black Orange:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Coral:
 
@@ -709,22 +683,22 @@ AIS Black Coral:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -735,11 +709,7 @@ AIS Black Coral:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Pink:
 
@@ -801,22 +771,22 @@ AIS Black Pink:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -827,11 +797,7 @@ AIS Black Pink:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Gray:
 
@@ -893,22 +859,22 @@ AIS Black Gray:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -919,16 +885,14 @@ AIS Black Gray:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
-#                                                                                                               
-#      ####   #         ##     ####    ####  
-#     #    #  #        #  #   #       #      
-#     #       #       #    #   ####    ####  
-#     #  ###  #       ######       #       # 
-#     #    #  #       #    #  #    #  #    # 
-#      ####   ######  #    #   ####    ####                                          
-#                                                                                               
+#
+#      ####   #         ##     ####    ####
+#     #    #  #        #  #   #       #
+#     #       #       #    #   ####    ####
+#     #  ###  #       ######       #       #
+#     #    #  #       #    #  #    #  #    #
+#      ####   ######  #    #   ####    ####
+#
 
 AIS Black Rose Glass:
 
@@ -990,22 +954,22 @@ AIS Black Rose Glass:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -1016,11 +980,7 @@ AIS Black Rose Glass:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Purple Glass:
 
@@ -1082,22 +1042,22 @@ AIS Black Purple Glass:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -1108,11 +1068,7 @@ AIS Black Purple Glass:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Blue Glass:
 
@@ -1174,22 +1130,22 @@ AIS Black Blue Glass:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -1200,11 +1156,7 @@ AIS Black Blue Glass:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Aqua Glass:
 
@@ -1266,22 +1218,22 @@ AIS Black Aqua Glass:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -1292,11 +1244,7 @@ AIS Black Aqua Glass:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Green Glass:
 
@@ -1358,22 +1306,22 @@ AIS Black Green Glass:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -1384,11 +1332,7 @@ AIS Black Green Glass:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Yellow Glass:
 
@@ -1450,22 +1394,22 @@ AIS Black Yellow Glass:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -1476,11 +1420,7 @@ AIS Black Yellow Glass:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Orange Glass:
 
@@ -1542,22 +1482,22 @@ AIS Black Orange Glass:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -1568,11 +1508,7 @@ AIS Black Orange Glass:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Coral Glass:
 
@@ -1634,22 +1570,22 @@ AIS Black Coral Glass:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -1660,11 +1596,7 @@ AIS Black Coral Glass:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Black Pink Glass:
 
@@ -1726,22 +1658,22 @@ AIS Black Pink Glass:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -1751,8 +1683,6 @@ AIS Black Pink Glass:
   google-blue-500: var(--primary-color)
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
-
-
 
 ##########################################
 
@@ -1816,22 +1746,22 @@ AIS Black Gray Glass:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -1842,17 +1772,14 @@ AIS Black Gray Glass:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
-#                                                                                                         
-#    #       #   ####   #    #  #####  
-#    #       #  #    #  #    #    #     
-#    #       #  #       ######    #   
-#    #       #  #  ###  #    #    #    
-#    #       #  #    #  #    #    #    
-#    ######  #   ####   #    #    #    
-#         
-                                                          
+#
+#    #       #   ####   #    #  #####
+#    #       #  #    #  #    #    #
+#    #       #  #       ######    #
+#    #       #  #  ###  #    #    #
+#    #       #  #    #  #    #    #
+#    ######  #   ####   #    #    #
+#
 
 AIS Light Rose:
 
@@ -1914,22 +1841,22 @@ AIS Light Rose:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -1940,11 +1867,7 @@ AIS Light Rose:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Light Purple:
 
@@ -2006,22 +1929,22 @@ AIS Light Purple:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -2032,11 +1955,7 @@ AIS Light Purple:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Light Blue:
 
@@ -2098,22 +2017,22 @@ AIS Light Blue:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -2124,11 +2043,7 @@ AIS Light Blue:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Light Aqua:
 
@@ -2190,22 +2105,22 @@ AIS Light Aqua:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -2216,11 +2131,7 @@ AIS Light Aqua:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Light Green:
 
@@ -2282,22 +2193,22 @@ AIS Light Green:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -2308,11 +2219,7 @@ AIS Light Green:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Light Yellow:
 
@@ -2374,22 +2281,22 @@ AIS Light Yellow:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -2400,11 +2307,7 @@ AIS Light Yellow:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Light Orange:
 
@@ -2466,22 +2369,22 @@ AIS Light Orange:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -2492,11 +2395,7 @@ AIS Light Orange:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Light Coral:
 
@@ -2558,22 +2457,22 @@ AIS Light Coral:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -2584,11 +2483,7 @@ AIS Light Coral:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Light Pink:
 
@@ -2650,22 +2545,22 @@ AIS Light Pink:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -2676,11 +2571,7 @@ AIS Light Pink:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Light Gray:
 
@@ -2742,22 +2633,22 @@ AIS Light Gray:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -2768,17 +2659,14 @@ AIS Light Gray:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
-#                             
-#    #####     ##    #####   #    # 
-#    #    #   #  #   #    #  #   #  
-#    #    #  #    #  #    #  ####   
-#    #    #  ######  #####   #  #   
-#    #    #  #    #  #   #   #   #  
-#    #####   #    #  #    #  #    # 
-#                                    
-                                
+#
+#    #####     ##    #####   #    #
+#    #    #   #  #   #    #  #   #
+#    #    #  #    #  #    #  ####
+#    #    #  ######  #####   #  #
+#    #    #  #    #  #   #   #   #
+#    #####   #    #  #    #  #    #
+#
 
 AIS Dark Rose:
 
@@ -2840,22 +2728,22 @@ AIS Dark Rose:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -2866,11 +2754,7 @@ AIS Dark Rose:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Dark Purple:
 
@@ -2932,22 +2816,22 @@ AIS Dark Purple:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -2958,11 +2842,7 @@ AIS Dark Purple:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Dark Blue:
 
@@ -3024,22 +2904,22 @@ AIS Dark Blue:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -3050,11 +2930,7 @@ AIS Dark Blue:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Dark Aqua:
 
@@ -3116,22 +2992,22 @@ AIS Dark Aqua:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -3142,11 +3018,7 @@ AIS Dark Aqua:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Dark Green:
 
@@ -3208,22 +3080,22 @@ AIS Dark Green:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -3234,11 +3106,7 @@ AIS Dark Green:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Dark Yellow:
 
@@ -3300,22 +3168,22 @@ AIS Dark Yellow:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -3326,11 +3194,7 @@ AIS Dark Yellow:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Dark Orange:
 
@@ -3392,22 +3256,22 @@ AIS Dark Orange:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -3418,11 +3282,7 @@ AIS Dark Orange:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Dark Coral:
 
@@ -3484,22 +3344,22 @@ AIS Dark Coral:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -3510,11 +3370,7 @@ AIS Dark Coral:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Dark Pink:
 
@@ -3576,22 +3432,22 @@ AIS Dark Pink:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
@@ -3602,11 +3458,7 @@ AIS Dark Pink:
   accent-color: var(--disabled-color)
   hacs-chip-color: var(--primary-color)
 
-
-
 ##########################################
-
-
 
 AIS Dark Gray:
 
@@ -3668,22 +3520,22 @@ AIS Dark Gray:
   table-row-background-color: var(--divider-color)
   table-row-alternative-background-color: var(--secondary-background-color)
   card-background-color: var(--primary-background-color)
-  #Animated icons
-  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
-  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
-  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
-  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
-  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
-  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
-  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
-  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
-  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
-  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
-  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
-  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
-  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
-  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
-  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Animated icons
+  # weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  # weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  # weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  # weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  # weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  # weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  # weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  # weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  # weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  # weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  # weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  # weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  # weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  # weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  # weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
   # Shadown
   ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
   # HACS
