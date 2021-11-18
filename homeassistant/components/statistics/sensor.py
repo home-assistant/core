@@ -34,8 +34,8 @@ from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
+STAT_AGE_COVERAGE_RATIO = "age_coverage_ratio"
 STAT_AGE_RANGE = "age_range"
-STAT_AGE_USAGE_RATIO = "age_usage_ratio"
 STAT_AVERAGE_CHANGE = "average_change"
 STAT_BUFFER_USAGE_RATIO = "buffer_usage_ratio"
 STAT_CHANGE = "change"
@@ -80,12 +80,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_STATE_CHARACTERISTIC, default=STAT_MEAN): vol.In(
             [
+                STAT_AGE_COVERAGE_RATIO,
                 STAT_AGE_RANGE,
-                STAT_AGE_USAGE_RATIO,
                 STAT_AVERAGE_CHANGE,
                 STAT_BUFFER_USAGE_RATIO,
-                STAT_CHANGE,
                 STAT_CHANGE_RATE,
+                STAT_CHANGE,
                 STAT_COUNT,
                 STAT_DIFFERENCE,
                 STAT_MAX_AGE,
@@ -168,7 +168,7 @@ class StatisticsSensor(SensorEntity):
         self.states = deque(maxlen=self._samples_max_buffer_size)
         self.ages = deque(maxlen=self._samples_max_buffer_size)
         self.attr = {
-            STAT_AGE_USAGE_RATIO: STATE_UNKNOWN,
+            STAT_AGE_COVERAGE_RATIO: STATE_UNKNOWN,
             STAT_BUFFER_USAGE_RATIO: STATE_UNKNOWN,
             STAT_COUNT: STATE_UNKNOWN,
             STAT_TOTAL: STATE_UNKNOWN,
@@ -269,7 +269,7 @@ class StatisticsSensor(SensorEntity):
         elif self._state_characteristic in (STAT_AGE_RANGE,):
             unit = "s"
         elif self._state_characteristic in (
-            STAT_AGE_USAGE_RATIO,
+            STAT_AGE_COVERAGE_RATIO,
             STAT_BUFFER_USAGE_RATIO,
         ):
             unit = "%"
@@ -416,7 +416,7 @@ class StatisticsSensor(SensorEntity):
             self.attr[STAT_AGE_RANGE] = STATE_UNKNOWN
             self.attr[STAT_CHANGE] = self.attr[STAT_AVERAGE_CHANGE] = STATE_UNKNOWN
             self.attr[STAT_CHANGE_RATE] = STATE_UNKNOWN
-            self.attr[STAT_AGE_USAGE_RATIO] = STATE_UNKNOWN
+            self.attr[STAT_AGE_COVERAGE_RATIO] = STATE_UNKNOWN
             self.attr[STAT_BUFFER_USAGE_RATIO] = 0
             return
 
@@ -450,11 +450,11 @@ class StatisticsSensor(SensorEntity):
         self.attr[STAT_CHANGE_RATE] = self.attr[STAT_CHANGE_RATE]
 
         if self._samples_max_age is not None:
-            self.attr[STAT_AGE_USAGE_RATIO] = (
+            self.attr[STAT_AGE_COVERAGE_RATIO] = (
                 100 * self.attr[STAT_AGE_RANGE] / self._samples_max_age.total_seconds()
             )
         else:
-            self.attr[STAT_AGE_USAGE_RATIO] = STATE_UNKNOWN
+            self.attr[STAT_AGE_COVERAGE_RATIO] = STATE_UNKNOWN
         self.attr[STAT_BUFFER_USAGE_RATIO] = (
             100 * self.attr[STAT_COUNT] / self._samples_max_buffer_size
         )

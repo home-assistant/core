@@ -145,7 +145,7 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.average_change == state.attributes.get("average_change")
         assert self.noisiness == state.attributes.get("noisiness")
 
-        assert state.attributes.get("age_usage_ratio") == STATE_UNKNOWN
+        assert state.attributes.get("age_coverage_ratio") == STATE_UNKNOWN
 
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -305,7 +305,7 @@ class TestStatisticsSensor(unittest.TestCase):
         assert state.attributes.get("min_value") == 6
         assert state.attributes.get("max_value") == 14
         assert state.attributes.get("age_range") == (3 - 1) * 60
-        assert state.attributes.get("age_usage_ratio") == 100 / 150 * 120
+        assert state.attributes.get("age_coverage_ratio") == 100 / 150 * 120
         assert state.attributes.get("buffer_usage_ratio") == 100 / 20 * 3
 
     def test_max_age_without_sensor_change(self):
