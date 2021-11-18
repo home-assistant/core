@@ -7,7 +7,7 @@ from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Final, Mapping, TypedDict, cast
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
@@ -32,7 +32,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 IPV4_BROADCAST = IPv4Address("255.255.255.255")
 
 # Attributes for accessing info from SSDP response
-ATTR_SSDP_LOCATION = "ssdp_location"
+ATTR_SSDP_LOCATION: Final = "ssdp_location"
 ATTR_SSDP_ST = "ssdp_st"
 ATTR_SSDP_NT = "ssdp_nt"
 ATTR_SSDP_UDN = "ssdp_udn"
@@ -56,7 +56,7 @@ ATTR_UPNP_UDN = "UDN"
 ATTR_UPNP_UPC = "UPC"
 ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 # Attributes for accessing info added by Home Assistant
-ATTR_HA_MATCHING_DOMAINS = "x-homeassistant-matching-domains"
+ATTR_HA_MATCHING_DOMAINS: Final = "x_homeassistant_matching_domains"
 
 PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
 
@@ -85,6 +85,58 @@ SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
 _LOGGER = logging.getLogger(__name__)
 
 
+class _HaServiceInfoDescription(TypedDict, total=True):
+    """Keys added by HA."""
+
+    x_homeassistant_matching_domains: set[str]
+
+
+class _SsdpDescriptionBase(TypedDict, total=True):
+    """Compulsory keys for SSDP info."""
+
+    ssdp_usn: str
+    ssdp_st: str
+
+
+class SsdpDescription(_SsdpDescriptionBase, total=False):
+    """SSDP info with optional keys."""
+
+    ssdp_location: str
+    ssdp_nt: str
+    ssdp_udn: str
+    ssdp_ext: str
+    ssdp_server: str
+
+
+class _UpnpDescriptionBase(TypedDict, total=True):
+    """Compulsory keys for UPnP info."""
+
+    deviceType: str
+    friendlyName: str
+    manufacturer: str
+    modelName: str
+    UDN: str
+
+
+class UpnpDescription(_UpnpDescriptionBase, total=False):
+    """UPnP info with optional keys."""
+
+    manufacturerURL: str
+    modelDescription: str
+    modelNumber: str
+    modelURL: str
+    serialNumber: str
+    UPC: str
+    iconList: dict[str, list[dict[str, str]]]
+    serviceList: dict[str, list[dict[str, str]]]
+    deviceList: dict[str, Any]
+    presentationURL: str
+
+
+class SsdpServiceInfo(SsdpDescription, UpnpDescription, _HaServiceInfoDescription):
+    """Prepared info from ssdp/upnp entries."""
+
+
 @bind_hass
 async def async_register_callback(
     hass: HomeAssistant,
@@ -102,7 +154,7 @@ async def async_register_callback(
 @bind_hass
 async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, udn: str, st: str
-) -> dict[str, str] | None:
+) -> SsdpServiceInfo | None:
     """Fetch the discovery info cache."""
     scanner: Scanner = hass.data[DOMAIN]
     return await scanner.async_get_discovery_info_by_udn_st(udn, st)
@@ -111,7 +163,7 @@ async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
 @bind_hass
 async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, st: str
-) -> list[dict[str, str]]:
+) -> list[SsdpServiceInfo]:
     """Fetch all the entries matching the st."""
     scanner: Scanner = hass.data[DOMAIN]
     return await scanner.async_get_discovery_info_by_st(st)
@@ -120,7 +172,7 @@ async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
 @bind_hass
 async def async_get_discovery_info_by_udn(
     hass: HomeAssistant, udn: str
-) -> list[dict[str, str]]:
+) -> list[SsdpServiceInfo]:
     """Fetch all the entries matching the udn."""
     scanner: Scanner = hass.data[DOMAIN]
     return await scanner.async_get_discovery_info_by_udn(udn)
@@ -141,7 +193,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_process_callbacks(
     callbacks: list[SsdpCallback],
-    discovery_info: dict[str, str],
+    discovery_info: SsdpServiceInfo,
     ssdp_change: SsdpChange,
 ) -> None:
     for callback in callbacks:
@@ -427,7 +479,7 @@ class Scanner:
 
     async def _async_headers_to_discovery_info(
         self, headers: Mapping[str, Any]
-    ) -> dict[str, Any]:
+    ) -> SsdpServiceInfo:
         """Combine the headers and description into discovery_info.
 
         Building this is a bit expensive so we only do it on demand.
@@ -443,7 +495,7 @@ class Scanner:
 
     async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
         self, udn: str, st: str
-    ) -> dict[str, Any] | None:
+    ) -> SsdpServiceInfo | None:
         """Return discovery_info for a udn and st."""
         if headers := self._all_headers_from_ssdp_devices.get((udn, st)):
             return await self._async_headers_to_discovery_info(headers)
@@ -451,7 +503,7 @@ class Scanner:
 
     async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
         self, st: str
-    ) -> list[dict[str, Any]]:
+    ) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a st."""
         return [
             await self._async_headers_to_discovery_info(headers)
@@ -459,7 +511,7 @@ class Scanner:
             if udn_st[1] == st
         ]
 
-    async def async_get_discovery_info_by_udn(self, udn: str) -> list[dict[str, Any]]:
+    async def async_get_discovery_info_by_udn(self, udn: str) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a udn."""
         return [
             await self._async_headers_to_discovery_info(headers)
@@ -470,7 +522,7 @@ class Scanner:
 
 def discovery_info_from_headers_and_description(
     info_with_desc: CaseInsensitiveDict,
-) -> dict[str, Any]:
+) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
     info = {
         DISCOVERY_MAPPING.get(k.lower(), k): v
@@ -485,7 +537,7 @@ def discovery_info_from_headers_and_description(
     if ATTR_SSDP_ST not in info and ATTR_SSDP_NT in info:
         info[ATTR_SSDP_ST] = info[ATTR_SSDP_NT]
 
-    return info
+    return cast(SsdpServiceInfo, info)
 
 
 def _udn_from_usn(usn: str | None) -> str | None:

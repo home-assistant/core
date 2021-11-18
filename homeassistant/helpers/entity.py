@@ -534,26 +534,26 @@ class Entity(ABC):
 
         entry = self.registry_entry
         # pylint: disable=consider-using-ternary
-        if (name := (entry and entry.name) or self.name) is not None:
-            attr[ATTR_FRIENDLY_NAME] = name
-
-        if (icon := (entry and entry.icon) or self.icon) is not None:
-            attr[ATTR_ICON] = icon
-
-        if (entity_picture := self.entity_picture) is not None:
-            attr[ATTR_ENTITY_PICTURE] = entity_picture
-
         if assumed_state := self.assumed_state:
             attr[ATTR_ASSUMED_STATE] = assumed_state
 
-        if (supported_features := self.supported_features) is not None:
-            attr[ATTR_SUPPORTED_FEATURES] = supported_features
+        if (attribution := self.attribution) is not None:
+            attr[ATTR_ATTRIBUTION] = attribution
 
         if (device_class := self.device_class) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
-        if (attribution := self.attribution) is not None:
-            attr[ATTR_ATTRIBUTION] = attribution
+        if (entity_picture := self.entity_picture) is not None:
+            attr[ATTR_ENTITY_PICTURE] = entity_picture
+
+        if (icon := (entry and entry.icon) or self.icon) is not None:
+            attr[ATTR_ICON] = icon
+
+        if (name := (entry and entry.name) or self.name) is not None:
+            attr[ATTR_FRIENDLY_NAME] = name
+
+        if (supported_features := self.supported_features) is not None:
+            attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
         end = timer()
 

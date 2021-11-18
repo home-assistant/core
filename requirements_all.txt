@@ -1014,7 +1014,7 @@ miflora==0.7.0
 millheater==0.8.0
 
 # homeassistant.components.minio
-minio==4.0.9
+minio==5.0.10
 
 # homeassistant.components.mitemp_bt
 mitemp_bt==0.0.5
@@ -2125,7 +2125,7 @@ sense-hat==2.2.0
 sense_energy==0.9.3
 
 # homeassistant.components.sentry
-sentry-sdk==1.4.3
+sentry-sdk==1.5.0
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2471,7 +2471,7 @@ youtube_dl==2021.06.06
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.13
+zeroconf==0.37.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.63
