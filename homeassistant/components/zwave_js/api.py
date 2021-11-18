@@ -250,50 +250,37 @@ def async_handle_failed_command(orig_func: Callable) -> Callable:
     return async_handle_failed_command_func
 
 
-def handle_planned_provisioning_entry(planned_provisioning_entry: dict) -> dict:
+def handle_planned_provisioning_entry(info: dict) -> ProvisioningEntry:
     """Handle provisioning entry as provisioning input."""
-    planned_provisioning_entry = ProvisioningEntry(
-        dsk=planned_provisioning_entry[DSK],
-        security_classes=[
-            SecurityClass(sec_cls)
-            for sec_cls in planned_provisioning_entry[SECURITY_CLASSES]
-        ],
+    info = ProvisioningEntry(
+        dsk=info[DSK],
+        security_classes=[SecurityClass(sec_cls) for sec_cls in info[SECURITY_CLASSES]],
         additional_properties={
-            k: v
-            for k, v in planned_provisioning_entry.items()
-            if k not in (DSK, SECURITY_CLASSES)
+            k: v for k, v in info.items() if k not in (DSK, SECURITY_CLASSES)
         },
     )
-    return planned_provisioning_entry
+    return info
 
 
-def handle_qr_provisioning_information(qr_provisioning_information: dict) -> dict:
+def handle_qr_provisioning_information(info: dict) -> QRProvisioningInformation:
     """Handle QR provisioning information as provisioning input."""
-    protocols = [
-        Protocols(proto)
-        for proto in qr_provisioning_information.get(SUPPORTED_PROTOCOLS, [])
-    ]
-    qr_provisioning_information = QRProvisioningInformation(
-        version=QRCodeVersion(qr_provisioning_information[VERSION]),
-        security_classes=[
-            SecurityClass(sec_cls)
-            for sec_cls in qr_provisioning_information[SECURITY_CLASSES]
-        ],
-        dsk=qr_provisioning_information[DSK],
-        generic_device_class=qr_provisioning_information[GENERIC_DEVICE_CLASS],
-        specific_device_class=qr_provisioning_information[SPECIFIC_DEVICE_CLASS],
-        installer_icon_type=qr_provisioning_information[INSTALLER_ICON_TYPE],
-        manufacturer_id=qr_provisioning_information[MANUFACTURER_ID],
-        product_type=qr_provisioning_information[PRODUCT_TYPE],
-        product_id=qr_provisioning_information[PRODUCT_ID],
-        application_version=qr_provisioning_information[APPLICATION_VERSION],
-        max_inclusion_request_interval=qr_provisioning_information.get(
-            MAX_INCLUSION_REQUEST_INTERVAL
-        ),
-        uuid=qr_provisioning_information.get(UUID),
+    protocols = [Protocols(proto) for proto in info.get(SUPPORTED_PROTOCOLS, [])]
+    info = QRProvisioningInformation(
+        version=QRCodeVersion(info[VERSION]),
+        security_classes=[SecurityClass(sec_cls) for sec_cls in info[SECURITY_CLASSES]],
+        dsk=info[DSK],
+        generic_device_class=info[GENERIC_DEVICE_CLASS],
+        specific_device_class=info[SPECIFIC_DEVICE_CLASS],
+        installer_icon_type=info[INSTALLER_ICON_TYPE],
+        manufacturer_id=info[MANUFACTURER_ID],
+        product_type=info[PRODUCT_TYPE],
+        product_id=info[PRODUCT_ID],
+        application_version=info[APPLICATION_VERSION],
+        max_inclusion_request_interval=info.get(MAX_INCLUSION_REQUEST_INTERVAL),
+        uuid=info.get(UUID),
         supported_protocols=protocols if protocols else None,
     )
-    return qr_provisioning_information
+    return info
 
 
 def validate_provisioning_info_for_inclusion_strategy(msg: dict) -> None:
@@ -811,9 +798,8 @@ async def websocket_provision_smart_start_node(
     provisioning_info = (
         msg.get(PLANNED_PROVISIONING_ENTRY)
         or msg.get(QR_PROVISIONING_INFORMATION)
-        or msg.get(QR_CODE_STRING)
+        or msg[QR_CODE_STRING]
     )
-    assert provisioning_info
 
     if (
         QR_PROVISIONING_INFORMATION in msg
