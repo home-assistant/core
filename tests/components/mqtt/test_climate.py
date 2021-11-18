@@ -432,6 +432,35 @@ async def test_receive_mqtt_temperature(hass, mqtt_mock):
     assert state.attributes.get("current_temperature") == 47
 
 
+async def test_receive_mqtt_action_received(hass, mqtt_mock):
+    """Test getting the action received via MQTT."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["climate"]["action_topic"] = "action"
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # Cycle through valid modes and also check for wrong input such as "None" (str(None))
+    async_fire_mqtt_message(hass, "action", "None")
+    state = hass.states.get(ENTITY_CLIMATE)
+    hvac_action = state.attributes.get("hvac_mode")
+    assert hvac_action is None
+    # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
+    actions = [
+        "off",
+        "heating",
+        "cooling",
+        "drying",
+        "idle",
+        "fan",
+        None,
+    ]
+    for action in actions:
+        async_fire_mqtt_message(hass, "action", action)
+        state = hass.states.get(ENTITY_CLIMATE)
+        hvac_action = state.attributes.get("hvac_mode")
+        assert hvac_action == action
+
+
 async def test_set_away_mode_pessimistic(hass, mqtt_mock):
     """Test setting of the away mode."""
     config = copy.deepcopy(DEFAULT_CONFIG)
