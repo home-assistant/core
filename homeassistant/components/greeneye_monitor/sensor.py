@@ -116,17 +116,12 @@ class GEMSensor(SensorEntity):
         """Construct the entity."""
         self._monitor_serial_number = monitor_serial_number
         self._attr_name = name
-        self._sensor: UnderlyingSensorType | None = None
+        self._monitor: greeneye.monitor.Monitor | None = None
         self._sensor_type = sensor_type
         self._number = number
         self._attr_unique_id = (
             f"{self._monitor_serial_number}-{self._sensor_type}-{self._number}"
         )
-
-    def _set_sensor(self, sensor: UnderlyingSensorType) -> None:
-        self._sensor = sensor
-        self._sensor.add_listener(self.async_write_ha_state)
-        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Wait for and connect to the sensor."""
@@ -149,14 +144,17 @@ class GEMSensor(SensorEntity):
             monitors.remove_listener(self._on_new_monitor)
 
     def _try_connect_to_monitor(self, monitors: greeneye.Monitors) -> bool:
-        monitor = monitors.monitors.get(self._monitor_serial_number)
-        if not monitor:
+        self._monitor = monitors.monitors.get(self._monitor_serial_number)
+        if not self._sensor:
             return False
 
-        self._connect_to_monitor(monitor)
+        self._sensor.add_listener(self.async_write_ha_state)
+        self.async_write_ha_state()
+
         return True
 
-    def _connect_to_monitor(self, monitor: greeneye.monitor.Monitor) -> None:
+    @property
+    def _sensor(self) -> UnderlyingSensorType | None:
         raise NotImplementedError()
 
 
@@ -173,8 +171,9 @@ class CurrentSensor(GEMSensor):
         super().__init__(monitor_serial_number, name, "current", number)
         self._net_metering = net_metering
 
-    def _connect_to_monitor(self, monitor: greeneye.monitor.Monitor) -> None:
-        self._set_sensor(monitor.channels[self._number - 1])
+    @property
+    def _sensor(self) -> greeneye.monitor.Channel | None:
+        return self._monitor.channels[self._number - 1] if self._monitor else None
 
     @property
     def native_value(self) -> float | None:
@@ -218,8 +217,9 @@ class PulseCounter(GEMSensor):
         self._time_unit = time_unit
         self._attr_native_unit_of_measurement = f"{counted_quantity}/{self._time_unit}"
 
-    def _connect_to_monitor(self, monitor: greeneye.monitor.Monitor) -> None:
-        self._set_sensor(monitor.pulse_counters[self._number - 1])
+    @property
+    def _sensor(self) -> greeneye.monitor.PulseCounter | None:
+        return self._monitor.pulse_counters[self._number - 1] if self._monitor else None
 
     @property
     def native_value(self) -> float | None:
@@ -270,8 +270,13 @@ class TemperatureSensor(GEMSensor):
         super().__init__(monitor_serial_number, name, "temp", number)
         self._attr_native_unit_of_measurement = unit
 
-    def _connect_to_monitor(self, monitor: greeneye.monitor.Monitor) -> None:
-        self._set_sensor(monitor.temperature_sensors[self._number - 1])
+    @property
+    def _sensor(self) -> greeneye.monitor.TemperatureSensor | None:
+        return (
+            self._monitor.temperature_sensors[self._number - 1]
+            if self._monitor
+            else None
+        )
 
     @property
     def native_value(self) -> float | None:
@@ -292,9 +297,10 @@ class VoltageSensor(GEMSensor):
         """Construct the entity."""
         super().__init__(monitor_serial_number, name, "volts", number)
 
-    def _connect_to_monitor(self, monitor: greeneye.monitor.Monitor) -> None:
+    @property
+    def _sensor(self) -> greeneye.monitor.Monitor | None:
         """Wire the updates to the monitor itself, since there is no voltage element in the API."""
-        self._set_sensor(monitor)
+        return self._monitor
 
     @property
     def native_value(self) -> float | None:
