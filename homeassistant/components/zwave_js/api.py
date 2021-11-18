@@ -137,6 +137,9 @@ SUPPORTED_PROTOCOLS = "supported_protocols"
 
 UNPROVISION = "unprovision"
 
+# https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
+MINIMUM_QR_STRING_LENGTH = 52
+
 # Helper schemas
 PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.Schema(
     {
@@ -569,7 +572,9 @@ async def websocket_ping_node(
         vol.Exclusive(QR_PROVISIONING_INFORMATION, "options"): vol.All(
             QR_PROVISIONING_INFORMATION_SCHEMA, handle_qr_provisioning_information
         ),
-        vol.Exclusive(QR_CODE_STRING, "options"): str,
+        vol.Exclusive(QR_CODE_STRING, "options"): vol.All(
+            str, vol.Length(min=MINIMUM_QR_STRING_LENGTH)
+        ),
     }
 )
 @websocket_api.async_response
@@ -769,7 +774,9 @@ async def websocket_validate_dsk_and_enter_pin(
         vol.Exclusive(QR_PROVISIONING_INFORMATION, "options"): vol.All(
             QR_PROVISIONING_INFORMATION_SCHEMA, handle_qr_provisioning_information
         ),
-        vol.Exclusive(QR_CODE_STRING, "options"): str,
+        vol.Exclusive(QR_CODE_STRING, "options"): vol.All(
+            str, vol.Length(min=MINIMUM_QR_STRING_LENGTH)
+        ),
     }
 )
 @websocket_api.async_response
@@ -880,7 +887,9 @@ async def websocket_get_provisioning_entries(
     {
         vol.Required(TYPE): "zwave_js/parse_qr_code_string",
         vol.Required(ENTRY_ID): str,
-        vol.Required(QR_CODE_STRING): str,
+        vol.Required(QR_CODE_STRING): vol.All(
+            str, vol.Length(min=MINIMUM_QR_STRING_LENGTH)
+        ),
     }
 )
 @websocket_api.async_response
@@ -1029,7 +1038,9 @@ async def websocket_remove_node(
         vol.Exclusive(QR_PROVISIONING_INFORMATION, "options"): vol.All(
             QR_PROVISIONING_INFORMATION_SCHEMA, handle_qr_provisioning_information
         ),
-        vol.Exclusive(QR_CODE_STRING, "options"): str,
+        vol.Exclusive(QR_CODE_STRING, "options"): vol.All(
+            str, vol.Length(min=MINIMUM_QR_STRING_LENGTH)
+        ),
     }
 )
 @websocket_api.async_response
