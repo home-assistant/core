@@ -511,6 +511,7 @@ class EntityPlatform:
                 entity.unique_id,
                 capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
+                device_class=entity.device_class,
                 device_id=device_id,
                 disabled_by=disabled_by,
                 entity_category=entity.entity_category,
