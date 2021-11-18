@@ -288,20 +288,12 @@ class SensorEntity(Entity):
         ):
             # Deprecation warning for date/timestamp device classes
             if not self.__datetime_as_string_deprecation_logged:
-                caller = inspect.stack()[2]
-                module = inspect.getmodule(caller[0])
-                if module and "custom_components" in module.__file__:
-                    report_issue = "report it to the custom component author."
-                else:
-                    report_issue = (
-                        "create a bug report at "
-                        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-                    )
+                report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "%s is providing a string for its state, while the device "
                     "class is '%s', this is not valid and will be unsupported "
                     "from Home Assistant 2022.2. Please %s",
-                    module.__name__ if module else "Unknown",
+                    self.entity_id,
                     device_class,
                     report_issue,
                 )

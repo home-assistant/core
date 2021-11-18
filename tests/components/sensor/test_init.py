@@ -227,5 +227,5 @@ async def test_deprecated_datetime_str(
     assert (
         "is providing a string for its state, while the device class is "
         f"'{device_class}', this is not valid and will be unsupported "
-        "from Home Assistant 2022.2. Please create a bug report at"
+        "from Home Assistant 2022.2."
     ) in caplog.text
