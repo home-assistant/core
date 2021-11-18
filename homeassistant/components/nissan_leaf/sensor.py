@@ -52,8 +52,9 @@ class LeafBatterySensor(LeafEntity, SensorEntity):
     @property
     def native_value(self):
         """Battery state percentage."""
-        if self.car.data[DATA_BATTERY]:
-            return round(self.car.data[DATA_BATTERY])
+        if self.car.data[DATA_BATTERY] is None:
+            return None
+        return round(self.car.data[DATA_BATTERY])
 
     @property
     def native_unit_of_measurement(self):
