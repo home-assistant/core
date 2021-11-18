@@ -496,7 +496,9 @@ class Scanner:
         if not callbacks and not matching_domains:
             return
 
-        discovery_info = discovery_info_from_headers_and_description(info_with_desc)
+        discovery_info = discovery_info_from_headers_and_description(
+            info_with_desc, info_desc
+        )
         discovery_info[ATTR_HA_MATCHING_DOMAINS] = matching_domains
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
@@ -534,7 +536,7 @@ class Scanner:
             await self._description_cache.async_get_description_dict(location) or {}
         )
         return discovery_info_from_headers_and_description(
-            CaseInsensitiveDict(headers, **info_desc)
+            CaseInsensitiveDict(headers, **info_desc), info_desc
         )
 
     async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
@@ -566,7 +568,8 @@ class Scanner:
 
 def discovery_info_from_headers_and_description(
     info_with_desc: CaseInsensitiveDict,
-) -> dict[str, Any]:
+    info_desc: Mapping[str, str],
+) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
     info = {
         DISCOVERY_MAPPING.get(k.lower(), k): v
@@ -580,6 +583,9 @@ def discovery_info_from_headers_and_description(
     # Increase compatibility.
     if ATTR_SSDP_ST not in info and ATTR_SSDP_NT in info:
         info[ATTR_SSDP_ST] = info[ATTR_SSDP_NT]
+
+    # Duplicate upnp data
+    info.upnp = info_desc
 
     return info
 
