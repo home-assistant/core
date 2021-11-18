@@ -64,12 +64,12 @@ STORAGE_KEY = "core.entity_registry"
 # Attributes relevant to describing entity
 # to external services.
 ENTITY_DESCRIBING_ATTRIBUTES = {
+    "capabilities",
+    "device_class",
     "entity_id",
     "name",
     "original_name",
-    "capabilities",
     "supported_features",
-    "device_class",
     "unit_of_measurement",
 }
 
