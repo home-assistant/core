@@ -5,18 +5,18 @@
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
-            "invalid_auth": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
-            "flipr_id": {
-                "description": "Pilih ID Flipr Anda dari daftar"
-            },
             "user": {
                 "data": {
-                    "email": "Email",
-                    "password": "Kata Sandi"
-                }
+                    "host": "Host",
+                    "password": "Kata Sandi",
+                    "pin": "Kode PIN",
+                    "ssl": "Menggunakan sertifikat SSL",
+                    "username": "Nama Pengguna"
+                },
+                "title": "Hubungkan ke Termostat Venstar"
             }
         }
     }
