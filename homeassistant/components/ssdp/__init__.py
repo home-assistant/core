@@ -586,6 +586,8 @@ def discovery_info_from_headers_and_description(
 
     # Duplicate upnp data
     info.upnp = info_desc
+    if ATTR_UPNP_UDN not in info.upnp:
+        info.upnp[ATTR_UPNP_UDN] = udn
 
     return info
 
