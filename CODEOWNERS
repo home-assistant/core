@@ -546,7 +546,6 @@ homeassistant/components/tplink/* @rytilahti @thegardenmonkey
 homeassistant/components/traccar/* @ludeeus
 homeassistant/components/trace/* @home-assistant/core
 homeassistant/components/tractive/* @Danielhiversen @zhulik @bieniu
-homeassistant/components/tradfri/* @janiversen
 homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
