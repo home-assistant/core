@@ -17,6 +17,8 @@ from homeassistant.const import (
     PRESSURE,
     PRESSURE_PA,
     PRESSURE_PSI,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMPERATURE,
@@ -24,10 +26,12 @@ from homeassistant.const import (
     VOLUME,
     VOLUME_GALLONS,
     VOLUME_LITERS,
+    WIND_SPEED,
 )
 from homeassistant.util import (
     distance as distance_util,
     pressure as pressure_util,
+    speed as speed_util,
     temperature as temperature_util,
     volume as volume_util,
 )
@@ -42,6 +46,8 @@ PRESSURE_UNITS = pressure_util.VALID_UNITS
 
 VOLUME_UNITS = volume_util.VALID_UNITS
 
+WIND_SPEED_UNITS = speed_util.VALID_UNITS
+
 TEMPERATURE_UNITS: tuple[str, ...] = (TEMP_FAHRENHEIT, TEMP_CELSIUS)
 
 
@@ -49,6 +55,8 @@ def is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
     if unit_type == LENGTH:
         units = LENGTH_UNITS
+    elif unit_type == WIND_SPEED:
+        units = WIND_SPEED_UNITS
     elif unit_type == TEMPERATURE:
         units = TEMPERATURE_UNITS
     elif unit_type == MASS:
@@ -71,6 +79,7 @@ class UnitSystem:
         name: str,
         temperature: str,
         length: str,
+        wind_speed: str,
         volume: str,
         mass: str,
         pressure: str,
@@ -81,6 +90,7 @@ class UnitSystem:
             for unit, unit_type in (
                 (temperature, TEMPERATURE),
                 (length, LENGTH),
+                (wind_speed, WIND_SPEED),
                 (volume, VOLUME),
                 (mass, MASS),
                 (pressure, PRESSURE),
@@ -97,6 +107,7 @@ class UnitSystem:
         self.mass_unit = mass
         self.pressure_unit = pressure
         self.volume_unit = volume
+        self.wind_speed_unit = wind_speed
 
     @property
     def is_metric(self) -> bool:
@@ -130,6 +141,14 @@ class UnitSystem:
             pressure, from_unit, self.pressure_unit
         )
 
+    def wind_speed(self, wind_speed: float | None, from_unit: str) -> float:
+        """Convert the given wind_speed to this unit system."""
+        if not isinstance(wind_speed, Number):
+            raise TypeError(f"{wind_speed!s} is not a numeric value.")
+
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return speed_util.convert(wind_speed, from_unit, self.wind_speed_unit)  # type: ignore
+
     def volume(self, volume: float | None, from_unit: str) -> float:
         """Convert the given volume to this unit system."""
         if not isinstance(volume, Number):
@@ -146,6 +165,7 @@ class UnitSystem:
             PRESSURE: self.pressure_unit,
             TEMPERATURE: self.temperature_unit,
             VOLUME: self.volume_unit,
+            WIND_SPEED: self.wind_speed_unit,
         }
 
 
@@ -153,6 +173,7 @@ METRIC_SYSTEM = UnitSystem(
     CONF_UNIT_SYSTEM_METRIC,
     TEMP_CELSIUS,
     LENGTH_KILOMETERS,
+    SPEED_METERS_PER_SECOND,
     VOLUME_LITERS,
     MASS_GRAMS,
     PRESSURE_PA,
@@ -162,6 +183,7 @@ IMPERIAL_SYSTEM = UnitSystem(
     CONF_UNIT_SYSTEM_IMPERIAL,
     TEMP_FAHRENHEIT,
     LENGTH_MILES,
+    SPEED_MILES_PER_HOUR,
     VOLUME_GALLONS,
     MASS_POUNDS,
     PRESSURE_PSI,
