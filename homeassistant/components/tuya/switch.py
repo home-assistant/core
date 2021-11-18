@@ -24,6 +24,28 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 # default instruction set of each category end up being a Switch.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
+    # Robot Vacuum
+    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
+    "sd": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_DISTURB,
+            name="Do Not Disturb (DND)",
+            icon="mdi:minus-circle",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.VOICE_SWITCH,
+            name="Voice Switch",
+            icon="mdi:account-voice",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.RESET_MAP,
+            name="Map Resetting",
+            icon="mdi:map-marker-remove",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Smart Kettle
     # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
     "bh": (
