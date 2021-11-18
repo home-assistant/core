@@ -1,13 +1,19 @@
 """Support for Onkyo Network Receivers and Processors."""
 from __future__ import annotations
 
+import logging
+from typing import Any
+
+from pyeiscp.commands import COMMANDS
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerEntity, MediaPlayerState
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_AUDIO_INFORMATION,
@@ -25,7 +31,63 @@ from .const import (
     SERVICE_SELECT_HDMI_OUTPUT,
     SOUND_MODE_MAPPING,
 )
+from .helpers import async_discover_connections
 from .receiver import OnkyoNetworkReceiver, ReceiverZone
+
+CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Import the Onkyo platform into a config entry."""
+    _LOGGER.warning(
+        "Configuration of the Onkyo platform in YAML is deprecated; "
+        "your configuration has been imported into the UI automatically "
+        "and can be safely removed from your configuration.yaml file"
+    )
+
+    # Calculate the new CONF_MAX_VOLUME from the old config variables
+    max_volume: int = int(
+        config.get(CONF_RECEIVER_MAX_VOLUME, DEFAULT_MAX_VOLUME)
+        * config.get(CONF_MAX_VOLUME, 100)
+        / 100
+    )
+
+    # Make sure the keys in CONF_SOURCES exist in DEFAULT_SOURCE_NAMES,
+    # since the old config can use any entry of the source["name"] tuple,
+    # but the new config always uses the first entry.
+    sources: dict[str, Any] = {
+        source["name"][0]
+        if isinstance(source["name"], tuple)
+        else source["name"]: value
+        for source in COMMANDS["main"]["SLI"]["values"].values()
+        for key, value in config.get(CONF_SOURCES, DEFAULT_SOURCES).items()
+        if key in source["name"]
+    }
+
+    # Start an import flow for each discovered connection.
+    # If a host is provided, only one connection may be discovered for that host,
+    # so we only start one import flow for that connection.
+    for connection in await async_discover_connections(
+        host=config.get(CONF_HOST, None)
+    ):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_HOST: connection.host,
+                    CONF_NAME: config.get(CONF_NAME, connection.name),
+                    CONF_MAX_VOLUME: max_volume,
+                    CONF_SOURCES: sources,
+                },
+            )
+        )
 
 
 async def async_setup_entry(

@@ -23,9 +23,9 @@ from .const import (
     DEFAULT_MAX_VOLUME,
     DEFAULT_SOURCE_NAMES,
     DEFAULT_SOURCES,
-    DISCOVER_TIMEOUT,
     DOMAIN,
 )
+from .helpers import async_discover_connections
 
 MANUAL_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -48,18 +48,50 @@ class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
+    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
+        """Handle a flow initialized by importing a config."""
+        connection = next(
+            iter(
+                self.get_unique_connections(
+                    await async_discover_connections(host=import_info[CONF_HOST])
+                )
+            ),
+            None,
+        )
+
+        if connection and await _validate_connection(connection):
+            await self.async_set_unique_id(connection.identifier)
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(
+                title=import_info[CONF_NAME],
+                data={
+                    CONF_IDENTIFIER: connection.identifier,
+                    CONF_HOST: connection.host,
+                    CONF_NAME: import_info[CONF_NAME],
+                },
+                options={
+                    CONF_MAX_VOLUME: import_info[CONF_MAX_VOLUME],
+                    CONF_SOURCES: import_info[CONF_SOURCES],
+                },
+            )
+
+        return self.async_abort(reason="unknown")
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if not self._discovered_connections:
-            self._discovered_connections = await self._discover_unique_connections()
+            self._discovered_connections = self.get_unique_connections(
+                await async_discover_connections()
+            )
 
         if len(self._discovered_connections) == 0:
             # No connections discovered, switch to manual host input.
             return await self.async_step_manual()
 
-        elif len(self._discovered_connections) == 1:
+        if len(self._discovered_connections) == 1:
             # One connection discovered, immediately connect.
             self._connection = self._discovered_connections[0]
             return await self.async_step_connect()
@@ -76,7 +108,9 @@ class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Run discovery for specified host.
             self._connection = next(
                 iter(
-                    await self._discover_unique_connections(host=user_input[CONF_HOST])
+                    self.get_unique_connections(
+                        await async_discover_connections(host=user_input[CONF_HOST])
+                    )
                 ),
                 None,
             )
@@ -139,33 +173,17 @@ class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _discover_unique_connections(
-        self, timeout: int = DISCOVER_TIMEOUT, host: str | None = None
-    ) -> list[Connection]:
-        """Discover all unique available connections on the network."""
-        connections: dict[str, Connection] = {}
-
-        @callback
-        async def _discovery_callback(connection: Connection) -> None:
-            """Handle a discovered connection."""
-            if (
-                connection.identifier not in connections
-                and connection.identifier
-                not in [
-                    entity.unique_id
-                    for entity in self._async_current_entries(include_ignore=True)
-                ]
-            ):
-                connections[connection.identifier] = connection
-
-        await Connection.discover(
-            host=host,
-            discovery_callback=_discovery_callback,
-            timeout=timeout,
-        )
-
-        await asyncio.sleep(timeout)
-        return list(connections.values())
+    def get_unique_connections(self, connections: list[Connection]) -> list[Connection]:
+        """Filter out connections that are already set up."""
+        return [
+            conn
+            for conn in connections
+            if conn.identifier
+            not in [
+                entity.unique_id
+                for entity in self._async_current_entries(include_ignore=True)
+            ]
+        ]
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
