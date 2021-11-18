@@ -45,12 +45,14 @@ class TestStatisticsSensor(unittest.TestCase):
         self.count = len(self.values)
         self.min = min(self.values)
         self.max = max(self.values)
-        self.difference = self.max - self.min
+        self.distance_abs = self.max - self.min
         self.total = sum(self.values)
         self.mean = round(sum(self.values) / len(self.values), 2)
         self.median = round(statistics.median(self.values), 2)
         self.deviation = round(statistics.stdev(self.values), 2)
         self.variance = round(statistics.variance(self.values), 2)
+        self.distance_95p = round(2 * 1.96 * statistics.stdev(self.values), 2)
+        self.distance_99p = round(2 * 2.58 * statistics.stdev(self.values), 2)
         self.quantiles = [
             round(quantile, 2) for quantile in statistics.quantiles(self.values)
         ]
@@ -133,7 +135,13 @@ class TestStatisticsSensor(unittest.TestCase):
         assert str(self.mean) == state.state
         assert self.min == state.attributes.get("min_value")
         assert self.max == state.attributes.get("max_value")
-        assert self.difference == state.attributes.get("difference")
+        assert self.distance_abs == state.attributes.get("distance_absolute")
+        assert self.distance_95p == state.attributes.get(
+            "distance_95_percent_of_values"
+        )
+        assert self.distance_99p == state.attributes.get(
+            "distance_99_percent_of_values"
+        )
         assert self.variance == state.attributes.get("variance")
         assert self.median == state.attributes.get("median")
         assert self.deviation == state.attributes.get("standard_deviation")

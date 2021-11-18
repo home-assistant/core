@@ -41,7 +41,9 @@ STAT_BUFFER_USAGE_RATIO = "buffer_usage_ratio"
 STAT_CHANGE = "change"
 STAT_CHANGE_RATE = "change_rate"
 STAT_COUNT = "count"
-STAT_DIFFERENCE = "difference"
+STAT_DISTANCE_95P = "distance_95_percent_of_values"
+STAT_DISTANCE_99P = "distance_99_percent_of_values"
+STAT_DISTANCE_ABSOLUTE = "distance_absolute"
 STAT_MAX_AGE = "max_age"
 STAT_MAX_VALUE = "max_value"
 STAT_MEAN = "mean"
@@ -87,7 +89,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 STAT_CHANGE_RATE,
                 STAT_CHANGE,
                 STAT_COUNT,
-                STAT_DIFFERENCE,
+                STAT_DISTANCE_95P,
+                STAT_DISTANCE_99P,
+                STAT_DISTANCE_ABSOLUTE,
                 STAT_MAX_AGE,
                 STAT_MAX_VALUE,
                 STAT_MEAN,
@@ -178,13 +182,15 @@ class StatisticsSensor(SensorEntity):
             STAT_VARIANCE: STATE_UNKNOWN,
             STAT_MIN_VALUE: STATE_UNKNOWN,
             STAT_MAX_VALUE: STATE_UNKNOWN,
-            STAT_DIFFERENCE: STATE_UNKNOWN,
+            STAT_DISTANCE_ABSOLUTE: STATE_UNKNOWN,
             STAT_MIN_AGE: STATE_UNKNOWN,
             STAT_MAX_AGE: STATE_UNKNOWN,
             STAT_AGE_RANGE: STATE_UNKNOWN,
             STAT_CHANGE: STATE_UNKNOWN,
             STAT_AVERAGE_CHANGE: STATE_UNKNOWN,
             STAT_CHANGE_RATE: STATE_UNKNOWN,
+            STAT_DISTANCE_95P: STATE_UNKNOWN,
+            STAT_DISTANCE_99P: STATE_UNKNOWN,
             STAT_NOISINESS: STATE_UNKNOWN,
             STAT_QUANTILES: STATE_UNKNOWN,
         }
@@ -249,7 +255,9 @@ class StatisticsSensor(SensorEntity):
             unit = None
         elif self._state_characteristic in (
             STAT_CHANGE,
-            STAT_DIFFERENCE,
+            STAT_DISTANCE_95P,
+            STAT_DISTANCE_99P,
+            STAT_DISTANCE_ABSOLUTE,
             STAT_MAX_VALUE,
             STAT_MEAN,
             STAT_MEDIAN,
@@ -383,9 +391,13 @@ class StatisticsSensor(SensorEntity):
         if states_count >= 2:
             self.attr[STAT_STANDARD_DEVIATION] = statistics.stdev(self.states)
             self.attr[STAT_VARIANCE] = statistics.variance(self.states)
+            self.attr[STAT_DISTANCE_95P] = 2 * 1.96 * self.attr[STAT_STANDARD_DEVIATION]
+            self.attr[STAT_DISTANCE_99P] = 2 * 2.58 * self.attr[STAT_STANDARD_DEVIATION]
         else:
             self.attr[STAT_STANDARD_DEVIATION] = STATE_UNKNOWN
             self.attr[STAT_VARIANCE] = STATE_UNKNOWN
+            self.attr[STAT_DISTANCE_95P] = STATE_UNKNOWN
+            self.attr[STAT_DISTANCE_99P] = STATE_UNKNOWN
 
         if states_count >= 2:
             self.attr[STAT_NOISINESS] = sum(
@@ -411,7 +423,7 @@ class StatisticsSensor(SensorEntity):
             self.attr[STAT_MEDIAN] = STATE_UNKNOWN
             self.attr[STAT_TOTAL] = STATE_UNKNOWN
             self.attr[STAT_MIN_VALUE] = self.attr[STAT_MAX_VALUE] = STATE_UNKNOWN
-            self.attr[STAT_DIFFERENCE] = STATE_UNKNOWN
+            self.attr[STAT_DISTANCE_ABSOLUTE] = STATE_UNKNOWN
             self.attr[STAT_MIN_AGE] = self.attr[STAT_MAX_AGE] = STATE_UNKNOWN
             self.attr[STAT_AGE_RANGE] = STATE_UNKNOWN
             self.attr[STAT_CHANGE] = self.attr[STAT_AVERAGE_CHANGE] = STATE_UNKNOWN
@@ -426,7 +438,7 @@ class StatisticsSensor(SensorEntity):
         self.attr[STAT_TOTAL] = sum(self.states)
         self.attr[STAT_MIN_VALUE] = min(self.states)
         self.attr[STAT_MAX_VALUE] = max(self.states)
-        self.attr[STAT_DIFFERENCE] = (
+        self.attr[STAT_DISTANCE_ABSOLUTE] = (
             self.attr[STAT_MAX_VALUE] - self.attr[STAT_MIN_VALUE]
         )
 
