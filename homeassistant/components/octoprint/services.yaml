@@ -1,0 +1,34 @@
+# Describes the format for available OctoPrint services
+pause_job:
+  name: Pause the active print
+  description: Pauses the active job
+  fields:
+    device_id:
+      name: Server
+      description: The server whose job should be paused
+      required: true
+      selector:
+        device:
+          integration: octoprint
+resume_job:
+  name: Resumes the active job
+  description: Resumes a previously paused job
+  fields:
+    device_id:
+      name: Server
+      description: The server whose job should be paused
+      required: true
+      selector:
+        device:
+          integration: octoprint
+stop_job:
+  name: Stops the active job
+  description: Stops the active job
+  fields:
+    device_id:
+      name: Server
+      description: The server whose job should be stopped
+      required: true
+      selector:
+        device:
+          integration: octoprint
