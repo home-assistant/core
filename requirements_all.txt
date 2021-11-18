@@ -1014,7 +1014,7 @@ miflora==0.7.0
 millheater==0.8.0
 
 # homeassistant.components.minio
-minio==4.0.9
+minio==5.0.10
 
 # homeassistant.components.mitemp_bt
 mitemp_bt==0.0.5
