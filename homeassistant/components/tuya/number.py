@@ -262,8 +262,8 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
                 self._attr_max_value = self._type_data.max_scaled
                 self._attr_min_value = self._type_data.min_scaled
                 self._attr_step = self._type_data.step_scaled
-                if (self._type_data.unit is not None) and str(self._type_data.unit):
-                    self._attr_mode = "box"
+                if description.unit_of_measurement is None:
+                    self._attr_unit_of_measurement = self._type_data.unit
 
     @property
     def value(self) -> float | None:
