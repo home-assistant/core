@@ -580,14 +580,14 @@ async def test_electrical_measurement_init(
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            set(),  # {"apparent_power"},  # set(),
+            set(),
             {
                 "electrical_measurement_rms_voltage",
                 "electrical_measurement",
                 "electrical_measurement_apparent_power",
                 "electrical_measurement_rms_current",
             },
-            set(),  # {"electrical_measurement_apparent_power"},  # set(),
+            set(),
         ),
         (
             smartenergy.Metering.cluster_id,
