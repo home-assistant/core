@@ -1,5 +1,5 @@
 """Test the Brunt config flow."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from aiohttp import ClientResponseError
 from aiohttp.client_exceptions import ServerDisconnectedError
@@ -113,17 +113,14 @@ async def test_form_duplicate_login(hass):
     "side_effect, error_message",
     [
         (ServerDisconnectedError, "cannot_connect"),
-        (ClientResponseError(None, None, status=403), "invalid_auth"),
-        (ClientResponseError(None, None, status=401), "unknown"),
+        (ClientResponseError(Mock(), None, status=403), "invalid_auth"),
+        (ClientResponseError(Mock(), None, status=401), "unknown"),
         (Exception, "unknown"),
     ],
 )
 async def test_form_error(hass, side_effect, error_message):
     """Test we handle cannot connect."""
     with patch(
-        "homeassistant.components.brunt.config_flow.ClientResponseError.__str__",
-        return_value="ClientResponseError",
-    ), patch(
         "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
         side_effect=side_effect,
     ):
