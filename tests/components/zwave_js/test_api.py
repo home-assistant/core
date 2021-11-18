@@ -876,7 +876,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
             TYPE: "zwave_js/provision_smart_start_node",
             ENTRY_ID: entry.entry_id,
             QR_PROVISIONING_INFORMATION: {
-                VERSION: 0,
+                VERSION: 1,
                 SECURITY_CLASSES: [0],
                 DSK: "test",
                 GENERIC_DEVICE_CLASS: 1,
@@ -897,7 +897,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.provision_smart_start_node",
         "entry": QRProvisioningInformation(
-            QRCodeVersion.S2,
+            QRCodeVersion.SMART_START,
             [SecurityClass.S2_UNAUTHENTICATED],
             "test",
             1,
@@ -938,10 +938,38 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
-    # Test no provisioning parameter provided causes failure
+    # Test QR provisioning information with S2 version throws error
     await ws_client.send_json(
         {
             ID: 5,
+            TYPE: "zwave_js/provision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+            QR_PROVISIONING_INFORMATION: {
+                VERSION: 0,
+                SECURITY_CLASSES: [0],
+                DSK: "test",
+                GENERIC_DEVICE_CLASS: 1,
+                SPECIFIC_DEVICE_CLASS: 1,
+                INSTALLER_ICON_TYPE: 1,
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 1,
+                PRODUCT_ID: 1,
+                APPLICATION_VERSION: "test",
+            },
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+    assert len(client.async_send_command.call_args_list) == 0
+
+    # Test no provisioning parameter provided causes failure
+    await ws_client.send_json(
+        {
+            ID: 6,
             TYPE: "zwave_js/provision_smart_start_node",
             ENTRY_ID: entry.entry_id,
         }
@@ -957,7 +985,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
     ):
         await ws_client.send_json(
             {
-                ID: 6,
+                ID: 7,
                 TYPE: "zwave_js/provision_smart_start_node",
                 ENTRY_ID: entry.entry_id,
                 QR_CODE_STRING: "test",
@@ -975,7 +1003,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
 
     await ws_client.send_json(
         {
-            ID: 7,
+            ID: 8,
             TYPE: "zwave_js/provision_smart_start_node",
             ENTRY_ID: entry.entry_id,
             QR_CODE_STRING: "test",
