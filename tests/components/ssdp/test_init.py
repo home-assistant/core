@@ -72,6 +72,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
         ssdp.ATTR_SSDP_UDN: ANY,
         "_timestamp": ANY,
         ssdp.ATTR_HA_MATCHING_DOMAINS: {"mock-domain"},
+        ssdp.ATTR_UPNP: {},
     }
     assert "Failed to fetch ssdp data" not in caplog.text
 
@@ -358,6 +359,9 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
             ssdp.ATTR_SSDP_UDN: ANY,
             "nts": "ssdp:alive",
             "_timestamp": ANY,
+            ssdp.ATTR_UPNP: {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+            },
         }
     ]
 
@@ -465,6 +469,9 @@ async def test_scan_with_registered_callback(
             ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
             ssdp.ATTR_HA_MATCHING_DOMAINS: set(),
+            ssdp.ATTR_UPNP: {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+            },
         },
         ssdp.SsdpChange.ALIVE,
     )
@@ -521,6 +528,9 @@ async def test_getting_existing_headers(
             ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
             ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
+            ssdp.ATTR_UPNP: {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+            },
         }
     ]
 
@@ -538,6 +548,9 @@ async def test_getting_existing_headers(
             ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
             ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
+            ssdp.ATTR_UPNP: {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+            },
         }
     ]
 
@@ -554,6 +567,9 @@ async def test_getting_existing_headers(
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_SSDP_UDN: ANY,
         "_timestamp": ANY,
+        ssdp.ATTR_UPNP: {
+            ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        },
     }
 
     assert (
