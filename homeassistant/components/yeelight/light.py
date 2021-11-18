@@ -842,6 +842,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     async def async_set_mode(self, mode: str):
         """Set a power mode."""
         await self._bulb.async_set_power_mode(PowerMode[mode.upper()])
+        self._async_schedule_state_check(True)
 
     @_async_cmd
     async def async_start_flow(self, transitions, count=0, action=ACTION_RECOVER):
