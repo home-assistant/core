@@ -1,7 +1,10 @@
 {
     "config": {
         "error": {
+            "bad_station_id": "ID Stasiun tidak valid, tidak ada, atau tidak ditemukan di basis data ID stasiun",
             "cannot_connect": "Gagal terhubung",
+            "error_response": "Kesalahan balasan dari Environment Canada",
+            "too_many_attempts": "Koneksi ke Environment Canada dibatasi; Coba lagi dalam 60 detik",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
@@ -11,7 +14,8 @@
                     "latitude": "Lintang",
                     "longitude": "Bujur",
                     "station": "ID stasiun cuaca"
-                }
+                },
+                "title": "Environment Canada: lokasi cuaca dan bahasa"
             }
         }
     }

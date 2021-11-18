@@ -15,6 +15,8 @@
                 "data": {
                     "admin_password": "Kata Sandi Admin",
                     "admin_username": "Nama Pengguna Admin",
+                    "surveillance_password": "Kata Sandi Surveillance",
+                    "surveillance_username": "Nama Pengguna Surveillance",
                     "url": "URL"
                 }
             }
