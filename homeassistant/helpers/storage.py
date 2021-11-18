@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from contextlib import suppress
+from copy import deepcopy
 import inspect
 from json import JSONEncoder
 import logging
@@ -133,6 +134,10 @@ class Store:
             # If we didn't generate data yet, do it now.
             if "data_func" in data:
                 data["data"] = data.pop("data_func")()
+
+            # We make a copy because code might assume it's safe to mutate loaded data
+            # and we don't want that to mess with what we're trying to store.
+            data = deepcopy(data)
         else:
             data = await self.hass.async_add_executor_job(
                 json_util.load_json, self.path
