@@ -797,20 +797,24 @@ async def websocket_provision_smart_start_node(
     client: Client,
 ) -> None:
     """Pre-provision a smart start node."""
-    if not (
-        provisioning_info := msg.get(PLANNED_PROVISIONING_ENTRY)
-        or msg.get(QR_PROVISIONING_INFORMATION)
-        or msg.get(QR_CODE_STRING)
-    ):
-        expected = ", ".join(
-            (PLANNED_PROVISIONING_ENTRY, QR_PROVISIONING_INFORMATION, QR_CODE_STRING)
-        )
+    try:
+        cv.has_at_least_one_key(
+            PLANNED_PROVISIONING_ENTRY, QR_PROVISIONING_INFORMATION, QR_CODE_STRING
+        )(msg)
+    except vol.Invalid as err:
         connection.send_error(
             msg[ID],
             ERR_INVALID_FORMAT,
-            f"must contain at least one of {expected}.",
+            err.args[0],
         )
         return
+
+    provisioning_info = (
+        msg.get(PLANNED_PROVISIONING_ENTRY)
+        or msg.get(QR_PROVISIONING_INFORMATION)
+        or msg.get(QR_CODE_STRING)
+    )
+    assert provisioning_info
 
     if (
         QR_PROVISIONING_INFORMATION in msg
