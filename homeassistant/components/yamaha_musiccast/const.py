@@ -1,6 +1,6 @@
 """Constants for the MusicCast integration."""
 
-from aiomusiccast.capabilities import EntityTypes
+from aiomusiccast.capabilities import EntityType
 
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -51,8 +51,8 @@ MEDIA_CLASS_MAPPING = {
 }
 
 ENTITY_CATEGORY_MAPPING = {
-    EntityTypes.CONFIG: ENTITY_CATEGORY_CONFIG,
-    EntityTypes.REGULAR: None,
-    EntityTypes.DIAGNOSTIC: ENTITY_CATEGORY_DIAGNOSTIC,
-    EntityTypes.SYSTEM: ENTITY_CATEGORY_SYSTEM,
+    EntityType.CONFIG: ENTITY_CATEGORY_CONFIG,
+    EntityType.REGULAR: None,
+    EntityType.DIAGNOSTIC: ENTITY_CATEGORY_DIAGNOSTIC,
+    EntityType.SYSTEM: ENTITY_CATEGORY_SYSTEM,
 }

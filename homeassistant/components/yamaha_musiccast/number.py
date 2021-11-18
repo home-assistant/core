@@ -38,6 +38,8 @@ async def async_setup_entry(
 class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
     """Representation of a MusicCast Alarm entity."""
 
+    capability: NumberSetter
+
     def __init__(
         self,
         coordinator: MusicCastDataUpdateCoordinator,
@@ -46,9 +48,9 @@ class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator, capability, zone_id)
-        self._attr_min_value = capability.min_value
-        self._attr_max_value = capability.max_value
-        self._attr_step = capability.step
+        self._attr_min_value = capability.value_range.minimum
+        self._attr_max_value = capability.value_range.maximum
+        self._attr_step = capability.value_range.step
 
     @property
     def value(self):
