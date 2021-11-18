@@ -518,9 +518,9 @@ class SimpliSafe:
                 data={**self.entry.data, CONF_TOKEN: token},
             )
 
-        # self.entry.async_on_unload(
-        #     self._api.add_refresh_token_callback(async_save_refresh_token)
-        # )
+        self.entry.async_on_unload(
+            self._api.add_refresh_token_callback(async_save_refresh_token)
+        )
 
         async_save_refresh_token(self._api.refresh_token)
 
