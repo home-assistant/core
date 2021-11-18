@@ -259,11 +259,11 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             # and determine unit of measurement
             if self._status_range.type == "Integer":
                 self._type_data = IntegerTypeData.from_json(self._status_range.values)
-                self._attr_max_value = self._type_data.max
-                self._attr_min_value = self._type_data.min
-                self._attr_step = self._type_data.step
-                if description.unit_of_measurement is None:
-                    self._attr_unit_of_measurement = self._type_data.unit
+                self._attr_max_value = self._type_data.max_scaled
+                self._attr_min_value = self._type_data.min_scaled
+                self._attr_step = self._type_data.step_scaled
+                if (self._type_data.unit is not None) and str(self._type_data.unit):
+                    self._attr_mode = "box"
 
     @property
     def value(self) -> float | None:
@@ -290,7 +290,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             [
                 {
                     "code": self.entity_description.key,
-                    "value": self._type_data.scale_value(value),
+                    "value": self._type_data.scale_value_back(value),
                 }
             ]
         )
