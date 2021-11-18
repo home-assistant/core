@@ -174,7 +174,7 @@ class SensorEntity(Entity):
     entity_description: SensorEntityDescription
     _attr_last_reset: datetime | None  # Deprecated, to be removed in 2021.11
     _attr_native_unit_of_measurement: str | None
-    _attr_native_value: StateType = None
+    _attr_native_value: StateType | date | datetime = None
     _attr_state_class: str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _attr_unit_of_measurement: None = (
