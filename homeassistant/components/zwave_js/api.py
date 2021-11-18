@@ -116,7 +116,6 @@ DRY_RUN = "dry_run"
 # constants for inclusion
 INCLUSION_STRATEGY = "inclusion_strategy"
 PIN = "pin"
-PROVISIONING = "provisioning"
 FORCE_SECURITY = "force_security"
 PLANNED_PROVISIONING_ENTRY = "planned_provisioning_entry"
 QR_PROVISIONING_INFORMATION = "qr_provisioning_information"
