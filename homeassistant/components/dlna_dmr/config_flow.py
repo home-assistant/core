@@ -94,7 +94,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         self._discoveries = {
-            discovery.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            discovery[ssdp.ATTR_UPNP].get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
             or urlparse(discovery[ssdp.ATTR_SSDP_LOCATION]).hostname: discovery
             for discovery in discoveries
         }
@@ -217,7 +217,9 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Abort if the device doesn't support all services required for a DmrDevice.
         # Use the discovery_info instead of DmrDevice.is_profile_device to avoid
         # contacting the device again.
-        discovery_service_list = discovery_info.get(ssdp.ATTR_UPNP_SERVICE_LIST)
+        discovery_service_list = discovery_info[ssdp.ATTR_UPNP].get(
+            ssdp.ATTR_UPNP_SERVICE_LIST
+        )
         if not discovery_service_list:
             return self.async_abort(reason="not_dmr")
         discovery_service_ids = {
@@ -352,7 +354,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.get(ssdp.ATTR_SSDP_NT) or discovery_info[ssdp.ATTR_SSDP_ST]
         )
         self._name = (
-            discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            discovery_info[ssdp.ATTR_UPNP].get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
             or urlparse(self._location).hostname
             or DEFAULT_NAME
         )
@@ -466,14 +468,19 @@ def _is_ignored_device(discovery_info: Mapping[str, Any]) -> bool:
         return True
 
     # Is the root device not a DMR?
-    if discovery_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) not in DmrDevice.DEVICE_TYPES:
+    if (
+        discovery_info[ssdp.ATTR_UPNP].get(ssdp.ATTR_UPNP_DEVICE_TYPE)
+        not in DmrDevice.DEVICE_TYPES
+    ):
         return True
 
     # Special cases for devices with other discovery methods (e.g. mDNS), or
     # that advertise multiple unrelated (sent in separate discovery packets)
     # UPnP devices.
-    manufacturer = discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER, "").lower()
-    model = discovery_info.get(ssdp.ATTR_UPNP_MODEL_NAME, "").lower()
+    manufacturer = (
+        discovery_info[ssdp.ATTR_UPNP].get(ssdp.ATTR_UPNP_MANUFACTURER, "").lower()
+    )
+    model = discovery_info[ssdp.ATTR_UPNP].get(ssdp.ATTR_UPNP_MODEL_NAME, "").lower()
 
     if manufacturer.startswith("xbmc") or model == "kodi":
         # kodi
