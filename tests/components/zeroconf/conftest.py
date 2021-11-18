@@ -17,5 +17,6 @@ def mock_async_zeroconf(mock_zeroconf):
         zc = mock_aiozc.return_value
         zc.async_register_service = AsyncMock()
         zc.zeroconf.async_wait_for_start = AsyncMock()
+        zc.zeroconf.done = False
         zc.ha_async_close = AsyncMock()
         yield zc
