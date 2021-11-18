@@ -1,7 +1,6 @@
 """Platform for Mazda sensor integration."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
-    CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
@@ -34,26 +33,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MazdaFuelRemainingSensor(MazdaEntity, SensorEntity):
     """Class for the fuel remaining sensor."""
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Fuel Remaining Percentage"
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_icon = "mdi:gas-station"
 
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_fuel_remaining_percentage"
+    def __init__(self, client, coordinator, index) -> None:
+        """Initialize Mazda fuel remaining sensor."""
+        super().__init__(client, coordinator, index)
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PERCENTAGE
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:gas-station"
+        self._attr_name = f"{self.vehicle_name} Fuel Remaining Percentage"
+        self._attr_unique_id = f"{self.vin}_fuel_remaining_percentage"
 
     @property
     def native_value(self):
@@ -64,28 +52,19 @@ class MazdaFuelRemainingSensor(MazdaEntity, SensorEntity):
 class MazdaFuelDistanceSensor(MazdaEntity, SensorEntity):
     """Class for the fuel distance sensor."""
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Fuel Distance Remaining"
+    _attr_icon = "mdi:gas-station"
 
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_fuel_distance_remaining"
+    def __init__(self, client, coordinator, index) -> None:
+        """Initialize Mazda fuel distance sensor."""
+        super().__init__(client, coordinator, index)
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            return LENGTH_MILES
-        return LENGTH_KILOMETERS
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:gas-station"
+        self._attr_name = f"{self.vehicle_name} Fuel Distance Remaining"
+        self._attr_unique_id = f"{self.vin}_fuel_distance_remaining"
+        self._attr_native_unit_of_measurement = (
+            LENGTH_KILOMETERS
+            if coordinator.hass.config.units.is_metric
+            else LENGTH_MILES
+        )
 
     @property
     def native_value(self):
@@ -103,28 +82,19 @@ class MazdaFuelDistanceSensor(MazdaEntity, SensorEntity):
 class MazdaOdometerSensor(MazdaEntity, SensorEntity):
     """Class for the odometer sensor."""
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Odometer"
+    _attr_icon = "mdi:speedometer"
 
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_odometer"
+    def __init__(self, client, coordinator, index) -> None:
+        """Initialize Mazda odometer sensor."""
+        super().__init__(client, coordinator, index)
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            return LENGTH_MILES
-        return LENGTH_KILOMETERS
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:speedometer"
+        self._attr_name = f"{self.vehicle_name} Odometer"
+        self._attr_unique_id = f"{self.vin}_odometer"
+        self._attr_native_unit_of_measurement = (
+            LENGTH_KILOMETERS
+            if coordinator.hass.config.units.is_metric
+            else LENGTH_MILES
+        )
 
     @property
     def native_value(self):
@@ -140,26 +110,15 @@ class MazdaOdometerSensor(MazdaEntity, SensorEntity):
 class MazdaFrontLeftTirePressureSensor(MazdaEntity, SensorEntity):
     """Class for the front left tire pressure sensor."""
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Front Left Tire Pressure"
+    _attr_native_unit_of_measurement = PRESSURE_PSI
+    _attr_icon = "mdi:car-tire-alert"
 
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_front_left_tire_pressure"
+    def __init__(self, client, coordinator, index) -> None:
+        """Initialize Mazda front left tire pressure sensor."""
+        super().__init__(client, coordinator, index)
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PRESSURE_PSI
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:car-tire-alert"
+        self._attr_name = f"{self.vehicle_name} Front Left Tire Pressure"
+        self._attr_unique_id = f"{self.vin}_front_left_tire_pressure"
 
     @property
     def native_value(self):
@@ -171,26 +130,15 @@ class MazdaFrontLeftTirePressureSensor(MazdaEntity, SensorEntity):
 class MazdaFrontRightTirePressureSensor(MazdaEntity, SensorEntity):
     """Class for the front right tire pressure sensor."""
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Front Right Tire Pressure"
+    _attr_native_unit_of_measurement = PRESSURE_PSI
+    _attr_icon = "mdi:car-tire-alert"
 
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_front_right_tire_pressure"
+    def __init__(self, client, coordinator, index) -> None:
+        """Initialize Mazda front right tire pressure sensor."""
+        super().__init__(client, coordinator, index)
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PRESSURE_PSI
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:car-tire-alert"
+        self._attr_name = f"{self.vehicle_name} Front Right Tire Pressure"
+        self._attr_unique_id = f"{self.vin}_front_right_tire_pressure"
 
     @property
     def native_value(self):
@@ -202,26 +150,15 @@ class MazdaFrontRightTirePressureSensor(MazdaEntity, SensorEntity):
 class MazdaRearLeftTirePressureSensor(MazdaEntity, SensorEntity):
     """Class for the rear left tire pressure sensor."""
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Rear Left Tire Pressure"
+    _attr_native_unit_of_measurement = PRESSURE_PSI
+    _attr_icon = "mdi:car-tire-alert"
 
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_rear_left_tire_pressure"
+    def __init__(self, client, coordinator, index) -> None:
+        """Initialize Mazda rear left tire pressure sensor."""
+        super().__init__(client, coordinator, index)
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PRESSURE_PSI
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:car-tire-alert"
+        self._attr_name = f"{self.vehicle_name} Rear Left Tire Pressure"
+        self._attr_unique_id = f"{self.vin}_rear_left_tire_pressure"
 
     @property
     def native_value(self):
@@ -233,26 +170,15 @@ class MazdaRearLeftTirePressureSensor(MazdaEntity, SensorEntity):
 class MazdaRearRightTirePressureSensor(MazdaEntity, SensorEntity):
     """Class for the rear right tire pressure sensor."""
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Rear Right Tire Pressure"
+    _attr_native_unit_of_measurement = PRESSURE_PSI
+    _attr_icon = "mdi:car-tire-alert"
 
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return f"{self.vin}_rear_right_tire_pressure"
+    def __init__(self, client, coordinator, index) -> None:
+        """Initialize Mazda rear right tire pressure sensor."""
+        super().__init__(client, coordinator, index)
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PRESSURE_PSI
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:car-tire-alert"
+        self._attr_name = f"{self.vehicle_name} Rear Right Tire Pressure"
+        self._attr_unique_id = f"{self.vin}_rear_right_tire_pressure"
 
     @property
     def native_value(self):
