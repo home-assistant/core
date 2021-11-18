@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_RESOURCE,
     CONTENT_TYPE_JSON,
+    STATE_ON,
 )
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
@@ -148,6 +149,59 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert_setup_component(1, SWITCH_DOMAIN)
+
+
+async def test_setup_with_json_state(hass, aioclient_mock):
+    """Test setup with valid configuration."""
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK, json={"state": "on"})
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {
+            SWITCH_DOMAIN: {
+                CONF_PLATFORM: DOMAIN,
+                CONF_NAME: "foo",
+                CONF_RESOURCE: "http://localhost",
+                CONF_HEADERS: {
+                    "Accept": CONTENT_TYPE_JSON,
+                },
+                rest.CONF_IS_ON_TEMPLATE: "{{ value_json.state == 'on' }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert_setup_component(1, SWITCH_DOMAIN)
+    state = hass.states.get("switch.foo")
+    assert state.state == STATE_ON
+
+
+async def test_setup_with_xml_state(hass, aioclient_mock):
+    """Test setup with valid configuration."""
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        headers={"content-type": "text/xml"},
+        text="<state>on</state>",
+    )
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {
+            SWITCH_DOMAIN: {
+                CONF_PLATFORM: DOMAIN,
+                CONF_NAME: "foo",
+                CONF_RESOURCE: "http://localhost",
+                CONF_HEADERS: {
+                    "Accept": CONTENT_TYPE_JSON,
+                },
+                rest.CONF_IS_ON_TEMPLATE: "{{ value_json.state == 'on' }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert_setup_component(1, SWITCH_DOMAIN)
+    state = hass.states.get("switch.foo")
+    assert state.state == STATE_ON
 
 
 async def test_setup_with_templated_headers_params(hass, aioclient_mock):

@@ -1,7 +1,10 @@
 """Support for RESTful API."""
+import json
 import logging
+from xml.parsers.expat import ExpatError
 
 import httpx
+import xmltodict
 
 from homeassistant.components.rest.utils import render_templates
 from homeassistant.helpers.httpx_client import get_async_client
@@ -76,3 +79,22 @@ class RestData:
             self.last_exception = ex
             self.data = None
             self.headers = None
+
+        if self.headers is not None:
+            # If the http request failed, headers will be None
+            content_type = self.headers.get("content-type")
+
+            if content_type and (
+                content_type.startswith("text/xml")
+                or content_type.startswith("application/xml")
+                or content_type.startswith("application/xhtml+xml")
+            ):
+                try:
+                    value = json.dumps(xmltodict.parse(self.data))
+                    _LOGGER.debug("JSON converted from XML: %s", self.data)
+                    self.data = value
+                except ExpatError:
+                    _LOGGER.warning(
+                        "REST xml result could not be parsed and converted to JSON"
+                    )
+                    _LOGGER.debug("Erroneous XML: %s", self.data)

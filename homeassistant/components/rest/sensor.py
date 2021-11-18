@@ -1,11 +1,9 @@
 """Support for RESTful API sensors."""
 import json
 import logging
-from xml.parsers.expat import ExpatError
 
 from jsonpath import jsonpath
 import voluptuous as vol
-import xmltodict
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -134,23 +132,6 @@ class RestSensor(RestEntity, SensorEntity):
         """Update state from the rest data."""
         value = self.rest.data
         _LOGGER.debug("Data fetched from resource: %s", value)
-        if self.rest.headers is not None:
-            # If the http request failed, headers will be None
-            content_type = self.rest.headers.get("content-type")
-
-            if content_type and (
-                content_type.startswith("text/xml")
-                or content_type.startswith("application/xml")
-                or content_type.startswith("application/xhtml+xml")
-            ):
-                try:
-                    value = json.dumps(xmltodict.parse(value))
-                    _LOGGER.debug("JSON converted from XML: %s", value)
-                except ExpatError:
-                    _LOGGER.warning(
-                        "REST xml result could not be parsed and converted to JSON"
-                    )
-                    _LOGGER.debug("Erroneous XML: %s", value)
 
         if self._json_attrs:
             self._attributes = {}

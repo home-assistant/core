@@ -181,6 +181,37 @@ async def test_setup_get(hass):
 
 
 @respx.mock
+async def test_setup_get_xml(hass):
+    """Test setup with valid xml configuration."""
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        headers={"content-type": "text/xml"},
+        content="<state>on</state>",
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.state }}",
+                "name": "foo",
+                "timeout": 30,
+                "headers": {"Accept": "text/xml"},
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state.state == STATE_ON
+
+
+@respx.mock
 async def test_setup_get_template_headers_params(hass):
     """Test setup with valid configuration."""
     respx.get("http://localhost").respond(status_code=200, json={})

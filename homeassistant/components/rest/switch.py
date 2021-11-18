@@ -1,11 +1,14 @@
 """Support for RESTful switches."""
 import asyncio
 from http import HTTPStatus
+import json
 import logging
+from xml.parsers.expat import ExpatError
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
+import xmltodict
 
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA,
@@ -244,6 +247,22 @@ class RestSwitch(SwitchEntity):
                 params=rendered_params,
             )
             text = await req.text()
+            content_type = req.content_type
+
+            if content_type and (
+                content_type.startswith("text/xml")
+                or content_type.startswith("application/xml")
+                or content_type.startswith("application/xhtml+xml")
+            ):
+                try:
+                    value = json.dumps(xmltodict.parse(text))
+                    _LOGGER.debug("JSON converted from XML: %s", text)
+                    text = value
+                except ExpatError:
+                    _LOGGER.warning(
+                        "REST xml result could not be parsed and converted to JSON"
+                    )
+                    _LOGGER.debug("Erroneous XML: %s", text)
 
         if self._is_on_template is not None:
             text = self._is_on_template.async_render_with_possible_json_value(
