@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_ACTION,
     DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
@@ -442,22 +443,14 @@ async def test_receive_mqtt_action_received(hass, mqtt_mock):
     # Cycle through valid modes and also check for wrong input such as "None" (str(None))
     async_fire_mqtt_message(hass, "action", "None")
     state = hass.states.get(ENTITY_CLIMATE)
-    hvac_action = state.attributes.get("hvac_mode")
+    hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
     assert hvac_action is None
     # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
-    actions = [
-        "off",
-        "heating",
-        "cooling",
-        "drying",
-        "idle",
-        "fan",
-        None,
-    ]
+    actions = ["off", "heating", "cooling", "drying", "idle", "fan"]
     for action in actions:
         async_fire_mqtt_message(hass, "action", action)
         state = hass.states.get(ENTITY_CLIMATE)
-        hvac_action = state.attributes.get("hvac_mode")
+        hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
         assert hvac_action == action
 
 
