@@ -105,6 +105,4 @@ class TwenteMilieuSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> date | None:
         """Return the state of the sensor."""
-        if pickup := self.coordinator.data.get(self.entity_description.waste_type):
-            return pickup
-        return None
+        return self.coordinator.data.get(self.entity_description.waste_type)
