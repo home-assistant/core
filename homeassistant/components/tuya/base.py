@@ -27,6 +27,13 @@ class IntegerTypeData:
     step: float
     unit: str | None = None
 
+    def __post_init__(self):
+        """Cast params to their proper types."""
+        self.min = int(self.min)
+        self.max = int(self.max)
+        self.scale = float(self.scale)
+        self.step = float(self.step)
+
     @property
     def max_scaled(self) -> float:
         """Return the max scaled."""
