@@ -851,7 +851,7 @@ async def websocket_unprovision_smart_start_node(
             err.args[0],
         )
         return
-    dsk_or_node_id = msg.get(DSK) or msg.get(NODE_ID)
+    dsk_or_node_id = msg.get(DSK) or msg[NODE_ID]
     await client.driver.controller.async_unprovision_smart_start_node(dsk_or_node_id)
     connection.send_result(msg[ID])
 
