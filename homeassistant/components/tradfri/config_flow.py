@@ -6,7 +6,7 @@ from typing import Any
 from uuid import uuid4
 
 import async_timeout
-from pytradfri import Gateway, RequestError
+from pytradfri import Gateway, PytradfriError
 from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
@@ -178,7 +178,7 @@ async def authenticate(
     try:
         async with async_timeout.timeout(5):
             key = await api_factory.generate_psk(security_code)
-    except RequestError as err:
+    except PytradfriError as err:
         raise AuthError("invalid_security_code") from err
     except asyncio.TimeoutError as err:
         raise AuthError("timeout") from err
@@ -202,9 +202,7 @@ async def get_gateway_info(
         gateway_info_result = await api(gateway.get_gateway_info())
 
         await factory.shutdown()
-    except (OSError, RequestError) as err:
-        # We're also catching OSError as PyTradfri doesn't catch that one yet
-        # Upstream PR: https://github.com/ggravlingen/pytradfri/pull/189
+    except PytradfriError as err:
         raise AuthError("cannot_connect") from err
 
     return {

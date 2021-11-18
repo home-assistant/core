@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from pytradfri import Gateway, PytradfriError, RequestError
+from pytradfri import Gateway, PytradfriError
 from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
@@ -143,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         gw_status = True
         try:
             await api(gateway.get_gateway_info())
-        except RequestError:
+        except PytradfriError:
             _LOGGER.error("Keep-alive failed")
             gw_status = False
 
