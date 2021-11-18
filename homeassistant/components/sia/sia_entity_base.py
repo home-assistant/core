@@ -6,7 +6,6 @@ import logging
 
 from pysiaalarm import SIAEvent
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
 from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -29,8 +28,13 @@ class SIABaseEntity(RestoreEntity):
 
     entity_description: SIAAlarmControlPanelEntityDescription | SIABinarySensorEntityDescription
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        entity_description: SIAAlarmControlPanelEntityDescription
+        | SIABinarySensorEntityDescription,
+    ) -> None:
         """Create SIABaseEntity object."""
+        self.entity_description = entity_description
         self._cancel_availability_cb: CALLBACK_TYPE | None = None
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
@@ -73,15 +77,13 @@ class SIABaseEntity(RestoreEntity):
     def async_handle_event(self, sia_event: SIAEvent) -> None:
         """Listen to dispatcher events for this port and account and update state and attributes.
 
-        If the port and account combo receives any message it means it is online and can therefore be set to available.
+        If the zone matches it means it is online and can therefore be set to available.
         """
         _LOGGER.debug("Received event: %s", sia_event)
-        if (
-            self.entity_description.zone is None
-            or int(sia_event.ri) == self.entity_description.zone
-        ):
-            self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
-            self.update_state(sia_event)
+        if int(sia_event.ri) != self.entity_description.zone:
+            return
+        self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
+        self.update_state(sia_event)
         self.async_reset_availability_cb()
         self.async_write_ha_state()
 
@@ -108,13 +110,7 @@ class SIABaseEntity(RestoreEntity):
     @callback
     def async_set_unavailable(self, _) -> None:
         """Set unavailable."""
-        if (
-            hasattr(self, "_attr_is_on")
-            and self.device_class == DEVICE_CLASS_CONNECTIVITY
-        ):
-            self._attr_is_on: bool | None = False
-        else:
-            self._attr_available = False
+        self._attr_available = False
         self.async_write_ha_state()
 
     @property

@@ -107,8 +107,8 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
         entity_description: SIAAlarmControlPanelEntityDescription,
     ) -> None:
         """Create SIAAlarmControlPanel object."""
-        super().__init__()
-        self.entity_description = entity_description
+        super().__init__(entity_description)
+        # self.entity_description = entity_description
 
         self._attr_state: StateType = None
         self._old_state: StateType = None

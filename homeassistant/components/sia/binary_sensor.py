@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -55,7 +55,7 @@ CC_CONNECTIVITY: dict[str, bool] = {"RP": True}
 def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
     """Generate binary sensors.
 
-    For each Account there is one power and one connectivity sensor with zone == 0 (Power) or None (Connectivity).
+    For each Account there is one power and one connectivity sensor with zone == 0.
     For each Zone in each Account there is one smoke and one moisture sensor.
     """
     for account_data in entry.data[CONF_ACCOUNTS]:
@@ -69,14 +69,14 @@ def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
                 name=get_name(
                     port=entry.data[CONF_PORT],
                     account=account_data[CONF_ACCOUNT],
-                    zone=None,
+                    zone=SIA_HUB_ZONE,
                     device_class=DEVICE_CLASS_CONNECTIVITY,
                 ),
                 device_class=DEVICE_CLASS_CONNECTIVITY,
                 entity_category="diagnostic",
                 port=entry.data[CONF_PORT],
                 account=account_data[CONF_ACCOUNT],
-                zone=None,
+                zone=SIA_HUB_ZONE,
                 ping_interval=account_data[CONF_PING_INTERVAL],
                 code_consequences=CC_CONNECTIVITY,
             ),
@@ -168,14 +168,6 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
 
     entity_description: SIABinarySensorEntityDescription
 
-    def __init__(
-        self,
-        entity_description: SIABinarySensorEntityDescription,
-    ) -> None:
-        """Initialize a binary sensor."""
-        super().__init__()
-        self.entity_description = entity_description
-
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
         if last_state is not None and last_state.state is not None:
@@ -192,3 +184,12 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
         if new_state is not None:
             _LOGGER.debug("New state will be %s", new_state)
             self._attr_is_on = new_state
+
+    @callback
+    def async_set_unavailable(self, _) -> None:
+        """Set unavailable overridden to allow connectivity behaviour."""
+        if self.device_class == DEVICE_CLASS_CONNECTIVITY:
+            self._attr_is_on = False
+        else:
+            self._attr_available = False
+        self.async_write_ha_state()
