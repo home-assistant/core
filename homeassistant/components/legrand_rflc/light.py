@@ -62,14 +62,6 @@ class LegrandRflcSwitch(LightEntity):
         self._attr_name = properties[hub.NAME]
         self._attr_is_on = properties[hub.POWER]
         self._zid = zid
-        hub.on(
-            f"{hub.EVENT_ZONE_PROPERTIES_CHANGED}:{zid}",
-            self._zone_properties_changed,
-        )
-        hub.on(hub.EVENT_CONNECTED, self._available)
-        hub.on(hub.EVENT_DISCONNECTED, self._available)
-        hub.on(hub.EVENT_AUTHENTICATED, self._available)
-        hub.on(hub.EVENT_UNAUTHENTICATED, self._available)
 
     @property
     def unique_id(self) -> str:
@@ -80,6 +72,19 @@ class LegrandRflcSwitch(LightEntity):
     def available(self) -> bool:
         """Yes, if we can communicate with its hub."""
         return self._hub.connected and self._hub.authenticated
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity being added to Home Assistant."""
+        await super().async_added_to_hass()
+        hub = self._hub
+        hub.on(
+            f"{hub.EVENT_ZONE_PROPERTIES_CHANGED}:{self._zid}",
+            self._zone_properties_changed,
+        )
+        hub.on(hub.EVENT_CONNECTED, self._available)
+        hub.on(hub.EVENT_DISCONNECTED, self._available)
+        hub.on(hub.EVENT_AUTHENTICATED, self._available)
+        hub.on(hub.EVENT_UNAUTHENTICATED, self._available)
 
     async def _available(self) -> None:
         self.async_write_ha_state()
