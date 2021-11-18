@@ -82,7 +82,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["sensor", "switch", "binary_sensor"]
+PLATFORMS = ["sensor", "switch", "binary_sensor", "button"]
 
 SIGNAL_UPDATE_LEAF = "nissan_leaf_update"
 
@@ -459,6 +459,16 @@ class LeafDataStore:
         _LOGGER.debug("Climate result not returned by Nissan servers")
         return False
 
+    async def async_start_charging(self):
+        result = await self.hass.async_add_executor_job(self.leaf.start_charging)
+        if result:
+            _LOGGER.debug("Start charging sent, request updated data in 1 minute")
+            check_charge_at = utcnow() + timedelta(minutes=1)
+            self.next_update = check_charge_at
+            async_track_point_in_utc_time(
+                self.hass, self.async_update_data, check_charge_at
+            )
+        return result
 
 class LeafEntity(Entity):
     """Base class for Nissan Leaf entity."""
