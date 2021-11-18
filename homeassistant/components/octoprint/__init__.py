@@ -11,6 +11,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
+    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
@@ -19,15 +20,17 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, SERVICE_PAUSE_JOB, SERVICE_RESUME_JOB, SERVICE_STOP_JOB
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,6 +123,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+    }
+)
+
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the OctoPrint component."""
@@ -171,7 +180,72 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    async def async_pause_print(call: ServiceCall) -> None:
+        """Pauses the active print."""
+        client = async_get_client_for_service_call(hass, call)
+        printer = await client.get_printer_info()
+        if printer.state.flags.printing:
+            await client.pause_job()
+        else:
+            raise InvalidPrinterState("Printer is not printing")
+
+    async def async_resume_print(call: ServiceCall) -> None:
+        """Resumes the active print."""
+        client = async_get_client_for_service_call(hass, call)
+        printer = await client.get_printer_info()
+        if printer.state.flags.paused:
+            await client.resume_job()
+        else:
+            raise InvalidPrinterState("Printer is not currently paused")
+
+    async def async_stop_print(call: ServiceCall) -> None:
+        """Resumes the active print."""
+        client = async_get_client_for_service_call(hass, call)
+        printer = await client.get_printer_info()
+        if printer.state.flags.printing or printer.state.flags.paused:
+            await client.cancel_job()
+        else:
+            raise InvalidPrinterState("Printer does not have an active job")
+
+    for service_name, schema, method in (
+        (
+            SERVICE_PAUSE_JOB,
+            SERVICE_SCHEMA,
+            async_pause_print,
+        ),
+        (
+            SERVICE_RESUME_JOB,
+            SERVICE_SCHEMA,
+            async_resume_print,
+        ),
+        (
+            SERVICE_STOP_JOB,
+            SERVICE_SCHEMA,
+            async_stop_print,
+        ),
+    ):
+        if hass.services.has_service(DOMAIN, service_name):
+            continue
+        hass.services.async_register(DOMAIN, service_name, method, schema=schema)
+
     return True
+
+
+def async_get_client_for_service_call(
+    hass: HomeAssistant, call: ServiceCall
+) -> OctoprintClient:
+    """Get the client related to a service call (by device ID)."""
+    device_id = call.data[CONF_DEVICE_ID]
+    device_registry = dr.async_get(hass)
+
+    if device_entry := device_registry.async_get(device_id):
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.entry_id in device_entry.config_entries:
+                return cast(
+                    OctoprintClient, hass.data[DOMAIN][entry.entry_id]["client"]
+                )
+
+    raise ValueError(f"No client for device ID: {device_id}")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -249,3 +323,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
             name="OctoPrint",
             configuration_url=str(configuration_url),
         )
+
+
+class InvalidPrinterState(HomeAssistantError):
+    """Service attempted in invalid state."""
