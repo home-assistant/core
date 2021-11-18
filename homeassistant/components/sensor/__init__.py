@@ -314,13 +314,14 @@ class SensorEntity(Entity):
             return value.isoformat(timespec="seconds")
 
         # Received a datetime
-        if value is not None and isinstance(value, datetime):
-            if device_class != DEVICE_CLASS_TIMESTAMP:
+        if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
+            try:
+                return value.isoformat(timespec="seconds")
+            except (AttributeError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid datetime: {self.entity_id} provides a {type(value)}"
-                    "state, however, does not have a timestamp device class"
-                )
-            return value.isoformat(timespec="seconds")
+                    f"Invalid datetime: {self.entity_id} has a timestamp device class"
+                    f"but does not provide a datetime state but {type(value)}"
+                ) from err
 
         # Received a date value
         if value is not None and isinstance(value, date):
