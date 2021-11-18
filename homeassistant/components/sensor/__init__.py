@@ -316,7 +316,7 @@ class SensorEntity(Entity):
         # Received a datetime
         if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
             try:
-                return value.isoformat(timespec="seconds")
+                return value.isoformat(timespec="seconds")  # type: ignore
             except (AttributeError, TypeError) as err:
                 raise ValueError(
                     f"Invalid datetime: {self.entity_id} has a timestamp device class"
@@ -324,13 +324,14 @@ class SensorEntity(Entity):
                 ) from err
 
         # Received a date value
-        if value is not None and isinstance(value, date):
-            if device_class != DEVICE_CLASS_DATE:
+        if value is not None and device_class == DEVICE_CLASS_DATE:
+            try:
+                return value.isoformat()  # type: ignore
+            except (AttributeError, TypeError) as err:
                 raise ValueError(
                     f"Invalid date: {self.entity_id} provides a {type(value)}"
                     "state, however, does not have a date device class"
-                )
-            return value.isoformat()
+                ) from err
 
         units = self.hass.config.units
         if (
@@ -362,7 +363,7 @@ class SensorEntity(Entity):
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
-                temp = units.temperature(float(value), unit_of_measurement)
+                temp = units.temperature(float(value), unit_of_measurement)  # type: ignore
                 value = round(temp) if prec == 0 else round(temp, prec)
 
         return value
