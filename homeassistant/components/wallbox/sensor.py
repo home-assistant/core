@@ -28,7 +28,6 @@ from .const import (
     CONF_ADDED_RANGE_KEY,
     CONF_CHARGING_POWER_KEY,
     CONF_CHARGING_SPEED_KEY,
-    CONF_CONNECTIONS,
     CONF_COST_KEY,
     CONF_CURRENT_MODE_KEY,
     CONF_DEPOT_PRICE_KEY,
@@ -133,7 +132,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Create wallbox sensor entities in HASS."""
-    coordinator = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
+    coordinator = hass.data[DOMAIN][config.entry_id]
 
     async_add_entities(
         [

@@ -9,6 +9,9 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "flipr_id": {
+                "description": "Pilih ID Flipr Anda dari daftar"
+            },
             "user": {
                 "data": {
                     "email": "Email",

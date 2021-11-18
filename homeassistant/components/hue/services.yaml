@@ -16,3 +16,8 @@ hue_activate_scene:
       example: "Energize"
       selector:
         text:
+    dynamic:
+      name: Dynamic
+      description: Enable dynamic mode of the scene (V2 bridges and supported scenes only).
+      selector:
+        boolean:

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "link": {
+                "title": "Freebox router\u306b\u30ea\u30f3\u30af"
+            },
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
+            }
+        }
+    }
+}

@@ -1,4 +1,7 @@
 """Provides device automations for deconz events."""
+
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -14,10 +17,11 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import DOMAIN
-from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE
+from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE, DeconzAlarmEvent, DeconzEvent
 
 CONF_SUBTYPE = "subtype"
 
@@ -613,16 +617,19 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-def _get_deconz_event_from_device_id(hass, device_id):
-    """Resolve deconz event from device id."""
+def _get_deconz_event_from_device(
+    hass: HomeAssistant,
+    device: dr.DeviceEntry,
+) -> DeconzAlarmEvent | DeconzEvent:
+    """Resolve deconz event from device."""
     for gateway in hass.data.get(DOMAIN, {}).values():
-
         for deconz_event in gateway.events:
-
-            if device_id == deconz_event.device_id:
+            if device.id == deconz_event.device_id:
                 return deconz_event
 
-    return None
+    raise InvalidDeviceAutomationConfig(
+        f'No deconz_event tied to device "{device.name}" found'
+    )
 
 
 async def async_validate_trigger_config(hass, config):
@@ -658,11 +665,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     trigger = REMOTES[device.model][trigger]
 
-    deconz_event = _get_deconz_event_from_device_id(hass, device.id)
-    if deconz_event is None:
-        raise InvalidDeviceAutomationConfig(
-            f'No deconz_event tied to device "{device.name}" found'
-        )
+    deconz_event = _get_deconz_event_from_device(hass, device)
 
     event_id = deconz_event.serial
 

@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -37,7 +38,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Network UPS Tools (NUT) from a config entry."""
 
-    # strip out the stale options CONF_RESOURCES
+    # strip out the stale options CONF_RESOURCES,
+    # maintain the entry in data in case of version rollback
     if CONF_RESOURCES in entry.options:
         new_data = {**entry.data, CONF_RESOURCES: entry.options[CONF_RESOURCES]}
         new_options = {k: v for k, v in entry.options.items() if k != CONF_RESOURCES}
@@ -79,7 +81,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("NUT Sensors Available: %s", status)
 
     undo_listener = entry.add_update_listener(_async_update_listener)
-
     unique_id = _unique_id_from_status(status)
     if unique_id is None:
         unique_id = entry.entry_id
@@ -91,6 +92,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         PYNUT_UNIQUE_ID: unique_id,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, unique_id)},
+        name=data.name.title(),
+        manufacturer=data.device_info.get(ATTR_MANUFACTURER),
+        model=data.device_info.get(ATTR_MODEL),
+        sw_version=data.device_info.get(ATTR_SW_VERSION),
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

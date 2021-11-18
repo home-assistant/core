@@ -22,8 +22,8 @@ from aiohttp import web
 import async_timeout
 import pytest
 
-from homeassistant.components.stream import Stream
 from homeassistant.components.stream.core import Segment, StreamOutput
+from homeassistant.components.stream.worker import SegmentBuffer
 
 TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 
@@ -34,7 +34,7 @@ class WorkerSync:
     def __init__(self):
         """Initialize WorkerSync."""
         self._event = None
-        self._original = Stream._worker_finished
+        self._original = SegmentBuffer.discontinuity
 
     def pause(self):
         """Pause the worker before it finalizes the stream."""
@@ -45,7 +45,7 @@ class WorkerSync:
         logging.debug("waking blocked worker")
         self._event.set()
 
-    def blocking_finish(self, stream: Stream):
+    def blocking_discontinuity(self, stream: SegmentBuffer):
         """Intercept call to pause stream worker."""
         # Worker is ending the stream, which clears all output buffers.
         # Block the worker thread until the test has a chance to verify
@@ -63,8 +63,8 @@ def stream_worker_sync(hass):
     """Patch StreamOutput to allow test to synchronize worker stream end."""
     sync = WorkerSync()
     with patch(
-        "homeassistant.components.stream.Stream._worker_finished",
-        side_effect=sync.blocking_finish,
+        "homeassistant.components.stream.worker.SegmentBuffer.discontinuity",
+        side_effect=sync.blocking_discontinuity,
         autospec=True,
     ):
         yield sync

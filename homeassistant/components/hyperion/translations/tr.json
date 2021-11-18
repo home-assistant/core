@@ -12,7 +12,7 @@
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "invalid_access_token": "Ge\u00e7ersiz eri\u015fim belirteci"
+            "invalid_access_token": "Ge\u00e7ersiz eri\u015fim anahtar\u0131"
         },
         "step": {
             "auth": {
