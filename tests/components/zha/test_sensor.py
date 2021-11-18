@@ -290,7 +290,7 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
             homeautomation.ElectricalMeasurement.cluster_id,
             "electrical_measurement",
             async_test_electrical_measurement,
-            6,
+            7,
             {"ac_power_divisor": 1000, "ac_power_multiplier": 1},
             {"rms_current", "rms_voltage"},
         ),
@@ -298,7 +298,7 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
             homeautomation.ElectricalMeasurement.cluster_id,
             "electrical_measurement_rms_current",
             async_test_em_rms_current,
-            6,
+            7,
             {"ac_current_divisor": 1000, "ac_current_multiplier": 1},
             {"active_power", "rms_voltage"},
         ),
@@ -306,7 +306,7 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
             homeautomation.ElectricalMeasurement.cluster_id,
             "electrical_measurement_rms_voltage",
             async_test_em_rms_voltage,
-            6,
+            7,
             {"ac_voltage_divisor": 10, "ac_voltage_multiplier": 1},
             {"active_power", "rms_current"},
         ),
@@ -561,28 +561,33 @@ async def test_electrical_measurement_init(
     (
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            {"rms_voltage", "rms_current"},
+            {"apparent_power", "rms_voltage", "rms_current"},
             {"electrical_measurement"},
             {
+                "electrical_measurement_apparent_power",
                 "electrical_measurement_rms_voltage",
                 "electrical_measurement_rms_current",
             },
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            {"rms_current"},
+            {"apparent_power", "rms_current"},
             {"electrical_measurement_rms_voltage", "electrical_measurement"},
-            {"electrical_measurement_rms_current"},
+            {
+                "electrical_measurement_apparent_power",
+                "electrical_measurement_rms_current",
+            },
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            set(),
+            set(),  # {"apparent_power"},  # set(),
             {
                 "electrical_measurement_rms_voltage",
                 "electrical_measurement",
+                "electrical_measurement_apparent_power",
                 "electrical_measurement_rms_current",
             },
-            set(),
+            set(),  # {"electrical_measurement_apparent_power"},  # set(),
         ),
         (
             smartenergy.Metering.cluster_id,
@@ -853,6 +858,7 @@ async def test_elec_measurement_skip_unsupported_attribute(
     all_attrs = {
         "active_power",
         "active_power_max",
+        "apparent_power",
         "rms_current",
         "rms_current_max",
         "rms_voltage",
