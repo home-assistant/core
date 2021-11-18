@@ -31,6 +31,11 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
         return f"{self.car.leaf.nickname} Plug Status"
 
     @property
+    def available(self):
+        """Sensor availability."""
+        return self.car.data[DATA_PLUGGED_IN] is not None
+
+    @property
     def is_on(self):
         """Return true if plugged in."""
         return self.car.data[DATA_PLUGGED_IN]
@@ -50,6 +55,11 @@ class LeafChargingSensor(LeafEntity, BinarySensorEntity):
     def name(self):
         """Sensor name."""
         return f"{self.car.leaf.nickname} Charging Status"
+
+    @property
+    def available(self):
+        """Sensor availability."""
+        return self.car.data[DATA_CHARGING] is not None
 
     @property
     def is_on(self):
