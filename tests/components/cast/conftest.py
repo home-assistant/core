@@ -17,13 +17,7 @@ def dial_mock():
 @pytest.fixture()
 def castbrowser_mock():
     """Mock pychromecast CastBrowser."""
-    return MagicMock()
-
-
-@pytest.fixture()
-def castbrowser_constructor_mock():
-    """Mock pychromecast CastBrowser constructor."""
-    return MagicMock()
+    return MagicMock(spec=pychromecast.discovery.CastBrowser)
 
 
 @pytest.fixture()
@@ -33,36 +27,28 @@ def mz_mock():
 
 
 @pytest.fixture()
-def pycast_mock(castbrowser_mock, castbrowser_constructor_mock):
-    """Mock pychromecast."""
-    pycast_mock = MagicMock()
-    pycast_mock.IDLE_APP_ID = pychromecast.IDLE_APP_ID
-    pycast_mock.IGNORE_CEC = []
-    pycast_mock.const = pychromecast.const
-    pycast_mock.discovery.CastBrowser = castbrowser_constructor_mock
-    pycast_mock.discovery.CastBrowser.return_value = castbrowser_mock
-    pycast_mock.discovery.AbstractCastListener = (
-        pychromecast.discovery.AbstractCastListener
-    )
-    return pycast_mock
-
-
-@pytest.fixture()
 def quick_play_mock():
     """Mock pychromecast quick_play."""
     return MagicMock()
 
 
+@pytest.fixture()
+def get_chromecast_mock():
+    """Mock pychromecast get_chromecast_from_cast_info."""
+    return MagicMock()
+
+
 @pytest.fixture(autouse=True)
-def cast_mock(dial_mock, mz_mock, pycast_mock, quick_play_mock):
+def cast_mock(
+    dial_mock, mz_mock, quick_play_mock, castbrowser_mock, get_chromecast_mock
+):
     """Mock pychromecast."""
+    ignore_cec_orig = list(pychromecast.IGNORE_CEC)
+
     with patch(
-        "homeassistant.components.cast.media_player.pychromecast", pycast_mock
-    ), patch(
-        "homeassistant.components.cast.discovery.pychromecast", pycast_mock
-    ), patch(
-        "homeassistant.components.cast.helpers.dial", dial_mock
-    ), patch(
+        "homeassistant.components.cast.discovery.pychromecast.discovery.CastBrowser",
+        castbrowser_mock,
+    ), patch("homeassistant.components.cast.helpers.dial", dial_mock), patch(
         "homeassistant.components.cast.media_player.MultizoneManager",
         return_value=mz_mock,
     ), patch(
@@ -71,5 +57,10 @@ def cast_mock(dial_mock, mz_mock, pycast_mock, quick_play_mock):
     ), patch(
         "homeassistant.components.cast.media_player.quick_play",
         quick_play_mock,
+    ), patch(
+        "homeassistant.components.cast.media_player.pychromecast.get_chromecast_from_cast_info",
+        get_chromecast_mock,
     ):
         yield
+
+    pychromecast.IGNORE_CEC = list(ignore_cec_orig)
