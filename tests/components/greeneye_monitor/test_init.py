@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from homeassistant.components.greeneye_monitor import (
     CONF_MONITORS,
     CONFIG_SCHEMA,
