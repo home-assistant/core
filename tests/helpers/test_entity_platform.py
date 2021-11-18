@@ -1085,10 +1085,13 @@ async def test_entity_info_added_to_entity_registry(hass):
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
 
     entity_default = MockEntity(
-        unique_id="default",
         capability_attributes={"max": 100},
-        supported_features=5,
         device_class="mock-device-class",
+        entity_category="config",
+        icon="nice:icon",
+        name="best name",
+        supported_features=5,
+        unique_id="default",
         unit_of_measurement=PERCENTAGE,
     )
 
@@ -1097,10 +1100,20 @@ async def test_entity_info_added_to_entity_registry(hass):
     registry = er.async_get(hass)
 
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
-    assert entry_default.capabilities == {"max": 100}
-    assert entry_default.supported_features == 5
-    assert entry_default.device_class == "mock-device-class"
-    assert entry_default.unit_of_measurement == PERCENTAGE
+    assert entry_default == er.RegistryEntry(
+        "test_domain.best_name",
+        "default",
+        "test_domain",
+        capabilities={"max": 100},
+        device_class="mock-device-class",
+        entity_category="config",
+        icon=None,
+        name=None,
+        original_icon="nice:icon",
+        original_name="best name",
+        supported_features=5,
+        unit_of_measurement=PERCENTAGE,
+    )
 
 
 async def test_override_restored_entities(hass):
