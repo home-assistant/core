@@ -347,9 +347,9 @@ class BMWConnectedDriveBaseEntity(Entity):
         }
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vehicle.vin)},
-            manufacturer=vehicle.attributes.get("brand"),
+            manufacturer=vehicle.brand.name,
             model=vehicle.name,
-            name=f'{vehicle.attributes.get("brand")} {vehicle.name}',
+            name=f"{vehicle.brand.name} {vehicle.name}",
         )
 
     def update_callback(self) -> None:
