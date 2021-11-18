@@ -155,27 +155,7 @@ class EntityRegistryStore(storage.Store):
         self, old_major_version: int, old_minor_version: int, data: dict
     ) -> dict:
         """Migrate to the new version."""
-        if old_major_version < 2 and old_minor_version < 2:
-            # From version 1.1
-            for entity in data["entities"]:
-                # Populate all keys
-                entity["area_id"] = entity.get("area_id")
-                entity["capabilities"] = entity.get("capabilities") or {}
-                entity["config_entry_id"] = entity.get("config_entry_id")
-                entity["device_class"] = entity.get("device_class")
-                entity["device_id"] = entity.get("device_id")
-                entity["disabled_by"] = entity.get("disabled_by")
-                entity["entity_category"] = entity.get("entity_category")
-                entity["icon"] = entity.get("icon")
-                entity["name"] = entity.get("name")
-                entity["original_icon"] = entity.get("original_icon")
-                entity["original_name"] = entity.get("original_name")
-                entity["platform"] = entity["platform"]
-                entity["supported_features"] = entity.get("supported_features", 0)
-                entity["unit_of_measurement"] = entity.get("unit_of_measurement")
-        if old_major_version > 1:
-            raise NotImplementedError
-        return data
+        return await _async_migrate(old_major_version, old_minor_version, data)
 
 
 class EntityRegistry:
@@ -549,7 +529,7 @@ class EntityRegistry:
             self.hass.config.path(PATH_REGISTRY),
             self._store,
             old_conf_load_func=load_yaml,
-            old_conf_migrate_func=_async_migrate,
+            old_conf_migrate_func=_async_migrate_yaml_to_json,
         )
         entities: dict[str, RegistryEntry] = OrderedDict()
 
@@ -739,13 +719,43 @@ def async_config_entry_disabled_by_changed(
         )
 
 
-async def _async_migrate(entities: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+async def _async_migrate(
+    old_major_version: int, old_minor_version: int, data: dict
+) -> dict:
+    """Migrate to the new version."""
+    if old_major_version < 2 and old_minor_version < 2:
+        # From version 1.1
+        for entity in data["entities"]:
+            # Populate all keys
+            entity["area_id"] = entity.get("area_id")
+            entity["capabilities"] = entity.get("capabilities") or {}
+            entity["config_entry_id"] = entity.get("config_entry_id")
+            entity["device_class"] = entity.get("device_class")
+            entity["device_id"] = entity.get("device_id")
+            entity["disabled_by"] = entity.get("disabled_by")
+            entity["entity_category"] = entity.get("entity_category")
+            entity["icon"] = entity.get("icon")
+            entity["name"] = entity.get("name")
+            entity["original_icon"] = entity.get("original_icon")
+            entity["original_name"] = entity.get("original_name")
+            entity["platform"] = entity["platform"]
+            entity["supported_features"] = entity.get("supported_features", 0)
+            entity["unit_of_measurement"] = entity.get("unit_of_measurement")
+    if old_major_version > 1:
+        raise NotImplementedError
+    return data
+
+
+async def _async_migrate_yaml_to_json(
+    entities: dict[str, Any]
+) -> dict[str, list[dict[str, Any]]]:
     """Migrate the YAML config file to storage helper format."""
-    return {
+    entities_1_1 = {
         "entities": [
             {"entity_id": entity_id, **info} for entity_id, info in entities.items()
         ]
     }
+    return await _async_migrate(1, 1, entities_1_1)
 
 
 @callback
