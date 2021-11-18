@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from contextlib import suppress
+import inspect
 from json import JSONEncoder
 import logging
 import os
@@ -75,11 +76,13 @@ class Store:
         key: str,
         private: bool = False,
         *,
-        encoder: type[JSONEncoder] | None = None,
         atomic_writes: bool = False,
+        encoder: type[JSONEncoder] | None = None,
+        minor_version: int = 1,
     ) -> None:
         """Initialize storage class."""
         self.version = version
+        self.minor_version = minor_version
         self.key = key
         self.hass = hass
         self._private = private
@@ -99,8 +102,8 @@ class Store:
     async def async_load(self) -> dict | list | None:
         """Load data.
 
-        If the expected version does not match the given version, the migrate
-        function will be invoked with await migrate_func(version, config).
+        If the expected version and minor version do not match the given versions, the
+        migrate function will be invoked with migrate_func(version, minor_version, config).
 
         Will ensure that when a call comes in while another one is in progress,
         the second call will wait and return the result of the first call.
@@ -137,7 +140,15 @@ class Store:
 
             if data == {}:
                 return None
-        if data["version"] == self.version:
+
+        # Add minor_version if not set
+        if "minor_version" not in data:
+            data["minor_version"] = 1
+
+        if (
+            data["version"] == self.version
+            and data["minor_version"] == self.minor_version
+        ):
             stored = data["data"]
         else:
             _LOGGER.info(
@@ -146,13 +157,29 @@ class Store:
                 data["version"],
                 self.version,
             )
-            stored = await self._async_migrate_func(data["version"], data["data"])
+            if len(inspect.signature(self._async_migrate_func).parameters) == 2:
+                # pylint: disable-next=no-value-for-parameter
+                stored = await self._async_migrate_func(data["version"], data["data"])
+            else:
+                try:
+                    stored = await self._async_migrate_func(
+                        data["version"], data["minor_version"], data["data"]
+                    )
+                except NotImplementedError:
+                    if data["version"] != self.version:
+                        raise
+                    stored = data["data"]
 
         return stored
 
     async def async_save(self, data: dict | list) -> None:
         """Save data."""
-        self._data = {"version": self.version, "key": self.key, "data": data}
+        self._data = {
+            "version": self.version,
+            "minor_version": self.minor_version,
+            "key": self.key,
+            "data": data,
+        }
 
         if self.hass.state == CoreState.stopping:
             self._async_ensure_final_write_listener()
@@ -163,7 +190,12 @@ class Store:
     @callback
     def async_delay_save(self, data_func: Callable[[], dict], delay: float = 0) -> None:
         """Save data with an optional delay."""
-        self._data = {"version": self.version, "key": self.key, "data_func": data_func}
+        self._data = {
+            "version": self.version,
+            "minor_version": self.minor_version,
+            "key": self.key,
+            "data_func": data_func,
+        }
 
         self._async_cleanup_delay_listener()
         self._async_ensure_final_write_listener()
@@ -248,7 +280,7 @@ class Store:
             atomic_writes=self._atomic_writes,
         )
 
-    async def _async_migrate_func(self, old_version, old_data):
+    async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
         """Migrate to the new version."""
         raise NotImplementedError
 
