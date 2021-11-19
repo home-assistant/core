@@ -36,12 +36,12 @@ async def validate_input(
     fronius = Fronius(async_get_clientsession(hass), host)
 
     try:
-        logger_info: dict[str, Any]
-        logger_info = await fronius.current_logger_info()
+        datalogger_info: dict[str, Any]
+        datalogger_info = await fronius.current_logger_info()
     except FroniusError as err:
         _LOGGER.debug(err)
     else:
-        logger_uid: str = logger_info["unique_identifier"]["value"]
+        logger_uid: str = datalogger_info["unique_identifier"]["value"]
         return logger_uid, FroniusConfigEntryData(
             host=host,
             is_logger=True,
