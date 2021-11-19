@@ -51,22 +51,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenUV as config entry."""
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
+    websession = aiohttp_client.async_get_clientsession(hass)
+    openuv = OpenUV(
+        entry,
+        Client(
+            entry.data[CONF_API_KEY],
+            entry.data.get(CONF_LATITUDE, hass.config.latitude),
+            entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+            altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
+            session=websession,
+        ),
+    )
+
+    # We disable the client's request retry abilities here to avoid a lengthy (and
+    # blocking) startup:
+    openuv.client.disable_request_retries()
+
     try:
-        websession = aiohttp_client.async_get_clientsession(hass)
-        openuv = OpenUV(
-            entry,
-            Client(
-                entry.data[CONF_API_KEY],
-                entry.data.get(CONF_LATITUDE, hass.config.latitude),
-                entry.data.get(CONF_LONGITUDE, hass.config.longitude),
-                altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
-                session=websession,
-            ),
-        )
         await openuv.async_update()
     except OpenUvError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
+
+    # Once we've successfully authenticated, we re-enable client request retries:
+    openuv.client.enable_request_retries()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = openuv

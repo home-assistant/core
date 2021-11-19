@@ -342,7 +342,7 @@ denonavr==0.10.9
 devolo-home-control-api==0.17.4
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==0.6.2
+devolo-plc-api==0.6.3
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -944,7 +944,7 @@ pyipma==2.0.5
 pyipp==0.11.0
 
 # homeassistant.components.iqvia
-pyiqvia==1.1.0
+pyiqvia==2021.11.0
 
 # homeassistant.components.isy994
 pyisy==3.0.0
@@ -1034,7 +1034,7 @@ pynzbgetapi==0.2.0
 pyoctoprintapi==0.1.6
 
 # homeassistant.components.openuv
-pyopenuv==2.2.1
+pyopenuv==2021.11.0
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
@@ -1226,7 +1226,7 @@ ring_doorbell==0.7.1
 rokuecp==0.8.1
 
 # homeassistant.components.roomba
-roombapy==1.6.3
+roombapy==1.6.4
 
 # homeassistant.components.roon
 roonapi==0.0.38
