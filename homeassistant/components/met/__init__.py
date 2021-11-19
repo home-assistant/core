@@ -176,14 +176,4 @@ class MetWeatherData:
         time_zone = dt_util.DEFAULT_TIME_ZONE
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False)
         self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
-
-        import datetime
-
-        now = datetime.datetime.now()
-        for k in range(20):
-            val = self._weather_data.get_weather(
-                now + datetime.timedelta(hours=k), True
-            )
-            print(k, val.get("temperature"))
-
         return self
