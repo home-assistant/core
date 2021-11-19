@@ -86,7 +86,6 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
     _attr_fan_modes = [FAN_ON, HVAC_MODE_OFF]
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = TEMP_CELSIUS
 
@@ -103,13 +102,21 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.device_id)},
             manufacturer=MANUFACTURER,
-            model=f"generation {1 if heater.is_gen1 else 2}",
+            model=f"Generation {heater.generation}",
             name=self.name,
         )
         if heater.is_gen1 or heater.is_gen3:
             self._attr_hvac_modes = [HVAC_MODE_HEAT]
         else:
             self._attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+
+        if heater.generation < 3:
+            self._attr_supported_features = (
+                SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+            )
+        else:
+            self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+
         self._update_attr(heater)
 
     async def async_set_temperature(self, **kwargs):
@@ -162,7 +169,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             "open_window": heater.open_window,
             "heating": heater.is_heating,
             "controlled_by_tibber": heater.tibber_control,
-            "heater_generation": 1 if heater.is_gen1 else 2,
+            "heater_generation": heater.generation,
         }
         if heater.room:
             self._attr_extra_state_attributes["room"] = heater.room.name
