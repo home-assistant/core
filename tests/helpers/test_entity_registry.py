@@ -74,10 +74,10 @@ def test_get_or_create_updates_data(registry):
         area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry=orig_config_entry,
-        device_class="mock-device-class",
         device_id="mock-dev-id",
         disabled_by=er.DISABLED_HASS,
         entity_category="config",
+        original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
         supported_features=5,
@@ -91,12 +91,13 @@ def test_get_or_create_updates_data(registry):
         area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry_id=orig_config_entry.entry_id,
-        device_class="mock-device-class",
+        device_class=None,
         device_id="mock-dev-id",
         disabled_by=er.DISABLED_HASS,
         entity_category="config",
         icon=None,
         name=None,
+        original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
         supported_features=5,
@@ -112,10 +113,10 @@ def test_get_or_create_updates_data(registry):
         area_id="new-mock-area-id",
         capabilities={"new-max": 100},
         config_entry=new_config_entry,
-        device_class="new-mock-device-class",
         device_id="new-mock-dev-id",
         disabled_by=er.DISABLED_USER,
         entity_category=None,
+        original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
@@ -129,12 +130,13 @@ def test_get_or_create_updates_data(registry):
         area_id="new-mock-area-id",
         capabilities={"new-max": 100},
         config_entry_id=new_config_entry.entry_id,
-        device_class="new-mock-device-class",
+        device_class=None,
         device_id="new-mock-dev-id",
         disabled_by=er.DISABLED_HASS,  # Should not be updated
         entity_category="config",
         icon=None,
         name=None,
+        original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
@@ -182,10 +184,10 @@ async def test_loading_saving_data(hass, registry):
         area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry=mock_config,
-        device_class="mock-device-class",
         device_id="mock-dev-id",
         disabled_by=er.DISABLED_HASS,
         entity_category="config",
+        original_device_class="mock-device-class",
         original_icon="hass:original-icon",
         original_name="Original Name",
         supported_features=5,
@@ -213,12 +215,13 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.area_id == "mock-area-id"
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.config_entry_id == mock_config.entry_id
-    assert new_entry2.device_class == "mock-device-class"
+    assert new_entry2.device_class is None
     assert new_entry2.device_id == "mock-dev-id"
     assert new_entry2.disabled_by == er.DISABLED_HASS
     assert new_entry2.entity_category == "config"
     assert new_entry2.icon == "hass:user-icon"
     assert new_entry2.name == "User Name"
+    assert new_entry2.original_device_class == "mock-device-class"
     assert new_entry2.original_icon == "hass:original-icon"
     assert new_entry2.original_name == "Original Name"
     assert new_entry2.supported_features == 5
@@ -599,7 +602,7 @@ async def test_restore_states(hass):
         suggested_object_id="all_info_set",
         capabilities={"max": 100},
         supported_features=5,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
         original_name="Mock Original Name",
         original_icon="hass:original-icon",
     )
@@ -649,14 +652,14 @@ async def test_async_get_device_class_lookup(hass):
         "light",
         "battery_charging",
         device_id="light_device_entry_id",
-        device_class="battery_charging",
+        original_device_class="battery_charging",
     )
     ent_reg.async_get_or_create(
         "sensor",
         "light",
         "battery",
         device_id="light_device_entry_id",
-        device_class="battery",
+        original_device_class="battery",
     )
     ent_reg.async_get_or_create(
         "light", "light", "demo", device_id="light_device_entry_id"
@@ -666,14 +669,14 @@ async def test_async_get_device_class_lookup(hass):
         "vacuum",
         "battery_charging",
         device_id="vacuum_device_entry_id",
-        device_class="battery_charging",
+        original_device_class="battery_charging",
     )
     ent_reg.async_get_or_create(
         "sensor",
         "vacuum",
         "battery",
         device_id="vacuum_device_entry_id",
-        device_class="battery",
+        original_device_class="battery",
     )
     ent_reg.async_get_or_create(
         "vacuum", "vacuum", "demo", device_id="vacuum_device_entry_id"
@@ -683,7 +686,7 @@ async def test_async_get_device_class_lookup(hass):
         "remote",
         "battery_charging",
         device_id="remote_device_entry_id",
-        device_class="battery_charging",
+        original_device_class="battery_charging",
     )
     ent_reg.async_get_or_create(
         "remote", "remote", "demo", device_id="remote_device_entry_id"
