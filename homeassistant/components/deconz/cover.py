@@ -132,7 +132,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
             return 100 - self._device.tilt  # type: ignore[no-any-return]
         return None
 
-    async def async_set_cover_tilt_position(self, **kwargs: int) -> None:
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Tilt the cover to a specific position."""
         position = 100 - kwargs[ATTR_TILT_POSITION]
         await self._device.set_position(tilt=position)
