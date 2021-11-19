@@ -5,7 +5,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.yeelight import (
+from homeassistant.components.yeelight.config_flow import MODEL_UNKNOWN, CannotConnect
+from homeassistant.components.yeelight.const import (
     CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
     CONF_MODEL,
@@ -21,7 +22,6 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.components.yeelight.config_flow import MODEL_UNKNOWN, CannotConnect
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM

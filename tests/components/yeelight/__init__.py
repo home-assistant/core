@@ -8,7 +8,7 @@ from async_upnp_client.search import SsdpSearchListener
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
-from homeassistant.components import yeelight as hass_yeelight, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -16,6 +16,7 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     YeelightScanner,
+    scanner,
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
 from homeassistant.core import callback
@@ -185,16 +186,14 @@ def _patch_discovery(no_device=False, capabilities=None):
         )
 
     return patch(
-        "homeassistant.components.yeelight.SsdpSearchListener",
+        "homeassistant.components.yeelight.scanner.SsdpSearchListener",
         new=_generate_fake_ssdp_listener,
     )
 
 
 def _patch_discovery_interval():
-    return patch.object(
-        hass_yeelight, "DISCOVERY_SEARCH_INTERVAL", timedelta(seconds=0)
-    )
+    return patch.object(scanner, "DISCOVERY_SEARCH_INTERVAL", timedelta(seconds=0))
 
 
 def _patch_discovery_timeout():
-    return patch.object(hass_yeelight, "DISCOVERY_TIMEOUT", 0.0001)
+    return patch.object(scanner, "DISCOVERY_TIMEOUT", 0.0001)
