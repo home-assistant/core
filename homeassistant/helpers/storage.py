@@ -13,7 +13,6 @@ from typing import Any
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers.event import async_call_later
 from homeassistant.loader import MAX_LOAD_CONCURRENTLY, bind_hass
 from homeassistant.util import json as json_util
 
@@ -28,13 +27,13 @@ STORAGE_SEMAPHORE = "storage_semaphore"
 
 @bind_hass
 async def async_migrator(
-    hass,
-    old_path,
-    store,
+    hass: HomeAssistant,
+    old_path: str,
+    store: Store,
     *,
-    old_conf_load_func=None,
-    old_conf_migrate_func=None,
-):
+    old_conf_load_func: Callable | None = None,
+    old_conf_migrate_func: Callable | None = None,
+) -> Any:
     """Migrate old data to a store and then load data.
 
     async def old_conf_migrate_func(old_data)
@@ -157,10 +156,12 @@ class Store:
             stored = data["data"]
         else:
             _LOGGER.info(
-                "Migrating %s storage from %s to %s",
+                "Migrating %s storage from %s.%s to %s.%s",
                 self.key,
                 data["version"],
+                data["minor_version"],
                 self.version,
+                self.minor_version,
             )
             if len(inspect.signature(self._async_migrate_func).parameters) == 2:
                 # pylint: disable-next=no-value-for-parameter
@@ -195,6 +196,9 @@ class Store:
     @callback
     def async_delay_save(self, data_func: Callable[[], dict], delay: float = 0) -> None:
         """Save data with an optional delay."""
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.helpers.event import async_call_later
+
         self._data = {
             "version": self.version,
             "minor_version": self.minor_version,
