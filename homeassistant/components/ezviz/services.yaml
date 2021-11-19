@@ -51,6 +51,38 @@ ptz:
           max: 9
           step: 1
           mode: box
+ptz_absolute:
+  name: Absolute PTZ
+  description: Moves the camera to the specified coordinates
+  target:
+    entity:
+      integration: ezviz
+      domain: camera
+  fields:
+    x:
+      name: X Position
+      description: X Position to move the camera to
+      required: true
+      example: 0.5
+      default: 0.5
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.1
+          mode: box
+    y:
+      name: Y Position
+      description: Y Position to move the camera to
+      required: true
+      example: 0.5
+      default: 0.5
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.1
+          mode: box
 set_alarm_detection_sensibility:
   name: Detection sensitivity
   description: Sets the detection sensibility level.

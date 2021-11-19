@@ -27,6 +27,8 @@ from .const import (
     ATTR_SERIAL,
     ATTR_SPEED,
     ATTR_TYPE,
+    ATTR_X,
+    ATTR_Y,
     CONF_CAMERAS,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
@@ -42,6 +44,7 @@ from .const import (
     SERVICE_ALARM_TRIGER,
     SERVICE_DETECTION_SENSITIVITY,
     SERVICE_PTZ,
+    SERVICE_PTZ_ABSOLUTE,
     SERVICE_WAKE_DEVICE,
 )
 from .coordinator import EzvizDataUpdateCoordinator
@@ -198,6 +201,15 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(
+        SERVICE_PTZ_ABSOLUTE,
+        {
+            vol.Required(ATTR_X): cv.small_float,
+            vol.Required(ATTR_Y): cv.small_float,
+        },
+        "perform_ptz_absolute",
+    )
+
+    platform.async_register_entity_service(
         SERVICE_ALARM_TRIGER,
         {
             vol.Required(ATTR_ENABLE): cv.positive_int,
@@ -337,6 +349,14 @@ class EzvizCamera(EzvizEntity, Camera):
 
         except HTTPError as err:
             raise HTTPError("Cannot perform PTZ") from err
+
+    def perform_ptz_absolute(self, x: float, y: float) -> None:
+        """Perform an absolute PTZ action on the camera."""
+        try:
+            self.coordinator.ezviz_client.ptz_control_coordinates(self._serial, x, y)
+
+        except HTTPError as err:
+            raise HTTPError("Cannot perform Absolute PTZ") from err
 
     def perform_sound_alarm(self, enable: int) -> None:
         """Sound the alarm on a camera."""

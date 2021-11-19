@@ -22,9 +22,12 @@ ATTR_DIRECTION = "direction"
 ATTR_SPEED = "speed"
 ATTR_LEVEL = "level"
 ATTR_TYPE = "type_value"
+ATTR_X = "x"
+ATTR_Y = "y"
 
 # Service names
 SERVICE_PTZ = "ptz"
+SERVICE_PTZ_ABSOLUTE = "ptz_absolute"
 SERVICE_ALARM_TRIGER = "sound_alarm"
 SERVICE_WAKE_DEVICE = "wake_device"
 SERVICE_ALARM_SOUND = "alarm_sound"
