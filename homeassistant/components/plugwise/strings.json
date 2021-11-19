@@ -2,7 +2,7 @@
   "options": {
     "step": {
       "init": {
-        "description": "Adjust Plugwise Options",
+        "description": "Adjust Smile/Stretch Options",
         "data": {
           "scan_interval": "Scan Interval (seconds)"
         }
@@ -10,33 +10,33 @@
     }
   },
   "config": {
+    "flow_title": "Plugwise {name}",
     "step": {
       "user": {
-        "title": "Plugwise type",
-        "description": "Product:",
+        "description": "Select your Plugwise connection type",
         "data": {
           "flow_type": "Connection type"
         }
       },
       "user_gateway": {
-        "title": "Connect to the Smile",
-        "description": "Please enter",
+        "title": "Connect to the Plugwise Smile/Stretch",
+        "description": "Please enter:",
         "data": {
-          "password": "Smile ID",
+          "password": "ID",
+          "username" : "Username",
           "host": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "username" : "Smile Username"
         }
-      }
+      },
     },
     "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%], check the 8 characters of your ID",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
-    },
-    "flow_title": "{name}"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
   }
 }

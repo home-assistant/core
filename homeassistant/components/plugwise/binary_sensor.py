@@ -1,170 +1,112 @@
 """Plugwise Binary Sensor component for Home Assistant."""
+from __future__ import annotations
 
-import logging
-
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import ATTR_ID, ATTR_NAME
 from homeassistant.core import callback
 
 from .const import (
     COORDINATOR,
     DOMAIN,
-    FLAME_ICON,
-    FLOW_OFF_ICON,
-    FLOW_ON_ICON,
-    IDLE_ICON,
-    NO_NOTIFICATION_ICON,
-    NOTIFICATION_ICON,
+    FW,
+    PW_MODEL,
+    SMILE,
+    VENDOR,
 )
 from .gateway import SmileGateway
+from .models import PW_BINARY_SENSOR_TYPES, PlugwiseBinarySensorEntityDescription
+from .smile_helpers import GWBinarySensor
 
-BINARY_SENSOR_MAP = {
-    "dhw_state": ["Domestic Hot Water State", None],
-    "slave_boiler_state": ["Secondary Heater Device State", None],
-}
-SEVERITIES = ["other", "info", "warning", "error"]
-
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Smile switches from a config entry."""
+    # # PLACEHOLDER USB entry setup
+    return await async_setup_entry_gateway(hass, config_entry, async_add_entities)
+
+async def async_setup_entry_gateway(hass, config_entry, async_add_entities):
     """Set up the Smile binary_sensors from a config entry."""
-    api = hass.data[DOMAIN][config_entry.entry_id]["api"]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
 
     entities = []
-    is_thermostat = api.single_master_thermostat()
+    for dev_id in coordinator.data[1]:
+        for key in coordinator.data[1][dev_id]:
+            if key != "binary_sensors":
+                continue
 
-    all_devices = api.get_all_devices()
-    for dev_id, device_properties in all_devices.items():
+            for data in coordinator.data[1][dev_id]["binary_sensors"]:
+                for description in PW_BINARY_SENSOR_TYPES:
+                    if (
+                        description.plugwise_api == SMILE
+                        and description.key == data.get(ATTR_ID)
+                    ):
+                        entities.extend(
+                            [
+                                GwBinarySensor(
+                                    coordinator,
+                                    description,
+                                    dev_id,
+                                    data,
+                                )
+                            ]
+                        )
 
-        if device_properties["class"] == "heater_central":
-            data = api.get_device_data(dev_id)
-            for binary_sensor in BINARY_SENSOR_MAP:
-                if binary_sensor not in data:
-                    continue
-
-                entities.append(
-                    PwBinarySensor(
-                        api,
-                        coordinator,
-                        device_properties["name"],
-                        dev_id,
-                        binary_sensor,
-                    )
-                )
-
-        if device_properties["class"] == "gateway" and is_thermostat is not None:
-            entities.append(
-                PwNotifySensor(
-                    api,
-                    coordinator,
-                    device_properties["name"],
-                    dev_id,
-                    "plugwise_notification",
-                )
-            )
-
-    async_add_entities(entities, True)
+    if entities:
+        async_add_entities(entities, True)
 
 
-class SmileBinarySensor(SmileGateway):
-    """Represent Smile Binary Sensors."""
+class GwBinarySensor(SmileGateway, BinarySensorEntity):
+    """Representation of a Gateway binary_sensor."""
 
-    def __init__(self, api, coordinator, name, dev_id, binary_sensor):
+    def __init__(
+        self,
+        coordinator,
+        description: PlugwiseBinarySensorEntityDescription,
+        dev_id,
+        bs_data,
+    ):
         """Initialise the binary_sensor."""
-        super().__init__(api, coordinator, name, dev_id)
+        _cdata = coordinator.data[1][dev_id]
+        super().__init__(
+            coordinator,
+            description,
+            dev_id,
+            _cdata.get(PW_MODEL),
+            _cdata.get(ATTR_NAME),
+            _cdata.get(VENDOR),
+            _cdata.get(FW),
+        )
 
-        self._binary_sensor = binary_sensor
+        self._gw_b_sensor = GWBinarySensor(
+            coordinator.data, dev_id, bs_data.get(ATTR_ID)
+        )
 
-        self._icon = None
-        self._is_on = False
-
-        if dev_id == self._api.heater_id:
-            self._entity_name = "Auxiliary"
-
-        sensorname = binary_sensor.replace("_", " ").title()
-        self._name = f"{self._entity_name} {sensorname}"
-
-        if dev_id == self._api.gateway_id:
-            self._entity_name = f"Smile {self._entity_name}"
-
-        self._unique_id = f"{dev_id}-{binary_sensor}"
-
-    @property
-    def icon(self):
-        """Return the icon of this entity."""
-        return self._icon
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._is_on
+        self._attr_entity_registry_enabled_default = (
+            description.entity_registry_enabled_default
+        )
+        self._attr_extra_state_attributes = None
+        self._attr_icon = None
+        self._attr_is_on = False
+        self._attr_name = f"{_cdata.get(ATTR_NAME)} {description.name}"
+        self._attr_should_poll = self.entity_description.should_poll
+        self._attr_unique_id = f"{dev_id}-{description.key}"
 
     @callback
     def _async_process_data(self):
         """Update the entity."""
-        raise NotImplementedError
+        self._gw_b_sensor.update_data()
+        self._attr_extra_state_attributes = self._gw_b_sensor.extra_state_attributes
+        self._attr_icon = self._gw_b_sensor.icon
+        self._attr_is_on = self._gw_b_sensor.is_on
 
-
-class PwBinarySensor(SmileBinarySensor, BinarySensorEntity):
-    """Representation of a Plugwise binary_sensor."""
-
-    @callback
-    def _async_process_data(self):
-        """Update the entity."""
-        if not (data := self._api.get_device_data(self._dev_id)):
-            _LOGGER.error("Received no data for device %s", self._binary_sensor)
-            self.async_write_ha_state()
-            return
-
-        if self._binary_sensor not in data:
-            self.async_write_ha_state()
-            return
-
-        self._is_on = data[self._binary_sensor]
-
-        if self._binary_sensor == "dhw_state":
-            self._icon = FLOW_ON_ICON if self._is_on else FLOW_OFF_ICON
-        if self._binary_sensor == "slave_boiler_state":
-            self._icon = FLAME_ICON if self._is_on else IDLE_ICON
+        if self._gw_b_sensor.notification:
+            for notify_id, message in self._gw_b_sensor.notification.items():
+                self.hass.components.persistent_notification.async_create(
+                    message, "Plugwise Notification:", f"{DOMAIN}.{notify_id}"
+                )
 
         self.async_write_ha_state()
 
-
-class PwNotifySensor(SmileBinarySensor, BinarySensorEntity):
-    """Representation of a Plugwise Notification binary_sensor."""
-
-    def __init__(self, api, coordinator, name, dev_id, binary_sensor):
-        """Set up the Plugwise API."""
-        super().__init__(api, coordinator, name, dev_id, binary_sensor)
-
-        self._attributes = {}
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    @callback
-    def _async_process_data(self):
-        """Update the entity."""
-        notify = self._api.notifications
-
-        for severity in SEVERITIES:
-            self._attributes[f"{severity}_msg"] = []
-
-        self._is_on = False
-        self._icon = NO_NOTIFICATION_ICON
-
-        if notify:
-            self._is_on = True
-            self._icon = NOTIFICATION_ICON
-
-            for details in notify.values():
-                for msg_type, msg in details.items():
-                    if msg_type not in SEVERITIES:
-                        msg_type = "other"
-
-                    self._attributes[f"{msg_type.lower()}_msg"].append(msg)
-
-        self.async_write_ha_state()
+# PLACEHOLDER for class USBBinarySensor()

@@ -1,11 +1,10 @@
 """Config flow for Plugwise integration."""
+
+from __future__ import annotations
+
 import logging
 
-from plugwise.exceptions import InvalidAuthentication, PlugwiseException
-from plugwise.smile import Smile
 import voluptuous as vol
-
-from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_BASE,
     CONF_HOST,
@@ -18,6 +17,12 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
+
+from plugwise.exceptions import (
+    InvalidAuthentication,
+    PlugwiseException,
+)
+from plugwise.smile import Smile
 
 from .const import (
     API,
@@ -45,8 +50,8 @@ CONNECTION_SCHEMA = vol.Schema(
     {vol.Required(FLOW_TYPE, default=FLOW_NET): vol.In([FLOW_NET, FLOW_USB])}
 )
 
-# PLACEHOLDER USB connection validation
 
+# PLACEHOLDER USB connection validation
 
 def _base_gw_schema(discovery_info):
     """Generate base schema for gateways."""
@@ -74,9 +79,9 @@ async def validate_gw_input(hass: core.HomeAssistant, data):
 
     api = Smile(
         host=data[CONF_HOST],
+        username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
         port=data[CONF_PORT],
-        username=data[CONF_USERNAME],
         timeout=30,
         websession=websession,
     )
@@ -104,6 +109,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered Plugwise Smile."""
         self.discovery_info = discovery_info
         self.discovery_info[CONF_USERNAME] = DEFAULT_USERNAME
+        _LOGGER.debug("Discovery info: %s", self.discovery_info)
         _properties = self.discovery_info.get("properties")
 
         # unique_id is needed here, to be able to determine whether the discovered device is known, or not.
@@ -117,6 +123,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_HOST: self.discovery_info[CONF_HOST],
             CONF_NAME: _name,
@@ -125,7 +132,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user_gateway()
 
-    # PLACEHOLDER USB step_user
+# PLACEHOLDER USB step_user
 
     async def async_step_user_gateway(self, user_input=None):
         """Handle the initial step when using network/gateway setups."""
@@ -173,7 +180,8 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[FLOW_TYPE] == FLOW_NET:
                 return await self.async_step_user_gateway()
 
-            # PLACEHOLDER for USB_FLOW
+            if user_input[FLOW_TYPE] == FLOW_USB:
+                return await self.async_step_user_usb()
 
         return self.async_show_form(
             step_id="user",
@@ -195,8 +203,13 @@ class PlugwiseOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
+    # PLACEHOLDER USB async_step_none
+
     async def async_step_init(self, user_input=None):
         """Manage the Plugwise options."""
+        if not self.config_entry.data.get(CONF_HOST):
+            return await self.async_step_none(user_input)
+
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 

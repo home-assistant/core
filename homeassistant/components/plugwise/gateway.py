@@ -1,35 +1,27 @@
-"""Plugwise platform for Home Assistant Core."""
+"""Plugwise network/gateway platform."""
 
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
-import async_timeout
-from plugwise.exceptions import (
-    InvalidAuthentication,
-    PlugwiseException,
-    XMLDataMissingError,
-)
-from plugwise.smile import Smile
 import voluptuous as vol
+from plugwise.exceptions import InvalidAuthentication, PlugwiseException
+from plugwise.smile import Smile
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-)
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
 )
 
 from .const import (
@@ -47,6 +39,10 @@ from .const import (
     SERVICE_DELETE,
     UNDO_UPDATE_LISTENER,
 )
+from .coordinator import PWDataUpdateCoordinator
+from .models import PlugwiseEntityDescription
+
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,22 +63,17 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         connected = await api.connect()
         if not connected:
-            _LOGGER.error("Unable to connect to the Smile/Stretch")
+            _LOGGER.error("Unable to connect to the Plugwise %s", api.smile_name)
             raise ConfigEntryNotReady
     except InvalidAuthentication:
         _LOGGER.error("Invalid username or Smile ID")
         return False
     except PlugwiseException as err:
-        _LOGGER.error("Error while communicating to the Smile/Stretch")
+        _LOGGER.error("Error while communicating to the Plugwise %s", api.smile_name)
         raise ConfigEntryNotReady from err
     except asyncio.TimeoutError as err:
-        _LOGGER.error("Timeout while connecting to the Smile/Stretch")
+        _LOGGER.error("Timeout while connecting to the Plugwise %s", api.smile_name)
         raise ConfigEntryNotReady from err
-
-    # Migrate to a valid unique_id when needed
-    if entry.unique_id is None:
-        if api.smile_version[0] != "1.8.0":
-            hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
 
     update_interval = timedelta(
         seconds=entry.options.get(
@@ -90,27 +81,9 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    async def async_update_gw_data():
-        """Update data via API endpoint."""
-        _LOGGER.debug("Updating %s", api.smile_name)
-        try:
-            async with async_timeout.timeout(update_interval.seconds):
-                await api.update_gw_devices()
-                return True
-        except XMLDataMissingError as err:
-            raise UpdateFailed("Smile update failed") from err
-        except PlugwiseException as err:
-            _LOGGER.debug("Updating failed, generic failure for %s", api.smile_name)
-            raise UpdateFailed("Smile update failed") from err
+    coordinator = PWDataUpdateCoordinator(hass, api, update_interval)
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"{api.smile_name}",
-        update_method=async_update_gw_data,
-        update_interval=update_interval,
-    )
-
+    api.get_all_devices()
     await coordinator.async_config_entry_first_refresh()
 
     undo_listener = entry.add_update_listener(_update_listener)
@@ -122,48 +95,24 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    api.get_all_devices()
+    s_m_thermostat = coordinator.data[0]["single_master_thermostat"]
 
     platforms = GATEWAY_PLATFORMS
-    if api.single_master_thermostat() is None:
+    if s_m_thermostat is None:
         platforms = SENSOR_PLATFORMS
-
-    async def delete_notification(self):
-        """Service: delete the Plugwise Notification."""
-        try:
-            deleted = await api.delete_notification()
-            _LOGGER.debug("PW Notification deleted: %s", deleted)
-        except PlugwiseException:
-            _LOGGER.debug(
-                "Failed to delete the Plugwise Notification for %s", api.smile_name
-            )
 
     for component in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-        if component == CLIMATE_DOMAIN:
-            hass.services.async_register(
-                DOMAIN, SERVICE_DELETE, delete_notification, schema=vol.Schema({})
-            )
 
     return True
 
-
 async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in GATEWAY_PLATFORMS
-            )
-        )
-    )
-
-    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, GATEWAY_PLATFORMS)
     if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -171,67 +120,44 @@ async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
 
 async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
-    coordinator.update_interval = timedelta(
-        seconds=entry.options.get(CONF_SCAN_INTERVAL)
-    )
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class SmileGateway(CoordinatorEntity):
     """Represent Smile Gateway."""
 
-    def __init__(self, api, coordinator, dev_id, name, model, vendor, fw):
+    def __init__(
+        self,
+        coordinator,
+        description: PlugwiseEntityDescription,
+        dev_id,
+        model,
+        name,
+        vendor,
+        fw,
+    ) -> None:
         """Initialise the gateway."""
         super().__init__(coordinator)
 
-        self._api = api
-        self._coordinator = coordinator
-        self._dev_id = dev_id
-        self._device_class = None
-        self._device_name = name
-        self._fw_version = fw
-        self._manufacturer = vendor
-        self._model = model
-        self._name = None
-        self._unique_id = None
+        entry = coordinator.config_entry
+        gw_id = coordinator.data[0]["gateway_id"]
+        self._attr_available = super().available
+        self._attr_device_class = description.device_class
+        self._attr_device_info = DeviceInfo(
+            configuration_url=f"http://{entry.data[CONF_HOST]}",
+            identifiers={(DOMAIN, dev_id)},
+            manufacturer=vendor,
+            model=model,
+            name=f"Smile {coordinator.data[0]['smile_name']}",
+            sw_version=fw,
+        )
+        self.entity_description = description
 
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
-
-    @property
-    def device_info(self) -> dict[str, any]:
-        """Return the device information."""
-        device_information = {
-            "identifiers": {(DOMAIN, self._dev_id)},
-            "name": self._device_name,
-            "manufacturer": self._manufacturer,
-            "model": self._model,
-            "sw_version": self._fw_version,
-        }
-
-        if self._dev_id != self._api.gateway_id:
-            device_information["via_device"] = (DOMAIN, self._api.gateway_id)
-        else:
-            device_information["name"] = f"Smile {self._api.smile_name}"
-
-        return device_information
-
-    @property
-    def name(self):
-        """Return the name of the entity, if any."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
+        if dev_id != gw_id:
+            self._attr_device_info.update(
+                name=name,
+                via_device=(DOMAIN, gw_id),
+            )
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
