@@ -82,7 +82,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         else:
             try:
                 gateway = get_master_gateway(hass)
-                found_gateway = True
             except ValueError:
                 LOGGER.error("No master gateway available")
                 return
