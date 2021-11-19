@@ -36,7 +36,6 @@ from .const import (
     GATEWAY_PLATFORMS,
     PW_TYPE,
     SENSOR_PLATFORMS,
-    SERVICE_DELETE,
     UNDO_UPDATE_LISTENER,
 )
 from .coordinator import PWDataUpdateCoordinator
