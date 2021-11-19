@@ -316,10 +316,10 @@ class SensorEntity(Entity):
             if device_class == DEVICE_CLASS_DATE:
                 return value.date().isoformat()
 
-            if value.tzinfo != timezone.utc:
+            if value.tzinfo is not None and value.tzinfo != timezone.utc:
                 value = value.astimezone(timezone.utc)
 
-            return value.astimezone(timezone.utc).isoformat(timespec="seconds")
+            return value.isoformat(timespec="seconds")
 
         # Received a datetime
         if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:

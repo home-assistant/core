@@ -184,6 +184,16 @@ async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
             "2021-01-09 12:00:00+01:00",
             "2021-01-09T11:00:00+00:00",
         ),
+        (
+            DEVICE_CLASS_TIMESTAMP,
+            "2021-01-09 12:00:00",
+            "2021-01-09T12:00:00",
+        ),
+        (
+            DEVICE_CLASS_TIMESTAMP,
+            "2021-01-09T12:00:00",
+            "2021-01-09T12:00:00",
+        ),
     ],
 )
 async def test_deprecated_datetime_str(
