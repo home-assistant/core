@@ -1014,7 +1014,7 @@ miflora==0.7.0
 mill-local==0.1.0
 
 # homeassistant.components.mill
-millheater==0.8.0
+millheater==0.9.0
 
 # homeassistant.components.minio
 minio==5.0.10
