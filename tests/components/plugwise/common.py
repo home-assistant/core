@@ -2,11 +2,12 @@
 
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.core import HomeAssistant
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def async_init_integration_gw(
+async def async_init_integration(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     skip_setup: bool = False,
@@ -15,7 +16,7 @@ async def async_init_integration_gw(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"host": "127.0.0.1", "password": "test-password"},
+        data={"host": "1.1.1.1", "password": "test-password"},
     )
     entry.add_to_hass(hass)
 

@@ -4,14 +4,14 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity_registry import async_get_registry
 
-from tests.components.plugwise.common import async_init_integration_gw
+from tests.components.plugwise.common import async_init_integration
 
 
 async def test_anna_climate_binary_sensor_entities(hass, mock_smile_anna):
     """Test creation of climate related binary_sensor entities."""
     a_sensor = "binary_sensor.auxiliary_slave_boiler_state"
 
-    entry = await async_init_integration_gw(hass, mock_smile_anna)
+    entry = await async_init_integration(hass, mock_smile_anna)
     assert entry.state == ConfigEntryState.LOADED
 
     # Enable the auxiliary sensor
@@ -35,7 +35,7 @@ async def test_anna_climate_binary_sensor_entities(hass, mock_smile_anna):
 
 async def test_anna_climate_binary_sensor_change(hass, mock_smile_anna):
     """Test change of climate related binary_sensor entities."""
-    entry = await async_init_integration_gw(hass, mock_smile_anna)
+    entry = await async_init_integration(hass, mock_smile_anna)
     assert entry.state == ConfigEntryState.LOADED
 
     hass.states.async_set("binary_sensor.auxiliary_dhw_state", STATE_ON, {})
@@ -57,7 +57,7 @@ async def test_adam_climate_binary_sensor_change(hass, mock_smile_adam):
 
     n_sensor = "binary_sensor.adam_plugwise_notification"
 
-    entry = await async_init_integration_gw(hass, mock_smile_adam)
+    entry = await async_init_integration(hass, mock_smile_adam)
     assert entry.state == ConfigEntryState.LOADED
 
     # Enable the notification sensor
