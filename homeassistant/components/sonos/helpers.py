@@ -1,9 +1,8 @@
 """Helper methods for common tasks."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
 
 from soco.exceptions import SoCoException, SoCoUPnPException
 
