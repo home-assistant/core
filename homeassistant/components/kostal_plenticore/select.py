@@ -87,19 +87,12 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        is_available = (
+        return (
             super().available
             and self.coordinator.data is not None
             and self.module_id in self.coordinator.data
             and self.data_id in self.coordinator.data[self.module_id]
         )
-
-        if is_available:
-            self._attr_current_option = self.coordinator.data[self.module_id][
-                self.data_id
-            ]
-
-        return is_available
 
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
@@ -124,3 +117,13 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         if option != "None":
             await self.coordinator.async_write_data(self.module_id, {option: "1"})
         self.async_write_ha_state()
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        if self.available:
+            return self.coordinator.data[self.module_id][
+                self.data_id
+            ]
+        else:
+            return None
