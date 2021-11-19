@@ -35,9 +35,10 @@ from . import DOMAIN, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 STAT_AGE_COVERAGE_RATIO = "age_coverage_ratio"
-STAT_AGE_RANGE = "age_range"
-STAT_AVERAGE_CHANGE = "average_change"
 STAT_BUFFER_USAGE_RATIO = "buffer_usage_ratio"
+STAT_SOURCE_VALUE_VALID = "source_value_valid"
+
+STAT_AVERAGE_CHANGE = "average_change"
 STAT_CHANGE = "change"
 STAT_CHANGE_RATE = "change_rate"
 STAT_COUNT = "count"
@@ -82,10 +83,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_STATE_CHARACTERISTIC, default=STAT_MEAN): vol.In(
             [
-                STAT_AGE_COVERAGE_RATIO,
-                STAT_AGE_RANGE,
                 STAT_AVERAGE_CHANGE,
-                STAT_BUFFER_USAGE_RATIO,
                 STAT_CHANGE_RATE,
                 STAT_CHANGE,
                 STAT_COUNT,
@@ -162,6 +160,7 @@ class StatisticsSensor(SensorEntity):
         self.is_binary = self._source_entity_id.split(".")[0] == "binary_sensor"
         self._name = name
         self._available = False
+        self._source_value_valid = False
         self._state_characteristic = state_characteristic
         self._samples_max_buffer_size = samples_max_buffer_size
         self._samples_max_age = samples_max_age
@@ -185,7 +184,6 @@ class StatisticsSensor(SensorEntity):
             STAT_DISTANCE_ABSOLUTE: STATE_UNKNOWN,
             STAT_MIN_AGE: STATE_UNKNOWN,
             STAT_MAX_AGE: STATE_UNKNOWN,
-            STAT_AGE_RANGE: STATE_UNKNOWN,
             STAT_CHANGE: STATE_UNKNOWN,
             STAT_AVERAGE_CHANGE: STATE_UNKNOWN,
             STAT_CHANGE_RATE: STATE_UNKNOWN,
@@ -228,7 +226,11 @@ class StatisticsSensor(SensorEntity):
     def _add_state_to_queue(self, new_state):
         """Add the state to the queue."""
         self._available = new_state.state != STATE_UNAVAILABLE
-        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE, None):
+        if new_state.state in (STATE_UNAVAILABLE):
+            self._source_value_valid = None
+            return
+        if new_state.state in (STATE_UNKNOWN, None):
+            self._source_value_valid = False
             return
 
         try:
@@ -237,7 +239,9 @@ class StatisticsSensor(SensorEntity):
             else:
                 self.states.append(float(new_state.state))
             self.ages.append(new_state.last_updated)
+            self._source_value_valid = True
         except ValueError:
+            self._source_value_valid = False
             _LOGGER.error(
                 "%s: parsing error, expected number and received %s",
                 self.entity_id,
@@ -274,13 +278,6 @@ class StatisticsSensor(SensorEntity):
             STAT_QUANTILES,
         ):
             unit = None
-        elif self._state_characteristic in (STAT_AGE_RANGE,):
-            unit = "s"
-        elif self._state_characteristic in (
-            STAT_AGE_COVERAGE_RATIO,
-            STAT_BUFFER_USAGE_RATIO,
-        ):
-            unit = "%"
         elif self._state_characteristic == STAT_VARIANCE:
             unit = base_unit + "²"
         elif self._state_characteristic == STAT_AVERAGE_CHANGE:
@@ -333,17 +330,11 @@ class StatisticsSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        if self.is_binary:
-            return None
-        attributes = {}
-        for stat, value in self.attr.items():
-            if value == STATE_UNKNOWN:
-                attributes[stat] = STATE_UNKNOWN
-            elif stat in STATS_NOT_A_NUMBER:
-                attributes[stat] = value
-            else:
-                attributes[stat] = round(value, self._precision)
-        return attributes
+        return {
+            STAT_AGE_COVERAGE_RATIO: self.attr[STAT_AGE_COVERAGE_RATIO],
+            STAT_BUFFER_USAGE_RATIO: self.attr[STAT_AGE_COVERAGE_RATIO],
+            STAT_SOURCE_VALUE_VALID: self._source_value_valid,
+        }
 
     @property
     def icon(self):
@@ -425,7 +416,6 @@ class StatisticsSensor(SensorEntity):
             self.attr[STAT_MIN_VALUE] = self.attr[STAT_MAX_VALUE] = STATE_UNKNOWN
             self.attr[STAT_DISTANCE_ABSOLUTE] = STATE_UNKNOWN
             self.attr[STAT_MIN_AGE] = self.attr[STAT_MAX_AGE] = STATE_UNKNOWN
-            self.attr[STAT_AGE_RANGE] = STATE_UNKNOWN
             self.attr[STAT_CHANGE] = self.attr[STAT_AVERAGE_CHANGE] = STATE_UNKNOWN
             self.attr[STAT_CHANGE_RATE] = STATE_UNKNOWN
             self.attr[STAT_AGE_COVERAGE_RATIO] = STATE_UNKNOWN
@@ -444,7 +434,7 @@ class StatisticsSensor(SensorEntity):
 
         self.attr[STAT_MIN_AGE] = self.ages[0]
         self.attr[STAT_MAX_AGE] = self.ages[-1]
-        self.attr[STAT_AGE_RANGE] = (
+        age_range_seconds = (
             self.attr[STAT_MAX_AGE] - self.attr[STAT_MIN_AGE]
         ).total_seconds()
 
@@ -453,22 +443,20 @@ class StatisticsSensor(SensorEntity):
         self.attr[STAT_CHANGE_RATE] = 0
         if states_count > 1:
             self.attr[STAT_AVERAGE_CHANGE] /= len(self.states) - 1
-            if self.attr[STAT_AGE_RANGE] > 0:
-                self.attr[STAT_CHANGE_RATE] = (
-                    self.attr[STAT_CHANGE] / self.attr[STAT_AGE_RANGE]
-                )
+            if age_range_seconds > 0:
+                self.attr[STAT_CHANGE_RATE] = self.attr[STAT_CHANGE] / age_range_seconds
         self.attr[STAT_CHANGE] = self.attr[STAT_CHANGE]
         self.attr[STAT_AVERAGE_CHANGE] = self.attr[STAT_AVERAGE_CHANGE]
         self.attr[STAT_CHANGE_RATE] = self.attr[STAT_CHANGE_RATE]
 
         if self._samples_max_age is not None:
-            self.attr[STAT_AGE_COVERAGE_RATIO] = (
-                100 * self.attr[STAT_AGE_RANGE] / self._samples_max_age.total_seconds()
+            self.attr[STAT_AGE_COVERAGE_RATIO] = round(
+                age_range_seconds / self._samples_max_age.total_seconds(), 2
             )
         else:
             self.attr[STAT_AGE_COVERAGE_RATIO] = STATE_UNKNOWN
-        self.attr[STAT_BUFFER_USAGE_RATIO] = (
-            100 * self.attr[STAT_COUNT] / self._samples_max_buffer_size
+        self.attr[STAT_BUFFER_USAGE_RATIO] = round(
+            self.attr[STAT_COUNT] / self._samples_max_buffer_size, 2
         )
 
     async def async_update(self):
