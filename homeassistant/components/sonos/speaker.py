@@ -232,7 +232,7 @@ class SonosSpeaker:
         future = asyncio.run_coroutine_threadsafe(
             self.async_setup_dispatchers(entry), self.hass.loop
         )
-        future.result(timeout=1)
+        future.result(timeout=10)
 
         if battery_info := fetch_battery_info_or_none(self.soco):
             self.battery_info = battery_info

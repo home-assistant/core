@@ -47,6 +47,8 @@ def soco_error(
                     )
                     return None
 
+                # Prefer the entity_id if available, zone name as a fallback
+                # Needed as SonosSpeaker instances are not entities
                 zone_name = getattr(self, "speaker", self).zone_name
                 target = getattr(self, "entity_id", zone_name)
                 message = f"Error calling {function} on {target}: {err}"
