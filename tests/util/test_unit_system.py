@@ -59,6 +59,7 @@ def test_invalid_units():
             VOLUME_LITERS,
             MASS_GRAMS,
             PRESSURE_PA,
+            LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
@@ -102,6 +103,7 @@ def test_invalid_units():
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
+            SPEED_METERS_PER_SECOND,
             VOLUME_LITERS,
             MASS_GRAMS,
             PRESSURE_PA,
