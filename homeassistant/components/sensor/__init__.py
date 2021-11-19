@@ -302,11 +302,15 @@ class SensorEntity(Entity):
             # Anyways, lets validate the date at least..
             try:
                 value = ciso8601.parse_datetime(str(value))
-            except (ValueError, IndexError) as error:
-                raise ValueError(
-                    f"Invalid date/datetime: {self.entity_id} provide state '{value}', "
-                    f"while it has device class '{device_class}'"
-                ) from error
+            except (ValueError, IndexError):
+                _LOGGER.error(
+                    "Invalid date/datetime: %s provide state '%s', "
+                    "while it has device class '%s'",
+                    self.entity_id,
+                    value,
+                    device_class,
+                )
+                return None
 
             # Convert the date object to a standardized state string.
             if device_class == DEVICE_CLASS_DATE:
@@ -330,21 +334,27 @@ class SensorEntity(Entity):
                     value = value.astimezone(timezone.utc)  # type: ignore
 
                 return value.isoformat(timespec="seconds")  # type: ignore
-            except (AttributeError, TypeError) as err:
-                raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has a timestamp device class"
-                    f"but does not provide a datetime state but {type(value)}"
-                ) from err
+            except (AttributeError, TypeError):
+                _LOGGER.error(
+                    "Invalid datetime: %s has a timestamp device class"
+                    "but does not provide a datetime state but %s",
+                    self.entity_id,
+                    type(value),
+                )
+                return None
 
         # Received a date value
         if value is not None and device_class == DEVICE_CLASS_DATE:
             try:
                 return value.isoformat()  # type: ignore
-            except (AttributeError, TypeError) as err:
-                raise ValueError(
-                    f"Invalid date: {self.entity_id} has a date device class"
-                    f"but does not provide a date state but {type(value)}"
-                ) from err
+            except (AttributeError, TypeError):
+                _LOGGER.error(
+                    "Invalid date: %s has a date device class"
+                    "but does not provide a date state but %s",
+                    self.entity_id,
+                    type(value),
+                )
+                return None
 
         units = self.hass.config.units
         if (
