@@ -1,7 +1,7 @@
 """Support for monitoring OctoPrint sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
@@ -159,7 +159,7 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Estimated Finish Time", device_id)
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
         if (
@@ -171,7 +171,7 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
 
         read_time = self.coordinator.data["last_read_time"]
 
-        return (read_time + timedelta(seconds=job.progress.print_time_left)).isoformat()
+        return read_time + timedelta(seconds=job.progress.print_time_left)
 
 
 class OctoPrintStartTimeSensor(OctoPrintSensorBase):
@@ -186,7 +186,7 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Start Time", device_id)
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
 
@@ -199,7 +199,7 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
 
         read_time = self.coordinator.data["last_read_time"]
 
-        return (read_time - timedelta(seconds=job.progress.print_time)).isoformat()
+        return read_time - timedelta(seconds=job.progress.print_time)
 
 
 class OctoPrintTemperatureSensor(OctoPrintSensorBase):
