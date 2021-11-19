@@ -247,7 +247,6 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_async_zeroconf):
         entry_title=entry.title,
     )
 
-    mock_async_zeroconf = MagicMock()
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
     uuid = await hass.helpers.instance_id.async_get()
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
