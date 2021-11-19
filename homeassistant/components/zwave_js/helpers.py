@@ -75,7 +75,7 @@ def get_device_id_ext(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str] |
     domain, dev_id = get_device_id(client, node)
     return (
         domain,
-        f"{dev_id}-{node.manufacturer_id:04x}:{node.product_type:04x}:{node.product_id:04x}",
+        f"{dev_id}-{node.manufacturer_id}:{node.product_type}:{node.product_id}",
     )
 
 
