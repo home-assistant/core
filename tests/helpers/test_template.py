@@ -15,6 +15,7 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     MASS_GRAMS,
     PRESSURE_PA,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
@@ -38,6 +39,7 @@ def _set_up_units(hass):
         "custom",
         TEMP_CELSIUS,
         LENGTH_METERS,
+        SPEED_KILOMETERS_PER_HOUR,
         VOLUME_LITERS,
         MASS_GRAMS,
         PRESSURE_PA,

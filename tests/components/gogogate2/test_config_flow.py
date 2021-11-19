@@ -6,6 +6,7 @@ from ismartgate.common import ApiError
 from ismartgate.const import GogoGate2ApiErrorCode
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.gogogate2.const import (
     DEVICE_TYPE_GOGOGATE2,
     DEVICE_TYPE_ISMARTGATE,
@@ -106,7 +107,9 @@ async def test_form_homekit_unique_id_already_setup(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data={"host": "1.2.3.4", "properties": {"id": MOCK_MAC_ADDR}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.2.3.4", properties={"id": MOCK_MAC_ADDR}
+        ),
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
@@ -126,7 +129,9 @@ async def test_form_homekit_unique_id_already_setup(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data={"host": "1.2.3.4", "properties": {"id": MOCK_MAC_ADDR}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.2.3.4", properties={"id": MOCK_MAC_ADDR}
+        ),
     )
     assert result["type"] == RESULT_TYPE_ABORT
 
@@ -143,7 +148,9 @@ async def test_form_homekit_ip_address_already_setup(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data={"host": "1.2.3.4", "properties": {"id": MOCK_MAC_ADDR}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.2.3.4", properties={"id": MOCK_MAC_ADDR}
+        ),
     )
     assert result["type"] == RESULT_TYPE_ABORT
 
@@ -154,7 +161,9 @@ async def test_form_homekit_ip_address(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data={"host": "1.2.3.4", "properties": {"id": MOCK_MAC_ADDR}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.2.3.4", properties={"id": MOCK_MAC_ADDR}
+        ),
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
@@ -227,7 +236,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data={"host": "1.2.3.4", "properties": {"id": MOCK_MAC_ADDR}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.2.3.4", properties={"id": MOCK_MAC_ADDR}
+        ),
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}

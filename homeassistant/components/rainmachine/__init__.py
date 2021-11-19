@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -166,9 +165,6 @@ async def async_update_programs_and_zones(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RainMachine as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
 
@@ -184,9 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # regenmaschine can load multiple controllers at once, but we only grab the one
     # we loaded above:
-    controller = hass.data[DOMAIN][entry.entry_id][
-        DATA_CONTROLLER
-    ] = get_client_controller(client)
+    controller = get_client_controller(client)
 
     entry_updates: dict[str, Any] = {}
     if not entry.unique_id or is_ip_address(entry.unique_id):
@@ -244,7 +238,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         controller_init_tasks.append(coordinator.async_refresh())
 
     await asyncio.gather(*controller_init_tasks)
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinators
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CONTROLLER: controller,
+        DATA_COORDINATOR: coordinators,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -354,7 +353,7 @@ class RainMachineEntity(CoordinatorEntity):
             ),
             sw_version=controller.software_version,
         )
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
         self._attr_name = f"{controller.name} {description.name}"
         # The colons are removed from the device MAC simply because that value
         # (unnecessarily) makes up the existing unique ID formula and we want to avoid

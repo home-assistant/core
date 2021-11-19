@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user_gateway": {
+                "data": {
+                    "password": "Smile ID",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            }
+        }
+    }
+}

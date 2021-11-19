@@ -7,8 +7,8 @@
         },
         "tuya__basic_nightvision": {
             "0": "Autom\u00e0tic",
-            "1": "off",
-            "2": "on"
+            "1": "OFF",
+            "2": "ON"
         },
         "tuya__decibel_sensitivity": {
             "0": "Sensibilitat baixa",
@@ -24,7 +24,7 @@
             "led": "LED"
         },
         "tuya__light_mode": {
-            "none": "off",
+            "none": "OFF",
             "pos": "Indica la ubicaci\u00f3 de l'interruptor",
             "relay": "Indiqueu l'estat, activat/desactivat"
         },
@@ -40,10 +40,10 @@
         "tuya__relay_status": {
             "last": "Recorda l'\u00faltim estat",
             "memory": "Recorda l'\u00faltim estat",
-            "off": "off",
-            "on": "on",
-            "power_off": "off",
-            "power_on": "on"
+            "off": "OFF",
+            "on": "ON",
+            "power_off": "OFF",
+            "power_on": "ON"
         }
     }
 }

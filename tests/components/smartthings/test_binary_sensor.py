@@ -65,6 +65,8 @@ async def test_entity_and_device_attributes(hass, device_factory):
     assert entry.unique_id == f"{device.device_id}.{Attribute.motion}"
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
+    assert entry.configuration_url == "https://account.smartthings.com"
+    assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
     assert entry.model == device.device_type_name
     assert entry.manufacturer == "Unavailable"

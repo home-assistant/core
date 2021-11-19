@@ -1089,7 +1089,7 @@ async def test_restoring_client(hass, aioclient_mock):
         data=ENTRY_CONFIG,
         source="test",
         options={},
-        entry_id=1,
+        entry_id="1",
     )
 
     registry = er.async_get(hass)

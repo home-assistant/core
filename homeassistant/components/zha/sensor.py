@@ -38,6 +38,7 @@ from homeassistant.const import (
     ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
+    POWER_VOLT_AMPERE,
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
@@ -311,6 +312,23 @@ class ElectricalMeasurement(Sensor):
         if not self.available:
             return
         await super().async_update()
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementApparentPower(
+    ElectricalMeasurement, id_suffix="apparent_power"
+):
+    """Apparent power measurement."""
+
+    SENSOR_ATTR = "apparent_power"
+    _device_class = DEVICE_CLASS_POWER
+    _unit = POWER_VOLT_AMPERE
+    _div_mul_prefix = "ac_power"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
 
 
 @MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)

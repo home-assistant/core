@@ -79,16 +79,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
 
-SUPPORT_CAST = (
-    SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-)
-
-STATE_CASTING = "casting"
+SUPPORT_CAST = SUPPORT_PLAY_MEDIA | SUPPORT_TURN_OFF
 
 ENTITY_SCHEMA = vol.All(
     vol.Schema(
@@ -244,6 +235,8 @@ class CastDevice(MediaPlayerEntity):
                 self._cast_info.friendly_name,
                 None,
                 None,
+                self._cast_info.cast_type,
+                self._cast_info.manufacturer,
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )
@@ -572,7 +565,7 @@ class CastDevice(MediaPlayerEntity):
         """Return the state of the player."""
         # The lovelace app loops media to prevent timing out, don't show that
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
-            return STATE_CASTING
+            return STATE_PLAYING
         if (media_status := self._media_status()[0]) is not None:
             if media_status.player_is_playing:
                 return STATE_PLAYING
@@ -581,7 +574,7 @@ class CastDevice(MediaPlayerEntity):
             if media_status.player_is_idle:
                 return STATE_IDLE
         if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
-            return STATE_CASTING
+            return STATE_PLAYING
         if self._chromecast is not None and self._chromecast.is_idle:
             return STATE_OFF
         return None
@@ -695,12 +688,19 @@ class CastDevice(MediaPlayerEntity):
         media_status = self._media_status()[0]
 
         if (
+            self._chromecast
+            and self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST
+        ):
+            support |= SUPPORT_TURN_ON
+
+        if (
             self.cast_status
             and self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED
         ):
             support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
 
-        if media_status:
+        if media_status and self.app_id != CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            support |= SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
             if media_status.supports_queue_next:
                 support |= SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
             if media_status.supports_seek:
@@ -835,6 +835,8 @@ class DynamicCastGroup:
                 self._cast_info.friendly_name,
                 None,
                 None,
+                self._cast_info.cast_type,
+                self._cast_info.manufacturer,
             ),
             ChromeCastZeroconf.get_zeroconf(),
         )

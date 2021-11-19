@@ -515,7 +515,15 @@ class Entity(ABC):
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
-            # Add warning in 2021.6, remove in 2021.10
+            # Warning added in 2021.12, will be removed in 2022.4
+            if self.device_state_attributes is not None:
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Entity %s (%s) implements device_state_attributes. Please %s",
+                    self.entity_id,
+                    type(self),
+                    report_issue,
+                )
             if extra_state_attributes is None:
                 extra_state_attributes = self.device_state_attributes
             attr.update(extra_state_attributes or {})
@@ -526,26 +534,26 @@ class Entity(ABC):
 
         entry = self.registry_entry
         # pylint: disable=consider-using-ternary
-        if (name := (entry and entry.name) or self.name) is not None:
-            attr[ATTR_FRIENDLY_NAME] = name
-
-        if (icon := (entry and entry.icon) or self.icon) is not None:
-            attr[ATTR_ICON] = icon
-
-        if (entity_picture := self.entity_picture) is not None:
-            attr[ATTR_ENTITY_PICTURE] = entity_picture
-
         if assumed_state := self.assumed_state:
             attr[ATTR_ASSUMED_STATE] = assumed_state
 
-        if (supported_features := self.supported_features) is not None:
-            attr[ATTR_SUPPORTED_FEATURES] = supported_features
+        if (attribution := self.attribution) is not None:
+            attr[ATTR_ATTRIBUTION] = attribution
 
         if (device_class := self.device_class) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
-        if (attribution := self.attribution) is not None:
-            attr[ATTR_ATTRIBUTION] = attribution
+        if (entity_picture := self.entity_picture) is not None:
+            attr[ATTR_ENTITY_PICTURE] = entity_picture
+
+        if (icon := (entry and entry.icon) or self.icon) is not None:
+            attr[ATTR_ICON] = icon
+
+        if (name := (entry and entry.name) or self.name) is not None:
+            attr[ATTR_FRIENDLY_NAME] = name
+
+        if (supported_features := self.supported_features) is not None:
+            attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
         end = timer()
 

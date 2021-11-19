@@ -751,12 +751,12 @@ def _reduce_statistics_per_month(
 
     def period_start_end(time: datetime) -> tuple[datetime, datetime]:
         """Return the start and end of the period (month) time is within."""
-        start = dt_util.as_utc(
-            dt_util.as_local(time).replace(
-                day=1, hour=0, minute=0, second=0, microsecond=0
-            )
+        start_local = dt_util.as_local(time).replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
         )
-        end = (start + timedelta(days=31)).replace(day=1)
+        start = dt_util.as_utc(start_local)
+        end_local = (start_local + timedelta(days=31)).replace(day=1)
+        end = dt_util.as_utc(end_local)
         return (start, end)
 
     return _reduce_statistics(stats, same_period, period_start_end, timedelta(days=31))

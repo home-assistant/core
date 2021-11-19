@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "code": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u30b3\u30fc\u30c9"
+                },
+                "title": "Meteoclimatic"
+            }
+        }
+    }
+}
