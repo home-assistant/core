@@ -3,6 +3,7 @@
         "step": {
             "user": {
                 "data": {
+                    "port": "\u30dd\u30fc\u30c8",
                     "source_1": "\u30bd\u30fc\u30b9#1\u306e\u540d\u524d",
                     "source_2": "\u30bd\u30fc\u30b9#2\u306e\u540d\u524d",
                     "source_3": "\u30bd\u30fc\u30b9#3\u306e\u540d\u524d",

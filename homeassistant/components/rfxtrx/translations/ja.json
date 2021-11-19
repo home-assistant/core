@@ -1,4 +1,13 @@
 {
+    "config": {
+        "step": {
+            "setup_network": {
+                "data": {
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            }
+        }
+    },
     "device_automation": {
         "action_type": {
             "send_command": "\u30b3\u30de\u30f3\u30c9\u3092\u9001\u4fe1: {subtype}",
