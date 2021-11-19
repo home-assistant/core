@@ -194,7 +194,10 @@ async def test_loading_saving_data(hass, registry):
         unit_of_measurement="initial-unit_of_measurement",
     )
     orig_entry2 = registry.async_update_entity(
-        orig_entry2.entity_id, name="User Name", icon="hass:user-icon"
+        orig_entry2.entity_id,
+        device_class="user-class",
+        name="User Name",
+        icon="hass:user-icon",
     )
 
     assert len(registry.entities) == 2
@@ -215,7 +218,7 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.area_id == "mock-area-id"
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.config_entry_id == mock_config.entry_id
-    assert new_entry2.device_class is None
+    assert new_entry2.device_class == "user-class"
     assert new_entry2.device_id == "mock-dev-id"
     assert new_entry2.disabled_by == er.DISABLED_HASS
     assert new_entry2.entity_category == "config"
@@ -412,6 +415,33 @@ async def test_migration_yaml_to_json(hass):
     assert entry.name == "Test Name"
     assert entry.disabled_by == er.DISABLED_HASS
     assert entry.config_entry_id == "test-config-id"
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_1_to_1_2(hass, hass_storage):
+    """Test migration from version 1.1 to 1.2."""
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "entities": [
+                {
+                    "device_class": "best_class",
+                    "entity_id": "test.entity",
+                    "platform": "super_platform",
+                    "unique_id": "very_unique",
+                },
+            ]
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    entry = registry.async_get_or_create("test", "super_platform", "very_unique")
+
+    assert entry.device_class is None
+    assert entry.original_device_class == "best_class"
 
 
 @pytest.mark.parametrize("load_registries", [False])
