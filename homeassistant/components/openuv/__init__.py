@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # We disable the client's request retry abilities here to avoid a lengthy (and
-    # blocking startup). Instead, we allow HASS to handle retries:
+    # blocking) startup:
     openuv.client.disable_request_retries()
 
     try:
