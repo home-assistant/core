@@ -62,7 +62,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.noisiness = round(sum([3, 4.8, 10.2, 1.2, 5.4, 2.5, 7.3, 8]) / 8, 2)
         self.addCleanup(self.hass.stop)
 
-    def test_binary_sensor_source(self):
+    def test_binary_source_sensor(self):
         """Test if source is a sensor."""
         values = ["on", "off", "on", "off", "on", "off", "on"]
         assert setup_component(
@@ -108,7 +108,7 @@ class TestStatisticsSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test_unitless")
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
-    def test_sensor_source_defaults(self):
+    def test_source_sensor_defaults(self):
         """Test the default behavior of the sensor."""
         assert setup_component(
             self.hass,
@@ -154,7 +154,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
         assert new_state.state == STATE_UNAVAILABLE
-        assert state.attributes.get("source_value_valid") is None
+        assert new_state.attributes.get("source_value_valid") is None
         self.hass.states.set(
             "sensor.test_monitored",
             0,
@@ -162,25 +162,28 @@ class TestStatisticsSensor(unittest.TestCase):
         )
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
-        assert new_state.state != STATE_UNAVAILABLE
-        assert state.attributes.get("source_value_valid") is True
-        assert new_state.attributes.get("count") == state.attributes.get("count") + 1
+        new_mean = round(sum(self.values) / (len(self.values) + 1), 2)
+        assert new_state.state == str(new_mean)
+        assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+        assert new_state.attributes.get("source_value_valid") is True
 
         # Source sensor has a nonnumerical state, unit and state should not change
         state = self.hass.states.get("sensor.test")
         self.hass.states.set("sensor.test_monitored", "beer", {})
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
-        assert state == new_state
-        assert state.attributes.get("source_value_valid") is False
+        assert new_state.state == str(new_mean)
+        assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+        assert new_state.attributes.get("source_value_valid") is False
 
         # Source sensor is removed, unit and state should not change
         # This is equal to a None value being published
         self.hass.states.remove("sensor.test_monitored")
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
-        assert state == new_state
-        assert state.attributes.get("source_value_valid") is False
+        assert new_state.state == str(new_mean)
+        assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+        assert new_state.attributes.get("source_value_valid") is False
 
     def test_sampling_size(self):
         """Test rotation."""

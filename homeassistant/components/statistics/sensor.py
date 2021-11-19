@@ -226,7 +226,7 @@ class StatisticsSensor(SensorEntity):
     def _add_state_to_queue(self, new_state):
         """Add the state to the queue."""
         self._available = new_state.state != STATE_UNAVAILABLE
-        if new_state.state in (STATE_UNAVAILABLE):
+        if new_state.state == STATE_UNAVAILABLE:
             self._source_value_valid = None
             return
         if new_state.state in (STATE_UNKNOWN, None):
