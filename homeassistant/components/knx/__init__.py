@@ -89,6 +89,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             # deprecated since 2021.12
+            cv.deprecated(ConnectionSchema.CONF_KNX_STATE_UPDATER),
+            cv.deprecated(ConnectionSchema.CONF_KNX_RATE_LIMIT),
             cv.deprecated(CONF_KNX_ROUTING),
             cv.deprecated(CONF_KNX_TUNNELING),
             cv.deprecated(CONF_KNX_INDIVIDUAL_ADDRESS),
@@ -231,7 +233,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if conf is None:
         conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
 
-    config = {**entry.data, **conf}
+    config = {**conf, **entry.data}
 
     try:
         knx_module = KNXModule(hass, config, entry)
@@ -297,6 +299,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unloading the KNX platforms."""
+    #  if not loaded directly return
+    if not hass.data.get(DOMAIN):
+        return True
+
     knx_module: KNXModule = hass.data[DOMAIN]
     for exposure in knx_module.exposures:
         exposure.shutdown()
@@ -315,6 +321,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data.pop(DATA_KNX_CONFIG)
 
     return unload_ok
+
+
+async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Update a given config entry."""
+    return await hass.config_entries.async_reload(entry.entry_id)
 
 
 class KNXModule:
@@ -345,6 +356,8 @@ class KNXModule:
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         )
+
+        self.entry.async_on_unload(self.entry.add_update_listener(async_update_entry))
 
     def init_xknx(self) -> None:
         """Initialize XKNX object."""

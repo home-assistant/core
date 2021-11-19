@@ -38,5 +38,26 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "connection_type": "KNX Connection Type",
+          "individual_address": "Default individual address",
+          "multicast_group": "Multicast group used for routing and discovery",
+          "multicast_port": "Multicast port used for routing and discovery",
+          "state_updater": "Globally enable reading states from the KNX Bus",
+          "rate_limit": "Maximum outgoing telegrams per second"
+        }
+      },
+      "tunnel": {
+        "data": {
+          "port": "[%key:common::config_flow::data::port%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "route_back": "Route Back / NAT Mode"
+        }
+      }
+    }
   }
 }

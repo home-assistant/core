@@ -38,5 +38,26 @@
     "error": {
       "cannot_connect": "Failed to connect."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "connection_type": "KNX Connection Type",
+          "individual_address": "Default individual address",
+          "multicast_group": "Multicast group used for routing and discovery",
+          "multicast_port": "Multicast port used for routing and discovery",
+          "state_updater": "Globally enable reading states from the KNX Bus",
+          "rate_limit": "Maximum outgoing telegrams per second"
+        }
+      },
+      "tunnel": {
+        "data": {
+          "port": "Port of KNX gateway",
+          "host": "IP Address of KNX gateway",
+          "route_back": "Route Back / NAT Mode"
+        }
+      }
+    }
   }
 }
