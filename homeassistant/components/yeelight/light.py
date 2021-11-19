@@ -83,7 +83,6 @@ SERVICE_SET_HSV_SCENE = "set_hsv_scene"
 SERVICE_SET_COLOR_TEMP_SCENE = "set_color_temp_scene"
 SERVICE_SET_COLOR_FLOW_SCENE = "set_color_flow_scene"
 SERVICE_SET_AUTO_DELAY_OFF_SCENE = "set_auto_delay_off_scene"
-SERVICE_FORCE_UPDATE = "force_update"
 
 EFFECT_DISCO = "Disco"
 EFFECT_TEMP = "Slow Temp"
@@ -405,11 +404,6 @@ def _async_setup_services(hass: HomeAssistant):
     platform.async_register_entity_service(
         SERVICE_SET_MUSIC_MODE, SERVICE_SCHEMA_SET_MUSIC_MODE, "async_set_music_mode"
     )
-    platform.async_register_entity_service(
-        SERVICE_FORCE_UPDATE,
-        {},
-        "async_force_update",
-    )
 
 
 class YeelightGenericLight(YeelightEntity, LightEntity):
@@ -417,6 +411,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     _attr_color_mode = COLOR_MODE_BRIGHTNESS
     _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_should_poll = False
 
     def __init__(self, device, entry, custom_effects=None):
         """Initialize the Yeelight light."""
@@ -597,10 +592,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     async def async_update(self):
         """Update light properties."""
-        await self.device.async_update()
-
-    async def async_force_update(self):
-        """Force an update of the light properties."""
         await self.device.async_update(True)
 
     async def async_set_music_mode(self, music_mode) -> None:

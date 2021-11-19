@@ -191,10 +191,3 @@ set_music_mode:
       required: true
       selector:
         boolean:
-force_update:
-  name: Force update
-  description: Force a update of the state
-  target:
-    entity:
-      integration: yeelight
-      domain: light
