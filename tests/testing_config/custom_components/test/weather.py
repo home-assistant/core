@@ -5,7 +5,16 @@ Call init before using it in your tests to ensure clean test data.
 """
 from __future__ import annotations
 
-from homeassistant.components.weather import Forecast, WeatherEntity
+from homeassistant.components.weather import (
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRESSURE,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
+    Forecast,
+    WeatherEntity,
+)
 
 from tests.common import MockEntity
 
@@ -97,3 +106,21 @@ class MockWeather(MockEntity, WeatherEntity):
     def condition(self) -> str | None:
         """Return the current condition."""
         return self._handle("condition")
+
+
+class MockWeatherMockForecast(MockWeather):
+    """Mock weather class with mocked forecast."""
+
+    @property
+    def forecast(self) -> list[Forecast] | None:
+        """Return the forecast."""
+        return [
+            {
+                ATTR_FORECAST_TEMP: self.temperature,
+                ATTR_FORECAST_TEMP_LOW: self.temperature,
+                ATTR_FORECAST_PRESSURE: self.pressure,
+                ATTR_FORECAST_WIND_SPEED: self.wind_speed,
+                ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
+                ATTR_FORECAST_PRECIPITATION: self._values.get("precipitation"),
+            }
+        ]
