@@ -324,16 +324,19 @@ class SensorEntity(Entity):
         # Received a datetime
         if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
             try:
-                if value.tzinfo is None:  # type: ignore
+                # We cast the value, to avoid using isinstance, but satisfy
+                # typechecking. The error are guarded in this try.
+                value = cast(datetime, value)
+                if value.tzinfo is None:
                     raise ValueError(
                         f"Invalid datetime: {self.entity_id} provides state '{value}', "
                         "which is missing timezone information"
                     )
 
-                if value.tzinfo != timezone.utc:  # type: ignore
-                    value = value.astimezone(timezone.utc)  # type: ignore
+                if value.tzinfo != timezone.utc:
+                    value = value.astimezone(timezone.utc)
 
-                return value.isoformat(timespec="seconds")  # type: ignore
+                return value.isoformat(timespec="seconds")
             except (AttributeError, TypeError):
                 _LOGGER.error(
                     "Invalid datetime: %s has a timestamp device class"
