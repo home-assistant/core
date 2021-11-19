@@ -81,19 +81,8 @@ def mock_smile():
         yield smile_mock.return_value
 
 
-def com_port():
-    """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo(TEST_USBPORT)
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = TEST_USBPORT
-    port.description = "Some serial port"
-    return port
-
-
 async def test_form_flow_gateway(hass):
     """Test we get the form for Plugwise Gateway product type."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
@@ -111,7 +100,6 @@ async def test_form_flow_gateway(hass):
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={FLOW_TYPE: FLOW_NET}
     )
@@ -150,7 +138,6 @@ async def test_form(hass):
 
 async def test_zeroconf_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
@@ -191,7 +178,6 @@ async def test_zeroconf_form(hass):
 
 async def test_zeroconf_stretch_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
@@ -232,7 +218,6 @@ async def test_zeroconf_stretch_form(hass):
 
 async def test_form_username(hass):
     """Test we get the username data back."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={FLOW_TYPE: FLOW_NET}
     )
