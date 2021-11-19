@@ -332,7 +332,7 @@ class StatisticsSensor(SensorEntity):
         """Return the state attributes of the sensor."""
         return {
             STAT_AGE_COVERAGE_RATIO: self.attr[STAT_AGE_COVERAGE_RATIO],
-            STAT_BUFFER_USAGE_RATIO: self.attr[STAT_AGE_COVERAGE_RATIO],
+            STAT_BUFFER_USAGE_RATIO: self.attr[STAT_BUFFER_USAGE_RATIO],
             STAT_SOURCE_VALUE_VALID: self._source_value_valid,
         }
 
@@ -418,8 +418,6 @@ class StatisticsSensor(SensorEntity):
             self.attr[STAT_MIN_AGE] = self.attr[STAT_MAX_AGE] = STATE_UNKNOWN
             self.attr[STAT_CHANGE] = self.attr[STAT_AVERAGE_CHANGE] = STATE_UNKNOWN
             self.attr[STAT_CHANGE_RATE] = STATE_UNKNOWN
-            self.attr[STAT_AGE_COVERAGE_RATIO] = STATE_UNKNOWN
-            self.attr[STAT_BUFFER_USAGE_RATIO] = 0
             return
 
         self.attr[STAT_MEAN] = statistics.mean(self.states)
@@ -449,15 +447,22 @@ class StatisticsSensor(SensorEntity):
         self.attr[STAT_AVERAGE_CHANGE] = self.attr[STAT_AVERAGE_CHANGE]
         self.attr[STAT_CHANGE_RATE] = self.attr[STAT_CHANGE_RATE]
 
-        if self._samples_max_age is not None:
+    def _update_attributes(self):
+        """Calculate and update the various attributes."""
+        states_count = len(self.states)
+
+        self.attr[STAT_BUFFER_USAGE_RATIO] = round(
+            states_count / self._samples_max_buffer_size, 2
+        )
+
+        if states_count >= 1 and self._samples_max_age is not None:
             self.attr[STAT_AGE_COVERAGE_RATIO] = round(
-                age_range_seconds / self._samples_max_age.total_seconds(), 2
+                (self.ages[-1] - self.ages[0]).total_seconds()
+                / self._samples_max_age.total_seconds(),
+                2,
             )
         else:
             self.attr[STAT_AGE_COVERAGE_RATIO] = STATE_UNKNOWN
-        self.attr[STAT_BUFFER_USAGE_RATIO] = round(
-            self.attr[STAT_COUNT] / self._samples_max_buffer_size, 2
-        )
 
     async def async_update(self):
         """Get the latest data and updates the states."""
@@ -466,6 +471,7 @@ class StatisticsSensor(SensorEntity):
             self._purge_old()
 
         self._update_characteristics()
+        self._update_attributes()
 
         # If max_age is set, ensure to update again after the defined interval.
         next_to_purge_timestamp = self._next_to_purge_timestamp()

@@ -101,21 +101,26 @@ class TestStatisticsSensor(unittest.TestCase):
         assert state.state == str(len(values))
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+        assert state.attributes.get("age_coverage_ratio") == STATE_UNKNOWN
+        assert state.attributes.get("buffer_usage_ratio") == round(7 / 20, 2)
+        assert state.attributes.get("source_value_valid") is True
 
         state = self.hass.states.get("sensor.test_unitless")
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
-    def test_sensor_source(self):
-        """Test if source is a sensor."""
+    def test_sensor_source_defaults(self):
+        """Test the default behavior of the sensor."""
         assert setup_component(
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                    },
+                ]
             },
         )
 
@@ -132,31 +137,12 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        assert str(self.mean) == state.state
-        assert self.min == state.attributes.get("min_value")
-        assert self.max == state.attributes.get("max_value")
-        assert self.distance_abs == state.attributes.get("distance_absolute")
-        assert self.distance_95p == state.attributes.get(
-            "distance_95_percent_of_values"
-        )
-        assert self.distance_99p == state.attributes.get(
-            "distance_99_percent_of_values"
-        )
-        assert self.variance == state.attributes.get("variance")
-        assert self.median == state.attributes.get("median")
-        assert self.deviation == state.attributes.get("standard_deviation")
-        assert self.quantiles == state.attributes.get("quantiles")
-        assert self.mean == state.attributes.get("mean")
-        assert self.count == state.attributes.get("count")
-        assert self.total == state.attributes.get("total")
-        assert self.change == state.attributes.get("change")
-        assert self.average_change == state.attributes.get("average_change")
-        assert self.noisiness == state.attributes.get("noisiness")
-
-        assert state.attributes.get("age_coverage_ratio") == STATE_UNKNOWN
-
+        assert state.state == str(self.mean)
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+        assert state.attributes.get("age_coverage_ratio") == STATE_UNKNOWN
+        assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
+        assert state.attributes.get("source_value_valid") is True
 
         # Source sensor turns unavailable, then available with valid value,
         # statistics sensor should follow
@@ -168,6 +154,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
         assert new_state.state == STATE_UNAVAILABLE
+        assert state.attributes.get("source_value_valid") is None
         self.hass.states.set(
             "sensor.test_monitored",
             0,
@@ -176,14 +163,16 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
         assert new_state.state != STATE_UNAVAILABLE
+        assert state.attributes.get("source_value_valid") is True
         assert new_state.attributes.get("count") == state.attributes.get("count") + 1
 
-        # Source sensor has a non-float state, unit and state should not change
+        # Source sensor has a nonnumerical state, unit and state should not change
         state = self.hass.states.get("sensor.test")
         self.hass.states.set("sensor.test_monitored", "beer", {})
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
         assert state == new_state
+        assert state.attributes.get("source_value_valid") is False
 
         # Source sensor is removed, unit and state should not change
         # This is equal to a None value being published
@@ -191,6 +180,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
         assert state == new_state
+        assert state.attributes.get("source_value_valid") is False
 
     def test_sampling_size(self):
         """Test rotation."""
@@ -198,12 +188,14 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                    "sampling_size": 5,
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "sampling_size": 5,
+                    },
+                ]
             },
         )
 
@@ -230,12 +222,14 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                    "sampling_size": 1,
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "sampling_size": 1,
+                    },
+                ]
             },
         )
 
@@ -285,12 +279,14 @@ class TestStatisticsSensor(unittest.TestCase):
                 self.hass,
                 "sensor",
                 {
-                    "sensor": {
-                        "platform": "statistics",
-                        "name": "test",
-                        "entity_id": "sensor.test_monitored",
-                        "max_age": {"seconds": 150},
-                    }
+                    "sensor": [
+                        {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                            "max_age": {"seconds": 150},
+                        },
+                    ]
                 },
             )
 
@@ -312,7 +308,6 @@ class TestStatisticsSensor(unittest.TestCase):
         assert state.attributes.get("count") == 3
         assert state.attributes.get("min_value") == 6
         assert state.attributes.get("max_value") == 14
-        assert state.attributes.get("age_range") == (3 - 1) * 60
         assert state.attributes.get("age_coverage_ratio") == 100 / 150 * 120
         assert state.attributes.get("buffer_usage_ratio") == 100 / 20 * 3
 
@@ -333,12 +328,14 @@ class TestStatisticsSensor(unittest.TestCase):
                 self.hass,
                 "sensor",
                 {
-                    "sensor": {
-                        "platform": "statistics",
-                        "name": "test",
-                        "entity_id": "sensor.test_monitored",
-                        "max_age": {"minutes": 3},
-                    }
+                    "sensor": [
+                        {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                            "max_age": {"minutes": 3},
+                        },
+                    ]
                 },
             )
 
@@ -389,11 +386,13 @@ class TestStatisticsSensor(unittest.TestCase):
                 self.hass,
                 "sensor",
                 {
-                    "sensor": {
-                        "platform": "statistics",
-                        "name": "test",
-                        "entity_id": "sensor.test_monitored",
-                    }
+                    "sensor": [
+                        {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                        },
+                    ]
                 },
             )
 
@@ -427,12 +426,14 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                    "precision": 0,
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "precision": 0,
+                    },
+                ]
             },
         )
 
@@ -457,12 +458,14 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                    "precision": 1,
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "precision": 1,
+                    },
+                ]
             },
         )
 
@@ -493,12 +496,6 @@ class TestStatisticsSensor(unittest.TestCase):
                         "name": "test_min_age",
                         "entity_id": "sensor.test_monitored",
                         "state_characteristic": "min_age",
-                    },
-                    {
-                        "platform": "statistics",
-                        "name": "test_age_range",
-                        "entity_id": "sensor.test_monitored",
-                        "state_characteristic": "age_range",
                     },
                     {
                         "platform": "statistics",
@@ -543,9 +540,6 @@ class TestStatisticsSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test_min_age")
         assert state.state == str(state.attributes.get("min_age"))
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-        state = self.hass.states.get("sensor.test_age_range")
-        assert state.state == str(state.attributes.get("age_range"))
-        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "s"
         state = self.hass.states.get("sensor.test_buffer_usage_ratio")
         assert state.state == str(state.attributes.get("buffer_usage_ratio"))
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
@@ -672,12 +666,14 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                    "sampling_size": 100,
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "sampling_size": 100,
+                    },
+                ]
             },
         )
 
@@ -739,13 +735,15 @@ class TestStatisticsSensor(unittest.TestCase):
                 self.hass,
                 "sensor",
                 {
-                    "sensor": {
-                        "platform": "statistics",
-                        "name": "test",
-                        "entity_id": "sensor.test_monitored",
-                        "sampling_size": 100,
-                        "max_age": {"hours": max_age},
-                    }
+                    "sensor": [
+                        {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                            "sampling_size": 100,
+                            "max_age": {"hours": max_age},
+                        },
+                    ]
                 },
             )
             self.hass.block_till_done()
@@ -776,12 +774,14 @@ async def test_reload(hass):
         hass,
         "sensor",
         {
-            "sensor": {
-                "platform": "statistics",
-                "name": "test",
-                "entity_id": "sensor.test_monitored",
-                "sampling_size": 100,
-            }
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "sampling_size": 100,
+                },
+            ]
         },
     )
     await hass.async_block_till_done()
