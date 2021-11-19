@@ -7,7 +7,7 @@ from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable, Final, Mapping, TypedDict, cast
+from typing import Any, Callable, Final, Mapping, MutableMapping, TypedDict, cast
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
@@ -420,7 +420,6 @@ class Scanner:
         location = ssdp_device.location
         info_desc = await self._async_get_description_dict(location) or {}
         combined_headers = ssdp_device.combined_headers(dst)
-        info_with_desc = CaseInsensitiveDict(combined_headers, **info_desc)
 
         callbacks = self._async_get_matching_callbacks(combined_headers)
         matching_domains: set[str] = set()
@@ -428,14 +427,14 @@ class Scanner:
         # If there are no changes from a search, do not trigger a config flow
         if source != SsdpSource.SEARCH_ALIVE:
             matching_domains = self.integration_matchers.async_matching_domains(
-                info_with_desc
+                CaseInsensitiveDict(combined_headers, **info_desc)
             )
 
         if not callbacks and not matching_domains:
             return
 
         discovery_info = discovery_info_from_headers_and_description(
-            info_with_desc, info_desc
+            combined_headers, info_desc
         )
         discovery_info[ATTR_HA_MATCHING_DOMAINS] = matching_domains
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
@@ -474,7 +473,7 @@ class Scanner:
             await self._description_cache.async_get_description_dict(location) or {}
         )
         return discovery_info_from_headers_and_description(
-            CaseInsensitiveDict(headers, **info_desc), info_desc
+            CaseInsensitiveDict(headers), info_desc
         )
 
     async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
@@ -505,18 +504,11 @@ class Scanner:
 
 
 def discovery_info_from_headers_and_description(
-    info_with_desc: CaseInsensitiveDict,
+    combined_headers: MutableMapping[str, Any],
     info_desc: Mapping[str, str],
 ) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
-    info = {
-        DISCOVERY_MAPPING.get(k.lower(), k): v
-        for k, v in info_with_desc.as_dict().items()
-    }
-
-    if ATTR_UPNP_UDN not in info and ATTR_SSDP_USN in info:
-        if udn := _udn_from_usn(info[ATTR_SSDP_USN]):
-            info[ATTR_UPNP_UDN] = udn
+    info = {DISCOVERY_MAPPING.get(k.lower(), k): v for k, v in combined_headers.items()}
 
     # Increase compatibility.
     if ATTR_SSDP_ST not in info and ATTR_SSDP_NT in info:
@@ -524,8 +516,9 @@ def discovery_info_from_headers_and_description(
 
     # Duplicate upnp data
     info[ATTR_UPNP] = info_desc
-    if ATTR_UPNP_UDN not in info[ATTR_UPNP]:
-        info[ATTR_UPNP][ATTR_UPNP_UDN] = udn
+    if ATTR_UPNP_UDN not in info[ATTR_UPNP] and ATTR_SSDP_USN in info:
+        if udn := _udn_from_usn(info[ATTR_SSDP_USN]):
+            info[ATTR_UPNP][ATTR_UPNP_UDN] = udn
 
     return cast(SsdpServiceInfo, info)
 

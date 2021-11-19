@@ -68,7 +68,6 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
         ssdp.ATTR_SSDP_USN: "uuid:mock-udn::mock-st",
         ssdp.ATTR_SSDP_SERVER: "mock-server",
         ssdp.ATTR_SSDP_EXT: "",
-        ssdp.ATTR_UPNP_UDN: "uuid:mock-udn",
         ssdp.ATTR_SSDP_UDN: ANY,
         "_timestamp": ANY,
         ssdp.ATTR_HA_MATCHING_DOMAINS: {"mock-domain"},
@@ -356,8 +355,6 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
             ssdp.ATTR_SSDP_NT: "mock-st",
             ssdp.ATTR_SSDP_ST: "mock-st",  # Set by ssdp component, not in original advertisement.
             ssdp.ATTR_SSDP_USN: "uuid:mock-udn::mock-st",
-            ssdp.ATTR_UPNP_UDN: "uuid:mock-udn",
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
             ssdp.ATTR_SSDP_UDN: ANY,
             "nts": "ssdp:alive",
             "_timestamp": ANY,
@@ -461,13 +458,11 @@ async def test_scan_with_registered_callback(
     assert async_not_matching_integration_callback1.call_count == 0
     assert async_integration_callback.call_args[0] == (
         {
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
             ssdp.ATTR_SSDP_EXT: "",
             ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
             ssdp.ATTR_SSDP_SERVER: "mock-server",
             ssdp.ATTR_SSDP_ST: "mock-st",
             ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::mock-st",
-            ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
             "x-rincon-bootseq": "55",
             ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
@@ -528,8 +523,6 @@ async def test_getting_existing_headers(
             ssdp.ATTR_SSDP_SERVER: "mock-server",
             ssdp.ATTR_SSDP_ST: "mock-st",
             ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
-            ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
             ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
             ssdp.ATTR_UPNP: {
@@ -549,8 +542,6 @@ async def test_getting_existing_headers(
             ssdp.ATTR_SSDP_SERVER: "mock-server",
             ssdp.ATTR_SSDP_ST: "mock-st",
             ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
-            ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
             ssdp.ATTR_SSDP_UDN: ANY,
             "_timestamp": ANY,
             ssdp.ATTR_UPNP: {
@@ -569,8 +560,6 @@ async def test_getting_existing_headers(
         ssdp.ATTR_SSDP_SERVER: "mock-server",
         ssdp.ATTR_SSDP_ST: "mock-st",
         ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
-        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_SSDP_UDN: ANY,
         "_timestamp": ANY,
         ssdp.ATTR_UPNP: {
