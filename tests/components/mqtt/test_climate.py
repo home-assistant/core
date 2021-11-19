@@ -433,7 +433,7 @@ async def test_receive_mqtt_temperature(hass, mqtt_mock):
     assert state.attributes.get("current_temperature") == 47
 
 
-async def test_receive_mqtt_action_received(hass, mqtt_mock):
+async def test_handle_action_received(hass, mqtt_mock):
     """Test getting the action received via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["climate"]["action_topic"] = "action"
@@ -512,21 +512,6 @@ async def test_set_away_mode(hass, mqtt_mock):
     )
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "away"
-
-
-async def test_set_hvac_action(hass, mqtt_mock):
-    """Test setting of the HVAC action."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    config["climate"]["action_topic"] = "action"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("hvac_action") is None
-
-    async_fire_mqtt_message(hass, "action", "cool")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("hvac_action") == "cool"
 
 
 async def test_set_hold_pessimistic(hass, mqtt_mock):
@@ -801,9 +786,9 @@ async def test_get_with_templates(hass, mqtt_mock, caplog):
     assert state.attributes.get("current_temperature") == 74656
 
     # Action
-    async_fire_mqtt_message(hass, "action", '"cool"')
+    async_fire_mqtt_message(hass, "action", '"cooling"')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("hvac_action") == "cool"
+    assert state.attributes.get("hvac_action") == "cooling"
 
 
 async def test_set_with_templates(hass, mqtt_mock, caplog):
