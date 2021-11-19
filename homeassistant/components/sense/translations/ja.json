@@ -3,6 +3,7 @@
         "step": {
             "user": {
                 "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "timeout": "\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8"
                 },
                 "title": "Sense Energy Monitor\u306b\u63a5\u7d9a\u3059\u308b"

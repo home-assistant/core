@@ -8,7 +8,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "\u30db\u30b9\u30c8"
+                    "host": "\u30db\u30b9\u30c8",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
                 },
                 "title": "Keenetic NDMS2\u30eb\u30fc\u30bf\u30fc\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
             }
