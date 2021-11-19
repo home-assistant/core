@@ -45,7 +45,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     _tunnels: list
     _gateway_ip: str = ""
-    _gateway_port: int = 3675
+    _gateway_port: int = DEFAULT_MCAST_PORT
 
     @staticmethod
     @callback
