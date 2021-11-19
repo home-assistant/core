@@ -410,7 +410,7 @@ class SonosSpeaker:
                     self.zone_name,
                     exc_info=exception,
                 )
-            await self.async_cleanup()
+            await self.async_offline()
 
     @callback
     def async_dispatch_event(self, event: SonosEvent) -> None:
@@ -534,9 +534,9 @@ class SonosSpeaker:
             "No recent activity and cannot reach %s, marking unavailable",
             self.zone_name,
         )
-        await self.async_cleanup()
+        await self.async_offline()
 
-    async def async_cleanup(self) -> None:
+    async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
         self.available = False
         self._share_link_plugin = None
@@ -557,7 +557,7 @@ class SonosSpeaker:
             self.zone_name,
             soco,
         )
-        await self.async_cleanup()
+        await self.async_offline()
         self.soco = soco
         self.speaker_activity("reboot")
 
