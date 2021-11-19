@@ -248,7 +248,7 @@ aurorapy==0.2.6
 axis==44
 
 # homeassistant.components.azure_event_hub
-azure-eventhub==5.5.0
+azure-eventhub==5.6.1
 
 # homeassistant.components.homekit
 base36==0.1.1
