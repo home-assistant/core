@@ -142,7 +142,7 @@ class AtomeData:
             self._retrieve_live()
 
     def _retrieve_period_usage(self, period_type):
-        """Return current daily/monthly/yearly power usage."""
+        """Return current daily/weekly/monthly/yearly power usage."""
         error_during_retrieve = False
         period_usage = None
         period_price = None
@@ -161,7 +161,7 @@ class AtomeData:
         return retrieve_has_been_sucessful, period_usage, period_price
 
     def _retrieve_period_usage_with_retry(self, period_type):
-        """Return current daily/monthly/yearly power usage with one retry."""
+        """Return current daily/weekly/monthly/yearly power usage with one retry."""
         (
             retrieve_has_been_sucessful,
             period_usage,
@@ -172,8 +172,8 @@ class AtomeData:
             self.atome_client.login()
             (
                 retrieve_has_been_sucessful,
-                self._day_usage,
-                self._day_price,
+                period_usage,
+                period_price,
             ) = self._retrieve_period_usage(period_type)
         return (period_usage, period_price)
 
