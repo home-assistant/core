@@ -362,7 +362,13 @@ async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
 
 
 async def test_options_flow_devices(
-    mock_hap, hass, demo_cleanup, device_reg, entity_reg, mock_get_source_ip
+    mock_hap,
+    hass,
+    demo_cleanup,
+    device_reg,
+    entity_reg,
+    mock_get_source_ip,
+    mock_async_zeroconf,
 ):
     """Test devices can be bridged."""
     config_entry = MockConfigEntry(
@@ -441,7 +447,7 @@ async def test_options_flow_devices(
 
 
 async def test_options_flow_devices_preserved_when_advanced_off(
-    mock_hap, hass, mock_get_source_ip
+    mock_hap, hass, mock_get_source_ip, mock_async_zeroconf
 ):
     """Test devices are preserved if they were added in advanced mode but it was turned off."""
     config_entry = MockConfigEntry(
