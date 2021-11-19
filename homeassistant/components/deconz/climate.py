@@ -38,6 +38,8 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -220,6 +222,17 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             data = {"on": self._hvac_mode_to_deconz[hvac_mode]}
 
         await self._device.set_config(**data)
+
+    @property
+    def hvac_action(self) -> str:
+        """Return current hvac operation ie. heat, cool.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        if self._device.state_on:
+            return CURRENT_HVAC_HEAT
+        else:
+            return CURRENT_HVAC_IDLE
 
     # Preset control
 
