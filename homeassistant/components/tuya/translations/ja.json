@@ -22,6 +22,7 @@
                     "access_id": "Tuya IoT Access ID",
                     "access_secret": "Tuya IoT Access Secret",
                     "country_code": "\u56fd\u5225\u30b3\u30fc\u30c9",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "region": "\u30ea\u30fc\u30b8\u30e7\u30f3",
                     "tuya_project_type": "Tuya Cloud\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u30bf\u30a4\u30d7"
                 },
