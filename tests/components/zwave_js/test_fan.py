@@ -183,8 +183,9 @@ async def test_standard_fan(hass, client, in_wall_smart_fan_control, integration
 async def test_hs_fan(hass, client, hs_fc200, integration):
     """Test a fan entity with configurable speeds."""
 
-    async def assert_percentage_to_zwave_speed(percentage, zwave_speed):
-        """Assert that a percentage input is translated to a specific Zwave speed."""
+    async def get_zwave_speed_from_percentage(percentage):
+        """Set the fan to a particular percentage and get the resulting Zwave speed."""
+        client.async_send_command.reset_mock()
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -196,24 +197,10 @@ async def test_hs_fan(hass, client, hs_fc200, integration):
         args = client.async_send_command.call_args[0][0]
         assert args["command"] == "node.set_value"
         assert args["nodeId"] == 39
-        assert args["value"] == zwave_speed
+        return args["value"]
 
-        client.async_send_command.reset_mock()
-
-    await assert_percentage_to_zwave_speed(0, 0)
-    await assert_percentage_to_zwave_speed(1, 33)
-    await assert_percentage_to_zwave_speed(31, 33)
-    await assert_percentage_to_zwave_speed(32, 33)
-    await assert_percentage_to_zwave_speed(33, 33)
-    await assert_percentage_to_zwave_speed(34, 66)
-    await assert_percentage_to_zwave_speed(66, 66)
-    await assert_percentage_to_zwave_speed(67, 66)
-    await assert_percentage_to_zwave_speed(68, 99)
-    await assert_percentage_to_zwave_speed(99, 99)
-    await assert_percentage_to_zwave_speed(100, 99)
-
-    async def assert_zwave_speed_to_percentage(zwave_speed, percentage):
-        """Assert that a ZWave speed is translated to a specific percentage."""
+    async def get_percentage_from_zwave_speed(zwave_speed):
+        """Set the underlying device speed and get the resulting percentage."""
         event = Event(
             type="value updated",
             data={
@@ -232,18 +219,23 @@ async def test_hs_fan(hass, client, hs_fc200, integration):
             },
         )
         hs_fc200.receive_event(event)
-
         state = hass.states.get(HS_FAN_ENTITY)
-        assert state.attributes[ATTR_PERCENTAGE] == percentage
+        return state.attributes[ATTR_PERCENTAGE]
 
-    await assert_zwave_speed_to_percentage(0, 0)
-    await assert_zwave_speed_to_percentage(1, 33)
-    await assert_zwave_speed_to_percentage(32, 33)
-    await assert_zwave_speed_to_percentage(33, 33)
-    await assert_zwave_speed_to_percentage(34, 67)
-    await assert_zwave_speed_to_percentage(66, 67)
-    await assert_zwave_speed_to_percentage(67, 100)
-    await assert_zwave_speed_to_percentage(99, 100)
+    percentages_to_zwave_speeds = [
+        [[0], [0]],
+        [range(1, 34), range(1, 34)],
+        [range(34, 68), range(34, 67)],
+        [range(68, 101), range(67, 100)],
+    ]
+
+    for percentages, zwave_speeds in percentages_to_zwave_speeds:
+        for percentage in percentages:
+            actual_zwave_speed = await get_zwave_speed_from_percentage(percentage)
+            assert actual_zwave_speed in zwave_speeds
+        for zwave_speed in zwave_speeds:
+            actual_percentage = await get_percentage_from_zwave_speed(zwave_speed)
+            assert actual_percentage in percentages
 
     state = hass.states.get(HS_FAN_ENTITY)
     assert math.isclose(state.attributes[ATTR_PERCENTAGE_STEP], 33.3333, rel_tol=1e-3)
