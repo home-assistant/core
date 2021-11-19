@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
@@ -29,9 +30,6 @@ from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 from . import (
     DEFAULT_ENTRY_TITLE,
     DHCP_DISCOVERY,
-    DHCP_HOSTNAME,
-    DHCP_IP_ADDRESS,
-    DHCP_MAC_ADDRESS,
     FLUX_DISCOVERY,
     IP_ADDRESS,
     MAC_ADDRESS,
@@ -341,11 +339,11 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                DHCP_HOSTNAME: "any",
-                DHCP_IP_ADDRESS: IP_ADDRESS,
-                DHCP_MAC_ADDRESS: "00:00:00:00:00:00",
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="any",
+                ip=IP_ADDRESS,
+                macaddress="00:00:00:00:00:00",
+            ),
         )
         await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
