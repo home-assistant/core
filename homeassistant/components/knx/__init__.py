@@ -248,17 +248,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
 
-    async def setup_platforms() -> None:
-        """Set up platforms."""
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform.value)
-                for platform in SupportedPlatforms
-                if platform.value in config
-            )
-        )
-
-    hass.async_create_task(setup_platforms())
+    hass.config_entries.async_setup_platforms(
+        entry,
+        [platform.value for platform in SupportedPlatforms if platform.value in config],
+    )
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
