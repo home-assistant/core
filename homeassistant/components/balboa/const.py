@@ -21,8 +21,6 @@ CONF_SYNC_TIME = "sync_time"
 DEFAULT_SYNC_TIME = False
 FAN_SUPPORTED_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_HIGH]
 PLATFORMS = ["climate"]
-SPA = "spa"
-UNSUB = "unsub"
 
 AUX = "Aux"
 CIRC_PUMP = "Circ Pump"

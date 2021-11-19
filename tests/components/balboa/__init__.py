@@ -3,14 +3,13 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant.components.balboa.const import DOMAIN as BALBOA_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 BALBOA_DEFAULT_PORT = 4257
 TEST_HOST = "balboatest.localdomain"
-TEST_NAME = "FakeSpa"
 
 
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
@@ -19,7 +18,6 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
         domain=BALBOA_DOMAIN,
         data={
             CONF_HOST: TEST_HOST,
-            CONF_NAME: TEST_NAME,
         },
     )
     config_entry.add_to_hass(hass)
@@ -40,7 +38,6 @@ async def init_integration_mocked(hass: HomeAssistant) -> MockConfigEntry:
         domain=BALBOA_DOMAIN,
         data={
             CONF_HOST: TEST_HOST,
-            CONF_NAME: TEST_NAME,
         },
     )
     config_entry.add_to_hass(hass)
@@ -66,6 +63,9 @@ async def init_integration_mocked(hass: HomeAssistant) -> MockConfigEntry:
     ), patch(
         "homeassistant.components.balboa.BalboaSpaWifi.spa_configured",
         new=BalboaMock.spa_configured,
+    ), patch(
+        "homeassistant.components.balboa.BalboaSpaWifi.get_model_name",
+        new=BalboaMock.get_model_name,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -115,10 +115,10 @@ class BalboaMock:
         """Return the macaddr of the spa wifi."""
         return "ef:ef:ef:c0:ff:ee"
 
-    @staticmethod
-    def get_model_name():
+    def get_model_name(self):
         """Return the model name."""
-        return "Fake"
+        self.fake_action = False
+        return "FakeSpa"
 
     @staticmethod
     def get_ssid():

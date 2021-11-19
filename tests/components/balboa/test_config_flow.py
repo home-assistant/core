@@ -4,7 +4,7 @@ from unittest.mock import patch
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.balboa.const import CONF_SYNC_TIME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -18,7 +18,6 @@ from tests.common import MockConfigEntry
 
 TEST_DATA = {
     CONF_HOST: "1.1.1.1",
-    CONF_NAME: "FakeSpa",
 }
 TEST_ID = "FakeBalboa"
 
@@ -37,6 +36,18 @@ async def test_form(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.balboa.config_flow.BalboaSpaWifi.disconnect",
         new=BalboaMock.disconnect,
+    ), patch(
+        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.listen",
+        new=BalboaMock.listen,
+    ), patch(
+        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.send_mod_ident_req",
+        new=BalboaMock.send_mod_ident_req,
+    ), patch(
+        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.send_panel_req",
+        new=BalboaMock.send_panel_req,
+    ), patch(
+        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.spa_configured",
+        new=BalboaMock.spa_configured,
     ), patch(
         "homeassistant.components.balboa.async_setup_entry",
         return_value=True,

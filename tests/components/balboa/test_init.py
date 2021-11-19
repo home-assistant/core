@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 from homeassistant.components.balboa.const import DOMAIN as BALBOA_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from . import TEST_HOST, TEST_NAME, BalboaMock, init_integration
+from . import TEST_HOST, BalboaMock, init_integration
 
 from tests.common import MockConfigEntry
 
@@ -29,7 +29,6 @@ async def test_setup_entry_fails(hass):
         domain=BALBOA_DOMAIN,
         data={
             CONF_HOST: TEST_HOST,
-            CONF_NAME: TEST_NAME,
         },
     )
     config_entry.add_to_hass(hass)

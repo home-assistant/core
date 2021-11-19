@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.balboa.const import DOMAIN as BALBOA_DOMAIN, SPA
+from homeassistant.components.balboa.const import DOMAIN as BALBOA_DOMAIN
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
@@ -77,7 +77,7 @@ async def test_spa_with_blower(hass: HomeAssistant):
     await async_setup_component(hass, BALBOA_DOMAIN, config_entry)
     await hass.async_block_till_done()
 
-    spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id][SPA]
+    spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id]
     spa.blower = True
 
     # force a refresh
@@ -119,7 +119,7 @@ async def test_spa_temperature(hass: HomeAssistant):
     await async_setup_component(hass, BALBOA_DOMAIN, config_entry)
     await hass.async_block_till_done()
 
-    spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id][SPA]
+    spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id]
 
     # flip the spa into celsius
     spa.tempscale = 1
@@ -157,7 +157,7 @@ async def test_spa_temperature_unit(hass: HomeAssistant):
         await async_setup_component(hass, BALBOA_DOMAIN, config_entry)
         await hass.async_block_till_done()
 
-        spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id][SPA]
+        spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id]
 
         spa.settemp = 15.4
         await common.async_set_temperature(
@@ -190,7 +190,7 @@ async def test_spa_hvac_modes(hass: HomeAssistant):
     await async_setup_component(hass, BALBOA_DOMAIN, config_entry)
     await hass.async_block_till_done()
 
-    spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id][SPA]
+    spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id]
 
     # try out the different heat modes
     for heat_mode in range(3):
@@ -215,7 +215,7 @@ async def test_spa_hvac_action(hass: HomeAssistant):
     await async_setup_component(hass, BALBOA_DOMAIN, config_entry)
     await hass.async_block_till_done()
 
-    spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id][SPA]
+    spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id]
 
     # try out the different heat states
     spa.heatstate = 1
@@ -241,7 +241,7 @@ async def test_spa_preset_modes(hass: HomeAssistant):
     await async_setup_component(hass, BALBOA_DOMAIN, config_entry)
     await hass.async_block_till_done()
 
-    spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id][SPA]
+    spa = hass.data[BALBOA_DOMAIN][config_entry.entry_id]
 
     state = hass.states.get(ENTITY_CLIMATE)
     modes = state.attributes.get(ATTR_PRESET_MODES)

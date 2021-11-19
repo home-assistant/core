@@ -3,14 +3,13 @@ from pybalboa import BalboaSpaWifi
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import _LOGGER, CONF_SYNC_TIME, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): str, vol.Required(CONF_NAME, default="Spa"): str}
-)
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -25,16 +24,31 @@ async def validate_input(hass: core.HomeAssistant, data):
     _LOGGER.debug("Got connected = %d", connected)
     if not connected:
         raise CannotConnect
+
+    # send config requests, and then listen until we are configured.
+    await spa.send_mod_ident_req()
+    await spa.send_panel_req(0, 1)
+
+    hass.loop.create_task(spa.listen())
+
+    await spa.spa_configured()
+
+    macaddr = format_mac(spa.get_macaddr())
+    model = spa.get_model_name()
     await spa.disconnect()
 
-    return {"title": data[CONF_NAME]}
+    return {"title": model, "formatted_mac": macaddr}
 
 
 class BalboaSpaClientFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Balboa Spa Client config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+
+    @staticmethod
+    def construct_unique_id(model_name: str, mac_addr: str) -> str:
+        """Construct the unique id from the discovery or user_step."""
+        return f"{model_name}-{mac_addr}"
 
     @staticmethod
     @callback
@@ -56,6 +70,11 @@ class BalboaSpaClientFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                unique_id = self.construct_unique_id(
+                    info["title"], info["formatted_mac"]
+                )
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(

@@ -3,47 +3,26 @@ import asyncio
 import time
 
 from pybalboa import BalboaSpaWifi
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    _LOGGER,
-    CONF_SYNC_TIME,
-    DEFAULT_SYNC_TIME,
-    DOMAIN,
-    PLATFORMS,
-    SPA,
-    UNSUB,
-)
-
-BALBOA_CONFIG_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_NAME): cv.string}
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [BALBOA_CONFIG_SCHEMA])}, extra=vol.ALLOW_EXTRA
-)
+from .const import _LOGGER, CONF_SYNC_TIME, DEFAULT_SYNC_TIME, DOMAIN, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Balboa Spa from a config entry."""
     host = entry.data[CONF_HOST]
 
-    unsub = entry.add_update_listener(update_listener)
-
     _LOGGER.debug("Attempting to connect to %s", host)
     spa = BalboaSpaWifi(host)
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = {SPA: spa, UNSUB: unsub}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = spa
 
     connected = await spa.connect()
     if not connected:
@@ -57,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Starting listener and monitor tasks")
     hass.loop.create_task(spa.listen())
     await spa.spa_configured()
-    hass.loop.create_task(spa.check_connection_status())
+    asyncio.create_task(spa.check_connection_status())
 
     # At this point we have a configured spa.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -79,11 +58,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     _LOGGER.debug("Disconnecting from spa")
-    spa = hass.data[DOMAIN][entry.entry_id][SPA]
+    spa = hass.data[DOMAIN][entry.entry_id]
     await spa.disconnect()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    hass.data[DOMAIN][entry.entry_id][UNSUB]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -93,16 +71,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def update_listener(hass, entry):
     """Handle options update."""
-    if entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
-        _LOGGER.debug("Setting up daily time sync")
-        spa = hass.data[DOMAIN][entry.entry_id][SPA]
+    if not entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
+        return
 
-        async def sync_time():
-            while entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
-                _LOGGER.debug("Syncing time with Home Assistant")
-                await spa.set_time(
-                    time.strptime(str(dt_util.now()), "%Y-%m-%d %H:%M:%S.%f%z")
-                )
-                await asyncio.sleep(86400)
+    _LOGGER.debug("Setting up daily time sync")
+    spa = hass.data[DOMAIN][entry.entry_id]
 
-        hass.loop.create_task(sync_time())
+    async def sync_time():
+        if entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
+            _LOGGER.debug("Syncing time with Home Assistant")
+            await spa.set_time(
+                time.strptime(str(dt_util.now()), "%Y-%m-%d %H:%M:%S.%f%z")
+            )
+
+    sync_time()
+    entry.async_on_unload(async_track_time_interval(hass, sync_time, 86400))

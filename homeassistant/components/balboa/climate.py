@@ -7,13 +7,9 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
     FAN_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -27,12 +23,22 @@ from homeassistant.const import (
 )
 
 from .balboa_entity import BalboaEntity
-from .const import CLIMATE, CLIMATE_SUPPORTED_FANSTATES, CLIMATE_SUPPORTED_MODES
+from .const import CLIMATE, CLIMATE_SUPPORTED_FANSTATES, CLIMATE_SUPPORTED_MODES, DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the spa climate device."""
-    async_add_entities([BalboaSpaClimate(hass, entry, CLIMATE)], True)
+    async_add_entities(
+        [
+            BalboaSpaClimate(
+                hass,
+                entry,
+                hass.data[DOMAIN][entry.entry_id],
+                CLIMATE,
+            )
+        ],
+        True,
+    )
 
 
 class BalboaSpaClimate(BalboaEntity, ClimateEntity):
@@ -62,11 +68,7 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
     def hvac_mode(self) -> str:
         """Return the current HVAC mode."""
         mode = self._client.get_heatmode()
-        if mode == self._client.HEATMODE_READY:
-            return HVAC_MODE_HEAT
-        if mode == self._client.HEATMODE_RNR:
-            return HVAC_MODE_AUTO
-        return HVAC_MODE_OFF
+        return self.balboa_to_ha_heatmode_map[mode]
 
     @property
     def hvac_action(self) -> str:
@@ -80,16 +82,8 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
     def fan_mode(self) -> str:
         """Return the current fan mode."""
         fanmode = self._client.get_blower()
-        if fanmode is None:
-            return FAN_OFF
-        if fanmode == self._client.BLOWER_OFF:
-            return FAN_OFF
-        if fanmode == self._client.BLOWER_LOW:
-            return FAN_LOW
-        if fanmode == self._client.BLOWER_MEDIUM:
-            return FAN_MEDIUM
-        if fanmode == self._client.BLOWER_HIGH:
-            return FAN_HIGH
+        if fanmode in self.balboa_to_ha_blower_map:
+            return self.balboa_to_ha_blower_map[fanmode]
         return FAN_OFF
 
     @property
@@ -154,13 +148,6 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
         """Return current preset mode."""
         return self._client.get_heatmode(True)
 
-    @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        return {
-            "time": f"{self._client.time_hour:02d}:{self._client.time_minute:02d}",
-        }
-
     async def async_set_temperature(self, **kwargs):
         """Set a new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
@@ -180,14 +167,7 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        if fan_mode == FAN_OFF:
-            await self._client.change_blower(self._client.BLOWER_OFF)
-        elif fan_mode == FAN_LOW:
-            await self._client.change_blower(self._client.BLOWER_LOW)
-        elif fan_mode == FAN_MEDIUM:
-            await self._client.change_blower(self._client.BLOWER_MEDIUM)
-        elif fan_mode == FAN_HIGH:
-            await self._client.change_blower(self._client.BLOWER_HIGH)
+        await self._client.change_blower(self.ha_to_balboa_blower_map[fan_mode])
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode.
