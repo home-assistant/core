@@ -118,6 +118,7 @@ class WeatherEntity(Entity):
     _attr_temperature: float | None
     _attr_visibility: float | None = None
     _attr_visibility_unit: str | None = None
+    _attr_precipitation_unit: str | None = None
     _attr_wind_bearing: float | str | None = None
     _attr_wind_speed: float | None = None
     _attr_wind_speed_unit: str | None = None
@@ -183,6 +184,11 @@ class WeatherEntity(Entity):
         return self._attr_forecast
 
     @property
+    def precipitation_unit(self) -> str | None:
+        """Return the native unit of measurement for accumulated precipitation."""
+        return self._attr_precipitation_unit
+
+    @property
     def precision(self) -> float:
         """Return the precision of the temperature value, after unit conversion."""
         if hasattr(self, "_attr_precision"):
@@ -221,6 +227,8 @@ class WeatherEntity(Entity):
             data[ATTR_WEATHER_WIND_BEARING] = wind_bearing
 
         if (wind_speed := self.wind_speed) is not None:
+            if (unit := self.wind_speed_unit) is not None:
+                wind_speed = self.hass.config.units.wind_speed(wind_speed, unit)
             data[ATTR_WEATHER_WIND_SPEED] = wind_speed
 
         if (visibility := self.visibility) is not None:
@@ -251,6 +259,20 @@ class WeatherEntity(Entity):
                             forecast_entry[ATTR_FORECAST_PRESSURE], unit
                         )
                         forecast_entry[ATTR_FORECAST_PRESSURE] = pressure
+                if ATTR_FORECAST_WIND_SPEED in forecast_entry:
+                    if (unit := self.wind_speed_unit) is not None:
+                        wind_speed = self.hass.config.units.wind_speed(
+                            forecast_entry[ATTR_FORECAST_WIND_SPEED], unit
+                        )
+                        forecast_entry[ATTR_FORECAST_WIND_SPEED] = wind_speed
+                if ATTR_FORECAST_PRECIPITATION in forecast_entry:
+                    if (unit := self.precipitation_unit) is not None:
+                        precipitation = (
+                            self.hass.config.units.accumulated_precipitation(
+                                forecast_entry[ATTR_FORECAST_PRECIPITATION], unit
+                            )
+                        )
+                        forecast_entry[ATTR_FORECAST_PRECIPITATION] = precipitation
 
                 forecast.append(forecast_entry)
 

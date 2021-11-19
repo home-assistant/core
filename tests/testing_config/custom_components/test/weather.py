@@ -89,6 +89,11 @@ class MockWeather(MockEntity, WeatherEntity):
         return self._handle("forecast")
 
     @property
+    def precipitation_unit(self) -> str | None:
+        """Return the native unit of measurement for accumulated precipitation."""
+        return self._handle("precipitation_unit")
+
+    @property
     def condition(self) -> str | None:
         """Return the current condition."""
         return self._handle("condition")
