@@ -1,4 +1,6 @@
 """Support for Apple HomeKit."""
+from __future__ import annotations
+
 import asyncio
 import ipaddress
 import logging
@@ -91,6 +93,7 @@ from .const import (
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
     MANUFACTURER,
+    PERSIST_LOCK,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
     SERVICE_HOMEKIT_UNPAIR,
@@ -171,6 +174,15 @@ UNPAIR_SERVICE_SCHEMA = vol.All(
 )
 
 
+def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
+    """All active HomeKit instances."""
+    return [
+        data[HOMEKIT]
+        for data in hass.data[DOMAIN].values()
+        if isinstance(data, dict) and HOMEKIT in data
+    ]
+
+
 def _async_get_entries_by_name(current_entries):
     """Return a dict of the entries by name."""
 
@@ -181,7 +193,7 @@ def _async_get_entries_by_name(current_entries):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
-    hass.data.setdefault(DOMAIN, {})
+    hass.data.setdefault(DOMAIN, {})[PERSIST_LOCK] = asyncio.Lock()
 
     _async_register_events_and_services(hass)
 
@@ -360,10 +372,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
 
     async def async_handle_homekit_reset_accessory(service):
         """Handle reset accessory HomeKit service call."""
-        for entry_id in hass.data[DOMAIN]:
-            if HOMEKIT not in hass.data[DOMAIN][entry_id]:
-                continue
-            homekit = hass.data[DOMAIN][entry_id][HOMEKIT]
+        for homekit in _async_all_homekit_instances(hass):
             if homekit.status != STATUS_RUNNING:
                 _LOGGER.warning(
                     "HomeKit is not running. Either it is waiting to be "
@@ -393,16 +402,11 @@ def _async_register_events_and_services(hass: HomeAssistant):
                 for ctype, cval in dev_reg_ent.connections
                 if ctype == device_registry.CONNECTION_NETWORK_MAC
             ]
-            domain_data = hass.data[DOMAIN]
             matching_instances = [
-                domain_data[entry_id][HOMEKIT]
-                for entry_id in domain_data
-                if HOMEKIT in domain_data[entry_id]
-                and domain_data[entry_id][HOMEKIT].driver
-                and device_registry.format_mac(
-                    domain_data[entry_id][HOMEKIT].driver.state.mac
-                )
-                in macs
+                homekit
+                for homekit in _async_all_homekit_instances(hass)
+                if homekit.driver
+                and device_registry.format_mac(homekit.driver.state.mac) in macs
             ]
             if not matching_instances:
                 raise HomeAssistantError(
@@ -421,10 +425,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
     async def async_handle_homekit_service_start(service):
         """Handle start HomeKit service call."""
         tasks = []
-        for entry_id in hass.data[DOMAIN]:
-            if HOMEKIT not in hass.data[DOMAIN][entry_id]:
-                continue
-            homekit = hass.data[DOMAIN][entry_id][HOMEKIT]
+        for homekit in _async_all_homekit_instances(hass):
             if homekit.status == STATUS_RUNNING:
                 _LOGGER.debug("HomeKit is already running")
                 continue
@@ -707,7 +708,8 @@ class HomeKit:
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
         await self.driver.async_start()
-        self.driver.async_persist()
+        async with self.hass.data[DOMAIN][PERSIST_LOCK]:
+            await self.hass.async_add_executor_job(self.driver.persist)
         self.status = STATUS_RUNNING
 
         if self.driver.state.paired:

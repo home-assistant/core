@@ -612,6 +612,9 @@ mficlient==0.3.0
 micloud==0.4
 
 # homeassistant.components.mill
+mill-local==0.1.0
+
+# homeassistant.components.mill
 millheater==0.8.0
 
 # homeassistant.components.minio
@@ -971,7 +974,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.10.1
+pylitterbot==2021.11.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.11.0
@@ -1451,7 +1454,7 @@ yeelight==0.7.8
 youless-api==0.15
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.13
+zeroconf==0.37.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.63

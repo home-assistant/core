@@ -1011,6 +1011,9 @@ micloud==0.4
 miflora==0.7.0
 
 # homeassistant.components.mill
+mill-local==0.1.0
+
+# homeassistant.components.mill
 millheater==0.8.0
 
 # homeassistant.components.minio
@@ -1604,7 +1607,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.10.1
+pylitterbot==2021.11.0
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -2471,7 +2474,7 @@ youtube_dl==2021.06.06
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.13
+zeroconf==0.37.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.63
