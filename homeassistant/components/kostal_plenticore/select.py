@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import ABC
 from datetime import timedelta
 import logging
-from typing import Any
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,19 +14,27 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SELECT_SETTINGS_DATA
 from .helper import Plenticore, SelectDataUpdateCoordinator
+from ...helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Any
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add kostal plenticore Select widget."""
     plenticore: Plenticore = hass.data[DOMAIN][entry.entry_id]
+    select_data_update_coordinator = SelectDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        "Settings Data",
+        timedelta(seconds=30),
+        plenticore,
+    )
 
     async_add_entities(
         PlenticoreDataSelect(
-            plenticore=plenticore,
+            select_data_update_coordinator,
             entry_id=entry.entry_id,
             platform_name=entry.title,
             device_class="kostal_plenticore__battery",
@@ -49,7 +56,7 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
 
     def __init__(
         self,
-        plenticore: Plenticore,
+        coordinator,
         entry_id: str,
         platform_name: str,
         device_class: str | None,
@@ -63,16 +70,7 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         unique_id: str,
     ) -> None:
         """Create a new switch Entity for Plenticore process data."""
-        super().__init__(
-            coordinator=SelectDataUpdateCoordinator(
-                self.hass,
-                _LOGGER,
-                "Select Data",
-                timedelta(seconds=30),
-                plenticore,
-            )
-        )
-        self.plenticore = plenticore
+        super().__init__(coordinator)
         self.entry_id = entry_id
         self.platform_name = platform_name
         self._attr_device_class = device_class
