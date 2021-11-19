@@ -98,6 +98,12 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
+        key="estimatedHourConsumption",
+        name="Estimated consumption current hour",
+        device_class=DEVICE_CLASS_ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    ),
+    SensorEntityDescription(
         key="accumulatedProduction",
         name="accumulated production",
         device_class=DEVICE_CLASS_ENERGY,
