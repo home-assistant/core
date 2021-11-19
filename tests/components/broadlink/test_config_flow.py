@@ -837,7 +837,7 @@ async def test_dhcp_can_finish(hass):
             data=dhcp.DhcpServiceInfo(
                 hostname="broadlink",
                 ip="1.2.3.4",
-                mac_address=device_registry.format_mac(device.mac),
+                macaddress=device_registry.format_mac(device.mac),
             ),
         )
         await hass.async_block_till_done()
