@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import ast
+import asyncio
 import logging
 from typing import Any, Final
 
@@ -369,13 +370,15 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     async def _async_turn_off(self, **kwargs: Any) -> None:
         # Older controllers (prior to Model 0x06) need to be "zeroed out" prior to turning off in order to avoid
         # the problem of briefly seeing the prior effect settings when turning on
-        if self._device.model_num is not 6:
+        if self._device.model_num != 6:
             if self.color_mode == COLOR_MODE_RGB:
                 await self._device.async_set_levels(r=0, b=0, g=0, brightness=None)
             elif self.color_mode == COLOR_MODE_RGBW:
                 await self._device.async_set_levels(r=0, b=0, g=0, w=0, brightness=None)
             elif self.color_mode == COLOR_MODE_RGBWW:
-                await self._device.async_set_levels(r=0, b=0, g=0, w=0, w2=0, brightness=None)
+                await self._device.async_set_levels(
+                    r=0, b=0, g=0, w=0, w2=0, brightness=None
+                )
 
             # Wait 1 second for device to get the settings we just sent prior to continuing with the turn off process
             # If we don't do this, the settings will not be saved on the device
