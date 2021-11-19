@@ -406,7 +406,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         def handle_action_received(msg):
             """Handle receiving action via MQTT."""
             payload = render_template(msg, CONF_ACTION_TEMPLATE)
-            if payload is None or payload in CURRENT_HVAC_ACTIONS:
+            if payload in CURRENT_HVAC_ACTIONS:
                 self._action = payload
                 self.async_write_ha_state()
             else:
