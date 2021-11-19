@@ -35,6 +35,7 @@ from .const import (
     PLATFORMS,
     SONOS_CHECK_ACTIVITY,
     SONOS_REBOOTED,
+    SONOS_SPEAKER_ACTIVITY,
     UPNP_ST,
 )
 from .favorites import SonosFavorites
@@ -259,6 +260,10 @@ class SonosDiscoveryManager:
                     self._create_soco, discovered_ip, SoCoCreationSource.REBOOTED
                 ):
                     async_dispatcher_send(self.hass, f"{SONOS_REBOOTED}-{uid}", soco)
+            else:
+                async_dispatcher_send(
+                    self.hass, f"{SONOS_SPEAKER_ACTIVITY}-{uid}", "discovery"
+                )
 
     async def _async_ssdp_discovered_player(self, info, change):
         if change == ssdp.SsdpChange.BYEBYE:
