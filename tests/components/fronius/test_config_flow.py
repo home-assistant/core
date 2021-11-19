@@ -206,10 +206,7 @@ async def test_form_updates_host(hass):
     with patch(
         "pyfronius.Fronius.current_logger_info",
         return_value=LOGGER_INFO_RETURN_VALUE,
-    ), patch(
-        "homeassistant.components.fronius.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -220,7 +217,6 @@ async def test_form_updates_host(hass):
 
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "entry_update_successful"
-    assert len(mock_setup_entry.mock_calls) == 1
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
