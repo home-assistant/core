@@ -147,6 +147,7 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
 
         self._attr_device_class = DEVICE_CLASS_MAPPING.get("battery")
         self._attr_state_class = STATE_CLASS_MAPPING.get("battery")
+        self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
         self._attr_native_unit_of_measurement = PERCENTAGE
 
         self._value = device_instance.battery_level
@@ -176,6 +177,9 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         self._attr_native_unit_of_measurement = getattr(
             device_instance.consumption_property[element_uid], f"{consumption}_unit"
         )
+
+        if consumption == "total":
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
         self._value = getattr(
             device_instance.consumption_property[element_uid], consumption
