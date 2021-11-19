@@ -1,7 +1,5 @@
 """Setup mocks for the Plugwise integration tests."""
 
-from functools import partial
-from http import HTTPStatus
 import re
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -39,15 +37,15 @@ def mock_smile():
 @pytest.fixture(name="mock_smile_unauth")
 def mock_smile_unauth(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock the Plugwise Smile unauthorized for Home Assistant."""
-    aioclient_mock.get(re.compile(".*"), status=HTTPStatus.UNAUTHORIZED)
-    aioclient_mock.put(re.compile(".*"), status=HTTPStatus.UNAUTHORIZED)
+    aioclient_mock.get(re.compile(".*"), status=401)
+    aioclient_mock.put(re.compile(".*"), status=401)
 
 
 @pytest.fixture(name="mock_smile_error")
 def mock_smile_error(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock the Plugwise Smile server failure for Home Assistant."""
-    aioclient_mock.get(re.compile(".*"), status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    aioclient_mock.put(re.compile(".*"), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(re.compile(".*"), status=500)
+    aioclient_mock.put(re.compile(".*"), status=500)
 
 
 @pytest.fixture(name="mock_smile_notconnect")
@@ -61,11 +59,6 @@ def mock_smile_notconnect():
         yield smile_mock.return_value
 
 
-def _get_device_data(chosen_env, device_id):
-    """Mock return data for specific devices."""
-    return _read_json(chosen_env, "get_device_data/" + device_id)
-
-
 @pytest.fixture(name="mock_smile_adam")
 def mock_smile_adam():
     """Create a Mock Adam environment for testing exceptions."""
@@ -76,7 +69,7 @@ def mock_smile_adam():
         smile_mock.XMLDataMissingError = XMLDataMissingError
 
         smile_mock.return_value.gateway_id = "fe799307f1624099878210aa0b9f1475"
-        smile_mock.return_value.heater_id = "90986d591dcd426cae3ec3e8111ff730"
+        smile_mock.return_value._active_device_present = False
         smile_mock.return_value.smile_version = "3.0.15"
         smile_mock.return_value.smile_type = "thermostat"
         smile_mock.return_value.smile_hostname = "smile98765"
@@ -84,8 +77,8 @@ def mock_smile_adam():
         smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.update_gw_devices.side_effect = AsyncMock(
-            return_value=True
+        smile_mock.return_value.async_update.side_effect = AsyncMock(
+            return_value=_read_json(chosen_env, "all_data")
         )
         smile_mock.return_value.single_master_thermostat.side_effect = Mock(
             return_value=False
@@ -97,11 +90,9 @@ def mock_smile_adam():
         smile_mock.return_value.set_temperature.side_effect = AsyncMock(
             return_value=True
         )
-        smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
+        smile_mock.return_value.set_switch_state.side_effect = AsyncMock(
             return_value=True
         )
-
-        smile_mock.return_value.gw_devices = _read_json(chosen_env, "all_devices")
 
         yield smile_mock.return_value
 
@@ -116,7 +107,7 @@ def mock_smile_anna():
         smile_mock.XMLDataMissingError = XMLDataMissingError
 
         smile_mock.return_value.gateway_id = "015ae9ea3f964e668e490fa39da3870b"
-        smile_mock.return_value.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
+        smile_mock.return_value._heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
         smile_mock.return_value.smile_version = "4.0.15"
         smile_mock.return_value.smile_type = "thermostat"
         smile_mock.return_value.smile_hostname = "smile98765"
@@ -124,8 +115,8 @@ def mock_smile_anna():
         smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.update_gw_devices.side_effect = AsyncMock(
-            return_value=True
+        smile_mock.return_value.async_update.side_effect = AsyncMock(
+            return_value=_read_json(chosen_env, "all_data")
         )
         smile_mock.return_value.single_master_thermostat.side_effect = Mock(
             return_value=True
@@ -137,11 +128,9 @@ def mock_smile_anna():
         smile_mock.return_value.set_temperature.side_effect = AsyncMock(
             return_value=True
         )
-        smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
+        smile_mock.return_value.set_switch_state.side_effect = AsyncMock(
             return_value=True
         )
-
-        smile_mock.return_value.gw_devices = _read_json(chosen_env, "all_devices")
 
         yield smile_mock.return_value
 
@@ -156,7 +145,7 @@ def mock_smile_p1():
         smile_mock.XMLDataMissingError = XMLDataMissingError
 
         smile_mock.return_value.gateway_id = "e950c7d5e1ee407a858e2a8b5016c8b3"
-        smile_mock.return_value.heater_id = None
+        smile_mock.return_value._heater_id = None
         smile_mock.return_value.smile_version = "3.3.9"
         smile_mock.return_value.smile_type = "power"
         smile_mock.return_value.smile_hostname = "smile98765"
@@ -164,15 +153,13 @@ def mock_smile_p1():
         smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.update_gw_devices.side_effect = AsyncMock(
-            return_value=True
+        smile_mock.return_value.async_update.side_effect = AsyncMock(
+            return_value=_read_json(chosen_env, "all_data")
         )
 
         smile_mock.return_value.single_master_thermostat.side_effect = Mock(
             return_value=None
         )
-
-        smile_mock.return_value.gw_devices = _read_json(chosen_env, "all_devices")
 
         yield smile_mock.return_value
 
@@ -187,19 +174,17 @@ def mock_stretch():
         smile_mock.XMLDataMissingError = XMLDataMissingError
 
         smile_mock.return_value.gateway_id = "259882df3c05415b99c2d962534ce820"
-        smile_mock.return_value.heater_id = None
+        smile_mock.return_value._heater_id = None
         smile_mock.return_value.smile_version = "3.1.11"
         smile_mock.return_value.smile_type = "stretch"
         smile_mock.return_value.smile_hostname = "stretch98765"
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.update_gw_devices.side_effect = AsyncMock(
+        smile_mock.return_value.async_update.side_effect = AsyncMock(
+            return_value=_read_json(chosen_env, "all_data")
+        )
+        smile_mock.return_value.set_switch_state.side_effect = AsyncMock(
             return_value=True
         )
-        smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
-            return_value=True
-        )
-
-        smile_mock.return_value.gw_devices = _read_json(chosen_env, "all_devices")
 
         yield smile_mock.return_value
