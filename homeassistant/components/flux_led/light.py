@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import ast
+import asyncio
 import logging
 import random
 from typing import Any, Final, cast
-import asyncio
 
 from flux_led.const import (
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
@@ -332,9 +332,9 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
             brightness = self.brightness
 
-        # New style controlers (Magic Home Branded RGBW Controller (0x06)) do not need to be turned on prior
+        # New style controllers (Magic Home Branded RGBW Controller (0x06)) do not need to be turned on prior
         # to setting effects
-        if not self.is_on and self._device.model_num is not 6:
+        if not self.is_on and self._device.model_num != 6:
             await self._device.async_turn_on()
             if not kwargs:
                 return
@@ -439,13 +439,15 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
     async def _async_turn_off(self, **kwargs: Any) -> None:
         # Older controllers (prior to Model 0x06) need to be "zeroed out" prior to turning off in order to avoid
         # the problem of briefly seeing the prior effect settings when turning on
-        if self._device.model_num is not 6:
+        if self._device.model_num != 6:
             if self.color_mode == COLOR_MODE_RGB:
                 await self._device.async_set_levels(r=0, b=0, g=0, brightness=None)
             elif self.color_mode == COLOR_MODE_RGBW:
                 await self._device.async_set_levels(r=0, b=0, g=0, w=0, brightness=None)
             elif self.color_mode == COLOR_MODE_RGBWW:
-                await self._device.async_set_levels(r=0, b=0, g=0, w=0, w2=0, brightness=None)
+                await self._device.async_set_levels(
+                    r=0, b=0, g=0, w=0, w2=0, brightness=None
+                )
 
             # Wait 1 second for device to get the settings we just sent prior to continuing with the turn off process
             # If we don't do this, the settings will not be saved on the device

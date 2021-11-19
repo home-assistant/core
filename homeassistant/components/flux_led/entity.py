@@ -69,6 +69,10 @@ class FluxEntity(CoordinatorEntity):
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
+    @abstractmethod
+    async def _async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the specified device off."""
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
