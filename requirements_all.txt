@@ -1691,7 +1691,7 @@ pyoctoprintapi==0.1.6
 pyombi==0.1.10
 
 # homeassistant.components.openuv
-pyopenuv==2.2.1
+pyopenuv==2021.11.0
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
