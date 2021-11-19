@@ -342,7 +342,7 @@ denonavr==0.10.9
 devolo-home-control-api==0.17.4
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==0.6.2
+devolo-plc-api==0.6.3
 
 # homeassistant.components.directv
 directv==0.4.0
