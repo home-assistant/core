@@ -102,7 +102,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.device_id)},
             manufacturer=MANUFACTURER,
-            model=f"generation {heater.generation}",
+            model=f"Generation {heater.generation}",
             name=self.name,
         )
         if heater.is_gen1 or heater.is_gen3:
@@ -169,7 +169,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             "open_window": heater.open_window,
             "heating": heater.is_heating,
             "controlled_by_tibber": heater.tibber_control,
-            "heater_generation": f"generation {heater.generation}",
+            "heater_generation": heater.generation,
         }
         if heater.room:
             self._attr_extra_state_attributes["room"] = heater.room.name
