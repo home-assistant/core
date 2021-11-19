@@ -229,9 +229,10 @@ class SonosSpeaker:
     def setup(self, entry: ConfigEntry) -> None:
         """Run initial setup of the speaker."""
         self.set_basic_info()
-        asyncio.run_coroutine_threadsafe(
+        future = asyncio.run_coroutine_threadsafe(
             self.async_setup_dispatchers(entry), self.hass.loop
         )
+        future.result(timeout=1)
 
         if battery_info := fetch_battery_info_or_none(self.soco):
             self.battery_info = battery_info
