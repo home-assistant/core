@@ -325,7 +325,7 @@ class SensorEntity(Entity):
         if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
             try:
                 # We cast the value, to avoid using isinstance, but satisfy
-                # typechecking. The error are guarded in this try.
+                # typechecking. The errors are guarded in this try.
                 value = cast(datetime, value)
                 if value.tzinfo is None:
                     raise ValueError(
