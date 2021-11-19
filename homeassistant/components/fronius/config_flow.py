@@ -98,7 +98,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     entry, title=title, data=info  # type: ignore[arg-type]
                 )
-                await self.hass.config_entries.async_reload(entry.entry_id)
                 return self.async_abort(reason="entry_update_successful")
 
             return self.async_create_entry(title=title, data=info)
