@@ -322,7 +322,7 @@ async def async_setup_entry(
             device.name,
         )
 
-    async_add_entities(lights, True)
+    async_add_entities(lights)
     _async_setup_services(hass)
 
 
