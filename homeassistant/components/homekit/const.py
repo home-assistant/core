@@ -12,6 +12,7 @@ HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
 HOMEKIT = "homekit"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
+PERSIST_LOCK = "persist_lock"
 
 # ### Codecs ####
 VIDEO_CODEC_COPY = "copy"
