@@ -1,33 +1,33 @@
 # Describes the format for available OctoPrint services
 pause_job:
-  name: Pause the active print
-  description: Pauses the active job
+  name: Pause the active job
+  description: Send the server the command to pause the active job.
   fields:
     device_id:
       name: Server
-      description: The server whose job should be paused
+      description: The server whose job should be paused.
       required: true
       selector:
         device:
           integration: octoprint
 resume_job:
   name: Resumes the active job
-  description: Resumes a previously paused job
+  description: Send the server the command to resume a paused job.
   fields:
     device_id:
       name: Server
-      description: The server whose job should be paused
+      description: The server whose job should be paused.
       required: true
       selector:
         device:
           integration: octoprint
 stop_job:
   name: Stops the active job
-  description: Stops the active job
+  description: Send the server the command to resume a stop the active job.
   fields:
     device_id:
       name: Server
-      description: The server whose job should be stopped
+      description: The server whose job should be stopped.
       required: true
       selector:
         device:
