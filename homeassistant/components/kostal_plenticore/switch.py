@@ -93,7 +93,6 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         self.platform_name = platform_name
         self.module_id = module_id
         self.data_id = data_id
-        self._last_run_success: bool | None = None
         self._name = name
         self._is_on = is_on
         self._attr_name = attr_name
