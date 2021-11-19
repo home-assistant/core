@@ -11,9 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from ...helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, SWITCH_SETTINGS_DATA
 from .helper import SettingDataUpdateCoordinator
-from ...helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         attr_name: str,
         attr_unique_id: str,
     ):
-        """Create a new switch Entity for Plenticore process data."""
+        """Create a new Switch Entity for Plenticore process data."""
         super().__init__(coordinator)
         self.entry_id = entry_id
         self.platform_name = platform_name

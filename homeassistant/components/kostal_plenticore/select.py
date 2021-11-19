@@ -12,9 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from ...helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, SELECT_SETTINGS_DATA
 from .helper import Plenticore, SelectDataUpdateCoordinator
-from ...helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ async def async_setup_entry(
 
 
 class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
-    """Representation of a Plenticore Switch."""
+    """Representation of a Plenticore Select."""
 
     def __init__(
         self,
@@ -69,7 +69,7 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         device_info: DeviceInfo,
         unique_id: str,
     ) -> None:
-        """Create a new switch Entity for Plenticore process data."""
+        """Create a new Select Entity for Plenticore process data."""
         super().__init__(coordinator)
         self.entry_id = entry_id
         self.platform_name = platform_name
@@ -122,8 +122,6 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if self.available:
-            return self.coordinator.data[self.module_id][
-                self.data_id
-            ]
+            return self.coordinator.data[self.module_id][self.data_id]
         else:
             return None
