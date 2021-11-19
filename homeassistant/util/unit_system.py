@@ -4,11 +4,14 @@ from __future__ import annotations
 from numbers import Number
 
 from homeassistant.const import (
+    ACCUMULATED_PRECIPITATION,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     LENGTH,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
     MASS,
     MASS_GRAMS,
     MASS_KILOGRAMS,
@@ -55,6 +58,8 @@ def is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
     if unit_type == LENGTH:
         units = LENGTH_UNITS
+    elif unit_type == ACCUMULATED_PRECIPITATION:
+        units = LENGTH_UNITS
     elif unit_type == WIND_SPEED:
         units = WIND_SPEED_UNITS
     elif unit_type == TEMPERATURE:
@@ -83,11 +88,13 @@ class UnitSystem:
         volume: str,
         mass: str,
         pressure: str,
+        accumulated_precipitation: str,
     ) -> None:
         """Initialize the unit system object."""
         errors: str = ", ".join(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
             for unit, unit_type in (
+                (accumulated_precipitation, ACCUMULATED_PRECIPITATION),
                 (temperature, TEMPERATURE),
                 (length, LENGTH),
                 (wind_speed, WIND_SPEED),
@@ -102,6 +109,7 @@ class UnitSystem:
             raise ValueError(errors)
 
         self.name = name
+        self.accumulated_precipitation_unit = accumulated_precipitation
         self.temperature_unit = temperature
         self.length_unit = length
         self.mass_unit = mass
@@ -129,6 +137,16 @@ class UnitSystem:
         # type ignore: https://github.com/python/mypy/issues/7207
         return distance_util.convert(  # type: ignore
             length, from_unit, self.length_unit
+        )
+
+    def accumulated_precipitation(self, precip: float | None, from_unit: str) -> float:
+        """Convert the given length to this unit system."""
+        if not isinstance(precip, Number):
+            raise TypeError(f"{precip!s} is not a numeric value.")
+
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return distance_util.convert(  # type: ignore
+            precip, from_unit, self.accumulated_precipitation_unit
         )
 
     def pressure(self, pressure: float | None, from_unit: str) -> float:
@@ -161,6 +179,7 @@ class UnitSystem:
         """Convert the unit system to a dictionary."""
         return {
             LENGTH: self.length_unit,
+            ACCUMULATED_PRECIPITATION: self.accumulated_precipitation_unit,
             MASS: self.mass_unit,
             PRESSURE: self.pressure_unit,
             TEMPERATURE: self.temperature_unit,
@@ -177,6 +196,7 @@ METRIC_SYSTEM = UnitSystem(
     VOLUME_LITERS,
     MASS_GRAMS,
     PRESSURE_PA,
+    LENGTH_MILLIMETERS,
 )
 
 IMPERIAL_SYSTEM = UnitSystem(
@@ -187,4 +207,5 @@ IMPERIAL_SYSTEM = UnitSystem(
     VOLUME_GALLONS,
     MASS_POUNDS,
     PRESSURE_PSI,
+    LENGTH_INCHES,
 )

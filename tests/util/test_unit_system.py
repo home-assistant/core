@@ -2,9 +2,11 @@
 import pytest
 
 from homeassistant.const import (
+    ACCUMULATED_PRECIPITATION,
     LENGTH,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
+    LENGTH_MILLIMETERS,
     MASS,
     MASS_GRAMS,
     PRESSURE,
@@ -33,6 +35,7 @@ def test_invalid_units():
             VOLUME_LITERS,
             MASS_GRAMS,
             PRESSURE_PA,
+            LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
@@ -44,6 +47,7 @@ def test_invalid_units():
             VOLUME_LITERS,
             MASS_GRAMS,
             PRESSURE_PA,
+            LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
@@ -55,6 +59,7 @@ def test_invalid_units():
             VOLUME_LITERS,
             MASS_GRAMS,
             PRESSURE_PA,
+            LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
@@ -66,6 +71,7 @@ def test_invalid_units():
             INVALID_UNIT,
             MASS_GRAMS,
             PRESSURE_PA,
+            LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
@@ -77,6 +83,7 @@ def test_invalid_units():
             VOLUME_LITERS,
             INVALID_UNIT,
             PRESSURE_PA,
+            LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
@@ -87,6 +94,19 @@ def test_invalid_units():
             SPEED_METERS_PER_SECOND,
             VOLUME_LITERS,
             MASS_GRAMS,
+            INVALID_UNIT,
+            LENGTH_MILLIMETERS,
+        )
+
+    with pytest.raises(ValueError):
+        UnitSystem(
+            SYSTEM_NAME,
+            TEMP_CELSIUS,
+            LENGTH_METERS,
+            SPEED_METERS_PER_SECOND,
+            VOLUME_LITERS,
+            MASS_GRAMS,
+            PRESSURE_PA,
             INVALID_UNIT,
         )
 
@@ -103,6 +123,8 @@ def test_invalid_value():
         METRIC_SYSTEM.volume("50L", VOLUME_LITERS)
     with pytest.raises(TypeError):
         METRIC_SYSTEM.pressure("50Pa", PRESSURE_PA)
+    with pytest.raises(TypeError):
+        METRIC_SYSTEM.accumulated_precipitation("50mm", LENGTH_MILLIMETERS)
 
 
 def test_as_dict():
@@ -114,6 +136,7 @@ def test_as_dict():
         VOLUME: VOLUME_LITERS,
         MASS: MASS_GRAMS,
         PRESSURE: PRESSURE_PA,
+        ACCUMULATED_PRECIPITATION: LENGTH_MILLIMETERS,
     }
 
     assert expected == METRIC_SYSTEM.as_dict()
@@ -213,6 +236,48 @@ def test_pressure_to_imperial():
     ) == pytest.approx(14.7, abs=1e-4)
 
 
+def test_accumulated_precipitation_same_unit():
+    """Test no conversion happens if to unit is same as from unit."""
+    assert (
+        METRIC_SYSTEM.accumulated_precipitation(
+            5, METRIC_SYSTEM.accumulated_precipitation_unit
+        )
+        == 5
+    )
+
+
+def test_accumulated_precipitation_unknown_unit():
+    """Test no conversion happens if unknown unit."""
+    with pytest.raises(ValueError):
+        METRIC_SYSTEM.accumulated_precipitation(5, "K")
+
+
+def test_accumulated_precipitation_to_metric():
+    """Test accumulated_precipitation conversion to metric system."""
+    assert (
+        METRIC_SYSTEM.accumulated_precipitation(
+            25, METRIC_SYSTEM.accumulated_precipitation_unit
+        )
+        == 25
+    )
+    assert METRIC_SYSTEM.accumulated_precipitation(
+        10, IMPERIAL_SYSTEM.accumulated_precipitation_unit
+    ) == pytest.approx(254, abs=1e-4)
+
+
+def test_accumulated_precipitation_to_imperial():
+    """Test accumulated_precipitation conversion to imperial system."""
+    assert (
+        IMPERIAL_SYSTEM.accumulated_precipitation(
+            10, IMPERIAL_SYSTEM.accumulated_precipitation_unit
+        )
+        == 10
+    )
+    assert IMPERIAL_SYSTEM.accumulated_precipitation(
+        254, METRIC_SYSTEM.accumulated_precipitation_unit
+    ) == pytest.approx(10, abs=1e-4)
+
+
 def test_properties():
     """Test the unit properties are returned as expected."""
     assert METRIC_SYSTEM.length_unit == LENGTH_KILOMETERS
@@ -221,6 +286,7 @@ def test_properties():
     assert METRIC_SYSTEM.mass_unit == MASS_GRAMS
     assert METRIC_SYSTEM.volume_unit == VOLUME_LITERS
     assert METRIC_SYSTEM.pressure_unit == PRESSURE_PA
+    assert METRIC_SYSTEM.accumulated_precipitation_unit == LENGTH_MILLIMETERS
 
 
 def test_is_metric():
