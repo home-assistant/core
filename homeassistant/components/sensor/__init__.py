@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import inspect
 import logging
 from typing import Any, Final, cast, final
@@ -311,11 +311,24 @@ class SensorEntity(Entity):
             # Convert the date object to a standardized state string.
             if device_class == DEVICE_CLASS_DATE:
                 return value.date().isoformat()
-            return value.isoformat(timespec="seconds")
+
+            if value.tzinfo != timezone.utc:
+                value = value.astimezone(timezone.utc)
+
+            return value.astimezone(timezone.utc).isoformat(timespec="seconds")
 
         # Received a datetime
         if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
             try:
+                if value.tzinfo is None:  # type: ignore
+                    raise ValueError(
+                        f"Invalid datetime: {self.entity_id} provides state '{value}', "
+                        "which is missing timezone information"
+                    )
+
+                if value.tzinfo != timezone.utc:  # type: ignore
+                    value = value.astimezone(timezone.utc)  # type: ignore
+
                 return value.isoformat(timespec="seconds")  # type: ignore
             except (AttributeError, TypeError) as err:
                 raise ValueError(
