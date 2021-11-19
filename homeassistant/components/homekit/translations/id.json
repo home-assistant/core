@@ -21,13 +21,15 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Mulai otomatis (nonaktifkan jika Anda memanggil layanan homekit.start secara manual)"
+                    "auto_start": "Mulai otomatis (nonaktifkan jika Anda memanggil layanan homekit.start secara manual)",
+                    "devices": "Perangkat (Pemicu)"
                 },
-                "description": "Sakelar yang dapat diprogram dibuat untuk setiap perangkat yang dipilih. Saat pemicu perangkat aktif, HomeKit dapat dikonfigurasi untuk menjalankan otomatisasi atau scene.",
+                "description": "Sakelar yang dapat diprogram dibuat untuk setiap perangkat yang dipilih. Saat pemicu perangkat aktif, HomeKit dapat dikonfigurasi untuk menjalankan otomatisasi atau skenario.",
                 "title": "Konfigurasi Tingkat Lanjut"
             },
             "cameras": {
                 "data": {
+                    "camera_audio": "Kamera yang mendukung audio",
                     "camera_copy": "Kamera yang mendukung aliran H.264 asli"
                 },
                 "description": "Periksa semua kamera yang mendukung streaming H.264 asli. Jika kamera tidak mengeluarkan aliran H.264, sistem akan mentranskode video ke H.264 untuk HomeKit. Proses transcoding membutuhkan CPU kinerja tinggi dan tidak mungkin bekerja pada komputer papan tunggal.",

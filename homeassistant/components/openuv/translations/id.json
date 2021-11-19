@@ -17,5 +17,12 @@
                 "title": "Isi informasi Anda"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Konfigurasikan OpenUV"
+            }
+        }
     }
 }

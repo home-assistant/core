@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "wrong_location": "\u3053\u306e\u30a8\u30ea\u30a2\u306b\u306fAirly\u306e\u6e2c\u5b9a\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u306f\u3042\u308a\u307e\u305b\u3093\u3002"
+            "wrong_location": "\u3053\u306e\u30a8\u30ea\u30a2\u306b\u3001Airly\u306e\u6e2c\u5b9a\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u306f\u3042\u308a\u307e\u305b\u3093\u3002"
         },
         "step": {
             "user": {

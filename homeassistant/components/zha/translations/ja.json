@@ -8,7 +8,41 @@
         "step": {
             "confirm": {
                 "description": "{name} \u3092\u8a2d\u5b9a\u3057\u307e\u3059\u304b\uff1f"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "\u30dd\u30fc\u30c8\u901f\u5ea6",
+                    "flow_control": "\u30c7\u30fc\u30bf\u30d5\u30ed\u30fc\u30b3\u30f3\u30c8\u30ed\u30fc\u30eb",
+                    "path": "\u30b7\u30ea\u30a2\u30eb \u30c7\u30d0\u30a4\u30b9\u306e\u30d1\u30b9"
+                },
+                "description": "\u30dd\u30fc\u30c8\u56fa\u6709\u306e\u8a2d\u5b9a\u3092\u5165\u529b",
+                "title": "\u8a2d\u5b9a"
+            },
+            "user": {
+                "description": "Zigbee radio\u7528\u30b7\u30ea\u30a2\u30eb\u30dd\u30fc\u30c8\u3092\u9078\u629e",
+                "title": "ZHA"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_2": "2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_3": "3\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_4": "4\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_5": "5\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_6": "6\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "close": "\u9589\u3058\u308b",
+            "dim_down": "\u8584\u6697\u304f\u3059\u308b",
+            "dim_up": "\u8584\u660e\u308b\u304f\u3059\u308b",
+            "left": "\u5de6",
+            "open": "\u958b\u304f",
+            "right": "\u53f3",
+            "turn_off": "\u30aa\u30d5\u306b\u3059\u308b",
+            "turn_on": "\u30aa\u30f3\u306b\u3059\u308b"
+        },
+        "trigger_type": {
+            "device_shaken": "\u30c7\u30d0\u30a4\u30b9\u304c\u63fa\u308c\u308b",
+            "device_tilted": "\u30c7\u30d0\u30a4\u30b9\u304c\u50be\u3044\u3066\u3044\u308b"
         }
     }
 }

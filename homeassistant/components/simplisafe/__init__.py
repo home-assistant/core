@@ -588,7 +588,7 @@ class SimpliSafeEntity(CoordinatorEntity):
         self._attr_extra_state_attributes = {
             ATTR_LAST_EVENT_INFO: event.get("info"),
             ATTR_LAST_EVENT_SENSOR_NAME: event.get("sensorName"),
-            ATTR_LAST_EVENT_SENSOR_TYPE: device_type.name,
+            ATTR_LAST_EVENT_SENSOR_TYPE: device_type.name.lower(),
             ATTR_LAST_EVENT_TIMESTAMP: event.get("eventTimestamp"),
             ATTR_SYSTEM_ID: system.system_id,
         }

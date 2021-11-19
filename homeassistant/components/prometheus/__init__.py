@@ -276,6 +276,15 @@ class PrometheusMetrics:
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
+    def _handle_input_number(self, state):
+        metric = self._metric(
+            "input_number_state",
+            self.prometheus_cli.Gauge,
+            "State of the input number",
+        )
+        value = self.state_as_number(state)
+        metric.labels(**self._labels(state)).set(value)
+
     def _handle_device_tracker(self, state):
         metric = self._metric(
             "device_tracker_state",

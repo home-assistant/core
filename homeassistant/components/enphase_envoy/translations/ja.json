@@ -4,7 +4,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "\u30db\u30b9\u30c8"
+                    "host": "\u30db\u30b9\u30c8",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
                 }
             }
         }

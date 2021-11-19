@@ -123,6 +123,7 @@ omit =
     homeassistant/components/bosch_shc/__init__.py
     homeassistant/components/bosch_shc/binary_sensor.py
     homeassistant/components/bosch_shc/const.py
+    homeassistant/components/bosch_shc/cover.py
     homeassistant/components/bosch_shc/entity.py
     homeassistant/components/bosch_shc/sensor.py
     homeassistant/components/braviatv/__init__.py
@@ -137,7 +138,9 @@ omit =
     homeassistant/components/broadlink/updater.py
     homeassistant/components/brottsplatskartan/sensor.py
     homeassistant/components/browser/*
+    homeassistant/components/brunt/__init__.py
     homeassistant/components/brunt/cover.py
+    homeassistant/components/brunt/const.py
     homeassistant/components/bsblan/climate.py
     homeassistant/components/bt_home_hub_5/device_tracker.py
     homeassistant/components/bt_smarthub/device_tracker.py
@@ -559,6 +562,8 @@ omit =
     homeassistant/components/kostal_plenticore/const.py
     homeassistant/components/kostal_plenticore/helper.py
     homeassistant/components/kostal_plenticore/sensor.py
+    homeassistant/components/kostal_plenticore/switch.py
+    homeassistant/components/kostal_plenticore/select.py
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lametric/*
@@ -647,7 +652,6 @@ omit =
     homeassistant/components/miflora/sensor.py
     homeassistant/components/mikrotik/hub.py
     homeassistant/components/mikrotik/device_tracker.py
-    homeassistant/components/mill/__init__.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/const.py
     homeassistant/components/mill/sensor.py

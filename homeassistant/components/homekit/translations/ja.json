@@ -8,7 +8,8 @@
             },
             "cameras": {
                 "data": {
-                    "camera_audio": "\u97f3\u58f0\u306b\u5bfe\u5fdc\u3057\u305f\u30ab\u30e1\u30e9"
+                    "camera_audio": "\u97f3\u58f0\u306b\u5bfe\u5fdc\u3057\u305f\u30ab\u30e1\u30e9",
+                    "camera_copy": "H.264\u306e\u30cd\u30a4\u30c6\u30a3\u30d6\u30b9\u30c8\u30ea\u30fc\u30e0\u3092\u30b5\u30dd\u30fc\u30c8\u3059\u308b\u30ab\u30e1\u30e9"
                 }
             },
             "yaml": {

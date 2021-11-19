@@ -6,6 +6,11 @@
                     "2fa": "2\u8981\u7d20\u30b3\u30fc\u30c9"
                 },
                 "title": "2\u8981\u7d20\u8a8d\u8a3c"
+            },
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                }
             }
         }
     }
