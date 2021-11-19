@@ -543,7 +543,9 @@ async def test_discovery_duplicate_data(hass):
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=TEST_DISCOVERY
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=TEST_DISCOVERY,
     )
 
     assert result["type"] == "abort"
