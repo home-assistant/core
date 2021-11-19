@@ -1,7 +1,18 @@
 {
     "config": {
+        "abort": {
+            "import_failed": "\u30b3\u30f3\u30d5\u30a3\u30b0\u304b\u3089\u306e\u30a4\u30f3\u30dd\u30fc\u30c8\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
+        },
+        "error": {
+            "connection_refused": "\u30db\u30b9\u30c8\u306b\u63a5\u7d9a\u3059\u308b\u3068\u304d\u306b\u63a5\u7d9a\u304c\u62d2\u5426\u3055\u308c\u307e\u3057\u305f",
+            "connection_timeout": "\u3053\u306e\u30db\u30b9\u30c8\u306b\u63a5\u7d9a\u3059\u308b\u3068\u304d\u306b\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8"
+        },
         "step": {
             "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                },
                 "title": "\u30c6\u30b9\u30c8\u3059\u308b\u8a3c\u660e\u66f8\u3092\u5b9a\u7fa9\u3059\u308b"
             }
         }

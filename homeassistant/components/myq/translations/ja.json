@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                },
+                "description": "{username} \u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u306f\u7121\u52b9\u306b\u306a\u308a\u307e\u3057\u305f\u3002"
+            },
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                }
+            }
+        }
+    }
+}

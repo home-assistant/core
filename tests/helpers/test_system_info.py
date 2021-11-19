@@ -27,3 +27,10 @@ async def test_container_installationtype(hass):
     ), patch("homeassistant.helpers.system_info.getuser", return_value="user"):
         info = await hass.helpers.system_info.async_get_system_info()
         assert info["installation_type"] == "Unknown"
+
+
+async def test_getuser_keyerror(hass):
+    """Test getuser keyerror."""
+    with patch("homeassistant.helpers.system_info.getuser", side_effect=KeyError):
+        info = await hass.helpers.system_info.async_get_system_info()
+        assert info["user"] is None

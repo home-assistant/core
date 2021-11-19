@@ -27,6 +27,10 @@
             "configure_addon": {
                 "data": {
                     "network_key": "Kunci Jaringan",
+                    "s0_legacy_key": "Kunci S0 (Warisan)",
+                    "s2_access_control_key": "Kunci Kontrol Akses S2",
+                    "s2_authenticated_key": "Kunci Autentikasi S2",
+                    "s2_unauthenticated_key": "Kunci S2 Tidak Diautentikasi",
                     "usb_path": "Jalur Perangkat USB"
                 },
                 "title": "Masukkan konfigurasi add-on Z-Wave JS"
@@ -51,17 +55,36 @@
             },
             "start_addon": {
                 "title": "Add-on Z-Wave JS sedang dimulai."
+            },
+            "usb_confirm": {
+                "description": "Ingin menyiapkan {name} dengan add-on Z-Wave JS?"
             }
         }
     },
     "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Hapus usercode pada {entity_name}",
+            "ping": "Ping perangkat",
+            "refresh_value": "Segarkan nilai untuk {entity_name}",
+            "reset_meter": "Setel ulang pengukur di {subtype}",
+            "set_config_parameter": "Tetapkan nilai parameter konfigurasi {subtype}",
+            "set_lock_usercode": "Setel usercode pada {entity_name}",
+            "set_value": "Setel nilai Nilai Z-Wave"
+        },
         "condition_type": {
             "config_parameter": "Nilai parameter konfigurasi {subtype}",
             "node_status": "Status node",
             "value": "Nilai saat ini dari Nilai Z-Wave"
         },
         "trigger_type": {
-            "state.node_status": "Status node berubah"
+            "event.notification.entry_control": "Mengirim notifikasi Entry Control",
+            "event.notification.notification": "Mengirim notifikasi",
+            "event.value_notification.basic": "Peristiwa Basic CC pada {subtype}",
+            "event.value_notification.central_scene": "Aksi Central Scene pada {subtype}",
+            "event.value_notification.scene_activation": "Aktivasi Skenario di {subtype}",
+            "state.node_status": "Status node berubah",
+            "zwave_js.value_updated.config_parameter": "Perubahan nilai pada parameter konfigurasi {subtype}",
+            "zwave_js.value_updated.value": "Perubahan nilai pada Nilai Z-Wave JS"
         }
     },
     "options": {
@@ -90,6 +113,10 @@
                     "emulate_hardware": "Emulasikan Perangkat Keras",
                     "log_level": "Tingkat log",
                     "network_key": "Kunci Jaringan",
+                    "s0_legacy_key": "Kunci S0 (Warisan)",
+                    "s2_access_control_key": "Kunci Kontrol Akses S2",
+                    "s2_authenticated_key": "Kunci Autentikasi S2",
+                    "s2_unauthenticated_key": "Kunci S2 Tidak Diautentikasi",
                     "usb_path": "Jalur Perangkat USB"
                 },
                 "title": "Masukkan konfigurasi add-on Z-Wave JS"

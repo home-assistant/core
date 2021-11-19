@@ -11,7 +11,7 @@ from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import ATTR_COMPONENT
-from homeassistant.util.file import write_utf8_file
+from homeassistant.util.file import write_utf8_file_atomic
 from homeassistant.util.yaml import dump, load_yaml
 
 DOMAIN = "config"
@@ -254,4 +254,4 @@ def _write(path, data):
     # Do it before opening file. If dump causes error it will now not
     # truncate the file.
     contents = dump(data)
-    write_utf8_file(path, contents)
+    write_utf8_file_atomic(path, contents)

@@ -12,6 +12,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
+                    "description": "Autentikasi ulang dengan akun Prosegur.",
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
                 }
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "country": "Negara",
-                    "password": "Kata Sandi"
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
                 }
             }
         }

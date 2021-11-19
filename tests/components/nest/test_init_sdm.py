@@ -60,7 +60,7 @@ async def test_setup_configuration_failure(hass, caplog):
 async def test_setup_susbcriber_failure(hass, caplog):
     """Test configuration error."""
     with patch(
-        "homeassistant.components.nest.GoogleNestSubscriber.start_async",
+        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
         side_effect=GoogleNestException(),
     ), caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
         result = await async_setup_sdm(hass)
@@ -74,10 +74,14 @@ async def test_setup_susbcriber_failure(hass, caplog):
 
 async def test_setup_device_manager_failure(hass, caplog):
     """Test configuration error."""
-    with patch("homeassistant.components.nest.GoogleNestSubscriber.start_async"), patch(
-        "homeassistant.components.nest.GoogleNestSubscriber.async_get_device_manager",
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async"
+    ), patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber.async_get_device_manager",
         side_effect=GoogleNestException(),
-    ), caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
+    ), caplog.at_level(
+        logging.ERROR, logger="homeassistant.components.nest"
+    ):
         result = await async_setup_sdm(hass)
         assert result
         assert len(caplog.messages) == 1
@@ -91,7 +95,7 @@ async def test_setup_device_manager_failure(hass, caplog):
 async def test_subscriber_auth_failure(hass, caplog):
     """Test configuration error."""
     with patch(
-        "homeassistant.components.nest.GoogleNestSubscriber.start_async",
+        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
         side_effect=AuthException(),
     ):
         result = await async_setup_sdm(hass, CONFIG)

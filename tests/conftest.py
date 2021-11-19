@@ -6,7 +6,7 @@ import logging
 import socket
 import ssl
 import threading
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp.test_utils import make_mocked_request
 import freezegun
@@ -598,7 +598,7 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     return component
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_get_source_ip():
     """Mock network util's async_get_source_ip."""
     with patch(
@@ -615,6 +615,21 @@ def mock_zeroconf():
         "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
     ):
         yield
+
+
+@pytest.fixture
+def mock_async_zeroconf(mock_zeroconf):
+    """Mock AsyncZeroconf."""
+    with patch("homeassistant.components.zeroconf.HaAsyncZeroconf") as mock_aiozc:
+        zc = mock_aiozc.return_value
+        zc.async_unregister_service = AsyncMock()
+        zc.async_register_service = AsyncMock()
+        zc.async_update_service = AsyncMock()
+        zc.zeroconf.async_wait_for_start = AsyncMock()
+        zc.zeroconf.done = False
+        zc.async_close = AsyncMock()
+        zc.ha_async_close = AsyncMock()
+        yield zc
 
 
 @pytest.fixture

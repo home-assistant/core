@@ -8,10 +8,12 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components import recorder
+from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.components.statistics.sensor import DOMAIN, StatisticsSensor
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
@@ -63,11 +65,18 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "binary_sensor.test_monitored",
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "binary_sensor.test_monitored",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_unitless",
+                        "entity_id": "binary_sensor.test_monitored_unitless",
+                    },
+                ]
             },
         )
 
@@ -76,12 +85,21 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.block_till_done()
 
         for value in values:
-            self.hass.states.set("binary_sensor.test_monitored", value)
+            self.hass.states.set(
+                "binary_sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.states.set("binary_sensor.test_monitored_unitless", value)
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
+        assert state.state == str(len(values))
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+        assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
 
-        assert str(len(values)) == state.state
+        state = self.hass.states.get("sensor.test_unitless")
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     def test_sensor_source(self):
         """Test if source is a sensor."""
@@ -110,7 +128,6 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-
         assert str(self.mean) == state.state
         assert self.min == state.attributes.get("min_value")
         assert self.max == state.attributes.get("max_value")
@@ -121,17 +138,34 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.mean == state.attributes.get("mean")
         assert self.count == state.attributes.get("count")
         assert self.total == state.attributes.get("total")
-        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
 
-        # Source sensor is unavailable, unit and state should not change
-        self.hass.states.set("sensor.test_monitored", "unavailable", {})
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+        assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+
+        # Source sensor turns unavailable, then available with valid value,
+        # statistics sensor should follow
+        state = self.hass.states.get("sensor.test")
+        self.hass.states.set(
+            "sensor.test_monitored",
+            STATE_UNAVAILABLE,
+        )
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
-        assert state == new_state
+        assert new_state.state == STATE_UNAVAILABLE
+        self.hass.states.set(
+            "sensor.test_monitored",
+            0,
+            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        )
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert new_state.state != STATE_UNAVAILABLE
+        assert new_state.attributes.get("count") == state.attributes.get("count") + 1
 
-        # Source sensor has a non float state, unit and state should not change
+        # Source sensor has a non-float state, unit and state should not change
+        state = self.hass.states.get("sensor.test")
         self.hass.states.set("sensor.test_monitored", "beer", {})
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
@@ -428,6 +462,161 @@ class TestStatisticsSensor(unittest.TestCase):
 
         state = self.hass.states.get("sensor.test")
         assert state.state == str(round(sum(self.values) / len(self.values), 1))
+
+    def test_state_characteristic_unit(self):
+        """Test statistics characteristic selection (via config)."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test_min_age",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "min_age",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_variance",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "variance",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_average_change",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "average_change",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_change_rate",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "change_rate",
+                    },
+                ]
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in self.values:
+            self.hass.states.set(
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.states.set(
+                "sensor.test_monitored_unitless",
+                value,
+            )
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test_min_age")
+        assert state.state == str(state.attributes.get("min_age"))
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+        state = self.hass.states.get("sensor.test_variance")
+        assert state.state == str(state.attributes.get("variance"))
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS + "²"
+        state = self.hass.states.get("sensor.test_average_change")
+        assert state.state == str(state.attributes.get("average_change"))
+        assert (
+            state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS + "/sample"
+        )
+        state = self.hass.states.get("sensor.test_change_rate")
+        assert state.state == str(state.attributes.get("change_rate"))
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS + "/s"
+
+    def test_state_class(self):
+        """Test state class, which depends on the characteristic configured."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test_normal",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "count",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_nan",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "min_age",
+                    },
+                ]
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in self.values:
+            self.hass.states.set(
+                "sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test_normal")
+        assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+        state = self.hass.states.get("sensor.test_nan")
+        assert state.attributes.get(ATTR_STATE_CLASS) is None
+
+    def test_unitless_source_sensor(self):
+        """Statistics for a unitless source sensor should never have a unit."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test_unitless_1",
+                        "entity_id": "sensor.test_monitored_unitless",
+                        "state_characteristic": "count",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_unitless_2",
+                        "entity_id": "sensor.test_monitored_unitless",
+                        "state_characteristic": "mean",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_unitless_3",
+                        "entity_id": "sensor.test_monitored_unitless",
+                        "state_characteristic": "change_rate",
+                    },
+                ]
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in self.values:
+            self.hass.states.set(
+                "sensor.test_monitored_unitless",
+                value,
+            )
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test_unitless_1")
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+        state = self.hass.states.get("sensor.test_unitless_2")
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+        state = self.hass.states.get("sensor.test_unitless_3")
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+
+        assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
 
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""

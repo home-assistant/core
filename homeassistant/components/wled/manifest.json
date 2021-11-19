@@ -3,7 +3,7 @@
   "name": "WLED",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wled",
-  "requirements": ["wled==0.8.0"],
+  "requirements": ["wled==0.10.0"],
   "zeroconf": ["_wled._tcp.local."],
   "codeowners": ["@frenck"],
   "quality_scale": "platinum",

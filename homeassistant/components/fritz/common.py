@@ -257,10 +257,10 @@ class FritzBoxTools:
 
     def _update_device_info(self) -> tuple[bool, str | None]:
         """Retrieve latest device information from the FRITZ!Box."""
-        userinterface = self.connection.call_action("UserInterface1", "GetInfo")
-        return userinterface.get("NewUpgradeAvailable"), userinterface.get(
+        version = self.connection.call_action("UserInterface1", "GetInfo").get(
             "NewX_AVM-DE_Version"
         )
+        return bool(version), version
 
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "flow_title": "{mac} ({ip})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "entity_config": {
+                "data": {
+                    "reverse": "\u30ab\u30d0\u30fc\u304c\u9006\u306b\u306a\u3063\u3066\u3044\u307e\u3059"
+                }
+            },
+            "target_config": {
+                "data": {
+                    "reverse": "\u30ab\u30d0\u30fc\u304c\u9006\u306b\u306a\u3063\u3066\u3044\u307e\u3059"
+                },
+                "title": "MyLink\u30ab\u30d0\u30fc\u306e\u8a2d\u5b9a"
+            }
+        }
+    }
+}

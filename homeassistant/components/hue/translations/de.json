@@ -35,6 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "Erste Taste",
+            "2": "Zweite Taste",
+            "3": "Dritte Taste",
+            "4": "Vierte Taste",
             "button_1": "Erste Taste",
             "button_2": "Zweite Taste",
             "button_3": "Dritte Taste",
@@ -47,11 +51,16 @@
             "turn_on": "Einschalten"
         },
         "trigger_type": {
+            "double_short_release": "Beide \"{subtype}\" losgelassen",
+            "initial_press": "Taste \"{subtype}\" anfangs gedr\u00fcckt",
+            "long_release": "Taste \"{subtype}\" nach langem Dr\u00fccken losgelassen",
             "remote_button_long_release": "\"{subtype}\" Taste nach langem Dr\u00fccken losgelassen",
             "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
             "remote_button_short_release": "\"{subtype}\" Taste losgelassen",
             "remote_double_button_long_press": "Beide \"{subtype}\" nach langem Dr\u00fccken losgelassen",
-            "remote_double_button_short_press": "Beide \"{subtype}\" losgelassen"
+            "remote_double_button_short_press": "Beide \"{subtype}\" losgelassen",
+            "repeat": "Taste \"{subtype}\" gedr\u00fcckt gehalten",
+            "short_release": "Taste \"{subtype}\" nach kurzem Dr\u00fccken losgelassen"
         }
     },
     "options": {
@@ -59,6 +68,7 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Hue-Gruppen erlauben",
+                    "allow_hue_scenes": "Hue-Szenen zulassen",
                     "allow_unreachable": "Erlaube nicht erreichbaren Gl\u00fchlampen, ihren Zustand korrekt zu melden"
                 }
             }
