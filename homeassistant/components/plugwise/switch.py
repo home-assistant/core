@@ -19,7 +19,6 @@ from plugwise.nodes import PlugwiseNode
 
 from .const import (
     API,
-    CB_NEW_NODE,
     COORDINATOR,
     DOMAIN,
     FW,
