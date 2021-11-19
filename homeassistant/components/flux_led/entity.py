@@ -64,6 +64,7 @@ class FluxEntity(CoordinatorEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the specified device off."""
+        await self._async_turn_off(**kwargs)
         await self._device.async_turn_off()
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
