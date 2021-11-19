@@ -40,6 +40,7 @@ G_AN_BOOKMARK = "Bookmark"
 G_AN_FAVORITE = "Favorite"
 G_AN_GOOGLE_ASSISTANT = "GoogleAssistant"
 G_LOCAL_EXO_PLAYER_ENTITY_ID = "media_player.wbudowany_glosnik"
+G_LOCAL_ANDROID_PLAYER_ENTITY_ID = "media_player.android_tv_127_0_0_1"
 G_CURR_MEDIA_CONTENT = {}
 
 # actions on remote

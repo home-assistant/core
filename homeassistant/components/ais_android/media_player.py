@@ -23,6 +23,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
@@ -88,6 +89,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_ANDROIDTV = (
     SUPPORT_PAUSE
     | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
     | SUPPORT_PREVIOUS_TRACK
@@ -382,23 +384,26 @@ class ADBDevice(MediaPlayerEntity):
         # check if we have ais gate
         if self.aftv.host == "127.0.0.1":
             return True
-        ais_model = self.device_info["model"].startswith("AIS")
-        return ais_model
+        # TODO check remote ais gates
+        # ais_model = self.device_info["model"].startswith("AIS")
+        return False
 
     async def async_execute_ais_command(self, cmd):
-        if self.aftv.host == "127.0.0.1":
-            # send command via console
-            cmd_process = await asyncio.create_subprocess_shell(
-                cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-            )
-            stdout, stderr = await cmd_process.communicate()
-            if stdout:
-                _LOGGER.info("stdout %s", stdout.decode())
-            if stderr:
-                _LOGGER.info("stderr %s", stderr.decode())
-        else:
-            # send command via adb
-            await self.aftv.adb_shell(cmd)
+        # TODO send command to remote ais gates
+        # if self.aftv.host == "127.0.0.1":
+        # send command via console
+        cmd_process = await asyncio.create_subprocess_shell(
+            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await cmd_process.communicate()
+        if stdout:
+            _LOGGER.info("stdout %s", stdout.decode())
+        if stderr:
+            _LOGGER.info("stderr %s", stderr.decode())
+        # TODO
+        # else:
+        #     # send command via adb
+        #     await self.aftv.adb_shell(cmd)
 
     async def async_added_to_hass(self):
         """Set config parameter when add to hass."""
@@ -438,6 +443,11 @@ class ADBDevice(MediaPlayerEntity):
 
         return None, None
 
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        _LOGGER.error("media_type " + media_type + " media_id " + media_id)
+        pass
+
     @adb_decorator()
     async def async_media_play(self):
         """Send play command."""
@@ -449,7 +459,6 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def async_media_pause(self):
         """Send pause command."""
-        # ais -> https://dev.to/larsonzhong/most-complete-adb-commands-4pcg#media-control
         if self._is_ais_gate():
             await self.async_execute_ais_command("su -c 'input keyevent 127'")
             return
@@ -459,6 +468,9 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def async_media_play_pause(self):
         """Send play/pause command."""
+        if self._is_ais_gate():
+            await self.async_execute_ais_command("su -c 'input keyevent 85'")
+            return
         await self.aftv.media_play_pause()
 
     @adb_decorator()
@@ -494,11 +506,17 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def async_media_previous_track(self):
         """Send previous track command (results in rewind)."""
+        if self._is_ais_gate():
+            await self.async_execute_ais_command("su -c 'input keyevent 88'")
+            return
         await self.aftv.media_previous_track()
 
     @adb_decorator()
     async def async_media_next_track(self):
         """Send next track command (results in fast-forward)."""
+        if self._is_ais_gate():
+            await self.async_execute_ais_command("su -c 'input keyevent 87'")
+            return
         await self.aftv.media_next_track()
 
     @adb_decorator()
@@ -626,26 +644,43 @@ class AndroidTVDevice(ADBDevice):
     @adb_decorator()
     async def async_media_stop(self):
         """Send stop command."""
+        if self._is_ais_gate():
+            await self.async_execute_ais_command("su -c 'input keyevent 86'")
+            return
         await self.aftv.media_stop()
 
     @adb_decorator()
     async def async_mute_volume(self, mute):
         """Mute the volume."""
+        if self._is_ais_gate():
+            await self.async_execute_ais_command("su -c 'input keyevent 164'")
+            return
         await self.aftv.mute_volume()
 
     @adb_decorator()
     async def async_set_volume_level(self, volume):
         """Set the volume level."""
+        if self._is_ais_gate():
+            await self.async_execute_ais_command(
+                "su -c 'media volume --show --stream 3 --set " + str(volume) + "'"
+            )
+            return
         await self.aftv.set_volume_level(volume)
 
     @adb_decorator()
     async def async_volume_down(self):
         """Send volume down command."""
+        if self._is_ais_gate():
+            await self.async_execute_ais_command("su -c 'input keyevent 25'")
+            return
         self._attr_volume_level = await self.aftv.volume_down(self._attr_volume_level)
 
     @adb_decorator()
     async def async_volume_up(self):
         """Send volume up command."""
+        if self._is_ais_gate():
+            await self.async_execute_ais_command("su -c 'input keyevent 24'")
+            return
         self._attr_volume_level = await self.aftv.volume_up(self._attr_volume_level)
 
 

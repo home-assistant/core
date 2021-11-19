@@ -4,7 +4,6 @@ Support for interacting with Spotify.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.spotify/
 """
-import asyncio
 import logging
 
 from homeassistant.components import ais_cloud
@@ -554,37 +553,39 @@ class SpotifyData:
         # update search list
         self.hass.states.set("sensor.spotifysearchlist", call_id, attr)
 
-        # play the uri
-        _audio_info = json.dumps(
-            {
-                "IMAGE_URL": track["thumbnail"],
-                "NAME": track["title"],
-                "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY,
-                "media_content_id": track["uri"],
-            }
-        )
-        self.hass.services.call(
-            "media_player",
-            "play_media",
-            {
-                "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                "media_content_type": "ais_content_info",
-                "media_content_id": _audio_info,
-            },
-        )
-        # new way to play
-        ais_track_uri = track["uri"]
-        if not track["uri"].startswith("spotify:track:"):
-            ais_track_uri = track["uri"] + ":play"
-        self.hass.services.call(
-            "ais_shell_command",
-            "execute_command",
-            {
-                "command": "su -c 'am start -W -a android.intent.action.VIEW -d "
-                + ais_track_uri
-                + "'"
-            },
-        )
+        # play via ais android integration
+        if self.hass.services.has_service("ais_android", "adb_command"):
+            _audio_info = json.dumps(
+                {
+                    "IMAGE_URL": track["thumbnail"],
+                    "NAME": track["title"],
+                    "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY,
+                    "media_content_id": track["uri"],
+                }
+            )
+            self.hass.services.call(
+                "media_player",
+                "play_media",
+                {
+                    "entity_id": ais_global.G_LOCAL_ANDROID_PLAYER_ENTITY_ID,
+                    "media_content_type": "ais_content_info",
+                    "media_content_id": _audio_info,
+                },
+            )
+        else:
+            # to play without integration
+            ais_track_uri = track["uri"]
+            if not track["uri"].startswith("spotify:track:"):
+                ais_track_uri = track["uri"] + ":play"
+            self.hass.services.call(
+                "ais_shell_command",
+                "execute_command",
+                {
+                    "command": "su -c 'am start -W -a android.intent.action.VIEW -d "
+                    + ais_track_uri
+                    + "'"
+                },
+            )
 
         # get track list
         self.get_tracks_list(
@@ -603,37 +604,40 @@ class SpotifyData:
 
         # update list
         self.hass.states.set("sensor.spotifylist", call_id, attr)
-        # set stream url, image and title
-        _audio_info = json.dumps(
-            {
-                "IMAGE_URL": track["thumbnail"],
-                "NAME": track["title"],
-                "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY,
-                "media_content_id": track["uri"],
-            }
-        )
-        self.hass.services.call(
-            "media_player",
-            "play_media",
-            {
-                "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                "media_content_type": "ais_content_info",
-                "media_content_id": _audio_info,
-            },
-        )
-        # new way to play
-        ais_track_uri = track["uri"]
-        if not track["uri"].startswith("spotify:track:"):
-            ais_track_uri = track["uri"] + ":play"
-        self.hass.services.call(
-            "ais_shell_command",
-            "execute_command",
-            {
-                "command": "su -c 'am start -W -a android.intent.action.VIEW -d "
-                + ais_track_uri
-                + "'"
-            },
-        )
+
+        # play via ais android integration
+        if self.hass.services.has_service("ais_android", "adb_command"):
+            _audio_info = json.dumps(
+                {
+                    "IMAGE_URL": track["thumbnail"],
+                    "NAME": track["title"],
+                    "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY,
+                    "media_content_id": track["uri"],
+                }
+            )
+            self.hass.services.call(
+                "media_player",
+                "play_media",
+                {
+                    "entity_id": ais_global.G_LOCAL_ANDROID_PLAYER_ENTITY_ID,
+                    "media_content_type": "ais_content_info",
+                    "media_content_id": _audio_info,
+                },
+            )
+        else:
+            # new way to play
+            ais_track_uri = track["uri"]
+            if not track["uri"].startswith("spotify:track:"):
+                ais_track_uri = track["uri"] + ":play"
+            self.hass.services.call(
+                "ais_shell_command",
+                "execute_command",
+                {
+                    "command": "su -c 'am start -W -a android.intent.action.VIEW -d "
+                    + ais_track_uri
+                    + "'"
+                },
+            )
 
     def change_play_queue(self, call):
         # info from android app
