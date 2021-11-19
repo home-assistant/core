@@ -440,7 +440,6 @@ async def test_setup_component_invalid_token(hass, config_entry):
     """Test handling of invalid token."""
 
     async def fake_ensure_valid_token(*args, **kwargs):
-        print("fake_ensure_valid_token")
         raise aiohttp.ClientResponseError(
             request_info=aiohttp.client.RequestInfo(
                 url="http://example.com",

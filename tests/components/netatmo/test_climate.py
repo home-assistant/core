@@ -38,7 +38,6 @@ async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_au
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
-    print(hass.states._states)
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
         hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
