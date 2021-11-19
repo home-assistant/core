@@ -58,8 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Token expired while connecting to Discovergy: %s", err)
         entry.async_start_reauth(hass)
         return False
-    except discovergyError.HTTPError as err:
-        _LOGGER.error("Error connecting to Discovergy: %s", err)
+    except Exception as err:  # pylint: disable=broad-except
+        _LOGGER.error("Unexpected error while communicating with API: %s", err)
         raise ConfigEntryNotReady from err
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
