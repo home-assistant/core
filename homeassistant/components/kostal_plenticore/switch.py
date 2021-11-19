@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import ABC
 from datetime import timedelta
 import logging
-from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -164,8 +163,3 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
                 f"{self.platform_name} {self._name} {self.off_label}"
             )
         return bool(self.coordinator.data[self.module_id][self.data_id] == self._is_on)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {"last_run_success": self._last_run_success}
