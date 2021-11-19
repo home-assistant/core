@@ -165,6 +165,16 @@ async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
     [
         (DEVICE_CLASS_DATE, "2021-11-09", "2021-11-09"),
         (
+            DEVICE_CLASS_DATE,
+            "2021-01-09T12:00:00+00:00",
+            "2021-01-09",
+        ),
+        (
+            DEVICE_CLASS_DATE,
+            "2021-01-09T00:00:00+01:00",
+            "2021-01-08",
+        ),
+        (
             DEVICE_CLASS_TIMESTAMP,
             "2021-01-09T12:00:00+00:00",
             "2021-01-09T12:00:00+00:00",

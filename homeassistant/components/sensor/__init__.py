@@ -308,12 +308,12 @@ class SensorEntity(Entity):
                     f"while it has device class '{device_class}'"
                 ) from error
 
+            if value.tzinfo is not None and value.tzinfo != timezone.utc:
+                value = value.astimezone(timezone.utc)
+
             # Convert the date object to a standardized state string.
             if device_class == DEVICE_CLASS_DATE:
                 return value.date().isoformat()
-
-            if value.tzinfo is not None and value.tzinfo != timezone.utc:
-                value = value.astimezone(timezone.utc)
 
             return value.isoformat(timespec="seconds")
 
