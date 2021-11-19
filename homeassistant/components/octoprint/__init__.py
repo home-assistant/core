@@ -186,7 +186,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         printer = await client.get_printer_info()
         if printer.state.flags.printing:
             await client.pause_job()
-        else:
+        elif not printer.state.flags.paused and not printer.state.flags.pausing:
             raise InvalidPrinterState("Printer is not printing")
 
     async def async_resume_print(call: ServiceCall) -> None:
@@ -195,7 +195,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         printer = await client.get_printer_info()
         if printer.state.flags.paused:
             await client.resume_job()
-        else:
+        elif not printer.state.flags.printing and not printer.state.flags.resuming:
             raise InvalidPrinterState("Printer is not currently paused")
 
     async def async_stop_print(call: ServiceCall) -> None:
@@ -204,8 +204,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         printer = await client.get_printer_info()
         if printer.state.flags.printing or printer.state.flags.paused:
             await client.cancel_job()
-        else:
-            raise InvalidPrinterState("Printer does not have an active job")
 
     for service_name, schema, method in (
         (
