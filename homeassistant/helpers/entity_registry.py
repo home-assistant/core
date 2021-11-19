@@ -36,7 +36,7 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import MaxLengthExceeded
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, storage
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
@@ -58,7 +58,8 @@ DISABLED_HASS = "hass"
 DISABLED_INTEGRATION = "integration"
 DISABLED_USER = "user"
 
-STORAGE_VERSION = 1
+STORAGE_VERSION_MAJOR = 1
+STORAGE_VERSION_MINOR = 2
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -147,6 +148,16 @@ class RegistryEntry:
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
 
+class EntityRegistryStore(storage.Store):
+    """Store entity registry data."""
+
+    async def _async_migrate_func(
+        self, old_major_version: int, old_minor_version: int, old_data: dict
+    ) -> dict:
+        """Migrate to the new version."""
+        return await _async_migrate(old_major_version, old_minor_version, old_data)
+
+
 class EntityRegistry:
     """Class to hold a registry of entities."""
 
@@ -155,8 +166,12 @@ class EntityRegistry:
         self.hass = hass
         self.entities: dict[str, RegistryEntry]
         self._index: dict[tuple[str, str, str], str] = {}
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        self._store = EntityRegistryStore(
+            hass,
+            STORAGE_VERSION_MAJOR,
+            STORAGE_KEY,
+            atomic_writes=True,
+            minor_version=STORAGE_VERSION_MINOR,
         )
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
@@ -509,11 +524,12 @@ class EntityRegistry:
         """Load the entity registry."""
         async_setup_entity_restore(self.hass, self)
 
-        data = await self.hass.helpers.storage.async_migrator(
+        data = await storage.async_migrator(
+            self.hass,
             self.hass.config.path(PATH_REGISTRY),
             self._store,
             old_conf_load_func=load_yaml,
-            old_conf_migrate_func=_async_migrate,
+            old_conf_migrate_func=_async_migrate_yaml_to_json,
         )
         entities: dict[str, RegistryEntry] = OrderedDict()
 
@@ -526,22 +542,22 @@ class EntityRegistry:
                     continue
 
                 entities[entity["entity_id"]] = RegistryEntry(
-                    area_id=entity.get("area_id"),
-                    capabilities=entity.get("capabilities") or {},
-                    config_entry_id=entity.get("config_entry_id"),
-                    device_class=entity.get("device_class"),
-                    device_id=entity.get("device_id"),
-                    disabled_by=entity.get("disabled_by"),
-                    entity_category=entity.get("entity_category"),
+                    area_id=entity["area_id"],
+                    capabilities=entity["capabilities"],
+                    config_entry_id=entity["config_entry_id"],
+                    device_class=entity["device_class"],
+                    device_id=entity["device_id"],
+                    disabled_by=entity["disabled_by"],
+                    entity_category=entity["entity_category"],
                     entity_id=entity["entity_id"],
-                    icon=entity.get("icon"),
-                    name=entity.get("name"),
-                    original_icon=entity.get("original_icon"),
-                    original_name=entity.get("original_name"),
+                    icon=entity["icon"],
+                    name=entity["name"],
+                    original_icon=entity["original_icon"],
+                    original_name=entity["original_name"],
                     platform=entity["platform"],
-                    supported_features=entity.get("supported_features", 0),
+                    supported_features=entity["supported_features"],
                     unique_id=entity["unique_id"],
-                    unit_of_measurement=entity.get("unit_of_measurement"),
+                    unit_of_measurement=entity["unit_of_measurement"],
                 )
 
         self.entities = entities
@@ -703,13 +719,43 @@ def async_config_entry_disabled_by_changed(
         )
 
 
-async def _async_migrate(entities: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+async def _async_migrate(
+    old_major_version: int, old_minor_version: int, data: dict
+) -> dict:
+    """Migrate to the new version."""
+    if old_major_version < 2 and old_minor_version < 2:
+        # From version 1.1
+        for entity in data["entities"]:
+            # Populate all keys
+            entity["area_id"] = entity.get("area_id")
+            entity["capabilities"] = entity.get("capabilities") or {}
+            entity["config_entry_id"] = entity.get("config_entry_id")
+            entity["device_class"] = entity.get("device_class")
+            entity["device_id"] = entity.get("device_id")
+            entity["disabled_by"] = entity.get("disabled_by")
+            entity["entity_category"] = entity.get("entity_category")
+            entity["icon"] = entity.get("icon")
+            entity["name"] = entity.get("name")
+            entity["original_icon"] = entity.get("original_icon")
+            entity["original_name"] = entity.get("original_name")
+            entity["platform"] = entity["platform"]
+            entity["supported_features"] = entity.get("supported_features", 0)
+            entity["unit_of_measurement"] = entity.get("unit_of_measurement")
+    if old_major_version > 1:
+        raise NotImplementedError
+    return data
+
+
+async def _async_migrate_yaml_to_json(
+    entities: dict[str, Any]
+) -> dict[str, list[dict[str, Any]]]:
     """Migrate the YAML config file to storage helper format."""
-    return {
+    entities_1_1 = {
         "entities": [
             {"entity_id": entity_id, **info} for entity_id, info in entities.items()
         ]
     }
+    return await _async_migrate(1, 1, entities_1_1)
 
 
 @callback
