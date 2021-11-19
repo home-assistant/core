@@ -7,12 +7,24 @@
                     "host": "\u30db\u30b9\u30c8"
                 }
             },
+            "link": {
+                "title": "\u30d1\u30b9\u30ef\u30fc\u30c9\u306e\u53d6\u5f97"
+            },
             "link_manual": {
-                "description": "\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u30c7\u30d0\u30a4\u30b9\u304b\u3089\u81ea\u52d5\u7684\u306b\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f\u3002\u6b21\u306e\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\u306b\u8a18\u8f09\u3055\u308c\u3066\u3044\u308b\u624b\u9806\u306b\u5f93\u3063\u3066\u304f\u3060\u3055\u3044: {auth_help_url}"
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                },
+                "description": "\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u30c7\u30d0\u30a4\u30b9\u304b\u3089\u81ea\u52d5\u7684\u306b\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f\u3002\u6b21\u306e\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\u306b\u8a18\u8f09\u3055\u308c\u3066\u3044\u308b\u624b\u9806\u306b\u5f93\u3063\u3066\u304f\u3060\u3055\u3044: {auth_help_url}",
+                "title": "\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u5165\u529b"
             },
             "manual": {
                 "data": {
                     "host": "\u30db\u30b9\u30c8"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
                 }
             }
         }

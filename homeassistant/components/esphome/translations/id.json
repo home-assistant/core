@@ -32,7 +32,8 @@
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Kunci enkripsi"
-                }
+                },
+                "description": "Perangkat ESPHome {name} mengaktifkan enkripsi transport atau telah mengubah kunci enkripsi. Masukkan kunci yang diperbarui."
             },
             "user": {
                 "data": {

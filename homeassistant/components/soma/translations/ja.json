@@ -2,6 +2,14 @@
     "config": {
         "abort": {
             "result_error": "SOMAConnect\u306f\u30a8\u30e9\u30fc\u30b9\u30c6\u30fc\u30bf\u30b9\u3067\u5fdc\u7b54\u3057\u307e\u3057\u305f\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            }
         }
     }
 }

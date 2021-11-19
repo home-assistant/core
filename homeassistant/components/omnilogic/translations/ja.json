@@ -1,4 +1,13 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -1,8 +1,17 @@
 {
     "config": {
+        "error": {
+            "reauth_invalid": "\u518d\u8a8d\u8a3c\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002\u30b7\u30ea\u30a2\u30eb\u756a\u53f7\u304c\u30aa\u30ea\u30b8\u30ca\u30eb\u3068\u4e00\u81f4\u3057\u307e\u305b\u3093"
+        },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                }
+            },
             "user": {
                 "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "station": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u306e\u30b7\u30ea\u30a2\u30eb\u756a\u53f7"
                 }
             }

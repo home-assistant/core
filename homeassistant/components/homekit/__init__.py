@@ -1,4 +1,6 @@
 """Support for Apple HomeKit."""
+from __future__ import annotations
+
 import asyncio
 import ipaddress
 import logging
@@ -172,7 +174,7 @@ UNPAIR_SERVICE_SCHEMA = vol.All(
 )
 
 
-def _async_all_homekit_instances(hass: HomeAssistant) -> list["HomeKit"]:
+def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
     """All active HomeKit instances."""
     return [
         data[HOMEKIT]

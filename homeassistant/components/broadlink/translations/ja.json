@@ -1,5 +1,6 @@
 {
     "config": {
+        "flow_title": "{name} ({model} at {host})",
         "step": {
             "auth": {
                 "title": "\u30c7\u30d0\u30a4\u30b9\u3078\u306e\u8a8d\u8a3c"
