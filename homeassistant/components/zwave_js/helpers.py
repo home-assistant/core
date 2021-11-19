@@ -72,9 +72,10 @@ def get_device_id_ext(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str] |
     if None in (node.manufacturer_id, node.product_type, node.product_id):
         return None
 
+    domain, dev_id = get_device_id(client, node)
     return (
-        DOMAIN,
-        f"{client.driver.controller.home_id}-{node.node_id}-{node.manufacturer_id:04x}:{node.product_type:04x}:{node.product_id:04x}",
+        domain,
+        f"{dev_id}-{node.manufacturer_id:04x}:{node.product_type:04x}:{node.product_id:04x}",
     )
 
 
