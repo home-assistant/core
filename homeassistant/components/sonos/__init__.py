@@ -215,7 +215,7 @@ class SonosDiscoveryManager:
                     new_coordinator = coordinator(self.hass, soco.household_id)
                     new_coordinator.setup(soco)
                     coord_dict[soco.household_id] = new_coordinator
-            speaker.setup()
+            speaker.setup(self.entry)
         except (OSError, SoCoException):
             _LOGGER.warning("Failed to add SonosSpeaker using %s", soco, exc_info=True)
 

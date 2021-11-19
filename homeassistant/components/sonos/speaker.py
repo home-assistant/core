@@ -24,12 +24,13 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
     async_dispatcher_send,
-    dispatcher_connect,
     dispatcher_send,
 )
 from homeassistant.util import dt as dt_util
@@ -171,11 +172,7 @@ class SonosSpeaker:
         self._poll_timer: Callable | None = None
 
         # Dispatcher handles
-        self._activity_dispatcher: Callable | None = None
-        self._check_activity_dispatcher: Callable | None = None
-        self._entity_creation_dispatcher: Callable | None = None
-        self._group_dispatcher: Callable | None = None
-        self._reboot_dispatcher: Callable | None = None
+        self.dispatchers: list[Callable] = []
 
         # Device information
         self.mac_address = speaker_info["mac_address"]
@@ -210,30 +207,30 @@ class SonosSpeaker:
         self.snapshot_group: list[SonosSpeaker] | None = None
         self._group_members_missing: set[str] = set()
 
-    def setup(self) -> None:
+    async def async_setup_dispatchers(self, entry: ConfigEntry) -> None:
+        """Connect dispatchers in async context during setup."""
+        dispatch_pairs = (
+            (SONOS_CHECK_ACTIVITY, self.async_check_activity),
+            (SONOS_SPEAKER_ADDED, self.update_group_for_uid),
+            (f"{SONOS_ENTITY_CREATED}-{self.soco.uid}", self.async_handle_new_entity),
+            (f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted),
+            (f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}", self.speaker_activity),
+        )
+
+        for (signal, target) in dispatch_pairs:
+            entry.async_on_unload(
+                async_dispatcher_connect(
+                    self.hass,
+                    signal,
+                    target,
+                )
+            )
+
+    def setup(self, entry: ConfigEntry) -> None:
         """Run initial setup of the speaker."""
         self.set_basic_info()
-
-        self._activity_dispatcher = dispatcher_connect(
-            self.hass,
-            f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}",
-            self.speaker_activity,
-        )
-        self._check_activity_dispatcher = dispatcher_connect(
-            self.hass, SONOS_CHECK_ACTIVITY, self.async_check_activity
-        )
-        self._entity_creation_dispatcher = dispatcher_connect(
-            self.hass,
-            f"{SONOS_ENTITY_CREATED}-{self.soco.uid}",
-            self.async_handle_new_entity,
-        )
-        self._reboot_dispatcher = dispatcher_connect(
-            self.hass, f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted
-        )
-        self._group_dispatcher = dispatcher_connect(
-            self.hass,
-            SONOS_SPEAKER_ADDED,
-            self.update_group_for_uid,
+        asyncio.run_coroutine_threadsafe(
+            self.async_setup_dispatchers(entry), self.hass.loop
         )
 
         if battery_info := fetch_battery_info_or_none(self.soco):
