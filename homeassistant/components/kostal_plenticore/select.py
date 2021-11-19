@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC
 from datetime import timedelta
 import logging
+from typing import Any
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -19,14 +20,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Any
 ) -> None:
     """Add kostal plenticore Select widget."""
     plenticore: Plenticore = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         PlenticoreDataSelect(
-            hass=hass,
             plenticore=plenticore,
             entry_id=entry.entry_id,
             platform_name=entry.title,
@@ -49,7 +49,6 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         plenticore: Plenticore,
         entry_id: str,
         platform_name: str,
@@ -66,7 +65,7 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         """Create a new switch Entity for Plenticore process data."""
         super().__init__(
             coordinator=SelectDataUpdateCoordinator(
-                hass,
+                self.hass,
                 _LOGGER,
                 "Select Data",
                 timedelta(seconds=30),
