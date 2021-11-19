@@ -123,5 +123,5 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         """Return the selected entity option to represent the entity state."""
         if self.available:
             return self.coordinator.data[self.module_id][self.data_id]
-        else:
-            return None
+
+        return None
