@@ -100,4 +100,3 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
             }
 
         return {ATTR_BLOCKED_DOMAINS: self.api.data["domains_being_blocked"]}
-

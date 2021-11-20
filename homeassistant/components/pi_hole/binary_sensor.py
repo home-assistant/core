@@ -6,11 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PiHoleEntity
-from .const import (
-    DATA_KEY_API,
-    DATA_KEY_COORDINATOR,
-    DOMAIN as PIHOLE_DOMAIN,
-)
+from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN as PIHOLE_DOMAIN
 
 
 async def async_setup_entry(
