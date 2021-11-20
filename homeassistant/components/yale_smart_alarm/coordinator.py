@@ -6,10 +6,14 @@ from datetime import timedelta
 import requests
 from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClient
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    ConfigEntryAuthFailed,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
@@ -133,11 +137,10 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                     self.entry.data[CONF_USERNAME], self.entry.data[CONF_PASSWORD]
                 )
             except AuthenticationError as error:
-                self.auth_failed(error)
-                raise UpdateFailed from error
+                raise ConfigEntryAuthFailed from error
             except requests.HTTPError as error:
-                if "401 Client Error" in str(error):
-                    self.auth_failed(error)
+                if error.response.status_code == 401:
+                    raise ConfigEntryAuthFailed from error
                 raise UpdateFailed from error
 
         try:
@@ -147,11 +150,10 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             online = self.yale.get_online()
 
         except AuthenticationError as error:
-            self.auth_failed(error)
-            raise UpdateFailed from error
+            raise ConfigEntryAuthFailed from error
         except requests.HTTPError as error:
-            if "401 Client Error" in str(error):
-                self.auth_failed(error)
+            if error.response.status_code == 401:
+                raise ConfigEntryAuthFailed from error
             raise UpdateFailed from error
         except requests.RequestException as error:
             raise UpdateFailed from error
@@ -162,17 +164,3 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             "status": status,
             "online": online,
         }
-
-    def auth_failed(self, error) -> None:
-        """Initiate re-authentication flow."""
-        LOGGER.error("Authentication failed. Check credentials %s", error)
-        self.hass.create_task(
-            self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={
-                    "source": SOURCE_REAUTH,
-                    "entry_id": self.entry.entry_id,
-                },
-                data=self.entry.data,
-            )
-        )
