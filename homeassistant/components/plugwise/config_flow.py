@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from plugwise.exceptions import InvalidAuthentication, PlugwiseException
+from plugwise.smile import Smile
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -19,12 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
-
-from plugwise.exceptions import (
-    InvalidAuthentication,
-    PlugwiseException,
-)
-from plugwise.smile import Smile
 
 from .const import (
     API,
@@ -54,6 +50,7 @@ CONNECTION_SCHEMA = vol.Schema(
 
 
 # PLACEHOLDER USB connection validation
+
 
 def _base_gw_schema(discovery_info):
     """Generate base schema for gateways."""
@@ -134,7 +131,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user_gateway()
 
-# PLACEHOLDER USB step_user
+    # PLACEHOLDER USB step_user
 
     async def async_step_user_gateway(self, user_input=None):
         """Handle the initial step when using network/gateway setups."""
@@ -183,7 +180,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_user_gateway()
 
             if user_input[FLOW_TYPE] == FLOW_USB:
-                return await self.async_step_user_usb()
+                return None  # Change when adding support for Stick
 
         return self.async_show_form(
             step_id="user",
@@ -209,9 +206,6 @@ class PlugwiseOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the Plugwise options."""
-        if not self.config_entry.data.get(CONF_HOST):
-            return await self.async_step_none(user_input)
-
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
