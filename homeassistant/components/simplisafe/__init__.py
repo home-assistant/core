@@ -264,7 +264,7 @@ def _async_get_system_for_service_call(
                     simplisafe = hass.data[DOMAIN][entry.entry_id]
                     return simplisafe.systems[system_id]
 
-    raise ValueError(f"No controller for device ID: {device_id}")
+    raise ValueError(f"No system for device ID: {device_id}")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
