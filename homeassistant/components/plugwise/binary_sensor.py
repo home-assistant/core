@@ -1,7 +1,6 @@
 """Plugwise Binary Sensor component for Home Assistant."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_ID, ATTR_NAME
 from homeassistant.core import callback
