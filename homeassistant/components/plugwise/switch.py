@@ -26,12 +26,10 @@ from .const import (
     PW_TYPE,
     SMILE,
     STICK,
-    USB,
     VENDOR,
 )
 from .gateway import SmileGateway
 from .models import PW_SWITCH_TYPES, PlugwiseSwitchEntityDescription
-from .usb import PlugwiseUSBEntity
 
 _LOGGER = logging.getLogger(__name__)
 
