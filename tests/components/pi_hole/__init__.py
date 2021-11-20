@@ -87,6 +87,9 @@ def _create_mocked_hole(raise_exception=False):
     type(mocked_hole).get_data = AsyncMock(
         side_effect=HoleError("") if raise_exception else None
     )
+    type(mocked_hole).get_versions = AsyncMock(
+        side_effect=HoleError("") if raise_exception else None
+    )
     type(mocked_hole).enable = AsyncMock()
     type(mocked_hole).disable = AsyncMock()
     mocked_hole.data = ZERO_DATA
