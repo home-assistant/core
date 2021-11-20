@@ -6,7 +6,6 @@ from typing import Any
 from xknx import XKNX
 from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
-from xknx.telegram.address import parse_device_group_address
 
 from homeassistant import config_entries
 from homeassistant.components.climate import ClimateEntity
@@ -24,8 +23,7 @@ from homeassistant.const import (
     CONF_NAME,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -56,48 +54,7 @@ async def async_setup_entry(
         SupportedPlatforms.CLIMATE.value
     ]
 
-    _async_migrate_unique_id(hass, config)
     async_add_entities(KNXClimate(xknx, entity_config) for entity_config in config)
-
-
-@callback
-def _async_migrate_unique_id(
-    hass: HomeAssistant, platform_config: list[ConfigType]
-) -> None:
-    """Change unique_ids used in 2021.4 to include target_temperature GA."""
-    entity_registry = er.async_get(hass)
-    for entity_config in platform_config:
-        # normalize group address strings - ga_temperature_state was the old uid
-        ga_temperature_state = parse_device_group_address(
-            entity_config[ClimateSchema.CONF_TEMPERATURE_ADDRESS][0]
-        )
-        old_uid = str(ga_temperature_state)
-
-        entity_id = entity_registry.async_get_entity_id("climate", DOMAIN, old_uid)
-        if entity_id is None:
-            continue
-        ga_target_temperature_state = parse_device_group_address(
-            entity_config[ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS][0]
-        )
-        target_temp = entity_config.get(ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS)
-        ga_target_temperature = (
-            parse_device_group_address(target_temp[0])
-            if target_temp is not None
-            else None
-        )
-        setpoint_shift = entity_config.get(ClimateSchema.CONF_SETPOINT_SHIFT_ADDRESS)
-        ga_setpoint_shift = (
-            parse_device_group_address(setpoint_shift[0])
-            if setpoint_shift is not None
-            else None
-        )
-        new_uid = (
-            f"{ga_temperature_state}_"
-            f"{ga_target_temperature_state}_"
-            f"{ga_target_temperature}_"
-            f"{ga_setpoint_shift}"
-        )
-        entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
 def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
