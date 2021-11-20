@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import random
 import re
 import string
@@ -122,8 +121,6 @@ _EMPTY_ENTITY_FILTER = {
     CONF_INCLUDE_ENTITIES: [],
     CONF_EXCLUDE_ENTITIES: [],
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
@@ -452,18 +449,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.hass,
             domains=self.hk_options[CONF_DOMAINS],
         )
-        _LOGGER.warning("All supported entities: %s", all_supported_entities)
 
         data_schema = {}
         entity_schema = vol.In
-        # Strip out entities that no longer exist to prevent error in the UI
-        entities = [
-            entity_id
-            for entity_id in entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-            if entity_id in all_supported_entities
-        ]
-        _LOGGER.warning("entities: %s", entities)
-
+        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
         if self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_ACCESSORY:
             include_exclude_mode = MODE_INCLUDE
             if not entities:
@@ -474,9 +463,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ] = vol.In(INCLUDE_EXCLUDE_MODES)
             entity_schema = cv.multi_select
 
-        data_schema[vol.Optional(CONF_ENTITIES, default=entities)] = entity_schema(
-            all_supported_entities
-        )
+        # Strip out entities that no longer exist to prevent error in the UI
+        valid_entities = [
+            entity_id for entity_id in entities if entity_id in all_supported_entities
+        ]
+        data_schema[
+            vol.Optional(CONF_ENTITIES, default=valid_entities)
+        ] = entity_schema(all_supported_entities)
 
         return self.async_show_form(
             step_id="include_exclude", data_schema=vol.Schema(data_schema)
