@@ -289,14 +289,14 @@ async def test_form_username(hass):
     assert result4["reason"] == "already_configured"
 
 
-async def test_form_invalid_auth(hass, mock_smile):
+async def test_form_invalid_auth(hass, mck_smile):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={FLOW_TYPE: FLOW_NET}
     )
 
-    mock_smile.connect.side_effect = InvalidAuthentication
-    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
+    mck_smile.connect.side_effect = InvalidAuthentication
+    mck_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -307,14 +307,14 @@ async def test_form_invalid_auth(hass, mock_smile):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass, mock_smile):
+async def test_form_cannot_connect(hass, mck_smile):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={FLOW_TYPE: FLOW_NET}
     )
 
-    mock_smile.connect.side_effect = ConnectionFailedError
-    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
+    mck_smile.connect.side_effect = ConnectionFailedError
+    mck_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -325,14 +325,14 @@ async def test_form_cannot_connect(hass, mock_smile):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_cannot_connect_port(hass, mock_smile):
+async def test_form_cannot_connect_port(hass, mck_smile):
     """Test we handle cannot connect to port error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={FLOW_TYPE: FLOW_NET}
     )
 
-    mock_smile.connect.side_effect = ConnectionFailedError
-    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
+    mck_smile.connect.side_effect = ConnectionFailedError
+    mck_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -347,14 +347,14 @@ async def test_form_cannot_connect_port(hass, mock_smile):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_other_problem(hass, mock_smile):
+async def test_form_other_problem(hass, mck_smile):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data={FLOW_TYPE: FLOW_NET}
     )
 
-    mock_smile.connect.side_effect = TimeoutError
-    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
+    mck_smile.connect.side_effect = TimeoutError
+    mck_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -365,7 +365,7 @@ async def test_form_other_problem(hass, mock_smile):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_options_flow_power(hass, mock_smile) -> None:
+async def test_options_flow_power(hass, mck_smile) -> None:
     """Test config flow options DSMR environments."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -397,7 +397,7 @@ async def test_options_flow_power(hass, mock_smile) -> None:
         }
 
 
-async def test_options_flow_thermo(hass, mock_smile) -> None:
+async def test_options_flow_thermo(hass, mck_smile) -> None:
     """Test config flow options for thermostatic environments."""
     entry = MockConfigEntry(
         domain=DOMAIN,
