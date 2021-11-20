@@ -108,7 +108,6 @@ class GWThermostat:
 
     def __init__(self, data, dev_id):
         """Initialize the Thermostat."""
-
         self._compressor_state = None
         self._cooling_state = None
         self._data = data
