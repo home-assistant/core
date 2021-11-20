@@ -3,7 +3,7 @@
         "step": {
             "user": {
                 "title": "Enter your Nightscout server information.",
-                "description": "- URL: the address of your nightscout instance. I.e.: https://myhomeassistant.duckdns.org:5423\n- API Key (optional): Only use if your instance is protected (auth_default_roles != readable).",
+                "description": "- URL: the address of your nightscout instance. e.g.: https://myhomeassistant.duckdns.org:5423\n- API Key/Access Token (optional): Only use if your instance is protected (auth_default_roles != readable).\nIt is recommended NOT to use your API_SECRET but instead generate an access token. See https://nightscout.github.io/nightscout/security/#create-authentication-tokens-for-users for details.\nA 'subject' (person/device) with the 'readable' permission is sufficient for this integration.",
                 "data": {
                     "url": "[%key:common::config_flow::data::url%]",
                     "api_key": "[%key:common::config_flow::data::api_key%]"
