@@ -8,5 +8,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wanted_max_items": "\u8868\u793a\u3057\u305f\u3044\u30a2\u30a4\u30c6\u30e0\u306e\u6700\u5927\u6570"
+                }
+            }
+        }
     }
 }

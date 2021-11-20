@@ -27,7 +27,8 @@
                     "4": "\u30be\u30fc\u30f34",
                     "5": "\u30be\u30fc\u30f35",
                     "6": "\u30be\u30fc\u30f36",
-                    "7": "\u30be\u30fc\u30f37"
+                    "7": "\u30be\u30fc\u30f37",
+                    "out": "OUT"
                 }
             },
             "options_io_ext": {
@@ -36,7 +37,9 @@
                     "11": "\u30be\u30fc\u30f311",
                     "12": "\u30be\u30fc\u30f312",
                     "8": "\u30be\u30fc\u30f38",
-                    "9": "\u30be\u30fc\u30f39"
+                    "9": "\u30be\u30fc\u30f39",
+                    "alarm2_out2": "OUT2/ALARM2",
+                    "out1": "OUT1"
                 }
             },
             "options_misc": {

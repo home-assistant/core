@@ -15,7 +15,8 @@
             "entity_config": {
                 "data": {
                     "reverse": "\u30ab\u30d0\u30fc\u304c\u9006\u306b\u306a\u3063\u3066\u3044\u307e\u3059"
-                }
+                },
+                "title": "\u30a8\u30f3\u30c6\u30a3\u30c6\u30a3\u306e\u8a2d\u5b9a"
             },
             "target_config": {
                 "data": {

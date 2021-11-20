@@ -1,0 +1,7 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_unlocked": "{entity_name} \u306e\u30ed\u30c3\u30af\u306f\u89e3\u9664\u3055\u308c\u3066\u3044\u307e\u3059"
+        }
+    }
+}

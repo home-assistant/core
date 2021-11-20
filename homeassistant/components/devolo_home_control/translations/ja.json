@@ -4,6 +4,11 @@
             "reauth_failed": "\u4ee5\u524d\u306e\u3068\u540c\u3058mydevolo\u30e6\u30fc\u30b6\u30fc\u3092\u4f7f\u7528\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
         },
         "step": {
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                }
+            },
             "zeroconf_confirm": {
                 "data": {
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"

@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "validate_verification_code": "\u8a8d\u8a3c\u30b3\u30fc\u30c9\u306e\u78ba\u8a8d\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3001\u518d\u5ea6\u8a66\u3057\u304f\u3060\u3055\u3044\u3002"
+        },
         "step": {
             "reauth": {
                 "data": {

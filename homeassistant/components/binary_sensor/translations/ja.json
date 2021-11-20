@@ -52,6 +52,7 @@
             "is_tampered": "{entity_name} \u304c\u6539\u7ac4(tampering)\u306e\u691c\u51fa\u3092\u958b\u59cb\u3057\u307e\u3057\u305f",
             "no_update": "{entity_name} \u304c\u6700\u65b0\u306b\u306a\u308a\u307e\u3057\u305f",
             "no_vibration": "{entity_name} \u304c\u632f\u52d5\u3092\u611f\u77e5\u3057\u306a\u304f\u306a\u3063\u305f",
+            "not_cold": "{entity_name} \u306f\u51b7\u3048\u3066\u3044\u307e\u305b\u3093",
             "not_connected": "{entity_name} \u304c\u5207\u65ad\u3055\u308c\u307e\u3057\u305f",
             "not_hot": "{entity_name} \u6e29\u307e\u3063\u3066\u3044\u307e\u305b\u3093",
             "not_locked": "{entity_name} \u306e\u30ed\u30c3\u30af\u304c\u89e3\u9664\u3055\u308c\u307e\u3057\u305f",
