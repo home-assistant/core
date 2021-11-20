@@ -113,8 +113,8 @@ class AtomeData:
 
     def _retrieve_live(self):
         error_during_retrieve = False
-        try:
-            values = self.atome_client.get_live()
+        values = self.atome_client.get_live()
+        if values.get("last") and values.get("subscribed") and values.get("isConnected"):    
             self._live_power = values["last"]
             self._subscribed_power = values["subscribed"]
             self._is_connected = values["isConnected"]
@@ -124,9 +124,9 @@ class AtomeData:
                 self._is_connected,
                 self._subscribed_power,
             )
-        except KeyError as error:
+        else:
             _LOGGER.error(
-                "Live Data : Missing last value in values: %s: %s", values, error
+                "Live Data : Missing last value in values: %s", values
             )
             error_during_retrieve = True
         return not error_during_retrieve
@@ -134,9 +134,9 @@ class AtomeData:
     @Throttle(LIVE_SCAN_INTERVAL)
     def update_live_usage(self):
         """Return current power value."""
-        retrieve_has_been_sucessful = self._retrieve_live()
+        retrieve_success = self._retrieve_live()
 
-        if not retrieve_has_been_sucessful:
+        if not retrieve_success:
             _LOGGER.debug("Perform Reconnect during live request")
             self.atome_client.login()
             self._retrieve_live()
@@ -146,32 +146,31 @@ class AtomeData:
         error_during_retrieve = False
         period_usage = None
         period_price = None
-        try:
-            values = self.atome_client.get_consumption(period_type)
+        values = self.atome_client.get_consumption(period_type)
+        if values.get("total") and values.get("price"):
             period_usage = values["total"] / 1000
             period_price = values["price"]
             _LOGGER.debug("Updating Atome %s data. Got: %d", period_type, period_usage)
-
-        except KeyError as error:
+        else:
             error_during_retrieve = True
             _LOGGER.error(
-                "%s : Missing last value in values: %s: %s", period_type, values, error
+                "%s : Missing last value in values: %s", period_type, values
             )
-        retrieve_has_been_sucessful = not error_during_retrieve
-        return retrieve_has_been_sucessful, period_usage, period_price
+        retrieve_success = not error_during_retrieve
+        return retrieve_success, period_usage, period_price
 
     def _retrieve_period_usage_with_retry(self, period_type):
         """Return current daily/weekly/monthly/yearly power usage with one retry."""
         (
-            retrieve_has_been_sucessful,
+            retrieve_success,
             period_usage,
             period_price,
         ) = self._retrieve_period_usage(period_type)
-        if not retrieve_has_been_sucessful:
+        if not retrieve_success:
             _LOGGER.debug("Perform Reconnect during %s", period_type)
             self.atome_client.login()
             (
-                retrieve_has_been_sucessful,
+                retrieve_success,
                 period_usage,
                 period_price,
             ) = self._retrieve_period_usage(period_type)
