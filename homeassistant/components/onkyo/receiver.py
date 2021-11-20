@@ -60,7 +60,6 @@ class OnkyoNetworkReceiver:
                         receiver.update_received_callback(message)
                     elif zone in ZONES:
                         receiver.zone_discovered_callback(zone)
-                        receiver.update_received_callback(message)
 
             @callback
             def _connected_callback(host: str) -> None:
@@ -123,9 +122,11 @@ class OnkyoNetworkReceiver:
 
     async def async_connect(self) -> bool:
         """Connect to the receiver."""
+        self._event.clear()
         try:
             with async_timeout.timeout(CONNECT_TIMEOUT):
                 await self._connection.connect()
+                await self._event.wait()
 
         except asyncio.TimeoutError as err:
             raise ConfigEntryNotReady(
@@ -139,12 +140,11 @@ class OnkyoNetworkReceiver:
             )
             return False
 
-        self.online = True
-
         # Discover what zones are available for the avr by querying the power.
         # If we get a response for the specific zone, it means it is available.
         for zone in ZONES:
             self.query_property(zone, "power")
+            self.query_property(zone, "volume")
 
         # Wait for a possible response of available zones to make sure that
         # the zones are added to the list before the platform is set up.
@@ -186,6 +186,9 @@ class OnkyoNetworkReceiver:
                 self,
             )
 
+            # Query the zone when it is first discovered.
+            self.zones[zone].connected_callback()
+
     @callback
     def update_received_callback(self, message: tuple[str, str, Any]) -> None:
         """Handle a received update from the receiver."""
@@ -200,9 +203,10 @@ class OnkyoNetworkReceiver:
         if not self.online:
             _LOGGER.info("Connected to Network Receiver at %s", self.host)
             self.online = True
+            self._event.set()
 
-        for zone in self.zones.values():
-            zone.connected_callback()
+            for zone in self.zones.values():
+                zone.connected_callback()
 
     @callback
     def disconnected_callback(self) -> None:
