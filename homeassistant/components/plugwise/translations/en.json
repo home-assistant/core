@@ -27,7 +27,7 @@
           "host": "IP-address",
           "port": "Port number"
         }
-      },
+      }
     },
     "error": {
       "already_configured": "This device is already configured",

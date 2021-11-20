@@ -27,7 +27,7 @@
           "host": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]"
         }
-      },
+      }
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
