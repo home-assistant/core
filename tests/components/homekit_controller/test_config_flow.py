@@ -148,7 +148,7 @@ def get_device_discovery_info(
         properties={
             "md": record["md"],
             "pv": record["pv"],
-            "id": device.device_id,
+            zeroconf.ATTR_PROPERTIES_ID: device.device_id,
             "c#": record["c#"],
             "s#": record["s#"],
             "ff": record["ff"],
@@ -273,7 +273,7 @@ async def test_id_missing(hass, controller):
     discovery_info = get_device_discovery_info(device)
 
     # Remove id from device
-    del discovery_info["properties"]["id"]
+    del discovery_info[zeroconf.ATTR_PROPERTIES][zeroconf.ATTR_PROPERTIES_ID]
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -289,7 +289,9 @@ async def test_discovery_ignored_model(hass, controller):
     """Already paired."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
-    discovery_info[zeroconf.ATTR_PROPERTIES]["id"] = "AA:BB:CC:DD:EE:FF"
+    discovery_info[zeroconf.ATTR_PROPERTIES][
+        zeroconf.ATTR_PROPERTIES_ID
+    ] = "AA:BB:CC:DD:EE:FF"
     discovery_info[zeroconf.ATTR_PROPERTIES]["md"] = "HHKBridge1,1"
 
     # Device is discovered
@@ -317,7 +319,9 @@ async def test_discovery_ignored_hk_bridge(hass, controller):
         connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
-    discovery_info[zeroconf.ATTR_PROPERTIES]["id"] = "AA:BB:CC:DD:EE:FF"
+    discovery_info[zeroconf.ATTR_PROPERTIES][
+        zeroconf.ATTR_PROPERTIES_ID
+    ] = "AA:BB:CC:DD:EE:FF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -344,7 +348,9 @@ async def test_discovery_does_not_ignore_non_homekit(hass, controller):
         connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
-    discovery_info[zeroconf.ATTR_PROPERTIES]["id"] = "AA:BB:CC:DD:EE:FF"
+    discovery_info[zeroconf.ATTR_PROPERTIES][
+        zeroconf.ATTR_PROPERTIES_ID
+    ] = "AA:BB:CC:DD:EE:FF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -486,7 +492,9 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
     # Set device as already paired
     discovery_info[zeroconf.ATTR_PROPERTIES]["sf"] = 0x00
     discovery_info[zeroconf.ATTR_PROPERTIES]["c#"] = 99999
-    discovery_info[zeroconf.ATTR_PROPERTIES]["id"] = "AA:BB:CC:DD:EE:FF"
+    discovery_info[zeroconf.ATTR_PROPERTIES][
+        zeroconf.ATTR_PROPERTIES_ID
+    ] = "AA:BB:CC:DD:EE:FF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
