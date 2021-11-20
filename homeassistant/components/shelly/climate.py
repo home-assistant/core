@@ -11,6 +11,7 @@ import async_timeout
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -72,13 +73,20 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
 
         self.wrapper = wrapper
         self.block = block
+
+        assert self.block.channel
+
+        self._load_device_block()
+
         self.control_result: dict[str, Any] | None = None
 
         self._attr_name = self.wrapper.name
         self._attr_unique_id = self.wrapper.mac
         self._attr_preset_modes: list[str] = [
             PRESET_NONE,
-            *wrapper.device.settings["schedule_profile_names"],
+            *wrapper.device.settings["thermostats"][int(self.block.channel)][
+                "schedule_profile_names"
+            ],
         ]
 
     @property
@@ -94,12 +102,12 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
     @property
     def available(self) -> bool:
         """Device availability."""
-        return not cast(bool, self.block.valveError)
+        return not cast(bool, self._device_block.valveError)
 
     @property
     def hvac_mode(self) -> str:
         """HVAC current mode."""
-        if not hasattr(self.block, "mode") or self._check_is_off():
+        if self._device_block.mode is None or self._check_is_off():
             return HVAC_MODE_OFF
 
         return HVAC_MODE_HEAT
@@ -107,16 +115,19 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Preset current mode."""
-        if not hasattr(self.block, "mode"):
+        if self._device_block.mode is None:
             return None
-        return self._attr_preset_modes[cast(int, self.block.mode)]
+        return self._attr_preset_modes[cast(int, self._device_block.mode)]
 
     @property
     def hvac_action(self) -> str | None:
         """HVAC current action."""
-        if self._check_is_off():
+        if self._device_block.status is None or self._check_is_off():
             return CURRENT_HVAC_OFF
-        return CURRENT_HVAC_HEAT
+
+        return (
+            CURRENT_HVAC_IDLE if self._device_block.status == 0 else CURRENT_HVAC_HEAT
+        )
 
     def _check_is_off(self) -> bool:
         """Return if valve is off or on."""
@@ -125,12 +136,30 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
             or (self.target_temperature <= self._attr_min_temp)
         )
 
-    async def set_state_full_path(self, path: str, **kwargs: Any) -> Any:
+    def _load_device_block(self) -> bool:
+        """Load device CoAP block."""
+        assert self.wrapper.device.blocks
+
+        for dev_block in self.wrapper.device.blocks:
+            if dev_block.type == "device":
+                self._device_block = dev_block
+
+        assert self._device_block
+        return True
+
+    async def async_update(self) -> None:
+        """Update entity with latest info."""
+        await self.wrapper.async_request_refresh()
+        await self.hass.async_add_executor_job(self._load_device_block)
+
+    async def set_state_full_path(self, **kwargs: Any) -> Any:
         """Set block state (HTTP request)."""
         _LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                return await self.wrapper.device.http_request("get", path, **kwargs)
+                return await self.wrapper.device.http_request(
+                    "get", f"thermostat/{self.block.channel}", kwargs
+                )
         except (asyncio.TimeoutError, OSError) as err:
             _LOGGER.error(
                 "Setting state for entity %s failed, state: %s, error: %s",
@@ -145,9 +174,7 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         """Set new target temperature."""
         if (current_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        await self.set_state_full_path(
-            "settings", target_t_enabled=1, target_t=f"{current_temp}"
-        )
+        await self.set_state_full_path(target_t_enabled=1, target_t=f"{current_temp}")
         if self._check_is_off():
             self.async_set_hvac_mode(HVAC_MODE_OFF)
         else:
@@ -157,7 +184,7 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         """Set hvac mode."""
         if hvac_mode == HVAC_MODE_OFF:
             await self.set_state_full_path(
-                "settings", target_t_enabled=1, target_t=f"{self._attr_min_temp}"
+                target_t_enabled=1, target_t=f"{self._attr_min_temp}"
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -167,7 +194,6 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
 
         preset_index = self._attr_preset_modes.index(preset_mode)
         await self.set_state_full_path(
-            "settings",
             schedule=(0 if preset_index == 0 else 1),
             schedule_profile=f"{preset_index}",
         )
