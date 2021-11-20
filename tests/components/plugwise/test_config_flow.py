@@ -36,7 +36,7 @@ from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_
 
 from tests.common import MockConfigEntry
 
-TEST_HOST = "1.1.1.1"
+TEST_HOST = "127.0.0.1"
 TEST_HOSTNAME = "smileabcdef"
 TEST_HOSTNAME2 = "stretchabc"
 TEST_PASSWORD = "test_password"

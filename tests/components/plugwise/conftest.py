@@ -51,7 +51,7 @@ def mock_smile_error(aioclient_mock: AiohttpClientMocker) -> None:
 @pytest.fixture(name="mock_smile_notconnect")
 def mock_smile_notconnect():
     """Mock the Plugwise Smile general connection failure for Home Assistant."""
-    with patch("homeassistant.components.plugwise.config_flow.Smile") as smile_mock:
+    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
         smile_mock.InvalidAuthentication = InvalidAuthentication
         smile_mock.ConnectionFailedError = ConnectionFailedError
         smile_mock.PlugwiseException = PlugwiseException
