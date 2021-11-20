@@ -53,8 +53,6 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     # this works for now but if we hit conflicts we can break it out to
     # a different dict that is keyed by manufacturer
     SMARTTHINGS_ACCELERATION_CLUSTER: Platform.BINARY_SENSOR,
-    zcl.clusters.closures.DoorLock.cluster_id: Platform.LOCK,
-    zcl.clusters.closures.WindowCovering.cluster_id: Platform.COVER,
     zcl.clusters.general.BinaryInput.cluster_id: Platform.BINARY_SENSOR,
     zcl.clusters.general.AnalogOutput.cluster_id: Platform.NUMBER,
     zcl.clusters.general.MultistateInput.cluster_id: Platform.SENSOR,
