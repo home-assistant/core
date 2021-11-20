@@ -114,7 +114,11 @@ class AtomeData:
     def _retrieve_live(self):
         error_during_retrieve = False
         values = self.atome_client.get_live()
-        if values.get("last") and values.get("subscribed") and values.get("isConnected"):
+        if (
+            values.get("last")
+            and values.get("subscribed")
+            and values.get("isConnected")
+        ):
             self._live_power = values["last"]
             self._subscribed_power = values["subscribed"]
             self._is_connected = values["isConnected"]
@@ -125,9 +129,7 @@ class AtomeData:
                 self._subscribed_power,
             )
         else:
-            _LOGGER.error(
-                "Live Data : Missing last value in values: %s", values
-            )
+            _LOGGER.error("Live Data : Missing last value in values: %s", values)
             error_during_retrieve = True
         return not error_during_retrieve
 
@@ -153,9 +155,7 @@ class AtomeData:
             _LOGGER.debug("Updating Atome %s data. Got: %d", period_type, period_usage)
         else:
             error_during_retrieve = True
-            _LOGGER.error(
-                "%s : Missing last value in values: %s", period_type, values
-            )
+            _LOGGER.error("%s : Missing last value in values: %s", period_type, values)
         retrieve_success = not error_during_retrieve
         return retrieve_success, period_usage, period_price
 
