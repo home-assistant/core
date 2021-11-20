@@ -16,7 +16,7 @@ async def async_init_integration(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"host": "1.1.1.1", "password": "test-password"},
+        data={"host": "127.0.0.1", "password": "test-password"},
     )
     entry.add_to_hass(hass)
 
