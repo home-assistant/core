@@ -813,7 +813,7 @@ hkavr==0.0.5
 hlk-sw16==0.0.9
 
 # homeassistant.components.pi_hole
-hole==0.5.1
+hole==0.6.0
 
 # homeassistant.components.workday
 holidays==0.11.3.1

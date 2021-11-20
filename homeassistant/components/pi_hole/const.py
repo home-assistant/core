@@ -32,7 +32,6 @@ ATTR_FTL_LATEST = "FTL_latest"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 DATA_KEY_API = "api"
-DATA_KEY_API_VERSIONS = "api_versions"
 DATA_KEY_COORDINATOR = "coordinator"
 
 

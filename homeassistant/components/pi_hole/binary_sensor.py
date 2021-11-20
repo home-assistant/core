@@ -8,7 +8,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import PiHoleEntity
 from .const import (
     DATA_KEY_API,
-    DATA_KEY_API_VERSIONS,
     DATA_KEY_COORDINATOR,
     DOMAIN as PIHOLE_DOMAIN,
 )
@@ -23,7 +22,6 @@ async def async_setup_entry(
     binary_sensors = [
         PiHoleBinarySensor(
             hole_data[DATA_KEY_API],
-            hole_data[DATA_KEY_API_VERSIONS],
             hole_data[DATA_KEY_COORDINATOR],
             name,
             entry.entry_id,
