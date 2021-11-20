@@ -64,7 +64,7 @@ TEST_DISCOVERY2 = {
 
 
 @pytest.fixture(name="mock_smile")
-def mock_smile():
+def _mock_smile():
     """Create a Mock Smile for testing exceptions."""
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile",
