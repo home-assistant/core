@@ -1,6 +1,7 @@
 {
   "domain": "fronius",
   "name": "Fronius",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fronius",
   "requirements": ["pyfronius==0.7.0"],
   "codeowners": ["@nielstron", "@farmio"],

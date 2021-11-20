@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, TypeVar
 
 from pyfronius import FroniusError
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -15,6 +16,13 @@ from .const import (
     SOLAR_NET_ID_SYSTEM,
     FroniusDeviceInfo,
     SolarNetId,
+)
+from .sensor import (
+    INVERTER_ENTITY_DESCRIPTIONS,
+    LOGGER_ENTITY_DESCRIPTIONS,
+    METER_ENTITY_DESCRIPTIONS,
+    POWER_FLOW_ENTITY_DESCRIPTIONS,
+    STORAGE_ENTITY_DESCRIPTIONS,
 )
 
 if TYPE_CHECKING:
@@ -29,7 +37,7 @@ class FroniusCoordinatorBase(
 ):
     """Query Fronius endpoint and keep track of seen conditions."""
 
-    valid_keys: list[str]
+    valid_descriptions: list[SensorEntityDescription]
 
     def __init__(self, *args: Any, solar_net: FroniusSolarNet, **kwargs: Any) -> None:
         """Set up the FroniusCoordinatorBase class."""
@@ -53,7 +61,9 @@ class FroniusCoordinatorBase(
             for solar_net_id in data:
                 if solar_net_id not in self.unregistered_keys:
                     # id seen for the first time
-                    self.unregistered_keys[solar_net_id] = set(self.valid_keys)
+                    self.unregistered_keys[solar_net_id] = {
+                        desc.key for desc in self.valid_descriptions
+                    }
             return data
 
     @callback
@@ -90,24 +100,7 @@ class FroniusCoordinatorBase(
 class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius device inverter endpoint and keep track of seen conditions."""
 
-    valid_keys = [
-        "energy_day",
-        "energy_year",
-        "energy_total",
-        "frequency_ac",
-        "current_ac",
-        "current_dc",
-        "current_dc_2",
-        "power_ac",
-        "voltage_ac",
-        "voltage_dc",
-        "voltage_dc_2",
-        "inverter_state",
-        "error_code",
-        "status_code",
-        "led_state",
-        "led_color",
-    ]
+    valid_descriptions = INVERTER_ENTITY_DESCRIPTIONS
 
     def __init__(
         self, *args: Any, inverter_info: FroniusDeviceInfo, **kwargs: Any
@@ -129,11 +122,7 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
 class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius logger info endpoint and keep track of seen conditions."""
 
-    valid_keys = [
-        "co2_factor",
-        "cash_factor",
-        "delivery_factor",
-    ]
+    valid_descriptions = LOGGER_ENTITY_DESCRIPTIONS
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
@@ -144,41 +133,7 @@ class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
 class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius system meter endpoint and keep track of seen conditions."""
 
-    valid_keys = [
-        "current_ac_phase_1",
-        "current_ac_phase_2",
-        "current_ac_phase_3",
-        "energy_reactive_ac_consumed",
-        "energy_reactive_ac_produced",
-        "energy_real_ac_minus",
-        "energy_real_ac_plus",
-        "energy_real_consumed",
-        "energy_real_produced",
-        "frequency_phase_average",
-        "meter_location",
-        "power_apparent_phase_1",
-        "power_apparent_phase_2",
-        "power_apparent_phase_3",
-        "power_apparent",
-        "power_factor_phase_1",
-        "power_factor_phase_2",
-        "power_factor_phase_3",
-        "power_factor",
-        "power_reactive_phase_1",
-        "power_reactive_phase_2",
-        "power_reactive_phase_3",
-        "power_reactive",
-        "power_real_phase_1",
-        "power_real_phase_2",
-        "power_real_phase_3",
-        "power_real",
-        "voltage_ac_phase_1",
-        "voltage_ac_phase_2",
-        "voltage_ac_phase_3",
-        "voltage_ac_phase_to_phase_12",
-        "voltage_ac_phase_to_phase_23",
-        "voltage_ac_phase_to_phase_31",
-    ]
+    valid_descriptions = METER_ENTITY_DESCRIPTIONS
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
@@ -189,18 +144,7 @@ class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase):
 class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius power flow endpoint and keep track of seen conditions."""
 
-    valid_keys = [
-        "energy_day",
-        "energy_year",
-        "energy_total",
-        "meter_mode",
-        "power_battery",
-        "power_grid",
-        "power_load",
-        "power_photovoltaics",
-        "relative_autonomy",
-        "relative_self_consumption",
-    ]
+    valid_descriptions = POWER_FLOW_ENTITY_DESCRIPTIONS
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
@@ -211,16 +155,7 @@ class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase):
 class FroniusStorageUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius system storage endpoint and keep track of seen conditions."""
 
-    valid_keys = [
-        "capacity_maximum",
-        "capacity_designed",
-        "current_dc",
-        "voltage_dc",
-        "voltage_dc_maximum_cell",
-        "voltage_dc_minimum_cell",
-        "state_of_charge",
-        "temperature_cell",
-    ]
+    valid_descriptions = STORAGE_ENTITY_DESCRIPTIONS
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""

@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pyfronius import Fronius
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -14,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_RESOURCE,
@@ -35,22 +35,23 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FroniusSolarNet
 from .const import DOMAIN
-from .coordinator import (
-    FroniusCoordinatorBase,
-    FroniusInverterUpdateCoordinator,
-    FroniusLoggerUpdateCoordinator,
-    FroniusMeterUpdateCoordinator,
-    FroniusPowerFlowUpdateCoordinator,
-    FroniusStorageUpdateCoordinator,
-)
+
+if TYPE_CHECKING:
+    from . import FroniusSolarNet
+    from .coordinator import (
+        FroniusCoordinatorBase,
+        FroniusInverterUpdateCoordinator,
+        FroniusLoggerUpdateCoordinator,
+        FroniusMeterUpdateCoordinator,
+        FroniusPowerFlowUpdateCoordinator,
+        FroniusStorageUpdateCoordinator,
+    )
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +60,6 @@ ENERGY_VOLT_AMPERE_REACTIVE_HOUR = "varh"
 POWER_VOLT_AMPERE_REACTIVE = "var"
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_MONITORED_CONDITIONS),
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_RESOURCE): cv.url,
@@ -76,14 +76,25 @@ async def async_setup_platform(
     discovery_info: None = None,
 ) -> None:
     """Import Fronius configuration from yaml."""
-    host = config[CONF_RESOURCE]
-    fronius = Fronius(async_get_clientsession(hass), host)
-    solar_net = FroniusSolarNet(hass, fronius, host)
-    await solar_net.init_devices()
+    _LOGGER.warning(
+        "Loading Fronius via platform setup is deprecated. Please remove it from your yaml configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][host] = solar_net
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Fronius sensor entities based on a config entry."""
+    solar_net: FroniusSolarNet = hass.data[DOMAIN][config_entry.entry_id]
     for inverter_coordinator in solar_net.inverter_coordinators:
         inverter_coordinator.add_entities_for_seen_keys(
             async_add_entities, InverterSensor
@@ -651,7 +662,6 @@ class InverterSensor(_FroniusSensorEntity):
         """Set up an individual Fronius inverter sensor."""
         self._name_extension = f"Inverter {solar_net_id}"
         super().__init__(coordinator, key, solar_net_id)
-
         self._attr_unique_id = f"{coordinator.inverter_info.unique_id}-{key}"
 
 
@@ -707,7 +717,6 @@ class PowerFlowSensor(_FroniusSensorEntity):
     ) -> None:
         """Set up an individual Fronius power flow sensor."""
         super().__init__(coordinator, key, solar_net_id)
-
         self._attr_unique_id = (
             f"{coordinator.solar_net.solar_net_device_id}-power_flow-{key}"
         )
