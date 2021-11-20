@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -135,6 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     group_manager.connect_update()
+    entry.async_on_unload(group_manager.disconnect_update)
 
     return True
 
@@ -239,6 +240,8 @@ class GroupManager:
         """Init group manager."""
         self._hass = hass
         self._group_membership = {}
+        self._disconnect_player_added = None
+        self._initialized = False
         self.controller = controller
 
     def _get_entity_id_to_player_id_map(self) -> dict:
@@ -345,11 +348,25 @@ class GroupManager:
 
         # When adding a new HEOS player we need to update the groups.
         async def _async_handle_player_added():
-            await self.async_update_groups(SIGNAL_HEOS_PLAYER_ADDED)
+            # Avoid calling async_update_groups when `DATA_ENTITY_ID_MAP` has not been
+            # fully populated yet. This may only happen during early startup.
+            if (
+                len(self._hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN])
+                <= len(self._hass.data[DOMAIN][DATA_ENTITY_ID_MAP])
+                and not self._initialized
+            ):
+                self._initialized = True
+                await self.async_update_groups(SIGNAL_HEOS_PLAYER_ADDED)
 
-        async_dispatcher_connect(
+        self._disconnect_player_added = async_dispatcher_connect(
             self._hass, SIGNAL_HEOS_PLAYER_ADDED, _async_handle_player_added
         )
+
+    @callback
+    def disconnect_update(self):
+        """Disconnect the listeners."""
+        if self._disconnect_player_added:
+            self._disconnect_player_added()
 
     @property
     def group_membership(self):

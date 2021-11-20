@@ -855,7 +855,7 @@ async def test_media_player_group_members(
         "media_player.test_player",
         "media_player.test_player_2",
     ]
-    controller.get_groups.assert_called()
+    controller.get_groups.assert_called_once()
     assert "Unable to get HEOS group info" not in caplog.text
 
 
