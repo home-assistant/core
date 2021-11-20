@@ -1,42 +1,42 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Service is already configured"
-        },
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
-        },
-        "flow_title": "{name}",
-        "step": {
-            "user": {
-                "data": {
-                    "flow_type": "Connection type"
-                },
-                "description": "Product:",
-                "title": "Plugwise type"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "IP Address",
-                    "password": "Smile ID",
-                    "port": "Port",
-                    "username": "Smile Username"
-                },
-                "description": "Please enter",
-                "title": "Connect to the Smile"
-            }
+  "options": {
+    "step": {
+      "init": {
+        "description": "Adjust Smile/Stretch Options",
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Scan Interval (seconds)"
-                },
-                "description": "Adjust Plugwise Options"
-            }
-        }
+      }
     }
+  },
+  "config": {
+    "flow_title": "Plugwise {name}",
+    "step": {
+      "user": {
+        "description": "Select your Plugwise connection type",
+        "data": {
+          "flow_type": "Connection type"
+        }
+      },
+      "user_gateway": {
+        "title": "Connect to the Plugwise Smile/Stretch",
+        "description": "Please enter:",
+        "data": {
+          "password": "ID",
+          "username": "Username",
+          "host": "IP-address",
+          "port": "Port number"
+        }
+      },
+    },
+    "error": {
+      "already_configured": "This device is already configured",
+      "invalid_auth": "Invalid authentication, check the 8 characters of your ID",
+      "cannot_connect": "Cannot connect",
+      "unknown": "Unknown error!"
+    },
+    "abort": {
+      "already_configured": "This device is already configured"
+    }
+  }
 }
