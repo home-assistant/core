@@ -11,13 +11,15 @@
             },
             "credentials": {
                 "data": {
-                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 },
                 "description": "\u30e6\u30fc\u30b6\u30fc\u540d\u3068\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
             },
             "reauth_confirm": {
                 "data": {
-                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 },
                 "description": "\u30db\u30b9\u30c8: {host} \u306e\u6b63\u3057\u3044\u30e6\u30fc\u30b6\u30fc\u540d\u3068\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
             },
