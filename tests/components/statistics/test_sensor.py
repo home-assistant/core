@@ -101,9 +101,9 @@ class TestStatisticsSensor(unittest.TestCase):
         assert state.state == str(len(values))
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
-        assert state.attributes.get("age_coverage_ratio") == STATE_UNKNOWN
         assert state.attributes.get("buffer_usage_ratio") == round(7 / 20, 2)
         assert state.attributes.get("source_value_valid") is True
+        assert "age_coverage_ratio" not in state.attributes
 
         state = self.hass.states.get("sensor.test_unitless")
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -140,9 +140,9 @@ class TestStatisticsSensor(unittest.TestCase):
         assert state.state == str(self.mean)
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
-        assert state.attributes.get("age_coverage_ratio") == STATE_UNKNOWN
         assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
         assert state.attributes.get("source_value_valid") is True
+        assert "age_coverage_ratio" not in state.attributes
 
         # Source sensor turns unavailable, then available with valid value,
         # statistics sensor should follow
@@ -309,8 +309,8 @@ class TestStatisticsSensor(unittest.TestCase):
             state = self.hass.states.get("sensor.test")
             new_mean = round(sum(self.values[-5:]) / len(self.values[-5:]), 2)
             assert state.state == str(new_mean)
-            assert state.attributes.get("age_coverage_ratio") == 1.0
             assert state.attributes.get("buffer_usage_ratio") == round(5 / 20, 2)
+            assert state.attributes.get("age_coverage_ratio") == 1.0
 
             # Values expire over time. Only two are left
 
@@ -321,8 +321,8 @@ class TestStatisticsSensor(unittest.TestCase):
             state = self.hass.states.get("sensor.test")
             new_mean = round(sum(self.values[-2:]) / len(self.values[-2:]), 2)
             assert state.state == str(new_mean)
-            assert state.attributes.get("age_coverage_ratio") == 1 / 4
             assert state.attributes.get("buffer_usage_ratio") == round(2 / 20, 2)
+            assert state.attributes.get("age_coverage_ratio") == 1 / 4
 
             # Values expire over time. Only one is left
 
@@ -333,8 +333,8 @@ class TestStatisticsSensor(unittest.TestCase):
             state = self.hass.states.get("sensor.test")
             new_mean = float(self.values[-1])
             assert state.state == str(new_mean)
-            assert state.attributes.get("age_coverage_ratio") == 0
             assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
+            assert state.attributes.get("age_coverage_ratio") == 0
 
             # Values expire over time. Memory is empty
 
@@ -344,8 +344,8 @@ class TestStatisticsSensor(unittest.TestCase):
 
             state = self.hass.states.get("sensor.test")
             assert state.state == STATE_UNKNOWN
-            assert state.attributes.get("age_coverage_ratio") == STATE_UNKNOWN
             assert state.attributes.get("buffer_usage_ratio") == round(0 / 20, 2)
+            assert state.attributes.get("age_coverage_ratio") == STATE_UNKNOWN
 
     def test_precision_0(self):
         """Test correct result with precision=0 as integer."""

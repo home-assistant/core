@@ -330,8 +330,11 @@ class StatisticsSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
+        extra_attr = {}
+        if self._samples_max_age is not None:
+            extra_attr = {STAT_AGE_COVERAGE_RATIO: self.attr[STAT_AGE_COVERAGE_RATIO]}
         return {
-            STAT_AGE_COVERAGE_RATIO: self.attr[STAT_AGE_COVERAGE_RATIO],
+            **extra_attr,
             STAT_BUFFER_USAGE_RATIO: self.attr[STAT_BUFFER_USAGE_RATIO],
             STAT_SOURCE_VALUE_VALID: self._source_value_valid,
         }
