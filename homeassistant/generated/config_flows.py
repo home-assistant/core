@@ -152,6 +152,7 @@ FLOWS = [
     "juicenet",
     "keenetic_ndms2",
     "kmtronic",
+    "knx",
     "kodi",
     "konnected",
     "kostal_plenticore",
