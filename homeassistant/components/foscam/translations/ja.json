@@ -10,7 +10,8 @@
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "port": "\u30dd\u30fc\u30c8",
                     "rtsp_port": "RTSP\u30dd\u30fc\u30c8",
-                    "stream": "\u30b9\u30c8\u30ea\u30fc\u30e0"
+                    "stream": "\u30b9\u30c8\u30ea\u30fc\u30e0",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 }
             }
         }

@@ -28,6 +28,11 @@
                     "host": "IP\u30a2\u30c9\u30ec\u30b9"
                 }
             },
+            "gateway": {
+                "data": {
+                    "host": "IP\u30a2\u30c9\u30ec\u30b9"
+                }
+            },
             "manual": {
                 "data": {
                     "host": "IP\u30a2\u30c9\u30ec\u30b9"

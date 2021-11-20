@@ -24,6 +24,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -321,6 +322,28 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    version = entry.version
+
+    LOGGER.debug("Migrating from version %s", version)
+
+    # 1 -> 2: Unique ID format changed, so delete and re-import:
+    if version == 1:
+        dev_reg = dr.async_get(hass)
+        dev_reg.async_clear_config_entry(entry.entry_id)
+
+        en_reg = er.async_get(hass)
+        en_reg.async_clear_config_entry(entry.entry_id)
+
+        version = entry.version = 2
+        hass.config_entries.async_update_entry(entry)
+
+    LOGGER.info("Migration to version %s successful", version)
+
+    return True
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

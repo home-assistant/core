@@ -5,7 +5,8 @@
             "confirm": {
                 "data": {
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
-                }
+                },
+                "title": "FRITZ!Box Tools\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
             },
             "reauth_confirm": {
                 "data": {
@@ -18,7 +19,8 @@
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "port": "\u30dd\u30fc\u30c8"
                 },
-                "description": "FRITZ!Box Tools\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u3066FRITZ!Box\u3092\u5236\u5fa1\u3057\u307e\u3059\u3002\n\u6700\u4f4e\u9650\u5fc5\u8981\u306a\u3082\u306e: \u30e6\u30fc\u30b6\u30fc\u540d\u3001\u30d1\u30b9\u30ef\u30fc\u30c9\u3002"
+                "description": "FRITZ!Box Tools\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u3066FRITZ!Box\u3092\u5236\u5fa1\u3057\u307e\u3059\u3002\n\u6700\u4f4e\u9650\u5fc5\u8981\u306a\u3082\u306e: \u30e6\u30fc\u30b6\u30fc\u540d\u3001\u30d1\u30b9\u30ef\u30fc\u30c9\u3002",
+                "title": "FRITZ!Box Tools\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7 - \u5fc5\u9808"
             },
             "user": {
                 "data": {
@@ -26,7 +28,17 @@
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "port": "\u30dd\u30fc\u30c8"
                 },
-                "description": "FRITZ!Box Tools\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u3066FRITZ!Box\u3092\u5236\u5fa1\u3057\u307e\u3059\u3002\n\u6700\u4f4e\u9650\u5fc5\u8981\u306a\u3082\u306e: \u30e6\u30fc\u30b6\u30fc\u540d\u3001\u30d1\u30b9\u30ef\u30fc\u30c9\u3002"
+                "description": "FRITZ!Box Tools\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u3066FRITZ!Box\u3092\u5236\u5fa1\u3057\u307e\u3059\u3002\n\u6700\u4f4e\u9650\u5fc5\u8981\u306a\u3082\u306e: \u30e6\u30fc\u30b6\u30fc\u540d\u3001\u30d1\u30b9\u30ef\u30fc\u30c9\u3002",
+                "title": "FRITZ!Box Tools\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "'\u30db\u30fc\u30e0' \u3067\u30c7\u30d0\u30a4\u30b9\u3092\u691c\u8a0e\u3059\u308b\u79d2\u6570"
+                }
             }
         }
     }
