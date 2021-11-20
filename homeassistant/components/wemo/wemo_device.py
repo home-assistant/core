@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
@@ -120,13 +121,13 @@ class DeviceCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed("WeMo update failed") from err
 
 
-def _device_info(wemo: WeMoDevice):
-    return {
-        "name": wemo.name,
-        "identifiers": {(DOMAIN, wemo.serialnumber)},
-        "model": wemo.model_name,
-        "manufacturer": "Belkin",
-    }
+def _device_info(wemo: WeMoDevice) -> DeviceInfo:
+    return DeviceInfo(
+        identifiers={(DOMAIN, wemo.serialnumber)},
+        manufacturer="Belkin",
+        model=wemo.model_name,
+        name=wemo.name,
+    )
 
 
 async def async_register_device(

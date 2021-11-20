@@ -1,11 +1,13 @@
 """The tests for the Prometheus exporter."""
 from dataclasses import dataclass
 import datetime
+from http import HTTPStatus
 import unittest.mock as mock
 
 import pytest
 
 from homeassistant.components import climate, humidifier, sensor
+from homeassistant.components.demo.number import DemoNumber
 from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
 from homeassistant.const import (
@@ -98,6 +100,17 @@ async def prometheus_client(hass, hass_client, namespace):
     sensor5.entity_id = "sensor.sps30_pm_1um_weight_concentration"
     await sensor5.async_update_ha_state()
 
+    number1 = DemoNumber(None, "Threshold", 5.2, None, False, 0, 10, 0.1)
+    number1.hass = hass
+    number1.entity_id = "input_number.threshold"
+    await number1.async_update_ha_state()
+
+    number2 = DemoNumber(None, None, 60, None, False, 0, 100)
+    number2.hass = hass
+    number2.entity_id = "input_number.brightness"
+    number2._attr_name = None
+    await number2.async_update_ha_state()
+
     return await hass_client()
 
 
@@ -106,7 +119,7 @@ async def test_view_empty_namespace(hass, hass_client):
     client = await prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
     body = body.split("\n")
@@ -228,13 +241,25 @@ async def test_view_empty_namespace(hass, hass_client):
         'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
     )
 
+    assert (
+        'input_number_state{domain="input_number",'
+        'entity="input_number.threshold",'
+        'friendly_name="Threshold"} 5.2' in body
+    )
+
+    assert (
+        'input_number_state{domain="input_number",'
+        'entity="input_number.brightness",'
+        'friendly_name="None"} 60.0' in body
+    )
+
 
 async def test_view_default_namespace(hass, hass_client):
     """Test prometheus metrics view."""
     client = await prometheus_client(hass, hass_client, None)
     resp = await client.get(prometheus.API_ENDPOINT)
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
     body = body.split("\n")

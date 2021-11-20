@@ -30,6 +30,7 @@
             "invalid_serial": "Port serial tidak valid",
             "invalid_subscribe_topic": "Topik langganan tidak valid",
             "invalid_version": "Versi MySensors tidak valid",
+            "mqtt_required": "Integrasi MQTT belum disiapkan",
             "not_a_number": "Masukkan angka",
             "port_out_of_range": "Nilai port minimal 1 dan maksimal 65535",
             "unknown": "Kesalahan yang tidak diharapkan"

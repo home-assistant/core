@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kasa import SmartBulb, SmartPlug, SmartStrip
+from kasa import SmartBulb, SmartDimmer, SmartPlug, SmartStrip
 from kasa.exceptions import SmartDeviceException
 from kasa.protocol import TPLinkSmartHomeProtocol
 
@@ -33,6 +33,7 @@ def _mocked_bulb() -> SmartBulb:
     bulb.is_color = True
     bulb.is_strip = False
     bulb.is_plug = False
+    bulb.is_dimmer = False
     bulb.hsv = (10, 30, 5)
     bulb.device_id = MAC_ADDRESS
     bulb.valid_temperature_range.min = 4000
@@ -45,6 +46,33 @@ def _mocked_bulb() -> SmartBulb:
     bulb.set_color_temp = AsyncMock()
     bulb.protocol = _mock_protocol()
     return bulb
+
+
+def _mocked_dimmer() -> SmartDimmer:
+    dimmer = MagicMock(auto_spec=SmartDimmer)
+    dimmer.update = AsyncMock()
+    dimmer.mac = MAC_ADDRESS
+    dimmer.alias = ALIAS
+    dimmer.model = MODEL
+    dimmer.host = IP_ADDRESS
+    dimmer.brightness = 50
+    dimmer.color_temp = 4000
+    dimmer.is_color = True
+    dimmer.is_strip = False
+    dimmer.is_plug = False
+    dimmer.is_dimmer = True
+    dimmer.hsv = (10, 30, 5)
+    dimmer.device_id = MAC_ADDRESS
+    dimmer.valid_temperature_range.min = 4000
+    dimmer.valid_temperature_range.max = 9000
+    dimmer.hw_info = {"sw_ver": "1.0.0"}
+    dimmer.turn_off = AsyncMock()
+    dimmer.turn_on = AsyncMock()
+    dimmer.set_brightness = AsyncMock()
+    dimmer.set_hsv = AsyncMock()
+    dimmer.set_color_temp = AsyncMock()
+    dimmer.protocol = _mock_protocol()
+    return dimmer
 
 
 def _mocked_plug() -> SmartPlug:
@@ -63,6 +91,7 @@ def _mocked_plug() -> SmartPlug:
     plug.hw_info = {"sw_ver": "1.0.0"}
     plug.turn_off = AsyncMock()
     plug.turn_on = AsyncMock()
+    plug.set_led = AsyncMock()
     plug.protocol = _mock_protocol()
     return plug
 
@@ -83,6 +112,7 @@ def _mocked_strip() -> SmartStrip:
     strip.hw_info = {"sw_ver": "1.0.0"}
     strip.turn_off = AsyncMock()
     strip.turn_on = AsyncMock()
+    strip.set_led = AsyncMock()
     strip.protocol = _mock_protocol()
     plug0 = _mocked_plug()
     plug0.alias = "Plug0"

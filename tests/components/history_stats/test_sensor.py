@@ -1,7 +1,6 @@
 """The test for the History Statistics sensor platform."""
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
-from os import path
 import unittest
 from unittest.mock import patch
 
@@ -18,6 +17,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     async_init_recorder_component,
+    get_fixture_path,
     get_test_home_assistant,
     init_recorder_component,
 )
@@ -253,11 +253,7 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "history_stats/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "history_stats")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -427,7 +423,3 @@ async def async_test_measure(hass):
     assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "50.0"
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

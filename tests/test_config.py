@@ -444,6 +444,7 @@ async def test_updating_configuration(hass, hass_storage):
         },
         "key": "core.config",
         "version": 1,
+        "minor_version": 1,
     }
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(

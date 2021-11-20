@@ -5,6 +5,13 @@ import functools
 import numbers
 from typing import Any
 
+from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_FAN,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
+)
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO,
@@ -28,8 +35,10 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
+    POWER_VOLT_AMPERE,
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
@@ -53,10 +62,13 @@ from .core.const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
+    CHANNEL_LEAF_WETNESS,
     CHANNEL_POWER_CONFIGURATION,
     CHANNEL_PRESSURE,
     CHANNEL_SMARTENERGY_METERING,
+    CHANNEL_SOIL_MOISTURE,
     CHANNEL_TEMPERATURE,
+    CHANNEL_THERMOSTAT,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
@@ -215,6 +227,23 @@ class Battery(Sensor):
     _device_class = DEVICE_CLASS_BATTERY
     _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Unlike any other entity, PowerConfiguration cluster may not support
+        battery_percent_remaining attribute, but zha-device-handlers takes care of it
+        so create the entity regardless
+        """
+        return cls(unique_id, zha_device, channels, **kwargs)
 
     @staticmethod
     def formatter(value: int) -> int:
@@ -286,6 +315,23 @@ class ElectricalMeasurement(Sensor):
 
 
 @MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementApparentPower(
+    ElectricalMeasurement, id_suffix="apparent_power"
+):
+    """Apparent power measurement."""
+
+    SENSOR_ATTR = "apparent_power"
+    _device_class = DEVICE_CLASS_POWER
+    _unit = POWER_VOLT_AMPERE
+    _div_mul_prefix = "ac_power"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurementRMSCurrent(ElectricalMeasurement, id_suffix="rms_current"):
     """RMS current measurement."""
 
@@ -319,6 +365,28 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
 @STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)
 class Humidity(Sensor):
     """Humidity sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_HUMIDITY
+    _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
+    _unit = PERCENTAGE
+
+
+@STRICT_MATCH(channel_names=CHANNEL_SOIL_MOISTURE)
+class SoilMoisture(Sensor):
+    """Soil Moisture sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_HUMIDITY
+    _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
+    _unit = PERCENTAGE
+
+
+@STRICT_MATCH(channel_names=CHANNEL_LEAF_WETNESS)
+class LeafWetness(Sensor):
+    """Leaf Wetness sensor."""
 
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
@@ -380,8 +448,7 @@ class SmartEnergyMetering(Sensor):
         attrs = {}
         if self._channel.device_type is not None:
             attrs["device_type"] = self._channel.device_type
-        status = self._channel.status
-        if status is not None:
+        if (status := self._channel.status) is not None:
             attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
 
@@ -482,3 +549,119 @@ class FormaldehydeConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
+
+
+@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT)
+class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
+    """Thermostat HVAC action sensor."""
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+
+        return cls(unique_id, zha_device, channels, **kwargs)
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the current HVAC action."""
+        if (
+            self._channel.pi_heating_demand is None
+            and self._channel.pi_cooling_demand is None
+        ):
+            return self._rm_rs_action
+        return self._pi_demand_action
+
+    @property
+    def _rm_rs_action(self) -> str | None:
+        """Return the current HVAC action based on running mode and running state."""
+
+        running_mode = self._channel.running_mode
+        if running_mode == self._channel.RunningMode.Heat:
+            return CURRENT_HVAC_HEAT
+        if running_mode == self._channel.RunningMode.Cool:
+            return CURRENT_HVAC_COOL
+
+        running_state = self._channel.running_state
+        if running_state and running_state & (
+            self._channel.RunningState.Fan_State_On
+            | self._channel.RunningState.Fan_2nd_Stage_On
+            | self._channel.RunningState.Fan_3rd_Stage_On
+        ):
+            return CURRENT_HVAC_FAN
+        if (
+            self._channel.system_mode != self._channel.SystemMode.Off
+            and running_mode == self._channel.SystemMode.Off
+        ):
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
+
+    @property
+    def _pi_demand_action(self) -> str | None:
+        """Return the current HVAC action based on pi_demands."""
+
+        heating_demand = self._channel.pi_heating_demand
+        if heating_demand is not None and heating_demand > 0:
+            return CURRENT_HVAC_HEAT
+        cooling_demand = self._channel.pi_cooling_demand
+        if cooling_demand is not None and cooling_demand > 0:
+            return CURRENT_HVAC_COOL
+
+        if self._channel.system_mode != self._channel.SystemMode.Off:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
+
+    @callback
+    def async_set_state(self, *args, **kwargs) -> None:
+        """Handle state update from channel."""
+        self.async_write_ha_state()
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers="Zen Within",
+    stop_on_match=True,
+)
+class ZenHVACAction(ThermostatHVACAction):
+    """Zen Within Thermostat HVAC Action."""
+
+    @property
+    def _rm_rs_action(self) -> str | None:
+        """Return the current HVAC action based on running mode and running state."""
+
+        if (running_state := self._channel.running_state) is None:
+            return None
+
+        rs_heat = (
+            self._channel.RunningState.Heat_State_On
+            | self._channel.RunningState.Heat_2nd_Stage_On
+        )
+        if running_state & rs_heat:
+            return CURRENT_HVAC_HEAT
+
+        rs_cool = (
+            self._channel.RunningState.Cool_State_On
+            | self._channel.RunningState.Cool_2nd_Stage_On
+        )
+        if running_state & rs_cool:
+            return CURRENT_HVAC_COOL
+
+        running_state = self._channel.running_state
+        if running_state and running_state & (
+            self._channel.RunningState.Fan_State_On
+            | self._channel.RunningState.Fan_2nd_Stage_On
+            | self._channel.RunningState.Fan_3rd_Stage_On
+        ):
+            return CURRENT_HVAC_FAN
+
+        if self._channel.system_mode != self._channel.SystemMode.Off:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF

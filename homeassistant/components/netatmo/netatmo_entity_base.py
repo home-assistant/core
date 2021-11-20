@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
@@ -23,11 +23,11 @@ class NetatmoBase(Entity):
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
         self._data_classes: list[dict] = []
-        self._listeners: list[CALLBACK_TYPE] = []
 
         self._device_name: str = ""
         self._id: str = ""
         self._model: str = ""
+        self._netatmo_type: str = ""
         self._attr_name = None
         self._attr_unique_id = None
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
@@ -75,9 +75,6 @@ class NetatmoBase(Entity):
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
 
-        for listener in self._listeners:
-            listener()
-
         for data_class in self._data_classes:
             await self.data_handler.unregister_data_class(
                 data_class[SIGNAL_NAME], self.async_update_callback
@@ -91,9 +88,10 @@ class NetatmoBase(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info for the sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._id)},
-            "name": self._device_name,
-            "manufacturer": MANUFACTURER,
-            "model": MODELS[self._model],
-        }
+        return DeviceInfo(
+            configuration_url=f"https://my.netatmo.com/app/{self._netatmo_type}",
+            identifiers={(DOMAIN, self._id)},
+            name=self._device_name,
+            manufacturer=MANUFACTURER,
+            model=MODELS[self._model],
+        )

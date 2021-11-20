@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from http import HTTPStatus
 import json
 import logging
 
@@ -9,12 +10,7 @@ from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONTENT_TYPE_JSON,
-    HTTP_BAD_REQUEST,
-    HTTP_OK,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.json import JSONEncoder
@@ -95,7 +91,9 @@ def registration_context(registration: dict) -> Context:
     return Context(user_id=registration[CONF_USER_ID])
 
 
-def empty_okay_response(headers: dict = None, status: int = HTTP_OK) -> Response:
+def empty_okay_response(
+    headers: dict = None, status: HTTPStatus = HTTPStatus.OK
+) -> Response:
     """Return a Response with empty JSON object and a 200."""
     return Response(
         text="{}", status=status, content_type=CONTENT_TYPE_JSON, headers=headers
@@ -103,7 +101,10 @@ def empty_okay_response(headers: dict = None, status: int = HTTP_OK) -> Response
 
 
 def error_response(
-    code: str, message: str, status: int = HTTP_BAD_REQUEST, headers: dict = None
+    code: str,
+    message: str,
+    status: HTTPStatus = HTTPStatus.BAD_REQUEST,
+    headers: dict = None,
 ) -> Response:
     """Return an error Response."""
     return json_response(
@@ -147,7 +148,11 @@ def savable_state(hass: HomeAssistant) -> dict:
 
 
 def webhook_response(
-    data, *, registration: dict, status: int = HTTP_OK, headers: dict = None
+    data,
+    *,
+    registration: dict,
+    status: HTTPStatus = HTTPStatus.OK,
+    headers: dict = None,
 ) -> Response:
     """Return a encrypted response if registration supports it."""
     data = json.dumps(data, cls=JSONEncoder)
@@ -169,10 +174,10 @@ def webhook_response(
 
 def device_info(registration: dict) -> DeviceInfo:
     """Return the device info for this registration."""
-    return {
-        "identifiers": {(DOMAIN, registration[ATTR_DEVICE_ID])},
-        "manufacturer": registration[ATTR_MANUFACTURER],
-        "model": registration[ATTR_MODEL],
-        "name": registration[ATTR_DEVICE_NAME],
-        "sw_version": registration[ATTR_OS_VERSION],
-    }
+    return DeviceInfo(
+        identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
+        manufacturer=registration[ATTR_MANUFACTURER],
+        model=registration[ATTR_MODEL],
+        name=registration[ATTR_DEVICE_NAME],
+        sw_version=registration[ATTR_OS_VERSION],
+    )

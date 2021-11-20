@@ -5,10 +5,10 @@ import asyncio
 from collections.abc import Callable, Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-import logging
-from logging import Logger
+from logging import Logger, getLogger
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Protocol
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -59,7 +59,7 @@ PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = getLogger(__name__)
 
 
 class AddEntitiesCallback(Protocol):
@@ -458,23 +458,42 @@ class EntityPlatform:
             device_id = None
 
             if config_entry_id is not None and device_info is not None:
-                processed_dev_info = {"config_entry_id": config_entry_id}
+                processed_dev_info: dict[str, str | None] = {
+                    "config_entry_id": config_entry_id
+                }
                 for key in (
                     "connections",
+                    "default_manufacturer",
+                    "default_model",
+                    "default_name",
+                    "entry_type",
                     "identifiers",
                     "manufacturer",
                     "model",
                     "name",
-                    "default_manufacturer",
-                    "default_model",
-                    "default_name",
-                    "sw_version",
-                    "entry_type",
-                    "via_device",
                     "suggested_area",
+                    "sw_version",
+                    "via_device",
                 ):
                     if key in device_info:
                         processed_dev_info[key] = device_info[key]  # type: ignore[misc]
+
+                if "configuration_url" in device_info:
+                    if device_info["configuration_url"] is None:
+                        processed_dev_info["configuration_url"] = None
+                    else:
+                        configuration_url = str(device_info["configuration_url"])
+                        if urlparse(configuration_url).scheme in [
+                            "http",
+                            "https",
+                            "homeassistant",
+                        ]:
+                            processed_dev_info["configuration_url"] = configuration_url
+                        else:
+                            _LOGGER.warning(
+                                "Ignoring invalid device configuration_url '%s'",
+                                configuration_url,
+                            )
 
                 try:
                     device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
@@ -490,17 +509,18 @@ class EntityPlatform:
                 self.domain,
                 self.platform_name,
                 entity.unique_id,
-                suggested_object_id=suggested_object_id,
-                config_entry=self.config_entry,
-                device_id=device_id,
-                known_object_ids=self.entities.keys(),
-                disabled_by=disabled_by,
                 capabilities=entity.capability_attributes,
-                supported_features=entity.supported_features,
+                config_entry=self.config_entry,
                 device_class=entity.device_class,
-                unit_of_measurement=entity.unit_of_measurement,
-                original_name=entity.name,
+                device_id=device_id,
+                disabled_by=disabled_by,
+                entity_category=entity.entity_category,
+                known_object_ids=self.entities.keys(),
                 original_icon=entity.icon,
+                original_name=entity.name,
+                suggested_object_id=suggested_object_id,
+                supported_features=entity.supported_features,
+                unit_of_measurement=entity.unit_of_measurement,
             )
 
             entity.registry_entry = entry
@@ -716,8 +736,7 @@ current_platform: ContextVar[EntityPlatform | None] = ContextVar(
 @callback
 def async_get_current_platform() -> EntityPlatform:
     """Get the current platform from context."""
-    platform = current_platform.get()
-    if platform is None:
+    if (platform := current_platform.get()) is None:
         raise RuntimeError("Cannot get non-set current platform")
     return platform
 

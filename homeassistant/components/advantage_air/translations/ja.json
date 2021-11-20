@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP\u30a2\u30c9\u30ec\u30b9",
+                    "port": "\u30dd\u30fc\u30c8"
+                },
+                "description": "Advantage Air wall mounted tablet\u306eAPI\u306b\u63a5\u7d9a\u3057\u307e\u3059\u3002",
+                "title": "\u63a5\u7d9a"
+            }
+        }
+    }
+}

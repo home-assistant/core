@@ -16,6 +16,8 @@ from homeassistant.components.fan import (
     SPEED_LOW,
     SPEED_MEDIUM,
     SPEED_OFF,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_SET_SPEED,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
@@ -126,7 +128,7 @@ async def test_missing_optional_config(hass, start_ha):
 )
 async def test_wrong_template_config(hass, start_ha):
     """Test: missing 'value_template' will fail."""
-    assert hass.states.async_all() == []
+    assert hass.states.async_all("fan") == []
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
@@ -234,8 +236,8 @@ async def test_templates_with_entities(hass, start_ha):
             [
                 ("0", None, None, None),
                 ("invalid", None, None, None),
-                ("auto", None, "auto", "auto"),
-                ("smart", None, "smart", "smart"),
+                ("auto", None, None, "auto"),
+                ("smart", None, None, "smart"),
                 ("invalid", None, None, None),
             ],
         ),
@@ -869,6 +871,7 @@ async def test_implemented_percentage(hass, speed_count, percentage_step):
     state = hass.states.get("fan.mechanical_ventilation")
     attributes = state.attributes
     assert attributes["percentage_step"] == percentage_step
+    assert attributes.get("supported_features") & SUPPORT_SET_SPEED
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
@@ -935,7 +938,8 @@ async def test_implemented_preset_mode(hass, start_ha):
 
     state = hass.states.get("fan.mechanical_ventilation")
     attributes = state.attributes
-    assert attributes["percentage"] is None
+    assert attributes.get("percentage") is None
+    assert attributes.get("supported_features") & SUPPORT_PRESET_MODE
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])

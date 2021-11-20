@@ -17,7 +17,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -176,6 +181,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
         super().__init__(_create_climate(xknx, config))
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
         if self.preset_modes:
             self._attr_supported_features |= SUPPORT_PRESET_MODE
@@ -218,8 +224,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self._device.set_target_temperature(temperature)
         self.async_write_ha_state()
@@ -263,10 +268,10 @@ class KNXClimate(KnxEntity, ClimateEntity):
             return CURRENT_HVAC_OFF
         if self._device.is_active is False:
             return CURRENT_HVAC_IDLE
-        if self._device.mode is not None and self._device.mode.supports_controller_mode:
-            return CURRENT_HVAC_ACTIONS.get(
-                self._device.mode.controller_mode.value, CURRENT_HVAC_IDLE
-            )
+        if (
+            self._device.mode is not None and self._device.mode.supports_controller_mode
+        ) or self._device.is_active:
+            return CURRENT_HVAC_ACTIONS.get(self.hvac_mode, CURRENT_HVAC_IDLE)
         return None
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:

@@ -14,6 +14,7 @@ from homeassistant.components.wled.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
+    ENTITY_CATEGORY_CONFIG,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -43,6 +44,7 @@ async def test_switch_state(
     entry = entity_registry.async_get("switch.wled_rgb_light_nightlight")
     assert entry
     assert entry.unique_id == "aabbccddeeff_nightlight"
+    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
 
     state = hass.states.get("switch.wled_rgb_light_sync_send")
     assert state
@@ -53,6 +55,7 @@ async def test_switch_state(
     entry = entity_registry.async_get("switch.wled_rgb_light_sync_send")
     assert entry
     assert entry.unique_id == "aabbccddeeff_sync_send"
+    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
 
     state = hass.states.get("switch.wled_rgb_light_sync_receive")
     assert state
@@ -63,6 +66,7 @@ async def test_switch_state(
     entry = entity_registry.async_get("switch.wled_rgb_light_sync_receive")
     assert entry
     assert entry.unique_id == "aabbccddeeff_sync_receive"
+    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
 
 
 async def test_switch_change_state(

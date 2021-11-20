@@ -147,8 +147,7 @@ class AquaLogicSensor(SensorEntity):
     @callback
     def async_update_callback(self):
         """Update callback."""
-        panel = self._processor.panel
-        if panel is not None:
+        if (panel := self._processor.panel) is not None:
             if panel.is_metric:
                 self._attr_native_unit_of_measurement = (
                     self.entity_description.unit_metric

@@ -41,6 +41,7 @@ ATTR_HOST = "host"
 ATTR_NEW_SERIAL_NUMBER = "NewSerialNumber"
 
 MOCK_HOST = "fake_host"
+MOCK_IP = "192.168.178.1"
 MOCK_SERIAL_NUMBER = "fake_serial_number"
 MOCK_FIRMWARE_INFO = [True, "1.1.1"]
 
@@ -51,7 +52,7 @@ MOCK_DEVICE_INFO = {
 }
 MOCK_IMPORT_CONFIG = {CONF_HOST: MOCK_HOST, CONF_USERNAME: "username"}
 MOCK_SSDP_DATA = {
-    ATTR_SSDP_LOCATION: "https://fake_host:12345/test",
+    ATTR_SSDP_LOCATION: f"https://{MOCK_IP}:12345/test",
     ATTR_UPNP_FRIENDLY_NAME: "fake_name",
     ATTR_UPNP_UDN: "uuid:only-a-test",
 }
@@ -81,7 +82,10 @@ async def test_user(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
         "requests.get"
     ) as mock_request_get, patch(
         "requests.post"
-    ) as mock_request_post:
+    ) as mock_request_post, patch(
+        "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+        return_value=MOCK_IP,
+    ):
 
         mock_request_get.return_value.status_code = 200
         mock_request_get.return_value.content = MOCK_REQUEST
@@ -129,7 +133,10 @@ async def test_user_already_configured(
         "requests.get"
     ) as mock_request_get, patch(
         "requests.post"
-    ) as mock_request_post:
+    ) as mock_request_post, patch(
+        "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+        return_value=MOCK_IP,
+    ):
 
         mock_request_get.return_value.status_code = 200
         mock_request_get.return_value.content = MOCK_REQUEST
@@ -319,7 +326,10 @@ async def test_ssdp_already_configured(
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+        return_value=MOCK_IP,
+    ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -343,7 +353,10 @@ async def test_ssdp_already_configured_host(
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+        return_value=MOCK_IP,
+    ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -367,7 +380,10 @@ async def test_ssdp_already_configured_host_uuid(
     with patch(
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=fc_class_mock,
-    ), patch("homeassistant.components.fritz.common.FritzStatus"):
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+        return_value=MOCK_IP,
+    ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -436,7 +452,7 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
         )
 
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["data"][CONF_HOST] == "fake_host"
+        assert result["data"][CONF_HOST] == MOCK_IP
         assert result["data"][CONF_PASSWORD] == "fake_pass"
         assert result["data"][CONF_USERNAME] == "fake_user"
 
@@ -482,7 +498,10 @@ async def test_import(hass: HomeAssistant, fc_class_mock, mock_get_source_ip):
         "requests.get"
     ) as mock_request_get, patch(
         "requests.post"
-    ) as mock_request_post:
+    ) as mock_request_post, patch(
+        "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+        return_value=MOCK_IP,
+    ):
 
         mock_request_get.return_value.status_code = 200
         mock_request_get.return_value.content = MOCK_REQUEST

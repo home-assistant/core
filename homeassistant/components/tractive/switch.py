@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, Literal, cast
+from typing import Any, Literal, cast
 
 from aiotractive.exceptions import TractiveError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -26,7 +27,7 @@ from .const import (
 )
 from .entity import TractiveEntity
 
-_LOGGER: Final = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -43,24 +44,27 @@ class TractiveSwitchEntityDescription(
     """Class describing Tractive switch entities."""
 
 
-SWITCH_TYPES: Final[tuple[TractiveSwitchEntityDescription, ...]] = (
+SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
     TractiveSwitchEntityDescription(
         key=ATTR_BUZZER,
         name="Tracker Buzzer",
         icon="mdi:volume-high",
         method="async_set_buzzer",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LED,
         name="Tracker LED",
         icon="mdi:led-on",
         method="async_set_led",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LIVE_TRACKING,
         name="Live Tracking",
         icon="mdi:map-marker-path",
         method="async_set_live_tracking",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
 )
 

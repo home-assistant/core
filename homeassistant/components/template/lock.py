@@ -22,7 +22,7 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN
 from .template_entity import TemplateEntity
 
 CONF_LOCK = "lock"
@@ -88,9 +88,8 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._state = None
         self._name = name
         self._state_template = value_template
-        domain = __name__.split(".")[-2]
-        self._command_lock = Script(hass, command_lock, name, domain)
-        self._command_unlock = Script(hass, command_unlock, name, domain)
+        self._command_lock = Script(hass, command_lock, name, DOMAIN)
+        self._command_unlock = Script(hass, command_unlock, name, DOMAIN)
         self._optimistic = optimistic
         self._unique_id = unique_id
 

@@ -11,9 +11,9 @@ from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_GATEWAY_ID,
@@ -42,7 +42,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._host = None
+        self._host: str | None = None
         self._import_groups = False
 
     async def async_step_user(
@@ -92,7 +92,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="auth", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle homekit discovery."""
         await self.async_set_unique_id(discovery_info["properties"]["id"])
         self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
@@ -174,7 +176,7 @@ async def authenticate(
     api_factory = await APIFactory.init(host, psk_id=identity)
 
     try:
-        with async_timeout.timeout(5):
+        async with async_timeout.timeout(5):
             key = await api_factory.generate_psk(security_code)
     except RequestError as err:
         raise AuthError("invalid_security_code") from err
@@ -182,7 +184,8 @@ async def authenticate(
         raise AuthError("timeout") from err
     finally:
         await api_factory.shutdown()
-
+    if key is None:
+        raise AuthError("cannot_authenticate")
     return await get_gateway_info(hass, host, identity, key)
 
 

@@ -31,9 +31,6 @@ from homeassistant.components.websocket_api.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    HTTP_NOT_FOUND,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -482,16 +479,14 @@ class MediaPlayerEntity(Entity):
         if hasattr(self, "_attr_media_image_hash"):
             return self._attr_media_image_hash
 
-        url = self.media_image_url
-        if url is not None:
+        if (url := self.media_image_url) is not None:
             return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
 
         return None
 
     async def async_get_media_image(self):
         """Fetch media image of current playing image."""
-        url = self.media_image_url
-        if url is None:
+        if (url := self.media_image_url) is None:
             return None, None
 
         return await self._async_fetch_image_from_cache(url)
@@ -871,9 +866,7 @@ class MediaPlayerEntity(Entity):
     @property
     def media_image_local(self):
         """Return local url to media image."""
-        image_hash = self.media_image_hash
-
-        if image_hash is None:
+        if (image_hash := self.media_image_hash) is None:
             return None
 
         return (
@@ -887,15 +880,15 @@ class MediaPlayerEntity(Entity):
         supported_features = self.supported_features or 0
         data = {}
 
-        if supported_features & SUPPORT_SELECT_SOURCE:
-            source_list = self.source_list
-            if source_list:
-                data[ATTR_INPUT_SOURCE_LIST] = source_list
+        if supported_features & SUPPORT_SELECT_SOURCE and (
+            source_list := self.source_list
+        ):
+            data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if supported_features & SUPPORT_SELECT_SOUND_MODE:
-            sound_mode_list = self.sound_mode_list
-            if sound_mode_list:
-                data[ATTR_SOUND_MODE_LIST] = sound_mode_list
+        if supported_features & SUPPORT_SELECT_SOUND_MODE and (
+            sound_mode_list := self.sound_mode_list
+        ):
+            data[ATTR_SOUND_MODE_LIST] = sound_mode_list
 
         return data
 
@@ -903,21 +896,20 @@ class MediaPlayerEntity(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        if self.state == STATE_OFF:
-            return None
-
         state_attr = {}
 
+        if self.support_grouping:
+            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
+
+        if self.state == STATE_OFF:
+            return state_attr
+
         for attr in ATTR_TO_PROPERTY:
-            value = getattr(self, attr)
-            if value is not None:
+            if (value := getattr(self, attr)) is not None:
                 state_attr[attr] = value
 
         if self.media_image_remotely_accessible:
             state_attr["entity_picture_local"] = self.media_image_local
-
-        if self.support_grouping:
-            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
 
         return state_attr
 
@@ -982,10 +974,9 @@ class MediaPlayerEntity(Entity):
         websession = async_get_clientsession(self.hass)
         with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
             response = await websession.get(url)
-            if response.status == HTTP_OK:
+            if response.status == HTTPStatus.OK:
                 content = await response.read()
-                content_type = response.headers.get(CONTENT_TYPE)
-                if content_type:
+                if content_type := response.headers.get(CONTENT_TYPE):
                     content_type = content_type.split(";")[0]
 
         if content is None:
@@ -1034,9 +1025,12 @@ class MediaPlayerImageView(HomeAssistantView):
         media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
-        player = self.component.get_entity(entity_id)
-        if player is None:
-            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else HTTP_UNAUTHORIZED
+        if (player := self.component.get_entity(entity_id)) is None:
+            status = (
+                HTTPStatus.NOT_FOUND
+                if request[KEY_AUTHENTICATED]
+                else HTTPStatus.UNAUTHORIZED
+            )
             return web.Response(status=status)
 
         authenticated = (
@@ -1075,9 +1069,8 @@ async def websocket_handle_thumbnail(hass, connection, msg):
     Async friendly.
     """
     component = hass.data[DOMAIN]
-    player = component.get_entity(msg["entity_id"])
 
-    if player is None:
+    if (player := component.get_entity(msg["entity_id"])) is None:
         connection.send_message(
             websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
         )

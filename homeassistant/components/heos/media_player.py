@@ -255,13 +255,13 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Get attributes about the device."""
-        return {
-            "identifiers": {(HEOS_DOMAIN, self._player.player_id)},
-            "name": self._player.name,
-            "model": self._player.model,
-            "manufacturer": "HEOS",
-            "sw_version": self._player.version,
-        }
+        return DeviceInfo(
+            identifiers={(HEOS_DOMAIN, self._player.player_id)},
+            manufacturer="HEOS",
+            model=self._player.model,
+            name=self._player.name,
+            sw_version=self._player.version,
+        )
 
     @property
     def extra_state_attributes(self) -> dict:

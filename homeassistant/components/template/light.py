@@ -37,7 +37,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -211,32 +211,31 @@ class LightTemplate(TemplateEntity, LightEntity):
         )
         self._name = friendly_name
         self._template = state_template
-        domain = __name__.split(".")[-2]
-        self._on_script = Script(hass, on_action, friendly_name, domain)
-        self._off_script = Script(hass, off_action, friendly_name, domain)
+        self._on_script = Script(hass, on_action, friendly_name, DOMAIN)
+        self._off_script = Script(hass, off_action, friendly_name, DOMAIN)
         self._level_script = None
         if level_action is not None:
-            self._level_script = Script(hass, level_action, friendly_name, domain)
+            self._level_script = Script(hass, level_action, friendly_name, DOMAIN)
         self._level_template = level_template
         self._temperature_script = None
         if temperature_action is not None:
             self._temperature_script = Script(
-                hass, temperature_action, friendly_name, domain
+                hass, temperature_action, friendly_name, DOMAIN
             )
         self._temperature_template = temperature_template
         self._color_script = None
         if color_action is not None:
-            self._color_script = Script(hass, color_action, friendly_name, domain)
+            self._color_script = Script(hass, color_action, friendly_name, DOMAIN)
         self._color_template = color_template
         self._white_value_script = None
         if white_value_action is not None:
             self._white_value_script = Script(
-                hass, white_value_action, friendly_name, domain
+                hass, white_value_action, friendly_name, DOMAIN
             )
         self._white_value_template = white_value_template
         self._effect_script = None
         if effect_action is not None:
-            self._effect_script = Script(hass, effect_action, friendly_name, domain)
+            self._effect_script = Script(hass, effect_action, friendly_name, DOMAIN)
         self._effect_list_template = effect_list_template
         self._effect_template = effect_template
         self._max_mireds_template = max_mireds_template
@@ -511,7 +510,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     def _update_brightness(self, brightness):
         """Update the brightness from the template."""
         try:
-            if brightness in ("None", ""):
+            if brightness in (None, "None", ""):
                 self._brightness = None
                 return
             if 0 <= int(brightness) <= 255:
@@ -532,7 +531,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     def _update_white_value(self, white_value):
         """Update the white value from the template."""
         try:
-            if white_value in ("None", ""):
+            if white_value in (None, "None", ""):
                 self._white_value = None
                 return
             if 0 <= int(white_value) <= 255:
@@ -552,7 +551,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_effect_list(self, effect_list):
         """Update the effect list from the template."""
-        if effect_list in ("None", ""):
+        if effect_list in (None, "None", ""):
             self._effect_list = None
             return
 
@@ -573,7 +572,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_effect(self, effect):
         """Update the effect from the template."""
-        if effect in ("None", ""):
+        if effect in (None, "None", ""):
             self._effect = None
             return
 
@@ -618,7 +617,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     def _update_temperature(self, render):
         """Update the temperature from the template."""
         try:
-            if render in ("None", ""):
+            if render in (None, "None", ""):
                 self._temperature = None
                 return
             temperature = int(render)
@@ -644,7 +643,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         """Update the hs_color from the template."""
         h_str = s_str = None
         if isinstance(render, str):
-            if render in ("None", ""):
+            if render in (None, "None", ""):
                 self._color = None
                 return
             h_str, s_str = map(
@@ -676,7 +675,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         """Update the max mireds from the template."""
 
         try:
-            if render in ("None", ""):
+            if render in (None, "None", ""):
                 self._max_mireds = None
                 return
             self._max_mireds = int(render)
@@ -691,7 +690,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     def _update_min_mireds(self, render):
         """Update the min mireds from the template."""
         try:
-            if render in ("None", ""):
+            if render in (None, "None", ""):
                 self._min_mireds = None
                 return
             self._min_mireds = int(render)
@@ -705,7 +704,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_supports_transition(self, render):
         """Update the supports transition from the template."""
-        if render in ("None", ""):
+        if render in (None, "None", ""):
             self._supports_transition = False
             return
         self._supports_transition = bool(render)
