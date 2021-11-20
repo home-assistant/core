@@ -1,10 +1,10 @@
 """Tests for the Fronius integration."""
-
+from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_RESOURCE
 from homeassistant.setup import async_setup_component
 
-from .const import DOMAIN, MOCK_HOST
+from .const import MOCK_HOST
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
