@@ -1,6 +1,8 @@
 """Philips Hue scene platform tests for V2 bridge/api."""
 
 
+from homeassistant.helpers import entity_registry as er
+
 from .conftest import setup_platform
 from .const import FAKE_SCENE
 
@@ -38,6 +40,16 @@ async def test_scene(hass, mock_bridge_v2, v2_resources_test_data):
     assert test_entity.attributes["speed"] == 0.5
     assert test_entity.attributes["brightness"] == 100.0
     assert test_entity.attributes["is_dynamic"] is False
+
+    # scene entities should not have a device assigned
+    ent_reg = er.async_get(hass)
+    for entity_id in (
+        "scene.test_zone_dynamic_test_scene",
+        "scene.test_room_regular_test_scene",
+    ):
+        entity_entry = ent_reg.async_get(entity_id)
+        assert entity_entry
+        assert entity_entry.device_id is None
 
 
 async def test_scene_turn_on_service(hass, mock_bridge_v2, v2_resources_test_data):
