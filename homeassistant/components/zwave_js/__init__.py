@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from typing import Callable
+from collections.abc import Callable
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
