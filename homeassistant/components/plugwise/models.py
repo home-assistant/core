@@ -3,9 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorEntityDescription,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.humidifier.const import ATTR_HUMIDITY
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -13,10 +11,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntityDescription,
 )
-from homeassistant.components.switch import (
-    DEVICE_CLASS_SWITCH,
-    SwitchEntityDescription,
-)
+from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntityDescription
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
