@@ -51,9 +51,13 @@ async def async_setup_entry(
 
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
     for block in wrapper.device.blocks:
+        if block.type == "device":
+            device_block = block
         if hasattr(block, "targetTemp"):
-            async_add_entities([ShellyClimate(wrapper, block)])
-            break
+            sensor_block = block
+
+    if sensor_block and device_block:
+        async_add_entities([ShellyClimate(wrapper, sensor_block, device_block)])
 
 
 class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
@@ -67,16 +71,17 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = TEMP_CELSIUS
 
-    def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
+    def __init__(
+        self, wrapper: BlockDeviceWrapper, sensor_block: Block, device_block: Block
+    ) -> None:
         """Initialize climate."""
-        super().__init__(wrapper, block)
+        super().__init__(wrapper, sensor_block)
 
         self.wrapper = wrapper
-        self.block = block
+        self.sensor_block = sensor_block
+        self.device_block = device_block
 
-        assert self.block.channel
-
-        self._load_device_block()
+        assert self.sensor_block.channel
 
         self.control_result: dict[str, Any] | None = None
 
@@ -84,7 +89,7 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         self._attr_unique_id = self.wrapper.mac
         self._attr_preset_modes: list[str] = [
             PRESET_NONE,
-            *wrapper.device.settings["thermostats"][int(self.block.channel)][
+            *wrapper.device.settings["thermostats"][int(self.sensor_block.channel)][
                 "schedule_profile_names"
             ],
         ]
@@ -92,22 +97,22 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Set target temperature."""
-        return cast(float, self.block.targetTemp)
+        return cast(float, self.sensor_block.targetTemp)
 
     @property
     def current_temperature(self) -> float | None:
         """Return current temperature."""
-        return cast(float, self.block.temp)
+        return cast(float, self.sensor_block.temp)
 
     @property
     def available(self) -> bool:
         """Device availability."""
-        return not cast(bool, self._device_block.valveError)
+        return not cast(bool, self.device_block.valveError)
 
     @property
     def hvac_mode(self) -> str:
         """HVAC current mode."""
-        if self._device_block.mode is None or self._check_is_off():
+        if self.device_block.mode is None or self._check_is_off():
             return HVAC_MODE_OFF
 
         return HVAC_MODE_HEAT
@@ -115,18 +120,18 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Preset current mode."""
-        if self._device_block.mode is None:
+        if self.device_block.mode is None:
             return None
-        return self._attr_preset_modes[cast(int, self._device_block.mode)]
+        return self._attr_preset_modes[cast(int, self.device_block.mode)]
 
     @property
     def hvac_action(self) -> str | None:
         """HVAC current action."""
-        if self._device_block.status is None or self._check_is_off():
+        if self.device_block.status is None or self._check_is_off():
             return CURRENT_HVAC_OFF
 
         return (
-            CURRENT_HVAC_IDLE if self._device_block.status == 0 else CURRENT_HVAC_HEAT
+            CURRENT_HVAC_IDLE if self.device_block.status == "0" else CURRENT_HVAC_HEAT
         )
 
     def _check_is_off(self) -> bool:
@@ -135,22 +140,6 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
             self.target_temperature is None
             or (self.target_temperature <= self._attr_min_temp)
         )
-
-    def _load_device_block(self) -> bool:
-        """Load device CoAP block."""
-        assert self.wrapper.device.blocks
-
-        for dev_block in self.wrapper.device.blocks:
-            if dev_block.type == "device":
-                self._device_block = dev_block
-
-        assert self._device_block
-        return True
-
-    async def async_update(self) -> None:
-        """Update entity with latest info."""
-        await self.wrapper.async_request_refresh()
-        await self.hass.async_add_executor_job(self._load_device_block)
 
     async def set_state_full_path(self, **kwargs: Any) -> Any:
         """Set block state (HTTP request)."""
