@@ -127,4 +127,3 @@ LOCK = "lock"
 RELAY = "relay"
 
 # PLACEHOLDER --- Const for Plugwise USB-stick.
-

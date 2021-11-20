@@ -97,4 +97,3 @@ class GwSensor(SmileGateway, SensorEntity):
         self.async_write_ha_state()
 
 # PLACEHOLDER for class USBSensor()
-
