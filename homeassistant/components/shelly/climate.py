@@ -175,10 +175,6 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         if (current_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.set_state_full_path(target_t_enabled=1, target_t=f"{current_temp}")
-        if self._check_is_off():
-            self.async_set_hvac_mode(HVAC_MODE_OFF)
-        else:
-            self.async_set_hvac_mode(HVAC_MODE_HEAT)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
@@ -197,5 +193,3 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
             schedule=(0 if preset_index == 0 else 1),
             schedule_profile=f"{preset_index}",
         )
-
-        await self.async_set_hvac_mode(HVAC_MODE_HEAT)
