@@ -5,6 +5,7 @@ from unittest.mock import patch
 from pynut2.nut2 import PyNUTError
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components import zeroconf
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import (
     CONF_ALIAS,
@@ -34,7 +35,7 @@ async def test_form_zeroconf(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={CONF_HOST: "192.168.1.5", CONF_PORT: 1234},
+        data=zeroconf.ZeroconfServiceInfo(host="192.168.1.5", port=1234),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
