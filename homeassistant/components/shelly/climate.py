@@ -77,11 +77,9 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         """Initialize climate."""
         super().__init__(wrapper, sensor_block)
 
-        self.wrapper = wrapper
-        self.sensor_block = sensor_block
         self.device_block = device_block
 
-        assert self.sensor_block.channel
+        assert self.block.channel
 
         self.control_result: dict[str, Any] | None = None
 
@@ -89,7 +87,7 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
         self._attr_unique_id = self.wrapper.mac
         self._attr_preset_modes: list[str] = [
             PRESET_NONE,
-            *wrapper.device.settings["thermostats"][int(self.sensor_block.channel)][
+            *wrapper.device.settings["thermostats"][int(self.block.channel)][
                 "schedule_profile_names"
             ],
         ]
@@ -97,12 +95,12 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Set target temperature."""
-        return cast(float, self.sensor_block.targetTemp)
+        return cast(float, self.block.targetTemp)
 
     @property
     def current_temperature(self) -> float | None:
         """Return current temperature."""
-        return cast(float, self.sensor_block.temp)
+        return cast(float, self.block.temp)
 
     @property
     def available(self) -> bool:
