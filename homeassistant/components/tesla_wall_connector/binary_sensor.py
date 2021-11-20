@@ -27,7 +27,7 @@ class WallConnectorBinarySensorDescription(
     """Binary Sensor entity description."""
 
 
-wall_connector_sensors = [
+WALL_CONNECTOR_SENSORS = [
     WallConnectorBinarySensorDescription(
         key="vehicle_connected",
         name=prefix_entity_name("Vehicle connected"),
@@ -50,7 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     wall_connector = hass.data[DOMAIN][config_entry.entry_id]
 
     all_entities = []
-    for description in wall_connector_sensors:
+    for description in WALL_CONNECTOR_SENSORS:
         entity = WallConnectorBinarySensorEntity(wall_connector, description)
         if entity is not None:
             all_entities.append(entity)

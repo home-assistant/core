@@ -38,7 +38,7 @@ class WallConnectorSensorDescription(
     """Sensor entity description with a function pointer for getting sensor value."""
 
 
-wall_connector_sensors = [
+WALL_CONNECTOR_SENSORS = [
     WallConnectorSensorDescription(
         key="evse_state",
         name=prefix_entity_name("State"),
@@ -112,7 +112,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     wall_connector = hass.data[DOMAIN][config_entry.entry_id]
 
     all_entities = []
-    for description in wall_connector_sensors:
+    for description in WALL_CONNECTOR_SENSORS:
         entity = WallConnectorSensorEntity(wall_connector, description)
         if entity is not None:
             all_entities.append(entity)
