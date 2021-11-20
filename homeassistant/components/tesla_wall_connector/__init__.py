@@ -187,4 +187,4 @@ class WallConnectorEntity(CoordinatorEntity):
 class WallConnectorLambdaValueGetterMixin:
     """Mixin with a function pointer for getting sensor value."""
 
-    value_getter: Callable[[dict], Any]
+    value_fn: Callable[[dict], Any]

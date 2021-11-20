@@ -43,13 +43,13 @@ wall_connector_sensors = [
         key="evse_state",
         name=prefix_entity_name("State"),
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        value_getter=lambda data: data[WALLCONNECTOR_DATA_VITALS].evse_state,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].evse_state,
     ),
     WallConnectorSensorDescription(
         key="handle_temp_c",
         name=prefix_entity_name("Handle Temperature"),
         native_unit_of_measurement=TEMP_CELSIUS,
-        value_getter=lambda data: data[WALLCONNECTOR_DATA_VITALS].handle_temp_c,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].handle_temp_c,
         device_class=DEVICE_CLASS_TEMPERATURE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -58,7 +58,7 @@ wall_connector_sensors = [
         key="grid_v",
         name=prefix_entity_name("Grid Voltage"),
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        value_getter=lambda data: data[WALLCONNECTOR_DATA_VITALS].grid_v,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].grid_v,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
@@ -67,7 +67,7 @@ wall_connector_sensors = [
         key="grid_hz",
         name=prefix_entity_name("Grid Frequency"),
         native_unit_of_measurement=FREQUENCY_HERTZ,
-        value_getter=lambda data: data[WALLCONNECTOR_DATA_VITALS].grid_hz,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].grid_hz,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
@@ -75,7 +75,7 @@ wall_connector_sensors = [
         key="power",
         name=prefix_entity_name("Power"),
         native_unit_of_measurement=POWER_KILO_WATT,
-        value_getter=lambda data: round(
+        value_fn=lambda data: round(
             (
                 (
                     data[WALLCONNECTOR_DATA_VITALS].currentA_a
@@ -100,7 +100,7 @@ wall_connector_sensors = [
         key="total_energy_kWh",
         name=prefix_entity_name("Total Energy"),
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_getter=lambda data: data[WALLCONNECTOR_DATA_LIFETIME].energy_wh / 1000.0,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_LIFETIME].energy_wh / 1000.0,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_ENERGY,
     ),
@@ -138,4 +138,4 @@ class WallConnectorSensorEntity(WallConnectorEntity, SensorEntity):
         if self.coordinator.data is None:
             return None
 
-        return self.entity_description.value_getter(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data)

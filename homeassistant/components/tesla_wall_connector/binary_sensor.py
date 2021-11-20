@@ -32,14 +32,14 @@ wall_connector_sensors = [
         key="vehicle_connected",
         name=prefix_entity_name("Vehicle connected"),
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        value_getter=lambda data: data[WALLCONNECTOR_DATA_VITALS].vehicle_connected,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].vehicle_connected,
         device_class=DEVICE_CLASS_PLUG,
     ),
     WallConnectorBinarySensorDescription(
         key="contactor_closed",
         name=prefix_entity_name("Contactor closed"),
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        value_getter=lambda data: data[WALLCONNECTOR_DATA_VITALS].contactor_closed,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].contactor_closed,
         device_class=DEVICE_CLASS_BATTERY_CHARGING,
     ),
 ]
@@ -74,4 +74,4 @@ class WallConnectorBinarySensorEntity(WallConnectorEntity, BinarySensorEntity):
         if self.coordinator.data is None:
             return None
 
-        return self.entity_description.value_getter(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data)
