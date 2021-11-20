@@ -1,11 +1,9 @@
 """Constants for Plugwise beta component."""
 
-import voluptuous as vol
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.helpers import config_validation as cv
 
 API = "api"
 ATTR_ENABLED_DEFAULT = "enabled_default"
@@ -127,7 +125,6 @@ WATER_TEMP = "water_temperature"
 DHW_COMF_MODE = "dhw_cm_switch"
 LOCK = "lock"
 RELAY = "relay"
-
 
 # PLACEHOLDER --- Const for Plugwise USB-stick.
 

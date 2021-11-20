@@ -26,6 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # # PLACEHOLDER USB entry setup
     return await async_setup_entry_gateway(hass, config_entry, async_add_entities)
 
+
 async def async_setup_entry_gateway(hass, config_entry, async_add_entities):
     """Set up the Smile binary_sensors from a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
@@ -110,3 +111,4 @@ class GwBinarySensor(SmileGateway, BinarySensorEntity):
         self.async_write_ha_state()
 
 # PLACEHOLDER for class USBBinarySensor()
+

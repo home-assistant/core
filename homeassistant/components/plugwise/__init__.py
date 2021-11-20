@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 
 from .gateway import async_setup_entry_gw, async_unload_entry_gw
 
+
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Plugwise platform."""
     return True

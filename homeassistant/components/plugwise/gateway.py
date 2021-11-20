@@ -26,7 +26,6 @@ from homeassistant.const import (
 
 from .const import (
     API,
-    CLIMATE_DOMAIN,
     COORDINATOR,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
@@ -106,6 +105,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return True
+
 
 async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""

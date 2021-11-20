@@ -1,7 +1,6 @@
 """Plugwise Sensor component for Home Assistant."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ID, ATTR_NAME, ATTR_STATE
 from homeassistant.core import callback
@@ -25,6 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smile switches from a config entry."""
     # PLACEHOLDER for async_setup_entry_usb()
     return await async_setup_entry_gateway(hass, config_entry, async_add_entities)
+
 
 async def async_setup_entry_gateway(hass, config_entry, async_add_entities):
     """Set up the Smile sensors from a config entry."""
@@ -97,3 +97,4 @@ class GwSensor(SmileGateway, SensorEntity):
         self.async_write_ha_state()
 
 # PLACEHOLDER for class USBSensor()
+

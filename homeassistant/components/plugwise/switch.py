@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     ATTR_ID,
@@ -15,7 +14,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from plugwise.exceptions import PlugwiseException
-from plugwise.nodes import PlugwiseNode
 
 from .const import (
     API,
@@ -23,9 +21,7 @@ from .const import (
     DOMAIN,
     FW,
     PW_MODEL,
-    PW_TYPE,
     SMILE,
-    STICK,
     VENDOR,
 )
 from .gateway import SmileGateway
@@ -38,6 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smile switches from a config entry."""
     # PLACEHOLDER for async_setup_entry_usb()
     return await async_setup_entry_gateway(hass, config_entry, async_add_entities)
+
 
 async def async_setup_entry_gateway(hass, config_entry, async_add_entities):
     """Set up the Smile switches from a config entry."""
