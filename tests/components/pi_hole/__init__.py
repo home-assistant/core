@@ -29,10 +29,13 @@ ZERO_DATA = {
 SAMPLE_VERSIONS = {
     "core_current": 5.5,
     "core_latest": 5.6,
+    "core_update": True,
     "web_current": 5.7,
     "web_latest": 5.8,
+    "web_update": True,
     "FTL_current": 5.10,
-    "FTL_latest": 5.11
+    "FTL_latest": 5.11,
+    "FTL_update": True,
 }
 
 HOST = "1.2.3.4"
