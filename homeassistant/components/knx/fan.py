@@ -7,37 +7,35 @@ from typing import Any, Final
 from xknx import XKNX
 from xknx.devices import Fan as XknxFan
 
+from homeassistant import config_entries
 from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
-from .const import DOMAIN, KNX_ADDRESS
+from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, SupportedPlatforms
 from .knx_entity import KnxEntity
 from .schema import FanSchema
 
 DEFAULT_PERCENTAGE: Final = 50
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up fans for KNX platform."""
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-    platform_config = discovery_info["platform_config"]
+    """Set up fan(s) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][SupportedPlatforms.FAN.value]
 
-    async_add_entities(KNXFan(xknx, entity_config) for entity_config in platform_config)
+    async_add_entities(KNXFan(xknx, entity_config) for entity_config in config)
 
 
 class KNXFan(KnxEntity, FanEntity):

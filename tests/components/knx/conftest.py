@@ -8,13 +8,22 @@ import pytest
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.dpt import DPTArray, DPTBinary
+from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant.components.knx.const import DOMAIN as KNX_DOMAIN
+from homeassistant.components.knx import ConnectionSchema
+from homeassistant.components.knx.const import (
+    CONF_KNX_AUTOMATIC,
+    CONF_KNX_CONNECTION_TYPE,
+    CONF_KNX_INDIVIDUAL_ADDRESS,
+    DOMAIN as KNX_DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 class KNXTestKit:
@@ -22,9 +31,10 @@ class KNXTestKit:
 
     INDIVIDUAL_ADDRESS = "1.2.3"
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant, mock_config_entry: MockConfigEntry):
         """Init KNX test helper class."""
         self.hass: HomeAssistant = hass
+        self.mock_config_entry: MockConfigEntry = mock_config_entry
         self.xknx: XKNX
         # outgoing telegrams will be put in the Queue instead of sent to the interface
         # telegrams to an InternalGroupAddress won't be queued here
@@ -60,6 +70,7 @@ class KNXTestKit:
             return_value=knx_ip_interface_mock(),
             side_effect=fish_xknx,
         ):
+            self.mock_config_entry.add_to_hass(self.hass)
             await async_setup_component(self.hass, KNX_DOMAIN, {KNX_DOMAIN: config})
             await self.xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.CONNECTED
@@ -191,8 +202,23 @@ class KNXTestKit:
 
 
 @pytest.fixture
-async def knx(request, hass):
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="KNX",
+        domain=KNX_DOMAIN,
+        data={
+            CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
+            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+            ConnectionSchema.CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
+            CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
+        },
+    )
+
+
+@pytest.fixture
+async def knx(request, hass, mock_config_entry: MockConfigEntry):
     """Create a KNX TestKit instance."""
-    knx_test_kit = KNXTestKit(hass)
+    knx_test_kit = KNXTestKit(hass, mock_config_entry)
     yield knx_test_kit
     await knx_test_kit.assert_no_telegram()

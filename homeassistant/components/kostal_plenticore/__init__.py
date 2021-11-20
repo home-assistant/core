@@ -11,7 +11,7 @@ from .helper import Plenticore
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "switch", "select"]
+PLATFORMS = ["select", "sensor", "switch"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
