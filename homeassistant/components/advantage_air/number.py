@@ -8,7 +8,7 @@ from .entity import AdvantageAirEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up AdvantageAir toggle platform."""
+    """Set up AdvantageAir number platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
