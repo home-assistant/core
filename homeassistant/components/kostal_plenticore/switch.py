@@ -129,24 +129,18 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         if await self.coordinator.async_write_data(
             self.module_id, {self.data_id: self.on_value}
         ):
-            self._last_run_success = True
             self.coordinator.name = f"{self.platform_name} {self._name} {self.on_label}"
             await self.coordinator.async_request_refresh()
-        else:
-            self._last_run_success = False
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn device off."""
         if await self.coordinator.async_write_data(
             self.module_id, {self.data_id: self.off_value}
         ):
-            self._last_run_success = True
             self.coordinator.name = (
                 f"{self.platform_name} {self._name} {self.off_label}"
             )
             await self.coordinator.async_request_refresh()
-        else:
-            self._last_run_success = False
 
     @property
     def device_info(self) -> DeviceInfo:
