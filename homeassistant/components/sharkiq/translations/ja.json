@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                }
+            }
+        }
+    }
+}

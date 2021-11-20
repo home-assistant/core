@@ -9,7 +9,7 @@ from kasa.discover import Discover
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -32,10 +32,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, SmartDevice] = {}
         self._discovered_device: SmartDevice | None = None
 
-    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
         return await self._async_handle_discovery(
-            discovery_info[IP_ADDRESS], discovery_info[MAC_ADDRESS]
+            discovery_info[dhcp.IP_ADDRESS], discovery_info[dhcp.MAC_ADDRESS]
         )
 
     async def async_step_discovery(

@@ -322,7 +322,7 @@ async def async_setup_entry(
             device.name,
         )
 
-    async_add_entities(lights, True)
+    async_add_entities(lights)
     _async_setup_services(hass)
 
 
@@ -411,6 +411,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     _attr_color_mode = COLOR_MODE_BRIGHTNESS
     _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_should_poll = False
 
     def __init__(self, device, entry, custom_effects=None):
         """Initialize the Yeelight light."""
@@ -591,7 +592,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     async def async_update(self):
         """Update light properties."""
-        await self.device.async_update()
+        await self.device.async_update(True)
 
     async def async_set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off."""
@@ -842,6 +843,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     async def async_set_mode(self, mode: str):
         """Set a power mode."""
         await self._bulb.async_set_power_mode(PowerMode[mode.upper()])
+        self._async_schedule_state_check(True)
 
     @_async_cmd
     async def async_start_flow(self, transitions, count=0, action=ACTION_RECOVER):

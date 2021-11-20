@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "hassio_confirm": {
+                "title": "Home Assistant\u30a2\u30c9\u30aa\u30f3\u7d4c\u7531\u306eAlmond"
+            }
+        }
+    }
+}

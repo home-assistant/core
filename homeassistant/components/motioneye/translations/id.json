@@ -11,11 +11,27 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "hassio_confirm": {
+                "title": "motionEye melalui add-on Home Assistant"
+            },
             "user": {
                 "data": {
                     "admin_password": "Kata Sandi Admin",
                     "admin_username": "Nama Pengguna Admin",
+                    "surveillance_password": "Kata Sandi Surveillance",
+                    "surveillance_username": "Nama Pengguna Surveillance",
                     "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stream_url_template": "Templat URL streaming",
+                    "webhook_set": "Konfigurasikan webhook motionEye untuk melaporkan peristiwa ke Home Assistant",
+                    "webhook_set_overwrite": "Timpa webhook yang tidak dikenal"
                 }
             }
         }

@@ -1,11 +1,13 @@
 """Support for MQTT discovery."""
 import asyncio
 from collections import deque
+import datetime as dt
 import functools
 import json
 import logging
 import re
 import time
+from typing import TypedDict
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
@@ -27,6 +29,7 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
+from .models import ReceivePayloadType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +87,17 @@ def set_discovery_hash(hass, discovery_hash):
 
 class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
+
+
+class MqttServiceInfo(TypedDict):
+    """Prepared info from mqtt entries."""
+
+    topic: str
+    payload: ReceivePayloadType
+    qos: int
+    retain: bool
+    subscribed_topic: str
+    timestamp: dt.datetime
 
 
 async def async_start(  # noqa: C901
@@ -288,14 +302,14 @@ async def async_start(  # noqa: C901
                 if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
                     return
 
-                data = {
-                    "topic": msg.topic,
-                    "payload": msg.payload,
-                    "qos": msg.qos,
-                    "retain": msg.retain,
-                    "subscribed_topic": msg.subscribed_topic,
-                    "timestamp": msg.timestamp,
-                }
+                data = MqttServiceInfo(
+                    topic=msg.topic,
+                    payload=msg.payload,
+                    qos=msg.qos,
+                    retain=msg.retain,
+                    subscribed_topic=msg.subscribed_topic,
+                    timestamp=msg.timestamp,
+                )
                 result = await hass.config_entries.flow.async_init(
                     integration, context={"source": DOMAIN}, data=data
                 )

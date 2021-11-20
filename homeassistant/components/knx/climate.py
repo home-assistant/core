@@ -268,10 +268,10 @@ class KNXClimate(KnxEntity, ClimateEntity):
             return CURRENT_HVAC_OFF
         if self._device.is_active is False:
             return CURRENT_HVAC_IDLE
-        if self._device.mode is not None and self._device.mode.supports_controller_mode:
-            return CURRENT_HVAC_ACTIONS.get(
-                self._device.mode.controller_mode.value, CURRENT_HVAC_IDLE
-            )
+        if (
+            self._device.mode is not None and self._device.mode.supports_controller_mode
+        ) or self._device.is_active:
+            return CURRENT_HVAC_ACTIONS.get(self.hvac_mode, CURRENT_HVAC_IDLE)
         return None
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:

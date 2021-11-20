@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "id_exists": "\u30b2\u30fc\u30c8\u30a6\u30a7\u30a4ID\u306f\u3059\u3067\u306b\u5b58\u5728\u3057\u307e\u3059"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "\u30d1\u30b9\u307e\u305f\u306fURL",
+                    "id": "ID"
+                },
+                "title": "OpenTherm\u30b2\u30fc\u30c8\u30a6\u30a7\u30a4"
+            }
+        }
+    }
+}

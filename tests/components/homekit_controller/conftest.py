@@ -30,5 +30,5 @@ def controller(hass):
 
 
 @pytest.fixture(autouse=True)
-def homekit_mock_zeroconf(mock_zeroconf):
-    """Mock zeroconf in all homekit tests."""
+def hk_mock_async_zeroconf(mock_async_zeroconf):
+    """Auto mock zeroconf."""

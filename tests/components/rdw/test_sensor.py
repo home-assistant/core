@@ -34,13 +34,13 @@ async def test_vehicle_sensors(
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
-    state = hass.states.get("sensor.name_registration_date")
-    entry = entity_registry.async_get("sensor.name_registration_date")
+    state = hass.states.get("sensor.ascription_date")
+    entry = entity_registry.async_get("sensor.ascription_date")
     assert entry
     assert state
-    assert entry.unique_id == "11ZKZ3_name_registration_date"
+    assert entry.unique_id == "11ZKZ3_ascription_date"
     assert state.state == "2021-11-04"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Name Registration Date"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Ascription Date"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_DATE
     assert ATTR_ICON not in state.attributes
     assert ATTR_STATE_CLASS not in state.attributes

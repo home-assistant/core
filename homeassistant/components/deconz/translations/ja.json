@@ -7,9 +7,16 @@
         "error": {
             "no_key": "API\u30ad\u30fc\u3092\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f"
         },
+        "flow_title": "{host}",
         "step": {
             "link": {
                 "title": "deCONZ\u3068\u30ea\u30f3\u30af\u3059\u308b"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
             }
         }
     },
@@ -17,7 +24,24 @@
         "trigger_subtype": {
             "both_buttons": "\u4e21\u65b9\u306e\u30dc\u30bf\u30f3",
             "button_1": "1\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
-            "button_2": "2\u756a\u76ee\u306e\u30dc\u30bf\u30f3"
+            "button_2": "2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_3": "3\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_4": "4\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_5": "5\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_6": "6\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_7": "7\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_8": "8\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "close": "\u9589\u3058\u308b",
+            "dim_down": "\u8584\u6697\u304f\u3059\u308b",
+            "dim_up": "\u8584\u660e\u308b\u304f\u3059\u308b",
+            "left": "\u5de6",
+            "right": "\u53f3",
+            "side_1": "\u30b5\u30a4\u30c91",
+            "turn_off": "\u30aa\u30d5\u306b\u3059\u308b",
+            "turn_on": "\u30aa\u30f3\u306b\u3059\u308b"
+        },
+        "trigger_type": {
+            "remote_gyro_activated": "\u30c7\u30d0\u30a4\u30b9\u304c\u63fa\u308c\u308b"
         }
     }
 }

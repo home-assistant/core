@@ -223,7 +223,8 @@ def test_is_registered(registry):
 async def test_loading_extra_values(hass, hass_storage):
     """Test we load extra data from the registry."""
     hass_storage[er.STORAGE_KEY] = {
-        "version": er.STORAGE_VERSION,
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": 1,
         "data": {
             "entities": [
                 {
@@ -387,7 +388,8 @@ async def test_migration(hass):
 async def test_loading_invalid_entity_id(hass, hass_storage):
     """Test we autofix invalid entity IDs."""
     hass_storage[er.STORAGE_KEY] = {
-        "version": er.STORAGE_VERSION,
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
         "data": {
             "entities": [
                 {

@@ -231,7 +231,7 @@ homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/honeywell/* @rdfurman
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
-homeassistant/components/hue/* @balloob @frenck
+homeassistant/components/hue/* @balloob @frenck @marcelveldt
 homeassistant/components/huisbaasje/* @dennisschroer
 homeassistant/components/humidifier/* @home-assistant/core @Shulyaka
 homeassistant/components/hunterdouglas_powerview/* @bdraco
@@ -265,6 +265,7 @@ homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/islamic_prayer_times/* @engrbm87
 homeassistant/components/isy994/* @bdraco @shbatm
 homeassistant/components/izone/* @Swamp-Ig
+homeassistant/components/jellyfin/* @j-stienstra
 homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/juicenet/* @jesserockz
 homeassistant/components/kaiterra/* @Michsior14

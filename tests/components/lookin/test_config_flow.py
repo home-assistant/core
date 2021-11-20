@@ -6,6 +6,7 @@ from unittest.mock import patch
 from aiolookin import NoUsableService
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.lookin.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -138,7 +139,7 @@ async def test_discovered_zeroconf(hass):
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     zc_data_new_ip = ZEROCONF_DATA.copy()
-    zc_data_new_ip["host"] = "127.0.0.2"
+    zc_data_new_ip[zeroconf.ATTR_HOST] = "127.0.0.2"
 
     with _patch_get_info(), patch(
         f"{MODULE}.async_setup_entry", return_value=True

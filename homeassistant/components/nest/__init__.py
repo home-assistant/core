@@ -8,7 +8,6 @@ from google_nest_sdm.exceptions import (
     ConfigurationException,
     GoogleNestException,
 )
-from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,15 +21,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_entry_oauth2_flow,
-    config_validation as cv,
-)
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
 from .const import (
+    CONF_PROJECT_ID,
+    CONF_SUBSCRIBER_ID,
+    DATA_NEST_CONFIG,
     DATA_SDM,
     DATA_SUBSCRIBER,
     DOMAIN,
@@ -43,9 +41,6 @@ from .legacy import async_setup_legacy, async_setup_legacy_entry
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PROJECT_ID = "project_id"
-CONF_SUBSCRIBER_ID = "subscriber_id"
-DATA_NEST_CONFIG = "nest_config"
 DATA_NEST_UNAVAILABLE = "nest_unavailable"
 
 NEST_SETUP_NOTIFICATION = "nest_setup"
@@ -199,24 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
-
-    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
-
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    auth = api.AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass),
-        session,
-        config[CONF_CLIENT_ID],
-        config[CONF_CLIENT_SECRET],
-    )
-    subscriber = GoogleNestSubscriber(
-        auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
-    )
+    subscriber = await api.new_subscriber(hass, entry)
     callback = SignalUpdateCallback(hass)
     subscriber.set_update_callback(callback.async_handle_event)
 

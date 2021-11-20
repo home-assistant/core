@@ -65,7 +65,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         self.entity_description = SENSOR_TYPES[self._attribute]
         self._name = f"{self.get_device_name()} {self.entity_description.name}"
         self._unique_id = f"{self._mac}-{self._attribute}"
-        self._state = self._device[self._attribute]
+        self._state = self._device.get(self._attribute)
 
     @property
     def native_value(self):
@@ -77,7 +77,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
         self._active = self._device["active"]
-        if self._device[self._attribute] is not None:
+        if self._device.get(self._attribute) is not None:
             self._state = self._device[self._attribute]
 
         self.async_write_ha_state()

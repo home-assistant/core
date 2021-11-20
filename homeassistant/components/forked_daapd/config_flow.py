@@ -6,8 +6,10 @@ from pyforked_daapd import ForkedDaapdAPI
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -153,35 +155,36 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=vol.Schema(DATA_SCHEMA_DICT), errors={}
         )
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Prepare configuration for a discovered forked-daapd device."""
         version_num = 0
-        if discovery_info.get("properties") and discovery_info["properties"].get(
-            "Machine Name"
-        ):
+        zeroconf_properties = discovery_info[zeroconf.ATTR_PROPERTIES]
+        if zeroconf_properties.get("Machine Name"):
             with suppress(ValueError):
                 version_num = int(
-                    discovery_info["properties"].get("mtd-version", "0").split(".")[0]
+                    zeroconf_properties.get("mtd-version", "0").split(".")[0]
                 )
         if version_num < 27:
             return self.async_abort(reason="not_forked_daapd")
-        await self.async_set_unique_id(discovery_info["properties"]["Machine Name"])
+        await self.async_set_unique_id(zeroconf_properties["Machine Name"])
         self._abort_if_unique_id_configured()
 
         # Update title and abort if we already have an entry for this host
         for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) != discovery_info["host"]:
+            if entry.data.get(CONF_HOST) != discovery_info[zeroconf.ATTR_HOST]:
                 continue
             self.hass.config_entries.async_update_entry(
                 entry,
-                title=discovery_info["properties"]["Machine Name"],
+                title=zeroconf_properties["Machine Name"],
             )
             return self.async_abort(reason="already_configured")
 
         zeroconf_data = {
-            CONF_HOST: discovery_info["host"],
-            CONF_PORT: int(discovery_info["port"]),
-            CONF_NAME: discovery_info["properties"]["Machine Name"],
+            CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
+            CONF_PORT: discovery_info[zeroconf.ATTR_PORT],
+            CONF_NAME: zeroconf_properties["Machine Name"],
         }
         self.discovery_schema = vol.Schema(fill_in_schema_dict(zeroconf_data))
         self.context.update({"title_placeholders": zeroconf_data})

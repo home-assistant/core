@@ -8,8 +8,9 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import async_get_device_info
@@ -85,25 +86,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return info, None
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle DHCP discovery."""
-        self.discovered_ip = discovery_info[IP_ADDRESS]
-        self.discovered_name = discovery_info[HOSTNAME]
+        self.discovered_ip = discovery_info[dhcp.IP_ADDRESS]
+        self.discovered_name = discovery_info[dhcp.HOSTNAME]
         return await self.async_step_discovery_confirm()
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        self.discovered_ip = discovery_info[CONF_HOST]
-        name = discovery_info[CONF_NAME]
+        self.discovered_ip = discovery_info[zeroconf.ATTR_HOST]
+        name = discovery_info[zeroconf.ATTR_NAME]
         if name.endswith(POWERVIEW_SUFFIX):
             name = name[: -len(POWERVIEW_SUFFIX)]
         self.discovered_name = name
         return await self.async_step_discovery_confirm()
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle HomeKit discovery."""
-        self.discovered_ip = discovery_info[CONF_HOST]
-        name = discovery_info[CONF_NAME]
+        self.discovered_ip = discovery_info[zeroconf.ATTR_HOST]
+        name = discovery_info[zeroconf.ATTR_NAME]
         if name.endswith(HAP_SUFFIX):
             name = name[: -len(HAP_SUFFIX)]
         self.discovered_name = name

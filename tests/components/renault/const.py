@@ -4,6 +4,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PLUG,
     DOMAIN as BINARY_SENSOR_DOMAIN,
 )
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.renault.const import (
     CONF_KAMEREON_ACCOUNT_ID,
@@ -115,6 +116,20 @@ MOCK_VEHICLES = {
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_charging",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charging",
+            },
+        ],
+        BUTTON_DOMAIN: [
+            {
+                ATTR_ENTITY_ID: "button.reg_number_start_air_conditioner",
+                ATTR_ICON: "mdi:air-conditioner",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_start_air_conditioner",
+            },
+            {
+                ATTR_ENTITY_ID: "button.reg_number_start_charge",
+                ATTR_ICON: "mdi:ev-station",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_start_charge",
             },
         ],
         DEVICE_TRACKER_DOMAIN: [],
@@ -249,6 +264,20 @@ MOCK_VEHICLES = {
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_charging",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charging",
+            },
+        ],
+        BUTTON_DOMAIN: [
+            {
+                ATTR_ENTITY_ID: "button.reg_number_start_air_conditioner",
+                ATTR_ICON: "mdi:air-conditioner",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_start_air_conditioner",
+            },
+            {
+                ATTR_ENTITY_ID: "button.reg_number_start_charge",
+                ATTR_ICON: "mdi:ev-station",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777999_start_charge",
             },
         ],
         DEVICE_TRACKER_DOMAIN: [
@@ -389,6 +418,20 @@ MOCK_VEHICLES = {
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_charging",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charging",
+            },
+        ],
+        BUTTON_DOMAIN: [
+            {
+                ATTR_ENTITY_ID: "button.reg_number_start_air_conditioner",
+                ATTR_ICON: "mdi:air-conditioner",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_start_air_conditioner",
+            },
+            {
+                ATTR_ENTITY_ID: "button.reg_number_start_charge",
+                ATTR_ICON: "mdi:ev-station",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_start_charge",
             },
         ],
         DEVICE_TRACKER_DOMAIN: [
@@ -532,6 +575,14 @@ MOCK_VEHICLES = {
             "location": "location.json",
         },
         BINARY_SENSOR_DOMAIN: [],
+        BUTTON_DOMAIN: [
+            {
+                ATTR_ENTITY_ID: "button.reg_number_start_air_conditioner",
+                ATTR_ICON: "mdi:air-conditioner",
+                ATTR_STATE: STATE_UNKNOWN,
+                ATTR_UNIQUE_ID: "vf1aaaaa555777123_start_air_conditioner",
+            },
+        ],
         DEVICE_TRACKER_DOMAIN: [
             {
                 ATTR_ENTITY_ID: "device_tracker.reg_number_location",

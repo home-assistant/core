@@ -1,14 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
-            "resources_not_available": "No known resources found"
+            "already_configured": "Device is already configured"
         },
         "error": {
             "cannot_connect": "Failed to connect",
             "unknown": "Unexpected error"
         },
         "step": {
+            "resources": {
+                "data": {
+                    "resources": "Resources"
+                },
+                "title": "Choose the Resources to Monitor"
+            },
             "ups": {
                 "data": {
                     "alias": "Alias",
@@ -28,11 +33,17 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
         "step": {
             "init": {
                 "data": {
+                    "resources": "Resources",
                     "scan_interval": "Scan Interval (seconds)"
-                }
+                },
+                "description": "Choose Sensor Resources."
             }
         }
     }

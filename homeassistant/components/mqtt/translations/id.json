@@ -61,13 +61,16 @@
                     "port": "Port",
                     "username": "Nama Pengguna"
                 },
-                "description": "Masukkan informasi koneksi broker MQTT Anda."
+                "description": "Masukkan informasi koneksi broker MQTT Anda.",
+                "title": "Opsi broker"
             },
             "options": {
                 "data": {
-                    "discovery": "Aktifkan penemuan"
+                    "discovery": "Aktifkan penemuan",
+                    "will_enable": "Aktifkan pesan 'will'"
                 },
-                "description": "Pilih opsi MQTT."
+                "description": "Penemuan - Jika penemuan diaktifkan (disarankan), Home Assistant akan secara otomatis menemukan perangkat dan entitas yang mempublikasikan konfigurasinya di broker MQTT. Jika penemuan dinonaktifkan, semua konfigurasi harus dilakukan secara manual.\nPesan birth - Pesan birth akan dikirim setiap kali Home Assistant terhubung (kembali) ke broker MQTT.\nPesan will akan dikirim setiap kali Home Assistant kehilangan koneksi ke broker, baik dalam kasus bersih (misalnya Home Assistant dimatikan) dan dalam kasus (misalnya Home Assistant mogok atau kehilangan koneksi jaringan) terputus yang tidak bersih.",
+                "title": "Opsi MQTT"
             }
         }
     }
