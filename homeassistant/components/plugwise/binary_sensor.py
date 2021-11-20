@@ -5,14 +5,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_ID, ATTR_NAME
 from homeassistant.core import callback
 
-from .const import (
-    COORDINATOR,
-    DOMAIN,
-    FW,
-    PW_MODEL,
-    SMILE,
-    VENDOR,
-)
+from .const import COORDINATOR, DOMAIN, FW, PW_MODEL, SMILE, VENDOR
 from .gateway import SmileGateway
 from .models import PW_BINARY_SENSOR_TYPES, PlugwiseBinarySensorEntityDescription
 from .smile_helpers import GWBinarySensor
@@ -108,5 +101,6 @@ class GwBinarySensor(SmileGateway, BinarySensorEntity):
                 )
 
         self.async_write_ha_state()
+
 
 # PLACEHOLDER for class USBBinarySensor()

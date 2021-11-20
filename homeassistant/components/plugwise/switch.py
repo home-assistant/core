@@ -3,27 +3,13 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import (
-    ATTR_ID,
-    ATTR_NAME,
-    ATTR_STATE,
-    STATE_OFF,
-    STATE_ON,
-)
-from homeassistant.core import callback
-
 from plugwise.exceptions import PlugwiseException
 
-from .const import (
-    API,
-    COORDINATOR,
-    DOMAIN,
-    FW,
-    PW_MODEL,
-    SMILE,
-    VENDOR,
-)
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import ATTR_ID, ATTR_NAME, ATTR_STATE, STATE_OFF, STATE_ON
+from homeassistant.core import callback
+
+from .const import API, COORDINATOR, DOMAIN, FW, PW_MODEL, SMILE, VENDOR
 from .gateway import SmileGateway
 from .models import PW_SWITCH_TYPES, PlugwiseSwitchEntityDescription
 
@@ -124,7 +110,9 @@ class GwSwitch(SmileGateway, SwitchEntity):
                 self.async_write_ha_state()
                 _LOGGER.debug("Turn Plugwise switch.%s on", self._attr_name)
         except PlugwiseException:
-            _LOGGER.error("Error: failed to turn Plugwise switch.%s on", self._attr_name)
+            _LOGGER.error(
+                "Error: failed to turn Plugwise switch.%s on", self._attr_name
+            )
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
@@ -137,7 +125,9 @@ class GwSwitch(SmileGateway, SwitchEntity):
                 self.async_write_ha_state()
                 _LOGGER.debug("Turn Plugwise switch.%s on", self._attr_name)
         except PlugwiseException:
-            _LOGGER.error("Error: failed to turn Plugwise switch.%s off", self._attr_name)
+            _LOGGER.error(
+                "Error: failed to turn Plugwise switch.%s off", self._attr_name
+            )
 
     @callback
     def _async_process_data(self):

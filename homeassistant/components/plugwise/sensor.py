@@ -5,14 +5,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ID, ATTR_NAME, ATTR_STATE
 from homeassistant.core import callback
 
-from .const import (
-    COORDINATOR,
-    DOMAIN,
-    FW,
-    PW_MODEL,
-    SMILE,
-    VENDOR,
-)
+from .const import COORDINATOR, DOMAIN, FW, PW_MODEL, SMILE, VENDOR
 from .gateway import SmileGateway
 from .models import PW_SENSOR_TYPES, PlugwiseSensorEntityDescription
 from .smile_helpers import icon_selector
@@ -95,5 +88,6 @@ class GwSensor(SmileGateway, SensorEntity):
             self._attr_icon = icon_selector(self._attr_native_value, None)
 
         self.async_write_ha_state()
+
 
 # PLACEHOLDER for class USBSensor()
