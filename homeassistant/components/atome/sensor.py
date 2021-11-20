@@ -114,7 +114,7 @@ class AtomeData:
     def _retrieve_live(self):
         error_during_retrieve = False
         values = self.atome_client.get_live()
-        if values.get("last") and values.get("subscribed") and values.get("isConnected"):    
+        if values.get("last") and values.get("subscribed") and values.get("isConnected"):
             self._live_power = values["last"]
             self._subscribed_power = values["subscribed"]
             self._is_connected = values["isConnected"]
