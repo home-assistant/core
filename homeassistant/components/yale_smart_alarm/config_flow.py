@@ -92,13 +92,12 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors={"base": "invalid_auth"},
                 )
             except requests.HTTPError as error:
-                if "401 Client Error" in str(error):
-                    LOGGER.error("Authentication failed. Check credentials %s", error)
-                    return self.async_show_form(
-                        step_id="reauth_confirm",
-                        data_schema=DATA_SCHEMA,
-                        errors={"base": "invalid_auth"},
-                    )
+                LOGGER.error("Cannot connect %s", error)
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=DATA_SCHEMA,
+                    errors={"base": "cannot_connect"},
+                )
 
             existing_entry = await self.async_set_unique_id(username)
             if existing_entry:
@@ -141,13 +140,12 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors={"base": "invalid_auth"},
                 )
             except requests.HTTPError as error:
-                if "401 Client Error" in str(error):
-                    LOGGER.error("Authentication failed. Check credentials %s", error)
-                    return self.async_show_form(
-                        step_id="user",
-                        data_schema=DATA_SCHEMA,
-                        errors={"base": "invalid_auth"},
-                    )
+                LOGGER.error("Cannot connect %s", error)
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=DATA_SCHEMA,
+                    errors={"base": "cannot_connect"},
+                )
 
             await self.async_set_unique_id(username)
             self._abort_if_unique_id_configured()

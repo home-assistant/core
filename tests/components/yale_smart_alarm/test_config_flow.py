@@ -58,13 +58,15 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    "side_effect, checkrun",
     [
-        (AuthenticationError,),
-        (requests.HTTPError("401 Client Error: Unauthorized for url"),),
+        (AuthenticationError, 1),
+        (requests.HTTPError("Error"), 2),
     ],
 )
-async def test_form_invalid_auth(hass: HomeAssistant, side_effect: Any) -> None:
+async def test_form_invalid_auth(
+    hass: HomeAssistant, side_effect: Any, checkrun: int
+) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -86,7 +88,12 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect: Any) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
+    if checkrun == 1:
+        assert result2["step_id"] == "user"
+        assert result2["errors"] == {"base": "invalid_auth"}
+    else:
+        assert result2["step_id"] == "user"
+        assert result2["errors"] == {"base": "cannot_connect"}
 
 
 @pytest.mark.parametrize(
@@ -198,13 +205,15 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    "side_effect, checkrun",
     [
-        (AuthenticationError,),
-        (requests.HTTPError("401 Client Error: Unauthorized for url"),),
+        (AuthenticationError, 1),
+        (requests.HTTPError("Client Error"), 2),
     ],
 )
-async def test_reauth_flow_invalid_login(hass: HomeAssistant, side_effect: Any) -> None:
+async def test_reauth_flow_invalid_login(
+    hass: HomeAssistant, side_effect: Any, checkrun: int
+) -> None:
     """Test a reauthentication flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -239,9 +248,13 @@ async def test_reauth_flow_invalid_login(hass: HomeAssistant, side_effect: Any) 
         )
         await hass.async_block_till_done()
 
-    assert result2["step_id"] == "reauth_confirm"
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
+    if checkrun == 1:
+        assert result2["step_id"] == "reauth_confirm"
+        assert result2["errors"] == {"base": "invalid_auth"}
+    else:
+        assert result2["step_id"] == "user"
+        assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
