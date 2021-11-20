@@ -57,23 +57,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     wall_connector = WallConnector(host=hostname, session=async_get_clientsession(hass))
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        WALLCONNECTOR_CLIENT: wall_connector,
-        WALLCONNECTOR_HOST: hostname,
-    }
-
     try:
         version_data = await wall_connector.async_get_version()
     except WallConnectorError as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data[DOMAIN][entry.entry_id].update(
-        {
-            WALLCONNECTOR_PART_NUMBER: version_data.part_number,
-            WALLCONNECTOR_FIRMWARE_VERSION: version_data.firmware_version,
-            WALLCONNECTOR_SERIAL_NUMBER: version_data.serial_number,
-        }
-    )
+    hass.data[DOMAIN][entry.entry_id] = {
+        WALLCONNECTOR_CLIENT: wall_connector,
+        WALLCONNECTOR_HOST: hostname,
+        WALLCONNECTOR_PART_NUMBER: version_data.part_number,
+        WALLCONNECTOR_FIRMWARE_VERSION: version_data.firmware_version,
+        WALLCONNECTOR_SERIAL_NUMBER: version_data.serial_number,
+    }
 
     async def async_update_data():
         """Fetch new data from the Wall Connector."""
