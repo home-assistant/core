@@ -14,8 +14,16 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "title": "ISY994\u30aa\u30d7\u30b7\u30e7\u30f3"
+            }
+        }
+    },
     "system_health": {
         "info": {
+            "device_connected": "ISY\u63a5\u7d9a\u6e08",
             "host_reachable": "\u30db\u30b9\u30c8\u5230\u9054\u53ef\u80fd",
             "websocket_status": "\u30a4\u30d9\u30f3\u30c8\u30bd\u30b1\u30c3\u30c8 \u30b9\u30c6\u30fc\u30bf\u30b9"
         }
