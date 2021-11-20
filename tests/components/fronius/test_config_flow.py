@@ -1,4 +1,4 @@
-"""Test the fronius config flow."""
+"""Test the Fronius config flow."""
 from unittest.mock import patch
 
 from pyfronius import FroniusError
@@ -13,9 +13,18 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
+from . import mock_responses
+
 from tests.common import MockConfigEntry
 
-INVERTER_INFO_RETURN_VALUE = {"inverters": [{"unique_id": {"value": "1234567"}}]}
+INVERTER_INFO_RETURN_VALUE = {
+    "inverters": [
+        {
+            "device_id": {"value": "1"},
+            "unique_id": {"value": "1234567"},
+        }
+    ]
+}
 LOGGER_INFO_RETURN_VALUE = {"unique_identifier": {"value": "123.4567"}}
 
 
@@ -183,35 +192,45 @@ async def test_form_already_existing(hass):
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_updates_host(hass):
+async def test_form_updates_host(hass, aioclient_mock):
     """Test existing entry gets updated."""
-    MockConfigEntry(
-        domain=DOMAIN, unique_id="123.4567", data={CONF_HOST: "different host"}
-    ).add_to_hass(hass)
+    old_host = "http://10.1.0.1"
+    new_host = "http://10.1.0.2"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123.4567890",  # has to match mocked logger unique_id
+        data={
+            CONF_HOST: old_host,
+            "is_logger": True,
+        },
+    )
+    entry.add_to_hass(hass)
+    mock_responses(aioclient_mock, host=old_host)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with patch(
-        "homeassistant.components.fronius.config_flow.Fronius.current_logger_info",
-        return_value=LOGGER_INFO_RETURN_VALUE,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "10.9.8.1",
-            },
-        )
-        await hass.async_block_till_done()
+
+    mock_responses(aioclient_mock, host=new_host)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": new_host,
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "entry_update_successful"
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].title == "SolarNet Datalogger at 10.9.8.1"
+    assert entries[0].title == f"SolarNet Datalogger at {new_host}"
     assert entries[0].data == {
-        "host": "10.9.8.1",
+        "host": new_host,
         "is_logger": True,
     }
