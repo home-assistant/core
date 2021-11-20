@@ -413,8 +413,7 @@ class HomeAccessory(Accessory):
     @ha_callback
     def async_update_linked_battery_callback(self, event):
         """Handle linked battery sensor state change listener callback."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
         if self.linked_battery_charging_sensor:
             battery_charging_state = None
@@ -425,8 +424,7 @@ class HomeAccessory(Accessory):
     @ha_callback
     def async_update_linked_battery_charging_callback(self, event):
         """Handle linked battery charging sensor state change listener callback."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
         self.async_update_battery(None, new_state.state == STATE_ON)
 
@@ -524,8 +522,7 @@ class HomeBridge(Bridge):
 
     async def async_get_snapshot(self, info):
         """Get snapshot from accessory if supported."""
-        acc = self.accessories.get(info["aid"])
-        if acc is None:
+        if (acc := self.accessories.get(info["aid"])) is None:
             raise ValueError("Requested snapshot for missing accessory")
         if not hasattr(acc, "async_get_snapshot"):
             raise ValueError(

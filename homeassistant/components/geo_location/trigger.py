@@ -52,8 +52,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
         if not source_match(from_state, source) and not source_match(to_state, source):
             return
 
-        zone_state = hass.states.get(zone_entity_id)
-        if zone_state is None:
+        if (zone_state := hass.states.get(zone_entity_id)) is None:
             _LOGGER.warning(
                 "Unable to execute automation %s: Zone %s not found",
                 automation_info["name"],

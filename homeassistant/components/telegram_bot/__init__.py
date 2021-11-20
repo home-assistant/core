@@ -329,8 +329,7 @@ async def async_setup(hass, config):
         """Handle sending Telegram Bot message service calls."""
 
         def _render_template_attr(data, attribute):
-            attribute_templ = data.get(attribute)
-            if attribute_templ:
+            if attribute_templ := data.get(attribute):
                 if any(
                     isinstance(attribute_templ, vtype) for vtype in (float, int, str)
                 ):

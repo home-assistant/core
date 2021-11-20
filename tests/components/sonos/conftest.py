@@ -39,6 +39,7 @@ class SonosMockEvent:
         base, count = self.variables[var_name].split(":")
         newcount = int(count) + 1
         self.variables[var_name] = ":".join([base, str(newcount)])
+        return self.variables[var_name]
 
 
 @pytest.fixture(name="config_entry")
@@ -92,7 +93,7 @@ def discover_fixture(soco):
     async def do_callback(hass, callback, *args, **kwargs):
         await callback(
             {
-                ssdp.ATTR_UPNP_UDN: soco.uid,
+                ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
                 ssdp.ATTR_SSDP_LOCATION: f"http://{soco.ip_address}/",
             },
             ssdp.SsdpChange.ALIVE,
@@ -114,8 +115,8 @@ def config_fixture():
 @pytest.fixture(name="music_library")
 def music_library_fixture():
     """Create music_library fixture."""
-    music_library = Mock()
-    music_library.get_sonos_favorites.return_value = []
+    music_library = MagicMock()
+    music_library.get_sonos_favorites.return_value.update_id = 1
     return music_library
 
 
@@ -125,12 +126,13 @@ def alarm_clock_fixture():
     alarm_clock = SonosMockService("AlarmClock")
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
+        "CurrentAlarmListVersion": "RINCON_test:14",
         "CurrentAlarmList": "<Alarms>"
         '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
         'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
         'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
         'IncludeLinkedZones="0"/>'
-        "</Alarms> "
+        "</Alarms>",
     }
     return alarm_clock
 
@@ -141,6 +143,7 @@ def alarm_clock_fixture_extended():
     alarm_clock = SonosMockService("AlarmClock")
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
+        "CurrentAlarmListVersion": "RINCON_test:15",
         "CurrentAlarmList": "<Alarms>"
         '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
         'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
@@ -150,7 +153,7 @@ def alarm_clock_fixture_extended():
         'Recurrence="DAILY" Enabled="1" RoomUUID="RINCON_test" '
         'ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" '
         'Volume="25" IncludeLinkedZones="0"/>'
-        "</Alarms> "
+        "</Alarms>",
     }
     return alarm_clock
 
@@ -160,6 +163,7 @@ def speaker_info_fixture():
     """Create speaker_info fixture."""
     return {
         "zone_name": "Zone A",
+        "uid": "RINCON_test",
         "model_name": "Model Name",
         "software_version": "49.2-64250",
         "mac_address": "00-11-22-33-44-55",
@@ -202,3 +206,9 @@ def alarm_event_fixture(soco):
     }
 
     return SonosMockEvent(soco, soco.alarmClock, variables)
+
+
+@pytest.fixture(autouse=True)
+def mock_get_source_ip(mock_get_source_ip):
+    """Mock network util's async_get_source_ip in all sonos tests."""
+    return mock_get_source_ip

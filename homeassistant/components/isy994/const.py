@@ -183,8 +183,6 @@ TYPE_CATEGORY_X10 = "113."
 TYPE_EZIO2X4 = "7.3.255."
 TYPE_INSTEON_MOTION = ("16.1.", "16.22.")
 
-UNDO_UPDATE_LISTENER = "undo_update_listener"
-
 # Used for discovery
 UDN_UUID_PREFIX = "uuid:"
 ISY_URL_POSTFIX = "/desc"

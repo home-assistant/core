@@ -29,7 +29,6 @@ ATTR_WEB_CURRENT = "web_current"
 ATTR_WEB_LATEST = "web_latest"
 ATTR_FTL_CURRENT = "FTL_current"
 ATTR_FTL_LATEST = "FTL_latest"
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 DATA_KEY_API = "api"

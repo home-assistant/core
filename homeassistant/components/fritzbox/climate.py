@@ -114,9 +114,9 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return the current operation mode."""
-        if (
-            self.device.target_temperature == OFF_REPORT_SET_TEMPERATURE
-            or self.device.target_temperature == OFF_API_TEMPERATURE
+        if self.device.target_temperature in (
+            OFF_REPORT_SET_TEMPERATURE,
+            OFF_API_TEMPERATURE,
         ):
             return HVAC_MODE_OFF
 

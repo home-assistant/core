@@ -33,14 +33,20 @@
             "button": "Taste",
             "button1": "Erste Taste",
             "button2": "Zweite Taste",
-            "button3": "Dritte Taste"
+            "button3": "Dritte Taste",
+            "button4": "Vierte Taste"
         },
         "trigger_type": {
+            "btn_down": "{subtype} Taste nach unten",
+            "btn_up": "{subtype} Taste nach oben",
             "double": "{subtype} zweifach bet\u00e4tigt",
-            "long": "{subtype} gehalten",
+            "double_push": "{subtype} Doppel-Druck",
+            "long": "{subtype} lange angeklickt",
+            "long_push": "{subtype} langer Druck",
             "long_single": "{subtype} gehalten und dann einfach bet\u00e4tigt",
             "single": "{subtype} einfach bet\u00e4tigt",
             "single_long": "{subtype} einfach bet\u00e4tigt und dann gehalten",
+            "single_push": "{subtype} einfacher Druck",
             "triple": "{subtype} dreifach bet\u00e4tigt"
         }
     }

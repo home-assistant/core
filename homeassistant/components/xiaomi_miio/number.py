@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import DEGREE, TIME_MINUTES
+from homeassistant.const import DEGREE, ENTITY_CATEGORY_CONFIG, TIME_MINUTES
 from homeassistant.core import callback
 
 from .const import (
@@ -25,7 +24,11 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_V1,
     FEATURE_FLAGS_AIRPURIFIER_V3,
     FEATURE_FLAGS_FAN,
+    FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
+    FEATURE_FLAGS_FAN_P9,
+    FEATURE_FLAGS_FAN_P10_P11,
+    FEATURE_FLAGS_FAN_ZA5,
     FEATURE_SET_DELAY_OFF_COUNTDOWN,
     FEATURE_SET_FAN_LEVEL,
     FEATURE_SET_FAVORITE_LEVEL,
@@ -33,7 +36,6 @@ from .const import (
     FEATURE_SET_LED_BRIGHTNESS_LEVEL,
     FEATURE_SET_MOTOR_SPEED,
     FEATURE_SET_OSCILLATION_ANGLE,
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_140,
     FEATURE_SET_VOLUME,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -47,13 +49,18 @@ from .const import (
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3,
+    MODEL_FAN_1C,
     MODEL_FAN_P5,
+    MODEL_FAN_P9,
+    MODEL_FAN_P10,
+    MODEL_FAN_P11,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
     MODEL_FAN_V3,
     MODEL_FAN_ZA1,
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
+    MODEL_FAN_ZA5,
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
 )
@@ -80,6 +87,15 @@ class XiaomiMiioNumberDescription(NumberEntityDescription):
     method: str | None = None
 
 
+@dataclass
+class OscillationAngleValues:
+    """A class that describes oscillation angle values."""
+
+    max_value: float | None = None
+    min_value: float | None = None
+    step: float | None = None
+
+
 NUMBER_TYPES = {
     FEATURE_SET_MOTOR_SPEED: XiaomiMiioNumberDescription(
         key=ATTR_MOTOR_SPEED,
@@ -91,6 +107,7 @@ NUMBER_TYPES = {
         step=10,
         available_with_device_off=False,
         method="async_set_motor_speed",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     FEATURE_SET_FAVORITE_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_FAVORITE_LEVEL,
@@ -100,6 +117,7 @@ NUMBER_TYPES = {
         max_value=17,
         step=1,
         method="async_set_favorite_level",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     FEATURE_SET_FAN_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_FAN_LEVEL,
@@ -109,6 +127,7 @@ NUMBER_TYPES = {
         max_value=3,
         step=1,
         method="async_set_fan_level",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     FEATURE_SET_VOLUME: XiaomiMiioNumberDescription(
         key=ATTR_VOLUME,
@@ -118,6 +137,7 @@ NUMBER_TYPES = {
         max_value=100,
         step=1,
         method="async_set_volume",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     FEATURE_SET_OSCILLATION_ANGLE: XiaomiMiioNumberDescription(
         key=ATTR_OSCILLATION_ANGLE,
@@ -128,16 +148,7 @@ NUMBER_TYPES = {
         max_value=120,
         step=1,
         method="async_set_oscillation_angle",
-    ),
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_140: XiaomiMiioNumberDescription(
-        key=ATTR_OSCILLATION_ANGLE,
-        name="Oscillation Angle",
-        icon="mdi:angle-acute",
-        unit_of_measurement=DEGREE,
-        min_value=30,
-        max_value=140,
-        step=30,
-        method="async_set_oscillation_angle",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     FEATURE_SET_DELAY_OFF_COUNTDOWN: XiaomiMiioNumberDescription(
         key=ATTR_DELAY_OFF_COUNTDOWN,
@@ -148,6 +159,7 @@ NUMBER_TYPES = {
         max_value=480,
         step=1,
         method="async_set_delay_off_countdown",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     FEATURE_SET_LED_BRIGHTNESS_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS_LEVEL,
@@ -157,6 +169,7 @@ NUMBER_TYPES = {
         max_value=8,
         step=1,
         method="async_set_led_brightness_level",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     FEATURE_SET_FAVORITE_RPM: XiaomiMiioNumberDescription(
         key=ATTR_FAVORITE_RPM,
@@ -164,9 +177,10 @@ NUMBER_TYPES = {
         icon="mdi:star-cog",
         unit_of_measurement="rpm",
         min_value=300,
-        max_value=2300,
+        max_value=2200,
         step=10,
         method="async_set_favorite_rpm",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
 }
 
@@ -181,13 +195,26 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
+    MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
+    MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
+    MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
     MODEL_FAN_P5: FEATURE_FLAGS_FAN_P5,
+    MODEL_FAN_P9: FEATURE_FLAGS_FAN_P9,
     MODEL_FAN_SA1: FEATURE_FLAGS_FAN,
     MODEL_FAN_V2: FEATURE_FLAGS_FAN,
     MODEL_FAN_V3: FEATURE_FLAGS_FAN,
     MODEL_FAN_ZA1: FEATURE_FLAGS_FAN,
     MODEL_FAN_ZA3: FEATURE_FLAGS_FAN,
     MODEL_FAN_ZA4: FEATURE_FLAGS_FAN,
+    MODEL_FAN_ZA5: FEATURE_FLAGS_FAN_ZA5,
+}
+
+OSCILLATION_ANGLE_VALUES = {
+    MODEL_FAN_P5: OscillationAngleValues(max_value=140, min_value=30, step=30),
+    MODEL_FAN_ZA5: OscillationAngleValues(max_value=120, min_value=30, step=30),
+    MODEL_FAN_P9: OscillationAngleValues(max_value=150, min_value=30, step=30),
+    MODEL_FAN_P10: OscillationAngleValues(max_value=140, min_value=30, step=30),
+    MODEL_FAN_P11: OscillationAngleValues(max_value=140, min_value=30, step=30),
 }
 
 
@@ -210,6 +237,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for feature, description in NUMBER_TYPES.items():
         if feature & features:
+            if (
+                description.key == ATTR_OSCILLATION_ANGLE
+                and model in OSCILLATION_ANGLE_VALUES
+            ):
+                description.max_value = OSCILLATION_ANGLE_VALUES[model].max_value
+                description.min_value = OSCILLATION_ANGLE_VALUES[model].min_value
+                description.step = OSCILLATION_ANGLE_VALUES[model].step
             entities.append(
                 XiaomiNumberEntity(
                     f"{config_entry.title} {description.name}",
@@ -249,14 +283,6 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         ):
             return False
         return super().available
-
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
 
     async def async_set_value(self, value):
         """Set an option of the miio device."""

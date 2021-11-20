@@ -27,6 +27,19 @@ MOCK_FEEDER = {
     },
 }
 
+MOCK_FELAQUA = {
+    "id": 31337,
+    "product_id": 8,
+    "household_id": HOUSEHOLD_ID,
+    "name": "Felaqua",
+    "parent": {"product_id": 1, "id": HUB_ID},
+    "status": {
+        "battery": 6.4,
+        "signal": {"device_rssi": 70, "hub_rssi": 65},
+        "online": True,
+    },
+}
+
 MOCK_CAT_FLAP = {
     "id": 13579,
     "product_id": 6,
@@ -38,6 +51,7 @@ MOCK_CAT_FLAP = {
         "locking": {"mode": 0},
         "learn_mode": 0,
         "signal": {"device_rssi": 65, "hub_rssi": 64},
+        "online": True,
     },
 }
 
@@ -52,6 +66,7 @@ MOCK_PET_FLAP = {
         "locking": {"mode": 0},
         "learn_mode": 0,
         "signal": {"device_rssi": 70, "hub_rssi": 65},
+        "online": True,
     },
 }
 
@@ -64,7 +79,7 @@ MOCK_PET = {
 }
 
 MOCK_API_DATA = {
-    "devices": [MOCK_HUB, MOCK_CAT_FLAP, MOCK_PET_FLAP, MOCK_FEEDER],
+    "devices": [MOCK_HUB, MOCK_CAT_FLAP, MOCK_PET_FLAP, MOCK_FEEDER, MOCK_FELAQUA],
     "pets": [MOCK_PET],
 }
 

@@ -55,8 +55,11 @@ SUPPORTED_LANGUAGES = [
     "ko-KR",
     "lv-LV",
     "ml-IN",
+    "ms-MY",
     "nb-NO",
+    "nl-BE",
     "nl-NL",
+    "pa-IN",
     "pl-PL",
     "pt-BR",
     "pt-PT",
@@ -150,8 +153,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_get_engine(hass, config, discovery_info=None):
     """Set up Google Cloud TTS component."""
-    key_file = config.get(CONF_KEY_FILE)
-    if key_file:
+    if key_file := config.get(CONF_KEY_FILE):
         key_file = hass.config.path(key_file)
         if not os.path.isfile(key_file):
             _LOGGER.error("File %s doesn't exist", key_file)
@@ -279,7 +281,7 @@ class GoogleCloudTTSProvider(Provider):
             )
             # pylint: enable=no-member
 
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            async with async_timeout.timeout(10):
                 response = await self.hass.async_add_executor_job(
                     self._client.synthesize_speech, synthesis_input, voice, audio_config
                 )

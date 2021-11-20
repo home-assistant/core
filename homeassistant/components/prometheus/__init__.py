@@ -148,8 +148,7 @@ class PrometheusMetrics:
 
     def handle_event(self, event):
         """Listen for new messages on the bus, and add them to Prometheus."""
-        state = event.data.get("new_state")
-        if state is None:
+        if (state := event.data.get("new_state")) is None:
             return
 
         entity_id = state.entity_id
@@ -277,6 +276,15 @@ class PrometheusMetrics:
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
+    def _handle_input_number(self, state):
+        metric = self._metric(
+            "input_number_state",
+            self.prometheus_cli.Gauge,
+            "State of the input number",
+        )
+        value = self.state_as_number(state)
+        metric.labels(**self._labels(state)).set(value)
+
     def _handle_device_tracker(self, state):
         metric = self._metric(
             "device_tracker_state",
@@ -318,8 +326,7 @@ class PrometheusMetrics:
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_climate_temp(self, state, attr, metric_name, metric_description):
-        temp = state.attributes.get(attr)
-        if temp:
+        if temp := state.attributes.get(attr):
             if self._climate_units == TEMP_FAHRENHEIT:
                 temp = fahrenheit_to_celsius(temp)
             metric = self._metric(
@@ -355,8 +362,7 @@ class PrometheusMetrics:
             "Current temperature in degrees Celsius",
         )
 
-        current_action = state.attributes.get(ATTR_HVAC_ACTION)
-        if current_action:
+        if current_action := state.attributes.get(ATTR_HVAC_ACTION):
             metric = self._metric(
                 "climate_action",
                 self.prometheus_cli.Gauge,

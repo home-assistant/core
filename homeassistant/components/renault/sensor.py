@@ -1,14 +1,17 @@
 """Support for Renault sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, cast
+from datetime import datetime
+from typing import TYPE_CHECKING, cast
 
 from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import (
     KamereonVehicleBatteryStatusData,
     KamereonVehicleCockpitData,
     KamereonVehicleHvacStatusData,
+    KamereonVehicleLocationData,
 )
 
 from homeassistant.components.sensor import (
@@ -20,9 +23,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
@@ -34,11 +40,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import as_utc, parse_datetime
 
 from .const import DEVICE_CLASS_CHARGE_STATE, DEVICE_CLASS_PLUG_STATE, DOMAIN
 from .renault_coordinator import T
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription
+from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
+from .renault_vehicle import RenaultVehicleProxy
 
 
 @dataclass
@@ -51,13 +59,16 @@ class RenaultSensorRequiredKeysMixin:
 
 @dataclass
 class RenaultSensorEntityDescription(
-    SensorEntityDescription, RenaultEntityDescription, RenaultSensorRequiredKeysMixin
+    SensorEntityDescription,
+    RenaultDataEntityDescription,
+    RenaultSensorRequiredKeysMixin,
 ):
     """Class describing Renault sensor entities."""
 
     icon_lambda: Callable[[RenaultSensor[T]], str] | None = None
+    condition_lambda: Callable[[RenaultVehicleProxy], bool] | None = None
     requires_fuel: bool = False
-    value_lambda: Callable[[RenaultSensor[T]], StateType] | None = None
+    value_lambda: Callable[[RenaultSensor[T]], StateType | datetime] | None = None
 
 
 async def async_setup_entry(
@@ -73,6 +84,7 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
         if description.coordinator in vehicle.coordinators
         and (not description.requires_fuel or vehicle.details.uses_fuel())
+        and (not description.condition_lambda or description.condition_lambda(vehicle))
     ]
     async_add_entities(entities)
 
@@ -95,7 +107,7 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
         return self.entity_description.icon_lambda(self)
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of this entity."""
         if self.data is None:
             return None
@@ -106,9 +118,7 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
 
 def _get_charging_power(entity: RenaultSensor[T]) -> StateType:
     """Return the charging_power of this entity."""
-    if entity.vehicle.details.reports_charging_power_in_watts():
-        return cast(float, entity.data) / 1000
-    return entity.data
+    return cast(float, entity.data) / 1000
 
 
 def _get_charge_state_formatted(entity: RenaultSensor[T]) -> str | None:
@@ -144,6 +154,14 @@ def _get_rounded_value(entity: RenaultSensor[T]) -> float:
     return round(cast(float, entity.data))
 
 
+def _get_utc_value(entity: RenaultSensor[T]) -> datetime:
+    """Return the UTC value of this entity."""
+    original_dt = parse_datetime(cast(str, entity.data))
+    if TYPE_CHECKING:
+        assert original_dt is not None
+    return as_utc(original_dt)
+
+
 SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
     RenaultSensorEntityDescription(
         key="battery_level",
@@ -177,6 +195,18 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
     ),
     RenaultSensorEntityDescription(
         key="charging_power",
+        condition_lambda=lambda a: not a.details.reports_charging_power_in_watts(),
+        coordinator="battery",
+        data_key="chargingInstantaneousPower",
+        device_class=DEVICE_CLASS_CURRENT,
+        entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
+        name="Charging Power",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="charging_power",
+        condition_lambda=lambda a: a.details.reports_charging_power_in_watts(),
         coordinator="battery",
         data_key="chargingInstantaneousPower",
         device_class=DEVICE_CLASS_POWER,
@@ -227,6 +257,16 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     RenaultSensorEntityDescription(
+        key="battery_last_activity",
+        coordinator="battery",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        data_key="timestamp",
+        entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
+        entity_registry_enabled_default=False,
+        name="Battery Last Activity",
+        value_lambda=_get_utc_value,
+    ),
+    RenaultSensorEntityDescription(
         key="mileage",
         coordinator="cockpit",
         data_key="totalMileage",
@@ -270,5 +310,15 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         name="Outside Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="location_last_activity",
+        coordinator="location",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        data_key="lastUpdateTime",
+        entity_class=RenaultSensor[KamereonVehicleLocationData],
+        entity_registry_enabled_default=False,
+        name="Location Last Activity",
+        value_lambda=_get_utc_value,
     ),
 )

@@ -97,8 +97,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
 
     def handle_status_event(self, event):
         """Handle the Egardia system status event."""
-        statuscode = event.get("status")
-        if statuscode is not None:
+        if (statuscode := event.get("status")) is not None:
             status = self.lookupstatusfromcode(statuscode)
             self.parsestatus(status)
             self.schedule_update_ha_state()

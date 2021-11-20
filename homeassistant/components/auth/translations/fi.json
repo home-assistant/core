@@ -12,6 +12,11 @@
             "title": "Ilmoita kertaluonteinen salasana"
         },
         "totp": {
+            "step": {
+                "init": {
+                    "title": "M\u00e4\u00e4rit\u00e4 kaksivaiheinen todennus TOTP:n avulla"
+                }
+            },
             "title": "TOTP"
         }
     }

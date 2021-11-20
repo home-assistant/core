@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
@@ -26,7 +27,7 @@ from .common import (
 
 async def test_sensors_diffuser_v1_battery_cartridge(hass: HomeAssistant) -> None:
     """Test the creation and values of the Rituals Perfume Genie sensors."""
-    config_entry = mock_config_entry(uniqe_id="id_123_sensor_test_diffuser_v1")
+    config_entry = mock_config_entry(unique_id="id_123_sensor_test_diffuser_v1")
     diffuser = mock_diffuser_v1_battery_cartridge()
     await init_integration(hass, config_entry, [diffuser])
     registry = entity_registry.async_get(hass)
@@ -59,6 +60,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(hass: HomeAssistant) -> Non
     entry = registry.async_get("sensor.genie_battery")
     assert entry
     assert entry.unique_id == f"{hublot}{BATTERY_SUFFIX}"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
     state = hass.states.get("sensor.genie_wifi")
     assert state
@@ -69,11 +71,12 @@ async def test_sensors_diffuser_v1_battery_cartridge(hass: HomeAssistant) -> Non
     entry = registry.async_get("sensor.genie_wifi")
     assert entry
     assert entry.unique_id == f"{hublot}{WIFI_SUFFIX}"
+    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
 
 
 async def test_sensors_diffuser_v2_no_battery_no_cartridge(hass: HomeAssistant) -> None:
     """Test the creation and values of the Rituals Perfume Genie sensors."""
-    config_entry = mock_config_entry(uniqe_id="id_123_sensor_test_diffuser_v2")
+    config_entry = mock_config_entry(unique_id="id_123_sensor_test_diffuser_v2")
 
     await init_integration(
         hass, config_entry, [mock_diffuser_v2_no_battery_no_cartridge()]

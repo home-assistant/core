@@ -61,7 +61,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_handle_turn_service(service):
         """Handle calls to homeassistant.turn_on/off."""
-        referenced = await async_extract_referenced_entity_ids(hass, service)
+        referenced = async_extract_referenced_entity_ids(hass, service)
         all_referenced = referenced.referenced | referenced.indirectly_referenced
 
         # Generic turn on/off method requires entity id
@@ -138,9 +138,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
-        if (
-            call.service in SHUTDOWN_SERVICES
-            and await recorder.async_migration_in_progress(hass)
+        if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
+            hass
         ):
             _LOGGER.error(
                 "The system cannot %s while a database upgrade is in progress",

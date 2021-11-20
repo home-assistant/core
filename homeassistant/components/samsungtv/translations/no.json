@@ -6,6 +6,7 @@
             "auth_missing": "Home Assistant er ikke autorisert til \u00e5 koble til denne Samsung TV-en. Sjekk TV-ens innstillinger for ekstern enhetsbehandling for \u00e5 autorisere Home Assistant.",
             "cannot_connect": "Tilkobling mislyktes",
             "id_missing": "Denne Samsung-enheten har ikke serienummer.",
+            "missing_config_entry": "Denne Samsung -enheten har ingen konfigurasjonsoppf\u00f8ring.",
             "not_supported": "Denne Samsung-enheten st\u00f8ttes forel\u00f8pig ikke.",
             "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
             "unknown": "Uventet feil"

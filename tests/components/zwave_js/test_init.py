@@ -161,7 +161,7 @@ async def test_new_entity_on_value_added(hass, multisensor_6, client, integratio
 async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):
     """Test we handle a ready node added event."""
     dev_reg = dr.async_get(hass)
-    node = Node(client, multisensor_6_state)
+    node = Node(client, deepcopy(multisensor_6_state))
     event = {"node": node}
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
@@ -272,15 +272,28 @@ async def test_start_addon(
 ):
     """Test start the Z-Wave JS add-on during entry setup."""
     device = "/test"
-    network_key = "abc123"
+    s0_legacy_key = "s0_legacy"
+    s2_access_control_key = "s2_access_control"
+    s2_authenticated_key = "s2_authenticated"
+    s2_unauthenticated_key = "s2_unauthenticated"
     addon_options = {
         "device": device,
-        "network_key": network_key,
+        "s0_legacy_key": s0_legacy_key,
+        "s2_access_control_key": s2_access_control_key,
+        "s2_authenticated_key": s2_authenticated_key,
+        "s2_unauthenticated_key": s2_unauthenticated_key,
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        data={"use_addon": True, "usb_path": device, "network_key": network_key},
+        data={
+            "use_addon": True,
+            "usb_path": device,
+            "s0_legacy_key": s0_legacy_key,
+            "s2_access_control_key": s2_access_control_key,
+            "s2_authenticated_key": s2_authenticated_key,
+            "s2_unauthenticated_key": s2_unauthenticated_key,
+        },
     )
     entry.add_to_hass(hass)
 
@@ -303,15 +316,28 @@ async def test_install_addon(
     """Test install and start the Z-Wave JS add-on during entry setup."""
     addon_installed.return_value["version"] = None
     device = "/test"
-    network_key = "abc123"
+    s0_legacy_key = "s0_legacy"
+    s2_access_control_key = "s2_access_control"
+    s2_authenticated_key = "s2_authenticated"
+    s2_unauthenticated_key = "s2_unauthenticated"
     addon_options = {
         "device": device,
-        "network_key": network_key,
+        "s0_legacy_key": s0_legacy_key,
+        "s2_access_control_key": s2_access_control_key,
+        "s2_authenticated_key": s2_authenticated_key,
+        "s2_unauthenticated_key": s2_unauthenticated_key,
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        data={"use_addon": True, "usb_path": device, "network_key": network_key},
+        data={
+            "use_addon": True,
+            "usb_path": device,
+            "s0_legacy_key": s0_legacy_key,
+            "s2_access_control_key": s2_access_control_key,
+            "s2_authenticated_key": s2_authenticated_key,
+            "s2_unauthenticated_key": s2_unauthenticated_key,
+        },
     )
     entry.add_to_hass(hass)
 
@@ -357,8 +383,27 @@ async def test_addon_info_failure(
 
 
 @pytest.mark.parametrize(
-    "old_device, new_device, old_network_key, new_network_key",
-    [("/old_test", "/new_test", "old123", "new123")],
+    (
+        "old_device, new_device, "
+        "old_s0_legacy_key, new_s0_legacy_key, "
+        "old_s2_access_control_key, new_s2_access_control_key, "
+        "old_s2_authenticated_key, new_s2_authenticated_key, "
+        "old_s2_unauthenticated_key, new_s2_unauthenticated_key"
+    ),
+    [
+        (
+            "/old_test",
+            "/new_test",
+            "old123",
+            "new123",
+            "old456",
+            "new456",
+            "old789",
+            "new789",
+            "old987",
+            "new987",
+        )
+    ],
 )
 async def test_addon_options_changed(
     hass,
@@ -370,12 +415,21 @@ async def test_addon_options_changed(
     start_addon,
     old_device,
     new_device,
-    old_network_key,
-    new_network_key,
+    old_s0_legacy_key,
+    new_s0_legacy_key,
+    old_s2_access_control_key,
+    new_s2_access_control_key,
+    old_s2_authenticated_key,
+    new_s2_authenticated_key,
+    old_s2_unauthenticated_key,
+    new_s2_unauthenticated_key,
 ):
     """Test update config entry data on entry setup if add-on options changed."""
     addon_options["device"] = new_device
-    addon_options["network_key"] = new_network_key
+    addon_options["s0_legacy_key"] = new_s0_legacy_key
+    addon_options["s2_access_control_key"] = new_s2_access_control_key
+    addon_options["s2_authenticated_key"] = new_s2_authenticated_key
+    addon_options["s2_unauthenticated_key"] = new_s2_unauthenticated_key
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -383,7 +437,10 @@ async def test_addon_options_changed(
             "url": "ws://host1:3001",
             "use_addon": True,
             "usb_path": old_device,
-            "network_key": old_network_key,
+            "s0_legacy_key": old_s0_legacy_key,
+            "s2_access_control_key": old_s2_access_control_key,
+            "s2_authenticated_key": old_s2_authenticated_key,
+            "s2_unauthenticated_key": old_s2_unauthenticated_key,
         },
     )
     entry.add_to_hass(hass)
@@ -393,7 +450,10 @@ async def test_addon_options_changed(
 
     assert entry.state == ConfigEntryState.LOADED
     assert entry.data["usb_path"] == new_device
-    assert entry.data["network_key"] == new_network_key
+    assert entry.data["s0_legacy_key"] == new_s0_legacy_key
+    assert entry.data["s2_access_control_key"] == new_s2_access_control_key
+    assert entry.data["s2_authenticated_key"] == new_s2_authenticated_key
+    assert entry.data["s2_unauthenticated_key"] == new_s2_unauthenticated_key
     assert install_addon.call_count == 0
     assert start_addon.call_count == 0
 
@@ -656,3 +716,85 @@ async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
 
     entity = ent_reg.async_get(EATON_RF9640_ENTITY)
     assert dev_reg.async_get(entity.device_id).area_id is not None
+
+
+async def test_node_removed(hass, multisensor_6_state, client, integration):
+    """Test that device gets removed when node gets removed."""
+    dev_reg = dr.async_get(hass)
+    node = Node(client, deepcopy(multisensor_6_state))
+    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device.id
+
+    event = {"node": node, "replaced": False}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Assert device has been removed
+    assert not dev_reg.async_get(old_device.id)
+
+
+async def test_replace_same_node(hass, multisensor_6_state, client, integration):
+    """Test when a node is replaced with itself that the device remains."""
+    dev_reg = dr.async_get(hass)
+    node = Node(client, deepcopy(multisensor_6_state))
+    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device.id
+
+    event = {"node": node, "replaced": True}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Assert device has remained
+    assert dev_reg.async_get(old_device.id)
+
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    # Assert device has remained
+    assert dev_reg.async_get(old_device.id)
+
+
+async def test_replace_different_node(
+    hass, multisensor_6_state, hank_binary_switch_state, client, integration
+):
+    """Test when a node is replaced with a different node."""
+    hank_binary_switch_state = deepcopy(hank_binary_switch_state)
+    multisensor_6_state = deepcopy(multisensor_6_state)
+    hank_binary_switch_state["nodeId"] = multisensor_6_state["nodeId"]
+    dev_reg = dr.async_get(hass)
+    old_node = Node(client, multisensor_6_state)
+    device_id = f"{client.driver.controller.home_id}-{old_node.node_id}"
+    new_node = Node(client, hank_binary_switch_state)
+    event = {"node": old_node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+
+    event = {"node": old_node, "replaced": True}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Device should still be there after the node was removed
+    assert device
+
+    event = {"node": new_node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    device = dev_reg.async_get(device.id)
+    # assert device is new
+    assert device
+    assert device.manufacturer == "HANK Electronics Ltd."

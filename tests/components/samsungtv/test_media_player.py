@@ -127,10 +127,9 @@ def delay_fixture():
         yield delay
 
 
-@pytest.fixture
-def mock_now():
-    """Fixture for dtutil.now."""
-    return dt_util.utcnow()
+@pytest.fixture(autouse=True)
+def mock_no_mac_address(no_mac_address):
+    """Fake mac address in all mediaplayer tests."""
 
 
 async def setup_samsungtv(hass, config):

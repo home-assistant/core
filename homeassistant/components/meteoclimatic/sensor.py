@@ -1,18 +1,15 @@
 """Support for Meteoclimatic sensor."""
-import logging
-
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MODEL, SENSOR_TYPES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -45,13 +42,13 @@ class MeteoclimaticSensor(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self.platform.config_entry.unique_id)},
-            "name": self.coordinator.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            name=self.coordinator.name,
+        )
 
     @property
     def native_value(self):

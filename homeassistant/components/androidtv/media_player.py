@@ -358,6 +358,7 @@ def adb_decorator(override_available=False):
         @functools.wraps(func)
         async def _adb_exception_catcher(self, *args, **kwargs):
             """Call an ADB-related method and catch exceptions."""
+            # pylint: disable=protected-access
             if not self.available and not override_available:
                 return None
 
@@ -532,8 +533,7 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def adb_command(self, cmd):
         """Send an ADB command to an Android TV / Fire TV device."""
-        key = KEYS.get(cmd)
-        if key:
+        if key := KEYS.get(cmd):
             await self.aftv.adb_shell(f"input keyevent {key}")
             return
 

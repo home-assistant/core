@@ -8,6 +8,7 @@ from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 from xknx.telegram.address import parse_device_group_address
 
+from homeassistant import config_entries
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
@@ -17,13 +18,25 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, DOMAIN, PRESET_MODES
+from .const import (
+    CONTROLLER_MODES,
+    CURRENT_HVAC_ACTIONS,
+    DATA_KNX_CONFIG,
+    DOMAIN,
+    PRESET_MODES,
+    SupportedPlatforms,
+)
 from .knx_entity import KnxEntity
 from .schema import ClimateSchema
 
@@ -32,23 +45,19 @@ CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}
 PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up climate(s) for KNX platform."""
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-
-    platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
+        SupportedPlatforms.CLIMATE.value
+    ]
 
-    _async_migrate_unique_id(hass, platform_config)
-    async_add_entities(
-        KNXClimate(xknx, entity_config) for entity_config in platform_config
-    )
+    _async_migrate_unique_id(hass, config)
+    async_add_entities(KNXClimate(xknx, entity_config) for entity_config in config)
 
 
 @callback
@@ -176,6 +185,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
         super().__init__(_create_climate(xknx, config))
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
         if self.preset_modes:
             self._attr_supported_features |= SUPPORT_PRESET_MODE
@@ -218,8 +228,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self._device.set_target_temperature(temperature)
         self.async_write_ha_state()
@@ -263,10 +272,10 @@ class KNXClimate(KnxEntity, ClimateEntity):
             return CURRENT_HVAC_OFF
         if self._device.is_active is False:
             return CURRENT_HVAC_IDLE
-        if self._device.mode is not None and self._device.mode.supports_controller_mode:
-            return CURRENT_HVAC_ACTIONS.get(
-                self._device.mode.controller_mode.value, CURRENT_HVAC_IDLE
-            )
+        if (
+            self._device.mode is not None and self._device.mode.supports_controller_mode
+        ) or self._device.is_active:
+            return CURRENT_HVAC_ACTIONS.get(self.hvac_mode, CURRENT_HVAC_IDLE)
         return None
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:

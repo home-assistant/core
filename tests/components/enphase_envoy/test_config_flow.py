@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch
 
 import httpx
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.enphase_envoy.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -12,7 +13,7 @@ from tests.common import MockConfigEntry
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -120,7 +121,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_import(hass: HomeAssistant) -> None:
     """Test we can import from yaml."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(
         "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
         return_value=True,
@@ -153,14 +154,14 @@ async def test_import(hass: HomeAssistant) -> None:
 
 async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test we can setup from zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "properties": {"serialnum": "1234"},
-            "host": "1.1.1.1",
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            properties={"serialnum": "1234"},
+            host="1.1.1.1",
+        ),
     )
     await hass.async_block_till_done()
 
@@ -198,7 +199,6 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
 
 async def test_form_host_already_exists(hass: HomeAssistant) -> None:
     """Test host already exists."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -237,7 +237,7 @@ async def test_form_host_already_exists(hass: HomeAssistant) -> None:
 
 async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
     """Test serial number already exists from zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -254,10 +254,10 @@ async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "properties": {"serialnum": "1234"},
-            "host": "1.1.1.1",
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            properties={"serialnum": "1234"},
+            host="1.1.1.1",
+        ),
     )
 
     assert result["type"] == "abort"
@@ -266,7 +266,7 @@ async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
 
 async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
     """Test hosts already exists from zeroconf."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -289,10 +289,10 @@ async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data={
-                "properties": {"serialnum": "1234"},
-                "host": "1.1.1.1",
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                properties={"serialnum": "1234"},
+                host="1.1.1.1",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -306,7 +306,7 @@ async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
 
 async def test_reauth(hass: HomeAssistant) -> None:
     """Test we reauth auth."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={

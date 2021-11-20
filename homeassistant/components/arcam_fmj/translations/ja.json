@@ -1,0 +1,14 @@
+{
+    "config": {
+        "flow_title": "{host}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                },
+                "description": "\u30c7\u30d0\u30a4\u30b9\u306e\u30db\u30b9\u30c8\u540d\u307e\u305f\u306fIP\u30a2\u30c9\u30ec\u30b9\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+            }
+        }
+    }
+}

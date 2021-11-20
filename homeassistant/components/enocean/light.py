@@ -73,8 +73,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn the light source on or sets a specific dimmer value."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             self._brightness = brightness
 
         bval = math.floor(self._brightness / 256.0 * 100.0)

@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import PiHoleEntity
 from .const import (
+<<<<<<< HEAD
     ATTR_BLOCKED_DOMAINS,
     ATTR_CORE_CURRENT,
     ATTR_CORE_LATEST,
@@ -21,6 +22,8 @@ from .const import (
     ATTR_FTL_LATEST,
     ATTR_WEB_CURRENT,
     ATTR_WEB_LATEST,
+=======
+>>>>>>> upstream/dev
     DATA_KEY_API,
     DATA_KEY_API_VERSIONS,
     DATA_KEY_COORDINATOR,
@@ -88,6 +91,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
             return round(self.api.data[self.entity_description.key], 2)
         except TypeError:
             return self.api.data[self.entity_description.key]
+<<<<<<< HEAD
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -103,3 +107,5 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
             }
 
         return {ATTR_BLOCKED_DOMAINS: self.api.data["domains_being_blocked"]}
+=======
+>>>>>>> upstream/dev
