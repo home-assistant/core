@@ -1,6 +1,5 @@
 """Test pi_hole component."""
 import logging
-from re import X
 from unittest.mock import AsyncMock
 
 from hole.exceptions import HoleError
