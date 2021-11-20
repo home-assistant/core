@@ -267,14 +267,29 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             # extract host/port from ssdp_location
             netloc = urlparse(discovery_info["ssdp_location"]).netloc.split(":")
-            return await self.async_step_user(
-                user_input={CONF_HOST: netloc[0], CONF_PORT: int(netloc[1])}
-            )
+            try:
+                status = await get_status(self.hass, netloc[0], int(netloc[1]))
+            except CannotConnect:
+                return self.async_abort(reason="connection_error")
+            else:
+                self.data[CONF_HOST] = netloc[0]
+                self.data[CONF_PORT] = int(netloc[1])
+                self.data[CONF_ID] = status.get(
+                    "chipId", status["mac"].replace(":", "")
+                )
+                self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
+
+                KonnectedFlowHandler.discovered_hosts[self.data[CONF_ID]] = {
+                    CONF_HOST: self.data[CONF_HOST],
+                    CONF_PORT: self.data[CONF_PORT],
+                }
+                return await self.async_step_confirm()
 
         return self.async_abort(reason="unknown")
 
     async def async_step_user(self, user_input=None):
         """Connect to panel and get config."""
+        errors = {}
         if user_input:
             # build config info and wait for user confirmation
             self.data[CONF_HOST] = user_input[CONF_HOST]
@@ -287,7 +302,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, self.data[CONF_HOST], self.data[CONF_PORT]
                 )
             except CannotConnect:
-                _LOGGER.error("Unable to connect to panel")
+                errors["base"] = "cannot_connect"
             else:
                 self.data[CONF_ID] = status.get(
                     "chipId", status["mac"].replace(":", "")
@@ -301,7 +316,20 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
                 return await self.async_step_confirm()
 
-        return self.async_abort(reason="unknown")
+        return self.async_show_form(
+            step_id="user",
+            description_placeholders={
+                "host": self.data.get(CONF_HOST, "Unknown"),
+                "port": self.data.get(CONF_PORT, "Unknown"),
+            },
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=self.data.get(CONF_HOST)): str,
+                    vol.Required(CONF_PORT, default=self.data.get(CONF_PORT)): int,
+                }
+            ),
+            errors=errors,
+        )
 
     async def async_step_confirm(self, user_input=None):
         """Attempt to link with the Konnected panel.
