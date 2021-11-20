@@ -1,7 +1,7 @@
 """Sensor data of the Renson ventilation unit."""
 import logging
 
-from rensonVentilationLib.fieldEnum import (
+from renson_endura_delta.field_enum import (
     AIR_QUALITY_FIELD,
     BREEZE_LEVEL_FIELD,
     BREEZE_TEMPERATURE_FIELD,
@@ -25,7 +25,7 @@ from rensonVentilationLib.fieldEnum import (
     NIGHTTIME_FIELD,
     OUTDOOR_TEMP_FIELD,
 )
-import rensonVentilationLib.renson as renson
+import renson_endura_delta.renson as renson
 import voluptuous as vol
 
 from homeassistant.components.renson.renson_descriptions import (
@@ -36,7 +36,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, STATE_CLASS_MEASURE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, DEVICE_CLASS_HUMIDITY, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import CONCENTRATION_PARTS_PER_CUBIC_METER, DOMAIN
 

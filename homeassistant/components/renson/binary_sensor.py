@@ -1,5 +1,5 @@
 """Binary sensors for renson."""
-from rensonVentilationLib.fieldEnum import (
+from renson_endura_delta.field_enum import (
     AIR_QUALITY_CONTROL_FIELD,
     BREEZE_ENABLE_FIELD,
     BREEZE_MET_FIELD,
@@ -8,7 +8,7 @@ from rensonVentilationLib.fieldEnum import (
     HUMIDITY_CONTROL_FIELD,
     PREHEATER_FIELD,
 )
-import rensonVentilationLib.renson as renson
+import renson_endura_delta.renson as renson
 
 from homeassistant.components.renson.renson_binary_sensor import RensonBinarySensor
 from homeassistant.components.renson.renson_descriptions import (

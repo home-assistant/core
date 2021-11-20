@@ -1,6 +1,6 @@
 """Renson sensor descriptions."""
 
-from rensonVentilationLib.fieldEnum import FieldEnum
+from renson_endura_delta.field_enum import FieldEnum
 
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription

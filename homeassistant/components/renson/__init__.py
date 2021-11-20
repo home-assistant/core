@@ -1,7 +1,7 @@
 """The Renson integration."""
 from __future__ import annotations
 
-import rensonVentilationLib.renson as renson
+import renson_endura_delta.renson as renson
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

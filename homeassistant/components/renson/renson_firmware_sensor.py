@@ -1,5 +1,5 @@
 """Firmware sensor of the Renson ventilation system."""
-import rensonVentilationLib.renson as renson
+import renson_endura_delta.renson as renson
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 

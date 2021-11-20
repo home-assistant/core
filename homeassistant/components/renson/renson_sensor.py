@@ -1,6 +1,6 @@
 """Sensor class of the Renson ventilation system."""
-from rensonVentilationLib.generalEnum import DataType
-import rensonVentilationLib.renson as renson
+from renson_endura_delta.general_enum import DataType
+import renson_endura_delta.renson as renson
 
 from homeassistant.components.renson.renson_descriptions import (
     RensonSensorEntityDescription,

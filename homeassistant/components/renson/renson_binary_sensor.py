@@ -1,6 +1,6 @@
 """Binary sensor for renson."""
 
-import rensonVentilationLib.renson as renson
+import renson_endura_delta.renson as renson
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.renson.renson_descriptions import (
