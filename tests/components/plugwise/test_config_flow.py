@@ -1,14 +1,10 @@
 """Test the Plugwise config flow."""
-import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
-    NetworkDown,
     PlugwiseException,
-    StickInitError,
-    TimeoutException,
 )
 import pytest
 
@@ -17,10 +13,9 @@ from homeassistant.components.plugwise.const import (
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    FLOW_TYPE,
     FLOW_NET,
+    FLOW_TYPE,
     PW_TYPE,
-    STICK,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
@@ -433,4 +428,3 @@ async def test_options_flow_thermo(hass, mock_smile) -> None:
         assert result["data"] == {
             CONF_SCAN_INTERVAL: 60,
         }
-
