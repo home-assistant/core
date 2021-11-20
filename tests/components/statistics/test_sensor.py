@@ -511,94 +511,134 @@ class TestStatisticsSensor(unittest.TestCase):
         characteristics = (
             {
                 "name": "average_change",
-                "value": float(self.average_change),
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(self.average_change),
                 "unit": "°C/sample",
             },
             {
                 "name": "change",
-                "value": float(self.change),
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(0),
+                "value_9": float(self.change),
                 "unit": "°C",
             },
             {
                 "name": "change_rate",
-                "value": float(self.change_rate),
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(self.change_rate),
                 "unit": "°C/s",
             },
             {
                 "name": "count",
-                "value": int(self.count),
+                "value_0": 0,
+                "value_1": 1,
+                "value_9": int(self.count),
                 "unit": None,
             },
             {
                 "name": "distance_95_percent_of_values",
-                "value": float(self.distance_95p),
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(self.distance_95p),
                 "unit": "°C",
             },
             {
                 "name": "distance_99_percent_of_values",
-                "value": float(self.distance_99p),
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(self.distance_99p),
                 "unit": "°C",
             },
             {
                 "name": "distance_absolute",
-                "value": float(self.distance_abs),
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(0),
+                "value_9": float(self.distance_abs),
                 "unit": "°C",
             },
             {
                 "name": "max_age",
-                "value": datetime(
+                "value_0": STATE_UNKNOWN,
+                "value_1": datetime(
+                    now.year + 1, 8, 2, 12, 23 + self.count + 10, 42, tzinfo=dt_util.UTC
+                ),
+                "value_9": datetime(
                     now.year + 1, 8, 2, 12, 23 + self.count - 1, 42, tzinfo=dt_util.UTC
                 ),
                 "unit": None,
             },
             {
                 "name": "max_value",
-                "value": float(self.max),
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(self.max),
                 "unit": "°C",
             },
             {
                 "name": "mean",
-                "value": float(self.mean),
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(self.mean),
                 "unit": "°C",
             },
             {
                 "name": "median",
-                "value": float(self.median),
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(self.median),
                 "unit": "°C",
             },
             {
                 "name": "min_age",
-                "value": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC),
+                "value_0": STATE_UNKNOWN,
+                "value_1": datetime(
+                    now.year + 1, 8, 2, 12, 23 + self.count + 10, 42, tzinfo=dt_util.UTC
+                ),
+                "value_9": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC),
                 "unit": None,
             },
             {
                 "name": "min_value",
-                "value": float(self.min),
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(self.min),
                 "unit": "°C",
             },
             {
                 "name": "noisiness",
-                "value": float(self.noisiness),
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(self.noisiness),
                 "unit": "°C",
             },
             {
                 "name": "quantiles",
-                "value": self.quantiles,
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": self.quantiles,
                 "unit": None,
             },
             {
                 "name": "standard_deviation",
-                "value": float(self.standard_deviation),
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(self.standard_deviation),
                 "unit": "°C",
             },
             {
                 "name": "total",
-                "value": float(self.total),
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(self.total),
                 "unit": "°C",
             },
             {
                 "name": "variance",
-                "value": float(self.variance),
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(self.variance),
                 "unit": "°C²",
             },
         )
@@ -610,6 +650,7 @@ class TestStatisticsSensor(unittest.TestCase):
                     "name": "test_" + characteristic["name"],
                     "entity_id": "sensor.test_monitored",
                     "state_characteristic": characteristic["name"],
+                    "max_age": {"minutes": 10},
                 }
             )
 
@@ -626,6 +667,8 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.start()
             self.hass.block_till_done()
 
+            # With all values in buffer
+
             for value in self.values:
                 self.hass.states.set(
                     "sensor.test_monitored",
@@ -637,13 +680,44 @@ class TestStatisticsSensor(unittest.TestCase):
 
             for characteristic in characteristics:
                 state = self.hass.states.get("sensor.test_" + characteristic["name"])
-                assert state.state == str(
-                    characteristic["value"]
-                ), f"value mismatch for characteristic '{characteristic['name']}'"
+                assert state.state == str(characteristic["value_9"]), (
+                    f"value mismatch for characteristic '{characteristic['name']}' (buffer filled) "
+                    f"- assert {state.state} == {str(characteristic['value_9'])}"
+                )
                 assert (
                     state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
                     == characteristic["unit"]
                 ), f"unit mismatch for characteristic '{characteristic['name']}'"
+
+            # With empty buffer
+
+            mock_data["return_time"] += timedelta(minutes=10)
+            fire_time_changed(self.hass, mock_data["return_time"])
+            self.hass.block_till_done()
+
+            for characteristic in characteristics:
+                state = self.hass.states.get("sensor.test_" + characteristic["name"])
+                assert state.state == str(characteristic["value_0"]), (
+                    f"value mismatch for characteristic '{characteristic['name']}' (buffer empty) "
+                    f"- assert {state.state} == {str(characteristic['value_0'])}"
+                )
+
+            # With single value in buffer
+
+            self.hass.states.set(
+                "sensor.test_monitored",
+                self.values[0],
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.block_till_done()
+            mock_data["return_time"] += timedelta(minutes=1)
+
+            for characteristic in characteristics:
+                state = self.hass.states.get("sensor.test_" + characteristic["name"])
+                assert state.state == str(characteristic["value_1"]), (
+                    f"value mismatch for characteristic '{characteristic['name']}' (one stored value) "
+                    f"- assert {state.state} == {str(characteristic['value_1'])}"
+                )
 
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
