@@ -398,7 +398,16 @@ class Thermostat(ClimateEntity):
 
     @property
     def precision(self) -> float:
-        """Return the precision of the system."""
+        """
+        Return the precision of the system.
+
+        Ecobbe precision is tenths and the temp is kept in F.
+        For configurations displaying in C, we set the precision
+        to HALVES to prevent differences in the ecobee and HA
+        display of temps due to rounding.
+        """
+        if self.hass.config.units.temperature_unit != TEMP_FAHRENHEIT:
+            return PRECISION_HALVES
         return PRECISION_TENTHS
 
     @property
