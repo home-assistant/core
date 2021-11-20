@@ -516,7 +516,8 @@ async def test_bridge_homekit(hass, aioclient_mock):
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="0.0.0.0", properties={"id": "aa:bb:cc:dd:ee:ff"}
+            host="0.0.0.0",
+            properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
         ),
     )
 
@@ -558,7 +559,8 @@ async def test_bridge_homekit_already_configured(hass, aioclient_mock):
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="0.0.0.0", properties={"id": "aa:bb:cc:dd:ee:ff"}
+            host="0.0.0.0",
+            properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
         ),
     )
 
