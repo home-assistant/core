@@ -167,7 +167,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     properties={
                         "md": record["md"],
                         "pv": record["pv"],
-                        "id": unique_id,
+                        zeroconf.ATTR_PROPERTIES_ID: unique_id,
                         "c#": record["c#"],
                         "s#": record["s#"],
                         "ff": record["ff"],
@@ -212,7 +212,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for (key, value) in discovery_info[zeroconf.ATTR_PROPERTIES].items()
         }
 
-        if "id" not in properties:
+        if zeroconf.ATTR_PROPERTIES_ID not in properties:
             # This can happen if the TXT record is received after the PTR record
             # we will wait for the next update in this case
             _LOGGER.debug(
@@ -223,7 +223,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # The hkid is a unique random number that looks like a pairing code.
         # It changes if a device is factory reset.
-        hkid = properties["id"]
+        hkid = properties[zeroconf.ATTR_PROPERTIES_ID]
         model = properties["md"]
         name = discovery_info[zeroconf.ATTR_NAME].replace("._hap._tcp.local.", "")
         status_flags = int(properties["sf"])
