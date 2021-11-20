@@ -26,6 +26,15 @@ ZERO_DATA = {
     "unique_domains": 0,
 }
 
+SAMPLE_VERSIONS = {
+    "core_current": 5.5,
+    "core_latest": 5.6,
+    "web_current": 5.7,
+    "web_latest": 5.8,
+    "FTL_current": 5.10,
+    "FTL_latest": 5.11
+}
+
 HOST = "1.2.3.4"
 PORT = 80
 LOCATION = "location"
@@ -78,6 +87,7 @@ def _create_mocked_hole(raise_exception=False):
     type(mocked_hole).enable = AsyncMock()
     type(mocked_hole).disable = AsyncMock()
     mocked_hole.data = ZERO_DATA
+    mocked_hole.versions = SAMPLE_VERSIONS
     return mocked_hole
 
 

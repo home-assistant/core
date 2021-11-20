@@ -1,5 +1,6 @@
 """Test pi_hole component."""
 import logging
+from re import X
 from unittest.mock import AsyncMock
 
 from hole.exceptions import HoleError
@@ -80,6 +81,10 @@ async def test_setup_minimal_config(hass):
         == "Pi-Hole Domains Blocked"
     )
     assert hass.states.get("sensor.pi_hole_seen_clients").name == "Pi-Hole Seen Clients"
+    assert (
+        hass.states.get("sensor.pi_hole_available_updates").name
+        == "Pi-Hole Available Updates"
+    )
 
     assert hass.states.get("sensor.pi_hole_ads_blocked_today").state == "0"
     assert hass.states.get("sensor.pi_hole_ads_percentage_blocked_today").state == "0"
@@ -90,6 +95,7 @@ async def test_setup_minimal_config(hass):
     assert hass.states.get("sensor.pi_hole_dns_unique_domains").state == "0"
     assert hass.states.get("sensor.pi_hole_domains_blocked").state == "0"
     assert hass.states.get("sensor.pi_hole_seen_clients").state == "0"
+    assert hass.states.get("sensor.pi_hole_available_updates").state == "3"
 
     assert hass.states.get("binary_sensor.pi_hole").name == "Pi-Hole"
     assert hass.states.get("binary_sensor.pi_hole").state == "off"
