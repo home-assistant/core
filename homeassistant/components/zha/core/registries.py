@@ -4,7 +4,6 @@ from __future__ import annotations
 import collections
 from collections.abc import Callable
 import dataclasses
-from typing import Dict, List, Tuple
 
 import attr
 from zigpy import zcl
@@ -54,8 +53,6 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     # this works for now but if we hit conflicts we can break it out to
     # a different dict that is keyed by manufacturer
     SMARTTHINGS_ACCELERATION_CLUSTER: Platform.BINARY_SENSOR,
-    SMARTTHINGS_HUMIDITY_CLUSTER: Platform.SENSOR,
-    VOC_LEVEL_CLUSTER: Platform.SENSOR,
     zcl.clusters.closures.DoorLock.cluster_id: Platform.LOCK,
     zcl.clusters.closures.WindowCovering.cluster_id: Platform.COVER,
     zcl.clusters.general.BinaryInput.cluster_id: Platform.BINARY_SENSOR,
@@ -63,16 +60,7 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.general.MultistateInput.cluster_id: Platform.SENSOR,
     zcl.clusters.general.OnOff.cluster_id: Platform.SWITCH,
     zcl.clusters.hvac.Fan.cluster_id: Platform.FAN,
-    zcl.clusters.measurement.CarbonDioxideConcentration.cluster_id: Platform.SENSOR,
-    zcl.clusters.measurement.CarbonMonoxideConcentration.cluster_id: Platform.SENSOR,
-    zcl.clusters.measurement.FormaldehydeConcentration.cluster_id: Platform.SENSOR,
-    zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: Platform.SENSOR,
     zcl.clusters.measurement.OccupancySensing.cluster_id: Platform.BINARY_SENSOR,
-    zcl.clusters.measurement.PressureMeasurement.cluster_id: Platform.SENSOR,
-    zcl.clusters.measurement.RelativeHumidity.cluster_id: Platform.SENSOR,
-    zcl.clusters.measurement.SoilMoisture.cluster_id: Platform.SENSOR,
-    zcl.clusters.measurement.LeafWetness.cluster_id: Platform.SENSOR,
-    zcl.clusters.measurement.TemperatureMeasurement.cluster_id: Platform.SENSOR,
     zcl.clusters.security.IasZone.cluster_id: Platform.BINARY_SENSOR,
 }
 
