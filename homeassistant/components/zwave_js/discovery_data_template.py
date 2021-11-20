@@ -41,6 +41,8 @@ from zwave_js_server.util.command_class.multilevel_sensor import (
     get_multilevel_sensor_type,
 )
 
+from homeassistant.exceptions import ConfigEntryNotReady, IntegrationError
+
 from .const import (
     ENTITY_DESC_KEY_BATTERY,
     ENTITY_DESC_KEY_CO,
@@ -261,7 +263,7 @@ class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
 class FanSpeedDataTemplate:
     """Mixin to define get_speed_config."""
 
-    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
+    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int]:
         """
         Get the fan speed configuration for this device.
 
@@ -300,7 +302,7 @@ class FixedFanSpeedDataTemplate(
     for each actual speed.
     """
 
-    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
+    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int]:
         """Get the fan speed configuration for this device."""
         return self.speeds
 
@@ -343,12 +345,8 @@ class ConfigurableFanSpeedDataTemplate(
 
     def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveConfigurationValue]:
         """Resolve helper class data for a discovered value."""
-        data: dict[str, Any] = {
-            "configuration_value": self._get_value_from_id(
-                value.node, self.configuration_option
-            ),
-        }
-        return data
+        zwave_value = self._get_value_from_id(value.node, self.configuration_option)
+        return {"configuration_value": zwave_value}
 
     def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
         """Return list of all ZwaveValues that should be watched."""
@@ -356,10 +354,17 @@ class ConfigurableFanSpeedDataTemplate(
             resolved_data["configuration_value"],
         ]
 
-    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
+    def get_speed_config(
+        self, resolved_data: dict[str, ZwaveConfigurationValue]
+    ) -> list[int]:
         """Get current speed configuration from resolved data."""
-        configuration_value: ZwaveValue | None = resolved_data["configuration_value"]
-        if configuration_value:
-            return self.configuration_value_to_speeds.get(configuration_value.value)
+        zwave_value: ZwaveValue | None = resolved_data["configuration_value"]
 
-        return None
+        if not zwave_value or not zwave_value.value:
+            raise ConfigEntryNotReady("Unable to read device configuration")
+
+        speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
+        if not speed_config:
+            raise IntegrationError("Unknown fan speed configuration value")
+
+        return speed_config

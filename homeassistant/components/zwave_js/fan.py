@@ -151,11 +151,6 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
         await self.info.node.async_set_value(self._target_value, zwave_speed)
 
     @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-        return super().available and self.speed_configuration is not None
-
-    @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self.info.primary_value.value is None:
@@ -173,26 +168,19 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
         return 100 / self.speed_count
 
     @property
-    def speed_configuration(self) -> list[int] | None:
+    def speed_configuration(self) -> list[int]:
         """Return the speed configuration for this fan."""
         return self.data_template.get_speed_config(self.info.platform_data)
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-
-        # Entity should be unavailable if this isn't set
-        assert self.speed_configuration
-
         return len(self.speed_configuration)
 
     def percentage_to_zwave_speed(self, percentage: int) -> int:
         """Map a percentage to a ZWave speed."""
         if percentage == 0:
             return 0
-
-        # Entity should be unavailable if this isn't set
-        assert self.speed_configuration
 
         # Since the percentage steps are computed with rounding, we have to
         # search to find the appropriate speed.
@@ -209,9 +197,6 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
         """Convert a Zwave speed to a percentage."""
         if zwave_speed == 0:
             return 0
-
-        # Entity should be unavailable if this isn't set
-        assert self.speed_configuration
 
         percentage = 0.0
         for speed_limit in self.speed_configuration:
