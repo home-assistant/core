@@ -72,7 +72,7 @@ class WallConnectorBinarySensorEntity(WallConnectorEntity, BinarySensorEntity):
         super().__init__(wall_connectord_data)
 
     @property
-    def state(self):
+    def is_on(self):
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             return None
