@@ -485,11 +485,11 @@ async def test_form_dhcp(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
-        data={
-            dhcp.IP_ADDRESS: "1.2.3.4",
-            dhcp.HOSTNAME: "isy994-ems",
-            dhcp.MAC_ADDRESS: MOCK_MAC,
-        },
+        data=dhcp.DhcpServiceInfo(
+            ip="1.2.3.4",
+            hostname="isy994-ems",
+            macaddress=MOCK_MAC,
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -529,11 +529,11 @@ async def test_form_dhcp_existing_entry(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
-            data={
-                dhcp.IP_ADDRESS: "1.2.3.4",
-                dhcp.HOSTNAME: "isy994-ems",
-                dhcp.MAC_ADDRESS: MOCK_MAC,
-            },
+            data=dhcp.DhcpServiceInfo(
+                ip="1.2.3.4",
+                hostname="isy994-ems",
+                macaddress=MOCK_MAC,
+            ),
         )
         await hass.async_block_till_done()
 
@@ -559,11 +559,11 @@ async def test_form_dhcp_existing_entry_preserves_port(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
-            data={
-                dhcp.IP_ADDRESS: "1.2.3.4",
-                dhcp.HOSTNAME: "isy994-ems",
-                dhcp.MAC_ADDRESS: MOCK_MAC,
-            },
+            data=dhcp.DhcpServiceInfo(
+                ip="1.2.3.4",
+                hostname="isy994-ems",
+                macaddress=MOCK_MAC,
+            ),
         )
         await hass.async_block_till_done()
 

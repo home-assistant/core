@@ -3,7 +3,7 @@
         "info": {
             "arch": "CPU Mimarisi",
             "dev": "Geli\u015ftirme",
-            "docker": "Konteyner",
+            "docker": "Docker",
             "hassio": "S\u00fcperviz\u00f6r",
             "installation_type": "Kurulum T\u00fcr\u00fc",
             "os_name": "\u0130\u015fletim Sistemi Ailesi",

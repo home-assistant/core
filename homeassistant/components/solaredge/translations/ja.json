@@ -3,8 +3,11 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "\u3053\u306e\u30a4\u30f3\u30b9\u30c8\u30fc\u30eb\u306e\u540d\u524d"
-                }
+                    "api_key": "API\u30ad\u30fc",
+                    "name": "\u3053\u306e\u30a4\u30f3\u30b9\u30c8\u30fc\u30eb\u306e\u540d\u524d",
+                    "site_id": "SolarEdge\u306e\u30b5\u30a4\u30c8ID"
+                },
+                "title": "\u3053\u306e\u30a4\u30f3\u30b9\u30c8\u30fc\u30eb\u306eAPI\u30d1\u30e9\u30e1\u30fc\u30bf\u30fc\u306e\u5b9a\u7fa9"
             }
         }
     }

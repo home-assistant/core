@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "device_unsupported": "Cihaz desteklenmiyor.",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "reauth_unsuccessful": "Yeniden kimlik do\u011frulama ba\u015far\u0131s\u0131z oldu, l\u00fctfen entegrasyonu kald\u0131r\u0131n ve yeniden kurun."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "confirm_discovery": {
+                "description": "{host} Nettigo Air Monitor'\u00fc kurmak istiyor musunuz?"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "L\u00fctfen kullan\u0131c\u0131 ad\u0131 ve \u015fifreyi giriniz."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "L\u00fctfen sunucu i\u00e7in do\u011fru kullan\u0131c\u0131 ad\u0131n\u0131 ve \u015fifreyi girin: {host}"
+            },
+            "user": {
+                "data": {
+                    "host": "Ana bilgisayar"
+                },
+                "description": "Nettigo Air Monitor entegrasyonunu kurun."
+            }
+        }
+    }
+}

@@ -11,6 +11,7 @@ from homeassistant.components import sensor
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
+    ENTITY_ID_FORMAT,
     STATE_CLASSES_SCHEMA,
     SensorEntity,
 )
@@ -132,6 +133,7 @@ async def _async_setup_entity(
 class MqttSensor(MqttEntity, SensorEntity):
     """Representation of a sensor that can be updated using MQTT."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     _attr_last_reset = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
 

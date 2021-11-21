@@ -6,6 +6,7 @@ from typing import Any
 from xknx import XKNX
 from xknx.devices import Sensor as XknxSensor
 
+from homeassistant import config_entries
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES,
@@ -14,28 +15,25 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, StateType
 
-from .const import ATTR_SOURCE, DOMAIN
+from .const import ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN, SupportedPlatforms
 from .knx_entity import KnxEntity
 from .schema import SensorSchema
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up sensor(s) for KNX platform."""
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-    platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
+        SupportedPlatforms.SENSOR.value
+    ]
 
-    async_add_entities(
-        KNXSensor(xknx, entity_config) for entity_config in platform_config
-    )
+    async_add_entities(KNXSensor(xknx, entity_config) for entity_config in config)
 
 
 def _create_sensor(xknx: XKNX, config: ConfigType) -> XknxSensor:

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "invalid_pin": "\u7121\u52b9\u306aPIN"
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN\u30b3\u30fc\u30c9"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "\u30c7\u30fc\u30bf\u901a\u77e5\u30b5\u30fc\u30d3\u30b9\u306e\u4f7f\u7528\u3092\u8a31\u53ef\u3057\u307e\u3059\u3002"
+                }
+            }
+        }
+    }
+}

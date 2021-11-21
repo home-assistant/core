@@ -35,12 +35,16 @@ MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
     "SHVIN-1",
 )
 
-# Bulbs that support white & color modes
-DUAL_MODE_LIGHT_MODELS: Final = (
-    "SHBDUO-1",
+MODELS_SUPPORTING_LIGHT_EFFECTS: Final = (
     "SHBLB-1",
     "SHCB-1",
     "SHRGBW2",
+)
+
+# Bulbs that support white & color modes
+DUAL_MODE_LIGHT_MODELS: Final = (
+    "SHBLB-1",
+    "SHCB-1",
 )
 
 # Used in "_async_update_data" as timeout for polling data from devices.

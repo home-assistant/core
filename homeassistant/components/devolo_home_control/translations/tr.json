@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
@@ -10,8 +11,16 @@
         "step": {
             "user": {
                 "data": {
+                    "mydevolo_url": "mydevolo URL",
                     "password": "Parola",
                     "username": "E-posta / devolo ID"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Parola",
+                    "username": "E-posta / devolo kimli\u011fi"
                 }
             }
         }

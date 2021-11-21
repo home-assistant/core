@@ -1,27 +1,34 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "link_local_address": "Ba\u011flant\u0131 yerel adresleri desteklenmiyor",
+            "not_doorbird_device": "Bu cihaz bir DoorBird de\u011fil"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "unknown": "Beklenmeyen hata"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "name": "Cihaz ad\u0131",
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "title": "DoorBird'e ba\u011flan\u0131n"
             }
         }
     },
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "events": "Virg\u00fclle ayr\u0131lm\u0131\u015f olaylar\u0131n listesi."
+                },
                 "description": "\u0130zlemek istedi\u011finiz her etkinlik i\u00e7in virg\u00fclle ayr\u0131lm\u0131\u015f bir etkinlik ad\u0131 ekleyin. Bunlar\u0131 buraya girdikten sonra, onlar\u0131 belirli bir etkinli\u011fe atamak i\u00e7in DoorBird uygulamas\u0131n\u0131 kullan\u0131n. https://www.home-assistant.io/integrations/doorbird/#events adresindeki belgelere bak\u0131n. \u00d6rnek: birisi_pressed_the_button, hareket"
             }
         }

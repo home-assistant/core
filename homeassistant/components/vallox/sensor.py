@@ -52,6 +52,9 @@ class ValloxSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_name = f"{name} {description.name}"
 
+        uuid = self.coordinator.data.get_uuid()
+        self._attr_unique_id = f"{uuid}-{description.key}"
+
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""

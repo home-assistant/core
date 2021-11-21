@@ -45,6 +45,7 @@ from .const import (
     ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_DICT,
+    MODELS_SUPPORTING_LIGHT_EFFECTS,
     POLLING_TIMEOUT_SEC,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -165,8 +166,12 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await device.initialize()
-        except (asyncio.TimeoutError, OSError) as err:
-            raise ConfigEntryNotReady from err
+        except asyncio.TimeoutError as err:
+            raise ConfigEntryNotReady(
+                str(err) or "Timeout during device setup"
+            ) from err
+        except OSError as err:
+            raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
 
         await async_block_device_setup(hass, entry, device)
     elif sleep_period is None or device_entry is None:
@@ -218,8 +223,10 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
             device = await RpcDevice.create(
                 aiohttp_client.async_get_clientsession(hass), options
             )
-    except (asyncio.TimeoutError, OSError) as err:
-        raise ConfigEntryNotReady from err
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady(str(err) or "Timeout during device setup") from err
+    except OSError as err:
+        raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
 
     device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         RPC
@@ -313,11 +320,12 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
             if self.model in DUAL_MODE_LIGHT_MODELS:
-                if "mode" in block.sensor_ids and self.model != "SHRGBW2":
+                if "mode" in block.sensor_ids:
                     if self._last_mode != block.mode:
                         self._last_cfg_changed = None
                     self._last_mode = block.mode
 
+            if self.model in MODELS_SUPPORTING_LIGHT_EFFECTS:
                 if "effect" in block.sensor_ids:
                     if self._last_effect != block.effect:
                         self._last_cfg_changed = None

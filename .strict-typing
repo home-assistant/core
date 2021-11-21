@@ -42,6 +42,7 @@ homeassistant.components.efergy.*
 homeassistant.components.elgato.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
+homeassistant.components.evil_genius_labs.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.fitbit.*
 homeassistant.components.flunearyou.*
@@ -65,6 +66,7 @@ homeassistant.components.image_processing.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
 homeassistant.components.iqvia.*
+homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
@@ -131,11 +133,13 @@ homeassistant.components.tplink.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
 homeassistant.components.tts.*
+homeassistant.components.twentemilieu.*
 homeassistant.components.upcloud.*
 homeassistant.components.uptime.*
 homeassistant.components.uptimerobot.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
+homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*

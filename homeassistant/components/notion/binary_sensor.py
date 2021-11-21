@@ -22,7 +22,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NotionEntity
 from .const import (
-    DATA_COORDINATOR,
     DOMAIN,
     LOGGER,
     SENSOR_BATTERY,
@@ -122,7 +121,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Notion sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [

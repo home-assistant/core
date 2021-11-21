@@ -1715,7 +1715,7 @@ class Config:
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
         store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True
+            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
         )
 
         if not (data := await store.async_load()):
@@ -1763,7 +1763,7 @@ class Config:
         }
 
         store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True
+            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
         )
         await store.async_save(data)
 

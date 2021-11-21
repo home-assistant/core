@@ -6,19 +6,37 @@
             "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
         "error": {
-            "invalid_auth": "Autentikasi tidak valid"
+            "invalid_auth": "Autentikasi tidak valid",
+            "login_error": "Kesalahan masuk ({code}): {msg}"
         },
         "flow_title": "Konfigurasi Tuya",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "ID Akses",
+                    "access_secret": "Kode Rahasia Akses",
+                    "country_code": "Kode Negara",
+                    "endpoint": "Zona Ketersediaan",
+                    "password": "Kata Sandi",
+                    "tuya_app_type": "Aplikasi Seluler",
+                    "username": "Akun"
+                },
+                "description": "Masukkan kredensial Tuya Anda",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
-                    "country_code": "Kode negara akun Anda (mis., 1 untuk AS atau 86 untuk China)",
+                    "access_id": "ID Akses Tuya IoT",
+                    "access_secret": "Kode Rahasia Akses Tuya IoT",
+                    "country_code": "Negara",
                     "password": "Kata Sandi",
                     "platform": "Aplikasi tempat akun Anda terdaftar",
-                    "username": "Nama Pengguna"
+                    "region": "Wilayah",
+                    "tuya_project_type": "Jenis proyek awan Tuya",
+                    "username": "Akun"
                 },
                 "description": "Masukkan kredensial Tuya Anda.",
-                "title": "Tuya"
+                "title": "Integrasi Tuya"
             }
         }
     },

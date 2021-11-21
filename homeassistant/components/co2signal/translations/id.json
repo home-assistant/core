@@ -2,9 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
+            "api_ratelimit": "Batas Tingkat API terlampaui",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
+            "api_ratelimit": "Batas Tingkat API terlampaui",
             "invalid_auth": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
@@ -22,8 +24,10 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Token Akses"
-                }
+                    "api_key": "Token Akses",
+                    "location": "Dapatkan data untuk"
+                },
+                "description": "Kunjungi https://co2signal.com/ untuk meminta token."
             }
         }
     }

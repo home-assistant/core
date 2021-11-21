@@ -6,6 +6,7 @@
             "connection_error": "Ba\u011flanma hatas\u0131"
         },
         "error": {
+            "discovery_error": "Motion Gateway bulunamad\u0131",
             "invalid_interface": "Ge\u00e7ersiz a\u011f aray\u00fcz\u00fc"
         },
         "flow_title": "Hareketli Panjurlar",
@@ -14,21 +15,24 @@
                 "data": {
                     "api_key": "API Anahtar\u0131",
                     "interface": "Kullan\u0131lacak a\u011f aray\u00fcz\u00fc"
-                }
+                },
+                "description": "16 karakterlik API Anahtar\u0131na ihtiyac\u0131n\u0131z olacak, talimatlar i\u00e7in https://www.home-assistant.io/integrations/motion_blinds/#retriving-the-key adresine bak\u0131n.",
+                "title": "Hareketli Perdeler"
             },
             "select": {
                 "data": {
-                    "select_ip": "\u0130p Adresi"
+                    "select_ip": "IP Adresi"
                 },
+                "description": "Motion Gateway'e ba\u011flamak istiyorsan\u0131z kurulumu tekrar \u00e7al\u0131\u015ft\u0131r\u0131n",
                 "title": "Ba\u011flamak istedi\u011finiz Hareket A\u011f Ge\u00e7idini se\u00e7in"
             },
             "user": {
                 "data": {
                     "api_key": "API Anahtar\u0131",
-                    "host": "IP adresi"
+                    "host": "IP Adresi"
                 },
                 "description": "Motion Gateway'inize ba\u011flan\u0131n, IP adresi ayarlanmad\u0131ysa, otomatik ke\u015fif kullan\u0131l\u0131r",
-                "title": "Hareketli Panjurlar"
+                "title": "Hareketli Perdeler"
             }
         }
     },

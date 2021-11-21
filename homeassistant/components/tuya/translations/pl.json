@@ -26,14 +26,16 @@
             },
             "user": {
                 "data": {
-                    "country_code": "Kod kraju twojego konta (np. 1 dla USA lub 86 dla Chin)",
+                    "access_id": "Identyfikator dost\u0119pu do Tuya IoT",
+                    "access_secret": "Has\u0142o dost\u0119pu do Tuya IoT",
+                    "country_code": "Kraj",
                     "password": "Has\u0142o",
                     "platform": "Aplikacja, w kt\u00f3rej zarejestrowane jest Twoje konto",
                     "region": "Region",
                     "tuya_project_type": "Typ projektu chmury Tuya",
-                    "username": "Nazwa u\u017cytkownika"
+                    "username": "Konto"
                 },
-                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce",
+                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce Tuya",
                 "title": "Integracja Tuya"
             }
         }

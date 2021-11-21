@@ -13,11 +13,7 @@ from flux_led.const import (
 )
 from flux_led.protocol import LEDENETRawState
 
-from homeassistant.components.dhcp import (
-    HOSTNAME as DHCP_HOSTNAME,
-    IP_ADDRESS as DHCP_IP_ADDRESS,
-    MAC_ADDRESS as DHCP_MAC_ADDRESS,
-)
+from homeassistant.components import dhcp
 from homeassistant.components.flux_led.const import FLUX_HOST, FLUX_MAC, FLUX_MODEL
 from homeassistant.core import HomeAssistant
 
@@ -30,11 +26,11 @@ FLUX_MAC_ADDRESS = "aabbccddeeff"
 
 DEFAULT_ENTRY_TITLE = f"{MODEL} {FLUX_MAC_ADDRESS}"
 
-DHCP_DISCOVERY = {
-    DHCP_HOSTNAME: MODEL,
-    DHCP_IP_ADDRESS: IP_ADDRESS,
-    DHCP_MAC_ADDRESS: MAC_ADDRESS,
-}
+DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+    hostname=MODEL,
+    ip=IP_ADDRESS,
+    macaddress=MAC_ADDRESS,
+)
 FLUX_DISCOVERY = {FLUX_HOST: IP_ADDRESS, FLUX_MODEL: MODEL, FLUX_MAC: FLUX_MAC_ADDRESS}
 
 
@@ -46,8 +42,10 @@ def _mocked_bulb() -> AIOWifiLedBulb:
 
     bulb.device_type = DeviceType.Bulb
     bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
+    bulb.effect_list = ["some_effect"]
     bulb.async_set_custom_pattern = AsyncMock()
     bulb.async_set_preset_pattern = AsyncMock()
+    bulb.async_set_effect = AsyncMock()
     bulb.async_set_white_temp = AsyncMock()
     bulb.async_stop = AsyncMock()
     bulb.async_update = AsyncMock()
@@ -68,6 +66,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.getWhiteTemperature = MagicMock(return_value=(2700, 128))
     bulb.brightness = 128
     bulb.model_num = 0x35
+    bulb.effect = None
     bulb.model = "Smart Bulb (0x35)"
     bulb.version_num = 8
     bulb.rgbwcapable = True

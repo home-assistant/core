@@ -1,0 +1,22 @@
+{
+    "config": {
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wanted_max_items": "\u8868\u793a\u3057\u305f\u3044\u30a2\u30a4\u30c6\u30e0\u306e\u6700\u5927\u6570"
+                }
+            }
+        }
+    }
+}

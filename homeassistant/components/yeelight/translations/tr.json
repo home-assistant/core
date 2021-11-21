@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "no_devices_found": "A\u011fda cihaz bulunamad\u0131"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "host": "Ana Bilgisayar"
-                }
+                },
+                "description": "Ana bilgisayar\u0131 bo\u015f b\u0131rak\u0131rsan\u0131z, cihazlar\u0131 bulmak i\u00e7in ke\u015fif kullan\u0131lacakt\u0131r."
             }
         }
     },
@@ -27,11 +29,13 @@
         "step": {
             "init": {
                 "data": {
-                    "model": "Model (Opsiyonel)",
+                    "model": "Model",
+                    "nightlight_switch": "Gece I\u015f\u0131\u011f\u0131 Anahtar\u0131n\u0131 Kullan",
                     "save_on_change": "De\u011fi\u015fiklikte Durumu Kaydet",
                     "transition": "Ge\u00e7i\u015f S\u00fcresi (ms)",
                     "use_music_mode": "M\u00fczik Modunu Etkinle\u015ftir"
-                }
+                },
+                "description": "Modeli bo\u015f b\u0131rak\u0131rsan\u0131z, otomatik olarak alg\u0131lanacakt\u0131r."
             }
         }
     }

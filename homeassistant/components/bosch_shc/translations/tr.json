@@ -1,5 +1,16 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "pairing_failed": "E\u015fle\u015ftirme ba\u015far\u0131s\u0131z; l\u00fctfen Bosch Ak\u0131ll\u0131 Ev Kumandas\u0131n\u0131n e\u015fle\u015ftirme modunda (LED yan\u0131p s\u00f6n\u00fcyor) ve \u015fifrenizin do\u011fru oldu\u011funu kontrol edin.",
+            "session_error": "Oturum hatas\u0131: API, Tamam Olmayan sonucu d\u00f6nd\u00fcr\u00fcr.",
+            "unknown": "Beklenmeyen hata"
+        },
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
@@ -10,7 +21,15 @@
                     "password": "Ak\u0131ll\u0131 Ev Denetleyicisinin \u015eifresi"
                 }
             },
+            "reauth_confirm": {
+                "description": "bosch_shc entegrasyonunun hesab\u0131n\u0131z\u0131 yeniden do\u011frulamas\u0131 gerekiyor",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
+            },
             "user": {
+                "data": {
+                    "host": "Ana bilgisayar"
+                },
+                "description": "Ev Asistan\u0131 ile izleme ve kontrole izin vermek i\u00e7in Bosch Ak\u0131ll\u0131 Ev Denetleyicinizi kurun.",
                 "title": "SHC kimlik do\u011frulama parametreleri"
             }
         }

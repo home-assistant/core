@@ -1022,6 +1022,73 @@ async def test_track_template_result(hass):
     assert len(wildercard_runs) == 4
 
 
+async def test_track_template_result_none(hass):
+    """Test tracking template."""
+    specific_runs = []
+    wildcard_runs = []
+    wildercard_runs = []
+
+    template_condition = Template("{{state_attr('sensor.test', 'battery')}}", hass)
+    template_condition_var = Template(
+        "{{(state_attr('sensor.test', 'battery')|int) + test }}", hass
+    )
+
+    def specific_run_callback(event, updates):
+        track_result = updates.pop()
+        result = int(track_result.result) if track_result.result is not None else None
+        specific_runs.append(result)
+
+    async_track_template_result(
+        hass, [TrackTemplate(template_condition, None)], specific_run_callback
+    )
+
+    @ha.callback
+    def wildcard_run_callback(event, updates):
+        track_result = updates.pop()
+        last_result = (
+            int(track_result.last_result)
+            if track_result.last_result is not None
+            else None
+        )
+        result = int(track_result.result) if track_result.result is not None else None
+        wildcard_runs.append((last_result, result))
+
+    async_track_template_result(
+        hass, [TrackTemplate(template_condition, None)], wildcard_run_callback
+    )
+
+    async def wildercard_run_callback(event, updates):
+        track_result = updates.pop()
+        last_result = (
+            int(track_result.last_result)
+            if track_result.last_result is not None
+            else None
+        )
+        result = int(track_result.result) if track_result.result is not None else None
+        wildercard_runs.append((last_result, result))
+
+    async_track_template_result(
+        hass,
+        [TrackTemplate(template_condition_var, {"test": 5})],
+        wildercard_run_callback,
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test", "-")
+    await hass.async_block_till_done()
+
+    assert specific_runs == [None]
+    assert wildcard_runs == [(None, None)]
+    assert wildercard_runs == [(None, 5)]
+
+    hass.states.async_set("sensor.test", "-", {"battery": 5})
+    await hass.async_block_till_done()
+
+    assert specific_runs == [None, 5]
+    assert wildcard_runs == [(None, None), (None, 5)]
+    assert wildercard_runs == [(None, 5), (5, 10)]
+
+
 async def test_track_template_result_super_template(hass):
     """Test tracking template with super template listening to same entity."""
     specific_runs = []

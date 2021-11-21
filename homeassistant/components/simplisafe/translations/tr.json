@@ -6,6 +6,7 @@
             "wrong_account": "Sa\u011flanan kullan\u0131c\u0131 kimlik bilgileri bu SimpliSafe hesab\u0131yla e\u015fle\u015fmiyor."
         },
         "error": {
+            "identifier_exists": "Hesap zaten kay\u0131tl\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "still_awaiting_mfa": "Hala MFA e-posta t\u0131klamas\u0131 bekleniyor",
             "unknown": "Beklenmeyen hata"
@@ -31,10 +32,22 @@
             },
             "user": {
                 "data": {
+                    "code": "Kod (Home Assistant kullan\u0131c\u0131 aray\u00fcz\u00fcnde kullan\u0131l\u0131r)",
                     "password": "Parola",
                     "username": "E-posta adresi"
                 },
-                "description": "SimpliSafe, 2021'den itibaren web uygulamas\u0131 \u00fczerinden yeni bir kimlik do\u011frulama mekanizmas\u0131na ge\u00e7ti. Teknik s\u0131n\u0131rlamalar nedeniyle, bu s\u00fcrecin sonunda manuel bir ad\u0131m vard\u0131r; l\u00fctfen ba\u015flamadan \u00f6nce [belgeleri](yetkilendirme kodu http://home assistant.io/integrations/simplisafe#getting) okudu\u011funuzdan emin olun.\n\nHaz\u0131r oldu\u011funuzda, SimpliSafe web uygulamas\u0131n\u0131 a\u00e7mak ve kimlik bilgilerinizi girmek i\u00e7in [buray\u0131]({url}) t\u0131klat\u0131n. \u0130\u015flem tamamland\u0131\u011f\u0131nda, buraya d\u00f6n\u00fcn ve G\u00f6nder'i t\u0131klat\u0131n."
+                "description": "2021'den itibaren SimpliSafe, web uygulamas\u0131 arac\u0131l\u0131\u011f\u0131yla yeni bir kimlik do\u011frulama mekanizmas\u0131na ge\u00e7ti. Teknik s\u0131n\u0131rlamalar nedeniyle bu i\u015flemin sonunda manuel bir ad\u0131m vard\u0131r; l\u00fctfen ba\u015flamadan \u00f6nce [belgeleri](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) okudu\u011funuzdan emin olun. \n\n Haz\u0131r oldu\u011funuzda SimpliSafe web uygulamas\u0131n\u0131 a\u00e7mak ve kimlik bilgilerinizi girmek i\u00e7in [buray\u0131]( {url} \u0130\u015flem tamamland\u0131\u011f\u0131nda buraya d\u00f6n\u00fcn ve G\u00f6nder'e t\u0131klay\u0131n.",
+                "title": "Bilgilerinizi doldurun."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kod (Home Assistant kullan\u0131c\u0131 aray\u00fcz\u00fcnde kullan\u0131l\u0131r)"
+                },
+                "title": "SimpliSafe'i yap\u0131land\u0131r\u0131n"
             }
         }
     }

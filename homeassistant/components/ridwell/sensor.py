@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date, datetime
 from typing import Any
 
 from aioridwell.client import RidwellAccount, RidwellPickupEvent
@@ -76,7 +77,7 @@ class RidwellSensor(CoordinatorEntity, SensorEntity):
         return attrs
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | date | datetime:
         """Return the value reported by the sensor."""
         event: RidwellPickupEvent = self.coordinator.data[self._account.account_id]
-        return event.pickup_date.isoformat()
+        return event.pickup_date

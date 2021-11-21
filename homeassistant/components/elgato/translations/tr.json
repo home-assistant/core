@@ -7,14 +7,17 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
+        "flow_title": "{serial_number}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "port": "Port"
-                }
+                },
+                "description": "Elgato Light'\u0131n\u0131z\u0131 Home Assistant ile entegre olacak \u015fekilde ayarlay\u0131n."
             },
             "zeroconf_confirm": {
+                "description": "Seri numaras\u0131 ` {serial_number} ` olan Elgato Light'\u0131 Home Assistant'a eklemek ister misiniz?",
                 "title": "Ke\u015ffedilen Elgato Light cihaz\u0131"
             }
         }

@@ -134,8 +134,8 @@ IGNORE_VIOLATIONS = {
     # Demo
     ("demo", "manual"),
     ("demo", "openalpr_local"),
-    # Migration of settings from zeroconf to network
-    ("network", "zeroconf"),
+    # This would be a circular dep
+    ("http", "network"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),

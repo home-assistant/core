@@ -1,5 +1,6 @@
 """Test Home Assistant template helper methods."""
-from datetime import datetime
+from datetime import datetime, timedelta
+import logging
 import math
 import random
 from unittest.mock import patch
@@ -12,13 +13,16 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
+    LENGTH_MILLIMETERS,
     MASS_GRAMS,
     PRESSURE_PA,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import device_registry as dr, template
+from homeassistant.helpers import device_registry as dr, entity, template
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
@@ -34,7 +38,14 @@ from tests.common import (
 def _set_up_units(hass):
     """Set up the tests."""
     hass.config.units = UnitSystem(
-        "custom", TEMP_CELSIUS, LENGTH_METERS, VOLUME_LITERS, MASS_GRAMS, PRESSURE_PA
+        "custom",
+        TEMP_CELSIUS,
+        LENGTH_METERS,
+        SPEED_KILOMETERS_PER_HOUR,
+        VOLUME_LITERS,
+        MASS_GRAMS,
+        PRESSURE_PA,
+        LENGTH_MILLIMETERS,
     )
 
 
@@ -744,6 +755,21 @@ def test_to_json(hass):
         "{{ {'Foo': 'Bar'} | to_json }}", hass
     ).async_render()
     assert actual_result == expected_result
+
+
+def test_to_json_string(hass):
+    """Test the object to JSON string filter."""
+
+    # Note that we're not testing the actual json.loads and json.dumps methods,
+    # only the filters, so we don't need to be exhaustive with our sample JSON.
+    actual_value_ascii = template.Template(
+        "{{ 'Bar ҝ éèà' | to_json }}", hass
+    ).async_render()
+    assert actual_value_ascii == '"Bar \\u049d \\u00e9\\u00e8\\u00e0"'
+    actual_value = template.Template(
+        "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=False) }}", hass
+    ).async_render()
+    assert actual_value == '"Bar ҝ éèà"'
 
 
 def test_from_json(hass):
@@ -1822,6 +1848,44 @@ async def test_device_entities(hass):
     assert_result_info(
         info, "light.hue_5678, light.hue_abcd", ["light.hue_5678", "light.hue_abcd"]
     )
+    assert info.rate_limit is None
+
+
+async def test_integration_entities(hass):
+    """Test integration_entities function."""
+    entity_registry = mock_registry(hass)
+
+    # test entities for given config entry title
+    config_entry = MockConfigEntry(domain="mock", title="Mock bridge 2")
+    config_entry.add_to_hass(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "mock", "test", config_entry=config_entry
+    )
+    info = render_to_info(hass, "{{ integration_entities('Mock bridge 2') }}")
+    assert_result_info(info, [entity_entry.entity_id])
+    assert info.rate_limit is None
+
+    # test integration entities not in entity registry
+    mock_entity = entity.Entity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = "light.test_entity"
+    mock_entity.platform = EntityPlatform(
+        hass=hass,
+        logger=logging.getLogger(__name__),
+        domain="light",
+        platform_name="entryless_integration",
+        platform=None,
+        scan_interval=timedelta(seconds=30),
+        entity_namespace=None,
+    )
+    await mock_entity.async_internal_added_to_hass()
+    info = render_to_info(hass, "{{ integration_entities('entryless_integration') }}")
+    assert_result_info(info, ["light.test_entity"])
+    assert info.rate_limit is None
+
+    # Test non existing integration/entry title
+    info = render_to_info(hass, "{{ integration_entities('abc123') }}")
+    assert_result_info(info, [])
     assert info.rate_limit is None
 
 

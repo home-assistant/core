@@ -1,0 +1,32 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u30db\u30b9\u30c8"
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "connection_type": "KNX\u63a5\u7d9a\u30bf\u30a4\u30d7",
+                    "rate_limit": "1 \u79d2\u3042\u305f\u308a\u306e\u6700\u5927\u9001\u4fe1\u96fb\u5831(telegrams )\u6570",
+                    "state_updater": "KNX\u30d0\u30b9\u304b\u3089\u306e\u8aad\u307f\u53d6\u308a\u72b6\u614b\u3092\u30b0\u30ed\u30fc\u30d0\u30eb\u306b\u6709\u52b9\u306b\u3059\u308b"
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8",
+                    "route_back": "\u30eb\u30fc\u30c8\u30d0\u30c3\u30af / NAT\u30e2\u30fc\u30c9"
+                }
+            }
+        }
+    }
+}

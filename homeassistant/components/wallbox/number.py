@@ -8,12 +8,7 @@ from homeassistant.const import DEVICE_CLASS_CURRENT
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import InvalidAuth
-from .const import (
-    CONF_CONNECTIONS,
-    CONF_MAX_AVAILABLE_POWER_KEY,
-    CONF_MAX_CHARGING_CURRENT_KEY,
-    DOMAIN,
-)
+from .const import CONF_MAX_AVAILABLE_POWER_KEY, CONF_MAX_CHARGING_CURRENT_KEY, DOMAIN
 
 
 @dataclass
@@ -23,7 +18,7 @@ class WallboxNumberEntityDescription(NumberEntityDescription):
     min_value: float = 0
 
 
-NUMBER_TYPES: dict[str, NumberEntityDescription] = {
+NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CONF_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CONF_MAX_CHARGING_CURRENT_KEY,
         name="Max. Charging Current",
@@ -35,8 +30,7 @@ NUMBER_TYPES: dict[str, NumberEntityDescription] = {
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Create wallbox sensor entities in HASS."""
-    coordinator = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
-
+    coordinator = hass.data[DOMAIN][config.entry_id]
     # Check if the user is authorized to change current, if so, add number component:
     try:
         await coordinator.async_set_charging_current(
@@ -56,6 +50,8 @@ async def async_setup_entry(hass, config, async_add_entities):
 
 class WallboxNumber(CoordinatorEntity, NumberEntity):
     """Representation of the Wallbox portal."""
+
+    entity_description: WallboxNumberEntityDescription
 
     def __init__(
         self, coordinator, config, description: WallboxNumberEntityDescription

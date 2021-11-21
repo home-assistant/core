@@ -18,6 +18,13 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Token Akses"
+                },
+                "description": "Untuk menautkan akun Google Anda, [otorisasi akun Anda]({url}).\n\nSetelah otorisasi, salin dan tempel Token Auth yang disediakan di bawah ini.",
+                "title": "Tautkan Akun Google"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Penyedia"

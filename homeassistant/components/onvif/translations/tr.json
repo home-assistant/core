@@ -2,7 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor"
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "no_h264": "Kullan\u0131labilir H264 ak\u0131\u015f\u0131 yok. Cihaz\u0131n\u0131zdaki profil yap\u0131land\u0131rmas\u0131n\u0131 kontrol edin.",
+            "no_mac": "ONVIF cihaz\u0131 i\u00e7in benzersiz kimlik yap\u0131land\u0131r\u0131lamad\u0131.",
+            "onvif_error": "ONVIF cihaz\u0131 ayarlan\u0131rken hata olu\u015ftu. Daha fazla bilgi i\u00e7in g\u00fcnl\u00fckleri kontrol edin."
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
@@ -12,15 +15,24 @@
                 "data": {
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "title": "Kimlik do\u011frulamay\u0131 yap\u0131land\u0131r"
             },
             "configure": {
+                "data": {
+                    "host": "Ana bilgisayar",
+                    "name": "Ad",
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
                 "title": "ONVIF cihaz\u0131n\u0131 yap\u0131land\u0131r\u0131n"
             },
             "configure_profile": {
                 "data": {
                     "include": "Kamera varl\u0131\u011f\u0131 olu\u015ftur"
                 },
+                "description": "{profile} i\u00e7in {resolution} \u00e7\u00f6z\u00fcn\u00fcrl\u00fckte kamera varl\u0131\u011f\u0131 olu\u015fturulsun mu?",
                 "title": "Profilleri Yap\u0131land\u0131r"
             },
             "device": {
@@ -31,7 +43,7 @@
             },
             "manual_input": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "name": "Ad",
                     "port": "Port"
                 },

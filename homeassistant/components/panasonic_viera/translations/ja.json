@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN\u30b3\u30fc\u30c9"
+                }
+            }
+        }
+    }
+}

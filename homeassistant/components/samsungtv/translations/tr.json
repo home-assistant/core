@@ -1,16 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bu Samsung TV zaten ayarlanm\u0131\u015f.",
-            "already_in_progress": "Samsung TV ayar\u0131 zaten s\u00fcr\u00fcyor.",
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "auth_missing": "Home Assistant'\u0131n bu Samsung TV'ye ba\u011flanma izni yok. Home Assistant'\u0131 yetkilendirmek i\u00e7in l\u00fctfen TV'nin ayarlar\u0131n\u0131 kontrol et.",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "id_missing": "Bu Samsung cihaz\u0131n\u0131n Seri Numaras\u0131 yok.",
             "missing_config_entry": "Bu Samsung cihaz\u0131nda bir yap\u0131land\u0131rma giri\u015fi yok.",
-            "not_supported": "Bu Samsung TV cihaz\u0131 \u015fu anda desteklenmiyor."
+            "not_supported": "Bu Samsung TV cihaz\u0131 \u015fu anda desteklenmiyor.",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "unknown": "Beklenmeyen hata"
         },
-        "flow_title": "Samsung TV: {model}",
+        "error": {
+            "auth_missing": "Home Assistant'\u0131n bu Samsung TV'ye ba\u011flanma izni yok. Home Assistant'\u0131 yetkilendirmek i\u00e7in l\u00fctfen TV'nin ayarlar\u0131n\u0131 kontrol et."
+        },
+        "flow_title": "{device}",
         "step": {
             "confirm": {
+                "description": "{device} kurulumunu yapmak istiyor musunuz? Home Assistant'\u0131 daha \u00f6nce hi\u00e7 ba\u011flamad\u0131ysan\u0131z, TV'nizde yetki isteyen bir a\u00e7\u0131l\u0131r pencere g\u00f6rmelisiniz.",
                 "title": "Samsung TV"
             },
             "reauth_confirm": {
@@ -18,7 +25,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "name": "Ad"
                 },
                 "description": "Samsung TV bilgilerini gir. Daha \u00f6nce hi\u00e7 Home Assistant'a ba\u011flamad\u0131ysan, TV'nde izin isteyen bir pencere g\u00f6receksindir."

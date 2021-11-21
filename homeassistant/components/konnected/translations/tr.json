@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "not_konn_panel": "Bilinen bir Konnected.io cihaz\u0131 de\u011fil",
             "unknown": "Beklenmeyen hata"
         },
         "error": {
@@ -10,38 +11,63 @@
         },
         "step": {
             "confirm": {
-                "description": "Model: {model}\nID: {id}\nSunucu: {host}\nPort: {port}\n\nIO ve panel davran\u0131\u015f\u0131n\u0131 Ba\u011fl\u0131 Alarm Paneli ayarlar\u0131nda yap\u0131land\u0131rabilirsiniz."
+                "description": "Model: {model}\nID: {id}\nSunucu: {host}\nPort: {port}\n\nIO ve panel davran\u0131\u015f\u0131n\u0131 Ba\u011fl\u0131 Alarm Paneli ayarlar\u0131nda yap\u0131land\u0131rabilirsiniz.",
+                "title": "Konnected Cihaz\u0131 Haz\u0131r"
             },
             "import_confirm": {
-                "description": "configuration.yaml'de {id} kimli\u011fine sahip Ba\u011fl\u0131 bir Alarm Paneli ke\u015ffedildi. Bu ak\u0131\u015f, onu bir yap\u0131land\u0131rma giri\u015fine aktarman\u0131za olanak tan\u0131r."
+                "description": "configuration.yaml'de {id} kimli\u011fine sahip Ba\u011fl\u0131 bir Alarm Paneli ke\u015ffedildi. Bu ak\u0131\u015f, onu bir yap\u0131land\u0131rma giri\u015fine aktarman\u0131za olanak tan\u0131r.",
+                "title": "Konnected Ayg\u0131t\u0131n\u0131 \u0130\u00e7eri Aktar"
             },
             "user": {
                 "data": {
-                    "host": "\u0130p Adresi",
+                    "host": "IP Adresi",
                     "port": "Port"
-                }
+                },
+                "description": "L\u00fctfen Konnected Paneliniz i\u00e7in ana bilgisayar bilgilerini girin."
             }
         }
     },
     "options": {
+        "abort": {
+            "not_konn_panel": "Bilinen bir Konnected.io cihaz\u0131 de\u011fil"
+        },
         "error": {
-            "bad_host": "Ge\u00e7ersiz, Ge\u00e7ersiz K\u0131lma API ana makine url'si"
+            "bad_host": "Ge\u00e7ersiz, Ge\u00e7ersiz K\u0131lma API ana makine url'si",
+            "one": "Bo\u015f",
+            "other": "Bo\u015f"
         },
         "step": {
             "options_binary": {
                 "data": {
-                    "inverse": "A\u00e7\u0131k / kapal\u0131 durumunu tersine \u00e7evirin"
-                }
+                    "inverse": "A\u00e7\u0131k / kapal\u0131 durumunu tersine \u00e7evirin",
+                    "name": "Ad (iste\u011fe ba\u011fl\u0131)",
+                    "type": "\u0130kili Sens\u00f6r Tipi"
+                },
+                "description": "{zone} se\u00e7enekleri",
+                "title": "\u0130kili Sens\u00f6r\u00fc Yap\u0131land\u0131r"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Ad (iste\u011fe ba\u011fl\u0131)",
+                    "poll_interval": "Yoklama Aral\u0131\u011f\u0131 (dakika) (iste\u011fe ba\u011fl\u0131)",
+                    "type": "Sens\u00f6r Tipi"
+                },
+                "description": "{zone} se\u00e7enekleri",
+                "title": "Dijital Sens\u00f6r\u00fc Yap\u0131land\u0131r"
             },
             "options_io": {
                 "data": {
+                    "1": "B\u00f6lge 1",
+                    "2": "B\u00f6lge 2",
                     "3": "B\u00f6lge 3",
                     "4": "B\u00f6lge 4",
                     "5": "B\u00f6lge 5",
                     "6": "B\u00f6lge 6",
                     "7": "B\u00f6lge 7",
-                    "out": "OUT"
-                }
+                    "out": "DI\u015eARI"
+                },
+                "description": "{host} bir {model} ke\u015ffetti. A\u015fa\u011f\u0131dan her G/\u00c7'\u0131n temel yap\u0131land\u0131rmas\u0131n\u0131 se\u00e7in - G/\u00c7'a ba\u011fl\u0131 olarak ikili sens\u00f6rlere (a\u00e7\u0131k/kapal\u0131 kontaklar), dijital sens\u00f6rlere (dht ve ds18b20) veya de\u011fi\u015ftirilebilir \u00e7\u0131k\u0131\u015flara izin verebilir. Sonraki ad\u0131mlarda ayr\u0131nt\u0131l\u0131 se\u00e7enekleri yap\u0131land\u0131rabileceksiniz.",
+                "title": "G/\u00c7'\u0131 yap\u0131land\u0131r"
             },
             "options_io_ext": {
                 "data": {
@@ -51,15 +77,33 @@
                     "8": "B\u00f6lge 8",
                     "9": "B\u00f6lge 9",
                     "alarm1": "ALARM1",
-                    "alarm2_out2": "OUT2/ALARM2",
-                    "out1": "OUT1"
-                }
+                    "alarm2_out2": "\u00c7IKI\u015e2/ALARM2",
+                    "out1": "\u00c7IKI\u015e1"
+                },
+                "description": "A\u015fa\u011f\u0131da kalan G/\u00c7'nin yap\u0131land\u0131rmas\u0131n\u0131 se\u00e7in. Sonraki ad\u0131mlarda ayr\u0131nt\u0131l\u0131 se\u00e7enekleri yap\u0131land\u0131rabileceksiniz.",
+                "title": "Geni\u015fletilmi\u015f G/\u00c7'yi Yap\u0131land\u0131r"
             },
             "options_misc": {
                 "data": {
                     "api_host": "API ana makine URL'sini ge\u00e7ersiz k\u0131l (iste\u011fe ba\u011fl\u0131)",
+                    "blink": "Durum de\u011fi\u015fikli\u011fi g\u00f6nderilirken panelin LED'ini yan\u0131p s\u00f6nd\u00fcr",
+                    "discovery": "A\u011f\u0131n\u0131zdaki ke\u015fif isteklerine yan\u0131t verin",
                     "override_api_host": "Varsay\u0131lan Home Assistant API ana bilgisayar paneli URL'sini ge\u00e7ersiz k\u0131l"
-                }
+                },
+                "description": "L\u00fctfen paneliniz i\u00e7in istedi\u011finiz davran\u0131\u015f\u0131 se\u00e7in",
+                "title": "\u00c7e\u015fitli Yap\u0131land\u0131rma"
+            },
+            "options_switch": {
+                "data": {
+                    "activation": "A\u00e7\u0131kken \u00e7\u0131kt\u0131",
+                    "momentary": "Darbe s\u00fcresi (ms) (iste\u011fe ba\u011fl\u0131)",
+                    "more_states": "Bu b\u00f6lge i\u00e7in ek durumlar yap\u0131land\u0131r\u0131n",
+                    "name": "Ad (iste\u011fe ba\u011fl\u0131)",
+                    "pause": "Darbeler aras\u0131nda duraklama (ms) (iste\u011fe ba\u011fl\u0131)",
+                    "repeat": "Tekrarlanacak zamanlar (-1=sonsuz) (iste\u011fe ba\u011fl\u0131)"
+                },
+                "description": "{zone} se\u00e7enekleri: durum {state}",
+                "title": "De\u011fi\u015ftirilebilir \u00c7\u0131k\u0131\u015f\u0131 Yap\u0131land\u0131r"
             }
         }
     }

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor"
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "not_huawei_lte": "Huawei LTE cihaz\u0131 de\u011fil"
         },
         "error": {
             "connection_timeout": "Ba\u011flant\u0131 zamana\u015f\u0131m\u0131",
@@ -22,7 +23,8 @@
                     "url": "URL",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
-                "description": "Cihaz eri\u015fim ayr\u0131nt\u0131lar\u0131n\u0131 girin. Kullan\u0131c\u0131 ad\u0131 ve parolan\u0131n belirtilmesi iste\u011fe ba\u011fl\u0131d\u0131r, ancak daha fazla entegrasyon \u00f6zelli\u011fi i\u00e7in destek sa\u011flar. \u00d6te yandan, yetkili bir ba\u011flant\u0131n\u0131n kullan\u0131lmas\u0131, entegrasyon aktifken Ev Asistan\u0131 d\u0131\u015f\u0131ndan cihaz web aray\u00fcz\u00fcne eri\u015fimde sorunlara neden olabilir ve tam tersi."
+                "description": "Cihaz eri\u015fim ayr\u0131nt\u0131lar\u0131n\u0131 girin.",
+                "title": "Huawei LTE'yi yap\u0131land\u0131r\u0131n"
             }
         }
     },
@@ -30,6 +32,7 @@
         "step": {
             "init": {
                 "data": {
+                    "name": "Bildirim hizmeti ad\u0131 (de\u011fi\u015fiklik yeniden ba\u015flatmay\u0131 gerektirir)",
                     "recipient": "SMS bildirimi al\u0131c\u0131lar\u0131",
                     "track_new_devices": "Yeni cihazlar\u0131 izle",
                     "track_wired_clients": "Kablolu a\u011f istemcilerini izleyin",

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
 from renault_api.kamereon.enums import ChargeState, PlugState
@@ -43,7 +44,7 @@ from homeassistant.util.dt import as_utc, parse_datetime
 
 from .const import DEVICE_CLASS_CHARGE_STATE, DEVICE_CLASS_PLUG_STATE, DOMAIN
 from .renault_coordinator import T
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription
+from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
 
@@ -58,14 +59,16 @@ class RenaultSensorRequiredKeysMixin:
 
 @dataclass
 class RenaultSensorEntityDescription(
-    SensorEntityDescription, RenaultEntityDescription, RenaultSensorRequiredKeysMixin
+    SensorEntityDescription,
+    RenaultDataEntityDescription,
+    RenaultSensorRequiredKeysMixin,
 ):
     """Class describing Renault sensor entities."""
 
     icon_lambda: Callable[[RenaultSensor[T]], str] | None = None
     condition_lambda: Callable[[RenaultVehicleProxy], bool] | None = None
     requires_fuel: bool = False
-    value_lambda: Callable[[RenaultSensor[T]], StateType] | None = None
+    value_lambda: Callable[[RenaultSensor[T]], StateType | datetime] | None = None
 
 
 async def async_setup_entry(
@@ -104,7 +107,7 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
         return self.entity_description.icon_lambda(self)
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of this entity."""
         if self.data is None:
             return None
@@ -151,12 +154,12 @@ def _get_rounded_value(entity: RenaultSensor[T]) -> float:
     return round(cast(float, entity.data))
 
 
-def _get_utc_value(entity: RenaultSensor[T]) -> str:
+def _get_utc_value(entity: RenaultSensor[T]) -> datetime:
     """Return the UTC value of this entity."""
     original_dt = parse_datetime(cast(str, entity.data))
     if TYPE_CHECKING:
         assert original_dt is not None
-    return as_utc(original_dt).isoformat()
+    return as_utc(original_dt)
 
 
 SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (

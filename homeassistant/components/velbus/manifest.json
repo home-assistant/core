@@ -2,7 +2,7 @@
   "domain": "velbus",
   "name": "Velbus",
   "documentation": "https://www.home-assistant.io/integrations/velbus",
-  "requirements": ["velbus-aio==2021.11.0"],
+  "requirements": ["velbus-aio==2021.11.7"],
   "config_flow": true,
   "codeowners": ["@Cereal2nd", "@brefra"],
   "iot_class": "local_push"

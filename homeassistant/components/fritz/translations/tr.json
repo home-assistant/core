@@ -1,13 +1,63 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "connection_error": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "Bulunan FRITZ!Box: {name} \n\n {name} kontrol etmek i\u00e7in FRITZ!Box Tools'u kurun",
+                "title": "FRITZ!Box Tools Kurulumu"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "{host} i\u00e7in FRITZ!Box Tools kimlik bilgilerini g\u00fcncelleyin. \n\n FRITZ!Box Tools, FRITZ!Box'\u0131n\u0131zda oturum a\u00e7am\u0131yor.",
+                "title": "FRITZ!Box Tools - kimlik bilgilerinin g\u00fcncellenmesi"
+            },
             "start_config": {
+                "data": {
+                    "host": "Ana bilgisayar",
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
                 "description": "FRITZ!Box'\u0131n\u0131z\u0131 kontrol etmek i\u00e7in FRITZ!Box Tools'u kurun.\n Minimum gerekli: kullan\u0131c\u0131 ad\u0131, \u015fifre.",
                 "title": "FRITZ!Box Tools Kurulumu - zorunlu"
             },
             "user": {
+                "data": {
+                    "host": "Ana bilgisayar",
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
                 "description": "FRITZ!Box'\u0131n\u0131z\u0131 kontrol etmek i\u00e7in FRITZ!Box Tools'u kurun.\n Minimum gerekli: kullan\u0131c\u0131 ad\u0131, \u015fifre.",
                 "title": "FRITZ!Box Tools Kurulumu"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Bir cihaz\u0131 'evde' varsaymak i\u00e7in saniye"
+                }
             }
         }
     }
