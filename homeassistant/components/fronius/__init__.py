@@ -9,7 +9,7 @@ from typing import Callable, TypeVar
 from pyfronius import Fronius, FroniusError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -154,14 +154,16 @@ class FroniusSolarNet:
         """Create a device for the Fronius SolarNet system."""
         solar_net_device: DeviceInfo = DeviceInfo(
             configuration_url=self.host,
-            name="SolarNet",
             identifiers={(DOMAIN, self.solar_net_device_id)},
             manufacturer="Fronius",
+            name="SolarNet",
         )
         if self.logger_coordinator:
             _logger_info = self.logger_coordinator.data[SOLAR_NET_ID_SYSTEM]
-            solar_net_device["model"] = _logger_info["product_type"]["value"]
-            solar_net_device["sw_version"] = _logger_info["software_version"]["value"]
+            solar_net_device[ATTR_MODEL] = _logger_info["product_type"]["value"]
+            solar_net_device[ATTR_SW_VERSION] = _logger_info["software_version"][
+                "value"
+            ]
 
         device_registry = await dr.async_get_registry(self.hass)
         device_registry.async_get_or_create(

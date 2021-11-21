@@ -708,10 +708,10 @@ class MeterSensor(_FroniusSensorEntity):
         meter_data = self._device_data()
 
         self._attr_device_info = DeviceInfo(
-            name=meter_data["model"]["value"],
             identifiers={(DOMAIN, meter_data["serial"]["value"])},
             manufacturer=meter_data["manufacturer"]["value"],
             model=meter_data["model"]["value"],
+            name=meter_data["model"]["value"],
             via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
         )
         self._attr_unique_id = f'{meter_data["serial"]["value"]}-{key}'
@@ -758,9 +758,9 @@ class StorageSensor(_FroniusSensorEntity):
 
         self._attr_unique_id = f'{storage_data["serial"]["value"]}-{key}'
         self._attr_device_info = DeviceInfo(
-            name=storage_data["model"]["value"],
             identifiers={(DOMAIN, storage_data["serial"]["value"])},
             manufacturer=storage_data["manufacturer"]["value"],
             model=storage_data["model"]["value"],
+            name=storage_data["model"]["value"],
             via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
         )
