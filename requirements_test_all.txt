@@ -1353,6 +1353,9 @@ toonapi==0.2.1
 # homeassistant.components.totalconnect
 total_connect_client==2021.11.4
 
+# homeassistant.components.trafikverket_weatherstation
+pytrafikverket==0.1.6.2
+
 # homeassistant.components.transmission
 transmissionrpc==0.11
 
