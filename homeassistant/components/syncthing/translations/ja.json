@@ -1,3 +1,13 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "title": "Syncthing\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7",
+                    "token": "\u30c8\u30fc\u30af\u30f3"
+                }
+            }
+        }
+    },
     "title": "Syncthing"
 }

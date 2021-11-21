@@ -13,7 +13,8 @@
             "user": {
                 "data": {
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
-                    "station": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u306e\u30b7\u30ea\u30a2\u30eb\u756a\u53f7"
+                    "station": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u306e\u30b7\u30ea\u30a2\u30eb\u756a\u53f7",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 }
             }
         }

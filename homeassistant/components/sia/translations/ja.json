@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "invalid_ping": "ping\u9593\u9694\u306f1\u301c1440\u5206\u3067\u3042\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059\u3002"
+        },
         "step": {
             "additional_account": {
                 "title": "\u73fe\u5728\u306e\u30dd\u30fc\u30c8\u306b\u5225\u306e\u30a2\u30ab\u30a6\u30f3\u30c8\u3092\u8ffd\u52a0\u3057\u307e\u3059\u3002"
@@ -9,7 +12,7 @@
                     "account": "\u30a2\u30ab\u30a6\u30f3\u30c8ID",
                     "additional_account": "\u8ffd\u52a0\u306e\u30a2\u30ab\u30a6\u30f3\u30c8",
                     "encryption_key": "\u6697\u53f7\u5316\u30ad\u30fc",
-                    "ping_interval": "ping\u9593\u9694(\u5206)",
+                    "ping_interval": "Ping\u30a4\u30f3\u30bf\u30fc\u30d0\u30eb(\u5206)",
                     "port": "\u30dd\u30fc\u30c8",
                     "protocol": "\u30d7\u30ed\u30c8\u30b3\u30eb"
                 }
