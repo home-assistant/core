@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -41,7 +42,7 @@ async def async_setup_entry(
 
     filter_corona: bool = config[CONF_FILTER_CORONA]
 
-    nina: Nina = Nina()
+    nina: Nina = Nina(async_get_clientsession(hass))
 
     for region in regions.keys():
         nina.addRegion(region)

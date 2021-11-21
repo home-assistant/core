@@ -28,12 +28,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         super().__init__()
         self._all_region_codes_sorted: dict[str, str] = {}  # pylint: disable=E1136
-        self.regions_a: dict[str, Any] = {}
-        self.regions_b: dict[str, Any] = {}
-        self.regions_c: dict[str, Any] = {}
-        self.regions_d: dict[str, Any] = {}
-        self.regions_e: dict[str, Any] = {}
-        self.regions_f: dict[str, Any] = {}
+        self.regions_a: dict[str, Any] = {}  # pylint: disable=E1136
+        self.regions_b: dict[str, Any] = {}  # pylint: disable=E1136
+        self.regions_c: dict[str, Any] = {}  # pylint: disable=E1136
+        self.regions_d: dict[str, Any] = {}  # pylint: disable=E1136
+        self.regions_e: dict[str, Any] = {}  # pylint: disable=E1136
+        self.regions_f: dict[str, Any] = {}  # pylint: disable=E1136
 
     async def async_step_user(  # pylint: disable=R0914,R0912
         self: ConfigFlow,  # pylint: disable=C0330
@@ -124,7 +124,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    def swap_key_value(dict_to_sort: dict[str, str]) -> dict[str, str]:
+    def swap_key_value(
+        dict_to_sort: dict[str, str]  # pylint: disable=E1136,C0330
+    ) -> dict[str, str]:  # pylint: disable=E1136
         """Swap keys and values in dict."""
         all_region_codes_swaped: dict[str, str] = {}  # pylint: disable=E1136
 
