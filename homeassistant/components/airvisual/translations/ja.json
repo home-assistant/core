@@ -30,6 +30,9 @@
                 "title": "AirVisual Node/Pro\u306e\u8a2d\u5b9a"
             },
             "reauth_confirm": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc"
+                },
                 "title": "AirVisual\u3092\u518d\u8a8d\u8a3c"
             },
             "user": {
