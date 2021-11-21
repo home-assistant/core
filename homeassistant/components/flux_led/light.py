@@ -7,6 +7,8 @@ import random
 from typing import Any, Final, cast
 
 from flux_led.const import (
+    ATTR_ID,
+    ATTR_IPADDR,
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM,
     COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
@@ -78,9 +80,7 @@ from .const import (
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
-    FLUX_HOST,
     FLUX_LED_DISCOVERY,
-    FLUX_MAC,
     MODE_AUTO,
     MODE_RGB,
     MODE_RGBW,
@@ -166,7 +166,7 @@ async def async_setup_platform(
     """Set up the flux led platform."""
     domain_data = hass.data[DOMAIN]
     discovered_mac_by_host = {
-        device[FLUX_HOST]: device[FLUX_MAC]
+        device[ATTR_IPADDR]: device[ATTR_ID]
         for device in domain_data[FLUX_LED_DISCOVERY]
     }
     for host, device_config in config.get(CONF_DEVICES, {}).items():

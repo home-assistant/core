@@ -51,7 +51,3 @@ CONF_TRANSITION: Final = "transition"
 CONF_CUSTOM_EFFECT_COLORS: Final = "custom_effect_colors"
 CONF_CUSTOM_EFFECT_SPEED_PCT: Final = "custom_effect_speed_pct"
 CONF_CUSTOM_EFFECT_TRANSITION: Final = "custom_effect_transition"
-
-FLUX_HOST: Final = "ipaddr"
-FLUX_MAC: Final = "id"
-FLUX_MODEL: Final = "model"
