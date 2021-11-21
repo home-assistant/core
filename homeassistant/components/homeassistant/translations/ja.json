@@ -2,6 +2,7 @@
     "system_health": {
         "info": {
             "docker": "Docker",
+            "os_name": "\u30aa\u30da\u30ec\u30fc\u30c6\u30a3\u30f3\u30b0\u30b7\u30b9\u30c6\u30e0\u30d5\u30a1\u30df\u30ea\u30fc",
             "user": "\u30e6\u30fc\u30b6\u30fc"
         }
     }

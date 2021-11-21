@@ -1,6 +1,16 @@
 {
     "config": {
+        "error": {
+            "bad_pin_format": "PIN\u306f4\u6841\u3067\u3042\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059",
+            "incorrect_pin": "PIN\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093"
+        },
         "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "title": "Subaru Starlink\u306e\u8a2d\u5b9a"
+            },
             "user": {
                 "data": {
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"

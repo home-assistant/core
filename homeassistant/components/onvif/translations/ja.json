@@ -10,8 +10,10 @@
             "configure": {
                 "data": {
                     "host": "\u30db\u30b9\u30c8",
+                    "name": "\u540d\u524d",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
-                    "port": "\u30dd\u30fc\u30c8"
+                    "port": "\u30dd\u30fc\u30c8",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 },
                 "title": "ONVIF\u30c7\u30d0\u30a4\u30b9\u306e\u8a2d\u5b9a"
             },
