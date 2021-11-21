@@ -484,7 +484,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
         model="via",
         name="Original Name",
         sw_version="Orig SW 1",
-        entry_type="device",
+        entry_type=None,
     )
 
     orig_light = registry.async_get_or_create(
