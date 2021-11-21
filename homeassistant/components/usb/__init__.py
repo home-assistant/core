@@ -33,7 +33,6 @@ REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
 
 # Attributes for UsbServiceInfo
 ATTR_DESCRIPTION: Final = "description"
-ATTR_DEVICE: Final = "device"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_PID: Final = "pid"
 ATTR_SERIAL_NUMBER: Final = "serial_number"
@@ -180,20 +179,20 @@ class USBDiscovery:
         self.seen.add(device_tuple)
         matched = []
         for matcher in self.usb:
-            if "vid" in matcher and device.vid != matcher["vid"]:
+            if ATTR_VID in matcher and device.vid != matcher[ATTR_VID]:
                 continue
-            if "pid" in matcher and device.pid != matcher["pid"]:
+            if ATTR_PID in matcher and device.pid != matcher[ATTR_PID]:
                 continue
-            if "serial_number" in matcher and not _fnmatch_lower(
-                device.serial_number, matcher["serial_number"]
+            if ATTR_SERIAL_NUMBER in matcher and not _fnmatch_lower(
+                device.serial_number, matcher[ATTR_SERIAL_NUMBER]
             ):
                 continue
-            if "manufacturer" in matcher and not _fnmatch_lower(
-                device.manufacturer, matcher["manufacturer"]
+            if ATTR_MANUFACTURER in matcher and not _fnmatch_lower(
+                device.manufacturer, matcher[ATTR_MANUFACTURER]
             ):
                 continue
-            if "description" in matcher and not _fnmatch_lower(
-                device.description, matcher["description"]
+            if ATTR_DESCRIPTION in matcher and not _fnmatch_lower(
+                device.description, matcher[ATTR_DESCRIPTION]
             ):
                 continue
             matched.append(matcher)
