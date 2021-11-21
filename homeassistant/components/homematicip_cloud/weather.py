@@ -22,7 +22,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import SPEED_KILOMETERS_PER_HOUR, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
@@ -68,6 +68,9 @@ async def async_setup_entry(
 class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
     """Representation of the HomematicIP weather sensor plus & basic."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the weather sensor."""
         super().__init__(hap, device)
@@ -81,11 +84,6 @@ class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
     def temperature(self) -> float:
         """Return the platform temperature."""
         return self._device.actualTemperature
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def humidity(self) -> int:
@@ -126,6 +124,9 @@ class HomematicipWeatherSensorPro(HomematicipWeatherSensor):
 class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
     """Representation of the HomematicIP home weather."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the home weather."""
         hap.home.modelType = "HmIP-Home-Weather"
@@ -145,11 +146,6 @@ class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
     def temperature(self) -> float:
         """Return the temperature."""
         return self._device.weather.temperature
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def humidity(self) -> int:
