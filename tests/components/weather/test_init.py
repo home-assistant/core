@@ -95,8 +95,8 @@ async def test_pressure_conversion(
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = convert_pressure(native_value, native_unit, unit_system.pressure_unit)
-    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(expected)
-    assert float(forecast[ATTR_FORECAST_PRESSURE]) == approx(expected)
+    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(expected, rel=1e-3)
+    assert float(forecast[ATTR_FORECAST_PRESSURE]) == approx(expected, rel=1e-3)
 
 
 @pytest.mark.parametrize("unit_system", [IMPERIAL_SYSTEM, METRIC_SYSTEM])
@@ -118,8 +118,10 @@ async def test_wind_speed_conversion(
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = convert_speed(native_value, native_unit, unit_system.wind_speed_unit)
-    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(expected)
-    assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == approx(expected)
+    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(
+        expected, rel=1e-3
+    )
+    assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == approx(expected, rel=1e-3)
 
 
 @pytest.mark.parametrize("unit_system", [IMPERIAL_SYSTEM, METRIC_SYSTEM])
@@ -138,8 +140,9 @@ async def test_visibility_conversion(
     )
 
     state = hass.states.get(entity0.entity_id)
+    expected = convert_distance(native_value, native_unit, unit_system.length_unit)
     assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(
-        convert_distance(native_value, native_unit, unit_system.length_unit)
+        expected, rel=1e-3
     )
 
 
@@ -164,4 +167,4 @@ async def test_precipitation_conversion(
     expected = convert_distance(
         native_value, native_unit, unit_system.accumulated_precipitation_unit
     )
-    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(expected)
+    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(expected, rel=1e-3)

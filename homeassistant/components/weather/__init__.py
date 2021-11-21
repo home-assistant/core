@@ -220,7 +220,7 @@ class WeatherEntity(Entity):
 
         if (pressure := self.pressure) is not None:
             if (unit := self.pressure_unit) is not None:
-                pressure = self.hass.config.units.pressure(pressure, unit)
+                pressure = round(self.hass.config.units.pressure(pressure, unit), 4)
             data[ATTR_WEATHER_PRESSURE] = pressure
 
         if (wind_bearing := self.wind_bearing) is not None:
@@ -228,12 +228,14 @@ class WeatherEntity(Entity):
 
         if (wind_speed := self.wind_speed) is not None:
             if (unit := self.wind_speed_unit) is not None:
-                wind_speed = self.hass.config.units.wind_speed(wind_speed, unit)
+                wind_speed = round(
+                    self.hass.config.units.wind_speed(wind_speed, unit), 4
+                )
             data[ATTR_WEATHER_WIND_SPEED] = wind_speed
 
         if (visibility := self.visibility) is not None:
             if (unit := self.visibility_unit) is not None:
-                visibility = self.hass.config.units.length(visibility, unit)
+                visibility = round(self.hass.config.units.length(visibility, unit), 4)
             data[ATTR_WEATHER_VISIBILITY] = visibility
 
         if self.forecast is not None:
@@ -255,22 +257,29 @@ class WeatherEntity(Entity):
                     )
                 if ATTR_FORECAST_PRESSURE in forecast_entry:
                     if (unit := self.pressure_unit) is not None:
-                        pressure = self.hass.config.units.pressure(
-                            forecast_entry[ATTR_FORECAST_PRESSURE], unit
+                        pressure = round(
+                            self.hass.config.units.pressure(
+                                forecast_entry[ATTR_FORECAST_PRESSURE], unit
+                            ),
+                            4,
                         )
                         forecast_entry[ATTR_FORECAST_PRESSURE] = pressure
                 if ATTR_FORECAST_WIND_SPEED in forecast_entry:
                     if (unit := self.wind_speed_unit) is not None:
-                        wind_speed = self.hass.config.units.wind_speed(
-                            forecast_entry[ATTR_FORECAST_WIND_SPEED], unit
+                        wind_speed = round(
+                            self.hass.config.units.wind_speed(
+                                forecast_entry[ATTR_FORECAST_WIND_SPEED], unit
+                            ),
+                            4,
                         )
                         forecast_entry[ATTR_FORECAST_WIND_SPEED] = wind_speed
                 if ATTR_FORECAST_PRECIPITATION in forecast_entry:
                     if (unit := self.precipitation_unit) is not None:
-                        precipitation = (
+                        precipitation = round(
                             self.hass.config.units.accumulated_precipitation(
                                 forecast_entry[ATTR_FORECAST_PRECIPITATION], unit
-                            )
+                            ),
+                            4,
                         )
                         forecast_entry[ATTR_FORECAST_PRECIPITATION] = precipitation
 
