@@ -261,10 +261,7 @@ class ZHAEntityRegistry:
                 for match in sorted_matches:
                     if match.strict_matched(manufacturer, model, channels):
                         claimed = match.claim_channels(channels)
-                        mtc_group = self._multi_entity_registry[component][
-                            stop_match_grp
-                        ]
-                        for ent_class in mtc_group[match]:
+                        for ent_class in stop_match_groups[stop_match_grp][match]:
                             ent_n_channels = EntityClassAndChannels(ent_class, claimed)
                             result[component].append(ent_n_channels)
                         all_claimed |= set(claimed)
