@@ -189,16 +189,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
+        host = discovery_info[zeroconf.ATTR_HOST]
         try:
-            self.info = await self._async_get_info(discovery_info["host"])
+            self.info = await self._async_get_info(host)
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
         except aioshelly.exceptions.FirmwareUnsupported:
             return self.async_abort(reason="unsupported_firmware")
 
         await self.async_set_unique_id(self.info["mac"])
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
-        self.host = discovery_info["host"]
+        self._abort_if_unique_id_configured({CONF_HOST: host})
+        self.host = host
 
         self.context["title_placeholders"] = {
             "name": discovery_info.get("name", "").split(".")[0]
