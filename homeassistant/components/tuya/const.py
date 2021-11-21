@@ -99,6 +99,7 @@ TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
 PLATFORMS = [
+    "alarm_control_panel",
     "binary_sensor",
     "camera",
     "climate",
@@ -134,6 +135,11 @@ class DPCode(str, Enum):
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
+    ALARM_ARM = "arm"
+    ALARM_DISARMED = "disarmed"
+    ALARM_HOME = "home"
+    ALARM_SOS = "sos"
+    ALARM_STATE = "master_mode"
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
