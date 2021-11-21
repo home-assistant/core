@@ -23,6 +23,7 @@ class VenstarSensorTypeMixin:
     """Mixin for sensor required keys."""
 
     cls: type[VenstarSensor]
+    stype: str
 
 
 class VenstarSensor(VenstarEntity, SensorEntity):
@@ -98,12 +99,14 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         cls=VenstarHumiditySensor,
+        stype="hum",
     ),
     VenstarSensorEntityDescription(
         key="temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
         cls=VenstarTemperatureSensor,
+        stype="temp",
     ),
 )
 
@@ -124,6 +127,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
             [
                 description.cls(coordinator, config_entry, description, sensor_name)
                 for description in SENSOR_ENTITIES
+                if coordinator.client.get_sensor(sensor_name, description.stype)
+                is not None
             ]
         )
 
