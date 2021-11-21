@@ -1,6 +1,14 @@
 {
     "config": {
+        "error": {
+            "invalid_pin": "\u7121\u52b9\u306aPIN"
+        },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN\u30b3\u30fc\u30c9"
+                }
+            },
             "user": {
                 "data": {
                     "host": "\u30db\u30b9\u30c8"

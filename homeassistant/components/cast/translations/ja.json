@@ -2,6 +2,9 @@
     "config": {
         "step": {
             "config": {
+                "data": {
+                    "known_hosts": "\u65e2\u77e5\u306e\u30db\u30b9\u30c8"
+                },
                 "description": "\u65e2\u77e5\u306e\u30db\u30b9\u30c8 - Cast\u30c7\u30d0\u30a4\u30b9\u306e\u30db\u30b9\u30c8\u540d\u3001\u307e\u305f\u306fIP\u30a2\u30c9\u30ec\u30b9\u306e\u30b3\u30f3\u30de\u533a\u5207\u308a\u30ea\u30b9\u30c8\u3002mDNS\u691c\u51fa\u304c\u6a5f\u80fd\u3057\u3066\u3044\u306a\u3044\u5834\u5408\u306b\u4f7f\u7528\u3057\u307e\u3059\u3002",
                 "title": "Google Cast\u306e\u8a2d\u5b9a"
             },

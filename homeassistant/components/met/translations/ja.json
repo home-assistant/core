@@ -2,6 +2,9 @@
     "config": {
         "step": {
             "user": {
+                "data": {
+                    "name": "\u540d\u524d"
+                },
                 "description": "Meteorologisk institutt"
             }
         }
