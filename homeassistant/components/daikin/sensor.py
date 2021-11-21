@@ -8,6 +8,7 @@ from pydaikin.daikin_base import Appliance
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -32,6 +33,7 @@ from .const import (
     ATTR_INSIDE_TEMPERATURE,
     ATTR_OUTSIDE_TEMPERATURE,
     ATTR_TARGET_HUMIDITY,
+    ATTR_TOTAL_ENERGY_TODAY,
     ATTR_TOTAL_POWER,
 )
 
@@ -82,7 +84,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TOTAL_POWER,
-        name="Total Power Consumption",
+        name="Current Total Power Consumption",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
         value_func=lambda device: round(device.current_total_power_consumption, 2),
@@ -95,7 +97,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_func=lambda device: round(device.last_hour_cool_energy_consumption, 2),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HEAT_ENERGY,
@@ -104,7 +106,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_func=lambda device: round(device.last_hour_heat_energy_consumption, 2),
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COMPRESSOR_FREQUENCY,
@@ -112,6 +114,15 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         icon="mdi:fan",
         native_unit_of_measurement=FREQUENCY_HERTZ,
         value_func=lambda device: device.compressor_frequency,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    DaikinSensorEntityDescription(
+        key=ATTR_TOTAL_ENERGY_TODAY,
+        name="Today's Total Energy Consumption",
+        device_class=DEVICE_CLASS_ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_func=lambda device: round(device.energy_consumption(time="today"), 2),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
 )
 
@@ -134,6 +145,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensors.append(ATTR_TOTAL_POWER)
         sensors.append(ATTR_COOL_ENERGY)
         sensors.append(ATTR_HEAT_ENERGY)
+        sensors.append(ATTR_TOTAL_ENERGY_TODAY)
     if daikin_api.device.support_humidity:
         sensors.append(ATTR_HUMIDITY)
         sensors.append(ATTR_TARGET_HUMIDITY)
