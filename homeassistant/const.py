@@ -553,6 +553,7 @@ SPEED_METERS_PER_SECOND: Final = "m/s"
 SPEED_INCHES_PER_HOUR: Final = "in/h"
 SPEED_KILOMETERS_PER_HOUR: Final = "km/h"
 SPEED_MILES_PER_HOUR: Final = "mph"
+SPEED_KNOTS: Final = "kn"
 
 # Signal_strength units
 SIGNAL_STRENGTH_DECIBELS: Final = "dB"

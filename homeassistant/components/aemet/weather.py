@@ -1,6 +1,11 @@
 """Support for the AEMET OpenData service."""
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -41,6 +46,9 @@ class AemetWeather(CoordinatorEntity, WeatherEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_HPA
+    _attr_wind_speed_unit = SPEED_METERS_PER_SECOND
+    _attr_precipitation_unit = LENGTH_MILLIMETERS
 
     def __init__(
         self,

@@ -17,7 +17,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -34,6 +34,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     NAME,
+    UNIT_TYPES,
 )
 
 PARALLEL_UPDATES = 1
@@ -63,9 +64,6 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         self._unit_system = API_METRIC if coordinator.is_metric else API_IMPERIAL
         self._attr_name = name
         self._attr_unique_id = coordinator.location_key
-        self._attr_temperature_unit = (
-            TEMP_CELSIUS if coordinator.is_metric else TEMP_FAHRENHEIT
-        )
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
             entry_type="service",
@@ -94,11 +92,25 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         )
 
     @property
+    def temperature_unit(self) -> str:
+        """Return the temperature unit used by the API."""
+        return UNIT_TYPES[
+            self.coordinator.data["Temperature"][self._unit_system]["UnitType"]
+        ]
+
+    @property
     def pressure(self) -> float:
         """Return the pressure."""
         return cast(
             float, self.coordinator.data["Pressure"][self._unit_system]["Value"]
         )
+
+    @property
+    def pressure_unit(self) -> str:
+        """Return the pressure unit used by the API."""
+        return UNIT_TYPES[
+            self.coordinator.data["Pressure"][self._unit_system]["UnitType"]
+        ]
 
     @property
     def humidity(self) -> int:
@@ -113,6 +125,13 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         )
 
     @property
+    def wind_speed_unit(self) -> str:
+        """Return the wind speed unit used by the API."""
+        return UNIT_TYPES[
+            self.coordinator.data["Wind"]["Speed"][self._unit_system]["UnitType"]
+        ]
+
+    @property
     def wind_bearing(self) -> int:
         """Return the wind bearing."""
         return cast(int, self.coordinator.data["Wind"]["Direction"]["Degrees"])
@@ -125,6 +144,13 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         )
 
     @property
+    def visibility_unit(self) -> str:
+        """Return the pressure unit used by the API."""
+        return UNIT_TYPES[
+            self.coordinator.data["Visibility"][self._unit_system]["UnitType"]
+        ]
+
+    @property
     def ozone(self) -> int | None:
         """Return the ozone level."""
         # We only have ozone data for certain locations and only in the forecast data.
@@ -133,6 +159,13 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         ):
             return cast(int, self.coordinator.data[ATTR_FORECAST][0]["Ozone"]["Value"])
         return None
+
+    @property
+    def precipitation_unit(self) -> str:
+        """Return the precipitation unit used by the API."""
+        return UNIT_TYPES[
+            self.coordinator.data["Precip1hr"][self._unit_system]["UnitType"]
+        ]
 
     @property
     def forecast(self) -> list[Forecast] | None:

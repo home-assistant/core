@@ -8,6 +8,7 @@ from homeassistant.const import (
     SPEED_INCHES_PER_DAY,
     SPEED_INCHES_PER_HOUR,
     SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     SPEED_MILLIMETERS_PER_DAY,
@@ -21,12 +22,14 @@ VALID_UNITS: tuple[str, ...] = (
     SPEED_MILLIMETERS_PER_DAY,
     SPEED_INCHES_PER_DAY,
     SPEED_INCHES_PER_HOUR,
+    SPEED_KNOTS,
 )
 
 HRS_TO_SECS = 60 * 60  # 1 hr = 3600 seconds
 KM_TO_M = 1000  # 1 km = 1000 m
 KM_TO_MILE = 0.62137119  # 1 km = 0.62137119 mi
 M_TO_IN = 39.3700787  # 1 m = 39.3700787 in
+KNOTS_TO_KPH = 1.852  # 1 knot = exactly 1.852 km/h
 
 # Units in terms of m/s
 UNIT_CONVERSION: dict[str, float] = {
@@ -36,6 +39,7 @@ UNIT_CONVERSION: dict[str, float] = {
     SPEED_MILLIMETERS_PER_DAY: (24 * HRS_TO_SECS) * 1000,
     SPEED_INCHES_PER_DAY: (24 * HRS_TO_SECS) * M_TO_IN,
     SPEED_INCHES_PER_HOUR: HRS_TO_SECS * M_TO_IN,
+    SPEED_KNOTS: 1 / KNOTS_TO_KPH * HRS_TO_SECS / KM_TO_M,
 }
 
 
