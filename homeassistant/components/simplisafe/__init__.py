@@ -192,29 +192,6 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 @callback
-def _async_get_changed_keys(dict1: dict[str, Any], dict2: dict[str, Any]) -> list[str]:
-    """Get a list of keys whose values are different between two dicts."""
-    set1 = set(dict1.items())
-    set2 = set(dict2.items())
-    return list(dict(set2 ^ set1))
-
-
-@callback
-def _async_register_base_station(
-    hass: HomeAssistant, entry: ConfigEntry, system: SystemV2 | SystemV3
-) -> None:
-    """Register a new bridge."""
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, system.system_id)},
-        manufacturer="SimpliSafe",
-        model=system.version,
-        name=system.address,
-    )
-
-
-@callback
 def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Bring a config entry up to current standards."""
     if CONF_TOKEN not in entry.data:
@@ -237,6 +214,21 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         }
     if entry_updates:
         hass.config_entries.async_update_entry(entry, **entry_updates)
+
+
+@callback
+def _async_register_base_station(
+    hass: HomeAssistant, entry: ConfigEntry, system: SystemV2 | SystemV3
+) -> None:
+    """Register a new bridge."""
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, system.system_id)},
+        manufacturer="SimpliSafe",
+        model=system.version,
+        name=system.address,
+    )
 
 
 async def async_setup_entry(  # noqa: C901
@@ -361,7 +353,7 @@ async def async_setup_entry(  # noqa: C901
     ):
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
-    current_entry_data = {**entry.data}
+    current_options = {**entry.options}
 
     async def async_reload_entry(_: HomeAssistant, updated_entry: ConfigEntry) -> None:
         """Handle an options update.
@@ -370,18 +362,15 @@ async def async_setup_entry(  # noqa: C901
           1. When SimpliSafeOptionsFlowHandler is initiated
           2. When a new refresh token is saved to the config entry data
 
-        We don't want #2 to trigger a reload of the config entry – because of the
-        SimpliSafe API's tendency to have delayed responses, triggering a reload will
-        temporarily cause SimpliSafe entities to show as unavailable.
+        We only want #1 to trigger an actual reload.
         """
-        nonlocal current_entry_data
-        updated_data = {**updated_entry.data}
-        changed = _async_get_changed_keys(current_entry_data, updated_data)
-        current_entry_data = updated_data
+        nonlocal current_options
+        updated_options = {**updated_entry.options}
 
-        if CONF_TOKEN in changed:
+        if updated_options == current_options:
             return
 
+        current_options = updated_options
         await hass.config_entries.async_reload(entry.entry_id)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
