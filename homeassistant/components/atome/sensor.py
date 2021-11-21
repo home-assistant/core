@@ -149,7 +149,6 @@ class AtomeData:
             _LOGGER.debug("Updating Atome %s data. Got: %d", period_type, period_usage)
             return True, period_usage, period_price
         else:
-            error_during_retrieve = True
             _LOGGER.error("%s : Missing last value in values: %s", period_type, values)
             return False, None, None
 
