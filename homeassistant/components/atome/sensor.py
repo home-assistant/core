@@ -116,7 +116,7 @@ class AtomeData:
         if (
             values.get("last")
             and values.get("subscribed")
-            and values.get("isConnected")
+            and ( values.get("isConnected") is not None ) 
         ):
             self._live_power = values["last"]
             self._subscribed_power = values["subscribed"]
@@ -128,9 +128,9 @@ class AtomeData:
                 self._subscribed_power,
             )
             return True
-        else:
-            _LOGGER.error("Live Data : Missing last value in values: %s", values)
-            return False
+
+        _LOGGER.error("Live Data : Missing last value in values: %s", values)
+        return False
 
     @Throttle(LIVE_SCAN_INTERVAL)
     def update_live_usage(self):
@@ -148,9 +148,9 @@ class AtomeData:
             period_price = values["price"]
             _LOGGER.debug("Updating Atome %s data. Got: %d", period_type, period_usage)
             return True, period_usage, period_price
-        else:
-            _LOGGER.error("%s : Missing last value in values: %s", period_type, values)
-            return False, None, None
+
+        _LOGGER.error("%s : Missing last value in values: %s", period_type, values)
+        return False, None, None
 
     def _retrieve_period_usage_with_retry(self, period_type):
         """Return current daily/weekly/monthly/yearly power usage with one retry."""
