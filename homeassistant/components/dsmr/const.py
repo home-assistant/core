@@ -44,7 +44,7 @@ DATA_TASK = "task"
 DEVICE_NAME_ENERGY = "Energy Meter"
 DEVICE_NAME_GAS = "Gas Meter"
 
-DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S"}
+DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S", "Q3D"}
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
@@ -271,7 +271,15 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_IMPORTED_TOTAL,
         name="Energy Consumption (total)",
-        dsmr_versions={"2.2", "4", "5", "5B"},
+        dsmr_versions={"2.2", "4", "5", "5B", "Q3D"},
+        force_update=True,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.ELECTRICITY_EXPORTED_TOTAL,
+        name="Energy Production (total)",
+        dsmr_versions={"Q3D"},
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
