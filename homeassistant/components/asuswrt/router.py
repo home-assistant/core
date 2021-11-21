@@ -256,21 +256,27 @@ class AsusWrtRouter:
             entity_reg, self._entry.entry_id
         )
         for entry in track_entries:
-            if entry.domain == TRACKER_DOMAIN:
-                device_mac = format_mac(entry.unique_id)
-                # migrate entity unique ID if wrong formatted
-                if device_mac != entry.unique_id:
-                    try:
-                        entity_reg.async_update_entity(
-                            entry.entity_id, new_unique_id=device_mac
-                        )
-                    except ValueError:
-                        # correct entity already exist
-                        entity_reg.async_remove(entry.entity_id)
-                        continue
-                self._devices[device_mac] = AsusWrtDevInfo(
-                    device_mac, entry.original_name
+
+            if entry.domain != TRACKER_DOMAIN:
+                continue
+            device_mac = format_mac(entry.unique_id)
+
+            # migrate entity unique ID if wrong formatted
+            if device_mac != entry.unique_id:
+                existing_entity_id = entity_reg.async_get_entity_id(
+                    DOMAIN, TRACKER_DOMAIN, device_mac
                 )
+                if existing_entity_id:
+                    # entity with uniqueid properly formatted already
+                    # exists in the registry, we delete this duplicate
+                    entity_reg.async_remove(entry.entity_id)
+                    continue
+
+                entity_reg.async_update_entity(
+                    entry.entity_id, new_unique_id=device_mac
+                )
+
+            self._devices[device_mac] = AsusWrtDevInfo(device_mac, entry.original_name)
 
         # Update devices
         await self.update_devices()
