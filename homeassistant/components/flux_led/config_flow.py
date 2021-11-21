@@ -134,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device = self._discovered_device
         placeholders = {
             "model": device.get(ATTR_MODEL_DESCRIPTION, device[ATTR_MODEL]),
-            "id": device[ATTR_ID],
+            "id": device[ATTR_ID][-6:],
             "ipaddr": device[ATTR_IPADDR],
         }
         self.context["title_placeholders"] = placeholders
