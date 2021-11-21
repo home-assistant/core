@@ -116,7 +116,7 @@ class AtomeData:
         if (
             values.get("last")
             and values.get("subscribed")
-            and (values.get("isConnected") is not None) 
+            and (values.get("isConnected") is not None)
         ):
             self._live_power = values["last"]
             self._subscribed_power = values["subscribed"]
