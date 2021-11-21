@@ -4,9 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tesla_wall_connector",
   "requirements": ["tesla-wall-connector==0.2.0"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dhcp": [
     {
       "hostname": "teslawallconnector_*",
@@ -22,7 +19,6 @@
       "macaddress": "4CFCAA*"
     }
   ],
-  "dependencies": [],
   "codeowners": [
     "@einarhauks"
   ],
