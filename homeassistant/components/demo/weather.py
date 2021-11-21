@@ -24,7 +24,13 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     WeatherEntity,
 )
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.util.dt as dt_util
 
 CONDITION_CLASSES = {
@@ -115,8 +121,11 @@ class DemoWeather(WeatherEntity):
         self._temperature_unit = temperature_unit
         self._humidity = humidity
         self._pressure = pressure
+        self._pressure_unit = PRESSURE_HPA
         self._wind_speed = wind_speed
+        self._wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
         self._forecast = forecast
+        self._precipitation_unit = LENGTH_MILLIMETERS
 
     @property
     def name(self):
