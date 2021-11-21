@@ -5,6 +5,7 @@ import pytest
 from regenmaschine.errors import RainMachineError
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.rainmachine import CONF_ZONE_RUN_TIME, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 
@@ -171,7 +172,7 @@ async def test_step_homekit_zeroconf_ip_already_exists(hass, source):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data={"host": "192.168.1.100"},
+            data=zeroconf.ZeroconfServiceInfo(host="192.168.1.100"),
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -200,7 +201,7 @@ async def test_step_homekit_zeroconf_ip_change(hass, source):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data={"host": "192.168.1.2"},
+            data=zeroconf.ZeroconfServiceInfo(host="192.168.1.2"),
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -231,7 +232,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(hass, source
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data={"host": "192.168.1.100"},
+            data=zeroconf.ZeroconfServiceInfo(host="192.168.1.100"),
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -275,7 +276,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data={"host": "192.168.1.100"},
+            data=zeroconf.ZeroconfServiceInfo(host="192.168.1.100"),
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -288,7 +289,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(hass):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
-            data={"host": "192.168.1.100"},
+            data=zeroconf.ZeroconfServiceInfo(host="192.168.1.100"),
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
