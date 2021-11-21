@@ -28,7 +28,11 @@
                 "description": "UniFi\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u306e\u8a2d\u5b9a"
             },
             "statistics_sensors": {
-                "description": "\u7d71\u8a08\u30bb\u30f3\u30b5\u30fc\u306e\u8a2d\u5b9a"
+                "data": {
+                    "allow_bandwidth_sensors": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u7528\u306e\u5e2f\u57df\u5e45\u4f7f\u7528\u30bb\u30f3\u30b5\u30fc"
+                },
+                "description": "\u7d71\u8a08\u30bb\u30f3\u30b5\u30fc\u306e\u8a2d\u5b9a",
+                "title": "UniFi\u30aa\u30d7\u30b7\u30e7\u30f33/3"
             }
         }
     }

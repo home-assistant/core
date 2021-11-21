@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "invalid_url": "\u7121\u52b9\u306aURL"
+        },
         "step": {
             "hassio_confirm": {
                 "title": "Home Assistant\u30a2\u30c9\u30aa\u30f3\u7d4c\u7531\u306emotionEye"
@@ -7,7 +10,8 @@
             "user": {
                 "data": {
                     "admin_password": "\u7ba1\u7406\u8005(Admin)\u30d1\u30b9\u30ef\u30fc\u30c9",
-                    "surveillance_password": "\u76e3\u8996(Surveillance)\u30d1\u30b9\u30ef\u30fc\u30c9"
+                    "surveillance_password": "\u76e3\u8996(Surveillance)\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "url": "URL"
                 }
             }
         }
