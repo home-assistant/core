@@ -121,12 +121,6 @@ class EcobeeSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the appropriate unit of measurement."""
-        if self._state in (
-            ECOBEE_STATE_CALIBRATING,
-            ECOBEE_STATE_UNKNOWN,
-            "unknown",
-        ):
-            return None
 
         if self.entity_description.key == "temperature":
             """
