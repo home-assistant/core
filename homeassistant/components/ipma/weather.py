@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -160,6 +161,9 @@ async def async_get_location(hass, api, latitude, longitude):
 class IPMAWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+
     def __init__(self, location: Location, api: IPMA_API, config):
         """Initialise the platform with a data instance and station name."""
         self._api = api
@@ -261,11 +265,6 @@ class IPMAWeather(WeatherEntity):
             return None
 
         return self._observation.wind_direction
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def forecast(self):
