@@ -6,7 +6,14 @@ from xknx.devices import Weather as XknxWeather
 
 from homeassistant import config_entries
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, TEMP_CELSIUS, Platform
+from homeassistant.const import (
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    PRESSURE_PA,
+    SPEED_METERS_PER_SECOND,
+    TEMP_CELSIUS,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -69,6 +76,8 @@ class KNXWeather(KnxEntity, WeatherEntity):
 
     _device: XknxWeather
     _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_PA
+    _attr_wind_speed_unit = SPEED_METERS_PER_SECOND
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
@@ -83,13 +92,9 @@ class KNXWeather(KnxEntity, WeatherEntity):
 
     @property
     def pressure(self) -> float | None:
-        """Return current air pressure."""
+        """Return current air pressure in pA."""
         # KNX returns pA - HA requires hPa
-        return (
-            self._device.air_pressure / 100
-            if self._device.air_pressure is not None
-            else None
-        )
+        return self._device.air_pressure
 
     @property
     def condition(self) -> str:
@@ -108,10 +113,5 @@ class KNXWeather(KnxEntity, WeatherEntity):
 
     @property
     def wind_speed(self) -> float | None:
-        """Return current wind speed in km/h."""
-        # KNX only supports wind speed in m/s
-        return (
-            self._device.wind_speed * 3.6
-            if self._device.wind_speed is not None
-            else None
-        )
+        """Return current wind speed in m/s."""
+        return self._device.wind_speed
