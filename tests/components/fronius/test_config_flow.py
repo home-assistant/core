@@ -228,11 +228,10 @@ async def test_form_updates_host(hass, aioclient_mock):
     await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_ABORT
-    assert result2["reason"] == "entry_update_successful"
+    assert result2["reason"] == "already_configured"
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].title == f"SolarNet Datalogger at {new_host}"
     assert entries[0].data == {
         "host": new_host,
         "is_logger": True,

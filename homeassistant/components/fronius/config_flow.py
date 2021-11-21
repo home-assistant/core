@@ -86,20 +86,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(unique_id, raise_on_progress=False)
+            self._abort_if_unique_id_configured(
+                updates=dict(info), reload_on_update=False
+            )
             title = (
                 f"SolarNet {'Datalogger' if info['is_logger'] else 'Inverter'}"
                 f" at {info['host']}"
             )
-            if entry := await self.async_set_unique_id(
-                unique_id, raise_on_progress=False
-            ):
-                if info.items() <= entry.data.items():
-                    return self.async_abort(reason="already_configured")
-                self.hass.config_entries.async_update_entry(
-                    entry, title=title, data=info  # type: ignore[arg-type]
-                )
-                return self.async_abort(reason="entry_update_successful")
-
             return self.async_create_entry(title=title, data=info)
 
         return self.async_show_form(
