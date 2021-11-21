@@ -51,7 +51,7 @@ class _DeviceIndex(NamedTuple):
     connections: dict[tuple[str, str], str]
 
 
-class DeviceEntryType(StrEnum):  # type: ignore[misc]
+class DeviceEntryType(StrEnum):
     """Device entry type."""
 
     SERVICE = "service"
