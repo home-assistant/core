@@ -125,9 +125,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=poll_interval),
     )
 
-    hass.data[DOMAIN][entry.entry_id].update(
-        {WALLCONNECTOR_DATA_UPDATE_COORDINATOR: coordinator}
-    )
+    hass.data[DOMAIN][entry.entry_id][
+        WALLCONNECTOR_DATA_UPDATE_COORDINATOR
+    ] = coordinator
 
     await coordinator.async_config_entry_first_refresh()
 
