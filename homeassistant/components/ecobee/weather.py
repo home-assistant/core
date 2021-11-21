@@ -14,10 +14,14 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
-from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    LENGTH_METERS,
+    PRESSURE_HPA,
+    SPEED_MILES_PER_HOUR,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import dt as dt_util
-from homeassistant.util.pressure import convert as pressure_convert
 
 from .const import (
     DOMAIN,
@@ -41,6 +45,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class EcobeeWeather(WeatherEntity):
     """Representation of Ecobee weather data."""
+
+    _attr_temperature_unit = TEMP_FAHRENHEIT
+    _attr_wind_speed_unit = SPEED_MILES_PER_HOUR
+    _attr_visibility_unit = LENGTH_METERS
+    _attr_pressure_unit = PRESSURE_HPA
 
     def __init__(self, data, name, index):
         """Initialize the Ecobee weather platform."""
@@ -102,19 +111,10 @@ class EcobeeWeather(WeatherEntity):
             return None
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
-
-    @property
     def pressure(self):
         """Return the pressure."""
         try:
-            pressure = self.get_forecast(0, "pressure")
-            if not self.hass.config.units.is_metric:
-                pressure = pressure_convert(pressure, PRESSURE_HPA, PRESSURE_INHG)
-                return round(pressure, 2)
-            return round(pressure)
+            return int(self.get_forecast(0, "pressure"))
         except ValueError:
             return None
 
