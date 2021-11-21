@@ -6,7 +6,7 @@ import fnmatch
 import logging
 import os
 import sys
-from typing import TypedDict
+from typing import Final, TypedDict
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
@@ -29,6 +29,15 @@ from .utils import usb_device_from_port
 _LOGGER = logging.getLogger(__name__)
 
 REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
+
+
+# Attributes for UsbServiceInfo
+ATTR_DESCRIPTION: Final = "description"
+ATTR_DEVICE: Final = "device"
+ATTR_MANUFACTURER: Final = "manufacturer"
+ATTR_PID: Final = "pid"
+ATTR_SERIAL_NUMBER: Final = "serial_number"
+ATTR_VID: Final = "vid"
 
 
 class UsbServiceInfo(TypedDict):
