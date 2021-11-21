@@ -191,7 +191,7 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
 
         # This shouldn't actually happen; the last entry in
         # `self.speed_configuration` should map to 100%.
-        return 100
+        return self.speed_configuration[-1]
 
     def zwave_speed_to_percentage(self, zwave_speed: int) -> int:
         """Convert a Zwave speed to a percentage."""

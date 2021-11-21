@@ -450,6 +450,10 @@ class FixedFanSpeedValueMix:
 
     speeds: list[int]
 
+    def __post_init__(self) -> None:
+        """Validate inputs."""
+        assert len(self.speeds) > 0
+
 
 @dataclass
 class FixedFanSpeedDataTemplate(
@@ -483,6 +487,11 @@ class ConfigurableFanSpeedValueMix:
 
     configuration_option: ZwaveValueID
     configuration_value_to_speeds: dict[int, list[int]]
+
+    def __post_init__(self) -> None:
+        """Validate inputs."""
+        for speeds in self.configuration_value_to_speeds.values():
+            assert len(speeds) > 0
 
 
 @dataclass
