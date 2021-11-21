@@ -384,11 +384,6 @@ def _test_single_input_cluster_device_class(probe_mock):
         assert call[0][1] == ch
 
 
-def test_single_input_cluster_device_class():
-    """Test SINGLE_INPUT_CLUSTER_DEVICE_CLASS matching by cluster id or class."""
-    _test_single_input_cluster_device_class()
-
-
 def test_single_input_cluster_device_class_by_cluster_class():
     """Test SINGLE_INPUT_CLUSTER_DEVICE_CLASS matching by cluster id or class."""
     mock_reg = {
