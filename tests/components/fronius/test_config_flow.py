@@ -15,8 +15,7 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import mock_responses
-from .const import MOCK_HOST
+from . import MOCK_HOST, mock_responses
 
 from tests.common import MockConfigEntry
 

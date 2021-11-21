@@ -24,7 +24,7 @@ async def test_symo_inverter(hass, aioclient_mock):
     mock_responses(aioclient_mock, night=True)
     await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all()) == 56
+    assert len(hass.states.async_all()) == 55
     assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 0)
     assert_state("sensor.energy_day_fronius_inverter_1_http_fronius", 10828)
     assert_state("sensor.energy_total_fronius_inverter_1_http_fronius", 44186900)
@@ -38,7 +38,7 @@ async def test_symo_inverter(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 60
+    assert len(hass.states.async_all()) == 59
     # 4 additional AC entities
     assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 2.19)
     assert_state("sensor.energy_day_fronius_inverter_1_http_fronius", 1113)
@@ -62,7 +62,7 @@ async def test_symo_logger(hass, aioclient_mock):
     mock_responses(aioclient_mock)
     await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all()) == 60
+    assert len(hass.states.async_all()) == 59
     # ignored constant entities:
     # hardware_platform, hardware_version, product_type
     # software_version, time_zone, time_zone_location
@@ -94,7 +94,7 @@ async def test_symo_meter(hass, aioclient_mock):
     mock_responses(aioclient_mock)
     await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all()) == 60
+    assert len(hass.states.async_all()) == 59
     # ignored entities:
     # manufacturer, model, serial, enable, timestamp, visible, meter_location
     #
@@ -155,7 +155,7 @@ async def test_symo_power_flow(hass, aioclient_mock):
     mock_responses(aioclient_mock, night=True)
     await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all()) == 56
+    assert len(hass.states.async_all()) == 55
     # ignored: location, mode, timestamp
     #
     # states are rounded to 2 decimals
@@ -203,7 +203,7 @@ async def test_symo_power_flow(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
     # still 55 because power_flow update interval is shorter than others
-    assert len(hass.states.async_all()) == 56
+    assert len(hass.states.async_all()) == 55
     assert_state(
         "sensor.energy_day_fronius_power_flow_0_http_fronius",
         1101.7001,

@@ -1,32 +1,33 @@
 """Tests for the Fronius integration."""
 from homeassistant.components.fronius.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_RESOURCE
-from homeassistant.setup import async_setup_component
+from homeassistant.const import CONF_HOST
 
-from .const import MOCK_HOST
-
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+MOCK_HOST = "http://fronius"
+MOCK_UID = "123.4567890"  # has to match mocked logger unique_id
 
 
 async def setup_fronius_integration(hass):
     """Create the Fronius integration."""
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
-                CONF_RESOURCE: MOCK_HOST,
-            }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_UID,
+        data={
+            CONF_HOST: MOCK_HOST,
+            "is_logger": True,
         },
     )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
 
 def mock_responses(
-    aioclient_mock: AiohttpClientMocker, host: str = MOCK_HOST, night: bool = False
+    aioclient_mock: AiohttpClientMocker,
+    host: str = MOCK_HOST,
+    night: bool = False,
 ) -> None:
     """Mock responses for Fronius Symo inverter with meter."""
     aioclient_mock.clear_requests()
