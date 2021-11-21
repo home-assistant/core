@@ -7,9 +7,8 @@ from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from websocket import WebSocketException, WebSocketProtocolException
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.samsungtv.const import (
-    ATTR_PROPERTIES,
     CONF_MANUFACTURER,
     CONF_MODEL,
     DEFAULT_MANUFACTURER,
@@ -85,18 +84,18 @@ MOCK_SSDP_DATA_WRONGMODEL = {
     ATTR_UPNP_MODEL_NAME: "HW-Qfake",
     ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
 }
-MOCK_DHCP_DATA = {IP_ADDRESS: "fake_host", MAC_ADDRESS: "aa:bb:cc:dd:ee:ff"}
+MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(ip="fake_host", macaddress="aa:bb:cc:dd:ee:ff")
 EXISTING_IP = "192.168.40.221"
-MOCK_ZEROCONF_DATA = {
-    CONF_HOST: "fake_host",
-    CONF_PORT: 1234,
-    ATTR_PROPERTIES: {
+MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+    host="fake_host",
+    port=1234,
+    properties={
         "deviceid": "aa:bb:cc:dd:ee:ff",
         "manufacturer": "fake_manufacturer",
         "model": "fake_model",
         "serialNumber": "fake_serial",
     },
-}
+)
 MOCK_OLD_ENTRY = {
     CONF_HOST: "fake_host",
     CONF_ID: "0d1cef00-00dc-1000-9c80-4844f7b172de_old",
@@ -1097,7 +1096,7 @@ async def test_update_legacy_missing_mac_from_dhcp(hass, remote: Mock):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={IP_ADDRESS: EXISTING_IP, MAC_ADDRESS: "aa:bb:cc:dd:ee:ff"},
+            data=dhcp.DhcpServiceInfo(ip=EXISTING_IP, macaddress="aa:bb:cc:dd:ee:ff"),
         )
         await hass.async_block_till_done()
         assert len(mock_setup.mock_calls) == 1
@@ -1131,7 +1130,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(hass, remote: Mo
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={IP_ADDRESS: EXISTING_IP, MAC_ADDRESS: "aa:bb:cc:dd:ee:ff"},
+            data=dhcp.DhcpServiceInfo(ip=EXISTING_IP, macaddress="aa:bb:cc:dd:ee:ff"),
         )
         await hass.async_block_till_done()
         assert len(mock_setup.mock_calls) == 1
