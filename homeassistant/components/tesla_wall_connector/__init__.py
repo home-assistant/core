@@ -30,15 +30,9 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL_CHARGING,
     DOMAIN,
-    WALLCONNECTOR_CLIENT,
     WALLCONNECTOR_DATA_LIFETIME,
-    WALLCONNECTOR_DATA_UPDATE_COORDINATOR,
     WALLCONNECTOR_DATA_VITALS,
     WALLCONNECTOR_DEVICE_NAME,
-    WALLCONNECTOR_FIRMWARE_VERSION,
-    WALLCONNECTOR_HOST,
-    WALLCONNECTOR_PART_NUMBER,
-    WALLCONNECTOR_SERIAL_NUMBER,
 )
 
 PLATFORMS: list[str] = ["sensor", "binary_sensor"]
@@ -62,20 +56,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except WallConnectorError as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        WALLCONNECTOR_CLIENT: wall_connector,
-        WALLCONNECTOR_HOST: hostname,
-        WALLCONNECTOR_PART_NUMBER: version_data.part_number,
-        WALLCONNECTOR_FIRMWARE_VERSION: version_data.firmware_version,
-        WALLCONNECTOR_SERIAL_NUMBER: version_data.serial_number,
-    }
+    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="tesla-wallconnector",
+        update_interval=timedelta(seconds=poll_interval),
+    )
+
+    hass.data[DOMAIN][entry.entry_id] = WallConnectorData(
+        wall_connector_client=wall_connector,
+        hostname=hostname,
+        part_number=version_data.part_number,
+        firmware_version=version_data.firmware_version,
+        serial_number=version_data.serial_number,
+        update_coordinator=coordinator,
+    )
 
     async def async_update_data():
         """Fetch new data from the Wall Connector."""
-        wall_connector = hass.data[DOMAIN][entry.entry_id][WALLCONNECTOR_CLIENT]
-        coordinator = hass.data[DOMAIN][entry.entry_id][
-            WALLCONNECTOR_DATA_UPDATE_COORDINATOR
-        ]
 
         previous_contactor_closed = (
             coordinator.data[WALLCONNECTOR_DATA_VITALS].contactor_closed
@@ -117,17 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             WALLCONNECTOR_DATA_LIFETIME: lifetime,
         }
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="tesla-wallconnector",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=poll_interval),
-    )
-
-    hass.data[DOMAIN][entry.entry_id][
-        WALLCONNECTOR_DATA_UPDATE_COORDINATOR
-    ] = coordinator
+    coordinator.update_method = async_update_data
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -158,22 +146,22 @@ def get_unique_id(serial_number: str, key: str) -> str:
 class WallConnectorEntity(CoordinatorEntity):
     """Base class for Wall Connector entities."""
 
-    def __init__(self, wall_connector: dict) -> None:
+    def __init__(self, wall_connector_data: WallConnectorData) -> None:
         """Initialize WallConnector Entity."""
-        self.wall_connector = wall_connector
+        self.wall_connector_data = wall_connector_data
         self._attr_unique_id = get_unique_id(
-            wall_connector[WALLCONNECTOR_SERIAL_NUMBER], self.entity_description.key
+            wall_connector_data.serial_number, self.entity_description.key
         )
-        super().__init__(wall_connector[WALLCONNECTOR_DATA_UPDATE_COORDINATOR])
+        super().__init__(wall_connector_data.update_coordinator)
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.wall_connector[WALLCONNECTOR_SERIAL_NUMBER])},
+            identifiers={(DOMAIN, self.wall_connector_data.serial_number)},
             default_name=WALLCONNECTOR_DEVICE_NAME,
-            model=self.wall_connector[WALLCONNECTOR_PART_NUMBER],
-            sw_version=self.wall_connector[WALLCONNECTOR_FIRMWARE_VERSION],
+            model=self.wall_connector_data.part_number,
+            sw_version=self.wall_connector_data.firmware_version,
             default_manufacturer="Tesla",
         )
 
@@ -183,3 +171,15 @@ class WallConnectorLambdaValueGetterMixin:
     """Mixin with a function pointer for getting sensor value."""
 
     value_fn: Callable[[dict], Any]
+
+
+@dataclass
+class WallConnectorData:
+    """Data for the Tesla Wall Connector integration."""
+
+    wall_connector_client: WallConnector
+    update_coordinator: DataUpdateCoordinator
+    hostname: str
+    part_number: str
+    firmware_version: str
+    serial_number: str

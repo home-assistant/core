@@ -22,6 +22,7 @@ from homeassistant.const import (
 )
 
 from . import (
+    WallConnectorData,
     WallConnectorEntity,
     WallConnectorLambdaValueGetterMixin,
     prefix_entity_name,
@@ -109,11 +110,11 @@ WALL_CONNECTOR_SENSORS = [
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Create the Wall Connector sensor devices."""
-    wall_connector = hass.data[DOMAIN][config_entry.entry_id]
+    wall_connector_data = hass.data[DOMAIN][config_entry.entry_id]
 
     all_entities = []
     for description in WALL_CONNECTOR_SENSORS:
-        entity = WallConnectorSensorEntity(wall_connector, description)
+        entity = WallConnectorSensorEntity(wall_connector_data, description)
         if entity is not None:
             all_entities.append(entity)
 
@@ -126,11 +127,13 @@ class WallConnectorSensorEntity(WallConnectorEntity, SensorEntity):
     entity_description: WallConnectorSensorDescription
 
     def __init__(
-        self, wall_connector: dict, description: WallConnectorSensorDescription
+        self,
+        wall_connector_data: WallConnectorData,
+        description: WallConnectorSensorDescription,
     ) -> None:
         """Initialize WallConnectorSensorEntity."""
         self.entity_description = description
-        super().__init__(wall_connector)
+        super().__init__(wall_connector_data)
 
     @property
     def state(self):

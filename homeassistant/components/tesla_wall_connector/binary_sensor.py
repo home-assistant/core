@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 
 from . import (
+    WallConnectorData,
     WallConnectorEntity,
     WallConnectorLambdaValueGetterMixin,
     prefix_entity_name,
@@ -47,11 +48,11 @@ WALL_CONNECTOR_SENSORS = [
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Create the Wall Connector sensor devices."""
-    wall_connector = hass.data[DOMAIN][config_entry.entry_id]
+    wall_connector_data = hass.data[DOMAIN][config_entry.entry_id]
 
     all_entities = []
     for description in WALL_CONNECTOR_SENSORS:
-        entity = WallConnectorBinarySensorEntity(wall_connector, description)
+        entity = WallConnectorBinarySensorEntity(wall_connector_data, description)
         if entity is not None:
             all_entities.append(entity)
 
@@ -62,11 +63,13 @@ class WallConnectorBinarySensorEntity(WallConnectorEntity, BinarySensorEntity):
     """Wall Connector Sensor Entity."""
 
     def __init__(
-        self, wall_connector: dict, description: WallConnectorBinarySensorDescription
+        self,
+        wall_connectord_data: WallConnectorData,
+        description: WallConnectorBinarySensorDescription,
     ) -> None:
         """Initialize WallConnectorBinarySensorEntity."""
         self.entity_description = description
-        super().__init__(wall_connector)
+        super().__init__(wall_connectord_data)
 
     @property
     def state(self):
