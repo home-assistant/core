@@ -509,4 +509,4 @@ async def test_options(hass: HomeAssistant):
     assert result2["type"] == "create_entry"
     assert result2["data"] == user_input
     assert result2["data"] == config_entry.options
-    assert hass.states.get("light.rgbw_controller_aabbccddeeff") is not None
+    assert hass.states.get("light.rgbw_controller_ddeeff") is not None
