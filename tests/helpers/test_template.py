@@ -1,5 +1,6 @@
 """Test Home Assistant template helper methods."""
-from datetime import datetime
+from datetime import datetime, timedelta
+import logging
 import math
 import random
 from unittest.mock import patch
@@ -20,7 +21,8 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import device_registry as dr, template
+from homeassistant.helpers import device_registry as dr, entity, template
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
@@ -1846,6 +1848,44 @@ async def test_device_entities(hass):
     assert_result_info(
         info, "light.hue_5678, light.hue_abcd", ["light.hue_5678", "light.hue_abcd"]
     )
+    assert info.rate_limit is None
+
+
+async def test_integration_entities(hass):
+    """Test integration_entities function."""
+    entity_registry = mock_registry(hass)
+
+    # test entities for given config entry title
+    config_entry = MockConfigEntry(domain="mock", title="Mock bridge 2")
+    config_entry.add_to_hass(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "mock", "test", config_entry=config_entry
+    )
+    info = render_to_info(hass, "{{ integration_entities('Mock bridge 2') }}")
+    assert_result_info(info, [entity_entry.entity_id])
+    assert info.rate_limit is None
+
+    # test integration entities not in entity registry
+    mock_entity = entity.Entity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = "light.test_entity"
+    mock_entity.platform = EntityPlatform(
+        hass=hass,
+        logger=logging.getLogger(__name__),
+        domain="light",
+        platform_name="entryless_integration",
+        platform=None,
+        scan_interval=timedelta(seconds=30),
+        entity_namespace=None,
+    )
+    await mock_entity.async_internal_added_to_hass()
+    info = render_to_info(hass, "{{ integration_entities('entryless_integration') }}")
+    assert_result_info(info, ["light.test_entity"])
+    assert info.rate_limit is None
+
+    # Test non existing integration/entry title
+    info = render_to_info(hass, "{{ integration_entities('abc123') }}")
+    assert_result_info(info, [])
     assert info.rate_limit is None
 
 
