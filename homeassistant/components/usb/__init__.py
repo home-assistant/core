@@ -33,6 +33,7 @@ REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
 
 # Attributes for UsbServiceInfo
 ATTR_DESCRIPTION: Final = "description"
+ATTR_DEVICE: Final = "device"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_PID: Final = "pid"
 ATTR_SERIAL_NUMBER: Final = "serial_number"
