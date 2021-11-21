@@ -14,7 +14,14 @@ from homeassistant.components.weather import (
     PLATFORM_SCHEMA,
     WeatherEntity,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -80,6 +87,10 @@ def setup_platform(
 class ZamgWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_HPA
+    _attr_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+
     def __init__(self, zamg_data, stationname=None):
         """Initialise the platform with a data instance and station name."""
         self.zamg_data = zamg_data
@@ -107,11 +118,6 @@ class ZamgWeather(WeatherEntity):
     def temperature(self):
         """Return the platform temperature."""
         return self.zamg_data.get_data(ATTR_WEATHER_TEMPERATURE)
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def pressure(self):
