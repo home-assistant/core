@@ -35,7 +35,16 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    LENGTH_KILOMETERS,
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -100,6 +109,12 @@ async def async_setup_entry(
 class SmhiWeather(WeatherEntity):
     """Representation of a weather entity."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_HPA
+    _attr_wind_speed_unit = SPEED_METERS_PER_SECOND
+    _attr_visibility_unit = LENGTH_KILOMETERS
+    _attr_precipitation_unit = LENGTH_MILLIMETERS
+
     def __init__(
         self,
         name: str,
@@ -158,11 +173,6 @@ class SmhiWeather(WeatherEntity):
         return None
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
     def humidity(self) -> int | None:
         """Return the humidity."""
         if self._forecasts is not None:
@@ -171,10 +181,9 @@ class SmhiWeather(WeatherEntity):
 
     @property
     def wind_speed(self) -> float | None:
-        """Return the wind speed."""
+        """Return the wind speed in m/s."""
         if self._forecasts is not None:
-            # Convert from m/s to km/h
-            return round(self._forecasts[0].wind_speed * 18 / 5)
+            return self._forecasts[0].wind_speed
         return None
 
     @property
