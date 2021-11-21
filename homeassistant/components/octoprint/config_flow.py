@@ -6,6 +6,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries, data_entry_flow, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -138,20 +139,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import."""
         return await self.async_step_user(user_input)
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle discovery flow."""
-        uuid = discovery_info["properties"]["uuid"]
+        uuid = discovery_info[zeroconf.ATTR_PROPERTIES]["uuid"]
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured()
 
         self.context["title_placeholders"] = {
-            CONF_HOST: discovery_info[CONF_HOST],
+            CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
         }
 
         self.discovery_schema = _schema_with_defaults(
-            host=discovery_info[CONF_HOST],
-            port=discovery_info[CONF_PORT],
-            path=discovery_info["properties"][CONF_PATH],
+            host=discovery_info[zeroconf.ATTR_HOST],
+            port=discovery_info[zeroconf.ATTR_PORT],
+            path=discovery_info[zeroconf.ATTR_PROPERTIES][CONF_PATH],
         )
 
         return await self.async_step_user()
