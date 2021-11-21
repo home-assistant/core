@@ -1,74 +1,39 @@
 """Test the Tesla Wall Connector config flow."""
-from unittest.mock import patch
+from tesla_wall_connector.exceptions import WallConnectorConnectionError
 
-import tesla_wall_connector
-from tesla_wall_connector import wall_connector
-
-from homeassistant.components.tesla_wall_connector.const import (
-    CONF_SCAN_INTERVAL_CHARGING,
-    DOMAIN,
-    WALLCONNECTOR_CLIENT,
-    WALLCONNECTOR_DATA_UPDATE_COORDINATOR,
-    WALLCONNECTOR_SERIAL_NUMBER,
-)
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant import config_entries
+from homeassistant.components.tesla_wall_connector.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from tests.common import MockConfigEntry
+from .conftest import create_wall_connector_entry
 
 
 async def test_init_success(hass: HomeAssistant) -> None:
     """Test setup and that we get the device info, including firmware version."""
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
-        options={CONF_SCAN_INTERVAL: 30, CONF_SCAN_INTERVAL_CHARGING: 5},
+    entry = await create_wall_connector_entry(hass)
+
+    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert hass.data[DOMAIN]
+    assert hass.data[DOMAIN][entry.entry_id]
+
+
+async def test_init_while_offline(hass: HomeAssistant) -> None:
+    """Test init with the wall connector offline."""
+    entry = await create_wall_connector_entry(
+        hass, side_effect=WallConnectorConnectionError
     )
 
-    entry.add_to_hass(hass)
+    assert entry.state == config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry.entry_id not in hass.data[DOMAIN]
 
-    fake_version_obj = tesla_wall_connector.wall_connector.Version(
-        {
-            "serial_number": "abc123",
-            "part_number": "part_123",
-            "firmware_version": "1.2.3",
-        }
-    )
 
-    # We need to return vitals with a contactor_closed attribute
-    # Since that is used to determine the update scan interval
-    fake_vitals = tesla_wall_connector.wall_connector.Vitals(
-        {
-            "contactor_closed": "false",
-        }
-    )
+async def test_load_unload(hass):
+    """Config entry can be unloaded."""
 
-    with patch(
-        "tesla_wall_connector.WallConnector.async_get_version",
-        return_value=fake_version_obj,
-    ), patch(
-        "tesla_wall_connector.WallConnector.async_get_vitals",
-        return_value=fake_vitals,
-    ) as vitals_mock, patch(
-        "tesla_wall_connector.WallConnector.async_get_lifetime",
-        return_value=None,
-    ) as lifetime_mock:
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    entry = await create_wall_connector_entry(hass)
 
-    assert hass.data[DOMAIN][entry.entry_id] is not None
-    assert isinstance(
-        hass.data[DOMAIN][entry.entry_id][WALLCONNECTOR_CLIENT],
-        wall_connector.WallConnector,
-    )
-    assert hass.data[DOMAIN][entry.entry_id][WALLCONNECTOR_SERIAL_NUMBER] == "abc123"
-    assert isinstance(
-        hass.data[DOMAIN][entry.entry_id][WALLCONNECTOR_DATA_UPDATE_COORDINATOR],
-        DataUpdateCoordinator,
-    )
+    assert entry.state is config_entries.ConfigEntryState.LOADED
 
-    # Verify that the DataUpdateCoordinator fetches the initial data
-    assert vitals_mock.call_count == 1
-    assert lifetime_mock.call_count == 1
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
