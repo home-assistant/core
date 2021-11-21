@@ -151,8 +151,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        host = discovery_info["properties"].get("ip")
-        uuid = discovery_info["properties"].get("uuid")
+        properties = discovery_info[zeroconf.ATTR_PROPERTIES]
+        host = properties.get("ip")
+        uuid = properties.get("uuid")
 
         if host is None or uuid is None:
             return self.async_abort(reason="unknown")
@@ -164,7 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = host
         self._input = {
             CONF_HOST: host,
-            CONF_PORT: discovery_info["properties"].get("port"),
+            CONF_PORT: properties.get("port"),
         }
 
         return await self.async_step_authenticate()
