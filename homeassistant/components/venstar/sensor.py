@@ -19,54 +19,10 @@ from .const import DOMAIN
 
 
 @dataclass
-class VenstarSensorEntityDescription(SensorEntityDescription):
-    """Base description of a Sensor entity."""
+class VenstarSensorTypeMixin:
+    """Mixin for sensor required keys."""
 
-
-HUMIDITY_SENSOR_DESCRIPTION = VenstarSensorEntityDescription(
-    key="humidity",
-    device_class=DEVICE_CLASS_HUMIDITY,
-    state_class=STATE_CLASS_MEASUREMENT,
-    native_unit_of_measurement=PERCENTAGE,
-)
-TEMPERATURE_SENSOR_DESCRIPTION = VenstarSensorEntityDescription(
-    key="temperature",
-    device_class=DEVICE_CLASS_TEMPERATURE,
-    state_class=STATE_CLASS_MEASUREMENT,
-)
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
-    """Set up Vensar device binary_sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[Entity] = []
-
-    sensors = coordinator.client.get_sensor_list()
-    if not sensors:
-        return
-
-    # look for humidity, and temperature
-    for sensor_name in sensors:
-        if coordinator.client.get_sensor(sensor_name, "hum") is not None:
-            entities.append(
-                VenstarHumiditySensor(
-                    coordinator,
-                    config_entry,
-                    HUMIDITY_SENSOR_DESCRIPTION,
-                    sensor_name,
-                )
-            )
-        if coordinator.client.get_sensor(sensor_name, "temp") is not None:
-            entities.append(
-                VenstarTemperatureSensor(
-                    coordinator,
-                    config_entry,
-                    TEMPERATURE_SENSOR_DESCRIPTION,
-                    sensor_name,
-                )
-            )
-
-    async_add_entities(entities)
+    cls: type[VenstarSensor]
 
 
 class VenstarSensor(VenstarEntity, SensorEntity):
@@ -87,14 +43,14 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         self.sensor_name = sensor_name
         self._config = config
 
-
-class VenstarHumiditySensor(VenstarSensor):
-    """Represent a Venstar humidity sensor."""
-
     @property
     def unique_id(self):
         """Return the unique id."""
-        return f"{self._config.entry_id}_{self.sensor_name.replace(' ', '_')}_hum"
+        return f"{self._config.entry_id}_{self.sensor_name.replace(' ', '_')}_{self.entity_description.key}"
+
+
+class VenstarHumiditySensor(VenstarSensor):
+    """Represent a Venstar humidity sensor."""
 
     @property
     def name(self):
@@ -109,11 +65,6 @@ class VenstarHumiditySensor(VenstarSensor):
 
 class VenstarTemperatureSensor(VenstarSensor):
     """Represent a Venstar temperature sensor."""
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return f"{self._config.entry_id}_{self.sensor_name.replace(' ', '_')}_temp"
 
     @property
     def name(self):
@@ -133,3 +84,47 @@ class VenstarTemperatureSensor(VenstarSensor):
     def native_value(self) -> float:
         """Return state of the sensor."""
         return round(float(self._client.get_sensor(self.sensor_name, "temp")), 1)
+
+
+@dataclass
+class VenstarSensorEntityDescription(SensorEntityDescription, VenstarSensorTypeMixin):
+    """Base description of a Sensor entity."""
+
+
+SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
+    VenstarSensorEntityDescription(
+        key="humidity",
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        cls=VenstarHumiditySensor,
+    ),
+    VenstarSensorEntityDescription(
+        key="temperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        cls=VenstarTemperatureSensor,
+    ),
+)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
+    """Set up Vensar device binary_sensors based on a config entry."""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[Entity] = []
+
+    sensors = coordinator.client.get_sensor_list()
+    if not sensors:
+        return
+
+    entities = []
+
+    for sensor_name in sensors:
+        entities.extend(
+            [
+                description.cls(coordinator, config_entry, description, sensor_name)
+                for description in SENSOR_ENTITIES
+            ]
+        )
+
+    async_add_entities(entities)
