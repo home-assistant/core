@@ -74,7 +74,5 @@ class WallConnectorBinarySensorEntity(WallConnectorEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        if self.coordinator.data is None:
-            return None
 
         return self.entity_description.value_fn(self.coordinator.data)
