@@ -202,7 +202,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             dr.format_mac(device[ATTR_ID]): device for device in discovered_devices
         }
         devices_name = {
-            mac: f"{device[ATTR_MODEL]} {mac} ({device[ATTR_IPADDR]})"
+            mac: async_name_from_discovery(device)
             for mac, device in self._discovered_devices.items()
             if mac not in current_unique_ids
             and device[ATTR_IPADDR] not in current_hosts
