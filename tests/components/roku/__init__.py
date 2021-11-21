@@ -36,7 +36,7 @@ MOCK_HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     name="onn._hap._tcp.local.",
     host=HOMEKIT_HOST,
     properties={
-        zeroconf.zeroconf.ATTR_PROPERTIES_ID: "2d:97:da:ee:dc:99",
+        zeroconf.ATTR_PROPERTIES_ID: "2d:97:da:ee:dc:99",
     },
 )
 
