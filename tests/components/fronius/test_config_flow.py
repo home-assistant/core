@@ -40,7 +40,7 @@ async def test_form_with_logger(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.fronius.config_flow.Fronius.current_logger_info",
+        "pyfronius.Fronius.current_logger_info",
         return_value=LOGGER_INFO_RETURN_VALUE,
     ), patch(
         "homeassistant.components.fronius.async_setup_entry",
@@ -72,10 +72,10 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.fronius.config_flow.Fronius.current_logger_info",
+        "pyfronius.Fronius.current_logger_info",
         side_effect=FroniusError,
     ), patch(
-        "homeassistant.components.fronius.config_flow.Fronius.inverter_info",
+        "pyfronius.Fronius.inverter_info",
         return_value=INVERTER_INFO_RETURN_VALUE,
     ), patch(
         "homeassistant.components.fronius.async_setup_entry",
@@ -105,10 +105,10 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.fronius.config_flow.Fronius.current_logger_info",
+        "pyfronius.Fronius.current_logger_info",
         side_effect=FroniusError,
     ), patch(
-        "homeassistant.components.fronius.config_flow.Fronius.inverter_info",
+        "pyfronius.Fronius.inverter_info",
         side_effect=FroniusError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -129,10 +129,10 @@ async def test_form_no_device(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.fronius.config_flow.Fronius.current_logger_info",
+        "pyfronius.Fronius.current_logger_info",
         side_effect=FroniusError,
     ), patch(
-        "homeassistant.components.fronius.config_flow.Fronius.inverter_info",
+        "pyfronius.Fronius.inverter_info",
         return_value={"inverters": []},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -153,7 +153,7 @@ async def test_form_unexpected(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.fronius.config_flow.Fronius.current_logger_info",
+        "pyfronius.Fronius.current_logger_info",
         side_effect=KeyError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -180,7 +180,7 @@ async def test_form_already_existing(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.fronius.config_flow.Fronius.current_logger_info",
+        "pyfronius.Fronius.current_logger_info",
         return_value=LOGGER_INFO_RETURN_VALUE,
     ):
         result2 = await hass.config_entries.flow.async_configure(
