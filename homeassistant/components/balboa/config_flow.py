@@ -46,11 +46,6 @@ class BalboaSpaClientFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     @staticmethod
-    def construct_unique_id(model_name: str, mac_addr: str) -> str:
-        """Construct the unique id from the discovery or user_step."""
-        return f"{model_name}-{mac_addr}"
-
-    @staticmethod
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
@@ -70,10 +65,7 @@ class BalboaSpaClientFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                unique_id = self.construct_unique_id(
-                    info["title"], info["formatted_mac"]
-                )
-                await self.async_set_unique_id(unique_id)
+                await self.async_set_unique_id(info["formatted_mac"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 

@@ -1,5 +1,6 @@
 """The Balboa Spa Client integration."""
 import asyncio
+from datetime import timedelta
 import time
 
 from pybalboa import BalboaSpaWifi
@@ -12,7 +13,16 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
-from .const import _LOGGER, CONF_SYNC_TIME, DEFAULT_SYNC_TIME, DOMAIN, PLATFORMS
+from .const import (
+    _LOGGER,
+    CONF_SYNC_TIME,
+    DEFAULT_SYNC_TIME,
+    DOMAIN,
+    PLATFORMS,
+    SIGNAL_UPDATE,
+)
+
+SYNC_TIME_INTERVAL = timedelta(days=1)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -22,16 +32,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Attempting to connect to %s", host)
     spa = BalboaSpaWifi(host)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = spa
-
     connected = await spa.connect()
     if not connected:
         _LOGGER.error("Failed to connect to spa at %s", host)
         raise ConfigEntryNotReady
 
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = spa
+
     # send config requests, and then listen until we are configured.
     await spa.send_mod_ident_req()
     await spa.send_panel_req(0, 1)
+
+    async def _async_balboa_update_cb():
+        """Primary update callback called from pybalboa."""
+        _LOGGER.debug("Primary update callback triggered")
+        async_dispatcher_send(hass, SIGNAL_UPDATE.format(entry.entry_id))
+
+    # set the callback so we know we have new data
+    spa.new_data_cb = _async_balboa_update_cb
 
     _LOGGER.debug("Starting listener and monitor tasks")
     hass.loop.create_task(spa.listen())
@@ -40,13 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # At this point we have a configured spa.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
-    async def _async_balboa_update_cb():
-        """Primary update callback called from pybalboa."""
-        _LOGGER.debug("Primary update callback triggered")
-        async_dispatcher_send(hass, DOMAIN)
-
-    spa.new_data_cb = _async_balboa_update_cb
 
     # call update_listener on startup
     await update_listener(hass, entry)
@@ -85,4 +96,6 @@ async def update_listener(hass, entry):
             )
 
     sync_time()
-    entry.async_on_unload(async_track_time_interval(hass, sync_time, 86400))
+    entry.async_on_unload(
+        async_track_time_interval(hass, sync_time, SYNC_TIME_INTERVAL)
+    )

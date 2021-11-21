@@ -7,9 +7,13 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     FAN_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -22,8 +26,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 
-from .balboa_entity import BalboaEntity
 from .const import CLIMATE, CLIMATE_SUPPORTED_FANSTATES, CLIMATE_SUPPORTED_MODES, DOMAIN
+from .entity import BalboaEntity
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -37,7 +41,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 CLIMATE,
             )
         ],
-        True,
     )
 
 
@@ -47,15 +50,31 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
     _attr_icon = "mdi:hot-tub"
     _attr_fan_modes = CLIMATE_SUPPORTED_FANSTATES
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+    def __init__(self, hass, entry, client, devtype, num=None):
+        """Initialize the climate entity."""
+        super().__init__(hass, entry, client, devtype, num)
 
+        # set the supported features
+        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
         if self._client.have_blower():
-            features |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= SUPPORT_FAN_MODE
 
-        return features
+        # map the blower and heatmodes back and forth
+        self.balboa_to_ha_blower_map = {
+            self._client.BLOWER_OFF: FAN_OFF,
+            self._client.BLOWER_LOW: FAN_LOW,
+            self._client.BLOWER_MEDIUM: FAN_MEDIUM,
+            self._client.BLOWER_HIGH: FAN_HIGH,
+        }
+        self.ha_to_balboa_blower_map = {
+            value: key for key, value in self.balboa_to_ha_blower_map.items()
+        }
+
+        self.balboa_to_ha_heatmode_map = {
+            self._client.HEATMODE_READY: HVAC_MODE_HEAT,
+            self._client.HEATMODE_RNR: HVAC_MODE_AUTO,
+            self._client.HEATMODE_REST: HVAC_MODE_OFF,
+        }
 
     @property
     def hvac_modes(self) -> list[str]:
