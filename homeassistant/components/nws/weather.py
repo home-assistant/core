@@ -14,25 +14,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    LENGTH_KILOMETERS,
     LENGTH_METERS,
-    LENGTH_MILES,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
     PRESSURE_PA,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.dt import utcnow
-from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.speed import convert as convert_speed
-from homeassistant.util.temperature import convert as convert_temperature
 
 from . import base_unique_id, device_info
 from .const import (
@@ -100,6 +92,11 @@ async def async_setup_entry(
 class NWSWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_PA
+    _attr_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+    _attr_visibility_unit = LENGTH_METERS
+
     def __init__(self, entry_data, hass_data, mode, units):
         """Initialise the platform with a data instance and station name."""
         self.nws = hass_data[NWS_DATA]
@@ -156,29 +153,19 @@ class NWSWeather(WeatherEntity):
 
     @property
     def temperature(self):
-        """Return the current temperature."""
+        """Return the current temperature in degrees C."""
         temp_c = None
         if self.observation:
             temp_c = self.observation.get("temperature")
-        if temp_c is not None:
-            return convert_temperature(temp_c, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-        return None
+        return temp_c
 
     @property
     def pressure(self):
-        """Return the current pressure."""
+        """Return the current pressure in Pa."""
         pressure_pa = None
         if self.observation:
             pressure_pa = self.observation.get("seaLevelPressure")
-        if pressure_pa is None:
-            return None
-        if self.is_metric:
-            pressure = convert_pressure(pressure_pa, PRESSURE_PA, PRESSURE_HPA)
-            pressure = round(pressure)
-        else:
-            pressure = convert_pressure(pressure_pa, PRESSURE_PA, PRESSURE_INHG)
-            pressure = round(pressure, 2)
-        return pressure
+        return pressure_pa
 
     @property
     def humidity(self):
@@ -194,16 +181,7 @@ class NWSWeather(WeatherEntity):
         wind_km_hr = None
         if self.observation:
             wind_km_hr = self.observation.get("windSpeed")
-        if wind_km_hr is None:
-            return None
-
-        if self.is_metric:
-            wind = wind_km_hr
-        else:
-            wind = convert_speed(
-                wind_km_hr, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR
-            )
-        return round(wind)
+        return wind_km_hr
 
     @property
     def wind_bearing(self):
@@ -212,11 +190,6 @@ class NWSWeather(WeatherEntity):
         if self.observation:
             wind_bearing = self.observation.get("windDirection")
         return wind_bearing
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
 
     @property
     def condition(self):
@@ -233,18 +206,11 @@ class NWSWeather(WeatherEntity):
 
     @property
     def visibility(self):
-        """Return visibility."""
+        """Return visibility in meters."""
         vis_m = None
         if self.observation:
             vis_m = self.observation.get("visibility")
-        if vis_m is None:
-            return None
-
-        if self.is_metric:
-            vis = convert_distance(vis_m, LENGTH_METERS, LENGTH_KILOMETERS)
-        else:
-            vis = convert_distance(vis_m, LENGTH_METERS, LENGTH_MILES)
-        return round(vis, 0)
+        return vis_m
 
     @property
     def forecast(self):
@@ -275,14 +241,11 @@ class NWSWeather(WeatherEntity):
             data[ATTR_FORECAST_WIND_BEARING] = forecast_entry.get("windBearing")
             wind_speed = forecast_entry.get("windSpeedAvg")
             if wind_speed is not None:
-                if self.is_metric:
-                    data[ATTR_FORECAST_WIND_SPEED] = round(
-                        convert_speed(
-                            wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
-                        )
+                data[ATTR_FORECAST_WIND_SPEED] = round(
+                    convert_speed(
+                        wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
                     )
-                else:
-                    data[ATTR_FORECAST_WIND_SPEED] = round(wind_speed)
+                )
             else:
                 data[ATTR_FORECAST_WIND_SPEED] = None
             forecast.append(data)
