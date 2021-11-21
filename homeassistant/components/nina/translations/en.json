@@ -1,20 +1,26 @@
 {
     "config": {
         "abort": {
-            "already_configured": "NINA is already configured"
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "no_selection": "Please select at least one city/county",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
-                "title" : "Select city/county",
                 "data": {
-                    "regions": "city/county",
-                    "slots": "Maximum warnings per city/county",
-                    "corona_filter": "Remove Corona Warnings"
-                }
+                    "corona_filter": "Remove Corona Warnings",
+                    "regions1": "city/county (A-D)",
+                    "regions2": "city/county (E-H)",
+                    "regions3": "city/county (I-L)",
+                    "regions4": "city/county (M-Q)",
+                    "regions5": "city/county (R-U)",
+                    "regions6": "city/county (V-Z)",
+                    "slots": "Maximum warnings per city/county"
+                },
+                "title": "Select city/county"
             }
         }
     }

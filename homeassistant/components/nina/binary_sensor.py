@@ -1,8 +1,7 @@
 """NINA sensor platform."""
 from typing import Any, Dict, List
 
-from pynina import ApiError, Nina
-from pynina import Warning as NinaWarning
+from pynina import ApiError, Nina, Warning as NinaWarning  # pylint: disable=E0401
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SAFETY,
@@ -17,21 +16,23 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     _LOGGER,
+    ATTR_EXPIRES,
+    ATTR_HEADLINE,
+    ATTR_ID,
+    ATTR_SENT,
+    ATTR_START,
     CONF_FILTER_CORONA,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
     DOMAIN,
     SCAN_INTERVAL,
-    ATTR_HEADLINE,
-    ATTR_ID,
-    ATTR_SENT,
-    ATTR_START,
-    ATTR_EXPIRES,
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Any
+    hass: HomeAssistant,  # pylint: disable=C0330
+    config_entry: ConfigEntry,  # pylint: disable=C0330
+    async_add_entities: Any,  # pylint: disable=C0330
 ) -> None:
     """Set up entries."""
     config: Dict[str, Any] = hass.data[DOMAIN][config_entry.entry_id]
@@ -65,27 +66,27 @@ async def async_setup_entry(
 
     await coordinator.async_config_entry_first_refresh()
 
-    entities: List[Message] = []
+    entities: List[NINAMessage] = []
 
     for idx, ent in enumerate(coordinator.data):  # pylint: disable=W0612
         for i in range(0, config[CONF_MESSAGE_SLOTS]):
             entities.append(
-                Message(coordinator, ent, regions[ent], i + 1, filter_corona)
+                NINAMessage(coordinator, ent, regions[ent], i + 1, filter_corona)
             )
 
     async_add_entities(entities)
 
 
-class Message(CoordinatorEntity, BinarySensorEntity):  # pylint: disable=R0902
+class NINAMessage(CoordinatorEntity, BinarySensorEntity):  # pylint: disable=R0902
     """Representation of an NINA warning."""
 
     def __init__(  # pylint: disable=R0913
-        self,
-        coordinator: DataUpdateCoordinator,
-        region: str,
-        regionName: str,
-        slotID: int,
-        filter_corona: bool,
+        self,  # pylint: disable=C0330
+        coordinator: DataUpdateCoordinator,  # pylint: disable=C0330
+        region: str,  # pylint: disable=C0330
+        regionName: str,  # pylint: disable=C0330
+        slotID: int,  # pylint: disable=C0330
+        filter_corona: bool,  # pylint: disable=C0330
     ):
         """Initialize."""
         super().__init__(coordinator)

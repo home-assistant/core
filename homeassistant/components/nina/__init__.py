@@ -11,8 +11,7 @@ PLATFORMS: list[str] = ["binary_sensor"]  # pylint: disable=E1136
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry.data
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True

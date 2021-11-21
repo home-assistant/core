@@ -1,0 +1,27 @@
+{
+    "config": {
+        "step":{
+            "user": {
+                "title": "Select city/county",
+                "data" : {
+                    "regions1": "city/county (A-D)",
+                    "regions2": "city/county (E-H)",
+                    "regions3": "city/county (I-L)",
+                    "regions4": "city/county (M-Q)",
+                    "regions5": "city/county (R-U)",
+                    "regions6": "city/county (V-Z)",
+                    "slots": "Maximum warnings per city/county",
+                    "corona_filter": "Remove Corona Warnings"
+                }
+            }
+        },
+        "abort": {
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+        },
+        "error": {
+            "no_selection": "Please select at least one city/county",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        }
+    }
+}

@@ -3,6 +3,7 @@ from typing import Any, Dict
 from unittest.mock import patch
 
 from pynina import ApiError
+import pytest
 
 from homeassistant.components.binary_sensor import DEVICE_CLASS_SAFETY
 from homeassistant.components.nina.const import (
@@ -26,58 +27,62 @@ ENTRY_DATA: Dict[str, Any] = {
     "regions": {"083350000000": "Aach, Stadt"},
 }
 
-DUMMY_RESPONCE: Dict[str, Any] = [
-    {
-        "id": "mow.DE-BW-S-SE018-20211102-18-001",
-        "payload": {
-            "version": 1,
-            "type": "ALERT",
+
+@pytest.fixture
+def dummy_response() -> Dict[str, Any]:
+    """Sample data for tests."""
+    return [
+        {
             "id": "mow.DE-BW-S-SE018-20211102-18-001",
-            "hash": "cae97b1c11bde900017305f681904ad5a6e8fd1c841241ced524b83eaa3522f4",
-            "data": {
-                "headline": "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen",
-                "provider": "MOWAS",
-                "severity": "Minor",
-                "msgType": "Update",
-                "transKeys": {"event": "BBK-EVC-040"},
-                "area": {"type": "ZGEM", "data": "9956+1102,100001"},
+            "payload": {
+                "version": 1,
+                "type": "ALERT",
+                "id": "mow.DE-BW-S-SE018-20211102-18-001",
+                "hash": "cae97b1c11bde900017305f681904ad5a6e8fd1c841241ced524b83eaa3522f4",
+                "data": {
+                    "headline": "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen",
+                    "provider": "MOWAS",
+                    "severity": "Minor",
+                    "msgType": "Update",
+                    "transKeys": {"event": "BBK-EVC-040"},
+                    "area": {"type": "ZGEM", "data": "9956+1102,100001"},
+                },
             },
+            "i18nTitle": {
+                "de": "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen"
+            },
+            "sent": "2021-11-02T20:07:16+01:00",
         },
-        "i18nTitle": {
-            "de": "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen"
-        },
-        "sent": "2021-11-02T20:07:16+01:00",
-    },
-    {
-        "id": "mow.DE-NW-BN-SE030-20201014-30-000",
-        "payload": {
-            "version": 1,
-            "type": "ALERT",
+        {
             "id": "mow.DE-NW-BN-SE030-20201014-30-000",
-            "hash": "551db820a43be7e4f39283e1dfb71b212cd520c3ee478d44f43519e9c48fde4c",
-            "data": {
-                "headline": "Ausfall Notruf 112",
-                "provider": "MOWAS",
-                "severity": "Minor",
-                "msgType": "Update",
-                "transKeys": {"event": "BBK-EVC-040"},
-                "area": {"type": "ZGEM", "data": "1+11057,100001"},
+            "payload": {
+                "version": 1,
+                "type": "ALERT",
+                "id": "mow.DE-NW-BN-SE030-20201014-30-000",
+                "hash": "551db820a43be7e4f39283e1dfb71b212cd520c3ee478d44f43519e9c48fde4c",
+                "data": {
+                    "headline": "Ausfall Notruf 112",
+                    "provider": "MOWAS",
+                    "severity": "Minor",
+                    "msgType": "Update",
+                    "transKeys": {"event": "BBK-EVC-040"},
+                    "area": {"type": "ZGEM", "data": "1+11057,100001"},
+                },
             },
+            "i18nTitle": {"de": "Ausfall Notruf 112"},
+            "start": "2021-11-01T05:20:00+01:00",
+            "sent": "2021-10-11T05:20:00+01:00",
+            "expires": "2021-11-22T05:19:00+01:00",
         },
-        "i18nTitle": {"de": "Ausfall Notruf 112"},
-        "start": "2021-11-01T05:20:00+01:00",
-        "sent": "2021-10-11T05:20:00+01:00",
-        "expires": "2021-11-22T05:19:00+01:00",
-    },
-]
+    ]
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(hass: HomeAssistant, dummy_response: Dict[str, Any]) -> None:
     """Test the creation and values of the NINA sensors."""
 
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=DUMMY_RESPONCE,
+        return_value=dummy_response,
     ):
 
         conf_entry: MockConfigEntry = MockConfigEntry(
