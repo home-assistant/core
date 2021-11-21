@@ -22,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Config, CoreState, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -165,7 +166,7 @@ class WazeTravelTime(SensorEntity):
 
     _attr_native_unit_of_measurement = TIME_MINUTES
     _attr_device_info = DeviceInfo(
-        entry_type="service",
+        entry_type=DeviceEntryType.SERVICE,
         name="Waze",
         identifiers={(DOMAIN, DOMAIN)},
     )

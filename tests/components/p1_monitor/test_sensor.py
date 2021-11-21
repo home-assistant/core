@@ -1,7 +1,7 @@
 """Tests for the sensors provided by the P1 Monitor integration."""
 import pytest
 
-from homeassistant.components.p1_monitor.const import DOMAIN, ENTRY_TYPE_SERVICE
+from homeassistant.components.p1_monitor.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
@@ -80,7 +80,7 @@ async def test_smartmeter(
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_smartmeter")}
     assert device_entry.manufacturer == "P1 Monitor"
     assert device_entry.name == "SmartMeter"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
 
@@ -136,7 +136,7 @@ async def test_phases(
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_phases")}
     assert device_entry.manufacturer == "P1 Monitor"
     assert device_entry.name == "Phases"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
 
@@ -182,7 +182,7 @@ async def test_settings(
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_settings")}
     assert device_entry.manufacturer == "P1 Monitor"
     assert device_entry.name == "Settings"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
 

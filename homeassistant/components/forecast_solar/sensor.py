@@ -6,6 +6,7 @@ from datetime import datetime
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -14,7 +15,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, ENTRY_TYPE_SERVICE, SENSORS
+from .const import DOMAIN, SENSORS
 from .models import ForecastSolarSensorEntityDescription
 
 
@@ -53,7 +54,7 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{entry_id}_{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
-            entry_type=ENTRY_TYPE_SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="Forecast.Solar",
             model=coordinator.data.account_type.value,

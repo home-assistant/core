@@ -7,6 +7,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, DEVICE_CLASS_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -95,7 +96,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
             self._unit_system = API_IMPERIAL
             self._attr_native_unit_of_measurement = description.unit_imperial
         self._attr_device_info = DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.location_key)},
             manufacturer=MANUFACTURER,
             name=NAME,
