@@ -9,7 +9,12 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -72,6 +77,11 @@ def _get_weather_condition(metoffice_code):
 
 class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of a Met Office weather condition."""
+
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_HPA
+    _attr_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+    _attr_precipitation_unit = LENGTH_MILLIMETERS
 
     def __init__(self, coordinator, hass_data, use_3hourly):
         """Initialise the platform with a data instance."""
