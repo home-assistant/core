@@ -41,30 +41,13 @@ class TestStatisticsSensor(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.values_binary = ["on", "off", "on", "off", "on", "off", "on"]
         self.values = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
-        self.count = len(self.values)
-        self.min = min(self.values)
-        self.max = max(self.values)
-        self.distance_abs = self.max - self.min
-        self.total = sum(self.values)
         self.mean = round(sum(self.values) / len(self.values), 2)
-        self.median = round(statistics.median(self.values), 2)
-        self.standard_deviation = round(statistics.stdev(self.values), 2)
-        self.variance = round(statistics.variance(self.values), 2)
-        self.distance_95p = round(2 * 1.96 * statistics.stdev(self.values), 2)
-        self.distance_99p = round(2 * 2.58 * statistics.stdev(self.values), 2)
-        self.quantiles = [
-            round(quantile, 2) for quantile in statistics.quantiles(self.values)
-        ]
-        self.change = round(self.values[-1] - self.values[0], 2)
-        self.average_change = round(self.change / (len(self.values) - 1), 2)
-        self.change_rate = round(self.change / (60 * (self.count - 1)), 2)
-        self.noisiness = round(sum([3, 4.8, 10.2, 1.2, 5.4, 2.5, 7.3, 8]) / 8, 2)
         self.addCleanup(self.hass.stop)
 
     def test_sensor_defaults_binary(self):
         """Test the general behavior of the sensor, with binary source sensor."""
-        values = ["on", "off", "on", "off", "on", "off", "on"]
         assert setup_component(
             self.hass,
             "sensor",
@@ -88,7 +71,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        for value in values:
+        for value in self.values_binary:
             self.hass.states.set(
                 "binary_sensor.test_monitored",
                 value,
@@ -98,7 +81,7 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        assert state.state == str(len(values))
+        assert state.state == str(len(self.values_binary))
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
         assert state.attributes.get("buffer_usage_ratio") == round(7 / 20, 2)
@@ -428,7 +411,7 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test_nan",
                         "entity_id": "sensor.test_monitored",
-                        "state_characteristic": "min_age",
+                        "state_characteristic": "datetime_oldest",
                     },
                 ]
             },
@@ -474,7 +457,7 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test_unitless_3",
                         "entity_id": "sensor.test_monitored_unitless",
-                        "state_characteristic": "change_rate",
+                        "state_characteristic": "change_second",
                     },
                 ]
             },
@@ -508,72 +491,125 @@ class TestStatisticsSensor(unittest.TestCase):
         def mock_now():
             return mock_data["return_time"]
 
+        value_spacing_minutes = 1
+
         characteristics = (
             {
-                "name": "average_change",
+                "name": "average_linear",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
-                "value_9": float(self.average_change),
-                "unit": "°C/sample",
+                "value_9": 10.68,
+                "unit": "°C",
+            },
+            {
+                "name": "average_step",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": 11.36,
+                "unit": "°C",
+            },
+            {
+                "name": "average_timeless",
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(self.mean),
+                "unit": "°C",
             },
             {
                 "name": "change",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(0),
-                "value_9": float(self.change),
+                "value_9": float(round(self.values[-1] - self.values[0], 2)),
                 "unit": "°C",
             },
             {
-                "name": "change_rate",
+                "name": "change_sample",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
-                "value_9": float(self.change_rate),
+                "value_9": float(
+                    round(
+                        (self.values[-1] - self.values[0]) / (len(self.values) - 1), 2
+                    )
+                ),
+                "unit": "°C/sample",
+            },
+            {
+                "name": "change_second",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(
+                    round(
+                        (self.values[-1] - self.values[0])
+                        / (60 * (len(self.values) - 1)),
+                        2,
+                    )
+                ),
                 "unit": "°C/s",
             },
             {
                 "name": "count",
                 "value_0": 0,
                 "value_1": 1,
-                "value_9": int(self.count),
+                "value_9": len(self.values),
+                "unit": None,
+            },
+            {
+                "name": "datetime_newest",
+                "value_0": STATE_UNKNOWN,
+                "value_1": datetime(
+                    now.year + 1,
+                    8,
+                    2,
+                    12,
+                    23 + len(self.values) + 10,
+                    42,
+                    tzinfo=dt_util.UTC,
+                ),
+                "value_9": datetime(
+                    now.year + 1,
+                    8,
+                    2,
+                    12,
+                    23 + len(self.values) - 1,
+                    42,
+                    tzinfo=dt_util.UTC,
+                ),
+                "unit": None,
+            },
+            {
+                "name": "datetime_oldest",
+                "value_0": STATE_UNKNOWN,
+                "value_1": datetime(
+                    now.year + 1,
+                    8,
+                    2,
+                    12,
+                    23 + len(self.values) + 10,
+                    42,
+                    tzinfo=dt_util.UTC,
+                ),
+                "value_9": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC),
                 "unit": None,
             },
             {
                 "name": "distance_95_percent_of_values",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
-                "value_9": float(self.distance_95p),
+                "value_9": float(round(2 * 1.96 * statistics.stdev(self.values), 2)),
                 "unit": "°C",
             },
             {
                 "name": "distance_99_percent_of_values",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
-                "value_9": float(self.distance_99p),
+                "value_9": float(round(2 * 2.58 * statistics.stdev(self.values), 2)),
                 "unit": "°C",
             },
             {
                 "name": "distance_absolute",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(0),
-                "value_9": float(self.distance_abs),
-                "unit": "°C",
-            },
-            {
-                "name": "max_age",
-                "value_0": STATE_UNKNOWN,
-                "value_1": datetime(
-                    now.year + 1, 8, 2, 12, 23 + self.count + 10, 42, tzinfo=dt_util.UTC
-                ),
-                "value_9": datetime(
-                    now.year + 1, 8, 2, 12, 23 + self.count - 1, 42, tzinfo=dt_util.UTC
-                ),
-                "unit": None,
-            },
-            {
-                "name": "max_value",
-                "value_0": STATE_UNKNOWN,
-                "value_1": float(self.values[0]),
-                "value_9": float(self.max),
+                "value_9": float(max(self.values) - min(self.values)),
                 "unit": "°C",
             },
             {
@@ -587,58 +623,60 @@ class TestStatisticsSensor(unittest.TestCase):
                 "name": "median",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(self.values[0]),
-                "value_9": float(self.median),
-                "unit": "°C",
-            },
-            {
-                "name": "min_age",
-                "value_0": STATE_UNKNOWN,
-                "value_1": datetime(
-                    now.year + 1, 8, 2, 12, 23 + self.count + 10, 42, tzinfo=dt_util.UTC
-                ),
-                "value_9": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC),
-                "unit": None,
-            },
-            {
-                "name": "min_value",
-                "value_0": STATE_UNKNOWN,
-                "value_1": float(self.values[0]),
-                "value_9": float(self.min),
+                "value_9": float(round(statistics.median(self.values), 2)),
                 "unit": "°C",
             },
             {
                 "name": "noisiness",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
-                "value_9": float(self.noisiness),
+                "value_9": float(
+                    round(sum([3, 4.8, 10.2, 1.2, 5.4, 2.5, 7.3, 8]) / 8, 2)
+                ),
                 "unit": "°C",
             },
             {
                 "name": "quantiles",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
-                "value_9": self.quantiles,
+                "value_9": [
+                    round(quantile, 2) for quantile in statistics.quantiles(self.values)
+                ],
                 "unit": None,
             },
             {
                 "name": "standard_deviation",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
-                "value_9": float(self.standard_deviation),
+                "value_9": float(round(statistics.stdev(self.values), 2)),
                 "unit": "°C",
             },
             {
                 "name": "total",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(self.values[0]),
-                "value_9": float(self.total),
+                "value_9": float(sum(self.values)),
+                "unit": "°C",
+            },
+            {
+                "name": "value_max",
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(max(self.values)),
+                "unit": "°C",
+            },
+            {
+                "name": "value_min",
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(min(self.values)),
                 "unit": "°C",
             },
             {
                 "name": "variance",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
-                "value_9": float(self.variance),
+                "value_9": float(round(statistics.variance(self.values), 2)),
                 "unit": "°C²",
             },
         )
@@ -676,7 +714,7 @@ class TestStatisticsSensor(unittest.TestCase):
                     {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
                 )
                 self.hass.block_till_done()
-                mock_data["return_time"] += timedelta(minutes=1)
+                mock_data["return_time"] += timedelta(minutes=value_spacing_minutes)
 
             for characteristic in characteristics:
                 state = self.hass.states.get("sensor.test_" + characteristic["name"])
@@ -809,7 +847,7 @@ class TestStatisticsSensor(unittest.TestCase):
                             "name": "test",
                             "entity_id": "sensor.test_monitored",
                             "sampling_size": 100,
-                            "state_characteristic": "max_age",
+                            "state_characteristic": "datetime_newest",
                             "max_age": {"hours": 3},
                         },
                     ]
