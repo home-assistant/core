@@ -48,9 +48,10 @@ def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
 def async_name_from_discovery(device: dict[str, Any]) -> str:
     """Convert a flux_led discovery to a human readable name."""
     if mac := device.get(ATTR_ID):
+        short_mac = mac[-6:]
         if device.get(ATTR_MODEL_DESCRIPTION):
-            return f"{device[ATTR_MODEL_DESCRIPTION]} {mac}"
-        return f"{device[ATTR_MODEL]} {mac}"
+            return f"{device[ATTR_MODEL_DESCRIPTION]} {short_mac}"
+        return f"{device[ATTR_MODEL]} {short_mac}"
     return cast(str, device[ATTR_IPADDR])
 
 
