@@ -246,7 +246,7 @@ aiorecollect==1.0.8
 aioridwell==0.2.0
 
 # homeassistant.components.shelly
-aioshelly==1.0.4
+aioshelly==1.0.5
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
