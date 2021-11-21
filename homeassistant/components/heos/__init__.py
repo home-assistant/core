@@ -367,6 +367,7 @@ class GroupManager:
         """Disconnect the listeners."""
         if self._disconnect_player_added:
             self._disconnect_player_added()
+            self._disconnect_player_added = None
 
     @property
     def group_membership(self):
