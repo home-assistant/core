@@ -136,7 +136,7 @@ class WallConnectorSensorEntity(WallConnectorEntity, SensorEntity):
         super().__init__(wall_connector_data)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             return None
