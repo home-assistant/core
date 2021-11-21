@@ -10,7 +10,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    PERCENTAGE,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,7 +28,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=None,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -122,17 +128,16 @@ class EcobeeSensor(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the appropriate unit of measurement."""
 
+        unit = None
         if self.entity_description.key == "temperature":
-            """
-            Tell HA that the entity's native unit is the same
-            as HA config's temperature unit. Then we will do
-            the needed conversion and rounding in native_value.
-            """
-            return self.hass.config.units.temperature_unit
+            # Tell HA that the entity's native unit is the same
+            # as HA config's temperature unit. Then we will do
+            # the needed conversion and rounding in native_value.
+            unit = self.hass.config.units.temperature_unit
         elif self.entity_description.key == "humidity":
-            return PERCENTAGE
-        else:
-            return None
+            unit = PERCENTAGE
+
+        return unit
 
     @property
     def native_value(self):
@@ -150,12 +155,10 @@ class EcobeeSensor(SensorEntity):
             else:
                 precision = PRECISION_TENTHS
 
-            """
-            When displaying temp in C, we want to set the precision to halves
-            to match the rounding of temperatures on the thermostat. We tell
-            HA the native temp unit is the current config temperature_unit, and
-            do our own conversion and rounding here.
-            """
+            # When displaying temp in C, we want to set the precision to halves
+            # to match the rounding of temperatures on the thermostat. We tell
+            # HA the native temp unit is the current config temperature_unit, and
+            # do our own conversion and rounding here.
             return display_temp(
                 self.hass, (float(self._state) / 10.0), TEMP_FAHRENHEIT, precision
             )
