@@ -34,15 +34,21 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    LENGTH_CENTIMETERS,
+    LENGTH_INCHES,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
     PRESSURE_HPA,
-    PRESSURE_INHG,
+    PRESSURE_MBAR,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utc_from_timestamp
-from homeassistant.util.pressure import convert as convert_pressure
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,6 +88,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=3)
+
+TEMPERATURE_UNIT = {
+    "si": TEMP_CELSIUS,
+    "us": TEMP_FAHRENHEIT,
+}
+
+WIND_SPEED_UNIT = {
+    "ca": SPEED_KILOMETERS_PER_HOUR,
+    "si": SPEED_METERS_PER_SECOND,
+    "uk2": SPEED_MILES_PER_HOUR,
+    "us": SPEED_MILES_PER_HOUR,
+}
+
+PRESSURE_UNIT = {
+    "si": PRESSURE_HPA,
+    "us": PRESSURE_MBAR,
+}
+
+VISIBILITY_UNIT = {
+    "si": LENGTH_KILOMETERS,
+    "ca": LENGTH_KILOMETERS,
+    "uk2": LENGTH_MILES,
+    "us": LENGTH_MILES,
+}
+
+PRECIPITATION_UNIT = {
+    "si": LENGTH_CENTIMETERS,
+    "us": LENGTH_INCHES,
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -135,10 +170,8 @@ class DarkSkyWeather(WeatherEntity):
 
     @property
     def temperature_unit(self):
-        """Return the unit of measurement."""
-        if self._dark_sky.units is None:
-            return None
-        return TEMP_FAHRENHEIT if "us" in self._dark_sky.units else TEMP_CELSIUS
+        """Return the unit of measurement for temperature."""
+        return TEMPERATURE_UNIT.get(self._dark_sky.units, TEMPERATURE_UNIT["si"])
 
     @property
     def humidity(self):
@@ -149,6 +182,11 @@ class DarkSkyWeather(WeatherEntity):
     def wind_speed(self):
         """Return the wind speed."""
         return self._ds_currently.get("windSpeed")
+
+    @property
+    def wind_speed_unit(self):
+        """Return the unit of measurement for wind speed."""
+        return WIND_SPEED_UNIT.get(self._dark_sky.units, WIND_SPEED_UNIT["si"])
 
     @property
     def wind_bearing(self):
@@ -163,10 +201,12 @@ class DarkSkyWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        pressure = self._ds_currently.get("pressure")
-        if "us" in self._dark_sky.units:
-            return round(convert_pressure(pressure, PRESSURE_HPA, PRESSURE_INHG), 2)
-        return pressure
+        return self._ds_currently.get("pressure")
+
+    @property
+    def pressure_unit(self):
+        """Return the unit of measurement for pressure."""
+        return PRESSURE_UNIT.get(self._dark_sky.units, PRESSURE_UNIT["si"])
 
     @property
     def visibility(self):
@@ -174,9 +214,19 @@ class DarkSkyWeather(WeatherEntity):
         return self._ds_currently.get("visibility")
 
     @property
+    def visibility_unit(self):
+        """Return the unit of measurement for visibility."""
+        return VISIBILITY_UNIT.get(self._dark_sky.units, VISIBILITY_UNIT["si"])
+
+    @property
     def condition(self):
         """Return the weather condition."""
         return MAP_CONDITION.get(self._ds_currently.get("icon"))
+
+    @property
+    def precipitation_unit(self):
+        """Return the unit of measurement for precipitation."""
+        return PRECIPITATION_UNIT.get(self._dark_sky.units, PRECIPITATION_UNIT["si"])
 
     @property
     def forecast(self):
