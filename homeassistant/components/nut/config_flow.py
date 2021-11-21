@@ -94,7 +94,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovery_info = discovery_info
         await self._async_handle_discovery_without_unique_id()
         self.context["title_placeholders"] = {
-            CONF_PORT: discovery_info[zeroconf.ATTR_PORT],
+            CONF_PORT: discovery_info[zeroconf.ATTR_PORT] or DEFAULT_PORT,
             CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
         }
         return await self.async_step_user()
