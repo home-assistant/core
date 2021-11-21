@@ -77,28 +77,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             WALLCONNECTOR_DATA_UPDATE_COORDINATOR
         ]
 
+        previous_contactor_closed = (
+            coordinator.data[WALLCONNECTOR_DATA_VITALS].contactor_closed
+            if coordinator.data is not None
+            and coordinator.data[WALLCONNECTOR_DATA_VITALS] is not None
+            else False
+        )
+
         try:
-            previous_contactor_closed = (
-                coordinator.data[WALLCONNECTOR_DATA_VITALS].contactor_closed
-                if coordinator.data is not None
-                and coordinator.data[WALLCONNECTOR_DATA_VITALS] is not None
-                else False
-            )
             vitals = await wall_connector.async_get_vitals()
             lifetime = await wall_connector.async_get_lifetime()
-
-            if previous_contactor_closed != vitals.contactor_closed:
-                coordinator.update_interval = (
-                    timedelta(seconds=poll_interval)
-                    if not vitals.contactor_closed
-                    else timedelta(seconds=poll_interval_charging)
-                )
-                _LOGGER.debug(
-                    "Contactor closed: %s. Update interval: %s",
-                    str(vitals.contactor_closed),
-                    str(coordinator.update_interval),
-                )
-
         except WallConnectorConnectionTimeoutError as ex:
             raise UpdateFailed(
                 f"Could not fetch data from Tesla WallConnector at {hostname}: Timeout"
@@ -111,6 +99,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(
                 f"Could not fetch data from Tesla WallConnector at {hostname}: {ex}"
             ) from ex
+
+        if previous_contactor_closed != vitals.contactor_closed:
+            coordinator.update_interval = (
+                timedelta(seconds=poll_interval)
+                if not vitals.contactor_closed
+                else timedelta(seconds=poll_interval_charging)
+            )
+            _LOGGER.debug(
+                "Contactor closed: %s. Update interval: %s",
+                str(vitals.contactor_closed),
+                str(coordinator.update_interval),
+            )
 
         return {
             WALLCONNECTOR_DATA_VITALS: vitals,
