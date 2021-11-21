@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
-from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL
+from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -112,6 +112,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
+        if not device.get(ATTR_MODEL_DESCRIPTION):
+            try:
+                device = await self._async_try_connect(host)
+            except FLUX_LED_EXCEPTIONS:
+                return self.async_abort(reason="cannot_connect")
+            else:
+                if device.get(ATTR_MODEL_DESCRIPTION):
+                    self._discovered_device = device
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
