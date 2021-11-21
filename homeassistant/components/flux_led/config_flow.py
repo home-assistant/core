@@ -37,6 +37,7 @@ from .const import (
 
 CONF_DEVICE: Final = "device"
 
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -130,7 +131,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self._async_create_entry_from_device(self._discovered_device)
 
         self._set_confirm_only()
-        placeholders = self._discovered_device
+        device = self._discovered_device
+        placeholders = {
+            "model": device.get(ATTR_MODEL_DESCRIPTION, device[ATTR_MODEL]),
+            "id": device[ATTR_ID],
+            "ipaddr": device[ATTR_IPADDR],
+        }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders=placeholders
