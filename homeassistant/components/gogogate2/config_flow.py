@@ -7,7 +7,7 @@ from ismartgate.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_DEVICE,
@@ -35,15 +35,21 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         self._ip_address = None
         self._device_type = None
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle homekit discovery."""
-        await self.async_set_unique_id(discovery_info["properties"]["id"])
-        return await self._async_discovery_handler(discovery_info["host"])
+        await self.async_set_unique_id(
+            discovery_info[zeroconf.ATTR_PROPERTIES][zeroconf.ATTR_PROPERTIES_ID]
+        )
+        return await self._async_discovery_handler(discovery_info[zeroconf.ATTR_HOST])
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle dhcp discovery."""
-        await self.async_set_unique_id(discovery_info[MAC_ADDRESS])
-        return await self._async_discovery_handler(discovery_info[IP_ADDRESS])
+        await self.async_set_unique_id(discovery_info[dhcp.MAC_ADDRESS])
+        return await self._async_discovery_handler(discovery_info[dhcp.IP_ADDRESS])
 
     async def _async_discovery_handler(self, ip_address):
         """Start the user flow from any discovery."""

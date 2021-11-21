@@ -3,11 +3,16 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 import logging
 
 from aiohttp.client_exceptions import ClientError
-from kostal.plenticore import PlenticoreApiClient, PlenticoreAuthenticationException
+from kostal.plenticore import (
+    PlenticoreApiClient,
+    PlenticoreApiException,
+    PlenticoreAuthenticationException,
+)
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -112,6 +117,38 @@ class Plenticore:
         _LOGGER.debug("Logged out from %s", self.host)
 
 
+class DataUpdateCoordinatorMixin:
+    """Base implementation for read and write data."""
+
+    async def async_read_data(self, module_id: str, data_id: str) -> list[str, bool]:
+        """Write settings back to Plenticore."""
+        client = self._plenticore.client
+
+        if client is None:
+            return False
+
+        try:
+            val = await client.get_setting_values(module_id, data_id)
+        except PlenticoreApiException:
+            return False
+        else:
+            return val
+
+    async def async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
+        """Write settings back to Plenticore."""
+        client = self._plenticore.client
+
+        if client is None:
+            return False
+
+        try:
+            await client.set_setting_values(module_id, value)
+        except PlenticoreApiException:
+            return False
+        else:
+            return True
+
+
 class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
@@ -171,7 +208,9 @@ class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
         }
 
 
-class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
+class SettingDataUpdateCoordinator(
+    PlenticoreUpdateCoordinator, DataUpdateCoordinatorMixin
+):
     """Implementation of PlenticoreUpdateCoordinator for settings data."""
 
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
@@ -183,8 +222,82 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
         _LOGGER.debug("Fetching %s for %s", self.name, self._fetch)
 
         fetched_data = await client.get_setting_values(self._fetch)
+        return fetched_data
+
+
+class PlenticoreSelectUpdateCoordinator(DataUpdateCoordinator):
+    """Base implementation of DataUpdateCoordinator for Plenticore data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        name: str,
+        update_inverval: timedelta,
+        plenticore: Plenticore,
+    ) -> None:
+        """Create a new update coordinator for plenticore data."""
+        super().__init__(
+            hass=hass,
+            logger=logger,
+            name=name,
+            update_interval=update_inverval,
+        )
+        # data ids to poll
+        self._fetch = defaultdict(list)
+        self._plenticore = plenticore
+
+    def start_fetch_data(self, module_id: str, data_id: str, all_options: str) -> None:
+        """Start fetching the given data (module-id and entry-id)."""
+        self._fetch[module_id].append(data_id)
+        self._fetch[module_id].append(all_options)
+
+        # Force an update of all data. Multiple refresh calls
+        # are ignored by the debouncer.
+        async def force_refresh(event_time: datetime) -> None:
+            await self.async_request_refresh()
+
+        async_call_later(self.hass, 2, force_refresh)
+
+    def stop_fetch_data(self, module_id: str, data_id: str, all_options: str) -> None:
+        """Stop fetching the given data (module-id and entry-id)."""
+        self._fetch[module_id].remove(all_options)
+        self._fetch[module_id].remove(data_id)
+
+
+class SelectDataUpdateCoordinator(
+    PlenticoreSelectUpdateCoordinator, DataUpdateCoordinatorMixin
+):
+    """Implementation of PlenticoreUpdateCoordinator for select data."""
+
+    async def _async_update_data(self) -> dict[str, dict[str, str]]:
+        client = self._plenticore.client
+
+        if client is None:
+            return {}
+
+        _LOGGER.debug("Fetching select %s for %s", self.name, self._fetch)
+
+        fetched_data = await self._async_get_current_option(self._fetch)
 
         return fetched_data
+
+    async def _async_get_current_option(
+        self,
+        module_id: str | dict[str, Iterable[str]],
+    ) -> dict[str, dict[str, str]]:
+        """Get current option."""
+        for mid, pids in module_id.items():
+            all_options = pids[1]
+            for all_option in all_options:
+                if all_option != "None":
+                    val = await self.async_read_data(mid, all_option)
+                    for option in val.values():
+                        if option[all_option] == "1":
+                            fetched = {mid: {pids[0]: all_option}}
+                            return fetched
+
+            return {mid: {pids[0]: "None"}}
 
 
 class PlenticoreDataFormatter:

@@ -5,6 +5,8 @@ import logging
 import os
 import tempfile
 
+from atomicwrites import AtomicWriter
+
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
@@ -12,6 +14,33 @@ _LOGGER = logging.getLogger(__name__)
 
 class WriteError(HomeAssistantError):
     """Error writing the data."""
+
+
+def write_utf8_file_atomic(
+    filename: str,
+    utf8_data: str,
+    private: bool = False,
+) -> None:
+    """Write a file and rename it into place using atomicwrites.
+
+    Writes all or nothing.
+
+    This function uses fsync under the hood. It should
+    only be used to write mission critical files as
+    fsync can block for a few seconds or longer is the
+    disk is busy.
+
+    Using this function frequently will significantly
+    negatively impact performance.
+    """
+    try:
+        with AtomicWriter(filename, overwrite=True).open() as fdesc:
+            if not private:
+                os.fchmod(fdesc.fileno(), 0o644)
+            fdesc.write(utf8_data)
+    except OSError as error:
+        _LOGGER.exception("Saving file failed: %s", filename)
+        raise WriteError(error) from error
 
 
 def write_utf8_file(
@@ -33,8 +62,8 @@ def write_utf8_file(
         ) as fdesc:
             fdesc.write(utf8_data)
             tmp_filename = fdesc.name
-        if not private:
-            os.chmod(tmp_filename, 0o644)
+            if not private:
+                os.fchmod(fdesc.fileno(), 0o644)
         os.replace(tmp_filename, filename)
     except OSError as error:
         _LOGGER.exception("Saving file failed: %s", filename)

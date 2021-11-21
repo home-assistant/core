@@ -4,7 +4,8 @@
             "user": {
                 "data": {
                     "account_id": "\u30a2\u30ab\u30a6\u30f3\u30c8ID",
-                    "host": "\u30db\u30b9\u30c8"
+                    "host": "\u30db\u30b9\u30c8",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
                 }
             }
         }

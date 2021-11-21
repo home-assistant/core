@@ -322,7 +322,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             [
                 {
                     "code": self._set_humidity_dpcode,
-                    "value": self._set_humidity_type.scale_value(humidity),
+                    "value": self._set_humidity_type.scale_value_back(humidity),
                 }
             ]
         )
@@ -364,7 +364,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 {
                     "code": self._set_temperature_dpcode,
                     "value": round(
-                        self._set_temperature_type.scale_value(kwargs["temperature"])
+                        self._set_temperature_type.scale_value_back(
+                            kwargs["temperature"]
+                        )
                     ),
                 }
             ]

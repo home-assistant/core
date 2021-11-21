@@ -17,6 +17,9 @@ from homeassistant.util import dt
 from tests.common import async_fire_time_changed
 
 MOCK_VERSION = 1
+MOCK_VERSION_2 = 2
+MOCK_MINOR_VERSION_1 = 1
+MOCK_MINOR_VERSION_2 = 2
 MOCK_KEY = "storage-test"
 MOCK_DATA = {"hello": "world"}
 MOCK_DATA2 = {"goodbye": "cruel world"}
@@ -25,7 +28,31 @@ MOCK_DATA2 = {"goodbye": "cruel world"}
 @pytest.fixture
 def store(hass):
     """Fixture of a store that prevents writing on Home Assistant stop."""
-    yield storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    return storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+
+
+@pytest.fixture
+def store_v_1_1(hass):
+    """Fixture of a store that prevents writing on Home Assistant stop."""
+    return storage.Store(
+        hass, MOCK_VERSION, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+    )
+
+
+@pytest.fixture
+def store_v_1_2(hass):
+    """Fixture of a store that prevents writing on Home Assistant stop."""
+    return storage.Store(
+        hass, MOCK_VERSION, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_2
+    )
+
+
+@pytest.fixture
+def store_v_2_1(hass):
+    """Fixture of a store that prevents writing on Home Assistant stop."""
+    return storage.Store(
+        hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+    )
 
 
 async def test_loading(hass, store):
@@ -64,8 +91,8 @@ async def test_loading_parallel(hass, store, hass_storage, caplog):
 
     results = await asyncio.gather(store.async_load(), store.async_load())
 
-    assert results[0] is MOCK_DATA
-    assert results[1] is MOCK_DATA
+    assert results[0] == MOCK_DATA
+    assert results[0] is results[1]
     assert caplog.text.count(f"Loading data for {store.key}")
 
 
@@ -78,6 +105,7 @@ async def test_saving_with_delay(hass, store, hass_storage):
     await hass.async_block_till_done()
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
+        "minor_version": 1,
         "key": MOCK_KEY,
         "data": MOCK_DATA,
     }
@@ -101,6 +129,7 @@ async def test_saving_on_final_write(hass, hass_storage):
     await hass.async_block_till_done()
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
+        "minor_version": 1,
         "key": MOCK_KEY,
         "data": MOCK_DATA,
     }
@@ -148,6 +177,7 @@ async def test_loading_while_delay(hass, store, hass_storage):
     await store.async_save({"delay": "no"})
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
+        "minor_version": 1,
         "key": MOCK_KEY,
         "data": {"delay": "no"},
     }
@@ -155,6 +185,7 @@ async def test_loading_while_delay(hass, store, hass_storage):
     store.async_delay_save(lambda: {"delay": "yes"}, 1)
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
+        "minor_version": 1,
         "key": MOCK_KEY,
         "data": {"delay": "no"},
     }
@@ -170,6 +201,7 @@ async def test_writing_while_writing_delay(hass, store, hass_storage):
     await store.async_save({"delay": "no"})
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
+        "minor_version": 1,
         "key": MOCK_KEY,
         "data": {"delay": "no"},
     }
@@ -178,6 +210,7 @@ async def test_writing_while_writing_delay(hass, store, hass_storage):
     await hass.async_block_till_done()
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
+        "minor_version": 1,
         "key": MOCK_KEY,
         "data": {"delay": "no"},
     }
@@ -196,6 +229,7 @@ async def test_multiple_delay_save_calls(hass, store, hass_storage):
     await store.async_save({"delay": "no"})
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
+        "minor_version": 1,
         "key": MOCK_KEY,
         "data": {"delay": "no"},
     }
@@ -204,6 +238,7 @@ async def test_multiple_delay_save_calls(hass, store, hass_storage):
     await hass.async_block_till_done()
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
+        "minor_version": 1,
         "key": MOCK_KEY,
         "data": {"delay": "no"},
     }
@@ -221,6 +256,7 @@ async def test_multiple_save_calls(hass, store, hass_storage):
     await asyncio.gather(*tasks)
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
+        "minor_version": 1,
         "key": MOCK_KEY,
         "data": {"savecount": 5},
     }
@@ -252,6 +288,7 @@ async def test_migrator_existing_config(hass, store, hass_storage):
     assert hass_storage[store.key] == {
         "key": MOCK_KEY,
         "version": MOCK_VERSION,
+        "minor_version": 1,
         "data": data,
     }
 
@@ -277,5 +314,147 @@ async def test_migrator_transforming_config(hass, store, hass_storage):
     assert hass_storage[store.key] == {
         "key": MOCK_KEY,
         "version": MOCK_VERSION,
+        "minor_version": 1,
         "data": data,
+    }
+
+
+async def test_minor_version_default(hass, store, hass_storage):
+    """Test minor version default."""
+
+    await store.async_save(MOCK_DATA)
+    assert hass_storage[store.key]["minor_version"] == 1
+
+
+async def test_minor_version(hass, store_v_1_2, hass_storage):
+    """Test minor version."""
+
+    await store_v_1_2.async_save(MOCK_DATA)
+    assert hass_storage[store_v_1_2.key]["minor_version"] == MOCK_MINOR_VERSION_2
+
+
+async def test_migrate_major_not_implemented_raises(hass, store, store_v_2_1):
+    """Test migrating between major versions fails if not implemented."""
+
+    await store_v_2_1.async_save(MOCK_DATA)
+    with pytest.raises(NotImplementedError):
+        await store.async_load()
+
+
+async def test_migrate_minor_not_implemented(
+    hass, hass_storage, store_v_1_1, store_v_1_2
+):
+    """Test migrating between minor versions does not fail if not implemented."""
+
+    assert store_v_1_1.key == store_v_1_2.key
+
+    await store_v_1_1.async_save(MOCK_DATA)
+    assert hass_storage[store_v_1_1.key] == {
+        "key": MOCK_KEY,
+        "version": MOCK_VERSION,
+        "minor_version": MOCK_MINOR_VERSION_1,
+        "data": MOCK_DATA,
+    }
+    data = await store_v_1_2.async_load()
+    assert hass_storage[store_v_1_1.key]["data"] == data
+
+    await store_v_1_2.async_save(MOCK_DATA)
+    assert hass_storage[store_v_1_2.key] == {
+        "key": MOCK_KEY,
+        "version": MOCK_VERSION,
+        "minor_version": MOCK_MINOR_VERSION_2,
+        "data": MOCK_DATA,
+    }
+
+
+async def test_migration(hass, hass_storage, store_v_1_2):
+    """Test migration."""
+    calls = 0
+
+    class CustomStore(storage.Store):
+        async def _async_migrate_func(
+            self, old_major_version, old_minor_version, old_data: dict
+        ):
+            nonlocal calls
+            calls += 1
+            assert old_major_version == store_v_1_2.version
+            assert old_minor_version == store_v_1_2.minor_version
+            return old_data
+
+    await store_v_1_2.async_save(MOCK_DATA)
+    assert hass_storage[store_v_1_2.key] == {
+        "key": MOCK_KEY,
+        "version": MOCK_VERSION,
+        "minor_version": MOCK_MINOR_VERSION_2,
+        "data": MOCK_DATA,
+    }
+    assert calls == 0
+
+    legacy_store = CustomStore(hass, 2, store_v_1_2.key, minor_version=1)
+    data = await legacy_store.async_load()
+    assert calls == 1
+    assert hass_storage[store_v_1_2.key]["data"] == data
+
+    await legacy_store.async_save(MOCK_DATA)
+    assert hass_storage[legacy_store.key] == {
+        "key": MOCK_KEY,
+        "version": 2,
+        "minor_version": 1,
+        "data": MOCK_DATA,
+    }
+
+
+async def test_legacy_migration(hass, hass_storage, store_v_1_2):
+    """Test legacy migration method signature."""
+    calls = 0
+
+    class LegacyStore(storage.Store):
+        async def _async_migrate_func(self, old_version, old_data: dict):
+            nonlocal calls
+            calls += 1
+            assert old_version == store_v_1_2.version
+            return old_data
+
+    await store_v_1_2.async_save(MOCK_DATA)
+    assert hass_storage[store_v_1_2.key] == {
+        "key": MOCK_KEY,
+        "version": MOCK_VERSION,
+        "minor_version": MOCK_MINOR_VERSION_2,
+        "data": MOCK_DATA,
+    }
+    assert calls == 0
+
+    legacy_store = LegacyStore(hass, 2, store_v_1_2.key, minor_version=1)
+    data = await legacy_store.async_load()
+    assert calls == 1
+    assert hass_storage[store_v_1_2.key]["data"] == data
+
+    await legacy_store.async_save(MOCK_DATA)
+    assert hass_storage[legacy_store.key] == {
+        "key": MOCK_KEY,
+        "version": 2,
+        "minor_version": 1,
+        "data": MOCK_DATA,
+    }
+
+
+async def test_changing_delayed_written_data(hass, store, hass_storage):
+    """Test changing data that is written with delay."""
+    data_to_store = {"hello": "world"}
+    store.async_delay_save(lambda: data_to_store, 1)
+    assert store.key not in hass_storage
+
+    loaded_data = await store.async_load()
+    assert loaded_data == data_to_store
+    assert loaded_data is not data_to_store
+
+    loaded_data["hello"] = "earth"
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "minor_version": 1,
+        "key": MOCK_KEY,
+        "data": {"hello": "world"},
     }

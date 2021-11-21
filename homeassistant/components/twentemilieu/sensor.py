@@ -12,7 +12,6 @@ from homeassistant.const import CONF_ID, DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -104,8 +103,6 @@ class TwenteMilieuSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> date | None:
         """Return the state of the sensor."""
-        if pickup := self.coordinator.data.get(self.entity_description.waste_type):
-            return pickup.isoformat()
-        return None
+        return self.coordinator.data.get(self.entity_description.waste_type)

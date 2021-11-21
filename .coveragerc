@@ -123,6 +123,7 @@ omit =
     homeassistant/components/bosch_shc/__init__.py
     homeassistant/components/bosch_shc/binary_sensor.py
     homeassistant/components/bosch_shc/const.py
+    homeassistant/components/bosch_shc/cover.py
     homeassistant/components/bosch_shc/entity.py
     homeassistant/components/bosch_shc/sensor.py
     homeassistant/components/braviatv/__init__.py
@@ -137,7 +138,9 @@ omit =
     homeassistant/components/broadlink/updater.py
     homeassistant/components/brottsplatskartan/sensor.py
     homeassistant/components/browser/*
+    homeassistant/components/brunt/__init__.py
     homeassistant/components/brunt/cover.py
+    homeassistant/components/brunt/const.py
     homeassistant/components/bsblan/climate.py
     homeassistant/components/bt_home_hub_5/device_tracker.py
     homeassistant/components/bt_smarthub/device_tracker.py
@@ -386,10 +389,6 @@ omit =
     homeassistant/components/glances/sensor.py
     homeassistant/components/gntp/notify.py
     homeassistant/components/goalfeed/*
-    homeassistant/components/goalzero/__init__.py
-    homeassistant/components/goalzero/binary_sensor.py
-    homeassistant/components/goalzero/sensor.py
-    homeassistant/components/goalzero/switch.py
     homeassistant/components/google/*
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
@@ -431,8 +430,9 @@ omit =
     homeassistant/components/hisense_aehw4a1/climate.py
     homeassistant/components/hitron_coda/device_tracker.py
     homeassistant/components/hive/__init__.py
-    homeassistant/components/hive/climate.py
+    homeassistant/components/hive/alarm_control_panel.py
     homeassistant/components/hive/binary_sensor.py
+    homeassistant/components/hive/climate.py
     homeassistant/components/hive/light.py
     homeassistant/components/hive/sensor.py
     homeassistant/components/hive/switch.py
@@ -540,7 +540,14 @@ omit =
     homeassistant/components/keyboard_remote/*
     homeassistant/components/kira/*
     homeassistant/components/kiwi/lock.py
-    homeassistant/components/knx/*
+    homeassistant/components/knx/__init__.py
+    homeassistant/components/knx/climate.py
+    homeassistant/components/knx/cover.py
+    homeassistant/components/knx/expose.py
+    homeassistant/components/knx/knx_entity.py
+    homeassistant/components/knx/light.py
+    homeassistant/components/knx/notify.py
+    homeassistant/components/knx/schema.py
     homeassistant/components/kodi/__init__.py
     homeassistant/components/kodi/browse_media.py
     homeassistant/components/kodi/const.py
@@ -550,7 +557,9 @@ omit =
     homeassistant/components/kostal_plenticore/__init__.py
     homeassistant/components/kostal_plenticore/const.py
     homeassistant/components/kostal_plenticore/helper.py
+    homeassistant/components/kostal_plenticore/select.py
     homeassistant/components/kostal_plenticore/sensor.py
+    homeassistant/components/kostal_plenticore/switch.py
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lametric/*
@@ -639,7 +648,6 @@ omit =
     homeassistant/components/miflora/sensor.py
     homeassistant/components/mikrotik/hub.py
     homeassistant/components/mikrotik/device_tracker.py
-    homeassistant/components/mill/__init__.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/const.py
     homeassistant/components/mill/sensor.py

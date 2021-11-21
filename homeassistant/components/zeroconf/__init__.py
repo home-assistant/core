@@ -17,6 +17,7 @@ from zeroconf.asyncio import AsyncServiceInfo
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.network.const import MDNS_TARGET_IP
 from homeassistant.components.network.models import Adapter
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -52,8 +53,6 @@ DEFAULT_IPV6 = True
 HOMEKIT_PAIRED_STATUS_FLAG = "sf"
 HOMEKIT_MODEL = "md"
 
-MDNS_TARGET_IP = "224.0.0.251"
-
 # Property key=value has a max length of 255
 # so we use 230 to leave space for key=
 MAX_PROPERTY_VALUE_LEN = 230
@@ -68,6 +67,9 @@ ATTR_NAME: Final = "name"
 ATTR_PORT: Final = "port"
 ATTR_PROPERTIES: Final = "properties"
 ATTR_TYPE: Final = "type"
+
+# Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
+ATTR_PROPERTIES_ID: Final = "id"
 
 
 CONFIG_SCHEMA = vol.Schema(

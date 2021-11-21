@@ -76,7 +76,7 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_INTENSITY) == 64
     assert state.attributes.get(ATTR_PALETTE) == "Random Cycle"
     assert state.attributes.get(ATTR_PRESET) is None
-    assert state.attributes.get(ATTR_REVERSE) is False
+    assert state.attributes.get(ATTR_REVERSE) is True
     assert state.attributes.get(ATTR_SPEED) == 16
     assert state.state == STATE_ON
 

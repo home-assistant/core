@@ -210,44 +210,44 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_start",
-            "2021-03-03T14:45:00.000+01:00",
+            "2021-03-03T14:45:00+01:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_end",
-            "2021-03-03T15:45:00.000+01:00",
+            "2021-03-03T15:45:00+01:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_max_order_time",
-            "2021-03-02T22:00:00.000+01:00",
+            "2021-03-02T22:00:00+01:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor("sensor.picnic_selected_slot_min_order_value", "35.0")
         self._assert_sensor(
             "sensor.picnic_last_order_slot_start",
-            "2021-02-26T20:15:00.000+01:00",
+            "2021-02-26T20:15:00+01:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_slot_end",
-            "2021-02-26T21:15:00.000+01:00",
+            "2021-02-26T21:15:00+01:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor("sensor.picnic_last_order_status", "COMPLETED")
         self._assert_sensor(
             "sensor.picnic_last_order_eta_start",
-            "2021-02-26T20:54:00.000+01:00",
+            "2021-02-26T20:54:00+01:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_eta_end",
-            "2021-02-26T21:14:00.000+01:00",
+            "2021-02-26T21:14:00+01:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_delivery_time",
-            "2021-02-26T20:54:05.221+01:00",
+            "2021-02-26T20:54:05+01:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
@@ -305,10 +305,10 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Assert delivery time is not available, but eta is
         self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNAVAILABLE)
         self._assert_sensor(
-            "sensor.picnic_last_order_eta_start", "2021-02-26T20:54:00.000+01:00"
+            "sensor.picnic_last_order_eta_start", "2021-02-26T20:54:00+01:00"
         )
         self._assert_sensor(
-            "sensor.picnic_last_order_eta_end", "2021-02-26T21:14:00.000+01:00"
+            "sensor.picnic_last_order_eta_end", "2021-02-26T21:14:00+01:00"
         )
 
     async def test_sensors_use_detailed_eta_if_available(self):
@@ -333,10 +333,10 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
             delivery_response["delivery_id"]
         )
         self._assert_sensor(
-            "sensor.picnic_last_order_eta_start", "2021-03-05T11:19:20.452+01:00"
+            "sensor.picnic_last_order_eta_start", "2021-03-05T11:19:20+01:00"
         )
         self._assert_sensor(
-            "sensor.picnic_last_order_eta_end", "2021-03-05T11:39:20.452+01:00"
+            "sensor.picnic_last_order_eta_end", "2021-03-05T11:39:20+01:00"
         )
 
     async def test_sensors_no_data(self):
