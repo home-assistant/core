@@ -528,13 +528,13 @@ class ConfigurableFanSpeedDataTemplate(
         self, resolved_data: dict[str, ZwaveConfigurationValue]
     ) -> list[int]:
         """Get current speed configuration from resolved data."""
-        zwave_value: ZwaveValue | None = resolved_data["configuration_value"]
+        zwave_value: ZwaveValue = resolved_data["configuration_value"]
 
-        if not zwave_value or not zwave_value.value:
+        if zwave_value.value is None:
             raise ConfigEntryNotReady("Unable to read device configuration")
 
         speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
-        if not speed_config:
+        if speed_config is None:
             raise IntegrationError("Unknown fan speed configuration value")
 
         return speed_config
