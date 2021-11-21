@@ -183,12 +183,12 @@ class FroniusSolarNet:
             solar_net_id = inverter["device_id"]["value"]
             unique_id = inverter["unique_id"]["value"]
             device_info = DeviceInfo(
-                name=inverter.get("custom_name", {}).get("value"),
                 identifiers={(DOMAIN, unique_id)},
                 manufacturer=inverter["device_type"].get("manufacturer", "Fronius"),
                 model=inverter["device_type"].get(
                     "model", inverter["device_type"]["value"]
                 ),
+                name=inverter.get("custom_name", {}).get("value"),
                 via_device=(DOMAIN, self.solar_net_device_id),
             )
             inverter_infos.append(
