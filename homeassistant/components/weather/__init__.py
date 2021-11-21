@@ -261,7 +261,7 @@ class WeatherEntity(Entity):
                             self.hass.config.units.pressure(
                                 forecast_entry[ATTR_FORECAST_PRESSURE], unit
                             ),
-                            4,
+                            2,
                         )
                         forecast_entry[ATTR_FORECAST_PRESSURE] = pressure
                 if ATTR_FORECAST_WIND_SPEED in forecast_entry:
@@ -270,7 +270,7 @@ class WeatherEntity(Entity):
                             self.hass.config.units.wind_speed(
                                 forecast_entry[ATTR_FORECAST_WIND_SPEED], unit
                             ),
-                            4,
+                            2,
                         )
                         forecast_entry[ATTR_FORECAST_WIND_SPEED] = wind_speed
                 if ATTR_FORECAST_PRECIPITATION in forecast_entry:
@@ -279,7 +279,7 @@ class WeatherEntity(Entity):
                             self.hass.config.units.accumulated_precipitation(
                                 forecast_entry[ATTR_FORECAST_PRECIPITATION], unit
                             ),
-                            4,
+                            2,
                         )
                         forecast_entry[ATTR_FORECAST_PRECIPITATION] = precipitation
 
