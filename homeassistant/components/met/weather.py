@@ -26,12 +26,9 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    LENGTH_INCHES,
     LENGTH_MILLIMETERS,
     PRESSURE_HPA,
-    PRESSURE_INHG,
     SPEED_KILOMETERS_PER_HOUR,
-    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -45,18 +42,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     T,
 )
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.speed import convert as convert_speed
 
-from .const import (
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_MAP,
-    CONDITIONS_MAP,
-    CONF_TRACK_HOME,
-    DOMAIN,
-    FORECAST_MAP,
-)
+from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,6 +120,11 @@ def format_condition(condition: str) -> str:
 class MetWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_HPA
+    _attr_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+    _attr_precipitation_unit = LENGTH_MILLIMETERS
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[T],
@@ -197,20 +189,11 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
         )
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
     def pressure(self) -> float | None:
-        """Return the pressure."""
-        pressure_hpa = self.coordinator.data.current_weather_data.get(
+        """Return the pressure in hPa."""
+        return self.coordinator.data.current_weather_data.get(
             ATTR_MAP[ATTR_WEATHER_PRESSURE]
         )
-        if self._is_metric or pressure_hpa is None:
-            return pressure_hpa
-
-        return round(convert_pressure(pressure_hpa, PRESSURE_HPA, PRESSURE_INHG), 2)
 
     @property
     def humidity(self) -> float | None:
@@ -221,17 +204,10 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
 
     @property
     def wind_speed(self) -> float | None:
-        """Return the wind speed."""
-        speed_km_h = self.coordinator.data.current_weather_data.get(
+        """Return the wind speed in km/h."""
+        return self.coordinator.data.current_weather_data.get(
             ATTR_MAP[ATTR_WEATHER_WIND_SPEED]
         )
-        if self._is_metric or speed_km_h is None:
-            return speed_km_h
-
-        speed_mi_h = convert_speed(
-            speed_km_h, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR
-        )
-        return int(round(speed_mi_h))
 
     @property
     def wind_bearing(self) -> float | str | None:
@@ -262,14 +238,6 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
                 for k, v in FORECAST_MAP.items()
                 if met_item.get(v) is not None
             }
-            if not self._is_metric and ATTR_FORECAST_PRECIPITATION in ha_item:
-                if ha_item[ATTR_FORECAST_PRECIPITATION] is not None:
-                    precip_inches = convert_distance(
-                        ha_item[ATTR_FORECAST_PRECIPITATION],
-                        LENGTH_MILLIMETERS,
-                        LENGTH_INCHES,
-                    )
-                ha_item[ATTR_FORECAST_PRECIPITATION] = round(precip_inches, 2)
             if ha_item.get(ATTR_FORECAST_CONDITION):
                 ha_item[ATTR_FORECAST_CONDITION] = format_condition(
                     ha_item[ATTR_FORECAST_CONDITION]
