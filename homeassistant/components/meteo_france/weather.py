@@ -13,7 +13,13 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODE, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_MODE,
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -71,6 +77,11 @@ async def async_setup_entry(
 class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_HPA
+    _attr_wind_speed_unit = SPEED_METERS_PER_SECOND
+    _attr_precipitation_unit = LENGTH_MILLIMETERS
+
     def __init__(self, coordinator: DataUpdateCoordinator, mode: str) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
@@ -112,11 +123,6 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
         return self.coordinator.data.current_forecast["T"]["value"]
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
     def pressure(self):
         """Return the pressure."""
         return self.coordinator.data.current_forecast["sea_level"]
@@ -128,9 +134,8 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
 
     @property
     def wind_speed(self):
-        """Return the wind speed."""
-        # convert from API m/s to km/h
-        return round(self.coordinator.data.current_forecast["wind"]["speed"] * 3.6)
+        """Return the wind speed in m/s."""
+        return self.coordinator.data.current_forecast["wind"]["speed"]
 
     @property
     def wind_bearing(self):
