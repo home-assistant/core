@@ -738,7 +738,15 @@ async def test_options_flow_with_invalid_data(hass, client):
             "type": "form",
             "handler": "test1",
             "step_id": "finish",
-            "data_schema": [{"name": "enabled", "type": "boolean"}],
+            "data_schema": [
+                {
+                    "default": ["invalid", "valid"],
+                    "name": "choices",
+                    "options": {"valid": "Valid"},
+                    "required": True,
+                    "type": "multi_select",
+                }
+            ],
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
@@ -747,18 +755,13 @@ async def test_options_flow_with_invalid_data(hass, client):
     with patch.dict(HANDLERS, {"test": TestFlow}):
         resp = await client.post(
             f"/api/config/config_entries/options/flow/{flow_id}",
-            json={"choices": ["valid"]},
+            json={"choices": ["valid", "invalid"]},
         )
-        assert resp.status == HTTPStatus.OK
+        assert resp.status == HTTPStatus.BAD_REQUEST
         data = await resp.json()
-        data.pop("flow_id")
         assert data == {
-            "handler": "test1",
-            "type": "create_entry",
-            "title": "Enable disable",
-            "version": 1,
-            "description": None,
-            "description_placeholders": None,
+            "message": "User input malformed: invalid is not a valid option for "
+            "dictionary value @ data['choices']"
         }
 
 
