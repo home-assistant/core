@@ -166,8 +166,12 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await device.initialize()
-        except (asyncio.TimeoutError, OSError) as err:
-            raise ConfigEntryNotReady from err
+        except asyncio.TimeoutError as err:
+            raise ConfigEntryNotReady(
+                str(err) or "Timeout during device setup"
+            ) from err
+        except OSError as err:
+            raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
 
         await async_block_device_setup(hass, entry, device)
     elif sleep_period is None or device_entry is None:
@@ -219,8 +223,10 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
             device = await RpcDevice.create(
                 aiohttp_client.async_get_clientsession(hass), options
             )
-    except (asyncio.TimeoutError, OSError) as err:
-        raise ConfigEntryNotReady from err
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady(str(err) or "Timeout during device setup") from err
+    except OSError as err:
+        raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
 
     device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         RPC
