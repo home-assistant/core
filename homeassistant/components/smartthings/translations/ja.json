@@ -16,6 +16,9 @@
             },
             "select_location": {
                 "title": "\u5834\u6240\u3092\u9078\u629e"
+            },
+            "user": {
+                "title": "\u30b3\u30fc\u30eb\u30d0\u30c3\u30afURL\u306e\u78ba\u8a8d"
             }
         }
     }

@@ -540,7 +540,14 @@ omit =
     homeassistant/components/keyboard_remote/*
     homeassistant/components/kira/*
     homeassistant/components/kiwi/lock.py
-    homeassistant/components/knx/*
+    homeassistant/components/knx/__init__.py
+    homeassistant/components/knx/climate.py
+    homeassistant/components/knx/cover.py
+    homeassistant/components/knx/expose.py
+    homeassistant/components/knx/knx_entity.py
+    homeassistant/components/knx/light.py
+    homeassistant/components/knx/notify.py
+    homeassistant/components/knx/schema.py
     homeassistant/components/kodi/__init__.py
     homeassistant/components/kodi/browse_media.py
     homeassistant/components/kodi/const.py
@@ -550,9 +557,9 @@ omit =
     homeassistant/components/kostal_plenticore/__init__.py
     homeassistant/components/kostal_plenticore/const.py
     homeassistant/components/kostal_plenticore/helper.py
+    homeassistant/components/kostal_plenticore/select.py
     homeassistant/components/kostal_plenticore/sensor.py
     homeassistant/components/kostal_plenticore/switch.py
-    homeassistant/components/kostal_plenticore/select.py
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lametric/*

@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "host": "Host",
+                    "individual_address": "Individual address for the connection",
+                    "port": "Port",
+                    "route_back": "Route Back / NAT Mode"
+                },
+                "description": "Please enter the connection information of your tunneling device."
+            },
+            "routing": {
+                "data": {
+                    "individual_address": "Individual address for the routing connection",
+                    "multicast_group": "The multicast group used for routing",
+                    "multicast_port": "The multicast port used for routing"
+                },
+                "description": "Please configure the routing options."
+            },
+            "tunnel": {
+                "data": {
+                    "gateway": "KNX Tunnel Connection"
+                },
+                "description": "Please select a gateway from the list."
+            },
+            "type": {
+                "data": {
+                    "connection_type": "KNX Connection Type"
+                },
+                "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "connection_type": "KNX Connection Type",
+                    "individual_address": "Default individual address",
+                    "multicast_group": "Multicast group used for routing and discovery",
+                    "multicast_port": "Multicast port used for routing and discovery",
+                    "rate_limit": "Maximum outgoing telegrams per second",
+                    "state_updater": "Globally enable reading states from the KNX Bus"
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "route_back": "Route Back / NAT Mode"
+                }
+            }
+        }
+    }
+}

@@ -18,7 +18,22 @@
         }
     },
     "options": {
+        "error": {
+            "bad_host": "\u7121\u52b9\u306a\u4e0a\u66f8\u304d(Override)API\u30db\u30b9\u30c8URL"
+        },
         "step": {
+            "options_binary": {
+                "data": {
+                    "name": "\u540d\u524d(\u30aa\u30d7\u30b7\u30e7\u30f3)"
+                },
+                "description": "{zone} \u30aa\u30d7\u30b7\u30e7\u30f3"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "\u540d\u524d(\u30aa\u30d7\u30b7\u30e7\u30f3)"
+                },
+                "description": "{zone} \u30aa\u30d7\u30b7\u30e7\u30f3"
+            },
             "options_io": {
                 "data": {
                     "1": "\u30be\u30fc\u30f31",
@@ -27,7 +42,8 @@
                     "4": "\u30be\u30fc\u30f34",
                     "5": "\u30be\u30fc\u30f35",
                     "6": "\u30be\u30fc\u30f36",
-                    "7": "\u30be\u30fc\u30f37"
+                    "7": "\u30be\u30fc\u30f37",
+                    "out": "OUT"
                 }
             },
             "options_io_ext": {
@@ -36,13 +52,21 @@
                     "11": "\u30be\u30fc\u30f311",
                     "12": "\u30be\u30fc\u30f312",
                     "8": "\u30be\u30fc\u30f38",
-                    "9": "\u30be\u30fc\u30f39"
+                    "9": "\u30be\u30fc\u30f39",
+                    "alarm2_out2": "OUT2/ALARM2",
+                    "out1": "OUT1"
                 }
             },
             "options_misc": {
                 "data": {
                     "discovery": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u4e0a\u306e\u691c\u51fa(discovery)\u8981\u6c42\u306b\u5fdc\u7b54\u3059\u308b"
                 }
+            },
+            "options_switch": {
+                "data": {
+                    "name": "\u540d\u524d(\u30aa\u30d7\u30b7\u30e7\u30f3)"
+                },
+                "description": "{zone}\u30aa\u30d7\u30b7\u30e7\u30f3 : \u72b6\u614b{state}"
             }
         }
     }

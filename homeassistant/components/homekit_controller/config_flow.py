@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_get_registry as async_get_device_registry,
@@ -157,16 +158,16 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 continue
             record = device.info
             return await self.async_step_zeroconf(
-                {
-                    "host": record["address"],
-                    "port": record["port"],
-                    "hostname": record["name"],
-                    "type": "_hap._tcp.local.",
-                    "name": record["name"],
-                    "properties": {
+                zeroconf.ZeroconfServiceInfo(
+                    host=record["address"],
+                    port=record["port"],
+                    hostname=record["name"],
+                    type="_hap._tcp.local.",
+                    name=record["name"],
+                    properties={
                         "md": record["md"],
                         "pv": record["pv"],
-                        "id": unique_id,
+                        zeroconf.ATTR_PROPERTIES_ID: unique_id,
                         "c#": record["c#"],
                         "s#": record["s#"],
                         "ff": record["ff"],
@@ -174,7 +175,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         "sf": record["sf"],
                         "sh": "",
                     },
-                }
+                )
             )
 
         return self.async_abort(reason="no_devices")
@@ -196,7 +197,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return False
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle a discovered HomeKit accessory.
 
         This flow is triggered by the discovery component.
@@ -205,10 +208,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # homekit_python has code to do this, but not in a form we can
         # easily use, so do the bare minimum ourselves here instead.
         properties = {
-            key.lower(): value for (key, value) in discovery_info["properties"].items()
+            key.lower(): value
+            for (key, value) in discovery_info[zeroconf.ATTR_PROPERTIES].items()
         }
 
-        if "id" not in properties:
+        if zeroconf.ATTR_PROPERTIES_ID not in properties:
             # This can happen if the TXT record is received after the PTR record
             # we will wait for the next update in this case
             _LOGGER.debug(
@@ -219,9 +223,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # The hkid is a unique random number that looks like a pairing code.
         # It changes if a device is factory reset.
-        hkid = properties["id"]
+        hkid = properties[zeroconf.ATTR_PROPERTIES_ID]
         model = properties["md"]
-        name = discovery_info["name"].replace("._hap._tcp.local.", "")
+        name = discovery_info[zeroconf.ATTR_NAME].replace("._hap._tcp.local.", "")
         status_flags = int(properties["sf"])
         paired = not status_flags & 0x01
 
@@ -239,8 +243,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Set unique-id and error out if it's already configured
         existing_entry = await self.async_set_unique_id(normalize_hkid(hkid))
         updated_ip_port = {
-            "AccessoryIP": discovery_info["host"],
-            "AccessoryPort": discovery_info["port"],
+            "AccessoryIP": discovery_info[zeroconf.ATTR_HOST],
+            "AccessoryPort": discovery_info[zeroconf.ATTR_PORT],
         }
 
         # If the device is already paired and known to us we should monitor c#

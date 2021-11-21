@@ -3,9 +3,12 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                    "country_code": "\u56fd\u5225\u30b3\u30fc\u30c9",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 }
             }
         }
-    }
+    },
+    "title": "\u30d4\u30af\u30cb\u30c3\u30af"
 }

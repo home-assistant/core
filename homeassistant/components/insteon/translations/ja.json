@@ -3,13 +3,16 @@
         "step": {
             "hubv1": {
                 "data": {
+                    "host": "IP\u30a2\u30c9\u30ec\u30b9",
                     "port": "\u30dd\u30fc\u30c8"
                 }
             },
             "hubv2": {
                 "data": {
+                    "host": "IP\u30a2\u30c9\u30ec\u30b9",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
-                    "port": "\u30dd\u30fc\u30c8"
+                    "port": "\u30dd\u30fc\u30c8",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 }
             }
         }
@@ -24,8 +27,10 @@
             },
             "change_hub_config": {
                 "data": {
+                    "host": "IP\u30a2\u30c9\u30ec\u30b9",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
-                    "port": "\u30dd\u30fc\u30c8"
+                    "port": "\u30dd\u30fc\u30c8",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 }
             }
         }

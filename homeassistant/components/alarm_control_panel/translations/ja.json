@@ -1,4 +1,9 @@
 {
+    "device_automation": {
+        "action_type": {
+            "trigger": "\u30c8\u30ea\u30ac\u30fc {entity_name}"
+        }
+    },
     "state": {
         "_": {
             "armed": "\u8b66\u6212",

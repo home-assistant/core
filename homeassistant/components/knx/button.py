@@ -4,30 +4,36 @@ from __future__ import annotations
 from xknx import XKNX
 from xknx.devices import RawValue as XknxRawValue
 
+from homeassistant import config_entries
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PAYLOAD, CONF_PAYLOAD_LENGTH, DOMAIN, KNX_ADDRESS
+from .const import (
+    CONF_PAYLOAD,
+    CONF_PAYLOAD_LENGTH,
+    DATA_KNX_CONFIG,
+    DOMAIN,
+    KNX_ADDRESS,
+    SupportedPlatforms,
+)
 from .knx_entity import KnxEntity
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up buttons for KNX platform."""
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-    platform_config = discovery_info["platform_config"]
+    """Set up the KNX binary sensor platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
+    config: ConfigType = hass.data[DATA_KNX_CONFIG]
 
     async_add_entities(
-        KNXButton(xknx, entity_config) for entity_config in platform_config
+        KNXButton(xknx, entity_config)
+        for entity_config in config[SupportedPlatforms.BUTTON.value]
     )
 
 

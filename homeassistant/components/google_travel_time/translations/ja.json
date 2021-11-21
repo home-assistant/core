@@ -1,4 +1,15 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc",
+                    "name": "\u540d\u524d",
+                    "origin": "\u30aa\u30ea\u30b8\u30f3"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

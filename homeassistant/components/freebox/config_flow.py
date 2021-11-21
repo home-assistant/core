@@ -111,6 +111,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Initialize flow from zeroconf."""
-        host = discovery_info[zeroconf.ATTR_PROPERTIES]["api_domain"]
-        port = discovery_info[zeroconf.ATTR_PROPERTIES]["https_port"]
+        zeroconf_properties = discovery_info[zeroconf.ATTR_PROPERTIES]
+        host = zeroconf_properties["api_domain"]
+        port = zeroconf_properties["https_port"]
         return await self.async_step_user({CONF_HOST: host, CONF_PORT: port})
