@@ -27,7 +27,16 @@ from homeassistant.components.weather import (
     PLATFORM_SCHEMA,
     WeatherEntity,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    LENGTH_CENTIMETERS,
+    LENGTH_KILOMETERS,
+    PRESSURE_KPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
@@ -89,6 +98,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ECWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+    _attr_pressure_unit = PRESSURE_KPA
+    _attr_visibility_unit = LENGTH_KILOMETERS
+    _attr_precipitation_unit = LENGTH_CENTIMETERS
+
     def __init__(self, coordinator, hourly):
         """Initialize Environment Canada weather."""
         super().__init__(coordinator)
@@ -112,11 +127,6 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
         ):
             return float(self.ec_data.hourly_forecasts[0]["temperature"])
         return None
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def humidity(self):
