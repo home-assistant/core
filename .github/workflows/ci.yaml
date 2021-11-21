@@ -645,7 +645,7 @@ jobs:
       - name: Run mypy
         run: |
           . venv/bin/activate
-          mypy homeassistant || true
+          mypy homeassistant
 
   pytest:
     runs-on: ubuntu-latest
