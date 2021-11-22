@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
@@ -197,7 +198,7 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
         return DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={
                 (DOMAIN, self.adguard.host, self.adguard.port, self.adguard.base_path)  # type: ignore
             },
