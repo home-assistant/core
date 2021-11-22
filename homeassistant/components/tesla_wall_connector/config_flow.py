@@ -13,7 +13,6 @@ from homeassistant.components.dhcp import IP_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -36,10 +35,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     wall_connector = WallConnector(
         host=data[CONF_HOST], session=async_get_clientsession(hass)
     )
-    try:
-        version = await wall_connector.async_get_version()
-    except WallConnectorError as ex:
-        raise CannotConnect from ex
+
+    version = await wall_connector.async_get_version()
 
     return {
         "title": WALLCONNECTOR_DEVICE_NAME,
@@ -105,7 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-        except CannotConnect:
+        except WallConnectorError:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -164,7 +161,3 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""

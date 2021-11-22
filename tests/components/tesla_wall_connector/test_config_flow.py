@@ -1,9 +1,10 @@
 """Test the Tesla Wall Connector config flow."""
 from unittest.mock import patch
 
+from tesla_wall_connector.exceptions import WallConnectorConnectionError
+
 from homeassistant import config_entries, setup
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
-from homeassistant.components.tesla_wall_connector.config_flow import CannotConnect
 from homeassistant.components.tesla_wall_connector.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
@@ -44,7 +45,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "tesla_wall_connector.WallConnector.async_get_version",
-        side_effect=CannotConnect,
+        side_effect=WallConnectorConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
