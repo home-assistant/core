@@ -85,7 +85,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class AtomeGenericSensor(SensorEntity):
-    """Basic class with atome client"""
+    """Basic class to store atome client."""
+
     def __init__(self, hass, atome_client, name, period_type):
         """Initialize the data."""
         self._atome_client = atome_client
@@ -100,7 +101,8 @@ class AtomeGenericSensor(SensorEntity):
 
 
 class AtomeLiveSensor(AtomeGenericSensor):
-    """ Class used to retrieve Live Data"""
+    """Class used to retrieve Live Data."""
+
     def __init__(self, hass, atome_client):
         """Initialize the data."""
         super().__init__(hass, atome_client, LIVE_NAME, LIVE_TYPE)
@@ -164,7 +166,8 @@ class AtomeLiveSensor(AtomeGenericSensor):
 
 
 class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
-    """ Class used to retrieve Period Data"""
+    """Class used to retrieve Period Data."""
+
     def __init__(self, hass, atome_client, name, period_type):
         """Initialize the data."""
         super().__init__(hass, atome_client, name, period_type)
@@ -189,7 +192,6 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
             self._previous_period_price = state_recorded.attributes.get(
                 ATTR_PREVIOUS_PERIOD_PRICE
             )
-
 
     def _retrieve_period_usage(self):
         """Return current daily/weekly/monthly/yearly power usage."""
@@ -241,7 +243,8 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
 
 
 class AtomeDailySensor(AtomePeriodSensor):
-    """ Class used to retrieve Daily Data"""
+    """Class used to retrieve Daily Data."""
+
     def __init__(self, hass, atome_client):
         """Initialize the data."""
         super().__init__(hass, atome_client, DAILY_NAME, DAILY_TYPE)
@@ -253,7 +256,8 @@ class AtomeDailySensor(AtomePeriodSensor):
 
 
 class AtomeWeeklySensor(AtomePeriodSensor):
-    """ Class used to retrieve Weekly Data"""
+    """Class used to retrieve Weekly Data."""
+
     def __init__(self, hass, atome_client):
         """Initialize the data."""
         super().__init__(hass, atome_client, WEEKLY_NAME, WEEKLY_TYPE)
@@ -265,7 +269,8 @@ class AtomeWeeklySensor(AtomePeriodSensor):
 
 
 class AtomeMonthlySensor(AtomePeriodSensor):
-    """ Class used to retrieve Monthly Data"""
+    """Class used to retrieve Monthly Data."""
+
     def __init__(self, hass, atome_client):
         """Initialize the data."""
         super().__init__(hass, atome_client, MONTHLY_NAME, MONTHLY_TYPE)
@@ -277,7 +282,8 @@ class AtomeMonthlySensor(AtomePeriodSensor):
 
 
 class AtomeYearlySensor(AtomePeriodSensor):
-    """ Class used to retrieve Yearly Data"""
+    """Class used to retrieve Yearly Data."""
+
     def __init__(self, hass, atome_client):
         """Initialize the data."""
         super().__init__(hass, atome_client, YEARLY_NAME, YEARLY_TYPE)
