@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -21,7 +22,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_LICENSE_PLATE, DOMAIN, ENTRY_TYPE_SERVICE
+from .const import CONF_LICENSE_PLATE, DOMAIN
 
 
 @dataclass
@@ -89,7 +90,7 @@ class RDWSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{license_plate}_{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            entry_type=ENTRY_TYPE_SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{license_plate}")},
             manufacturer=coordinator.data.brand,
             name=f"{coordinator.data.brand}: {coordinator.data.license_plate}",

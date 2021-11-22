@@ -10,6 +10,7 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -17,7 +18,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, ENTRY_TYPE_SERVICE
+from .const import DOMAIN
 
 
 @dataclass
@@ -96,7 +97,7 @@ class TwenteMilieuSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{DOMAIN}_{entry.data[CONF_ID]}_{description.key}"
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.twentemilieu.nl",
-            entry_type=ENTRY_TYPE_SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, str(entry.data[CONF_ID]))},
             manufacturer="Twente Milieu",
             name="Twente Milieu",
