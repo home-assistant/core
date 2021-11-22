@@ -77,7 +77,11 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     MultilevelSensorType,
 )
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
+from zwave_js_server.model.value import (
+    ConfigurationValue as ZwaveConfigurationValue,
+    Value as ZwaveValue,
+    get_value_id,
+)
 from zwave_js_server.util.command_class.meter import get_meter_scale_type
 from zwave_js_server.util.command_class.multilevel_sensor import (
     get_multilevel_sensor_scale_type,
@@ -522,24 +526,23 @@ class ConfigurableFanSpeedDataTemplate(
     the underlying switch for each actual speed.
     """
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveConfigurationValue]:
         """Resolve helper class data for a discovered value."""
         zwave_value: ZwaveValue = self._get_value_from_id(
             value.node, self.configuration_option
         )
-        data: dict[str, Any] = {"configuration_value": zwave_value}
 
+        # Validate the data; this is an ideal place because it's only
+        # called once for each data update, so there's not too much
+        # log spam.
         if zwave_value.value is None:
             _LOGGER.warn("Unable to read fan speed configuration value")
-            return data
+        else:
+            speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
+            if speed_config is None:
+                _LOGGER.warn("Unrecognized speed configuration value")
 
-        speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
-        if speed_config is None:
-            _LOGGER.warn("Unrecognized speed configuration value")
-            return data
-
-        data["speed_config"] = speed_config
-        return data
+        return {"configuration_value": zwave_value}
 
     def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
         """Return list of all ZwaveValues that should be watched."""
@@ -547,7 +550,9 @@ class ConfigurableFanSpeedDataTemplate(
             resolved_data["configuration_value"],
         ]
 
-    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
+    def get_speed_config(
+        self, resolved_data: dict[str, ZwaveConfigurationValue]
+    ) -> list[int] | None:
         """Get current speed configuration from resolved data."""
-        speed_config: list[int] | None = resolved_data["speed_config"]
-        return speed_config
+        zwave_value: ZwaveValue = resolved_data["configuration_value"]
+        return self.configuration_value_to_speeds.get(zwave_value.value)
