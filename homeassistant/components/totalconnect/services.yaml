@@ -1,0 +1,15 @@
+arm_away_instant:
+  name: Arm Away Instant
+  description: Arm Away with zero entry delay.
+  target:
+    entity:
+      integration: totalconnect
+      domain: alarm_control_panel
+
+arm_stay_instant:
+  name: Arm Stay Instant
+  description: Arm Stay with zero entry delay.
+  target:
+    entity:
+      integration: totalconnect
+      domain: alarm_control_panel
