@@ -546,7 +546,7 @@ async def test_fan_restore(hass, hk_driver, events):
         suggested_object_id="all_info_set",
         capabilities={"speed_list": ["off", "low", "medium", "high"]},
         supported_features=SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})

@@ -45,7 +45,7 @@ def assert_temperature_sensor_registered(
 ):
     """Assert that a temperature sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "temp", number, name)
-    assert sensor.device_class == DEVICE_CLASS_TEMPERATURE
+    assert sensor.original_device_class == DEVICE_CLASS_TEMPERATURE
 
 
 def assert_pulse_counter_registered(
@@ -67,7 +67,7 @@ def assert_power_sensor_registered(
     """Assert that a power sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "current", number, name)
     assert sensor.unit_of_measurement == POWER_WATT
-    assert sensor.device_class == DEVICE_CLASS_POWER
+    assert sensor.original_device_class == DEVICE_CLASS_POWER
 
 
 def assert_voltage_sensor_registered(
@@ -76,7 +76,7 @@ def assert_voltage_sensor_registered(
     """Assert that a voltage sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "volts", number, name)
     assert sensor.unit_of_measurement == ELECTRIC_POTENTIAL_VOLT
-    assert sensor.device_class == DEVICE_CLASS_VOLTAGE
+    assert sensor.original_device_class == DEVICE_CLASS_VOLTAGE
 
 
 def assert_sensor_registered(

@@ -136,7 +136,7 @@ async def test_init_shutterbox(shutterbox, hass, config):
 
     state = hass.states.get(entity_id)
     assert state.name == "shutterBox-position"
-    assert entry.device_class == DEVICE_CLASS_SHUTTER
+    assert entry.original_device_class == DEVICE_CLASS_SHUTTER
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_features & SUPPORT_OPEN
