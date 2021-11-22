@@ -353,6 +353,8 @@ async def async_setup_entry(  # noqa: C901
     ):
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
+    current_options = {**entry.options}
+
     async def async_reload_entry(_: HomeAssistant, updated_entry: ConfigEntry) -> None:
         """Handle an options update.
 
@@ -360,11 +362,15 @@ async def async_setup_entry(  # noqa: C901
           1. When SimpliSafeOptionsFlowHandler is initiated
           2. When a new refresh token is saved to the config entry data
 
-        We only want #1 to trigger an reload.
+        We only want #1 to trigger an actual reload.
         """
-        if updated_entry.options == entry.options:
+        nonlocal current_options
+        updated_options = {**updated_entry.options}
+
+        if updated_options == current_options:
             return
 
+        current_options = updated_options
         await hass.config_entries.async_reload(entry.entry_id)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
