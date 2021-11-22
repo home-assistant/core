@@ -58,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.ip_address = None
         self.serial_number = None
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info) -> FlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info[IP_ADDRESS]
         _LOGGER.info("Discovered Tesla Wall Connector at [%s]", self.ip_address)
@@ -68,13 +68,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 host=self.ip_address, session=async_get_clientsession(self.hass)
             )
             version = await wall_connector.async_get_version()
-            self.serial_number = version.serial_number
-        except Exception as ex:  # pylint: disable=broad-except
+        except WallConnectorError as ex:
             _LOGGER.exception(
                 "Could not read serial number from Tesla WallConnector at [%s]: [%s]",
                 self.ip_address,
                 ex,
             )
+            return self.async_abort(reason="cannot_connect")
+
+        self.serial_number = version.serial_number
 
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
 
