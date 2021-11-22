@@ -94,6 +94,7 @@ ALLOWED_USED_COMPONENTS = {
     # Internal integrations
     "alert",
     "automation",
+    "button",
     "conversation",
     "device_automation",
     "frontend",
