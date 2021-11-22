@@ -467,7 +467,7 @@ async def test_button_switch(hass, hk_driver, events):
 
     call_press = async_mock_service(hass, domain, "press")
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, True)
+    acc.char_on.client_update_value(True)
     await hass.async_block_till_done()
     assert acc.char_on.value is True
     assert len(call_press) == 1
