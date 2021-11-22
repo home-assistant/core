@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+import logging
 from typing import Any
 
 from zwave_js_server.const import CommandClass
@@ -76,11 +77,7 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     MultilevelSensorType,
 )
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.value import (
-    ConfigurationValue as ZwaveConfigurationValue,
-    Value as ZwaveValue,
-    get_value_id,
-)
+from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 from zwave_js_server.util.command_class.meter import get_meter_scale_type
 from zwave_js_server.util.command_class.multilevel_sensor import (
     get_multilevel_sensor_scale_type,
@@ -127,7 +124,6 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
-from homeassistant.exceptions import ConfigEntryNotReady, IntegrationError
 
 from .const import (
     ENTITY_DESC_KEY_BATTERY,
@@ -222,6 +218,8 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
     POWER_WATT: SENSOR_UNIT_WATT,
     IRRADIATION_WATTS_PER_SQUARE_METER: UNIT_WATT_PER_SQUARE_METER,
 }
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -433,12 +431,14 @@ class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
 class FanSpeedDataTemplate:
     """Mixin to define get_speed_config."""
 
-    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int]:
+    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
         """
         Get the fan speed configuration for this device.
 
         Values should indicate the highest allowed device setting for each
-        actual speed.
+        actual speed, and should be sorted in ascending order.
+
+        Empty lists are not permissible.
         """
         # pylint: disable=no-self-use
         raise NotImplementedError
@@ -522,10 +522,24 @@ class ConfigurableFanSpeedDataTemplate(
     the underlying switch for each actual speed.
     """
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveConfigurationValue]:
+    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
         """Resolve helper class data for a discovered value."""
-        zwave_value = self._get_value_from_id(value.node, self.configuration_option)
-        return {"configuration_value": zwave_value}
+        zwave_value: ZwaveValue = self._get_value_from_id(
+            value.node, self.configuration_option
+        )
+        data: dict[str, Any] = {"configuration_value": zwave_value}
+
+        if zwave_value.value is None:
+            _LOGGER.warn("Unable to read fan speed configuration value")
+            return data
+
+        speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
+        if speed_config is None:
+            _LOGGER.warn("Unrecognized speed configuration value")
+            return data
+
+        data["speed_config"] = speed_config
+        return data
 
     def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
         """Return list of all ZwaveValues that should be watched."""
@@ -533,17 +547,7 @@ class ConfigurableFanSpeedDataTemplate(
             resolved_data["configuration_value"],
         ]
 
-    def get_speed_config(
-        self, resolved_data: dict[str, ZwaveConfigurationValue]
-    ) -> list[int]:
+    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
         """Get current speed configuration from resolved data."""
-        zwave_value: ZwaveValue = resolved_data["configuration_value"]
-
-        if zwave_value.value is None:
-            raise ConfigEntryNotReady("Unable to read device configuration")
-
-        speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
-        if speed_config is None:
-            raise IntegrationError("Unknown fan speed configuration value")
-
+        speed_config: list[int] | None = resolved_data["speed_config"]
         return speed_config

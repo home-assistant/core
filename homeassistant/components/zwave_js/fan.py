@@ -151,6 +151,11 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
         await self.info.node.async_set_value(self._target_value, zwave_speed)
 
     @property
+    def available(self) -> bool:
+        """Return whether the entity is available."""
+        return super().available and self.has_speed_configuration
+
+    @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self.info.primary_value.value is None:
@@ -168,9 +173,21 @@ class ConfiguredSpeedRangeZwaveFan(ZwaveFan):
         return 100 / self.speed_count
 
     @property
+    def has_speed_configuration(self) -> bool:
+        """Check if the speed configuration is valid."""
+        return self.data_template.get_speed_config(self.info.platform_data) is not None
+
+    @property
     def speed_configuration(self) -> list[int]:
         """Return the speed configuration for this fan."""
-        return self.data_template.get_speed_config(self.info.platform_data)
+        speed_configuration = self.data_template.get_speed_config(
+            self.info.platform_data
+        )
+
+        # Entity should be unavailable if this isn't set
+        assert speed_configuration is not None
+
+        return speed_configuration
 
     @property
     def speed_count(self) -> int:
