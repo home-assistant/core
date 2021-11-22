@@ -85,7 +85,7 @@ MOCK_SSDP_DATA_WRONGMODEL = {
     ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
 }
 MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
-    ip="fake_host", macaddress="aa:bb:cc:dd:ee:ff", hostname=""
+    ip="fake_ip", macaddress="aa:bb:cc:dd:ee:ff", hostname="fake_host"
 )
 EXISTING_IP = "192.168.40.221"
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
