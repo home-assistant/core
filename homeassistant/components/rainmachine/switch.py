@@ -15,6 +15,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -163,7 +164,7 @@ async def async_setup_entry(
                     coordinator,
                     controller,
                     RainMachineSwitchDescription(
-                        key=f"{controller.name}_{kind}_{uid}",
+                        key=f"{kind}_{uid}",
                         name=data["name"],
                         icon="mdi:water",
                         uid=uid,
@@ -178,7 +179,7 @@ async def async_setup_entry(
                     coordinator,
                     controller,
                     RainMachineSwitchDescription(
-                        key=f"{controller.name}_{kind}_{uid}_enabled",
+                        key=f"{kind}_{uid}_enabled",
                         name=f"{data['name']} Enabled",
                         entity_category=ENTITY_CATEGORY_CONFIG,
                         icon="mdi:cog",
@@ -263,9 +264,9 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
         off right after turning it on.
         """
         if not self.coordinator.data[self.entity_description.uid]["active"]:
-            self._attr_is_on = False
-            self.async_write_ha_state()
-            return
+            raise HomeAssistantError(
+                f"Cannot turn off an inactive program/zone: {self.name}"
+            )
 
         await self.async_turn_off_when_active(**kwargs)
 
@@ -276,10 +277,9 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if not self.coordinator.data[self.entity_description.uid]["active"]:
-            LOGGER.error("Cannot turn on an inactive program/zone: %s", self.name)
-            self._attr_is_on = False
-            self.async_write_ha_state()
-            return
+            raise HomeAssistantError(
+                f"Cannot turn on an inactive program/zone: {self.name}"
+            )
 
         await self.async_turn_on_when_active(**kwargs)
 

@@ -71,8 +71,29 @@ async def test_invalid_password(hass):
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
-async def test_migrate_1_2(hass):
-    """Test migration from version 1 to 2 (new unique ID with straightforward MAC)."""
+@pytest.mark.parametrize(
+    "platform,entity_name,entity_id,old_unique_id,new_unique_id",
+    [
+        (
+            "binary_sensor",
+            "Home Flow Sensor",
+            "binary_sensor.home_flow_sensor",
+            "60e32719b6cf_flow_sensor",
+            "60:e3:27:19:b6:cf_flow_sensor",
+        ),
+        (
+            "switch",
+            "Home Landscaping",
+            "switch.home_landscaping",
+            "60e32719b6cf_RainMachineZone_1",
+            "60:e3:27:19:b6:cf_zone_1",
+        ),
+    ],
+)
+async def test_migrate_1_2(
+    hass, platform, entity_name, entity_id, old_unique_id, new_unique_id
+):
+    """Test migration from version 1 to 2 (consistent unique IDs)."""
     conf = {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "password",
@@ -85,18 +106,16 @@ async def test_migrate_1_2(hass):
 
     ent_reg = er.async_get(hass)
 
-    # Create entity RegistryEntry using old unique ID format (MAC without colons):
-    entity_name = "Home Landscaping"
-    old_unique_id = "60e32719b6cf_RainMachineZone_1"
+    # Create entity RegistryEntry using old unique ID format:
     entity_entry = ent_reg.async_get_or_create(
-        "switch",
+        platform,
         DOMAIN,
         old_unique_id,
         suggested_object_id=entity_name,
         config_entry=entry,
         original_name=entity_name,
     )
-    assert entity_entry.entity_id == "switch.home_landscaping"
+    assert entity_entry.entity_id == entity_id
     assert entity_entry.unique_id == old_unique_id
 
     with patch(
@@ -109,10 +128,9 @@ async def test_migrate_1_2(hass):
         await hass.async_block_till_done()
 
     # Check that new RegistryEntry is using new unique ID format
-    entity_entry = ent_reg.async_get("switch.home_landscaping")
-    new_unique_id = "60:e3:27:19:b6:cf_RainMachineZone_1"
+    entity_entry = ent_reg.async_get(entity_id)
     assert entity_entry.unique_id == new_unique_id
-    assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
+    assert ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id) is None
 
 
 async def test_options_flow(hass):

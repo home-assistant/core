@@ -333,7 +333,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     LOGGER.debug("Migrating from version %s", version)
 
-    # 1 -> 2: Removing old, unnecessary change to MAC address in unique ID:
+    # 1 -> 2: Update unique IDs to be consistent across platform (including removing
+    # the silly removal of colons in the MAC address that was added originally):
     if version == 1:
         version = entry.version = 2
 
@@ -342,10 +343,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             e for e in ent_reg.entities.values() if e.config_entry_id == entry.entry_id
         ]:
             unique_id_pieces = entity_entry.unique_id.split("_")
-            mac = unique_id_pieces[0]
-            unique_id_pieces[0] = ":".join(
-                mac[i : i + 2] for i in range(0, len(mac), 2)
-            )
+            old_mac = unique_id_pieces[0]
+            new_mac = ":".join(old_mac[i : i + 2] for i in range(0, len(old_mac), 2))
+            unique_id_pieces[0] = new_mac
+
+            if entity_entry.entity_id.startswith("switch"):
+                unique_id_pieces[1] = unique_id_pieces[1][11:].lower()
+
             ent_reg.async_update_entity(
                 entity_entry.entity_id, new_unique_id="_".join(unique_id_pieces)
             )
