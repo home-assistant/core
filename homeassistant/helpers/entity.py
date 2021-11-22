@@ -127,7 +127,7 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
     if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
-    return entry.device_class
+    return entry.device_class or entry.original_device_class
 
 
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
@@ -540,7 +540,9 @@ class Entity(ABC):
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
 
-        if (device_class := self.device_class) is not None:
+        if (
+            device_class := (entry and entry.device_class) or self.device_class
+        ) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:

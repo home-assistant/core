@@ -96,7 +96,7 @@ async def test_get_triggers_no_state(hass, device_reg, entity_reg):
             "test",
             f"5678_{device_class}",
             device_id=device_entry.id,
-            device_class=device_class,
+            original_device_class=device_class,
         ).entity_id
 
     await hass.async_block_till_done()
