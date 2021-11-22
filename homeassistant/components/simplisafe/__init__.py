@@ -107,7 +107,7 @@ ATTR_TIMESTAMP = "timestamp"
 
 DEFAULT_ENTITY_MODEL = "alarm_control_panel"
 DEFAULT_ENTITY_NAME = "Alarm Control Panel"
-DEFAULT_REST_API_ERROR_COUNT = 2
+DEFAULT_ERROR_THRESHOLD = 2
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
 
@@ -231,7 +231,9 @@ def _async_register_base_station(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
@@ -351,6 +353,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ):
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
+    current_options = {**entry.options}
+
+    async def async_reload_entry(_: HomeAssistant, updated_entry: ConfigEntry) -> None:
+        """Handle an options update.
+
+        This method will get called in two scenarios:
+          1. When SimpliSafeOptionsFlowHandler is initiated
+          2. When a new refresh token is saved to the config entry data
+
+        We only want #1 to trigger an actual reload.
+        """
+        nonlocal current_options
+        updated_options = {**updated_entry.options}
+
+        if updated_options == current_options:
+            return
+
+        await hass.config_entries.async_reload(entry.entry_id)
+
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
@@ -363,11 +384,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle an options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class SimpliSafe:
@@ -564,7 +580,11 @@ class SimpliSafeEntity(CoordinatorEntity):
         assert simplisafe.coordinator
         super().__init__(simplisafe.coordinator)
 
-        self._rest_api_errors = 0
+        # SimpliSafe can incorrectly return an error state when there isn't any
+        # error. This can lead to entities having an unknown state frequently.
+        # To protect against that, we measure an error count for each entity and only
+        # mark the state as unavailable if we detect a few in a row:
+        self._error_count = 0
 
         if device:
             model = device.type.name
@@ -630,7 +650,7 @@ class SimpliSafeEntity(CoordinatorEntity):
             system_offline = False
 
         return (
-            self._rest_api_errors < DEFAULT_REST_API_ERROR_COUNT
+            self._error_count < DEFAULT_ERROR_THRESHOLD
             and self._online
             and not system_offline
         )
@@ -638,14 +658,10 @@ class SimpliSafeEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update the entity with new REST API data."""
-        # SimpliSafe can incorrectly return an error state when there isn't any
-        # error. This can lead to the system having an unknown state frequently.
-        # To protect against that, we measure how many "error states" we receive
-        # and only alter the state if we detect a few in a row:
         if self.coordinator.last_update_success:
-            self._rest_api_errors = 0
+            self.async_reset_error_count()
         else:
-            self._rest_api_errors += 1
+            self.async_increment_error_count()
 
         self.async_update_from_rest_api()
         self.async_write_ha_state()
@@ -712,6 +728,21 @@ class SimpliSafeEntity(CoordinatorEntity):
         )
 
         self.async_update_from_rest_api()
+
+    @callback
+    def async_increment_error_count(self) -> None:
+        """Increment this entity's error count."""
+        LOGGER.debug('Error for entity "%s" (total: %s)', self.name, self._error_count)
+        self._error_count += 1
+
+    @callback
+    def async_reset_error_count(self) -> None:
+        """Reset this entity's error count."""
+        if self._error_count == 0:
+            return
+
+        LOGGER.debug('Resetting error count for "%s"', self.name)
+        self._error_count = 0
 
     @callback
     def async_update_from_rest_api(self) -> None:
