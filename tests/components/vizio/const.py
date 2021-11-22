@@ -1,4 +1,5 @@
 """Constants for the Vizio integration tests."""
+from homeassistant.components import zeroconf
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV,
@@ -23,8 +24,6 @@ from homeassistant.const import (
     CONF_INCLUDE,
     CONF_NAME,
     CONF_PIN,
-    CONF_PORT,
-    CONF_TYPE,
 )
 from homeassistant.util import slugify
 
@@ -198,10 +197,10 @@ ZEROCONF_NAME = f"{NAME}.{VIZIO_ZEROCONF_SERVICE_TYPE}"
 ZEROCONF_HOST = HOST.split(":")[0]
 ZEROCONF_PORT = HOST.split(":")[1]
 
-MOCK_ZEROCONF_SERVICE_INFO = {
-    CONF_TYPE: VIZIO_ZEROCONF_SERVICE_TYPE,
-    CONF_NAME: ZEROCONF_NAME,
-    CONF_HOST: ZEROCONF_HOST,
-    CONF_PORT: ZEROCONF_PORT,
-    "properties": {"name": "SB4031-D5"},
-}
+MOCK_ZEROCONF_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
+    type=VIZIO_ZEROCONF_SERVICE_TYPE,
+    name=ZEROCONF_NAME,
+    host=ZEROCONF_HOST,
+    port=ZEROCONF_PORT,
+    properties={"name": "SB4031-D5"},
+)

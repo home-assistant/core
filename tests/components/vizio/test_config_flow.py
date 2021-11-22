@@ -3,6 +3,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
 from homeassistant.components.vizio.config_flow import _get_config_schema
 from homeassistant.components.vizio.const import (
@@ -27,7 +28,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PIN,
-    CONF_PORT,
 )
 from homeassistant.core import HomeAssistant
 
@@ -796,8 +796,8 @@ async def test_zeroconf_flow_with_port_in_host(
     # Try rediscovering same device, this time with port already in host
     discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
     discovery_info[
-        CONF_HOST
-    ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
+        zeroconf.ATTR_HOST
+    ] = f"{discovery_info[zeroconf.ATTR_HOST]}:{discovery_info[zeroconf.ATTR_PORT]}"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
