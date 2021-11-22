@@ -6,8 +6,10 @@ import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -144,11 +146,13 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="select", data_schema=select_schema, errors=errors
         )
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        name = discovery_info.get("name")
-        self.host = discovery_info.get("host")
-        mac_address = discovery_info.get("properties", {}).get("mac")
+        name = discovery_info[zeroconf.ATTR_NAME]
+        self.host = discovery_info[zeroconf.ATTR_HOST]
+        mac_address = discovery_info[zeroconf.ATTR_PROPERTIES].get("mac")
 
         if not name or not self.host or not mac_address:
             return self.async_abort(reason="not_xiaomi_aqara")
