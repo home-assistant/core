@@ -471,7 +471,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff"),
+            data=dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+            ),
         )
         await hass.async_block_till_done()
     assert result2["type"] == RESULT_TYPE_ABORT
@@ -509,7 +511,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff"),
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
@@ -570,7 +574,9 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff"),
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
