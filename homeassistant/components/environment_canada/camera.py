@@ -55,6 +55,7 @@ class ECCamera(CoordinatorEntity, Camera):
         self._attr_name = f"{coordinator.config_entry.title} Radar"
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}-radar"
         self._attr_attribution = self.radar_object.metadata["attribution"]
+        self._attr_entity_registry_enabled_default = False
 
         self.content_type = "image/gif"
         self.image = None
