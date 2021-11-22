@@ -536,11 +536,11 @@ class ConfigurableFanSpeedDataTemplate(
         # called once for each data update, so there's not too much
         # log spam.
         if zwave_value.value is None:
-            _LOGGER.warn("Unable to read fan speed configuration value")
+            _LOGGER.warning("Unable to read fan speed configuration value")
         else:
             speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
             if speed_config is None:
-                _LOGGER.warn("Unrecognized speed configuration value")
+                _LOGGER.warning("Unrecognized speed configuration value")
 
         return {"configuration_value": zwave_value}
 
