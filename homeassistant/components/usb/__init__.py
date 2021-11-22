@@ -6,6 +6,7 @@ import fnmatch
 import logging
 import os
 import sys
+from typing import Any
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
@@ -40,6 +41,17 @@ class UsbServiceInfo:
     serial_number: str | None
     manufacturer: str | None
     description: str | None
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        _LOGGER.warning(
+            "__getitem__ will fail in version 2022.6. Please use <cls>.<name> instead."
+        )
+        return getattr(self, name)
 
 
 def human_readable_device_name(
