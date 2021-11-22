@@ -35,6 +35,7 @@ from homeassistant.const import (
     CONF_PORT,
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORY_SYSTEM,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
@@ -652,6 +653,7 @@ ENTITY_CATEGORIES: EsphomeEnumMapper[EntityCategory, str | None] = EsphomeEnumMa
         EntityCategory.NONE: None,
         EntityCategory.CONFIG: ENTITY_CATEGORY_CONFIG,
         EntityCategory.DIAGNOSTIC: ENTITY_CATEGORY_DIAGNOSTIC,
+        EntityCategory.SYSTEM: ENTITY_CATEGORY_SYSTEM,
     }
 )
 
