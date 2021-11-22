@@ -684,9 +684,7 @@ class LoggerSensor(_FroniusSensorEntity):
         super().__init__(coordinator, key, solar_net_id)
         logger_data = self._device_data()
         # Logger device is already created in FroniusSolarNet._create_solar_net_device
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.solar_net.solar_net_device_id)}
-        )
+        self._attr_device_info = coordinator.solar_net.system_device_info
         self._attr_native_unit_of_measurement = logger_data[key].get("unit")
         self._attr_unique_id = f'{logger_data["unique_identifier"]["value"]}-{key}'
 
@@ -732,9 +730,7 @@ class PowerFlowSensor(_FroniusSensorEntity):
         """Set up an individual Fronius power flow sensor."""
         super().__init__(coordinator, key, solar_net_id)
         # SolarNet device is already created in FroniusSolarNet._create_solar_net_device
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.solar_net.solar_net_device_id)}
-        )
+        self._attr_device_info = coordinator.solar_net.system_device_info
         self._attr_unique_id = (
             f"{coordinator.solar_net.solar_net_device_id}-power_flow-{key}"
         )
