@@ -76,6 +76,7 @@ SUPPORTED_DOMAINS = [
     "alarm_control_panel",
     "automation",
     "binary_sensor",
+    "button",
     CAMERA_DOMAIN,
     "climate",
     "cover",
