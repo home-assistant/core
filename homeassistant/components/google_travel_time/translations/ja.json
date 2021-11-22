@@ -4,6 +4,7 @@
             "user": {
                 "data": {
                     "api_key": "API\u30ad\u30fc",
+                    "destination": "\u76ee\u7684\u5730",
                     "name": "\u540d\u524d",
                     "origin": "\u30aa\u30ea\u30b8\u30f3"
                 }
@@ -14,6 +15,8 @@
         "step": {
             "init": {
                 "data": {
+                    "avoid": "\u907f\u3051\u308b",
+                    "time": "\u6642\u9593",
                     "units": "\u5358\u4f4d"
                 }
             }

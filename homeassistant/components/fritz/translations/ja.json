@@ -4,7 +4,8 @@
         "step": {
             "confirm": {
                 "data": {
-                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 },
                 "title": "FRITZ!Box Tools\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
             },

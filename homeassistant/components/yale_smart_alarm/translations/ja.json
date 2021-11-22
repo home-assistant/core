@@ -5,14 +5,16 @@
                 "data": {
                     "area_id": "\u30a8\u30ea\u30a2ID",
                     "name": "\u540d\u524d",
-                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 }
             },
             "user": {
                 "data": {
                     "area_id": "\u30a8\u30ea\u30a2ID",
                     "name": "\u540d\u524d",
-                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 }
             }
         }

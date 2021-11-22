@@ -3,6 +3,7 @@
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API\u30ad\u30fc",
                     "api_token": "API\u30b7\u30fc\u30af\u30ec\u30c3\u30c8",
                     "currencies": "\u53e3\u5ea7\u6b8b\u9ad8 \u901a\u8ca8",
                     "exchange_rates": "\u70ba\u66ff\u30ec\u30fc\u30c8"

@@ -6,6 +6,11 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "schedule": "\u30b9\u30b1\u30b8\u30e5\u30fc\u30eb"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {

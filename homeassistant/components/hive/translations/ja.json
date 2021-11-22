@@ -15,13 +15,15 @@
             },
             "reauth": {
                 "data": {
-                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 },
                 "title": "Hive\u30ed\u30b0\u30a4\u30f3"
             },
             "user": {
                 "data": {
-                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 },
                 "title": "Hive\u30ed\u30b0\u30a4\u30f3"
             }

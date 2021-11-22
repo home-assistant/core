@@ -6,6 +6,7 @@
         "step": {
             "user": {
                 "data": {
+                    "email": "Email",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
                 }
             }
