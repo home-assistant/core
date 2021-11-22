@@ -161,7 +161,7 @@ def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
         not last_uptime
         or abs((delta_uptime - last_uptime).total_seconds()) > UPTIME_DEVIATION
     ):
-        return delta_uptime.replace(microsecond=0)
+        return delta_uptime
 
     return last_uptime
 
