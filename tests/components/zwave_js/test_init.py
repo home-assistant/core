@@ -305,6 +305,11 @@ async def test_existing_node_not_ready(
     assert device.model is None
     assert device.sw_version is None
 
+    state = hass.states.get(motion_entity_new)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.name == "Custom Sensor Name"
+
 
 async def test_start_addon(
     hass, addon_installed, install_addon, addon_options, set_addon_options, start_addon
