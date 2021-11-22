@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -21,11 +22,17 @@ from homeassistant.const import (
     POWER_WATT,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "atome"
+
+ATTRIBUTION = "Data provided by TotalEnergies"
+
+ATTR_PREVIOUS_PERIOD_USAGE = "previous_consumption"
+ATTR_PREVIOUS_PERIOD_PRICE = "previous_price"
 
 LIVE_SCAN_INTERVAL = timedelta(seconds=30)
 DAILY_SCAN_INTERVAL = timedelta(seconds=150)
@@ -66,53 +73,45 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error(exp)
         return
 
-    data = AtomeData(atome_client)
-
-    sensors = []
-    sensors.append(AtomeSensor(data, LIVE_NAME, LIVE_TYPE))
-    sensors.append(AtomeSensor(data, DAILY_NAME, DAILY_TYPE))
-    sensors.append(AtomeSensor(data, WEEKLY_NAME, WEEKLY_TYPE))
-    sensors.append(AtomeSensor(data, MONTHLY_NAME, MONTHLY_TYPE))
-    sensors.append(AtomeSensor(data, YEARLY_NAME, YEARLY_TYPE))
+    sensors = [
+        AtomeLiveSensor(hass, atome_client),
+        AtomeDailySensor(hass, atome_client),
+        AtomeWeeklySensor(hass, atome_client),
+        AtomeMonthlySensor(hass, atome_client),
+        AtomeYearlySensor(hass, atome_client)
+    ]
 
     add_entities(sensors, True)
 
 
-class AtomeData:
-    """Stores data retrieved from Neurio sensor."""
-
-    def __init__(self, client: AtomeClient) -> None:
+class AtomeGenericSensor(SensorEntity):
+    def __init__(self, hass, atome_client, name, period_type):
         """Initialize the data."""
-        self.atome_client = client
+        self._atome_client = atome_client
+        self._name = name
+        self._period_type = period_type
+        self._hass = hass
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+class AtomeLiveSensor(AtomeGenericSensor):
+    def __init__(self, hass, atome_client):
+        """Initialize the data."""
+        super().__init__(hass, atome_client, LIVE_NAME, LIVE_TYPE)
         self._live_power = None
         self._subscribed_power = None
         self._is_connected = None
-        self._day_usage = None
-        self._day_price = None
-        self._week_usage = None
-        self._week_price = None
-        self._month_usage = None
-        self._month_price = None
-        self._year_usage = None
-        self._year_price = None
 
-    @property
-    def live_power(self):
-        """Return latest active power value."""
-        return self._live_power
-
-    @property
-    def subscribed_power(self):
-        """Return latest active power value."""
-        return self._subscribed_power
-
-    @property
-    def is_connected(self):
-        """Return latest active power value."""
-        return self._is_connected
+        self._attr_device_class = DEVICE_CLASS_POWER
+        self._attr_native_unit_of_measurement = POWER_WATT
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     def _retrieve_live(self):
-        values = self.atome_client.get_live()
+        """Retrieve Live data."""
+        values = self._atome_client.get_live()
         if (
             values.get("last")
             and values.get("subscribed")
@@ -135,145 +134,145 @@ class AtomeData:
     @Throttle(LIVE_SCAN_INTERVAL)
     def update_live_usage(self):
         """Return current power value."""
+        _LOGGER.debug("Live Data : Update Usage")
         if not self._retrieve_live():
             _LOGGER.debug("Perform Reconnect during live request")
-            self.atome_client.login()
+            self._atome_client.login()
             self._retrieve_live()
 
-    def _retrieve_period_usage(self, period_type):
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes of this device."""
+        attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attr["subscribed_power"] = self._subscribed_power
+        attr["is_connected"] = self._is_connected
+        return attr
+
+    @property
+    def state(self):
+        _LOGGER.debug("Live Data : display")
+        return self._live_power
+
+    async def async_update(self):
+        """Fetch new state data for this sensor."""
+        _LOGGER.debug("Async Update sensor %s", self._name)
+        # Watch Out : only method name is given to function i.e. without ()
+        await self._hass.async_add_executor_job(self.update_live_usage)
+
+
+class AtomePeriodSensor(RestoreEntity,AtomeGenericSensor):
+    def __init__(self, hass, atome_client, name, period_type):
+        """Initialize the data."""
+        super().__init__(hass, atome_client, name, period_type)
+        self._period_usage = None
+        self._period_price = None
+        self._previous_period_usage = None
+        self._previous_period_price = None
+
+        self._attr_device_class = DEVICE_CLASS_ENERGY
+        self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+        self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+
+    async def async_added_to_hass(self):
+        """Handle added to Hass."""
+        # restore from previous run
+        await super().async_added_to_hass()
+        state_recorded = await self.async_get_last_state()
+        if state_recorded:
+            self._previous_period_usage = (
+                state_recorded.attributes.get(ATTR_PREVIOUS_PERIOD_USAGE)
+            )
+            self._previous_period_price = (
+                state_recorded.attributes.get(ATTR_PREVIOUS_PERIOD_PRICE)
+            )
+
+
+    def _retrieve_period_usage(self):
         """Return current daily/weekly/monthly/yearly power usage."""
-        values = self.atome_client.get_consumption(period_type)
+        values = self._atome_client.get_consumption(self._period_type)
         if values.get("total") and values.get("price"):
-            period_usage = values["total"] / 1000
-            period_price = values["price"]
-            _LOGGER.debug("Updating Atome %s data. Got: %d", period_type, period_usage)
-            return True, period_usage, period_price
+            if (
+                (self._period_usage is not None)
+                and ((values["total"] / 1000) < self._period_usage)
+            ):
+                self._previous_period_usage = self._period_usage
+                self._period_price = self._period_price
+            self._period_usage = values["total"] / 1000
+            self._period_price = values["price"]
+            _LOGGER.debug("Updating Atome %s data. Got: %d", self._period_type, self._period_usage)
+            return True
 
-        _LOGGER.error("%s : Missing last value in values: %s", period_type, values)
-        return False, None, None
+        _LOGGER.error("%s : Missing last value in values: %s", self._period_type, values)
+        return False
 
-    def _retrieve_period_usage_with_retry(self, period_type):
+    def _retrieve_period_usage_with_retry(self):
         """Return current daily/weekly/monthly/yearly power usage with one retry."""
-        (
-            retrieve_success,
-            period_usage,
-            period_price,
-        ) = self._retrieve_period_usage(period_type)
-        if not retrieve_success:
-            _LOGGER.debug("Perform Reconnect during %s", period_type)
-            self.atome_client.login()
-            (
-                retrieve_success,
-                period_usage,
-                period_price,
-            ) = self._retrieve_period_usage(period_type)
-        return (period_usage, period_price)
+
+        if not self._retrieve_period_usage():
+            _LOGGER.debug("Perform Reconnect during %s", self._period_type)
+            self._atome_client.login()
+            self._retrieve_period_usage()
 
     @property
-    def day_usage(self):
-        """Return latest daily usage value."""
-        return self._day_usage
+    def extra_state_attributes(self):
+        """Return the state attributes of this device."""
+        attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attr["price"] = self._period_price
+        attr[ATTR_PREVIOUS_PERIOD_USAGE] = self._previous_period_usage
+        attr[ATTR_PREVIOUS_PERIOD_PRICE] = self._previous_period_price
+        return attr
 
     @property
-    def day_price(self):
-        """Return latest daily usage value."""
-        return self._day_price
+    def state(self):
+        return self._period_usage
+
+    async def async_update(self):
+        """Fetch new state data for this sensor."""
+        _LOGGER.debug("Async Update sensor %s", self._name)
+        # Watch Out : only method name is given to function i.e. without ()
+        await self._hass.async_add_executor_job(self.update_period_usage)
+
+
+class AtomeDailySensor(AtomePeriodSensor):
+    def __init__(self, hass, atome_client):
+        """Initialize the data."""
+        super().__init__(hass, atome_client, DAILY_NAME, DAILY_TYPE)
+
 
     @Throttle(DAILY_SCAN_INTERVAL)
-    def update_day_usage(self):
+    def update_period_usage(self):
         """Return current daily power usage."""
-        (
-            self._day_usage,
-            self._day_price,
-        ) = self._retrieve_period_usage_with_retry(DAILY_TYPE)
+        self._retrieve_period_usage_with_retry()
 
-    @property
-    def week_usage(self):
-        """Return latest weekly usage value."""
-        return self._week_usage
 
-    @property
-    def week_price(self):
-        """Return latest weekly usage value."""
-        return self._week_price
+class AtomeWeeklySensor(AtomePeriodSensor):
+    def __init__(self, hass, atome_client):
+        """Initialize the data."""
+        super().__init__(hass, atome_client, WEEKLY_NAME, WEEKLY_TYPE)
 
     @Throttle(WEEKLY_SCAN_INTERVAL)
-    def update_week_usage(self):
-        """Return current weekly power usage."""
-        (
-            self._week_usage,
-            self._week_price,
-        ) = self._retrieve_period_usage_with_retry(WEEKLY_TYPE)
+    def update_period_usage(self):
+        """Return current daily power usage."""
+        self._retrieve_period_usage_with_retry()
 
-    @property
-    def month_usage(self):
-        """Return latest monthly usage value."""
-        return self._month_usage
 
-    @property
-    def month_price(self):
-        """Return latest monthly usage value."""
-        return self._month_price
+class AtomeMonthlySensor(AtomePeriodSensor):
+    def __init__(self, hass, atome_client):
+        """Initialize the data."""
+        super().__init__(hass, atome_client, MONTHLY_NAME, MONTHLY_TYPE)
 
     @Throttle(MONTHLY_SCAN_INTERVAL)
-    def update_month_usage(self):
-        """Return current monthly power usage."""
-        (
-            self._month_usage,
-            self._month_price,
-        ) = self._retrieve_period_usage_with_retry(MONTHLY_TYPE)
+    def update_period_usage(self):
+        """Return current daily power usage."""
+        self._retrieve_period_usage_with_retry()
 
-    @property
-    def year_usage(self):
-        """Return latest yearly usage value."""
-        return self._year_usage
 
-    @property
-    def year_price(self):
-        """Return latest yearly usage value."""
-        return self._year_price
+class AtomeYearlySensor(AtomePeriodSensor):
+    def __init__(self, hass, atome_client):
+        """Initialize the data."""
+        super().__init__(hass, atome_client, YEARLY_NAME, YEARLY_TYPE)
 
     @Throttle(YEARLY_SCAN_INTERVAL)
-    def update_year_usage(self):
-        """Return current yearly power usage."""
-        (
-            self._year_usage,
-            self._year_price,
-        ) = self._retrieve_period_usage_with_retry(YEARLY_TYPE)
-
-
-class AtomeSensor(SensorEntity):
-    """Representation of a sensor entity for Atome."""
-
-    def __init__(self, data, name, sensor_type):
-        """Initialize the sensor."""
-        self._attr_name = name
-        self._data = data
-
-        self._sensor_type = sensor_type
-
-        if sensor_type == LIVE_TYPE:
-            self._attr_device_class = DEVICE_CLASS_POWER
-            self._attr_native_unit_of_measurement = POWER_WATT
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
-        else:
-            self._attr_device_class = DEVICE_CLASS_ENERGY
-            self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
-
-    def update(self):
-        """Update device state."""
-        update_function = getattr(self._data, f"update_{self._sensor_type}_usage")
-        update_function()
-
-        if self._sensor_type == LIVE_TYPE:
-            self._attr_native_value = self._data.live_power
-            self._attr_extra_state_attributes = {
-                "subscribed_power": self._data.subscribed_power,
-                "is_connected": self._data.is_connected,
-            }
-        else:
-            self._attr_native_value = getattr(self._data, f"{self._sensor_type}_usage")
-            self._attr_extra_state_attributes = {
-                "price": getattr(self._data, f"{self._sensor_type}_price")
-            }
+    def update_period_usage(self):
+        """Return current daily power usage."""
+        self._retrieve_period_usage_with_retry()
