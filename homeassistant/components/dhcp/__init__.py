@@ -65,11 +65,7 @@ class DhcpServiceInfo:
     macaddress: str
 
     def __getitem__(self, name: str) -> Any:
-        """
-        Allow property access by name for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
+        """Allow property access by name for compatibility reason."""
         return getattr(self, name)
 
 
