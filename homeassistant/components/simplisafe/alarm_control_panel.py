@@ -38,6 +38,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -67,6 +68,7 @@ ATTR_WIFI_STRENGTH = "wifi_strength"
 
 STATE_MAP_FROM_REST_API = {
     SystemStates.ALARM: STATE_ALARM_TRIGGERED,
+    SystemStates.ALARM_COUNT: STATE_ALARM_PENDING,
     SystemStates.AWAY: STATE_ALARM_ARMED_AWAY,
     SystemStates.AWAY_COUNT: STATE_ALARM_ARMING,
     SystemStates.EXIT_DELAY: STATE_ALARM_ARMING,
