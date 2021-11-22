@@ -1098,11 +1098,3 @@ async def test_addressable_light(hass: HomeAssistant) -> None:
     bulb.async_turn_on.assert_called_once()
     bulb.async_turn_on.reset_mock()
     await async_mock_device_turn_on(hass, bulb)
-
-    with pytest.raises(ValueError):
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            "turn_on",
-            {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
-            blocking=True,
-        )
