@@ -1,4 +1,5 @@
 """Enum related helpers."""
+from __future__ import annotations
 
 from enum import Enum
 from typing import Any
@@ -7,7 +8,7 @@ from typing import Any
 class StrEnum(str, Enum):
     """Partial backport of Python 3.11's StrEnum for our basic use cases."""
 
-    def __new__(cls, value: str, *args: Any, **kwargs: Any) -> "StrEnum":
+    def __new__(cls, value: str, *args: Any, **kwargs: Any) -> StrEnum:
         """Create a new StrEnum instance."""
         # enum.auto intentionally not backported yet, waiting until it's
         # very clear that its implementation will no longer change.
