@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_aqara import config_flow, const
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 
@@ -400,11 +401,11 @@ async def test_zeroconf_success(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            CONF_HOST: TEST_HOST,
-            ZEROCONF_NAME: TEST_ZEROCONF_NAME,
-            ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            name=TEST_ZEROCONF_NAME,
+            properties={ZEROCONF_MAC: TEST_MAC},
+        ),
     )
 
     assert result["type"] == "form"
@@ -443,7 +444,9 @@ async def test_zeroconf_missing_data(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={CONF_HOST: TEST_HOST, ZEROCONF_NAME: TEST_ZEROCONF_NAME},
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST, name=TEST_ZEROCONF_NAME, properties={}
+        ),
     )
 
     assert result["type"] == "abort"
@@ -455,11 +458,11 @@ async def test_zeroconf_unknown_device(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            CONF_HOST: TEST_HOST,
-            ZEROCONF_NAME: "not-a-xiaomi-aqara-gateway",
-            ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            name="not-a-xiaomi-aqara-gateway",
+            properties={ZEROCONF_MAC: TEST_MAC},
+        ),
     )
 
     assert result["type"] == "abort"
