@@ -177,7 +177,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._auth_failed:
             return False
         return (
-            self.state == STATE_ON
+            self._attr_state == STATE_ON
             or self._on_script is not None
             or self._mac is not None
             or self._power_off_in_progress()
