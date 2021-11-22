@@ -99,7 +99,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         """Update the entity when new data comes from the websocket."""
         if TYPE_CHECKING:
             assert event.event_type
-        if state := STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type):
+        if state := STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type) is not None:
             self._attr_is_locked = state
             self.async_reset_error_count()
         else:
