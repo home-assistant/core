@@ -49,7 +49,9 @@ async def handle_webhook(hass, webhook_id, request):
     data["webhook_id"] = webhook_id
     hass.bus.async_fire(RECEIVED_DATA, dict(data))
 
-    return Response(status=HTTPStatus.OK, body=MessagingResponse().to_xml(), content_type="text/xml")
+    return Response(
+        status=HTTPStatus.OK, body=MessagingResponse().to_xml(), content_type="text/xml"
+    )
 
 
 async def async_setup_entry(hass, entry):
