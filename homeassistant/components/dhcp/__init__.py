@@ -57,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class DhcpServiceInfo(config_entries.BaseServiceInfo):
+class DhcpServiceInfo:
     """Prepared info from dhcp entries."""
 
     ip: str
