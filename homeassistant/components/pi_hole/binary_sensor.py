@@ -3,6 +3,7 @@ from typing import Any
 
 from hole import Hole
 
+from collections.abc import Mapping
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
@@ -50,7 +51,7 @@ async def async_setup_entry(
                 description,
             )
             for description in BINARY_SENSOR_TYPES_STATISTICS_ONLY
-        ]   
+        ]
 
     async_add_entities(binary_sensors, True)
 
@@ -79,18 +80,22 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return if the service is on."""
 
-        if self.entity_description.version_update is not None:
-            return self.api.versions[self.entity_description.version_update]
+        if self.entity_description.version_update != "":
+            return self.api.versions[self.entity_description.version_update]  # type: ignore[no-any-return]
 
         if self.entity_description.key == "status":
             return self.api.data.get("status") == "enabled"  # type: ignore[no-any-return]
 
+        return False
+
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the Pi-hole."""
 
-        if self.entity_description.version_current is not None:
+        if self.entity_description.version_current != "":
             return {
                 "current_version": self.api.versions[self.entity_description.version_current],
                 "latest_version": self.api.versions[self.entity_description.version_latest]
             }
+
+        return {}

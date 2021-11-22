@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import PERCENTAGE
 
@@ -93,14 +94,15 @@ SENSOR_TYPES: tuple[PiHoleSensorEntityDescription, ...] = (
     )
 )
 
+
 @dataclass
-class PiHoleBinarySensorEntityDescription(SensorEntityDescription):
+class PiHoleBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes PiHole binary sensor entity."""
 
     icon: str = "mdi:pi-hole"
-    version_current: str = None
-    version_latest: str = None
-    version_update: str = None
+    version_current: str = ""
+    version_latest: str = ""
+    version_update: str = ""
 
 
 BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
@@ -134,7 +136,7 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
 )
 
 BINARY_SENSOR_TYPES_STATISTICS_ONLY: tuple[PiHoleBinarySensorEntityDescription, ...] = (
-     PiHoleBinarySensorEntityDescription(
+    PiHoleBinarySensorEntityDescription(
         key="status",
         name="Status",
         icon="mdi:pi-hole"
