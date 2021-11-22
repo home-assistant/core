@@ -444,7 +444,9 @@ async def test_zeroconf_missing_data(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(host=TEST_HOST, name=TEST_ZEROCONF_NAME),
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST, name=TEST_ZEROCONF_NAME, properties={}
+        ),
     )
 
     assert result["type"] == "abort"
