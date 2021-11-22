@@ -418,13 +418,13 @@ class PrometheusMetrics:
                 break
 
         if metric is not None:
-            if unit not in (None, ""):
+            if unit in (None, ""):
                 _metric = self._metric(
-                    metric, self.prometheus_cli.Gauge, f"Sensor data measured in {unit}"
+                    metric, self.prometheus_cli.Gauge, "State of the sensor"
                 )
             else:
                 _metric = self._metric(
-                    metric, self.prometheus_cli.Gauge, "State of the sensor"
+                    metric, self.prometheus_cli.Gauge, f"Sensor data measured in {unit}"
                 )
 
             try:
