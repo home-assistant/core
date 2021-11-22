@@ -15,6 +15,9 @@ from bimmer_connected.vehicle_status import (
 )
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_LIGHT,
+    DEVICE_CLASS_LOCK,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_PLUG,
     DEVICE_CLASS_PROBLEM,
@@ -169,14 +172,14 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     BMWBinarySensorEntityDescription(
         key="door_lock_state",
         name="Door lock state",
-        device_class="lock",
+        device_class=DEVICE_CLASS_LOCK,
         icon="mdi:car-key",
         value_fn=_are_doors_locked,
     ),
     BMWBinarySensorEntityDescription(
         key="lights_parking",
         name="Parking lights",
-        device_class="light",
+        device_class=DEVICE_CLASS_LIGHT,
         icon="mdi:car-parking-lights",
         value_fn=_are_parking_lights_on,
     ),
@@ -198,7 +201,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     BMWBinarySensorEntityDescription(
         key="charging_status",
         name="Charging status",
-        device_class="power",
+        device_class=DEVICE_CLASS_BATTERY_CHARGING,
         icon="mdi:ev-station",
         value_fn=_is_vehicle_charging,
     ),
