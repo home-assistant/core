@@ -318,6 +318,7 @@ FLOWS = [
     "vera",
     "verisure",
     "vesync",
+    "vicare",
     "vilfo",
     "vizio",
     "vlc_telnet",
