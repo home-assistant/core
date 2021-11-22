@@ -33,6 +33,7 @@ ATTRIBUTION = "Data provided by TotalEnergies"
 
 ATTR_PREVIOUS_PERIOD_USAGE = "previous_consumption"
 ATTR_PREVIOUS_PERIOD_PRICE = "previous_price"
+ATTR_PERIOD_PRICE = "price"
 
 LIVE_SCAN_INTERVAL = timedelta(seconds=30)
 DAILY_SCAN_INTERVAL = timedelta(seconds=150)
@@ -187,6 +188,10 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
         await super().async_added_to_hass()
         state_recorded = await self.async_get_last_state()
         if state_recorded:
+            self._period_usage = state_recorded.state
+            self._period_price = state_recorded.attributes.get(
+                ATTR_PERIOD_PRICE
+            )
             self._previous_period_usage = state_recorded.attributes.get(
                 ATTR_PREVIOUS_PERIOD_USAGE
             )
@@ -202,7 +207,7 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
                 (values["total"] / 1000) < self._period_usage
             ):
                 self._previous_period_usage = self._period_usage
-                self._period_price = self._period_price
+                self._previous_period_price = self._period_price
             self._period_usage = values["total"] / 1000
             self._period_price = values["price"]
             _LOGGER.debug(
@@ -227,7 +232,7 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
     def extra_state_attributes(self):
         """Return the state attributes of this device."""
         attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        attr["price"] = self._period_price
+        attr[ATTR_PERIOD_PRICE] = self._period_price
         attr[ATTR_PREVIOUS_PERIOD_USAGE] = self._previous_period_usage
         attr[ATTR_PREVIOUS_PERIOD_PRICE] = self._previous_period_price
         return attr
