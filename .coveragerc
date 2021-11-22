@@ -1194,7 +1194,12 @@ omit =
     homeassistant/components/vesync/light.py
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
-    homeassistant/components/vicare/*
+    homeassistant/components/vicare/binary_sensor.py
+    homeassistant/components/vicare/climate.py
+    homeassistant/components/vicare/const.py
+    homeassistant/components/vicare/__init__.py
+    homeassistant/components/vicare/sensor.py
+    homeassistant/components/vicare/water_heater.py
     homeassistant/components/vilfo/__init__.py
     homeassistant/components/vilfo/sensor.py
     homeassistant/components/vilfo/const.py

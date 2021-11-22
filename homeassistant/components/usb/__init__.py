@@ -6,7 +6,7 @@ import fnmatch
 import logging
 import os
 import sys
-from typing import Final, TypedDict
+from typing import TypedDict
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
@@ -29,15 +29,6 @@ from .utils import usb_device_from_port
 _LOGGER = logging.getLogger(__name__)
 
 REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
-
-
-# Attributes for UsbServiceInfo
-ATTR_DESCRIPTION: Final = "description"
-ATTR_DEVICE: Final = "device"
-ATTR_MANUFACTURER: Final = "manufacturer"
-ATTR_PID: Final = "pid"
-ATTR_SERIAL_NUMBER: Final = "serial_number"
-ATTR_VID: Final = "vid"
 
 
 class UsbServiceInfo(TypedDict):
@@ -180,20 +171,20 @@ class USBDiscovery:
         self.seen.add(device_tuple)
         matched = []
         for matcher in self.usb:
-            if ATTR_VID in matcher and device.vid != matcher[ATTR_VID]:
+            if "vid" in matcher and device.vid != matcher["vid"]:
                 continue
-            if ATTR_PID in matcher and device.pid != matcher[ATTR_PID]:
+            if "pid" in matcher and device.pid != matcher["pid"]:
                 continue
-            if ATTR_SERIAL_NUMBER in matcher and not _fnmatch_lower(
-                device.serial_number, matcher[ATTR_SERIAL_NUMBER]
+            if "serial_number" in matcher and not _fnmatch_lower(
+                device.serial_number, matcher["serial_number"]
             ):
                 continue
-            if ATTR_MANUFACTURER in matcher and not _fnmatch_lower(
-                device.manufacturer, matcher[ATTR_MANUFACTURER]
+            if "manufacturer" in matcher and not _fnmatch_lower(
+                device.manufacturer, matcher["manufacturer"]
             ):
                 continue
-            if ATTR_DESCRIPTION in matcher and not _fnmatch_lower(
-                device.description, matcher[ATTR_DESCRIPTION]
+            if "description" in matcher and not _fnmatch_lower(
+                device.description, matcher["description"]
             ):
                 continue
             matched.append(matcher)

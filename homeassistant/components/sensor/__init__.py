@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import inspect
 import logging
 from typing import Any, Final, cast, final
@@ -308,15 +308,31 @@ class SensorEntity(Entity):
                     f"while it has device class '{device_class}'"
                 ) from error
 
+            if value.tzinfo is not None and value.tzinfo != timezone.utc:
+                value = value.astimezone(timezone.utc)
+
             # Convert the date object to a standardized state string.
             if device_class == DEVICE_CLASS_DATE:
                 return value.date().isoformat()
+
             return value.isoformat(timespec="seconds")
 
         # Received a datetime
         if value is not None and device_class == DEVICE_CLASS_TIMESTAMP:
             try:
-                return value.isoformat(timespec="seconds")  # type: ignore
+                # We cast the value, to avoid using isinstance, but satisfy
+                # typechecking. The errors are guarded in this try.
+                value = cast(datetime, value)
+                if value.tzinfo is None:
+                    raise ValueError(
+                        f"Invalid datetime: {self.entity_id} provides state '{value}', "
+                        "which is missing timezone information"
+                    )
+
+                if value.tzinfo != timezone.utc:
+                    value = value.astimezone(timezone.utc)
+
+                return value.isoformat(timespec="seconds")
             except (AttributeError, TypeError) as err:
                 raise ValueError(
                     f"Invalid datetime: {self.entity_id} has a timestamp device class"

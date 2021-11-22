@@ -122,7 +122,7 @@ async def test_get_trigger_capabilities(
         "test",
         platform.ENTITIES["battery"].unique_id,
         device_id=device_entry.id,
-        device_class=device_class_reg,
+        original_device_class=device_class_reg,
         unit_of_measurement=unit_reg,
     ).entity_id
     if set_state:

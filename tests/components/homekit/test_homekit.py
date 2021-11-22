@@ -1118,14 +1118,14 @@ async def test_homekit_finds_linked_batteries(
         "powerwall",
         "battery_charging",
         device_id=device_entry.id,
-        device_class=DEVICE_CLASS_BATTERY_CHARGING,
+        original_device_class=DEVICE_CLASS_BATTERY_CHARGING,
     )
     battery_sensor = entity_reg.async_get_or_create(
         "sensor",
         "powerwall",
         "battery",
         device_id=device_entry.id,
-        device_class=DEVICE_CLASS_BATTERY,
+        original_device_class=DEVICE_CLASS_BATTERY,
     )
     light = entity_reg.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
@@ -1187,14 +1187,14 @@ async def test_homekit_async_get_integration_fails(
         "invalid_integration_does_not_exist",
         "battery_charging",
         device_id=device_entry.id,
-        device_class=DEVICE_CLASS_BATTERY_CHARGING,
+        original_device_class=DEVICE_CLASS_BATTERY_CHARGING,
     )
     battery_sensor = entity_reg.async_get_or_create(
         "sensor",
         "invalid_integration_does_not_exist",
         "battery",
         device_id=device_entry.id,
-        device_class=DEVICE_CLASS_BATTERY,
+        original_device_class=DEVICE_CLASS_BATTERY,
     )
     light = entity_reg.async_get_or_create(
         "light", "invalid_integration_does_not_exist", "demo", device_id=device_entry.id
@@ -1334,14 +1334,14 @@ async def test_homekit_ignored_missing_devices(
         "powerwall",
         "battery_charging",
         device_id=device_entry.id,
-        device_class=DEVICE_CLASS_BATTERY_CHARGING,
+        original_device_class=DEVICE_CLASS_BATTERY_CHARGING,
     )
     entity_reg.async_get_or_create(
         "sensor",
         "powerwall",
         "battery",
         device_id=device_entry.id,
-        device_class=DEVICE_CLASS_BATTERY,
+        original_device_class=DEVICE_CLASS_BATTERY,
     )
     light = entity_reg.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
@@ -1404,7 +1404,7 @@ async def test_homekit_finds_linked_motion_sensors(
         "camera",
         "motion_sensor",
         device_id=device_entry.id,
-        device_class=DEVICE_CLASS_MOTION,
+        original_device_class=DEVICE_CLASS_MOTION,
     )
     camera = entity_reg.async_get_or_create(
         "camera", "camera", "demo", device_id=device_entry.id
@@ -1466,7 +1466,7 @@ async def test_homekit_finds_linked_humidity_sensors(
         "humidifier",
         "humidity_sensor",
         device_id=device_entry.id,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        original_device_class=DEVICE_CLASS_HUMIDITY,
     )
     humidifier = entity_reg.async_get_or_create(
         "humidifier", "humidifier", "demo", device_id=device_entry.id

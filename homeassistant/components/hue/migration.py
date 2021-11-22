@@ -126,7 +126,7 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
                     continue
                 # migrate sensors
                 matched_dev_class = sensor_class_mapping.get(
-                    ent.device_class or "unknown"
+                    ent.original_device_class or "unknown"
                 )
                 if matched_dev_class is None:
                     # this may happen if we're looking at orphaned or unsupported entity

@@ -1018,7 +1018,7 @@ async def test_thermostat_restore(hass, hk_driver, events):
             ATTR_HVAC_MODES: [HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF],
         },
         supported_features=0,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
@@ -1826,7 +1826,7 @@ async def test_water_heater_restore(hass, hk_driver, events):
         suggested_object_id="all_info_set",
         capabilities={ATTR_MIN_TEMP: 60, ATTR_MAX_TEMP: 70},
         supported_features=0,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
