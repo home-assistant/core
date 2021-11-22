@@ -1,6 +1,5 @@
 """Support for getting status from a Pi-hole system."""
-from collections.abc import Mapping
-from typing import Any
+from typing import Any, Mapping
 
 from hole import Hole
 
