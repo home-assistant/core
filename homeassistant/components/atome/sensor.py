@@ -237,9 +237,9 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
         """Return the state of this device."""
         return self._period_usage
 
-    #This function can be instanciated
     def update_period_usage(self):
         """Return current daily power usage."""
+        # This function can be instantiated
         self._retrieve_period_usage_with_retry()
 
     async def async_update(self):
