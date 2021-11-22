@@ -399,7 +399,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.24.27
+flux_led==0.24.28
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -835,7 +835,7 @@ pyatag==0.3.5.3
 pyatmo==6.2.0
 
 # homeassistant.components.apple_tv
-pyatv==0.9.6
+pyatv==0.8.2
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
