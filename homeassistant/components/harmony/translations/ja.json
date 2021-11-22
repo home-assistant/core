@@ -1,5 +1,6 @@
 {
     "config": {
+        "flow_title": "{name}",
         "step": {
             "link": {
                 "title": "Logitech Harmony Hub\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"

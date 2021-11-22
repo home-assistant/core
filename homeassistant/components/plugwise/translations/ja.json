@@ -2,6 +2,9 @@
     "config": {
         "flow_title": "{name}",
         "step": {
+            "user": {
+                "description": "\u30d7\u30ed\u30c0\u30af\u30c8:"
+            },
             "user_gateway": {
                 "data": {
                     "password": "Smile ID",

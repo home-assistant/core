@@ -340,6 +340,7 @@ class LutronCasetaDevice(Entity):
             name=self.name,
             suggested_area=self._device["name"].split("_")[0],
             via_device=(DOMAIN, self._bridge_device["serial"]),
+            configuration_url="https://device-login.lutron.com",
         )
 
     @property

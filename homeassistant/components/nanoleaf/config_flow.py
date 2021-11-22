@@ -107,9 +107,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle Nanoleaf Homekit and Zeroconf discovery."""
         return await self._async_discovery_handler(
-            discovery_info["host"],
-            discovery_info["name"].replace(f".{discovery_info['type']}", ""),
-            discovery_info["properties"]["id"],
+            discovery_info[zeroconf.ATTR_HOST],
+            discovery_info[zeroconf.ATTR_NAME].replace(
+                f".{discovery_info[zeroconf.ATTR_TYPE]}", ""
+            ),
+            discovery_info[zeroconf.ATTR_PROPERTIES][zeroconf.ATTR_PROPERTIES_ID],
         )
 
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:

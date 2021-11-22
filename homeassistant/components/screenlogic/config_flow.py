@@ -7,9 +7,10 @@ from screenlogicpy.requests import login
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -88,15 +89,15 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovered_gateways = await async_discover_gateways_by_unique_id(self.hass)
         return await self.async_step_gateway_select()
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        mac = _extract_mac_from_name(discovery_info[HOSTNAME])
+        mac = _extract_mac_from_name(discovery_info[dhcp.HOSTNAME])
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(
-            updates={CONF_IP_ADDRESS: discovery_info[IP_ADDRESS]}
+            updates={CONF_IP_ADDRESS: discovery_info[dhcp.IP_ADDRESS]}
         )
-        self.discovered_ip = discovery_info[IP_ADDRESS]
-        self.context["title_placeholders"] = {"name": discovery_info[HOSTNAME]}
+        self.discovered_ip = discovery_info[dhcp.IP_ADDRESS]
+        self.context["title_placeholders"] = {"name": discovery_info[dhcp.HOSTNAME]}
         return await self.async_step_gateway_entry()
 
     async def async_step_gateway_select(self, user_input=None):

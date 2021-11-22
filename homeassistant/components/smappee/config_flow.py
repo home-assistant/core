@@ -4,12 +4,13 @@ import logging
 from pysmappee import helper, mqtt
 import voluptuous as vol
 
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
 from .const import (
-    CONF_HOSTNAME,
     CONF_SERIALNUMBER,
     DOMAIN,
     ENV_CLOUD,
@@ -36,14 +37,20 @@ class SmappeeFlowHandler(
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
 
-        if not discovery_info[CONF_HOSTNAME].startswith(SUPPORTED_LOCAL_DEVICES):
+        if not discovery_info[zeroconf.ATTR_HOSTNAME].startswith(
+            SUPPORTED_LOCAL_DEVICES
+        ):
             return self.async_abort(reason="invalid_mdns")
 
         serial_number = (
-            discovery_info[CONF_HOSTNAME].replace(".local.", "").replace("Smappee", "")
+            discovery_info[zeroconf.ATTR_HOSTNAME]
+            .replace(".local.", "")
+            .replace("Smappee", "")
         )
 
         # Check if already configured (local)
@@ -56,7 +63,7 @@ class SmappeeFlowHandler(
 
         self.context.update(
             {
-                CONF_IP_ADDRESS: discovery_info["host"],
+                CONF_IP_ADDRESS: discovery_info[zeroconf.ATTR_HOST],
                 CONF_SERIALNUMBER: serial_number,
                 "title_placeholders": {"name": serial_number},
             }

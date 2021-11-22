@@ -943,6 +943,41 @@ class MockEntity(entity.Entity):
             self.entity_id = values["entity_id"]
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._handle("available")
+
+    @property
+    def capability_attributes(self):
+        """Info about capabilities."""
+        return self._handle("capability_attributes")
+
+    @property
+    def device_class(self):
+        """Info how device should be classified."""
+        return self._handle("device_class")
+
+    @property
+    def device_info(self):
+        """Info how it links to a device."""
+        return self._handle("device_info")
+
+    @property
+    def entity_category(self):
+        """Return the entity category."""
+        return self._handle("entity_category")
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._handle("entity_registry_enabled_default")
+
+    @property
+    def icon(self):
+        """Return the suggested icon."""
+        return self._handle("icon")
+
+    @property
     def name(self):
         """Return the name of the entity."""
         return self._handle("name")
@@ -953,39 +988,9 @@ class MockEntity(entity.Entity):
         return self._handle("should_poll")
 
     @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._handle("unique_id")
-
-    @property
     def state(self):
         """Return the state of the entity."""
         return self._handle("state")
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._handle("available")
-
-    @property
-    def device_info(self):
-        """Info how it links to a device."""
-        return self._handle("device_info")
-
-    @property
-    def device_class(self):
-        """Info how device should be classified."""
-        return self._handle("device_class")
-
-    @property
-    def unit_of_measurement(self):
-        """Info on the units the entity state is in."""
-        return self._handle("unit_of_measurement")
-
-    @property
-    def capability_attributes(self):
-        """Info about capabilities."""
-        return self._handle("capability_attributes")
 
     @property
     def supported_features(self):
@@ -993,9 +998,14 @@ class MockEntity(entity.Entity):
         return self._handle("supported_features")
 
     @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._handle("entity_registry_enabled_default")
+    def unique_id(self):
+        """Return the unique ID of the entity."""
+        return self._handle("unique_id")
+
+    @property
+    def unit_of_measurement(self):
+        """Info on the units the entity state is in."""
+        return self._handle("unit_of_measurement")
 
     def _handle(self, attr):
         """Return attribute value."""

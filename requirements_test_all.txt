@@ -121,7 +121,7 @@ aioguardian==2021.11.0
 aioharmony==0.2.8
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.6.3
+aiohomekit==0.6.4
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -173,7 +173,7 @@ aiorecollect==1.0.8
 aioridwell==0.2.0
 
 # homeassistant.components.shelly
-aioshelly==1.0.4
+aioshelly==1.0.5
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
@@ -372,7 +372,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env_canada==0.5.14
+env_canada==0.5.18
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.0
@@ -458,7 +458,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.3.9
+google-nest-sdm==0.4.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -880,7 +880,7 @@ pyeverlights==0.1.0
 pyevilgenius==1.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.1.9.8
+pyezviz==0.2.0.5
 
 # homeassistant.components.fido
 pyfido==2.1.1
@@ -1263,7 +1263,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2021.11.0
+simplisafe-python==2021.11.2
 
 # homeassistant.components.slack
 slackclient==2.5.0

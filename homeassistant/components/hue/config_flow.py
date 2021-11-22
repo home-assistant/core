@@ -232,7 +232,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         bridge = await self._get_bridge(
-            discovery_info["host"], discovery_info["properties"]["bridgeid"]
+            discovery_info[zeroconf.ATTR_HOST],
+            discovery_info[zeroconf.ATTR_PROPERTIES]["bridgeid"],
         )
 
         await self.async_set_unique_id(bridge.id)
@@ -252,7 +253,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         as the unique identifier. Therefore, this method uses discovery without
         a unique ID.
         """
-        self.bridge = await self._get_bridge(discovery_info[CONF_HOST])
+        self.bridge = await self._get_bridge(discovery_info[zeroconf.ATTR_HOST])
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_link()
 
