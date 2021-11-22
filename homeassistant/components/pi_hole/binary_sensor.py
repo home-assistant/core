@@ -4,9 +4,22 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from typing import Any
+
+from hole import Hole
 
 from . import PiHoleEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN as PIHOLE_DOMAIN
+from .const import (
+    CONF_STATISTICS_ONLY,
+    DATA_KEY_API,
+    DATA_KEY_COORDINATOR,
+    DOMAIN as PIHOLE_DOMAIN,
+    BINARY_SENSOR_TYPES,
+    BINARY_SENSOR_TYPES_STATISTICS_ONLY,
+    PiHoleBinarySensorEntityDescription,
+)
 
 
 async def async_setup_entry(
@@ -15,33 +28,69 @@ async def async_setup_entry(
     """Set up the Pi-hole binary sensor."""
     name = entry.data[CONF_NAME]
     hole_data = hass.data[PIHOLE_DOMAIN][entry.entry_id]
+
     binary_sensors = [
         PiHoleBinarySensor(
             hole_data[DATA_KEY_API],
             hole_data[DATA_KEY_COORDINATOR],
             name,
             entry.entry_id,
+            description,
         )
+        for description in BINARY_SENSOR_TYPES
     ]
+
+    if entry.data[CONF_STATISTICS_ONLY]:
+        binary_sensors += [
+            PiHoleBinarySensor(
+                hole_data[DATA_KEY_API],
+                hole_data[DATA_KEY_COORDINATOR],
+                name,
+                entry.entry_id,
+                description,
+            )
+            for description in BINARY_SENSOR_TYPES_STATISTICS_ONLY
+        ]   
+
     async_add_entities(binary_sensors, True)
 
 
 class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
     """Representation of a Pi-hole binary sensor."""
 
-    _attr_icon = "mdi:pi-hole"
+    entity_description: PiHoleBinarySensorEntityDescription
 
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
+    def __init__(
+        self,
+        api: Hole,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        server_unique_id: str,
+        description: PiHoleBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize a Pi-hole sensor."""
+        super().__init__(api, coordinator, name, server_unique_id)
+        self.entity_description = description
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the sensor."""
-        return f"{self._server_unique_id}/Status"
+        self._attr_name = f"{name} {description.name}"
+        self._attr_unique_id = f"{self._server_unique_id}/{description.name}"
 
     @property
     def is_on(self) -> bool:
         """Return if the service is on."""
-        return self.api.data.get("status") == "enabled"  # type: ignore[no-any-return]
+
+        if self.entity_description.version_update is not None:
+            return self.api.versions[self.entity_description.version_update]
+
+        if self.entity_description.key == "status":
+            return self.api.data.get("status") == "enabled"  # type: ignore[no-any-return]
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the Pi-hole."""
+
+        if self.entity_description.version_current is not None:
+            return {
+                "current_version": self.api.versions[self.entity_description.version_current],
+                "latest_version": self.api.versions[self.entity_description.version_latest]
+            }

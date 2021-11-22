@@ -15,12 +15,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import PiHoleEntity
 from .const import (
     ATTR_BLOCKED_DOMAINS,
-    ATTR_CORE_CURRENT,
-    ATTR_CORE_LATEST,
-    ATTR_FTL_CURRENT,
-    ATTR_FTL_LATEST,
-    ATTR_WEB_CURRENT,
-    ATTR_WEB_LATEST,
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
     DOMAIN as PIHOLE_DOMAIN,
@@ -71,16 +65,6 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     @property
     def native_value(self) -> Any:
         """Return the state of the device."""
-        if self.entity_description.key == "available_updates":
-            available_updates = 0
-            if self.api.versions["core_update"]:
-                available_updates += 1
-            if self.api.versions["web_update"]:
-                available_updates += 1
-            if self.api.versions["FTL_update"]:
-                available_updates += 1
-            return available_updates
-
         try:
             return round(self.api.data[self.entity_description.key], 2)
         except TypeError:
@@ -89,14 +73,4 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the Pi-hole."""
-        if self.entity_description.key == "available_updates":
-            return {
-                ATTR_CORE_CURRENT: self.api.versions[ATTR_CORE_CURRENT],
-                ATTR_CORE_LATEST: self.api.versions[ATTR_CORE_LATEST],
-                ATTR_WEB_CURRENT: self.api.versions[ATTR_WEB_CURRENT],
-                ATTR_WEB_LATEST: self.api.versions[ATTR_WEB_LATEST],
-                ATTR_FTL_CURRENT: self.api.versions[ATTR_FTL_CURRENT],
-                ATTR_FTL_LATEST: self.api.versions[ATTR_FTL_LATEST],
-            }
-
         return {ATTR_BLOCKED_DOMAINS: self.api.data["domains_being_blocked"]}

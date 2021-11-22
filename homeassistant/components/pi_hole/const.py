@@ -23,12 +23,6 @@ SERVICE_DISABLE = "disable"
 SERVICE_DISABLE_ATTR_DURATION = "duration"
 
 ATTR_BLOCKED_DOMAINS = "domains_blocked"
-ATTR_CORE_CURRENT = "core_current"
-ATTR_CORE_LATEST = "core_latest"
-ATTR_WEB_CURRENT = "web_current"
-ATTR_WEB_LATEST = "web_latest"
-ATTR_FTL_CURRENT = "FTL_current"
-ATTR_FTL_LATEST = "FTL_latest"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 DATA_KEY_API = "api"
@@ -96,11 +90,53 @@ SENSOR_TYPES: tuple[PiHoleSensorEntityDescription, ...] = (
         name="DNS Unique Domains",
         native_unit_of_measurement="domains",
         icon="mdi:domain",
-    ),
-    PiHoleSensorEntityDescription(
-        key="available_updates",
-        name="Available Updates",
-        native_unit_of_measurement="updates",
+    )
+)
+
+@dataclass
+class PiHoleBinarySensorEntityDescription(SensorEntityDescription):
+    """Describes PiHole binary sensor entity."""
+
+    icon: str = "mdi:pi-hole"
+    version_current: str = None
+    version_latest: str = None
+    version_update: str = None
+
+
+BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
+    PiHoleBinarySensorEntityDescription(
+        key="core_update_available",
+        name="Core Update Available",
         icon="mdi:update",
+        device_class="update",
+        version_current="core_current",
+        version_latest="core_latest",
+        version_update="core_update",
+    ),
+    PiHoleBinarySensorEntityDescription(
+        key="web_update_available",
+        name="Web Update Available",
+        icon="mdi:update",
+        device_class="update",
+        version_current="web_current",
+        version_latest="web_latest",
+        version_update="web_update",
+    ),
+    PiHoleBinarySensorEntityDescription(
+        key="ftl_update_available",
+        name="FTL Update Available",
+        icon="mdi:update",
+        device_class="update",
+        version_current="FTL_current",
+        version_latest="FTL_latest",
+        version_update="FTL_update",
+    ),
+)
+
+BINARY_SENSOR_TYPES_STATISTICS_ONLY: tuple[PiHoleBinarySensorEntityDescription, ...] = (
+     PiHoleBinarySensorEntityDescription(
+        key="status",
+        name="Status",
+        icon="mdi:pi-hole"
     ),
 )

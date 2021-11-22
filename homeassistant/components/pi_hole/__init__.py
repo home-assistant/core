@@ -154,10 +154,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def _async_platforms(entry: ConfigEntry) -> list[str]:
     """Return platforms to be loaded / unloaded."""
     platforms = ["sensor"]
+    platforms.append("binary_sensor")
     if not entry.data[CONF_STATISTICS_ONLY]:
         platforms.append("switch")
-    else:
-        platforms.append("binary_sensor")
     return platforms
 
 

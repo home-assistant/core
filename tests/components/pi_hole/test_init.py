@@ -80,10 +80,6 @@ async def test_setup_minimal_config(hass):
         == "Pi-Hole Domains Blocked"
     )
     assert hass.states.get("sensor.pi_hole_seen_clients").name == "Pi-Hole Seen Clients"
-    assert (
-        hass.states.get("sensor.pi_hole_available_updates").name
-        == "Pi-Hole Available Updates"
-    )
 
     assert hass.states.get("sensor.pi_hole_ads_blocked_today").state == "0"
     assert hass.states.get("sensor.pi_hole_ads_percentage_blocked_today").state == "0"
@@ -94,10 +90,33 @@ async def test_setup_minimal_config(hass):
     assert hass.states.get("sensor.pi_hole_dns_unique_domains").state == "0"
     assert hass.states.get("sensor.pi_hole_domains_blocked").state == "0"
     assert hass.states.get("sensor.pi_hole_seen_clients").state == "0"
-    assert hass.states.get("sensor.pi_hole_available_updates").state == "3"
 
     assert hass.states.get("binary_sensor.pi_hole").name == "Pi-Hole"
     assert hass.states.get("binary_sensor.pi_hole").state == "off"
+
+    assert (
+        hass.states.get("binary_sensor.pi_hole_core_update_available").name
+        == "Pi-Hole Core Update Available"
+    )
+    assert hass.states.get("binary_sensor.pi_hole_core_update_available").state == "on"
+    assert hass.states.get("binary_sensor.pi_hole_core_update_available").attributes["current_version"] == "v5.5"
+    assert hass.states.get("binary_sensor.pi_hole_core_update_available").attributes["latest_version"] == "v5.6"
+
+    assert (
+        hass.states.get("binary_sensor.pi_hole_ftl_update_available").name
+        == "Pi-Hole FTL Update Available"
+    )
+    assert hass.states.get("binary_sensor.pi_hole_ftl_update_available").state == "on"
+    assert hass.states.get("binary_sensor.pi_hole_ftl_update_available").attributes["current_version"] == "v5.10"
+    assert hass.states.get("binary_sensor.pi_hole_ftl_update_available").attributes["latest_version"] == "v5.11"
+
+    assert (
+        hass.states.get("binary_sensor.pi_hole_web_update_available").name
+        == "Pi-Hole Web Update Available"
+    )
+    assert hass.states.get("binary_sensor.pi_hole_web_update_available").state == "on"
+    assert hass.states.get("binary_sensor.pi_hole_web_update_available").attributes["current_version"] == "v5.7"
+    assert hass.states.get("binary_sensor.pi_hole_web_update_available").attributes["latest_version"] == "v5.8"
 
 
 async def test_setup_name_config(hass):
