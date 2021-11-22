@@ -1,5 +1,7 @@
 """Test Home Assistant enum utils."""
 
+from enum import auto
+
 import pytest
 
 from homeassistant.util.enum import StrEnum
@@ -26,3 +28,8 @@ def test_strenum():
 
         class FailEnum(StrEnum):
             Test = 42
+
+    with pytest.raises(TypeError):
+
+        class FailEnum2(StrEnum):
+            Test = auto()
