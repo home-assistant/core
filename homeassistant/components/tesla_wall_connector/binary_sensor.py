@@ -50,11 +50,10 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     """Create the Wall Connector sensor devices."""
     wall_connector_data = hass.data[DOMAIN][config_entry.entry_id]
 
-    all_entities = []
-    for description in WALL_CONNECTOR_SENSORS:
-        entity = WallConnectorBinarySensorEntity(wall_connector_data, description)
-        if entity is not None:
-            all_entities.append(entity)
+    all_entities = [
+        WallConnectorBinarySensorEntity(wall_connector_data, description)
+        for description in WALL_CONNECTOR_SENSORS
+    ]
 
     async_add_devices(all_entities)
 
