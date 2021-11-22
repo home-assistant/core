@@ -370,7 +370,6 @@ async def async_setup_entry(  # noqa: C901
         if updated_options == current_options:
             return
 
-        current_options = updated_options
         await hass.config_entries.async_reload(entry.entry_id)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
