@@ -2,6 +2,9 @@
     "config": {
         "step": {
             "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc"
+                },
                 "description": "https://home.freedompro.eu \u304b\u3089\u53d6\u5f97\u3057\u305fAPI\u30ad\u30fc\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044",
                 "title": "Freedompro API\u30ad\u30fc"
             }

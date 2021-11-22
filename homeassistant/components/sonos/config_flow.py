@@ -5,7 +5,6 @@ import soco
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
@@ -31,13 +30,13 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf."""
-        hostname = discovery_info["hostname"]
+        hostname = discovery_info[zeroconf.ATTR_HOSTNAME]
         if hostname is None or not hostname.lower().startswith("sonos"):
             return self.async_abort(reason="not_sonos_device")
         await self.async_set_unique_id(self._domain, raise_on_progress=False)
-        host = discovery_info[CONF_HOST]
-        mdns_name = discovery_info[CONF_NAME]
-        properties = discovery_info["properties"]
+        host = discovery_info[zeroconf.ATTR_HOST]
+        mdns_name = discovery_info[zeroconf.ATTR_NAME]
+        properties = discovery_info[zeroconf.ATTR_PROPERTIES]
         boot_seqnum = properties.get("bootseq")
         model = properties.get("model")
         uid = hostname_to_uid(hostname)

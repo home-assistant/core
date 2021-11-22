@@ -2,12 +2,13 @@
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dhcp import MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -184,18 +185,22 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_edit()
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle dhcp discovery of a Squeezebox player."""
         _LOGGER.debug(
             "Reached dhcp discovery of a player with info: %s", discovery_info
         )
-        await self.async_set_unique_id(format_mac(discovery_info[MAC_ADDRESS]))
+        await self.async_set_unique_id(format_mac(discovery_info[dhcp.MAC_ADDRESS]))
         self._abort_if_unique_id_configured()
 
         _LOGGER.debug("Configuring dhcp player with unique id: %s", self.unique_id)
 
         registry = async_get(self.hass)
 
+        if TYPE_CHECKING:
+            assert self.unique_id
         # if we have detected this player, do nothing. if not, there must be a server out there for us to configure, so start the normal user flow (which tries to autodetect server)
         if registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.unique_id) is not None:
             # this player is already known, so do nothing other than mark as configured

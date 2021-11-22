@@ -16,5 +16,14 @@
                 "title": "Keenetic NDMS2\u30eb\u30fc\u30bf\u30fc\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
             }
         }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "scan_interval": "\u30b9\u30ad\u30e3\u30f3\u9593\u9694"
+                }
+            }
+        }
     }
 }

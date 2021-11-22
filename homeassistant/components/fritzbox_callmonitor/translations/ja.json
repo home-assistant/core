@@ -2,6 +2,11 @@
     "config": {
         "flow_title": "{name}",
         "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "\u96fb\u8a71\u5e33"
+                }
+            },
             "user": {
                 "data": {
                     "host": "\u30db\u30b9\u30c8",
