@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ph_offset": "pH\u30aa\u30d5\u30bb\u30c3\u30c8(\u6b63\u307e\u305f\u306f\u8ca0)"
+                }
+            }
+        }
+    }
+}

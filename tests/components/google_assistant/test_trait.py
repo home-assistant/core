@@ -146,7 +146,7 @@ async def test_camera_stream(hass):
 
     assert trt.query_attributes() == {
         "cameraStreamAccessUrl": "https://example.com/api/streams/bla",
-        "cameraStreamReceiverAppId": "B12CE3CA",
+        "cameraStreamReceiverAppId": "B45F4572",
     }
 
 

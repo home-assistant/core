@@ -149,6 +149,13 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         device_class=DEVICE_CLASS_LOCK,
     ),
     NotificationZWaveJSEntityDescription(
+        # NotificationType 6: Access Control - State Id's 11 (Lock jammed)
+        key=NOTIFICATION_ACCESS_CONTROL,
+        states=("11",),
+        device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
         # NotificationType 6: Access Control - State Id 22 (door/window open)
         key=NOTIFICATION_ACCESS_CONTROL,
         off_state="23",
@@ -191,6 +198,14 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 8: Power Management -
+        # State Id's 6, 7, 8, 9 (power status)
+        key=NOTIFICATION_POWER_MANAGEMENT,
+        states=("6", "7", "8", "9"),
+        device_class=DEVICE_CLASS_SAFETY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    NotificationZWaveJSEntityDescription(
+        # NotificationType 8: Power Management -
         # State Id's 10, 11, 17 (Battery maintenance status)
         key=NOTIFICATION_POWER_MANAGEMENT,
         states=("10", "11", "17"),
@@ -198,10 +213,11 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
-        # NotificationType 9: System - State Id's 1, 2, 6, 7
+        # NotificationType 9: System - State Id's 1, 2, 3, 4, 6, 7
         key=NOTIFICATION_SYSTEM,
-        states=("1", "2", "6", "7"),
+        states=("1", "2", "3", "4", "6", "7"),
         device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 10: Emergency - State Id's 1, 2, 3

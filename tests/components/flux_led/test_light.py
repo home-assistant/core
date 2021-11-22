@@ -214,11 +214,26 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     await async_mock_device_turn_off(hass, bulb)
     assert hass.states.get(entity_id).state == STATE_OFF
 
+    bulb.brightness = 0
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (10, 10, 30)},
+        blocking=True,
+    )
+    # If the bulb is off and we are using existing brightness
+    # it has to be at least 1 or the bulb won't turn on
+    bulb.async_set_levels.assert_called_with(10, 10, 30, brightness=1)
+    bulb.async_set_levels.reset_mock()
+    bulb.async_turn_on.reset_mock()
+
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     bulb.async_turn_on.assert_called_once()
     bulb.async_turn_on.reset_mock()
+    await async_mock_device_turn_on(hass, bulb)
+    assert hass.states.get(entity_id).state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -229,6 +244,19 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     bulb.async_set_levels.assert_called_with(255, 0, 0, brightness=100)
     bulb.async_set_levels.reset_mock()
 
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (10, 10, 30)},
+        blocking=True,
+    )
+    # If the bulb is on and we are using existing brightness
+    # and brightness was 0 it means we could not read it because
+    # an effect is in progress so we use 255
+    bulb.async_set_levels.assert_called_with(10, 10, 30, brightness=255)
+    bulb.async_set_levels.reset_mock()
+
+    bulb.brightness = 128
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",

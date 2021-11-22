@@ -18,6 +18,7 @@ from .const import (
     ATTR_SETTINGS,
     AUDIO_CODECS,
     DOMAIN,
+    HLS_PROVIDER,
     MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
     PACKETS_TO_WAIT_FOR_AUDIO,
@@ -25,6 +26,7 @@ from .const import (
     SOURCE_TIMEOUT,
 )
 from .core import Part, Segment, StreamOutput, StreamSettings
+from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -279,6 +281,9 @@ class SegmentBuffer:
         # the discontinuity sequence number.
         self._stream_id += 1
         self._start_time = datetime.datetime.utcnow()
+        # Call discontinuity to remove incomplete segment from the HLS output
+        if hls_output := self._outputs_callback().get(HLS_PROVIDER):
+            cast(HlsStreamOutput, hls_output).discontinuity()
 
     def close(self) -> None:
         """Close stream buffer."""

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_upb_file": "UPB UPStart\u306e\u30a8\u30af\u30b9\u30dd\u30fc\u30c8\u30d5\u30a1\u30a4\u30eb\u304c\u306a\u3044\u304b\u7121\u52b9\u3067\u3059\u3002\u30d5\u30a1\u30a4\u30eb\u540d\u3068\u30d1\u30b9\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "\u30a2\u30c9\u30ec\u30b9(\u4e0a\u8a18\u306e\u8aac\u660e\u3092\u53c2\u7167)",
+                    "file_path": "UPStart UPB\u30a8\u30af\u30b9\u30dd\u30fc\u30c8\u30d5\u30a1\u30a4\u30eb\u306e\u30d1\u30b9\u3068\u540d\u524d\u3002",
+                    "protocol": "\u30d7\u30ed\u30c8\u30b3\u30eb"
+                },
+                "title": "UPB PIM\u306b\u63a5\u7d9a"
+            }
+        }
+    }
+}

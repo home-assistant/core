@@ -25,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
@@ -250,15 +251,32 @@ class AsusWrtRouter:
             self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
 
         # Load tracked entities from registry
+        entity_reg = er.async_get(self.hass)
         track_entries = er.async_entries_for_config_entry(
-            er.async_get(self.hass),
-            self._entry.entry_id,
+            entity_reg, self._entry.entry_id
         )
         for entry in track_entries:
-            if entry.domain == TRACKER_DOMAIN:
-                self._devices[entry.unique_id] = AsusWrtDevInfo(
-                    entry.unique_id, entry.original_name
+
+            if entry.domain != TRACKER_DOMAIN:
+                continue
+            device_mac = format_mac(entry.unique_id)
+
+            # migrate entity unique ID if wrong formatted
+            if device_mac != entry.unique_id:
+                existing_entity_id = entity_reg.async_get_entity_id(
+                    DOMAIN, TRACKER_DOMAIN, device_mac
                 )
+                if existing_entity_id:
+                    # entity with uniqueid properly formatted already
+                    # exists in the registry, we delete this duplicate
+                    entity_reg.async_remove(entry.entity_id)
+                    continue
+
+                entity_reg.async_update_entity(
+                    entry.entity_id, new_unique_id=device_mac
+                )
+
+            self._devices[device_mac] = AsusWrtDevInfo(device_mac, entry.original_name)
 
         # Update devices
         await self.update_devices()
@@ -279,7 +297,7 @@ class AsusWrtRouter:
         new_device = False
         _LOGGER.debug("Checking devices for ASUS router %s", self._host)
         try:
-            wrt_devices = await self._api.async_get_connected_devices()
+            api_devices = await self._api.async_get_connected_devices()
         except OSError as exc:
             if not self._connect_error:
                 self._connect_error = True
@@ -294,18 +312,18 @@ class AsusWrtRouter:
             self._connect_error = False
             _LOGGER.info("Reconnected to ASUS router %s", self._host)
 
+        self._connected_devices = len(api_devices)
         consider_home = self._options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
         track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
+        wrt_devices = {format_mac(mac): dev for mac, dev in api_devices.items()}
         for device_mac, device in self._devices.items():
-            dev_info = wrt_devices.get(device_mac)
+            dev_info = wrt_devices.pop(device_mac, None)
             device.update(dev_info, consider_home)
 
         for device_mac, dev_info in wrt_devices.items():
-            if device_mac in self._devices:
-                continue
             if not track_unknown and not dev_info.name:
                 continue
             new_device = True
@@ -316,8 +334,6 @@ class AsusWrtRouter:
         async_dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
-
-        self._connected_devices = len(wrt_devices)
         await self._update_unpolled_sensors()
 
     async def init_sensors_coordinator(self) -> None:
@@ -430,7 +446,7 @@ async def _get_nvram_info(api: AsusWrt, info_type: str) -> dict[str, Any]:
     info = {}
     try:
         info = await api.async_get_nvram(info_type)
-    except (OSError, UnicodeDecodeError) as exc:
+    except OSError as exc:
         _LOGGER.warning("Error calling method async_get_nvram(%s): %s", info_type, exc)
 
     return info

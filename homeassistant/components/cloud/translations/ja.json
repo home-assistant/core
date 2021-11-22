@@ -1,6 +1,8 @@
 {
     "system_health": {
         "info": {
+            "can_reach_cloud_auth": "\u8a8d\u8a3c\u30b5\u30fc\u30d0\u30fc\u306b\u5230\u9054",
+            "logged_in": "\u30ed\u30b0\u30a4\u30f3\u6e08",
             "remote_server": "\u30ea\u30e2\u30fc\u30c8\u30b5\u30fc\u30d0\u30fc"
         }
     }

@@ -1,7 +1,6 @@
 """Support for Z-Wave cover devices."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any, cast
 
@@ -222,12 +221,6 @@ class ZWaveTiltCover(ZWaveCover):
                 tilt_value,
                 percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
             )
-            # The following 2 lines are a workaround for this issue:
-            # https://github.com/zwave-js/node-zwave-js/issues/3611
-            # As soon as the issue is fixed, and minimum server schema is bumped
-            # the 2 lines should be removed.
-            await asyncio.sleep(2.5)
-            await self.info.node.async_refresh_cc_values(tilt_value.command_class)
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""

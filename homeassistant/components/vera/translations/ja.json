@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "URL {base_url} \u3092\u6301\u3064\u30b3\u30f3\u30c8\u30ed\u30fc\u30e9\u306b\u63a5\u7d9a\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "vera_controller_url": "\u30b3\u30f3\u30c8\u30ed\u30fc\u30e9\u306eURL"
+                }
+            }
+        }
+    }
+}

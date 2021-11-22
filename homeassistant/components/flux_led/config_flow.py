@@ -7,7 +7,7 @@ from typing import Any, Final
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODE, CONF_NAME, CONF_PROTOCOL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -82,12 +82,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = {
-            FLUX_HOST: discovery_info[IP_ADDRESS],
-            FLUX_MODEL: discovery_info[HOSTNAME],
-            FLUX_MAC: discovery_info[MAC_ADDRESS].replace(":", ""),
+            FLUX_HOST: discovery_info[dhcp.IP_ADDRESS],
+            FLUX_MODEL: discovery_info[dhcp.HOSTNAME],
+            FLUX_MAC: discovery_info[dhcp.MAC_ADDRESS].replace(":", ""),
         }
         return await self._async_handle_discovery()
 

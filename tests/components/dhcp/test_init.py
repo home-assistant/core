@@ -171,11 +171,11 @@ async def test_dhcp_match_hostname_and_macaddress(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_dhcp_renewal_match_hostname_and_macaddress(hass):
@@ -199,11 +199,11 @@ async def test_dhcp_renewal_match_hostname_and_macaddress(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.1.120",
-        dhcp.HOSTNAME: "irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
-        dhcp.MAC_ADDRESS: "50147903852c",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.1.120",
+        hostname="irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
+        macaddress="50147903852c",
+    )
 
 
 async def test_dhcp_match_hostname(hass):
@@ -223,11 +223,11 @@ async def test_dhcp_match_hostname(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_dhcp_match_macaddress(hass):
@@ -247,11 +247,11 @@ async def test_dhcp_match_macaddress(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_dhcp_match_macaddress_without_hostname(hass):
@@ -271,11 +271,11 @@ async def test_dhcp_match_macaddress_without_hostname(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.107.151",
-        dhcp.HOSTNAME: "",
-        dhcp.MAC_ADDRESS: "606bbd59e4b4",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.107.151",
+        hostname="",
+        macaddress="606bbd59e4b4",
+    )
 
 
 async def test_dhcp_nomatch(hass):
@@ -548,11 +548,11 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_device_tracker_hostname_and_macaddress_after_start(hass):
@@ -585,11 +585,11 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass):
@@ -731,11 +731,11 @@ async def test_aiodiscover_finds_new_hosts(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_aiodiscover_does_not_call_again_on_shorter_hostname(hass):
@@ -786,20 +786,20 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "irobot-abc",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="irobot-abc",
+        macaddress="b8b7f16db533",
+    )
     assert mock_init.mock_calls[1][1][0] == "mock-domain"
     assert mock_init.mock_calls[1][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[1][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "irobot-abcdef",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[1][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="irobot-abcdef",
+        macaddress="b8b7f16db533",
+    )
 
 
 async def test_aiodiscover_finds_new_hosts_after_interval(hass):
@@ -838,8 +838,8 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass):
     assert mock_init.mock_calls[0][2]["context"] == {
         "source": config_entries.SOURCE_DHCP
     }
-    assert mock_init.mock_calls[0][2]["data"] == {
-        dhcp.IP_ADDRESS: "192.168.210.56",
-        dhcp.HOSTNAME: "connect",
-        dhcp.MAC_ADDRESS: "b8b7f16db533",
-    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )

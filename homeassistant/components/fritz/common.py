@@ -257,10 +257,10 @@ class FritzBoxTools:
 
     def _update_device_info(self) -> tuple[bool, str | None]:
         """Retrieve latest device information from the FRITZ!Box."""
-        userinterface = self.connection.call_action("UserInterface1", "GetInfo")
-        return userinterface.get("NewUpgradeAvailable"), userinterface.get(
+        version = self.connection.call_action("UserInterface1", "GetInfo").get(
             "NewX_AVM-DE_Version"
         )
+        return bool(version), version
 
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
@@ -440,11 +440,6 @@ class FritzDeviceBase(Entity):
     @property
     def should_poll(self) -> bool:
         """No polling needed."""
-        return False
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
         return False
 
     async def async_process_update(self) -> None:

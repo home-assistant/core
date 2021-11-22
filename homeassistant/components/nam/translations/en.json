@@ -2,16 +2,33 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "device_unsupported": "The device is unsupported."
+            "device_unsupported": "The device is unsupported.",
+            "reauth_successful": "Re-authentication was successful",
+            "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
-        "flow_title": "{name}",
+        "flow_title": "{host}",
         "step": {
             "confirm_discovery": {
                 "description": "Do you want to set up Nettigo Air Monitor at {host}?"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please enter the username and password."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please enter the correct username and password for host: {host}"
             },
             "user": {
                 "data": {

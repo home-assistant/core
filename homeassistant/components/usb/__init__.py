@@ -6,6 +6,7 @@ import fnmatch
 import logging
 import os
 import sys
+from typing import TypedDict
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
@@ -28,6 +29,17 @@ from .utils import usb_device_from_port
 _LOGGER = logging.getLogger(__name__)
 
 REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
+
+
+class UsbServiceInfo(TypedDict):
+    """Prepared info from usb entries."""
+
+    device: str
+    vid: str
+    pid: str
+    serial_number: str | None
+    manufacturer: str | None
+    description: str | None
 
 
 def human_readable_device_name(
@@ -193,7 +205,14 @@ class USBDiscovery:
                 self.hass,
                 matcher["domain"],
                 {"source": config_entries.SOURCE_USB},
-                dataclasses.asdict(device),
+                UsbServiceInfo(
+                    device=device.device,
+                    vid=device.vid,
+                    pid=device.pid,
+                    serial_number=device.serial_number,
+                    manufacturer=device.manufacturer,
+                    description=device.description,
+                ),
             )
 
     @callback

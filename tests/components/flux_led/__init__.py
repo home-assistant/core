@@ -13,11 +13,7 @@ from flux_led.const import (
 )
 from flux_led.protocol import LEDENETRawState
 
-from homeassistant.components.dhcp import (
-    HOSTNAME as DHCP_HOSTNAME,
-    IP_ADDRESS as DHCP_IP_ADDRESS,
-    MAC_ADDRESS as DHCP_MAC_ADDRESS,
-)
+from homeassistant.components import dhcp
 from homeassistant.components.flux_led.const import FLUX_HOST, FLUX_MAC, FLUX_MODEL
 from homeassistant.core import HomeAssistant
 
@@ -30,11 +26,11 @@ FLUX_MAC_ADDRESS = "aabbccddeeff"
 
 DEFAULT_ENTRY_TITLE = f"{MODEL} {FLUX_MAC_ADDRESS}"
 
-DHCP_DISCOVERY = {
-    DHCP_HOSTNAME: MODEL,
-    DHCP_IP_ADDRESS: IP_ADDRESS,
-    DHCP_MAC_ADDRESS: MAC_ADDRESS,
-}
+DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+    hostname=MODEL,
+    ip=IP_ADDRESS,
+    macaddress=MAC_ADDRESS,
+)
 FLUX_DISCOVERY = {FLUX_HOST: IP_ADDRESS, FLUX_MODEL: MODEL, FLUX_MAC: FLUX_MAC_ADDRESS}
 
 

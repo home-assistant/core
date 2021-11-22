@@ -1,8 +1,14 @@
 {
     "config": {
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API \u043a\u043b\u044e\u0447"
+                }
+            },
             "user": {
                 "data": {
+                    "api_key": "API \u043a\u043b\u044e\u0447",
                     "location": "\u041c\u0435\u0441\u0442\u043e\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0435",
                     "port": "\u041f\u043e\u0440\u0442"
                 }

@@ -328,13 +328,21 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
 
     async def _async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
+            brightness = self.brightness
+
         if not self.is_on:
             await self._device.async_turn_on()
             if not kwargs:
                 return
-
-        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
-            brightness = self.brightness
+            # If the brightness was previously 0, the light
+            # will not turn on unless brightness is at least 1
+            if not brightness:
+                brightness = 1
+        elif not brightness:
+            # If the device was on and brightness was not
+            # set, it means it was masked by an effect
+            brightness = 255
 
         # Handle switch to CCT Color Mode
         if ATTR_COLOR_TEMP in kwargs:

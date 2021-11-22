@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Callable
 
 from wled import Device as WLEDDevice
@@ -37,7 +37,7 @@ from .models import WLEDEntity
 class WLEDSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[WLEDDevice], StateType]
+    value_fn: Callable[[WLEDDevice], datetime | StateType]
 
 
 @dataclass
@@ -77,9 +77,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: (utcnow() - timedelta(seconds=device.info.uptime))
-        .replace(microsecond=0)
-        .isoformat(),
+        value_fn=lambda device: (utcnow() - timedelta(seconds=device.info.uptime)),
     ),
     WLEDSensorEntityDescription(
         key="free_heap",
@@ -157,6 +155,6 @@ class WLEDSensorEntity(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

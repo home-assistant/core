@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "name": "Ad",
                     "password": "Parola",
                     "port": "Port",

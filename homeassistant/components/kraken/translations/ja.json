@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\u66f4\u65b0\u9593\u9694"
+                }
+            }
+        }
+    }
+}

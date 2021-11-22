@@ -940,7 +940,7 @@ async def test_trait_execute_adding_query_data(hass):
                     "states": {
                         "online": True,
                         "cameraStreamAccessUrl": "https://example.com/api/streams/bla",
-                        "cameraStreamReceiverAppId": "B12CE3CA",
+                        "cameraStreamReceiverAppId": "B45F4572",
                     },
                 }
             ]

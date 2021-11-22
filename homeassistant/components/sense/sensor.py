@@ -1,7 +1,7 @@
 """Support for monitoring a Sense energy sensor."""
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    STATE_CLASS_TOTAL,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -251,7 +251,7 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Sense energy sensor."""
 
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_state_class = STATE_CLASS_TOTAL
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON

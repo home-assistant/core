@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "setup_network": {
+                "data": {
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "send_command": "\u30b3\u30de\u30f3\u30c9\u3092\u9001\u4fe1: {subtype}",
+            "send_status": "\u30b9\u30c6\u30fc\u30bf\u30b9\u66f4\u65b0\u306e\u9001\u4fe1: {subtype}"
+        },
+        "trigger_type": {
+            "command": "\u30b3\u30de\u30f3\u30c9\u3092\u53d7\u4fe1: {subtype}",
+            "status": "\u53d7\u4fe1\u30b9\u30c6\u30fc\u30bf\u30b9: {subtype}"
+        }
+    }
+}

@@ -158,7 +158,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.HaServiceInfo(
+        data=zeroconf.ZeroconfServiceInfo(
             properties={"serialnum": "1234"},
             host="1.1.1.1",
         ),
@@ -254,7 +254,7 @@ async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.HaServiceInfo(
+        data=zeroconf.ZeroconfServiceInfo(
             properties={"serialnum": "1234"},
             host="1.1.1.1",
         ),
@@ -289,7 +289,7 @@ async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
+            data=zeroconf.ZeroconfServiceInfo(
                 properties={"serialnum": "1234"},
                 host="1.1.1.1",
             ),

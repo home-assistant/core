@@ -24,16 +24,15 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_TYPE,
-    DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
+    PRESSURE_CBAR,
     PRESSURE_MBAR,
     TEMP_CELSIUS,
 )
@@ -47,7 +46,6 @@ from .const import (
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DOMAIN,
-    PRESSURE_CBAR,
     READ_MODE_FLOAT,
     READ_MODE_INT,
 )
@@ -183,11 +181,11 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
-            key="IAD",
-            device_class=DEVICE_CLASS_CURRENT,
+            key="vis",
+            device_class=DEVICE_CLASS_VOLTAGE,
             entity_registry_enabled_default=False,
-            name="Current",
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            name="vis",
+            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
             read_mode=READ_MODE_FLOAT,
             state_class=STATE_CLASS_MEASUREMENT,
         ),

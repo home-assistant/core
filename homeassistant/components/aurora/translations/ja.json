@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "\u540d\u524d"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "\u3057\u304d\u3044\u5024(%)"
+                }
+            }
+        }
+    },
+    "title": "NOAA\u30aa\u30fc\u30ed\u30e9\u30bb\u30f3\u30b5\u30fc"
+}

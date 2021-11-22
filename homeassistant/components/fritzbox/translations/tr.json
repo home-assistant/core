@@ -21,14 +21,14 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "password": "\u015eifre",
+                    "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
                 "description": "Giri\u015f bilgilerinizi {name} i\u00e7in g\u00fcncelleyin."
             },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },

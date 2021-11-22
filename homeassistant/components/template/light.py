@@ -510,7 +510,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     def _update_brightness(self, brightness):
         """Update the brightness from the template."""
         try:
-            if brightness in ("None", ""):
+            if brightness in (None, "None", ""):
                 self._brightness = None
                 return
             if 0 <= int(brightness) <= 255:
@@ -531,7 +531,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     def _update_white_value(self, white_value):
         """Update the white value from the template."""
         try:
-            if white_value in ("None", ""):
+            if white_value in (None, "None", ""):
                 self._white_value = None
                 return
             if 0 <= int(white_value) <= 255:
@@ -551,7 +551,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_effect_list(self, effect_list):
         """Update the effect list from the template."""
-        if effect_list in ("None", ""):
+        if effect_list in (None, "None", ""):
             self._effect_list = None
             return
 
@@ -572,7 +572,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_effect(self, effect):
         """Update the effect from the template."""
-        if effect in ("None", ""):
+        if effect in (None, "None", ""):
             self._effect = None
             return
 
@@ -617,7 +617,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     def _update_temperature(self, render):
         """Update the temperature from the template."""
         try:
-            if render in ("None", ""):
+            if render in (None, "None", ""):
                 self._temperature = None
                 return
             temperature = int(render)
@@ -643,7 +643,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         """Update the hs_color from the template."""
         h_str = s_str = None
         if isinstance(render, str):
-            if render in ("None", ""):
+            if render in (None, "None", ""):
                 self._color = None
                 return
             h_str, s_str = map(
@@ -675,7 +675,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         """Update the max mireds from the template."""
 
         try:
-            if render in ("None", ""):
+            if render in (None, "None", ""):
                 self._max_mireds = None
                 return
             self._max_mireds = int(render)
@@ -690,7 +690,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     def _update_min_mireds(self, render):
         """Update the min mireds from the template."""
         try:
-            if render in ("None", ""):
+            if render in (None, "None", ""):
                 self._min_mireds = None
                 return
             self._min_mireds = int(render)
@@ -704,7 +704,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_supports_transition(self, render):
         """Update the supports transition from the template."""
-        if render in ("None", ""):
+        if render in (None, "None", ""):
             self._supports_transition = False
             return
         self._supports_transition = bool(render)
