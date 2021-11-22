@@ -91,7 +91,7 @@ SENSOR_TYPES: tuple[PiHoleSensorEntityDescription, ...] = (
         name="DNS Unique Domains",
         native_unit_of_measurement="domains",
         icon="mdi:domain",
-    )
+    ),
 )
 
 
@@ -137,8 +137,6 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
 
 BINARY_SENSOR_TYPES_STATISTICS_ONLY: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
-        key="status",
-        name="Status",
-        icon="mdi:pi-hole"
+        key="status", name="Status", icon="mdi:pi-hole"
     ),
 )

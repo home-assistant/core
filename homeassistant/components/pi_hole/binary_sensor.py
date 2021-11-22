@@ -1,9 +1,9 @@
 """Support for getting status from a Pi-hole system."""
+from collections.abc import Mapping
 from typing import Any
 
 from hole import Hole
 
-from collections.abc import Mapping
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
@@ -94,8 +94,12 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
 
         if self.entity_description.version_current != "":
             return {
-                "current_version": self.api.versions[self.entity_description.version_current],
-                "latest_version": self.api.versions[self.entity_description.version_latest]
+                "current_version": self.api.versions[
+                    self.entity_description.version_current
+                ],
+                "latest_version": self.api.versions[
+                    self.entity_description.version_latest
+                ],
             }
 
         return {}
