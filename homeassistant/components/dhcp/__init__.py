@@ -60,7 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 class DhcpServiceInfo:
     """Prepared info from dhcp entries."""
 
-    ip: str
+    ip: str  # pylint: disable=[C0103]
     hostname: str
     macaddress: str
 
