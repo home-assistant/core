@@ -88,24 +88,6 @@ async def test_offer_for_stream_source(
     assert answer_sdp == ANSWER_SDP
 
 
-async def test_response_missing_answer(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test invalid response from RTSPtoWebRTC server."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
-    config_entry.add_to_hass(hass)
-
-    assert await async_setup_webrtc(hass)
-
-    aioclient_mock.post(
-        f"{SERVER_URL}/stream",
-        json={},
-    )
-
-    with pytest.raises(HomeAssistantError, match=r".*missing SDP Answer.*"):
-        await webrtc.async_offer_for_stream_source(hass, OFFER_SDP, STREAM_SOURCE)
-
-
 async def test_offer_failure(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
