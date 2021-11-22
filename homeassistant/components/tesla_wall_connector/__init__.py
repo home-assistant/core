@@ -35,7 +35,7 @@ from .const import (
     WALLCONNECTOR_DEVICE_NAME,
 )
 
-PLATFORMS: list[str] = ["sensor", "binary_sensor"]
+PLATFORMS: list[str] = ["binary_sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
