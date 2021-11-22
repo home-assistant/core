@@ -12,7 +12,11 @@ from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
@@ -241,6 +245,7 @@ async def test_existing_node_not_ready(
     """Test we handle a non ready node that exists during integration setup."""
     dev_reg = dr.async_get(hass)
     er_reg = er.async_get(hass)
+    area_reg = ar.async_get(hass)
 
     node = zp3111
 
@@ -257,10 +262,15 @@ async def test_existing_node_not_ready(
     assert state.state != STATE_UNAVAILABLE
     assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
 
-    # Rename the device and entity
-    updated_dev_entry = dev_reg.async_update_device(device.id, name="Custom Device")
+    kitchen_area = area_reg.async_create("Kitchen")
+
+    # Customize the device and entity
+    updated_dev_entry = dev_reg.async_update_device(
+        device.id, name="Custom Device", area_id=kitchen_area.id
+    )
     assert updated_dev_entry != device
     assert updated_dev_entry.name == "Custom Device"
+    assert updated_dev_entry.area_id == kitchen_area.id
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id)})
     device_ext = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id_ext)})
@@ -276,6 +286,24 @@ async def test_existing_node_not_ready(
     assert updated_state != state
     assert updated_state.state != STATE_UNAVAILABLE
     assert updated_state.name == "Custom Sensor Name"
+
+    # Send node added event with a not-ready node
+    not_ready_node = Node(client, zp3111_not_ready_state)
+    event = {"node": not_ready_node}
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id)})
+    device_ext = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id_ext)})
+    assert device
+    assert device_ext == device
+    assert device.id == updated_dev_entry.id
+    assert device.identifiers == updated_dev_entry.identifiers
+    assert device.name == "Custom Device"
+    assert device.area_id == kitchen_area.id
+    assert device.manufacturer is None
+    assert device.model is None
+    assert device.sw_version is None
 
 
 async def test_start_addon(
