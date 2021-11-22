@@ -1,7 +1,6 @@
 """Config flow for azure_event_hub integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -22,8 +21,10 @@ from .const import (
     CONF_MAX_DELAY,
     CONF_SEND_INTERVAL,
     CONF_USE_CONN_STRING,
+    DEFAULT_OPTIONS,
     DOMAIN,
     STEP_CONN_STRING,
+    STEP_IMPORT,
     STEP_SAS,
     STEP_USER,
 )
@@ -52,7 +53,24 @@ SAS_SCHEMA = vol.Schema(
     }
 )
 
-DEFAULT_OPTIONS = {CONF_SEND_INTERVAL: 5, CONF_MAX_DELAY: 30}
+
+async def validate_data(data: dict[str, Any], step_id: str) -> dict[str, str] | None:
+    """Validate the input."""
+    try:
+        client = AzureEventHubClient.from_input(**data)
+    except HomeAssistantError:
+        return {"base": f"invalid_{step_id}"}
+    except Exception:  # pylint: disable=broad-except
+        return {"base": "unknown"}
+
+    try:
+        await client.test_connection()
+    except EventHubError:
+        return {"base": "cannot_connect"}
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.exception("Unknown error when trying to connect to Azure: %s", exc)
+        return {"base": "unknown"}
+    return None
 
 
 class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -69,7 +87,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the config flow."""
         self._data: dict[str, Any] = {}
-        self._options: Mapping[str, Any] = DEFAULT_OPTIONS
+        self._options: dict[str, Any] = DEFAULT_OPTIONS
         self._conn_string: bool | None = None
 
     async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
@@ -93,7 +111,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._update_data(user_input, STEP_CONN_STRING)
-        errors = await self._validate_data(STEP_CONN_STRING)
+        errors = await validate_data(self._data, STEP_CONN_STRING)
         if errors is not None:
             return self.async_show_form(
                 step_id=STEP_CONN_STRING,
@@ -112,7 +130,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
             )
         self._update_data(user_input, STEP_SAS)
-        errors = await self._validate_data(STEP_SAS)
+        errors = await validate_data(self._data, STEP_SAS)
         if errors is not None:
             return self.async_show_form(
                 step_id=STEP_SAS,
@@ -127,8 +145,8 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import config from configuration.yaml."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-        self._update_data(import_config, "import")
-        return await self.async_route("import")
+        self._update_data(import_config, STEP_IMPORT)
+        return await self.async_route(STEP_IMPORT)
 
     async def async_route(self, step_id: str) -> FlowResult:
         """Handle the user_input, check if configured and route to the right next step or create entry."""
@@ -142,40 +160,19 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             options=self._options,
         )
 
-    async def _validate_data(self, step_id: str) -> dict[str, str] | None:
-        """Validate the input."""
-        try:
-            client = AzureEventHubClient.from_input(**self._data)
-        except HomeAssistantError:
-            return {"base": f"invalid_{step_id}"}
-        except Exception:  # pylint: disable=broad-except
-            return {"base": "unknown"}
-        try:
-            await client.test_connection()
-        except EventHubError:
-            return {"base": "cannot_connect"}
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.exception("Unknown error when trying to connect to Azure: %s", exc)
-            return {"base": "unknown"}
-
     def _update_data(self, user_input: dict[str, Any], step_id: str) -> None:
         """Parse the user_input and store in data and options attributes."""
-        if step_id == STEP_USER:
-            if self._conn_string is None:
-                self._conn_string = user_input.pop(CONF_USE_CONN_STRING)
-            self._data = user_input
-            return
         if step_id in (STEP_CONN_STRING, STEP_SAS):
             self._data.update(user_input)
             return
-        if step_id == "import":
-            send_interval = user_input.pop(CONF_SEND_INTERVAL, None)
-            if send_interval is not None:
-                self._options[CONF_SEND_INTERVAL] = send_interval
-            max_delay = user_input.pop(CONF_MAX_DELAY, None)
-            if max_delay is not None:
-                self._options[CONF_MAX_DELAY] = max_delay
-            self._data = user_input
+        if step_id == STEP_USER:
+            self._conn_string = user_input.pop(CONF_USE_CONN_STRING)
+        if step_id == STEP_IMPORT:
+            if CONF_SEND_INTERVAL in user_input:
+                self._options[CONF_SEND_INTERVAL] = user_input.pop(CONF_SEND_INTERVAL)
+            if CONF_MAX_DELAY in user_input:
+                self._options[CONF_MAX_DELAY] = user_input.pop(CONF_MAX_DELAY)
+        self._data = user_input
 
 
 class AEHOptionsFlowHandler(config_entries.OptionsFlow):
@@ -185,13 +182,13 @@ class AEHOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize AEH options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
-        """Manage the SIA options."""
+    async def async_step_options(self, user_input: dict[str, Any] = None) -> FlowResult:
+        """Manage the AEH options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="init",
+            step_id="options",
             data_schema=vol.Schema(
                 {
                     vol.Required(
