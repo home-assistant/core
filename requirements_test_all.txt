@@ -152,7 +152,7 @@ aiomodernforms==0.1.8
 aiomusiccast==0.13.1
 
 # homeassistant.components.nanoleaf
-aionanoleaf==0.0.3
+aionanoleaf==0.0.4
 
 # homeassistant.components.notion
 aionotion==3.0.2
