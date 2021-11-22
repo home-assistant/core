@@ -7,7 +7,7 @@ from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import threading
-from typing import Final
+from typing import Any, Final
 
 from aiodiscover import DiscoverHosts
 from aiodiscover.discovery import (
@@ -63,6 +63,17 @@ class DhcpServiceInfo(config_entries.BaseServiceInfo):
     ip: str
     hostname: str
     macaddress: str
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in a future release.
+        """
+        _LOGGER.warning(
+            "__getitem__ will fail in version 2022.6. Please use <cls>.<name> instead."
+        )
+        return getattr(self, name)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

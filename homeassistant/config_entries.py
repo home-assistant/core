@@ -75,21 +75,6 @@ PATH_CONFIG = ".config_entries.json"
 SAVE_DELAY = 1
 
 
-class BaseServiceInfo:
-    """Base ServiceInfo type for discovery."""
-
-    def __getitem__(self, name: str) -> Any:
-        """
-        Allow property access by name for compatibility reason.
-
-        Deprecated, and will be removed in a future release.
-        """
-        _LOGGER.warning(
-            "__getitem__ is deprecated and will be removed in a future release."
-        )
-        return getattr(self, name)
-
-
 class ConfigEntryState(Enum):
     """Config entry state."""
 
