@@ -12,12 +12,12 @@ from hole import Hole
 
 from . import PiHoleEntity
 from .const import (
+    BINARY_SENSOR_TYPES,
+    BINARY_SENSOR_TYPES_STATISTICS_ONLY,
     CONF_STATISTICS_ONLY,
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
     DOMAIN as PIHOLE_DOMAIN,
-    BINARY_SENSOR_TYPES,
-    BINARY_SENSOR_TYPES_STATISTICS_ONLY,
     PiHoleBinarySensorEntityDescription,
 )
 
