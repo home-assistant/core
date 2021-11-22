@@ -68,7 +68,7 @@ class DhcpServiceInfo:
         """
         Allow property access by name for compatibility reason.
 
-        Deprecated, and will be removed in a future release.
+        Deprecated, and will be removed in version 2022.6.
         """
         _LOGGER.warning(
             "__getitem__ will fail in version 2022.6. Please use <cls>.<name> instead."
