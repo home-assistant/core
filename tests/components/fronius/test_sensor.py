@@ -5,58 +5,13 @@ from homeassistant.components.fronius.const import (
     DEFAULT_UPDATE_INTERVAL,
     DEFAULT_UPDATE_INTERVAL_POWER_FLOW,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.util import dt
 
-from . import setup_fronius_integration
-from .const import MOCK_HOST
+from . import mock_responses, setup_fronius_integration
 
-from tests.common import async_fire_time_changed, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-def mock_responses(aioclient_mock: AiohttpClientMocker, night: bool = False) -> None:
-    """Mock responses for Fronius Symo inverter with meter."""
-    aioclient_mock.clear_requests()
-    _day_or_night = "night" if night else "day"
-
-    aioclient_mock.get(
-        f"{MOCK_HOST}/solar_api/GetAPIVersion.cgi",
-        text=load_fixture("symo/GetAPIVersion.json", "fronius"),
-    )
-    aioclient_mock.get(
-        f"{MOCK_HOST}/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&"
-        "DeviceId=1&DataCollection=CommonInverterData",
-        text=load_fixture(
-            f"symo/GetInverterRealtimeDate_Device_1_{_day_or_night}.json", "fronius"
-        ),
-    )
-    aioclient_mock.get(
-        f"{MOCK_HOST}/solar_api/v1/GetInverterInfo.cgi",
-        text=load_fixture("symo/GetInverterInfo.json", "fronius"),
-    )
-    aioclient_mock.get(
-        f"{MOCK_HOST}/solar_api/v1/GetLoggerInfo.cgi",
-        text=load_fixture("symo/GetLoggerInfo.json", "fronius"),
-    )
-    aioclient_mock.get(
-        f"{MOCK_HOST}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=Device&DeviceId=0",
-        text=load_fixture("symo/GetMeterRealtimeData_Device_0.json", "fronius"),
-    )
-    aioclient_mock.get(
-        f"{MOCK_HOST}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=System",
-        text=load_fixture("symo/GetMeterRealtimeData_System.json", "fronius"),
-    )
-    aioclient_mock.get(
-        f"{MOCK_HOST}/solar_api/v1/GetPowerFlowRealtimeData.fcgi",
-        text=load_fixture(
-            f"symo/GetPowerFlowRealtimeData_{_day_or_night}.json", "fronius"
-        ),
-    )
-    aioclient_mock.get(
-        f"{MOCK_HOST}/solar_api/v1/GetStorageRealtimeData.cgi?Scope=System",
-        text=load_fixture("symo/GetStorageRealtimeData_System.json", "fronius"),
-    )
+from tests.common import async_fire_time_changed
 
 
 async def test_symo_inverter(hass, aioclient_mock):
@@ -70,7 +25,7 @@ async def test_symo_inverter(hass, aioclient_mock):
     mock_responses(aioclient_mock, night=True)
     await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all()) == 56
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 55
     assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 0)
     assert_state("sensor.energy_day_fronius_inverter_1_http_fronius", 10828)
     assert_state("sensor.energy_total_fronius_inverter_1_http_fronius", 44186900)
@@ -84,7 +39,7 @@ async def test_symo_inverter(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 60
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     # 4 additional AC entities
     assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 2.19)
     assert_state("sensor.energy_day_fronius_inverter_1_http_fronius", 1113)
@@ -108,7 +63,7 @@ async def test_symo_logger(hass, aioclient_mock):
     mock_responses(aioclient_mock)
     await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all()) == 60
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     # ignored constant entities:
     # hardware_platform, hardware_version, product_type
     # software_version, time_zone, time_zone_location
@@ -140,7 +95,7 @@ async def test_symo_meter(hass, aioclient_mock):
     mock_responses(aioclient_mock)
     await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all()) == 60
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     # ignored entities:
     # manufacturer, model, serial, enable, timestamp, visible, meter_location
     #
@@ -201,7 +156,7 @@ async def test_symo_power_flow(hass, aioclient_mock):
     mock_responses(aioclient_mock, night=True)
     await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all()) == 56
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 55
     # ignored: location, mode, timestamp
     #
     # states are rounded to 2 decimals
@@ -249,7 +204,7 @@ async def test_symo_power_flow(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
     # still 55 because power_flow update interval is shorter than others
-    assert len(hass.states.async_all()) == 56
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 55
     assert_state(
         "sensor.energy_day_fronius_power_flow_0_http_fronius",
         1101.7001,
