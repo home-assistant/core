@@ -324,7 +324,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
 
         self._delay_cancel = None
         self._auto_off_cancel = None
-        self._state = False
+        self._state = None
 
     @property
     def is_on(self) -> bool:
