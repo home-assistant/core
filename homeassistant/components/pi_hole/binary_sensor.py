@@ -73,7 +73,10 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
         super().__init__(api, coordinator, name, server_unique_id)
         self.entity_description = description
 
-        self._attr_name = f"{name} {description.name}"
+        if description.key == "status":
+            self._attr_name = f"{name}"
+        else:
+            self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{self._server_unique_id}/{description.name}"
 
     @property
