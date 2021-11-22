@@ -739,7 +739,15 @@ async def test_zeroconf_flow(
 
     # Apply discovery updates to entry to mimic when user hits submit without changing
     # defaults which were set from discovery parameters
-    user_input = result["data_schema"](discovery_info)
+    user_input = result["data_schema"](
+        {
+            CONF_HOST: f"{discovery_info[zeroconf.ATTR_HOST]}:{discovery_info[zeroconf.ATTR_PORT]}",
+            CONF_NAME: discovery_info[zeroconf.ATTR_NAME][
+                : -(len(discovery_info[zeroconf.ATTR_TYPE]) + 1)
+            ],
+            CONF_DEVICE_CLASS: "speaker",
+        }
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
