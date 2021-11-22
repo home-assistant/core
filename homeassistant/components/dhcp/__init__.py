@@ -39,6 +39,7 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
 )
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_dhcp
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -74,11 +75,11 @@ class DhcpServiceInfo:
         Deprecated, and will be removed in version 2022.6.
         """
         if not self._warning_logged:
-            _LOGGER.debug(
-                "Accessing discovery_info['%s'] will fail in version 2022.6, "
-                "please use discovery_info.%s instead",
-                name,
-                name,
+            report(
+                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={"dhcp"},
+                error_if_core=False,
+                level=logging.DEBUG,
             )
             self._warning_logged = True
         return getattr(self, name)
