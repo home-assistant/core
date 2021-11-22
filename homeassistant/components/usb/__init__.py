@@ -6,7 +6,6 @@ import fnmatch
 import logging
 import os
 import sys
-from typing import TypedDict
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
@@ -31,7 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
 
 
-class UsbServiceInfo(TypedDict):
+@dataclasses.dataclass
+class UsbServiceInfo:
     """Prepared info from usb entries."""
 
     device: str
