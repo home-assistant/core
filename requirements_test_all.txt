@@ -143,6 +143,9 @@ aiohue==3.0.10
 # homeassistant.components.homewizard_energy
 aiohwenergy==0.4.0
 
+# homeassistant.components.homewizard_energy
+aiohwenergy==0.4.0
+
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
 

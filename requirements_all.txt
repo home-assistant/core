@@ -199,6 +199,9 @@ aiohue==3.0.10
 # homeassistant.components.homewizard_energy
 aiohwenergy==0.4.0
 
+# homeassistant.components.homewizard_energy
+aiohwenergy==0.4.0
+
 # homeassistant.components.imap
 aioimaplib==0.9.0
 

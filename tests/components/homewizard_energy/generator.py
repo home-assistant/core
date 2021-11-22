@@ -19,6 +19,8 @@ def get_mock_device(
     mock_device.device.api_version = "v1"
     mock_device.device.firmware_version = "1.00"
 
+    mock_device.state = None
+
     mock_device.initialize = AsyncMock()
     mock_device.close = AsyncMock()
 
