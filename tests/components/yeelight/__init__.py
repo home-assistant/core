@@ -8,7 +8,7 @@ from async_upnp_client.search import SsdpSearchListener
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
-from homeassistant.components import yeelight as hass_yeelight
+from homeassistant.components import yeelight as hass_yeelight, zeroconf
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -39,14 +39,14 @@ CAPABILITIES = {
 
 ID_DECIMAL = f"{int(ID, 16):08d}"
 
-ZEROCONF_DATA = {
-    "host": IP_ADDRESS,
-    "port": 54321,
-    "hostname": f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
-    "type": "_miio._udp.local.",
-    "name": f"yeelink-light-strip1_miio{ID_DECIMAL}._miio._udp.local.",
-    "properties": {"epoch": "1", "mac": "000000000000"},
-}
+ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+    host=IP_ADDRESS,
+    port=54321,
+    hostname=f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
+    type="_miio._udp.local.",
+    name=f"yeelink-light-strip1_miio{ID_DECIMAL}._miio._udp.local.",
+    properties={"epoch": "1", "mac": "000000000000"},
+)
 
 NAME = "name"
 SHORT_ID = hex(int("0x000000000015243f", 16))
