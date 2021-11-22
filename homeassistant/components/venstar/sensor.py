@@ -26,6 +26,35 @@ class VenstarSensorTypeMixin:
     stype: str
 
 
+@dataclass
+class VenstarSensorEntityDescription(SensorEntityDescription, VenstarSensorTypeMixin):
+    """Base description of a Sensor entity."""
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
+    """Set up Vensar device binary_sensors based on a config entry."""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[Entity] = []
+
+    sensors = coordinator.client.get_sensor_list()
+    if not sensors:
+        return
+
+    entities = []
+
+    for sensor_name in sensors:
+        entities.extend(
+            [
+                description.cls(coordinator, config_entry, description, sensor_name)
+                for description in SENSOR_ENTITIES
+                if coordinator.client.get_sensor(sensor_name, description.stype)
+                is not None
+            ]
+        )
+
+    async_add_entities(entities)
+
+
 class VenstarSensor(VenstarEntity, SensorEntity):
     """Base class for a Venstar sensor."""
 
@@ -87,11 +116,6 @@ class VenstarTemperatureSensor(VenstarSensor):
         return round(float(self._client.get_sensor(self.sensor_name, "temp")), 1)
 
 
-@dataclass
-class VenstarSensorEntityDescription(SensorEntityDescription, VenstarSensorTypeMixin):
-    """Base description of a Sensor entity."""
-
-
 SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
     VenstarSensorEntityDescription(
         key="humidity",
@@ -109,27 +133,3 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         stype="temp",
     ),
 )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
-    """Set up Vensar device binary_sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[Entity] = []
-
-    sensors = coordinator.client.get_sensor_list()
-    if not sensors:
-        return
-
-    entities = []
-
-    for sensor_name in sensors:
-        entities.extend(
-            [
-                description.cls(coordinator, config_entry, description, sensor_name)
-                for description in SENSOR_ENTITIES
-                if coordinator.client.get_sensor(sensor_name, description.stype)
-                is not None
-            ]
-        )
-
-    async_add_entities(entities)
