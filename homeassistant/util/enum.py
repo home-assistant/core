@@ -1,4 +1,4 @@
-"""Enum related helpers."""
+"""Enum related utilities."""
 from __future__ import annotations
 
 from enum import Enum

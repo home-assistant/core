@@ -1,8 +1,8 @@
-"""Test Home Assistant enum helper."""
+"""Test Home Assistant enum utils."""
 
 import pytest
 
-from homeassistant.helpers.enum import StrEnum
+from homeassistant.util.enum import StrEnum
 
 
 def test_strenum():
