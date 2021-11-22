@@ -64,17 +64,23 @@ class DhcpServiceInfo:
     hostname: str
     macaddress: str
 
+    # Used to prevent log flooding. To be removed in 2022.6
+    _warning_logged: bool = False
+
     def __getitem__(self, name: str) -> Any:
         """
         Allow property access by name for compatibility reason.
 
         Deprecated, and will be removed in version 2022.6.
         """
-        _LOGGER.debug(
-            "Accessing discovery_info['%s'] will fail in version 2022.6. Please use discovery_info.%s instead",
-            name,
-            name,
-        )
+        if not self._warning_logged:
+            _LOGGER.debug(
+                "Accessing discovery_info['%s'] will fail in version 2022.6, "
+                "please use discovery_info.%s instead",
+                name,
+                name,
+            )
+            self._warning_logged = True
         return getattr(self, name)
 
 
