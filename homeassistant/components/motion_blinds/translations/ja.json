@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "discovery_error": "Motion Gateway\u306e\u691c\u51fa\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "invalid_interface": "\u7121\u52b9\u306a\u30cd\u30c3\u30c8\u30ef\u30fc\u30af \u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30a4\u30b9"
         },
         "step": {

@@ -9,15 +9,29 @@
                     "pin": "PIN\u30b3\u30fc\u30c9"
                 }
             },
+            "pairing_complete": {
+                "title": "\u30da\u30a2\u30ea\u30f3\u30b0\u5b8c\u4e86"
+            },
             "pairing_complete_import": {
                 "title": "\u30da\u30a2\u30ea\u30f3\u30b0\u5b8c\u4e86"
             },
             "user": {
                 "data": {
+                    "device_class": "\u30c7\u30d0\u30a4\u30b9\u30bf\u30a4\u30d7",
                     "host": "\u30db\u30b9\u30c8",
                     "name": "\u540d\u524d"
                 },
                 "title": "VIZIO SmartCast\u30c7\u30d0\u30a4\u30b9"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "\u542b\u3081\u308b\u30a2\u30d7\u30ea\u3001\u307e\u305f\u306f\u9664\u5916\u3059\u308b\u30a2\u30d7\u30ea",
+                    "include_or_exclude": "\u30a2\u30d7\u30ea\u3092\u542b\u3081\u308b\u304b\u3001\u9664\u5916\u3057\u307e\u3059\u304b\uff1f"
+                }
             }
         }
     }

@@ -43,6 +43,7 @@
                 "data": {
                     "birth_enable": "\u30d0\u30fc\u30b9(birth)\u30e1\u30c3\u30bb\u30fc\u30b8\u306e\u6709\u52b9\u5316",
                     "birth_payload": "\u30d0\u30fc\u30b9(Birth)\u30e1\u30c3\u30bb\u30fc\u30b8 \u30da\u30a4\u30ed\u30fc\u30c9",
+                    "discovery": "\u691c\u51fa\u3092\u6709\u52b9\u306b\u3059\u308b",
                     "will_enable": "\u30a6\u30a3\u30eb(will)\u30e1\u30c3\u30bb\u30fc\u30b8\u306e\u6709\u52b9\u5316",
                     "will_payload": "\u30a6\u30a3\u30eb(will)\u30e1\u30c3\u30bb\u30fc\u30b8 \u30da\u30a4\u30ed\u30fc\u30c9"
                 },

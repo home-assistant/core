@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "invalid_discovery_topic": "(\u4e0d\u6b63\u306a)Invalid discovery topic prefix."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "discovery_prefix": "(\u691c\u51fa)Discovery topic prefix"
+                }
+            }
+        }
+    }
+}

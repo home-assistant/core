@@ -15,6 +15,7 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "off": "\u30aa\u30d5",
             "on": "\u30aa\u30f3"
         }
     }

@@ -9,6 +9,13 @@
             "confirm": {
                 "description": "{name} \u3092\u8a2d\u5b9a\u3057\u307e\u3059\u304b\uff1f"
             },
+            "pick_radio": {
+                "data": {
+                    "radio_type": "\u7121\u7dda\u30bf\u30a4\u30d7"
+                },
+                "description": "Zigbee\u7121\u7dda\u6a5f\u306e\u30bf\u30a4\u30d7\u3092\u9078\u3076",
+                "title": "\u7121\u7dda\u30bf\u30a4\u30d7"
+            },
             "port_config": {
                 "data": {
                     "baudrate": "\u30dd\u30fc\u30c8\u901f\u5ea6",
@@ -19,6 +26,9 @@
                 "title": "\u8a2d\u5b9a"
             },
             "user": {
+                "data": {
+                    "path": "\u30b7\u30ea\u30a2\u30eb \u30c7\u30d0\u30a4\u30b9\u306e\u30d1\u30b9"
+                },
                 "description": "Zigbee radio\u7528\u30b7\u30ea\u30a2\u30eb\u30dd\u30fc\u30c8\u3092\u9078\u629e",
                 "title": "ZHA"
             }
@@ -36,6 +46,7 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "\u4e21\u65b9\u306e\u30dc\u30bf\u30f3",
+            "button_1": "1\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_2": "2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_3": "3\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_4": "4\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
@@ -51,6 +62,7 @@
             "turn_on": "\u30aa\u30f3\u306b\u3059\u308b"
         },
         "trigger_type": {
+            "device_offline": "\u30c7\u30d0\u30a4\u30b9\u304c\u30aa\u30d5\u30e9\u30a4\u30f3",
             "device_shaken": "\u30c7\u30d0\u30a4\u30b9\u304c\u63fa\u308c\u308b",
             "device_tilted": "\u30c7\u30d0\u30a4\u30b9\u304c\u50be\u3044\u3066\u3044\u308b"
         }

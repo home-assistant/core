@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "configuration_updated": "\u8a2d\u5b9a\u304c\u66f4\u65b0\u3055\u308c\u307e\u3057\u305f\u3002"
+        },
         "error": {
             "service_unavailable": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
         },

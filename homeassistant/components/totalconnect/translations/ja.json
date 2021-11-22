@@ -13,6 +13,9 @@
                 },
                 "description": "\u3053\u306e\u30e6\u30fc\u30b6\u30fc\u306e\u30e6\u30fc\u30b6\u30fc\u30b3\u30fc\u30c9\u3092\u5834\u6240 {location_id} \u306b\u5165\u529b\u3057\u307e\u3059",
                 "title": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3\u30e6\u30fc\u30b6\u30fc\u30b3\u30fc\u30c9"
+            },
+            "reauth_confirm": {
+                "description": "Total Connect\u306f\u30a2\u30ab\u30a6\u30f3\u30c8\u3092\u518d\u8a8d\u8a3c\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059"
             }
         }
     }
