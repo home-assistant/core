@@ -117,6 +117,9 @@ async def test_deprecated_unit_of_measurement(hass, caplog, enable_custom_integr
 async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
     """Test conversion of datetime."""
     test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)
+    test_local_timestamp = test_timestamp.astimezone(
+        dt_util.get_time_zone("Europe/Amsterdam")
+    )
     test_date = date(2017, 12, 19)
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
@@ -131,6 +134,11 @@ async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
     )
     platform.ENTITIES["3"] = platform.MockSensor(
         name="Test", native_value=None, device_class=DEVICE_CLASS_DATE
+    )
+    platform.ENTITIES["4"] = platform.MockSensor(
+        name="Test",
+        native_value=test_local_timestamp,
+        device_class=DEVICE_CLASS_TIMESTAMP,
     )
 
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
@@ -148,16 +156,58 @@ async def test_datetime_conversion(hass, caplog, enable_custom_integrations):
     state = hass.states.get(platform.ENTITIES["3"].entity_id)
     assert state.state == STATE_UNKNOWN
 
+    state = hass.states.get(platform.ENTITIES["4"].entity_id)
+    assert state.state == test_timestamp.isoformat()
+
 
 @pytest.mark.parametrize(
-    "device_class,native_value",
+    "device_class,native_value,state_value",
     [
-        (DEVICE_CLASS_DATE, "2021-11-09"),
-        (DEVICE_CLASS_TIMESTAMP, "2021-01-09T12:00:00+00:00"),
+        (DEVICE_CLASS_DATE, "2021-11-09", "2021-11-09"),
+        (
+            DEVICE_CLASS_DATE,
+            "2021-01-09T12:00:00+00:00",
+            "2021-01-09",
+        ),
+        (
+            DEVICE_CLASS_DATE,
+            "2021-01-09T00:00:00+01:00",
+            "2021-01-08",
+        ),
+        (
+            DEVICE_CLASS_TIMESTAMP,
+            "2021-01-09T12:00:00+00:00",
+            "2021-01-09T12:00:00+00:00",
+        ),
+        (
+            DEVICE_CLASS_TIMESTAMP,
+            "2021-01-09 12:00:00+00:00",
+            "2021-01-09T12:00:00+00:00",
+        ),
+        (
+            DEVICE_CLASS_TIMESTAMP,
+            "2021-01-09T12:00:00+04:00",
+            "2021-01-09T08:00:00+00:00",
+        ),
+        (
+            DEVICE_CLASS_TIMESTAMP,
+            "2021-01-09 12:00:00+01:00",
+            "2021-01-09T11:00:00+00:00",
+        ),
+        (
+            DEVICE_CLASS_TIMESTAMP,
+            "2021-01-09 12:00:00",
+            "2021-01-09T12:00:00",
+        ),
+        (
+            DEVICE_CLASS_TIMESTAMP,
+            "2021-01-09T12:00:00",
+            "2021-01-09T12:00:00",
+        ),
     ],
 )
 async def test_deprecated_datetime_str(
-    hass, caplog, enable_custom_integrations, device_class, native_value
+    hass, caplog, enable_custom_integrations, device_class, native_value, state_value
 ):
     """Test warning on deprecated str for a date(time) value."""
     platform = getattr(hass.components, "test.sensor")
@@ -171,9 +221,29 @@ async def test_deprecated_datetime_str(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert state.state == native_value
+    assert state.state == state_value
     assert (
         "is providing a string for its state, while the device class is "
         f"'{device_class}', this is not valid and will be unsupported "
         "from Home Assistant 2022.2."
+    ) in caplog.text
+
+
+async def test_reject_timezoneless_datetime_str(
+    hass, caplog, enable_custom_integrations
+):
+    """Test rejection of timezone-less datetime objects as timestamp."""
+    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=None)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test", native_value=test_timestamp, device_class=DEVICE_CLASS_TIMESTAMP
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Invalid datetime: sensor.test provides state '2017-12-19 18:29:42', "
+        "which is missing timezone information"
     ) in caplog.text
