@@ -235,36 +235,47 @@ async def test_null_name(hass, client, null_name_check, integration):
     assert hass.states.get(f"switch.node_{node.node_id}")
 
 
-async def test_existing_node_not_ready(hass, client, multisensor_6):
+async def test_existing_node_not_ready(
+    hass, zp3111_not_ready_state, zp3111_state, zp3111, client, integration
+):
     """Test we handle a non ready node that exists during integration setup."""
     dev_reg = dr.async_get(hass)
-    node = multisensor_6
-    node.data = deepcopy(node.data)  # Copy to allow modification in tests.
-    node.data["ready"] = False
-    event = {"node": node}
-    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
-    entry.add_to_hass(hass)
+    er_reg = er.async_get(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    node = zp3111
 
-    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+    motion_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    motion_device_id_ext = f"{motion_device_id}-{node.manufacturer_id}:{node.product_type}:{node.product_id}"
 
-    assert not state  # entity not yet added
-    assert dev_reg.async_get_device(  # device should be added
-        identifiers={(DOMAIN, air_temperature_device_id)}
-    )
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id)})
+    device_ext = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id_ext)})
+    assert device and device_ext == device
 
-    node.data["ready"] = True
-    node.emit("ready", event)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
-
-    assert state  # entity and device added
+    motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
+    state = hass.states.get(motion_entity)
+    assert state
     assert state.state != STATE_UNAVAILABLE
-    assert dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
+
+    # Rename the device and entity
+    updated_dev_entry = dev_reg.async_update_device(device.id, name="Custom Device")
+    assert updated_dev_entry != device
+    assert updated_dev_entry.name == "Custom Device"
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id)})
+    device_ext = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id_ext)})
+    assert device == updated_dev_entry and device_ext == updated_dev_entry
+
+    motion_entity_new = "binary_sensor.custom_motion_sensor"
+    er_reg.async_update_entity(
+        motion_entity, new_entity_id=motion_entity_new, name="Custom Sensor Name"
+    )
+    await hass.async_block_till_done()
+    updated_state = hass.states.get(motion_entity_new)
+    assert updated_state
+    assert updated_state != state
+    assert updated_state.state != STATE_UNAVAILABLE
+    assert updated_state.name == "Custom Sensor Name"
 
 
 async def test_start_addon(
