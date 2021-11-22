@@ -189,9 +189,7 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
         state_recorded = await self.async_get_last_state()
         if state_recorded:
             self._period_usage = state_recorded.state
-            self._period_price = state_recorded.attributes.get(
-                ATTR_PERIOD_PRICE
-            )
+            self._period_price = state_recorded.attributes.get(ATTR_PERIOD_PRICE)
             self._previous_period_usage = state_recorded.attributes.get(
                 ATTR_PREVIOUS_PERIOD_USAGE
             )
