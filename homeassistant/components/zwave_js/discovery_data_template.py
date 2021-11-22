@@ -531,17 +531,6 @@ class ConfigurableFanSpeedDataTemplate(
         zwave_value: ZwaveValue = self._get_value_from_id(
             value.node, self.configuration_option
         )
-
-        # Validate the data; this is an ideal place because it's only
-        # called once for each data update, so there's not too much
-        # log spam.
-        if zwave_value.value is None:
-            _LOGGER.warning("Unable to read fan speed configuration value")
-        else:
-            speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
-            if speed_config is None:
-                _LOGGER.warning("Unrecognized speed configuration value")
-
         return {"configuration_value": zwave_value}
 
     def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
@@ -555,4 +544,14 @@ class ConfigurableFanSpeedDataTemplate(
     ) -> list[int] | None:
         """Get current speed configuration from resolved data."""
         zwave_value: ZwaveValue = resolved_data["configuration_value"]
-        return self.configuration_value_to_speeds.get(zwave_value.value)
+
+        if zwave_value.value is None:
+            _LOGGER.warning("Unable to read fan speed configuration value")
+            return None
+
+        speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
+        if speed_config is None:
+            _LOGGER.warning("Unrecognized speed configuration value")
+            return None
+
+        return speed_config
