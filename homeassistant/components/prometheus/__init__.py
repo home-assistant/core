@@ -418,9 +418,14 @@ class PrometheusMetrics:
                 break
 
         if metric is not None:
-            _metric = self._metric(
-                metric, self.prometheus_cli.Gauge, f"Sensor data measured in {unit}"
-            )
+            if unit not in (None, ""):
+                _metric = self._metric(
+                    metric, self.prometheus_cli.Gauge, f"Sensor data measured in {unit}"
+                )
+            else:
+                _metric = self._metric(
+                    metric, self.prometheus_cli.Gauge, "State of the sensor"
+                )
 
             try:
                 value = self.state_as_number(state)
@@ -458,8 +463,12 @@ class PrometheusMetrics:
     def _sensor_fallback_metric(state, unit):
         """Get metric from fallback logic for compatibility."""
         if unit in (None, ""):
-            _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
-            return None
+            try:
+                state_helper.state_as_number(state)
+                return "sensor_state"
+            except ValueError:
+                _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
+                return None
         return f"sensor_unit_{unit}"
 
     @staticmethod
