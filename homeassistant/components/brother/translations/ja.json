@@ -20,6 +20,7 @@
                 "data": {
                     "type": "\u30d7\u30ea\u30f3\u30bf\u30fc\u306e\u7a2e\u985e"
                 },
+                "description": "Brother\u793e\u306e\u30d7\u30ea\u30f3\u30bf\u30fc {model} \u3067\u3001\u30b7\u30ea\u30a2\u30eb\u756a\u53f7\u304c `{serial_number}` \u3092Home Assistant\u306b\u8ffd\u52a0\u3057\u307e\u3059\u304b\uff1f",
                 "title": "\u30d6\u30e9\u30b6\u30fc\u30d7\u30ea\u30f3\u30bf\u30fc\u3092\u767a\u898b"
             }
         }

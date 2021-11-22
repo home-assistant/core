@@ -11,7 +11,9 @@
             },
             "zeroconf_confirm": {
                 "data": {
-                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "Email / devolo ID"
                 }
             }
         }

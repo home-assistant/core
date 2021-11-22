@@ -8,6 +8,9 @@
         },
         "step": {
             "reauth_confirm": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc"
+                },
                 "description": "UptimeRobot\u304b\u3089\u65b0\u898f\u306e\u8aad\u307f\u53d6\u308a\u5c02\u7528\u306eAPI\u30ad\u30fc\u3092\u5f97\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059"
             },
             "user": {
