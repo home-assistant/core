@@ -18,11 +18,11 @@ Other integrations may use this webrtc integration with these steps:
 
 from __future__ import annotations
 
-import base64
 import logging
 
-import aiohttp
 import async_timeout
+from rtsp_to_webrtc.client import Client
+from rtsp_to_webrtc.exceptions import ClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -60,40 +60,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-class Client:
-    """Client for RTSPtoWebRTC server."""
-
-    def __init__(self, websession: aiohttp.ClientSession, server_url: str) -> None:
-        """Initialize Client."""
-        self._session = websession
-        self._server_url = f"{server_url}/stream"
-
-    async def offer(self, offer_sdp: str, stream_source: str) -> str:
-        """Send the WebRTC offer to the RTSPtoWebRTC server."""
-        sdp64 = base64.b64encode(offer_sdp.encode("utf-8")).decode("utf-8")
-        try:
-            resp = await self._session.post(
-                self._server_url,
-                data={
-                    "url": stream_source,
-                    "sdp64": sdp64,
-                },
-            )
-        except aiohttp.ClientError as err:
-            raise HomeAssistantError(
-                f"WebRTC server communication failure: {err}"
-            ) from err
-
-        resp.raise_for_status()
-
-        data = await resp.json()
-        if "sdp64" not in data:
-            raise HomeAssistantError(
-                f"WebRTC server response missing SDP Answer: {resp}"
-            )
-        return base64.b64decode(data["sdp64"]).decode("utf-8")
-
-
 def is_suported_stream_source(stream_source: str) -> bool:
     """Return True if the stream source is supported by this component."""
     for prefix in RTSP_PREFIXES:
@@ -114,5 +80,10 @@ async def async_offer_for_stream_source(
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("webrtc integration is not set up.")
     client: Client = hass.data[DOMAIN]
-    async with async_timeout.timeout(TIMEOUT):
-        return await client.offer(offer_sdp, stream_source)
+    try:
+        async with async_timeout.timeout(TIMEOUT):
+            return await client.offer(offer_sdp, stream_source)
+    except TimeoutError as err:
+        raise HomeAssistantError("Timeout talking to RTSPtoWebRTC server") from err
+    except ClientError as err:
+        raise HomeAssistantError(str(err)) from err
