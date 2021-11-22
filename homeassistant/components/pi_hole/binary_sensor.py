@@ -1,14 +1,14 @@
 """Support for getting status from a Pi-hole system."""
+from typing import Any
+
+from hole import Hole
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-from typing import Any
-
-from hole import Hole
 
 from . import PiHoleEntity
 from .const import (
