@@ -71,7 +71,10 @@ class DhcpServiceInfo:
         Deprecated, and will be removed in version 2022.6.
         """
         _LOGGER.warning(
-            "__getitem__ will fail in version 2022.6. Please use <cls>.<name> instead."
+            "Accessing ['%s'] will fail in version 2022.6. Please use %s.%s instead.",
+            name,
+            self,
+            name,
         )
         return getattr(self, name)
 
