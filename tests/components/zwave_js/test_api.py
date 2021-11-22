@@ -654,7 +654,7 @@ async def test_add_node(
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
-            QR_CODE_STRING: "testtesttesttesttesttesttesttesttesttesttesttesttest",
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
     )
 
@@ -666,7 +666,7 @@ async def test_add_node(
         "command": "controller.begin_inclusion",
         "options": {
             "strategy": InclusionStrategy.SECURITY_S2,
-            "provisioning": "testtesttesttesttesttesttesttesttesttesttesttesttest",
+            "provisioning": "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         },
     }
 
@@ -698,6 +698,41 @@ async def test_add_node(
     msg = await ws_client.receive_json()
     assert not msg["success"]
 
+    # Even though inclusion fails, provision_smart_start_node should be called
+    assert len(client.async_send_command.call_args_list) == 1
+    assert (
+        client.async_send_command.call_args[0][0]["command"]
+        == "controller.provision_smart_start_node"
+    )
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    # Test QR provisioning information with S0 inclusion strategy fails
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/add_node",
+            ENTRY_ID: entry.entry_id,
+            INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S0,
+            QR_PROVISIONING_INFORMATION: {
+                VERSION: 1,
+                SECURITY_CLASSES: [0],
+                DSK: "test",
+                GENERIC_DEVICE_CLASS: 1,
+                SPECIFIC_DEVICE_CLASS: 1,
+                INSTALLER_ICON_TYPE: 1,
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 1,
+                PRODUCT_ID: 1,
+                APPLICATION_VERSION: "test",
+            },
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
     assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
@@ -710,7 +745,7 @@ async def test_add_node(
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
-            QR_CODE_STRING: "testtesttesttesttesttesttesttesttesttesttesttesttest",
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
     )
 
@@ -925,7 +960,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
             ID: 4,
             TYPE: "zwave_js/provision_smart_start_node",
             ENTRY_ID: entry.entry_id,
-            QR_CODE_STRING: "testtesttesttesttesttesttesttesttesttesttesttesttest",
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
     )
 
@@ -935,7 +970,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.provision_smart_start_node",
-        "entry": "testtesttesttesttesttesttesttesttesttesttesttesttest",
+        "entry": "90testtesttesttesttesttesttesttesttesttesttesttesttest",
     }
 
     client.async_send_command.reset_mock()
@@ -991,7 +1026,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
                 ID: 7,
                 TYPE: "zwave_js/provision_smart_start_node",
                 ENTRY_ID: entry.entry_id,
-                QR_CODE_STRING: "testtesttesttesttesttesttesttesttesttesttesttesttest",
+                QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
             }
         )
         msg = await ws_client.receive_json()
@@ -1009,7 +1044,7 @@ async def test_provision_smart_start_node(hass, integration, client, hass_ws_cli
             ID: 8,
             TYPE: "zwave_js/provision_smart_start_node",
             ENTRY_ID: entry.entry_id,
-            QR_CODE_STRING: "testtesttesttesttesttesttesttesttesttesttesttesttest",
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
     )
     msg = await ws_client.receive_json()
@@ -1211,7 +1246,7 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
             ID: 1,
             TYPE: "zwave_js/parse_qr_code_string",
             ENTRY_ID: entry.entry_id,
-            QR_CODE_STRING: "testtesttesttesttesttesttesttesttesttesttesttesttest",
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
     )
 
@@ -1236,7 +1271,7 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {
         "command": "utils.parse_qr_code_string",
-        "qr": "testtesttesttesttesttesttesttesttesttesttesttesttest",
+        "qr": "90testtesttesttesttesttesttesttesttesttesttesttesttest",
     }
 
     # Test FailedZWaveCommand is caught
@@ -1249,7 +1284,7 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
                 ID: 6,
                 TYPE: "zwave_js/parse_qr_code_string",
                 ENTRY_ID: entry.entry_id,
-                QR_CODE_STRING: "testtesttesttesttesttesttesttesttesttesttesttesttest",
+                QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
             }
         )
         msg = await ws_client.receive_json()
@@ -1267,7 +1302,7 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
             ID: 7,
             TYPE: "zwave_js/parse_qr_code_string",
             ENTRY_ID: entry.entry_id,
-            QR_CODE_STRING: "testtesttesttesttesttesttesttesttesttesttesttesttest",
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
     )
     msg = await ws_client.receive_json()
@@ -1737,7 +1772,7 @@ async def test_replace_failed_node(
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
-            QR_CODE_STRING: "testtesttesttesttesttesttesttesttesttesttesttesttest",
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
     )
 
@@ -1750,38 +1785,9 @@ async def test_replace_failed_node(
         "nodeId": 67,
         "options": {
             "strategy": InclusionStrategy.SECURITY_S2,
-            "provisioning": "testtesttesttesttesttesttesttesttesttesttesttesttest",
+            "provisioning": "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         },
     }
-
-    client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"success": True}
-
-    # Test S2 QR provisioning information with Smart Start inclusion strategy fails
-    await ws_client.send_json(
-        {
-            ID: 5,
-            TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
-            INCLUSION_STRATEGY: InclusionStrategy.SMART_START.value,
-            QR_PROVISIONING_INFORMATION: {
-                VERSION: 0,
-                SECURITY_CLASSES: [0],
-                DSK: "test",
-                GENERIC_DEVICE_CLASS: 1,
-                SPECIFIC_DEVICE_CLASS: 1,
-                INSTALLER_ICON_TYPE: 1,
-                MANUFACTURER_ID: 1,
-                PRODUCT_TYPE: 1,
-                PRODUCT_ID: 1,
-                APPLICATION_VERSION: "test",
-            },
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
 
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
@@ -1794,7 +1800,7 @@ async def test_replace_failed_node(
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,
             INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
-            QR_CODE_STRING: "testtesttesttesttesttesttesttesttesttesttesttesttest",
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
     )
 
