@@ -21,11 +21,15 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
+SERVICE_ALARM_ARM_STAY_INSTANT = "arm_stay_instant"
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
@@ -47,6 +51,21 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
             )
 
     async_add_entities(alarms, True)
+
+    # Set up services
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_AWAY_INSTANT,
+        None,
+        "async_alarm_arm_away_instant",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_STAY_INSTANT,
+        None,
+        "async_alarm_arm_home_instant",
+    )
 
 
 class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
