@@ -506,7 +506,7 @@ async def test_windowcovering_basic_restore(hass, hk_driver, events):
         suggested_object_id="all_info_set",
         capabilities={},
         supported_features=SUPPORT_STOP,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
@@ -544,7 +544,7 @@ async def test_windowcovering_restore(hass, hk_driver, events):
         suggested_object_id="all_info_set",
         capabilities={},
         supported_features=SUPPORT_STOP,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
