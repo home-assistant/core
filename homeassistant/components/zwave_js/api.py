@@ -18,6 +18,7 @@ from zwave_js_server.const import (
     Protocols,
     QRCodeVersion,
     SecurityClass,
+    ZwaveFeature,
 )
 from zwave_js_server.exceptions import (
     BaseZwaveJSServerError,
@@ -135,6 +136,7 @@ MAX_INCLUSION_REQUEST_INTERVAL = "max_inclusion_request_interval"
 UUID = "uuid"
 SUPPORTED_PROTOCOLS = "supported_protocols"
 
+FEATURE = "feature"
 UNPROVISION = "unprovision"
 
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
@@ -181,7 +183,11 @@ PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.All(
             vol.Required(DSK): str,
             vol.Required(SECURITY_CLASSES): vol.All(
                 cv.ensure_list,
-                [vol.All(int, vol.In([val.value for val in SecurityClass]))],
+                [
+                    vol.All(
+                        vol.Coerce(int), vol.In([val.value for val in SecurityClass])
+                    )
+                ],
             ),
         },
         # Provisioning entries can have extra keys for SmartStart
@@ -194,11 +200,15 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(VERSION): vol.All(
-                int, vol.In([val.value for val in QRCodeVersion])
+                vol.Coerce(int), vol.In([val.value for val in QRCodeVersion])
             ),
             vol.Required(SECURITY_CLASSES): vol.All(
                 cv.ensure_list,
-                [vol.All(int, vol.In([val.value for val in SecurityClass]))],
+                [
+                    vol.All(
+                        vol.Coerce(int), vol.In([val.value for val in SecurityClass])
+                    )
+                ],
             ),
             vol.Required(DSK): str,
             vol.Required(GENERIC_DEVICE_CLASS): int,
@@ -211,7 +221,8 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
             vol.Optional(MAX_INCLUSION_REQUEST_INTERVAL): int,
             vol.Optional(UUID): str,
             vol.Optional(SUPPORTED_PROTOCOLS): vol.All(
-                cv.ensure_list, [vol.All(int, vol.In([val.value for val in Protocols]))]
+                cv.ensure_list,
+                [vol.All(vol.Coerce(int), vol.In([val.value for val in Protocols]))],
             ),
         }
     ),
@@ -312,6 +323,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_unprovision_smart_start_node)
     websocket_api.async_register_command(hass, websocket_get_provisioning_entries)
     websocket_api.async_register_command(hass, websocket_parse_qr_code_string)
+    websocket_api.async_register_command(hass, websocket_supports_feature)
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
@@ -552,12 +564,15 @@ async def websocket_ping_node(
     {
         vol.Required(TYPE): "zwave_js/add_node",
         vol.Required(ENTRY_ID): str,
-        vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.In(
-            [
-                strategy.value
-                for strategy in InclusionStrategy
-                if strategy != InclusionStrategy.SMART_START
-            ]
+        vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.All(
+            vol.Coerce(int),
+            vol.In(
+                [
+                    strategy.value
+                    for strategy in InclusionStrategy
+                    if strategy != InclusionStrategy.SMART_START
+                ]
+            ),
         ),
         vol.Optional(FORCE_SECURITY): bool,
         vol.Exclusive(
@@ -701,9 +716,15 @@ async def websocket_add_node(
     {
         vol.Required(TYPE): "zwave_js/grant_security_classes",
         vol.Required(ENTRY_ID): str,
-        vol.Required(SECURITY_CLASSES): [
-            vol.In([sec_cls.value for sec_cls in SecurityClass])
-        ],
+        vol.Required(SECURITY_CLASSES): vol.All(
+            cv.ensure_list,
+            [
+                vol.All(
+                    vol.Coerce(int),
+                    vol.In([sec_cls.value for sec_cls in SecurityClass]),
+                )
+            ],
+        ),
         vol.Optional(CLIENT_SIDE_AUTH, default=False): bool,
     }
 )
@@ -894,6 +915,36 @@ async def websocket_parse_qr_code_string(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
+        vol.Required(TYPE): "zwave_js/supports_feature",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(FEATURE): vol.All(
+            vol.Coerce(int), vol.In(val.value for val in ZwaveFeature)
+        ),
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_supports_feature(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Check if controller supports a particular feature."""
+    supported = await client.driver.controller.async_supports_feature(
+        ZwaveFeature(msg[FEATURE])
+    )
+    connection.send_result(
+        msg[ID],
+        {"supported": supported},
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
         vol.Required(TYPE): "zwave_js/stop_inclusion",
         vol.Required(ENTRY_ID): str,
     }
@@ -1010,12 +1061,15 @@ async def websocket_remove_node(
         vol.Required(TYPE): "zwave_js/replace_failed_node",
         vol.Required(ENTRY_ID): str,
         vol.Required(NODE_ID): int,
-        vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.In(
-            [
-                strategy.value
-                for strategy in InclusionStrategy
-                if strategy != InclusionStrategy.SMART_START
-            ]
+        vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.All(
+            vol.Coerce(int),
+            vol.In(
+                [
+                    strategy.value
+                    for strategy in InclusionStrategy
+                    if strategy != InclusionStrategy.SMART_START
+                ]
+            ),
         ),
         vol.Optional(FORCE_SECURITY): bool,
         vol.Exclusive(

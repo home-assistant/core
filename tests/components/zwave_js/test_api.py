@@ -12,6 +12,7 @@ from zwave_js_server.const import (
     Protocols,
     QRCodeVersion,
     SecurityClass,
+    ZwaveFeature,
 )
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import (
@@ -38,6 +39,7 @@ from homeassistant.components.zwave_js.api import (
     ENABLED,
     ENTRY_ID,
     ERR_NOT_LOADED,
+    FEATURE,
     FILENAME,
     FORCE_CONSOLE,
     GENERIC_DEVICE_CLASS,
@@ -1309,6 +1311,27 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_supports_feature(hass, integration, client, hass_ws_client):
+    """Test supports_feature websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"supported": True}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/supports_feature",
+            ENTRY_ID: entry.entry_id,
+            FEATURE: ZwaveFeature.SMART_START,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"supported": True}
 
 
 async def test_cancel_inclusion_exclusion(hass, integration, client, hass_ws_client):
