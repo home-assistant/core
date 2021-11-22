@@ -1,12 +1,13 @@
 """The dhcp integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import fnmatch
 from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import threading
-from typing import Final, TypedDict
+from typing import Final
 
 from aiodiscover import DiscoverHosts
 from aiodiscover.discovery import (
@@ -55,7 +56,8 @@ SCAN_INTERVAL = timedelta(minutes=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-class DhcpServiceInfo(TypedDict):
+@dataclass
+class DhcpServiceInfo(config_entries.BaseServiceInfo):
     """Prepared info from dhcp entries."""
 
     ip: str
