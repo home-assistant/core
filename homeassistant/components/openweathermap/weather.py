@@ -5,6 +5,7 @@ from homeassistant.components.weather import Forecast, WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.pressure import convert as pressure_convert
@@ -71,7 +72,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._unique_id)},
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,

@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -142,7 +143,7 @@ class VlcDevice(MediaPlayerEntity):
         config_entry_id = config_entry.entry_id
         self._attr_unique_id = config_entry_id
         self._attr_device_info = DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, config_entry_id)},
             manufacturer="VideoLAN",
             name=name,

@@ -14,6 +14,7 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -120,7 +121,7 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this Azure DevOps instance."""
         return DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._organization, self._project_name)},  # type: ignore
             manufacturer=self._organization,
             name=self._project_name,
