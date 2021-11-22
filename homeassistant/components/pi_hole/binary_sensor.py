@@ -1,5 +1,7 @@
 """Support for getting status from a Pi-hole system."""
-from typing import Any, Mapping
+from __future__ import annotations
+
+from typing import Any
 
 from hole import Hole
 
@@ -91,7 +93,7 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
         return False
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the Pi-hole."""
 
         if self.entity_description.version_current != "":
