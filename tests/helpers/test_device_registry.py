@@ -179,7 +179,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "model": "model",
                     "name": "name",
                     "sw_version": "version",
-                    "entry_type": "service",
+                    "entry_type": device_registry.DeviceEntryType.SERVICE,
                     "area_id": "12345A",
                     "name_by_user": "Test Friendly Name",
                     "disabled_by": device_registry.DISABLED_USER,
@@ -212,7 +212,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.id == "abcdefghijklm"
     assert entry.area_id == "12345A"
     assert entry.name_by_user == "Test Friendly Name"
-    assert entry.entry_type == "service"
+    assert entry.entry_type is device_registry.DeviceEntryType.SERVICE
     assert entry.disabled_by == device_registry.DISABLED_USER
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)
