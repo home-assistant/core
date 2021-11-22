@@ -135,7 +135,7 @@ async def async_restore_block_attribute_entities(
             name="",
             icon=entry.original_icon,
             unit=entry.unit_of_measurement,
-            device_class=entry.device_class,
+            device_class=entry.original_device_class,
         )
 
         entities.append(
