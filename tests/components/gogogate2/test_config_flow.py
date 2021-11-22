@@ -191,7 +191,9 @@ async def test_discovered_dhcp(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(ip="1.2.3.4", macaddress=MOCK_MAC_ADDR),
+        data=dhcp.DhcpServiceInfo(
+            ip="1.2.3.4", macaddress=MOCK_MAC_ADDR, hostname="mock_hostname"
+        ),
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
@@ -246,7 +248,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(ip="1.2.3.4", macaddress=MOCK_MAC_ADDR),
+        data=dhcp.DhcpServiceInfo(
+            ip="1.2.3.4", macaddress=MOCK_MAC_ADDR, hostname="mock_hostname"
+        ),
     )
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "already_in_progress"
@@ -254,7 +258,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(ip="1.2.3.4", macaddress="00:00:00:00:00:00"),
+        data=dhcp.DhcpServiceInfo(
+            ip="1.2.3.4", macaddress="00:00:00:00:00:00", hostname="mock_hostname"
+        ),
     )
     assert result3["type"] == RESULT_TYPE_ABORT
     assert result3["reason"] == "already_in_progress"
