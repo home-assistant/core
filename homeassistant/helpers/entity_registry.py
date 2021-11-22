@@ -59,7 +59,7 @@ DISABLED_INTEGRATION = "integration"
 DISABLED_USER = "user"
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -751,9 +751,13 @@ async def _async_migrate(
             entity["supported_features"] = entity.get("supported_features", 0)
             entity["unit_of_measurement"] = entity.get("unit_of_measurement")
 
+    if old_major_version < 2 and old_minor_version < 3:
+        # From version 1.2
+        for entity in data["entities"]:
             # Move device_class to original_device_class
             entity["original_device_class"] = entity["device_class"]
             entity["device_class"] = None
+
     if old_major_version > 1:
         raise NotImplementedError
     return data
