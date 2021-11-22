@@ -345,12 +345,12 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_in_progress():
             return self.async_abort(reason="already_in_progress")
 
-        vid = discovery_info["vid"]
-        pid = discovery_info["pid"]
-        serial_number = discovery_info["serial_number"]
-        device = discovery_info["device"]
-        manufacturer = discovery_info["manufacturer"]
-        description = discovery_info["description"]
+        vid = discovery_info[usb.ATTR_VID]
+        pid = discovery_info[usb.ATTR_PID]
+        serial_number = discovery_info[usb.ATTR_SERIAL_NUMBER]
+        device = discovery_info[usb.ATTR_DEVICE]
+        manufacturer = discovery_info[usb.ATTR_MANUFACTURER]
+        description = discovery_info[usb.ATTR_DESCRIPTION]
         # Zooz uses this vid/pid, but so do 2652 sticks
         if vid == "10C4" and pid == "EA60" and description and "2652" in description:
             return self.async_abort(reason="not_zwave_device")
