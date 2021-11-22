@@ -14,9 +14,9 @@ class NanoleafEntity(Entity):
         """Initialize an Nanoleaf entity."""
         self._nanoleaf = nanoleaf
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._nanoleaf.serial_no)},
-            manufacturer=self._nanoleaf.manufacturer,
-            model=self._nanoleaf.model,
-            name=self._nanoleaf.name,
-            sw_version=self._nanoleaf.firmware_version,
+            identifiers={(DOMAIN, nanoleaf.serial_no)},
+            manufacturer=nanoleaf.manufacturer,
+            model=nanoleaf.model,
+            name=nanoleaf.name,
+            sw_version=nanoleaf.firmware_version,
         )

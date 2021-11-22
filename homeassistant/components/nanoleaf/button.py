@@ -26,8 +26,8 @@ class NanoleafIdentifyButton(NanoleafEntity, ButtonEntity):
     def __init__(self, nanoleaf: Nanoleaf) -> None:
         """Initialize the Nanoleaf button."""
         super().__init__(nanoleaf)
-        self._attr_unique_id = f"{self._nanoleaf.serial_no}_identify"
-        self._attr_name = f"Identify {self._nanoleaf.name}"
+        self._attr_unique_id = f"{nanoleaf.serial_no}_identify"
+        self._attr_name = f"Identify {nanoleaf.name}"
         self._attr_icon = "mdi:magnify"
         self._attr_entity_category = ENTITY_CATEGORY_CONFIG
 

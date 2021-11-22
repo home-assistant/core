@@ -80,12 +80,10 @@ class NanoleafLight(NanoleafEntity, LightEntity):
     def __init__(self, nanoleaf: Nanoleaf) -> None:
         """Initialize the Nanoleaf light."""
         super().__init__(nanoleaf)
-        self._attr_unique_id = self._nanoleaf.serial_no
-        self._attr_name = self._nanoleaf.name
-        self._attr_min_mireds = math.ceil(
-            1000000 / self._nanoleaf.color_temperature_max
-        )
-        self._attr_max_mireds = kelvin_to_mired(self._nanoleaf.color_temperature_min)
+        self._attr_unique_id = nanoleaf.serial_no
+        self._attr_name = nanoleaf.name
+        self._attr_min_mireds = math.ceil(1000000 / nanoleaf.color_temperature_max)
+        self._attr_max_mireds = kelvin_to_mired(nanoleaf.color_temperature_min)
 
     @property
     def brightness(self) -> int:
