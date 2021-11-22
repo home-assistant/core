@@ -195,7 +195,14 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     elif state.domain == "remote" and features & SUPPORT_ACTIVITY:
         a_type = "ActivityRemote"
 
-    elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
+    elif state.domain in (
+        "automation",
+        "button",
+        "input_boolean",
+        "remote",
+        "scene",
+        "script",
+    ):
         a_type = "Switch"
 
     elif state.domain in ("input_select", "select"):
