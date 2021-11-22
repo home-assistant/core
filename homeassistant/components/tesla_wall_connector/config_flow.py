@@ -63,6 +63,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.ip_address = discovery_info[IP_ADDRESS]
         _LOGGER.info("Discovered Tesla Wall Connector at [%s]", self.ip_address)
 
+        self._async_abort_entries_match({CONF_HOST: self.ip_address})
+
         try:
             wall_connector = WallConnector(
                 host=self.ip_address, session=async_get_clientsession(self.hass)
@@ -78,7 +80,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.serial_number = version.serial_number
 
-        self._async_abort_entries_match({CONF_HOST: self.ip_address})
+        await self.async_set_unique_id(self.serial_number)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
 
         _LOGGER.info(
             "No entry found for wall connector with IP %s. Serial nr: %s",
