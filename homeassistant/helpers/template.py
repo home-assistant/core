@@ -1496,13 +1496,14 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
         return default
 
 
-def as_datetime(value, from_timestamp=False):
+def as_datetime(value):
     """Filter and to convert a time string or UNIX timestamp to datetime object."""
-    return (
-        dt_util.utc_from_timestamp(value)
-        if from_timestamp
-        else dt_util.parse_datetime(value)
-    )
+    try:
+        # Check for a valid UNIX timestamp string, int or float
+        timestamp = float(value)
+        return dt_util.utc_from_timestamp(timestamp)
+    except ValueError:
+        return dt_util.parse_datetime(value)
 
 
 def strptime(string, fmt, default=_SENTINEL):

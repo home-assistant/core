@@ -737,6 +737,7 @@ def test_as_datetime_from_timestamp(hass):
     tests = [
         (1469119144, "2016-07-21 16:39:04+00:00"),
         (1469119144.0, "2016-07-21 16:39:04+00:00"),
+        (-1, "1969-12-31 23:59:59+00:00"),
     ]
     for input, output in tests:
         # expected = dt_util.parse_datetime(input)
@@ -744,15 +745,19 @@ def test_as_datetime_from_timestamp(hass):
             output = str(output)
 
         assert (
-            template.Template(
-                f"{{{{ as_datetime({input}, from_timestamp=True) }}}}", hass
-            ).async_render()
+            template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
             == output
         )
         assert (
-            template.Template(
-                f"{{{{ {input} | as_datetime(from_timestamp=True) }}}}", hass
-            ).async_render()
+            template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
+            == output
+        )
+        assert (
+            template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
+            == output
+        )
+        assert (
+            template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
             == output
         )
 
