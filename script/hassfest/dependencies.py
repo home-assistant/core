@@ -95,6 +95,7 @@ ALLOWED_USED_COMPONENTS = {
     "alert",
     "automation",
     "conversation",
+    "button",
     "device_automation",
     "frontend",
     "group",
