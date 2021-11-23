@@ -77,7 +77,3 @@ EFFECT_SUPPORT_MODES = {COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
 CONF_CUSTOM_EFFECT_COLORS: Final = "custom_effect_colors"
 CONF_CUSTOM_EFFECT_SPEED_PCT: Final = "custom_effect_speed_pct"
 CONF_CUSTOM_EFFECT_TRANSITION: Final = "custom_effect_transition"
-
-FLUX_HOST: Final = "ipaddr"
-FLUX_MAC: Final = "id"
-FLUX_MODEL: Final = "model"
