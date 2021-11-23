@@ -1,7 +1,7 @@
 """Config flow to configure the WLED integration."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 from wled import WLED, WLEDConnectionError
@@ -57,7 +57,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         # Prepare configuration flow
-        return await self._handle_config_flow(cast(dict, discovery_info), True)
+        return await self._handle_config_flow({}, True)
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None

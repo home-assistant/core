@@ -107,7 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.update(
                     {
                         CONF_HOST: self.discovery_info[CONF_HOST],
-                        CONF_PORT: self.discovery_info.get(CONF_PORT, DEFAULT_PORT),
+                        CONF_PORT: self.discovery_info.port or DEFAULT_PORT,
                     }
                 )
             info, errors = await self._async_validate_or_error(user_input)
