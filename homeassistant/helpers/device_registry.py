@@ -501,6 +501,9 @@ class DeviceRegistry:
                 orphaned_timestamp=None,
             )
         )
+        for other_device in list(self.devices.values()):
+            if other_device.via_device_id == device_id:
+                self._async_update_device(other_device.id, via_device_id=None)
         self.hass.bus.async_fire(
             EVENT_DEVICE_REGISTRY_UPDATED, {"action": "remove", "device_id": device_id}
         )

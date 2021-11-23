@@ -420,7 +420,7 @@ async def test_deleted_device_removing_area_id(registry):
 
 
 async def test_specifying_via_device_create(registry):
-    """Test specifying a via_device and updating."""
+    """Test specifying a via_device and removal of the hub device."""
     via = registry.async_get_or_create(
         config_entry_id="123",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -439,6 +439,10 @@ async def test_specifying_via_device_create(registry):
     )
 
     assert light.via_device_id == via.id
+
+    registry.async_remove_device(via.id)
+    light = registry.async_get_device({("hue", "456")})
+    assert light.via_device_id is None
 
 
 async def test_specifying_via_device_update(registry):
