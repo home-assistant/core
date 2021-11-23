@@ -680,11 +680,13 @@ jobs:
         with:
           filters: .integration_paths.yaml
       - name: Determine integration tests to run
+        if: ${{ needs.changes.outputs.integrations }}
         id: tests
         run: |
           integrations=$(echo "${{ needs.changes.outputs.integrations }}" | | jq -cSr '. | join(" ")')
           echo "::set-output name=integrations::$(for integration in $integrations; do [[ -d "tests/components/${integration}" ]] && echo "${integration}: homeassistant/components/${integration}"; done)"
       - name: Test
+        if: ${{ needs.changes.outputs.integrations }}
         run: |
           tests/components/{${{ steps.tests.outputs.integrations }}}
 
