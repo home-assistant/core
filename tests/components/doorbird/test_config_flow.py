@@ -82,7 +82,7 @@ async def test_form_zeroconf_wrong_oui(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.HaServiceInfo(
+        data=zeroconf.ZeroconfServiceInfo(
             properties={"macaddress": "notdoorbirdoui"},
             host="192.168.1.8",
             name="Doorstation - abc123._axis-video._tcp.local.",
@@ -98,7 +98,7 @@ async def test_form_zeroconf_link_local_ignored(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.HaServiceInfo(
+        data=zeroconf.ZeroconfServiceInfo(
             properties={"macaddress": "1CCAE3DOORBIRD"},
             host="169.254.103.61",
             name="Doorstation - abc123._axis-video._tcp.local.",
@@ -121,7 +121,7 @@ async def test_form_zeroconf_correct_oui(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
+            data=zeroconf.ZeroconfServiceInfo(
                 properties={"macaddress": "1CCAE3DOORBIRD"},
                 name="Doorstation - abc123._axis-video._tcp.local.",
                 host="192.168.1.5",
@@ -180,7 +180,7 @@ async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
+            data=zeroconf.ZeroconfServiceInfo(
                 properties={"macaddress": "1CCAE3DOORBIRD"},
                 name="Doorstation - abc123._axis-video._tcp.local.",
                 host="192.168.1.5",

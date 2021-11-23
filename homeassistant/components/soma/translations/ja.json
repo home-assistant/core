@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "connection_error": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "result_error": "SOMAConnect\u306f\u30a8\u30e9\u30fc\u30b9\u30c6\u30fc\u30bf\u30b9\u3067\u5fdc\u7b54\u3057\u307e\u3057\u305f\u3002"
+        },
+        "create_entry": {
+            "default": "\u6b63\u5e38\u306b\u8a8d\u8a3c\u3055\u308c\u307e\u3057\u305f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            }
+        }
+    }
+}

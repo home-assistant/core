@@ -12,7 +12,6 @@ from homeassistant import config_entries, exceptions
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, PRINTER_TYPES
 from .utils import get_snmp_engine
@@ -81,7 +80,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Hostname is format: brother.local.
@@ -91,7 +90,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: self.host})
 
         snmp_engine = get_snmp_engine(self.hass)
-        model = discovery_info.get(zeroconf.ATTR_PROPERTIES, {}).get("product")
+        model = discovery_info[zeroconf.ATTR_PROPERTIES].get("product")
 
         try:
             self.brother = Brother(self.host, snmp_engine=snmp_engine, model=model)

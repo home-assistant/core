@@ -1,14 +1,37 @@
 {
     "config": {
-        "error": {
-            "faulty_credentials": "\u8a8d\u8a3c\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3001\u30c8\u30fc\u30af\u30f3\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044"
+        "abort": {
+            "already_in_progress": "\u69cb\u6210\u30d5\u30ed\u30fc\u306f\u3059\u3067\u306b\u9032\u884c\u4e2d\u3067\u3059",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
         },
+        "error": {
+            "faulty_credentials": "\u8a8d\u8a3c\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3001\u30c8\u30fc\u30af\u30f3\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044",
+            "ssl_error": "SSL\u8a3c\u660e\u66f8\u306e\u554f\u984c"
+        },
+        "flow_title": "{name} ({host})",
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8",
+                    "token": "\u30c8\u30fc\u30af\u30f3(\u30aa\u30d7\u30b7\u30e7\u30f3)"
+                }
+            },
             "select_server": {
                 "data": {
                     "server": "\u30b5\u30fc\u30d0\u30fc"
                 },
                 "title": "Plex\u30b5\u30fc\u30d0\u30fc\u3092\u9078\u629e"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "use_episode_art": "\u30a8\u30d4\u30bd\u30fc\u30c9\u30a2\u30fc\u30c8\u3092\u4f7f\u7528"
+                },
+                "description": "Plex Media Player\u306e\u30aa\u30d7\u30b7\u30e7\u30f3"
             }
         }
     }

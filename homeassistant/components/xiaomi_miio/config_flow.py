@@ -7,9 +7,11 @@ from micloud.micloudexception import MiCloudAccessDenied
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -154,13 +156,15 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         return await self.async_step_cloud()
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        name = discovery_info.get("name")
-        self.host = discovery_info.get("host")
-        self.mac = discovery_info.get("properties", {}).get("mac")
+        name = discovery_info[zeroconf.ATTR_NAME]
+        self.host = discovery_info[zeroconf.ATTR_HOST]
+        self.mac = discovery_info[zeroconf.ATTR_PROPERTIES].get("mac")
         if self.mac is None:
-            poch = discovery_info.get("properties", {}).get("poch", "")
+            poch = discovery_info[zeroconf.ATTR_PROPERTIES].get("poch", "")
             if (result := search(r"mac=\w+", poch)) is not None:
                 self.mac = result.group(0).split("=")[1]
 

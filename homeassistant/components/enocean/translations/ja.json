@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "USB\u30c9\u30f3\u30b0\u30eb\u306e\u30d1\u30b9"
+                }
+            },
+            "manual": {
+                "data": {
+                    "path": "USB\u30c9\u30f3\u30b0\u30eb\u306e\u30d1\u30b9"
+                }
+            }
+        }
+    }
+}

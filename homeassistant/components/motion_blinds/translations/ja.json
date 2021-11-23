@@ -1,13 +1,34 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "already_in_progress": "\u69cb\u6210\u30d5\u30ed\u30fc\u306f\u3059\u3067\u306b\u9032\u884c\u4e2d\u3067\u3059",
+            "connection_error": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+        },
         "error": {
+            "discovery_error": "Motion Gateway\u306e\u691c\u51fa\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "invalid_interface": "\u7121\u52b9\u306a\u30cd\u30c3\u30c8\u30ef\u30fc\u30af \u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30a4\u30b9"
         },
         "step": {
             "connect": {
                 "data": {
+                    "api_key": "API\u30ad\u30fc",
                     "interface": "\u4f7f\u7528\u3059\u308b\u30cd\u30c3\u30c8\u30ef\u30fc\u30af \u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30a4\u30b9"
-                }
+                },
+                "title": "\u30e2\u30fc\u30b7\u30e7\u30f3\u30d6\u30e9\u30a4\u30f3\u30c9"
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP\u30a2\u30c9\u30ec\u30b9"
+                },
+                "title": "\u63a5\u7d9a\u3057\u305f\u3044Motion Gateway\u3092\u9078\u629e\u3057\u307e\u3059\u3002"
+            },
+            "user": {
+                "data": {
+                    "host": "IP\u30a2\u30c9\u30ec\u30b9"
+                },
+                "description": "Motion Gateway\u306b\u63a5\u7d9a\u3057\u307e\u3059\u3002IP\u30a2\u30c9\u30ec\u30b9\u304c\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u306a\u3044\u5834\u5408\u306f\u3001\u81ea\u52d5\u691c\u51fa\u304c\u4f7f\u7528\u3055\u308c\u307e\u3059",
+                "title": "\u30e2\u30fc\u30b7\u30e7\u30f3\u30d6\u30e9\u30a4\u30f3\u30c9"
             }
         }
     },

@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc",
+                    "destination": "\u76ee\u7684\u5730",
+                    "name": "\u540d\u524d",
+                    "origin": "\u30aa\u30ea\u30b8\u30f3"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid": "\u907f\u3051\u308b",
+                    "language": "\u8a00\u8a9e",
+                    "mode": "\u30c8\u30e9\u30d9\u30eb\u30e2\u30fc\u30c9",
+                    "time": "\u6642\u9593",
+                    "time_type": "\u6642\u9593\u30bf\u30a4\u30d7",
+                    "transit_mode": "\u30c8\u30e9\u30f3\u30b8\u30c3\u30c8\u30e2\u30fc\u30c9",
+                    "transit_routing_preference": "\u30c8\u30e9\u30f3\u30b8\u30c3\u30c8\u30eb\u30fc\u30c6\u30a3\u30f3\u30b0\u306e\u8a2d\u5b9a",
+                    "units": "\u5358\u4f4d"
+                }
+            }
+        }
+    },
+    "title": "Google\u30de\u30c3\u30d7\u306e\u79fb\u52d5\u6642\u9593(Travel Time)"
+}

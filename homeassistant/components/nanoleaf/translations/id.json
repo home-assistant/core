@@ -9,9 +9,14 @@
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
+            "not_allowing_new_tokens": "Nanoleaf tidak mengizinkan token baru, ikuti petunjuk di atas.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
+        "flow_title": "{name}",
         "step": {
+            "link": {
+                "title": "Tautkan Nanoleaf"
+            },
             "user": {
                 "data": {
                     "host": "Host"

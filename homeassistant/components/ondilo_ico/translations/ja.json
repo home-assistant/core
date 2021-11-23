@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "\u8a8d\u8a3cURL\u306e\u751f\u6210\u304c\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8\u3057\u307e\u3057\u305f\u3002",
+            "missing_configuration": "Netatmo\u30b3\u30f3\u30dd\u30fc\u30cd\u30f3\u30c8\u304c\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u305b\u3093\u3002\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\u306b\u5f93\u3063\u3066\u304f\u3060\u3055\u3044\u3002"
+        },
+        "create_entry": {
+            "default": "\u6b63\u5e38\u306b\u8a8d\u8a3c\u3055\u308c\u307e\u3057\u305f"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "\u8a8d\u8a3c\u65b9\u6cd5\u306e\u9078\u629e"
+            }
+        }
+    }
+}

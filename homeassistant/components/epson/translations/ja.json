@@ -2,6 +2,14 @@
     "config": {
         "error": {
             "powered_off": "\u30d7\u30ed\u30b8\u30a7\u30af\u30bf\u30fc\u306e\u96fb\u6e90\u306f\u5165\u3063\u3066\u3044\u307e\u3059\u304b\uff1f\u521d\u671f\u8a2d\u5b9a\u3092\u884c\u3046\u305f\u3081\u306b\u306f\u3001\u30d7\u30ed\u30b8\u30a7\u30af\u30bf\u30fc\u306e\u96fb\u6e90\u3092\u5165\u308c\u3066\u304a\u304f\u8981\u304c\u3042\u308a\u307e\u3059\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "name": "\u540d\u524d"
+                }
+            }
         }
     }
 }

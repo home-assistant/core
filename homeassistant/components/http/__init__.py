@@ -13,6 +13,7 @@ from aiohttp.typedefs import StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 import voluptuous as vol
 
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import storage
@@ -20,7 +21,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
-import homeassistant.util as hass_util
 from homeassistant.util import ssl as ssl_util
 
 from .auth import setup_auth
@@ -190,7 +190,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http = server
 
-    local_ip = await hass.async_add_executor_job(hass_util.get_local_ip)
+    local_ip = await async_get_source_ip(hass)
 
     host = local_ip
     if server_host is not None:

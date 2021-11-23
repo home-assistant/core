@@ -20,6 +20,7 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -187,7 +188,7 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
         """Device info."""
         return DeviceInfo(
             default_name="Forecast",
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN,)},
             manufacturer="Met Éireann",
             model="Forecast",

@@ -15,6 +15,7 @@ from pyipp import (
 )
 import voluptuous as vol
 
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_HOST,
@@ -99,25 +100,27 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
-    async def async_step_zeroconf(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        port = discovery_info[CONF_PORT]
-        zctype = discovery_info["type"]
-        name = discovery_info[CONF_NAME].replace(f".{zctype}", "")
+        port = discovery_info[zeroconf.ATTR_PORT]
+        zctype = discovery_info[zeroconf.ATTR_TYPE]
+        name = discovery_info[zeroconf.ATTR_NAME].replace(f".{zctype}", "")
         tls = zctype == "_ipps._tcp.local."
-        base_path = discovery_info["properties"].get("rp", "ipp/print")
+        base_path = discovery_info[zeroconf.ATTR_PROPERTIES].get("rp", "ipp/print")
 
         self.context.update({"title_placeholders": {"name": name}})
 
         self.discovery_info.update(
             {
-                CONF_HOST: discovery_info[CONF_HOST],
+                CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
                 CONF_PORT: port,
                 CONF_SSL: tls,
                 CONF_VERIFY_SSL: False,
                 CONF_BASE_PATH: f"/{base_path}",
                 CONF_NAME: name,
-                CONF_UUID: discovery_info["properties"].get("UUID"),
+                CONF_UUID: discovery_info[zeroconf.ATTR_PROPERTIES].get("UUID"),
             }
         )
 

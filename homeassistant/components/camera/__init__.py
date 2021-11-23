@@ -570,8 +570,6 @@ class Camera(Entity):
 
         if self.frontend_stream_type:
             attrs["frontend_stream_type"] = self.frontend_stream_type
-            # Remove after home-assistant/frontend#10298 is merged into nightly
-            attrs["stream_type"] = self.frontend_stream_type
 
         return attrs
 

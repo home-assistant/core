@@ -8,7 +8,7 @@ from typing import cast
 from aioguardian import Client
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
@@ -40,12 +40,6 @@ PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_COORDINATOR: {},
-        DATA_COORDINATOR_PAIRED_SENSOR: {},
-    }
-
     client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
 
     # The valve controller's UDP-based API can't handle concurrent requests very well,
@@ -53,6 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_lock = asyncio.Lock()
 
     # Set up DataUpdateCoordinators for the valve controller:
+    coordinators: dict[str, GuardianDataUpdateCoordinator] = {}
     init_valve_controller_tasks = []
     for api, api_coro in (
         (API_SENSOR_PAIR_DUMP, client.sensor.pair_dump),
@@ -61,9 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         (API_VALVE_STATUS, client.valve.status),
         (API_WIFI_STATUS, client.wifi.status),
     ):
-        coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
-            api
-        ] = GuardianDataUpdateCoordinator(
+        coordinator = coordinators[api] = GuardianDataUpdateCoordinator(
             hass,
             client=client,
             api_name=api,
@@ -74,14 +67,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         init_valve_controller_tasks.append(coordinator.async_refresh())
 
     await asyncio.gather(*init_valve_controller_tasks)
-    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = client
 
     # Set up an object to evaluate each batch of paired sensor UIDs and add/remove
     # devices as appropriate:
-    paired_sensor_manager = hass.data[DOMAIN][entry.entry_id][
-        DATA_PAIRED_SENSOR_MANAGER
-    ] = PairedSensorManager(hass, entry, client, api_lock)
+    paired_sensor_manager = PairedSensorManager(hass, entry, client, api_lock)
     await paired_sensor_manager.async_process_latest_paired_sensor_uids()
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CLIENT: client,
+        DATA_COORDINATOR: coordinators,
+        DATA_COORDINATOR_PAIRED_SENSOR: {},
+        DATA_PAIRED_SENSOR_MANAGER: paired_sensor_manager,
+    }
 
     @callback
     def async_process_paired_sensor_uids() -> None:
@@ -90,9 +88,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             paired_sensor_manager.async_process_latest_paired_sensor_uids()
         )
 
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
-        API_SENSOR_PAIR_DUMP
-    ].async_add_listener(async_process_paired_sensor_uids)
+    coordinators[API_SENSOR_PAIR_DUMP].async_add_listener(
+        async_process_paired_sensor_uids
+    )
 
     # Set up all of the Guardian entity platforms:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -204,7 +202,7 @@ class GuardianEntity(CoordinatorEntity):
     ) -> None:
         """Initialize."""
         self._attr_device_info = DeviceInfo(manufacturer="Elexa")
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
+        self._attr_extra_state_attributes = {}
         self._entry = entry
         self.entity_description = description
 

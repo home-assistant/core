@@ -1,6 +1,10 @@
 """Support for Velbus thermostat."""
 from __future__ import annotations
 
+from typing import Any
+
+from velbusaio.channels import Temperature as VelbusTemp
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
@@ -33,6 +37,7 @@ async def async_setup_entry(
 class VelbusClimate(VelbusEntity, ClimateEntity):
     """Representation of a Velbus thermostat."""
 
+    _channel: VelbusTemp
     _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_hvac_mode = HVAC_MODE_HEAT
@@ -40,7 +45,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     _attr_preset_modes = list(PRESET_MODES)
 
     @property
-    def target_temperature(self) -> int | None:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._channel.get_climate_target()
 
@@ -56,7 +61,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
             None,
         )
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return

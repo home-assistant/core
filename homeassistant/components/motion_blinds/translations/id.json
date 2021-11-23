@@ -33,5 +33,12 @@
                 "title": "Motion Blinds"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Tentukan pengaturan opsional"
+            }
+        }
     }
 }

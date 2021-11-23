@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "all_configured": "\u3059\u3079\u3066\u306e\u3001Philips Hue bridge\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
             "discover_timeout": "Hue bridge\u3092\u767a\u898b(\u63a2\u308a\u5f53\u3066)\u3067\u304d\u307e\u305b\u3093",
             "no_bridges": "Hue bridge\u306f\u767a\u898b\u3055\u308c\u307e\u305b\u3093\u3067\u3057\u305f",
             "not_hue_bridge": "Hue bridge\u3067\u306f\u3042\u308a\u307e\u305b\u3093",
@@ -19,11 +21,38 @@
                 "title": "Hue bridge\u3092\u30d4\u30c3\u30af\u30a2\u30c3\u30d7"
             },
             "link": {
-                "description": "\u30d6\u30ea\u30c3\u30b8\u306e\u30dc\u30bf\u30f3\u3092\u62bc\u3059\u3068\u3001Philips Hue\u304cHome Assistant\u306b\u767b\u9332\u3055\u308c\u307e\u3059\u3002\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
+                "description": "\u30d6\u30ea\u30c3\u30b8\u306e\u30dc\u30bf\u30f3\u3092\u62bc\u3059\u3068\u3001Philips Hue\u304cHome Assistant\u306b\u767b\u9332\u3055\u308c\u307e\u3059\u3002\n\n![\u30d6\u30ea\u30c3\u30b8\u306e\u30dc\u30bf\u30f3\u306e\u4f4d\u7f6e](/static/images/config_philips_hue.jpg)",
                 "title": "\u30ea\u30f3\u30af\u30cf\u30d6"
             },
             "manual": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                },
                 "title": "Hue bridges\u3092\u624b\u52d5\u3067\u8a2d\u5b9a\u3059\u308b"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "1": "1\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "2": "2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "3": "3\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "4": "4\u756a\u76ee\u306e\u30dc\u30bf\u30f3"
+        },
+        "trigger_type": {
+            "double_short_release": "\u30dc\u30bf\u30f3 \"{subtype}\" \u96e2\u3059",
+            "initial_press": "\u30dc\u30bf\u30f3 \"{subtype}\" \u6700\u521d\u306b\u62bc\u3055\u308c\u305f",
+            "long_release": "\u30dc\u30bf\u30f3 \"{subtype}\" \u96e2\u3057\u305f\u5f8c\u306b\u9577\u62bc\u3057",
+            "repeat": "\u30dc\u30bf\u30f3 \"{subtype}\" \u3092\u62bc\u3057\u305f\u307e\u307e",
+            "short_release": "\u30dc\u30bf\u30f3 \"{subtype}\" \u77ed\u62bc\u3057\u306e\u5f8c\u306b\u96e2\u3059"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_scenes": "Hue\u30b7\u30fc\u30f3\u3092\u8a31\u53ef"
+                }
             }
         }
     }

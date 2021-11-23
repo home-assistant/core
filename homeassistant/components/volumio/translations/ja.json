@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "\u691c\u51fa\u3055\u308c\u305fVolumio\u306b\u63a5\u7d9a\u3067\u304d\u307e\u305b\u3093"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Volumio (`{name}`) \u3092Home Assistant\u306b\u8ffd\u52a0\u3057\u307e\u3059\u304b\uff1f",
+                "title": "Volumio\u3092\u767a\u898b"
+            },
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            }
+        }
+    }
+}

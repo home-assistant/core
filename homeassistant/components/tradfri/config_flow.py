@@ -11,9 +11,9 @@ from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_GATEWAY_ID,
@@ -42,7 +42,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._host = None
+        self._host: str | None = None
         self._import_groups = False
 
     async def async_step_user(
@@ -92,12 +92,18 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="auth", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle homekit discovery."""
-        await self.async_set_unique_id(discovery_info["properties"]["id"])
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
+        await self.async_set_unique_id(
+            discovery_info[zeroconf.ATTR_PROPERTIES][zeroconf.ATTR_PROPERTIES_ID]
+        )
+        self._abort_if_unique_id_configured(
+            {CONF_HOST: discovery_info[zeroconf.ATTR_HOST]}
+        )
 
-        host = discovery_info["host"]
+        host = discovery_info[zeroconf.ATTR_HOST]
 
         for entry in self._async_current_entries():
             if entry.data.get(CONF_HOST) != host:
@@ -106,7 +112,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Backwards compat, we update old entries
             if not entry.unique_id:
                 self.hass.config_entries.async_update_entry(
-                    entry, unique_id=discovery_info["properties"]["id"]
+                    entry,
+                    unique_id=discovery_info[zeroconf.ATTR_PROPERTIES][
+                        zeroconf.ATTR_PROPERTIES_ID
+                    ],
                 )
 
             return self.async_abort(reason="already_configured")

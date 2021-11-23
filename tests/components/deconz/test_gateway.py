@@ -176,10 +176,10 @@ async def test_gateway_setup(hass, aioclient_mock):
     )
 
     assert gateway_entry.configuration_url == f"http://{HOST}:{PORT}"
-    assert gateway_entry.entry_type == "service"
+    assert gateway_entry.entry_type is dr.DeviceEntryType.SERVICE
 
 
-async def test_gateway_device_no_configuration_url_when_addon(hass, aioclient_mock):
+async def test_gateway_device_configuration_url_when_addon(hass, aioclient_mock):
     """Successful setup."""
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
@@ -195,7 +195,9 @@ async def test_gateway_device_no_configuration_url_when_addon(hass, aioclient_mo
         identifiers={(DECONZ_DOMAIN, gateway.bridgeid)}
     )
 
-    assert not gateway_entry.configuration_url
+    assert (
+        gateway_entry.configuration_url == "homeassistant://hassio/ingress/core_deconz"
+    )
 
 
 async def test_gateway_retry(hass):

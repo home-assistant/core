@@ -4,8 +4,8 @@
             "brightness_decrease": "{entity_name} f\u00e9nyerej\u00e9nek cs\u00f6kkent\u00e9se",
             "brightness_increase": "{entity_name} f\u00e9nyerej\u00e9nek n\u00f6vel\u00e9se",
             "flash": "Vaku {entity_name}",
-            "toggle": "{entity_name} fel/lekapcsol\u00e1sa",
-            "turn_off": "{entity_name} lekapcsol\u00e1sa",
+            "toggle": "{entity_name} be/kikapcsol\u00e1sa",
+            "turn_off": "{entity_name} kikapcsol\u00e1sa",
             "turn_on": "{entity_name} felkapcsol\u00e1sa"
         },
         "condition_type": {

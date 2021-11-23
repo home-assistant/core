@@ -9,7 +9,7 @@ import voluptuous as vol
 from xknx import XKNX
 from xknx.devices.climate import SetpointShiftMode
 from xknx.dpt import DPTBase, DPTNumeric
-from xknx.exceptions import CouldNotParseAddress
+from xknx.exceptions import ConversionError, CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
@@ -40,6 +40,8 @@ from .const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    CONF_PAYLOAD,
+    CONF_PAYLOAD_LENGTH,
     CONF_RESET_AFTER,
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -123,20 +125,49 @@ def numeric_type_validator(value: Any) -> str | int:
     raise vol.Invalid(f"value '{value}' is not a valid numeric sensor type.")
 
 
+def _max_payload_value(payload_length: int) -> int:
+    if payload_length == 0:
+        return 0x3F
+    return int(256 ** payload_length) - 1
+
+
+def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:
+    """Validate a button entity payload configuration."""
+    if _type := entity_config.get(CONF_TYPE):
+        _payload = entity_config[ButtonSchema.CONF_VALUE]
+        if (transcoder := DPTBase.parse_transcoder(_type)) is None:
+            raise vol.Invalid(f"'type: {_type}' is not a valid sensor type.")
+        entity_config[CONF_PAYLOAD_LENGTH] = transcoder.payload_length
+        try:
+            entity_config[CONF_PAYLOAD] = int.from_bytes(
+                transcoder.to_knx(_payload), byteorder="big"
+            )
+        except ConversionError as ex:
+            raise vol.Invalid(
+                f"'payload: {_payload}' not valid for 'type: {_type}'"
+            ) from ex
+        return entity_config
+
+    _payload = entity_config[CONF_PAYLOAD]
+    _payload_length = entity_config[CONF_PAYLOAD_LENGTH]
+    if _payload > (max_payload := _max_payload_value(_payload_length)):
+        raise vol.Invalid(
+            f"'payload: {_payload}' exceeds possible maximum for "
+            f"payload_length {_payload_length}: {max_payload}"
+        )
+    return entity_config
+
+
 def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     """Validate a select entity options configuration."""
     options_seen = set()
     payloads_seen = set()
-    payload_length = entity_config[SelectSchema.CONF_PAYLOAD_LENGTH]
-    if payload_length == 0:
-        max_payload = 0x3F
-    else:
-        max_payload = 256 ** payload_length - 1
+    payload_length = entity_config[CONF_PAYLOAD_LENGTH]
 
     for opt in entity_config[SelectSchema.CONF_OPTIONS]:
         option = opt[SelectSchema.CONF_OPTION]
-        payload = opt[SelectSchema.CONF_PAYLOAD]
-        if payload > max_payload:
+        payload = opt[CONF_PAYLOAD]
+        if payload > (max_payload := _max_payload_value(payload_length)):
             raise vol.Invalid(
                 f"'payload: {payload}' for 'option: {option}' exceeds possible"
                 f" maximum of 'payload_length: {payload_length}': {max_payload}"
@@ -170,7 +201,11 @@ sync_state_validator = vol.Any(
 
 
 class ConnectionSchema:
-    """Voluptuous schema for KNX connection."""
+    """
+    Voluptuous schema for KNX connection.
+
+    DEPRECATED: Migrated to config and options flow. Will be removed in a future version of Home Assistant.
+    """
 
     CONF_KNX_LOCAL_IP = "local_ip"
     CONF_KNX_MCAST_GRP = "multicast_group"
@@ -178,6 +213,9 @@ class ConnectionSchema:
     CONF_KNX_RATE_LIMIT = "rate_limit"
     CONF_KNX_ROUTE_BACK = "route_back"
     CONF_KNX_STATE_UPDATER = "state_updater"
+
+    CONF_KNX_DEFAULT_STATE_UPDATER = True
+    CONF_KNX_DEFAULT_RATE_LIMIT = 20
 
     TUNNELING_SCHEMA = vol.Schema(
         {
@@ -198,8 +236,10 @@ class ConnectionSchema:
         ): ia_validator,
         vol.Optional(CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): cv.string,
         vol.Optional(CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT): cv.port,
-        vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
-        vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
+        vol.Optional(
+            CONF_KNX_STATE_UPDATER, default=CONF_KNX_DEFAULT_STATE_UPDATER
+        ): cv.boolean,
+        vol.Optional(CONF_KNX_RATE_LIMIT, default=CONF_KNX_DEFAULT_RATE_LIMIT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
     }
@@ -281,6 +321,67 @@ class BinarySensorSchema(KNXPlatformSchema):
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
+    )
+
+
+class ButtonSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX buttons."""
+
+    PLATFORM_NAME = SupportedPlatforms.BUTTON.value
+
+    CONF_VALUE = "value"
+    DEFAULT_NAME = "KNX Button"
+
+    payload_or_value_msg = f"Please use only one of `{CONF_PAYLOAD}` or `{CONF_VALUE}`"
+    length_or_type_msg = (
+        f"Please use only one of `{CONF_PAYLOAD_LENGTH}` or `{CONF_TYPE}`"
+    )
+
+    ENTITY_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Required(KNX_ADDRESS): ga_validator,
+                vol.Exclusive(
+                    CONF_PAYLOAD, "payload_or_value", msg=payload_or_value_msg
+                ): object,
+                vol.Exclusive(
+                    CONF_VALUE, "payload_or_value", msg=payload_or_value_msg
+                ): object,
+                vol.Exclusive(
+                    CONF_PAYLOAD_LENGTH, "length_or_type", msg=length_or_type_msg
+                ): object,
+                vol.Exclusive(
+                    CONF_TYPE, "length_or_type", msg=length_or_type_msg
+                ): object,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            }
+        ),
+        vol.Any(
+            vol.Schema(
+                # encoded value
+                {
+                    vol.Required(CONF_VALUE): vol.Any(int, float, str),
+                    vol.Required(CONF_TYPE): sensor_type_validator,
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
+            vol.Schema(
+                # raw payload - default is DPT 1 style True
+                {
+                    vol.Optional(CONF_PAYLOAD, default=1): cv.positive_int,
+                    vol.Optional(CONF_PAYLOAD_LENGTH, default=0): vol.All(
+                        vol.Coerce(int), vol.Range(min=0, max=14)
+                    ),
+                    vol.Optional(CONF_VALUE): None,
+                    vol.Optional(CONF_TYPE): None,
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
+        ),
+        # calculate raw CONF_PAYLOAD and CONF_PAYLOAD_LENGTH
+        # from CONF_VALUE and CONF_TYPE if given and check payload size
+        button_payload_sub_validator,
     )
 
 
@@ -733,8 +834,6 @@ class SelectSchema(KNXPlatformSchema):
 
     CONF_OPTION = "option"
     CONF_OPTIONS = "options"
-    CONF_PAYLOAD = "payload"
-    CONF_PAYLOAD_LENGTH = "payload_length"
     DEFAULT_NAME = "KNX Select"
 
     ENTITY_SCHEMA = vol.All(

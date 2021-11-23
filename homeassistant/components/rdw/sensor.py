@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from typing import Callable
 
 from vehicle import Vehicle
@@ -13,22 +14,22 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import CONF_LICENSE_PLATE, DOMAIN, ENTRY_TYPE_SERVICE
+from .const import CONF_LICENSE_PLATE, DOMAIN
 
 
 @dataclass
 class RDWSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Vehicle], str | float | None]
+    value_fn: Callable[[Vehicle], date | str | float | None]
 
 
 @dataclass
@@ -43,13 +44,13 @@ SENSORS: tuple[RDWSensorEntityDescription, ...] = (
         key="apk_expiration",
         name="APK Expiration",
         device_class=DEVICE_CLASS_DATE,
-        value_fn=lambda vehicle: vehicle.apk_expiration.isoformat(),
+        value_fn=lambda vehicle: vehicle.apk_expiration,
     ),
     RDWSensorEntityDescription(
-        key="name_registration_date",
-        name="Name Registration Date",
+        key="ascription_date",
+        name="Ascription Date",
         device_class=DEVICE_CLASS_DATE,
-        value_fn=lambda vehicle: vehicle.name_registration_date.isoformat(),
+        value_fn=lambda vehicle: vehicle.ascription_date,
     ),
 )
 
@@ -89,7 +90,7 @@ class RDWSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{license_plate}_{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            entry_type=ENTRY_TYPE_SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{license_plate}")},
             manufacturer=coordinator.data.brand,
             name=f"{coordinator.data.brand}: {coordinator.data.license_plate}",
@@ -98,6 +99,6 @@ class RDWSensorEntity(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> date | str | float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -6,9 +6,10 @@
             "is_connected": "{entity_name} \u304c\u63a5\u7d9a\u3055\u308c\u3066\u3044\u307e\u3059",
             "is_gas": "{entity_name} \u304c\u3001\u30ac\u30b9\u3092\u691c\u51fa\u3057\u3066\u3044\u307e\u3059",
             "is_hot": "{entity_name} \u71b1\u3044",
-            "is_light": "{\u30a8\u30f3\u30c6\u30a3\u30c6\u30a3\u540d} \u304c\u5149\u3092\u691c\u77e5\u3057\u3066\u3044\u307e\u3059",
+            "is_light": "{entity_name} \u304c\u5149\u3092\u691c\u77e5\u3057\u3066\u3044\u307e\u3059",
             "is_locked": "{entity_name} \u306f\u30ed\u30c3\u30af\u3055\u308c\u3066\u3044\u307e\u3059",
             "is_moist": "{entity_name} \u306f\u6e7f\u3063\u3066\u3044\u307e\u3059",
+            "is_no_update": "{entity_name} \u306f\u6700\u65b0\u3067\u3059",
             "is_no_vibration": "{entity_name} \u306f\u632f\u52d5\u3092\u611f\u77e5\u3057\u3066\u3044\u307e\u305b\u3093",
             "is_not_bat_low": "{entity_name} \u30d0\u30c3\u30c6\u30ea\u30fc\u306f\u6b63\u5e38\u3067\u3059",
             "is_not_cold": "{entity_name} \u51b7\u3048\u3066\u3044\u307e\u305b\u3093",
@@ -38,6 +39,7 @@
             "is_sound": "{entity_name} \u304c\u97f3\u3092\u691c\u77e5\u3057\u3066\u3044\u307e\u3059",
             "is_tampered": "{entity_name} \u304c\u6539\u7ac4(tampering)\u3092\u691c\u51fa\u3057\u3066\u3044\u307e\u3059",
             "is_unsafe": "{entity_name} \u306f\u5b89\u5168\u3067\u306f\u3042\u308a\u307e\u305b\u3093",
+            "is_update": "{entity_name} \u306b\u5229\u7528\u53ef\u80fd\u306a\u30a2\u30c3\u30d7\u30c7\u30fc\u30c8\u304c\u3042\u308a\u307e\u3059",
             "is_vibration": "{entity_name} \u304c\u632f\u52d5\u3092\u611f\u77e5\u3057\u3066\u3044\u307e\u3059"
         },
         "trigger_type": {
@@ -48,7 +50,9 @@
             "hot": "{entity_name} \u6e29\u307e\u3063\u3066\u3044\u307e\u3059",
             "is_not_tampered": "{entity_name} \u304c\u6539\u7ac4(tampering)\u306e\u691c\u51fa\u3092\u505c\u6b62\u3057\u307e\u3057\u305f",
             "is_tampered": "{entity_name} \u304c\u6539\u7ac4(tampering)\u306e\u691c\u51fa\u3092\u958b\u59cb\u3057\u307e\u3057\u305f",
+            "no_update": "{entity_name} \u304c\u6700\u65b0\u306b\u306a\u308a\u307e\u3057\u305f",
             "no_vibration": "{entity_name} \u304c\u632f\u52d5\u3092\u611f\u77e5\u3057\u306a\u304f\u306a\u3063\u305f",
+            "not_cold": "{entity_name} \u306f\u51b7\u3048\u3066\u3044\u307e\u305b\u3093",
             "not_connected": "{entity_name} \u304c\u5207\u65ad\u3055\u308c\u307e\u3057\u305f",
             "not_hot": "{entity_name} \u6e29\u307e\u3063\u3066\u3044\u307e\u305b\u3093",
             "not_locked": "{entity_name} \u306e\u30ed\u30c3\u30af\u304c\u89e3\u9664\u3055\u308c\u307e\u3057\u305f",
@@ -72,6 +76,7 @@
             "turned_off": "{entity_name} \u30aa\u30d5\u306b\u306a\u308a\u307e\u3057\u305f",
             "turned_on": "{entity_name} \u30aa\u30f3\u306b\u306a\u3063\u3066\u3044\u307e\u3059",
             "unsafe": "{entity_name} \u306f\u5b89\u5168\u3067\u306f\u306a\u304f\u306a\u308a\u307e\u3057\u305f",
+            "update": "{entity_name} \u306f\u3001\u5229\u7528\u53ef\u80fd\u306a\u30a2\u30c3\u30d7\u30c7\u30fc\u30c8\u3092\u53d6\u5f97\u3057\u307e\u3057\u305f\u3002",
             "vibration": "{entity_name} \u304c\u632f\u52d5\u3092\u611f\u77e5\u3057\u59cb\u3081\u307e\u3057\u305f"
         }
     },
@@ -97,6 +102,10 @@
             "off": "\u901a\u5e38",
             "on": "\u4f4e"
         },
+        "battery_charging": {
+            "off": "\u5145\u96fb\u3057\u3066\u3044\u306a\u3044",
+            "on": "\u5145\u96fb"
+        },
         "cold": {
             "off": "\u901a\u5e38",
             "on": "\u4f4e\u6e29"
@@ -121,6 +130,10 @@
             "off": "\u6b63\u5e38",
             "on": "\u9ad8\u6e29"
         },
+        "light": {
+            "off": "\u30e9\u30a4\u30c8\u306a\u3057",
+            "on": "\u30e9\u30a4\u30c8\u3092\u691c\u51fa"
+        },
         "lock": {
             "off": "\u30ed\u30c3\u30af\u3055\u308c\u307e\u3057\u305f",
             "on": "\u30ed\u30c3\u30af\u3055\u308c\u3066\u3044\u307e\u305b\u3093"
@@ -141,12 +154,17 @@
             "off": "\u9589\u9396",
             "on": "\u958b\u653e"
         },
+        "plug": {
+            "off": "\u30a2\u30f3\u30d7\u30e9\u30b0\u30c9",
+            "on": "\u30d7\u30e9\u30b0\u30a4\u30f3"
+        },
         "presence": {
             "off": "\u5916\u51fa",
             "on": "\u5728\u5b85"
         },
         "problem": {
-            "off": "OK"
+            "off": "OK",
+            "on": "\u554f\u984c"
         },
         "running": {
             "off": "\u30e9\u30f3\u30cb\u30f3\u30b0\u3067\u306f\u306a\u3044",
@@ -163,6 +181,10 @@
         "sound": {
             "off": "\u672a\u691c\u51fa",
             "on": "\u691c\u51fa"
+        },
+        "update": {
+            "off": "\u6700\u65b0",
+            "on": "\u66f4\u65b0\u53ef\u80fd"
         },
         "vibration": {
             "off": "\u30af\u30ea\u30a2",

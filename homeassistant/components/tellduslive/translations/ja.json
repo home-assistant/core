@@ -1,7 +1,18 @@
 {
     "config": {
+        "abort": {
+            "authorize_url_timeout": "\u8a8d\u8a3cURL\u306e\u751f\u6210\u304c\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8\u3057\u307e\u3057\u305f\u3002",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
         "step": {
+            "auth": {
+                "description": "TelldusLive\u30a2\u30ab\u30a6\u30f3\u30c8\u3092\u30ea\u30f3\u30af\u3059\u308b\u306b\u306f:\n1. \u4ee5\u4e0b\u306e\u30ea\u30f3\u30af\u3092\u30af\u30ea\u30c3\u30af\u3057\u307e\u3059\n2. Telldus Live\u306b\u30ed\u30b0\u30a4\u30f3\u3057\u307e\u3059\n3.  **{app_name}** \u3092\u627f\u8a8d\u3057\u307e\u3059(**Yes(\u306f\u3044)**\u3092\u30af\u30ea\u30c3\u30af\u3057\u307e\u3059)\n4. \u3053\u3053\u306b\u623b\u3063\u3066\u304d\u3066\u3001**\u9001\u4fe1(submit)** \u3092\u30af\u30ea\u30c3\u30af\u3057\u307e\u3059\u3002 \n\n [TelldusLive\u30a2\u30ab\u30a6\u30f3\u30c8\u306e\u30ea\u30f3\u30af]({auth_url})",
+                "title": "TelldusLive\u306b\u5bfe\u3057\u3066\u8a8d\u8a3c\u3059\u308b"
+            },
             "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                },
                 "description": "\u7a7a",
                 "title": "\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u3092\u9078\u3076\u3002"
             }

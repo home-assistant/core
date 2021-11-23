@@ -11,7 +11,9 @@ import attr
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import RequiredParameterMissing
+from homeassistant.helpers.frame import report
 from homeassistant.loader import bind_hass
+from homeassistant.util.enum import StrEnum
 import homeassistant.util.uuid as uuid_util
 
 from .debounce import Debouncer
@@ -49,6 +51,12 @@ class _DeviceIndex(NamedTuple):
     connections: dict[tuple[str, str], str]
 
 
+class DeviceEntryType(StrEnum):
+    """Device entry type."""
+
+    SERVICE = "service"
+
+
 @attr.s(slots=True, frozen=True)
 class DeviceEntry:
     """Device Registry Entry."""
@@ -68,7 +76,7 @@ class DeviceEntry:
             )
         ),
     )
-    entry_type: str | None = attr.ib(default=None)
+    entry_type: DeviceEntryType | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     identifiers: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
     manufacturer: str | None = attr.ib(default=None)
@@ -162,7 +170,9 @@ class DeviceRegistry:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
         self.hass = hass
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = hass.helpers.storage.Store(
+            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        )
         self._clear_index()
 
     @callback
@@ -252,7 +262,7 @@ class DeviceRegistry:
         default_name: str | None | UndefinedType = UNDEFINED,
         # To disable a device if it gets created
         disabled_by: str | None | UndefinedType = UNDEFINED,
-        entry_type: str | None | UndefinedType = UNDEFINED,
+        entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         identifiers: set[tuple[str, str]] | None = None,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
@@ -300,6 +310,14 @@ class DeviceRegistry:
             via_device_id: str | UndefinedType = via.id if via else UNDEFINED
         else:
             via_device_id = UNDEFINED
+
+        if isinstance(entry_type, str) and not isinstance(entry_type, DeviceEntryType):
+            report(  # type: ignore[unreachable]
+                "uses str for device registry entry_type. This is deprecated, "
+                "it should be updated to use DeviceEntryType instead",
+                error_if_core=False,
+            )
+            entry_type = DeviceEntryType(entry_type)
 
         device = self._async_update_device(
             device.id,
@@ -368,7 +386,7 @@ class DeviceRegistry:
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | None | UndefinedType = UNDEFINED,
         disabled_by: str | None | UndefinedType = UNDEFINED,
-        entry_type: str | None | UndefinedType = UNDEFINED,
+        entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
@@ -483,6 +501,9 @@ class DeviceRegistry:
                 orphaned_timestamp=None,
             )
         )
+        for other_device in list(self.devices.values()):
+            if other_device.via_device_id == device_id:
+                self._async_update_device(other_device.id, via_device_id=None)
         self.hass.bus.async_fire(
             EVENT_DEVICE_REGISTRY_UPDATED, {"action": "remove", "device_id": device_id}
         )
@@ -509,7 +530,9 @@ class DeviceRegistry:
                     name=device["name"],
                     sw_version=device["sw_version"],
                     # Introduced in 0.110
-                    entry_type=device.get("entry_type"),
+                    entry_type=DeviceEntryType(device["entry_type"])
+                    if device.get("entry_type")
+                    else None,
                     id=device["id"],
                     # Introduced in 0.79
                     # renamed in 0.95

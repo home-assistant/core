@@ -7,6 +7,7 @@ from miio import DeviceException
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 
@@ -391,11 +392,11 @@ async def test_zeroconf_gateway_success(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            CONF_HOST: TEST_HOST,
-            ZEROCONF_NAME: TEST_ZEROCONF_NAME,
-            ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            name=TEST_ZEROCONF_NAME,
+            properties={ZEROCONF_MAC: TEST_MAC},
+        ),
     )
 
     assert result["type"] == "form"
@@ -430,11 +431,11 @@ async def test_zeroconf_unknown_device(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            CONF_HOST: TEST_HOST,
-            ZEROCONF_NAME: "not-a-xiaomi-miio-device",
-            ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            name="not-a-xiaomi-miio-device",
+            properties={ZEROCONF_MAC: TEST_MAC},
+        ),
     )
 
     assert result["type"] == "abort"
@@ -444,7 +445,9 @@ async def test_zeroconf_unknown_device(hass):
 async def test_zeroconf_no_data(hass):
     """Test a failed zeroconf discovery because of no data."""
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data={}
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(host=None, name=None, properties={}),
     )
 
     assert result["type"] == "abort"
@@ -456,7 +459,9 @@ async def test_zeroconf_missing_data(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={CONF_HOST: TEST_HOST, ZEROCONF_NAME: TEST_ZEROCONF_NAME},
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST, name=TEST_ZEROCONF_NAME, properties={}
+        ),
     )
 
     assert result["type"] == "abort"
@@ -746,11 +751,11 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            CONF_HOST: TEST_HOST,
-            ZEROCONF_NAME: zeroconf_name_to_test,
-            ZEROCONF_PROP: {"poch": f"0:mac={TEST_MAC_DEVICE}\x00"},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            name=zeroconf_name_to_test,
+            properties={"poch": f"0:mac={TEST_MAC_DEVICE}\x00"},
+        ),
     )
 
     assert result["type"] == "form"

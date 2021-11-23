@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3092\u958b\u59cb\u3057\u307e\u3059\u304b\uff1f",
+                "title": "\u30ed\u30fc\u30ab\u30ebIP\u30a2\u30c9\u30ec\u30b9"
+            }
+        }
+    },
+    "title": "\u30ed\u30fc\u30ab\u30ebIP\u30a2\u30c9\u30ec\u30b9"
+}

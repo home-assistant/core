@@ -7,6 +7,7 @@ from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connecti
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -17,8 +18,8 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_WS_PORT,
@@ -99,15 +100,17 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._ssl: bool | None = DEFAULT_SSL
         self._discovery_name: str | None = None
 
-    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        self._host = discovery_info["host"]
-        self._port = int(discovery_info["port"])
-        self._name = discovery_info["hostname"][: -len(".local.")]
-        if not (uuid := discovery_info["properties"].get("uuid")):
+        self._host = discovery_info[zeroconf.ATTR_HOST]
+        self._port = int(discovery_info[zeroconf.ATTR_PORT])
+        self._name = discovery_info[zeroconf.ATTR_HOSTNAME][: -len(".local.")]
+        if not (uuid := discovery_info[zeroconf.ATTR_PROPERTIES].get("uuid")):
             return self.async_abort(reason="no_uuid")
 
-        self._discovery_name = discovery_info["name"]
+        self._discovery_name = discovery_info[zeroconf.ATTR_NAME]
 
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured(

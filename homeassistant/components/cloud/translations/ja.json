@@ -1,7 +1,15 @@
 {
     "system_health": {
         "info": {
-            "remote_server": "\u30ea\u30e2\u30fc\u30c8\u30b5\u30fc\u30d0\u30fc"
+            "alexa_enabled": "Alexa\u6709\u52b9",
+            "can_reach_cloud_auth": "\u8a8d\u8a3c\u30b5\u30fc\u30d0\u30fc\u306b\u5230\u9054",
+            "google_enabled": "Google\u6709\u52b9",
+            "logged_in": "\u30ed\u30b0\u30a4\u30f3\u6e08",
+            "relayer_connected": "\u63a5\u7d9a\u3055\u308c\u305f\u518d\u30ec\u30a4\u30e4\u30fc",
+            "remote_connected": "\u30ea\u30e2\u30fc\u30c8\u63a5\u7d9a",
+            "remote_enabled": "\u30ea\u30e2\u30fc\u30c8\u6709\u52b9",
+            "remote_server": "\u30ea\u30e2\u30fc\u30c8\u30b5\u30fc\u30d0\u30fc",
+            "subscription_expiration": "\u30b5\u30d6\u30b9\u30af\u30ea\u30d7\u30b7\u30e7\u30f3\u306e\u6709\u52b9\u671f\u9650"
         }
     }
 }
