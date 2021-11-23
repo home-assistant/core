@@ -558,6 +558,21 @@ async def test_ssdp_flow_existing(
     assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
 
 
+async def test_ssdp_flow_duplicate_location(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+) -> None:
+    """Test that discovery of device with URL matching existing entry gets aborted."""
+    config_entry_mock.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_DISCOVERY,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry_mock.data[CONF_URL] == MOCK_DEVICE_LOCATION
+
+
 async def test_ssdp_flow_upnp_udn(
     hass: HomeAssistant, config_entry_mock: MockConfigEntry
 ) -> None:

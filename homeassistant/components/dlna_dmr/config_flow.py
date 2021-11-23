@@ -236,6 +236,10 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="already_in_progress")
 
+        # Abort if another config entry has the same location, in case the
+        # device doesn't have a static and unique UDN (breaking the UPnP spec).
+        self._async_abort_entries_match({CONF_URL: self._location})
+
         self.context["title_placeholders"] = {"name": self._name}
 
         return await self.async_step_confirm()
