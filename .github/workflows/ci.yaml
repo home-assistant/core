@@ -696,7 +696,7 @@ jobs:
             --durations=10 \
             -n auto \
             --dist=loadfile \
-            --test-group-count 4 \
+            --test-group-count 6 \
             --test-group=${{ matrix.group }} \
             --cov homeassistant \
             --cov-report= \
