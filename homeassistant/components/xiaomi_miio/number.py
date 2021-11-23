@@ -33,6 +33,7 @@ from .const import (
     FEATURE_SET_FAN_LEVEL,
     FEATURE_SET_FAVORITE_LEVEL,
     FEATURE_SET_FAVORITE_RPM,
+    FEATURE_SET_LED_BRIGHTNESS,
     FEATURE_SET_LED_BRIGHTNESS_LEVEL,
     FEATURE_SET_MOTOR_SPEED,
     FEATURE_SET_OSCILLATION_ANGLE,
@@ -95,17 +96,6 @@ class OscillationAngleValues:
     max_value: float | None = None
     min_value: float | None = None
     step: float | None = None
-
-
-@dataclass
-class LightBrightnessValues:
-    """A class that describes LED brightness values."""
-
-    key: str = ATTR_LED_BRIGHTNESS_LEVEL
-    max_value: float | None = None
-    min_value: float | None = None
-    step: float | None = None
-    method: str = "async_set_led_brightness_level"
 
 
 NUMBER_TYPES = {
@@ -173,6 +163,16 @@ NUMBER_TYPES = {
         method="async_set_delay_off_countdown",
         entity_category=ENTITY_CATEGORY_CONFIG,
     ),
+    FEATURE_SET_LED_BRIGHTNESS: XiaomiMiioNumberDescription(
+        key=ATTR_LED_BRIGHTNESS,
+        name="Led Brightness",
+        icon="mdi:brightness-6",
+        min_value=0,
+        max_value=100,
+        step=1,
+        method="async_set_led_brightness",
+        entity_category=ENTITY_CATEGORY_CONFIG,
+    ),
     FEATURE_SET_LED_BRIGHTNESS_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS_LEVEL,
         name="Led Brightness",
@@ -229,23 +229,6 @@ OSCILLATION_ANGLE_VALUES = {
     MODEL_FAN_P11: OscillationAngleValues(max_value=140, min_value=30, step=30),
 }
 
-LED_BRIGHTNESS_VALUES = {
-    MODEL_FAN_ZA5: LightBrightnessValues(
-        key=ATTR_LED_BRIGHTNESS,
-        max_value=100,
-        min_value=0,
-        step=1,
-        method="async_set_led_brightness",
-    ),
-    MODEL_AIRPURIFIER_3C: LightBrightnessValues(
-        key=ATTR_LED_BRIGHTNESS_LEVEL,
-        max_value=8,
-        min_value=0,
-        step=1,
-        method="async_set_led_brightness_level",
-    ),
-}
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Selectors from a config entry."""
@@ -273,15 +256,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 description.max_value = OSCILLATION_ANGLE_VALUES[model].max_value
                 description.min_value = OSCILLATION_ANGLE_VALUES[model].min_value
                 description.step = OSCILLATION_ANGLE_VALUES[model].step
-            if (
-                description.key == ATTR_LED_BRIGHTNESS_LEVEL
-                and model in LED_BRIGHTNESS_VALUES
-            ):
-                description.key = LED_BRIGHTNESS_VALUES[model].key
-                description.max_value = LED_BRIGHTNESS_VALUES[model].max_value
-                description.min_value = LED_BRIGHTNESS_VALUES[model].min_value
-                description.step = LED_BRIGHTNESS_VALUES[model].step
-                description.method = LED_BRIGHTNESS_VALUES[model].method
+
             entities.append(
                 XiaomiNumberEntity(
                     f"{config_entry.title} {description.name}",
