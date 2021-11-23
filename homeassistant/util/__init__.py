@@ -120,7 +120,7 @@ def convert_to_int(
     """
     if isinstance(value, int):
         return value
-    if isinstance(value, bytes):
+    if isinstance(value, bytes) and value:
         bytes_value = bytearray(value)
         return_value = 0
         while len(bytes_value):
