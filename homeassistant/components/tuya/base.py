@@ -26,6 +26,7 @@ class IntegerTypeData:
     scale: float
     step: float
     unit: str | None = None
+    type: str | None = None
 
     @property
     def max_scaled(self) -> float:
