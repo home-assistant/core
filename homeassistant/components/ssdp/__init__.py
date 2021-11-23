@@ -499,7 +499,7 @@ class Scanner:
         discovery_info = discovery_info_from_headers_and_description(
             info_with_desc, info_desc
         )
-        discovery_info[ATTR_HA_MATCHING_DOMAINS] = matching_domains
+        discovery_info.x_homeassistant_matching_domains = matching_domains
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
 
