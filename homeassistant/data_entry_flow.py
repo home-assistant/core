@@ -4,6 +4,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any, TypedDict
 import uuid
@@ -25,6 +26,7 @@ RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
 
 
+@dataclass
 class BaseServiceInfo:
     """Base class for discovery ServiceInfo."""
 
