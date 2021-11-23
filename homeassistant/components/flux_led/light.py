@@ -88,6 +88,16 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLUX_LED: Final = SUPPORT_TRANSITION
 
+
+MODE_ATTRS = {
+    ATTR_EFFECT,
+    ATTR_COLOR_TEMP,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
+    ATTR_WHITE,
+}
+
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
 COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF: Final = 285
@@ -303,36 +313,6 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             await self._device.async_turn_on()
         if not kwargs:
             return
-        if effect := kwargs.get(ATTR_EFFECT):
-            await self._async_set_effect(effect)
-            return
-        await self._async_set_colors(**kwargs)
-
-    async def _async_set_effect(self, effect: str) -> None:
-        """Set an effect."""
-        # Random color effect
-        if effect == EFFECT_RANDOM:
-            await self._device.async_set_levels(
-                random.randint(0, 255),
-                random.randint(0, 255),
-                random.randint(0, 255),
-            )
-            return
-        # Custom effect
-        if effect == EFFECT_CUSTOM:
-            if self._custom_effect_colors:
-                await self._device.async_set_custom_pattern(
-                    self._custom_effect_colors,
-                    self._custom_effect_speed_pct,
-                    self._custom_effect_transition,
-                )
-            return
-        await self._device.async_set_effect(
-            effect, self._device.speed or DEFAULT_EFFECT_SPEED
-        )
-
-    async def _async_set_colors(self, **kwargs: Any) -> None:
-        """Set color (can be done before turning on)."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
             brightness = self.brightness
         if not brightness:
@@ -341,7 +321,19 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             # If the device was on and brightness was not
             # set, it means it was masked by an effect
             brightness = 255 if self.is_on else 1
+        if MODE_ATTRS.intersection(kwargs):
+            await self._async_set_mode(
+                brightness, **{k: v for k, v in kwargs.items() if k != ATTR_BRIGHTNESS}
+            )
+            return
+        await self._async_adjust_brightness(brightness)
 
+    async def _async_set_mode(self, brightness: int, **kwargs: Any) -> None:
+        """Set an effect or color mode."""
+        # Handle switch to Effect Mode
+        if effect := kwargs.get(ATTR_EFFECT):
+            await self._async_set_effect(effect, brightness)
+            return
         # Handle switch to CCT Color Mode
         if ATTR_COLOR_TEMP in kwargs:
             color_temp_mired = kwargs[ATTR_COLOR_TEMP]
@@ -385,7 +377,12 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             await self._device.async_set_levels(w=kwargs[ATTR_WHITE])
             return
 
-        # Handle brightness adjustment in CCT Color Mode
+    async def _async_adjust_brightness(self, brightness: int) -> None:
+        """Adjust brightness."""
+        # Handle brightness adjustment in effect mode
+        if effect := self.effect:
+            await self._async_set_effect(effect, brightness)
+            return
         if self.color_mode == COLOR_MODE_COLOR_TEMP:
             await self._device.async_set_white_temp(self._device.color_temp, brightness)
             return
@@ -408,6 +405,30 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         if self.color_mode in {COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS}:
             await self._device.async_set_levels(w=brightness)
             return
+
+    async def _async_set_effect(self, effect: str, brightness: int) -> None:
+        """Set an effect."""
+        # Random color effect
+        if effect == EFFECT_RANDOM:
+            await self._device.async_set_levels(
+                random.randint(0, 255),
+                random.randint(0, 255),
+                random.randint(0, 255),
+            )
+            return
+        # Custom effect
+        if effect == EFFECT_CUSTOM:
+            if self._custom_effect_colors:
+                await self._device.async_set_custom_pattern(
+                    self._custom_effect_colors,
+                    self._custom_effect_speed_pct,
+                    self._custom_effect_transition,
+                )
+            return
+        effect_brightness = round(brightness / 255 * 100)
+        await self._device.async_set_effect(
+            effect, self._device.speed or DEFAULT_EFFECT_SPEED, effect_brightness
+        )
 
     async def async_set_custom_effect(
         self, colors: list[tuple[int, int, int]], speed_pct: int, transition: str
