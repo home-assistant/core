@@ -77,7 +77,7 @@ async def test_sensor_entity_smr_version(
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert ATTR_DEVICE_CLASS not in state.attributes
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
+    assert state.attributes.get(ATTR_ICON) == "mdi:counter"
 
 
 async def test_sensor_entity_meter_model(
@@ -115,7 +115,7 @@ async def test_sensor_entity_meter_model(
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert ATTR_DEVICE_CLASS not in state.attributes
-    assert state.attributes.get(ATTR_ICON) == "mdi:counter"
+    assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
 
 
 async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config_entry):
