@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
+from dataclasses import dataclass
 import fnmatch
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 import socket
 import sys
-from typing import Any, Final, TypedDict, cast
+from typing import Any, Final, cast
 
 import voluptuous as vol
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
@@ -25,8 +26,10 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
@@ -89,7 +92,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class ZeroconfServiceInfo(TypedDict):
+@dataclass
+class ZeroconfServiceInfo(BaseServiceInfo):
     """Prepared info from mDNS entries."""
 
     host: str
@@ -98,6 +102,25 @@ class ZeroconfServiceInfo(TypedDict):
     type: str
     name: str
     properties: dict[str, Any]
+
+    # Used to prevent log flooding. To be removed in 2022.6
+    _warning_logged: bool = False
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={"zeroconf"},
+                error_if_core=False,
+                level=logging.DEBUG,
+            )
+            self._warning_logged = True
+        return getattr(self, name)
 
 
 @bind_hass
@@ -360,7 +383,7 @@ class ZeroconfDiscovery:
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type in HOMEKIT_TYPES:
-            props = info[ATTR_PROPERTIES]
+            props = info.properties
             if domain := async_get_homekit_discovery_domain(self.homekit_models, props):
                 discovery_flow.async_create_flow(
                     self.hass, domain, {"source": config_entries.SOURCE_HOMEKIT}, info
@@ -382,25 +405,23 @@ class ZeroconfDiscovery:
                     # likely bad homekit data
                     return
 
-        if ATTR_NAME in info:
-            lowercase_name: str | None = info[ATTR_NAME].lower()
+        if info.name:
+            lowercase_name: str | None = info.name.lower()
         else:
             lowercase_name = None
 
-        if "macaddress" in info[ATTR_PROPERTIES]:
-            uppercase_mac: str | None = info[ATTR_PROPERTIES]["macaddress"].upper()
+        if "macaddress" in info.properties:
+            uppercase_mac: str | None = info.properties["macaddress"].upper()
         else:
             uppercase_mac = None
 
-        if "manufacturer" in info[ATTR_PROPERTIES]:
-            lowercase_manufacturer: str | None = info[ATTR_PROPERTIES][
-                "manufacturer"
-            ].lower()
+        if "manufacturer" in info.properties:
+            lowercase_manufacturer: str | None = info.properties["manufacturer"].lower()
         else:
             lowercase_manufacturer = None
 
-        if "model" in info[ATTR_PROPERTIES]:
-            lowercase_model: str | None = info[ATTR_PROPERTIES]["model"].lower()
+        if "model" in info.properties:
+            lowercase_model: str | None = info.properties["model"].lower()
         else:
             lowercase_model = None
 

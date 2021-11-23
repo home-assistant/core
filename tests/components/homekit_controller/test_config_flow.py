@@ -162,8 +162,8 @@ def get_device_discovery_info(
         del result["properties"]["c#"]
 
     if upper_case_props:
-        result["properties"] = {
-            key.upper(): val for (key, val) in result["properties"].items()
+        result.properties = {
+            key.upper(): val for (key, val) in result.properties.items()
         }
 
     return result
