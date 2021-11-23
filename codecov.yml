@@ -7,3 +7,9 @@ coverage:
         target: 90
         threshold: 0.09
 comment: false
+
+# To make partial tests possible,
+# we need to carry forward.
+flag_management:
+  default_rules:
+    carryforward: true
