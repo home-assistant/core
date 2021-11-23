@@ -67,8 +67,11 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.brightness = 128
     bulb.model_num = 0x35
     bulb.effect = None
+    bulb.speed = 50
     bulb.model = "Smart Bulb (0x35)"
     bulb.version_num = 8
+    bulb.original_addressable = False
+    bulb.addressable = False
     bulb.rgbwcapable = True
     bulb.color_modes = {FLUX_COLOR_MODE_RGB, FLUX_COLOR_MODE_CCT}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
@@ -111,6 +114,16 @@ async def async_mock_device_turn_on(hass: HomeAssistant, bulb: AIOWifiLedBulb) -
     """Mock the device being on."""
     bulb.is_on = True
     bulb.raw_state._replace(power_state=0x23)
+    bulb.data_receive_callback()
+    await hass.async_block_till_done()
+
+
+async def async_mock_effect_speed(
+    hass: HomeAssistant, bulb: AIOWifiLedBulb, effect: str, speed: int
+) -> None:
+    """Mock the device being on with an effect."""
+    bulb.speed = speed
+    bulb.effect = effect
     bulb.data_receive_callback()
     await hass.async_block_till_done()
 

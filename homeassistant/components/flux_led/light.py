@@ -6,13 +6,6 @@ import logging
 import random
 from typing import Any, Final, cast
 
-from flux_led.const import (
-    COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
-    COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM,
-    COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
-    COLOR_MODE_RGBW as FLUX_COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW as FLUX_COLOR_MODE_RGBWW,
-)
 from flux_led.utils import (
     color_temp_to_white_levels,
     rgbcw_brightness,
@@ -33,7 +26,6 @@ from homeassistant.components.light import (
     ATTR_WHITE,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
@@ -78,6 +70,7 @@ from .const import (
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
+    EFFECT_SUPPORT_MODES,
     FLUX_HOST,
     FLUX_LED_DISCOVERY,
     FLUX_MAC,
@@ -89,21 +82,12 @@ from .const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
-from .entity import FluxEntity
+from .entity import FluxOnOffEntity
+from .util import _flux_color_mode_to_hass, _hass_color_modes
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLUX_LED: Final = SUPPORT_TRANSITION
-
-
-FLUX_COLOR_MODE_TO_HASS: Final = {
-    FLUX_COLOR_MODE_RGB: COLOR_MODE_RGB,
-    FLUX_COLOR_MODE_RGBW: COLOR_MODE_RGBW,
-    FLUX_COLOR_MODE_RGBWW: COLOR_MODE_RGBWW,
-    FLUX_COLOR_MODE_CCT: COLOR_MODE_COLOR_TEMP,
-}
-
-EFFECT_SUPPORT_MODES = {COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
@@ -146,15 +130,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
     }
 )
-
-
-def _flux_color_mode_to_hass(flux_color_mode: str, flux_color_modes: set[str]) -> str:
-    """Map the flux color mode to Home Assistant color mode."""
-    if flux_color_mode == FLUX_COLOR_MODE_DIM:
-        if len(flux_color_modes) > 1:
-            return COLOR_MODE_WHITE
-        return COLOR_MODE_BRIGHTNESS
-    return FLUX_COLOR_MODE_TO_HASS.get(flux_color_mode, COLOR_MODE_ONOFF)
 
 
 async def async_setup_platform(
@@ -242,7 +217,7 @@ async def async_setup_entry(
     )
 
 
-class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
+class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     """Representation of a Flux light."""
 
     def __init__(
@@ -261,10 +236,7 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
             color_temperature_kelvin_to_mired(self._device.max_temp) + 1
         )  # for rounding
         self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
-        self._attr_supported_color_modes = {
-            _flux_color_mode_to_hass(mode, self._device.color_modes)
-            for mode in self._device.color_modes
-        }
+        self._attr_supported_color_modes = _hass_color_modes(self._device)
         if self._attr_supported_color_modes.intersection(EFFECT_SUPPORT_MODES):
             self._attr_supported_features |= SUPPORT_EFFECT
             self._attr_effect_list = [*self._device.effect_list, EFFECT_RANDOM]
@@ -405,7 +377,9 @@ class FluxLight(FluxEntity, CoordinatorEntity, LightEntity):
                         self._custom_effect_transition,
                     )
                 return
-            await self._device.async_set_effect(effect, DEFAULT_EFFECT_SPEED)
+            await self._device.async_set_effect(
+                effect, self._device.speed or DEFAULT_EFFECT_SPEED
+            )
             return
 
         # Handle brightness adjustment in CCT Color Mode
