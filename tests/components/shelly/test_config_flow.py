@@ -19,8 +19,11 @@ MOCK_SETTINGS = {
 }
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="1.1.1.1",
+    hostname="mock_hostname",
     name="shelly1pm-12345",
-    properties={"id": "shelly1pm-12345"},
+    port=None,
+    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+    type="mock_type",
 )
 MOCK_CONFIG = {
     "wifi": {"ap": {"ssid": "Test name"}},

@@ -90,6 +90,8 @@ MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
 EXISTING_IP = "192.168.40.221"
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host="fake_host",
+    hostname="mock_hostname",
+    name="mock_name",
     port=1234,
     properties={
         "deviceid": "aa:bb:cc:dd:ee:ff",
@@ -97,6 +99,7 @@ MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
         "model": "fake_model",
         "serialNumber": "fake_serial",
     },
+    type="mock_type",
 )
 MOCK_OLD_ENTRY = {
     CONF_HOST: "fake_host",
