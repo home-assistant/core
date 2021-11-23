@@ -108,7 +108,12 @@ async def test_form_homekit_unique_id_already_setup(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4", properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR}
+            host="1.2.3.4",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            type="mock_type",
         ),
     )
     assert result["type"] == RESULT_TYPE_FORM
@@ -130,7 +135,12 @@ async def test_form_homekit_unique_id_already_setup(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4", properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR}
+            host="1.2.3.4",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            type="mock_type",
         ),
     )
     assert result["type"] == RESULT_TYPE_ABORT
@@ -149,7 +159,12 @@ async def test_form_homekit_ip_address_already_setup(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4", properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR}
+            host="1.2.3.4",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            type="mock_type",
         ),
     )
     assert result["type"] == RESULT_TYPE_ABORT
@@ -162,7 +177,12 @@ async def test_form_homekit_ip_address(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4", properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR}
+            host="1.2.3.4",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            type="mock_type",
         ),
     )
     assert result["type"] == RESULT_TYPE_FORM
@@ -239,7 +259,12 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4", properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR}
+            host="1.2.3.4",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            type="mock_type",
         ),
     )
     assert result["type"] == RESULT_TYPE_FORM
