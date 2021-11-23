@@ -1,4 +1,1 @@
-"""The tests for the Button integration.
-
-Testing touching a core file...
-"""
+"""The tests for the Button integration."""
