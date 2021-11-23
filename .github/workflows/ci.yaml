@@ -658,11 +658,13 @@ jobs:
       integrations: ${{ steps.integrations.outputs.integration-changes }}
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2.4.0
       - name: Filter for core changes
         uses: dorny/paths-filter@v2.10.2
         id: core-changes
         with:
-          filters: ./core_files.yml
+          filters: .core_files.yaml
       - name: Create a list of integrations to filter for changes
         id: integration-filters
         run: |
