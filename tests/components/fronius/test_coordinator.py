@@ -14,7 +14,7 @@ from tests.common import async_fire_time_changed
 
 
 async def test_adaptive_update_interval(hass, aioclient_mock):
-    """Test conordinators changing their update interval when inverter not available."""
+    """Test coordinators changing their update interval when inverter not available."""
     with patch("pyfronius.Fronius.current_inverter_data") as mock_inverter_data:
         mock_responses(aioclient_mock)
         await setup_fronius_integration(hass)
