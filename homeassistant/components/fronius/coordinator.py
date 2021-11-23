@@ -59,14 +59,15 @@ class FroniusCoordinatorBase(
         async with self.solar_net.coordinator_lock:
             try:
                 data = await self._update_method()
-                if self._failed_update_count != 0:
-                    self._failed_update_count = 0
-                    self.update_interval = self.default_interval
             except FroniusError as err:
                 self._failed_update_count += 1
                 if self._failed_update_count == 3:
                     self.update_interval = self.error_interval
                 raise UpdateFailed(err) from err
+
+            if self._failed_update_count != 0:
+                self._failed_update_count = 0
+                self.update_interval = self.default_interval
 
             for solar_net_id in data:
                 if solar_net_id not in self.unregistered_keys:
