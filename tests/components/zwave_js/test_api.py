@@ -701,11 +701,7 @@ async def test_add_node(
     assert not msg["success"]
 
     # Even though inclusion fails, provision_smart_start_node should be called
-    assert len(client.async_send_command.call_args_list) == 1
-    assert (
-        client.async_send_command.call_args[0][0]["command"]
-        == "controller.provision_smart_start_node"
-    )
+    assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
