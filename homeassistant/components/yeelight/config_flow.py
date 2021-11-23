@@ -15,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from . import (
+from .const import (
     CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
     CONF_MODEL,
@@ -25,12 +25,14 @@ from . import (
     CONF_TRANSITION,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
-    YeelightScanner,
+)
+from .device import (
     _async_unique_name,
     async_format_id,
     async_format_model,
     async_format_model_id,
 )
+from .scanner import YeelightScanner
 
 MODEL_UNKNOWN = "unknown"
 
