@@ -12,14 +12,21 @@ from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from tests.common import MockConfigEntry, load_fixture
 
 HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    name="Hunter Douglas Powerview Hub._hap._tcp.local.",
     host="1.2.3.4",
-    properties={"id": "AA::BB::CC::DD::EE::FF"},
+    hostname="mock_hostname",
+    name="Hunter Douglas Powerview Hub._hap._tcp.local.",
+    port=None,
+    properties={zeroconf.ATTR_PROPERTIES_ID: "AA::BB::CC::DD::EE::FF"},
+    type="mock_type",
 )
 
 ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    name="Hunter Douglas Powerview Hub._powerview._tcp.local.",
     host="1.2.3.4",
+    hostname="mock_hostname",
+    name="Hunter Douglas Powerview Hub._powerview._tcp.local.",
+    port=None,
+    properties={},
+    type="mock_type",
 )
 
 DHCP_DISCOVERY_INFO = dhcp.DhcpServiceInfo(
