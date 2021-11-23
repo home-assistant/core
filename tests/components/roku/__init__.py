@@ -33,11 +33,14 @@ MOCK_SSDP_DISCOVERY_INFO = {
 HOMEKIT_HOST = "192.168.1.161"
 
 MOCK_HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    name="onn._hap._tcp.local.",
     host=HOMEKIT_HOST,
+    hostname="mock_hostname",
+    name="onn._hap._tcp.local.",
+    port=None,
     properties={
         zeroconf.ATTR_PROPERTIES_ID: "2d:97:da:ee:dc:99",
     },
+    type="mock_type",
 )
 
 
