@@ -58,6 +58,7 @@ class UsbServiceInfo(BaseServiceInfo):
                 f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
                 exclude_integrations={"usb"},
                 error_if_core=False,
+                level=logging.DEBUG,
             )
             self._warning_logged = True
         return getattr(self, name)
