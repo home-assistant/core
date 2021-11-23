@@ -651,9 +651,57 @@ jobs:
           . venv/bin/activate
           mypy homeassistant
 
-  pytest:
+  changes:
+    name: Determine what has changed
+    outputs:
+      core: ${{ steps.core.outputs.any }}
+      integrations: ${{ steps.integrations.outputs.changes }}
+      tests: ${{ steps.tests.outputs.integrations }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2.4.0
+      - name: Filter for core changes
+        uses: dorny/paths-filter@v2.10.2
+        id: core
+        with:
+          filters: .core_files.yaml
+      - name: Create a list of integrations to filter for changes
+        id: integration-filters
+        run: |
+          integrations=$(ls -Ad ./homeassistant/components/[!_]*  | xargs -n 1 basename)
+          touch .integration_paths.yaml
+          for integration in $integrations; do
+            echo "${integration}: [homeassistant/components/${integration}/*, tests/components/${integration}/*]" \
+              >> .integration_paths.yaml;
+          done
+          echo "Result:"
+          cat .integration_paths.yaml
+      - name: Filter for integration changes
+        uses: dorny/paths-filter@v2.10.2
+        id: integrations
+        with:
+          filters: .integration_paths.yaml
+      - name: Determine integration tests to run
+        if: ${{ steps.integrations.outputs.changes }}
+        id: tests
+        run: |
+          possible_integrations=$(echo '${{ steps.integrations.outputs.changes }}' | jq -cSr '. | join(" ")')
+          integrations=$(for integration in $possible_integrations; do [[ -d "tests/components/${integration}" ]] && echo -n "${integration},"; done)
+          integrations="${integrations::-1}"
+
+          # If more than one, add brackets to it
+          if [[ "${integrations}" == *","* ]]; then
+            integrations="{${integrations}}"
+          fi
+
+          echo "::set-output name=integrations::${integrations}"
+
+  pytest-full:
+    if: ${{ needs.changes.outputs.core == 'true' }}
     runs-on: ubuntu-latest
     needs:
+      - changes
       - gen-requirements-all
       - hassfest
       - lint-bandit
@@ -725,10 +773,83 @@ jobs:
         run: |
           ./script/check_dirty
 
-  coverage:
+  pytest-partial:
+    if: ${{ needs.changes.outputs.core == 'false' }}
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - gen-requirements-all
+      - hassfest
+      - lint-bandit
+      - lint-black
+      - lint-codespell
+      - lint-dockerfile
+      - lint-executable-shebangs
+      - lint-isort
+      - lint-json
+      - lint-pyupgrade
+      - lint-yaml
+      - mypy
+      - prepare-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.8, 3.9]
+    name: >-
+      Run partial tests Python ${{ matrix.python-version }}
+    container: homeassistant/ci-azure:${{ matrix.python-version }}
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2.4.0
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+        id: cache-venv
+        uses: actions/cache@v2.1.7
+        with:
+          path: venv
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
+            needs.prepare-tests.outputs.python-key }}
+      - name: Fail job if Python cache restore failed
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore Python virtual environment from cache"
+          exit 1
+      - name: Register Python problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/python.json"
+      - name: Install Pytest Annotation plugin
+        run: |
+          . venv/bin/activate
+          # Ideally this should be part of our dependencies
+          # However this plugin is fairly new and doesn't run correctly
+          # on a non-GitHub environment.
+          pip install pytest-github-actions-annotate-failures==0.1.3
+      - name: Run pytest
+        run: |
+          . venv/bin/activate
+          python3 -X dev -m pytest \
+            -qq \
+            --timeout=9 \
+            --durations=10 \
+            -n auto \
+            --dist=loadfile \
+            --cov homeassistant \
+            --cov-report= \
+            -o console_output_style=count \
+            -p no:sugar \
+            tests/components/${{ needs.changes.outputs.tests }}
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: .coverage
+      - name: Check dirty
+        run: |
+          ./script/check_dirty
+
+  coverage-full:
     name: Process test coverage
     runs-on: ubuntu-latest
-    needs: ["prepare-tests", "pytest"]
+    needs: ["prepare-tests", "pytest-full"]
     strategy:
       matrix:
         python-version: [3.8]
@@ -755,6 +876,39 @@ jobs:
           . venv/bin/activate
           coverage combine coverage*/.coverage*
           coverage report --fail-under=94
+          coverage xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2.1.0
+
+  coverage-partial:
+    name: Process partial test coverage
+    runs-on: ubuntu-latest
+    needs: ["prepare-tests", "pytest-partial"]
+    strategy:
+      matrix:
+        python-version: [3.8]
+    container: homeassistant/ci-azure:${{ matrix.python-version }}
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2.4.0
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+        id: cache-venv
+        uses: actions/cache@v2.1.7
+        with:
+          path: venv
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
+            needs.prepare-tests.outputs.python-key }}
+      - name: Fail job if Python cache restore failed
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore Python virtual environment from cache"
+          exit 1
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v2
+      - name: Combine coverage results
+        run: |
+          . venv/bin/activate
+          coverage combine coverage*/.coverage*
           coverage xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2.1.0
