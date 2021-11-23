@@ -766,7 +766,7 @@ class HomeKit:
             manufacturer=MANUFACTURER,
             name=accessory_friendly_name(self._entry_title, self.driver.accessory),
             model=f"HomeKit {hk_mode_name}",
-            entry_type="service",
+            entry_type=device_registry.DeviceEntryType.SERVICE,
         )
 
     @callback
