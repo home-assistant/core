@@ -153,16 +153,15 @@ def is_block_momentary_input(settings: dict[str, Any], block: Block) -> bool:
     return button_type in ["momentary", "momentary_on_release"]
 
 
-def get_device_uptime(uptime: float, last_uptime: str | None) -> str:
+def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
     delta_uptime = utcnow() - timedelta(seconds=uptime)
 
     if (
         not last_uptime
-        or abs((delta_uptime - datetime.fromisoformat(last_uptime)).total_seconds())
-        > UPTIME_DEVIATION
+        or abs((delta_uptime - last_uptime).total_seconds()) > UPTIME_DEVIATION
     ):
-        return delta_uptime.replace(microsecond=0).isoformat()
+        return delta_uptime
 
     return last_uptime
 
