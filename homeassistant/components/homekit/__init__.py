@@ -102,11 +102,11 @@ from .const import (
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
+    async_dismiss_setup_message,
     async_port_is_available,
-    dismiss_setup_message,
+    async_show_setup_message,
     get_persist_fullpath_for_entry_id,
     remove_state_files_for_entry_id,
-    show_setup_message,
     state_needs_accessory_mode,
     validate_entity_config,
 )
@@ -321,7 +321,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    dismiss_setup_message(hass, entry.entry_id)
+    async_dismiss_setup_message(hass, entry.entry_id)
     homekit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
 
     if homekit.status == STATUS_RUNNING:
@@ -719,7 +719,7 @@ class HomeKit:
     @callback
     def _async_show_setup_message(self):
         """Show the pairing setup message."""
-        show_setup_message(
+        async_show_setup_message(
             self.hass,
             self._entry_id,
             accessory_friendly_name(self._entry_title, self.driver.accessory),
