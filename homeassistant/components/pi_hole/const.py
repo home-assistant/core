@@ -109,7 +109,6 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="core_update_available",
         name="Core Update Available",
-        icon="mdi:update",
         device_class="update",
         version_current="core_current",
         version_latest="core_latest",
