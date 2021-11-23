@@ -653,7 +653,20 @@ jobs:
 
   pytest:
     runs-on: ubuntu-latest
-    needs: prepare-tests
+    needs:
+      - gen-requirements-all
+      - hassfest
+      - lint-bandit
+      - lint-black
+      - lint-codespell
+      - lint-dockerfile
+      - lint-executable-shebangs
+      - lint-isort
+      - lint-json
+      - lint-pyupgrade
+      - lint-yaml
+      - mypy
+      - prepare-tests
     strategy:
       fail-fast: false
       matrix:
