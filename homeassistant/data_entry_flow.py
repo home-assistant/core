@@ -25,6 +25,10 @@ RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
 
 
+class BaseServiceInfo:
+    """Base class for discovery ServiceInfo."""
+
+
 class FlowError(HomeAssistantError):
     """Error while configuring an account."""
 
@@ -301,7 +305,7 @@ class FlowManager(abc.ABC):
         self,
         flow: Any,
         step_id: str,
-        user_input: dict | None,
+        user_input: dict | BaseServiceInfo | None,
         step_done: asyncio.Future | None = None,
     ) -> FlowResult:
         """Handle a step of a flow."""

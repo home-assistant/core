@@ -33,6 +33,7 @@ from homeassistant.const import (
     STATE_HOME,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import (
@@ -58,7 +59,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class DhcpServiceInfo:
+class DhcpServiceInfo(BaseServiceInfo):
     """Prepared info from dhcp entries."""
 
     ip: str  # pylint: disable=invalid-name
