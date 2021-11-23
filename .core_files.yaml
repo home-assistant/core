@@ -22,6 +22,7 @@ base_platforms: &base_platforms
   - homeassistant/components/cover/*
   - homeassistant/components/device_tracker/*
   - homeassistant/components/fan/*
+  - homeassistant/components/geo_location/*
   - homeassistant/components/humidifier/*
   - homeassistant/components/image_processing/*
   - homeassistant/components/light/*
