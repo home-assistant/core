@@ -8,30 +8,47 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import (
+    ATTR_ID,
+    ATTR_IPADDR,
+    ATTR_MODEL,
+    ATTR_MODEL_DESCRIPTION,
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
 )
 from flux_led.protocol import LEDENETRawState
 
 from homeassistant.components import dhcp
-from homeassistant.components.flux_led.const import FLUX_HOST, FLUX_MAC, FLUX_MODEL
 from homeassistant.core import HomeAssistant
 
 MODULE = "homeassistant.components.flux_led"
 MODULE_CONFIG_FLOW = "homeassistant.components.flux_led.config_flow"
 IP_ADDRESS = "127.0.0.1"
 MODEL = "AZ120444"
+MODEL_DESCRIPTION = "RGBW Controller"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 FLUX_MAC_ADDRESS = "aabbccddeeff"
+SHORT_MAC_ADDRESS = "ddeeff"
 
-DEFAULT_ENTRY_TITLE = f"{MODEL} {FLUX_MAC_ADDRESS}"
+DEFAULT_ENTRY_TITLE = f"{MODEL_DESCRIPTION} {SHORT_MAC_ADDRESS}"
+DEFAULT_ENTRY_TITLE_PARTIAL = f"{MODEL} {SHORT_MAC_ADDRESS}"
+
 
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
     hostname=MODEL,
     ip=IP_ADDRESS,
     macaddress=MAC_ADDRESS,
 )
-FLUX_DISCOVERY = {FLUX_HOST: IP_ADDRESS, FLUX_MODEL: MODEL, FLUX_MAC: FLUX_MAC_ADDRESS}
+FLUX_DISCOVERY_PARTIAL = {
+    ATTR_IPADDR: IP_ADDRESS,
+    ATTR_MODEL: MODEL,
+    ATTR_ID: FLUX_MAC_ADDRESS,
+}
+FLUX_DISCOVERY = {
+    ATTR_IPADDR: IP_ADDRESS,
+    ATTR_MODEL: MODEL,
+    ATTR_ID: FLUX_MAC_ADDRESS,
+    ATTR_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
+}
 
 
 def _mocked_bulb() -> AIOWifiLedBulb:
