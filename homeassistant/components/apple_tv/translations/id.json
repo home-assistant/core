@@ -24,14 +24,14 @@
             },
             "pair_no_pin": {
                 "description": "Pemasangan diperlukan untuk layanan `{protocol}`. Masukkan PIN {pin} di Apple TV untuk melanjutkan.",
-                "title": "Memasangkan"
+                "title": "Pemasangan"
             },
             "pair_with_pin": {
                 "data": {
                     "pin": "Kode PIN"
                 },
                 "description": "Pemasangan diperlukan untuk protokol `{protocol}`. Masukkan kode PIN yang ditampilkan pada layar. Angka nol di awal harus dihilangkan. Misalnya, masukkan 123 jika kode yang ditampilkan adalah 0123.",
-                "title": "Memasangkan"
+                "title": "Pemasangan"
             },
             "reconfigure": {
                 "description": "Apple TV ini mengalami masalah koneksi dan harus dikonfigurasi ulang.",

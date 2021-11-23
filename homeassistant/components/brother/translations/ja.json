@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
             "unsupported_model": "\u3053\u306e\u30d7\u30ea\u30f3\u30bf\u30fc\u30e2\u30c7\u30eb\u306f\u30b5\u30dd\u30fc\u30c8\u3055\u308c\u3066\u3044\u307e\u305b\u3093\u3002"
         },
         "error": {

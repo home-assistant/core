@@ -14,5 +14,12 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Netgear"
+            }
+        }
     }
 }

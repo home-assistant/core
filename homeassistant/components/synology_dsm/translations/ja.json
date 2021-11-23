@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f",
             "reconfigure_successful": "\u518d\u8a2d\u5b9a\u306b\u6210\u529f\u3057\u307e\u3057\u305f"
         },
         "step": {
@@ -23,7 +24,8 @@
                 "data": {
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
-                }
+                },
+                "title": "Synology DSM \u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u306e\u518d\u8a8d\u8a3c"
             },
             "user": {
                 "data": {

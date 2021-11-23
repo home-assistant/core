@@ -13,6 +13,7 @@
             "user": {
                 "data": {
                     "host": "Host",
+                    "ssl": "Gunakan SSL",
                     "username": "Nama Pengguna"
                 }
             }
