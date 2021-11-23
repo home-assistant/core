@@ -808,8 +808,8 @@ jobs:
       - name: Determine integration tests to run
         id: integrations
         run: |
-          integrations=$(echo "${{ needs.changes.outputs.integrations }}" | | jq -cSr '. | join(",")')
-          echo "::set-output name=integrations::$(for integration in $integrations; do echo "${integration}: homeassistant/components/${integration}"; done)"
+          integrations=$(echo "${{ needs.changes.outputs.integrations }}" | | jq -cSr '. | join(" ")')
+          echo "::set-output name=integrations::$(for integration in $integrations; do [[ -d "tests/components/${integration}" ]] && echo "${integration}: homeassistant/components/${integration}"; done)"
       - name: Run pytest
         run: |
           . venv/bin/activate
