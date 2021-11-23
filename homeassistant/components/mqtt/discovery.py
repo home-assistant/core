@@ -12,7 +12,7 @@ from typing import Any
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, BaseServiceInfo
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -92,7 +92,7 @@ class MQTTConfig(dict):
 
 
 @dataclass
-class MqttServiceInfo:
+class MqttServiceInfo(BaseServiceInfo):
     """Prepared info from mqtt entries."""
 
     topic: str
