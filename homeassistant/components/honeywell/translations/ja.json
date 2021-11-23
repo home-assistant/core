@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c"
+        },
         "step": {
             "user": {
                 "data": {

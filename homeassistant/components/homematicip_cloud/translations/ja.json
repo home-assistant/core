@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u30a2\u30af\u30bb\u30b9\u30dd\u30a4\u30f3\u30c8\u306f\u65e2\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "connection_aborted": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
             "unknown": "\u4e0d\u660e\u306a\u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f\u3002"
         },
         "error": {

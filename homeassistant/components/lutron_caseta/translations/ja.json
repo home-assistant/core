@@ -15,8 +15,23 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "button_1": "1\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "group_1_button_1": "\u6700\u521d\u306e\u30b0\u30eb\u30fc\u30d7\u306e\u6700\u521d\u306e\u30dc\u30bf\u30f3",
+            "group_1_button_2": "\u6700\u521d\u306e\u30b0\u30eb\u30fc\u30d7\u306e2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "group_2_button_1": "2\u756a\u76ee\u306e\u30b0\u30eb\u30fc\u30d7\u306e\u6700\u521d\u306e\u30dc\u30bf\u30f3",
+            "group_2_button_2": "2\u756a\u76ee\u306e\u30b0\u30eb\u30fc\u30d7\u306e2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "off": "\u30aa\u30d5",
-            "on": "\u30aa\u30f3"
+            "on": "\u30aa\u30f3",
+            "stop": "\u505c\u6b62(\u304a\u6c17\u306b\u5165\u308a)",
+            "stop_1": "\u505c\u6b62 1",
+            "stop_2": "\u505c\u6b62 2",
+            "stop_3": "\u505c\u6b62 3",
+            "stop_4": "\u505c\u6b62 4",
+            "stop_all": "\u3059\u3079\u3066\u505c\u6b62"
+        },
+        "trigger_type": {
+            "press": "\"{subtype}\" \u62bc\u3059",
+            "release": "\"{subtype}\" \u96e2\u3059"
         }
     }
 }

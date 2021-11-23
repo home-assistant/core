@@ -3,12 +3,12 @@
         "step": {
             "reauth": {
                 "data": {
-                    "email": "Email"
+                    "email": "E\u30e1\u30fc\u30eb"
                 }
             },
             "user": {
                 "data": {
-                    "email": "Email"
+                    "email": "E\u30e1\u30fc\u30eb"
                 }
             }
         }

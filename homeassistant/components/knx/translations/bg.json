@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "host": "\u0425\u043e\u0441\u0442",
+                    "port": "\u041f\u043e\u0440\u0442"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "tunnel": {
+                "data": {
+                    "host": "\u0425\u043e\u0441\u0442",
+                    "port": "\u041f\u043e\u0440\u0442"
+                }
+            }
+        }
+    }
+}

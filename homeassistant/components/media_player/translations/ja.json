@@ -1,4 +1,10 @@
 {
+    "device_automation": {
+        "trigger_type": {
+            "turned_off": "{entity_name} \u30aa\u30d5\u306b\u306a\u308a\u307e\u3057\u305f",
+            "turned_on": "{entity_name} \u30aa\u30f3\u306b\u306a\u3063\u3066\u3044\u307e\u3059"
+        }
+    },
     "state": {
         "_": {
             "idle": "\u30a2\u30a4\u30c9\u30eb",

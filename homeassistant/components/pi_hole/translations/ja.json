@@ -11,7 +11,8 @@
                     "api_key": "API\u30ad\u30fc",
                     "host": "\u30db\u30b9\u30c8",
                     "name": "\u540d\u524d",
-                    "port": "\u30dd\u30fc\u30c8"
+                    "port": "\u30dd\u30fc\u30c8",
+                    "statistics_only": "\u7d71\u8a08\u306e\u307f"
                 }
             }
         }
