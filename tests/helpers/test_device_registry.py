@@ -167,23 +167,25 @@ async def test_multiple_config_entries(registry):
 async def test_loading_from_storage(hass, hass_storage):
     """Test loading stored devices on start."""
     hass_storage[device_registry.STORAGE_KEY] = {
-        "version": device_registry.STORAGE_VERSION,
+        "version": device_registry.STORAGE_VERSION_MAJOR,
+        "minor_version": device_registry.STORAGE_VERSION_MINOR,
         "data": {
             "devices": [
                 {
+                    "area_id": "12345A",
                     "config_entries": ["1234"],
+                    "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "disabled_by": device_registry.DISABLED_USER,
+                    "entry_type": device_registry.DeviceEntryType.SERVICE,
                     "id": "abcdefghijklm",
                     "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
+                    "name_by_user": "Test Friendly Name",
                     "name": "name",
                     "sw_version": "version",
-                    "entry_type": device_registry.DeviceEntryType.SERVICE,
-                    "area_id": "12345A",
-                    "name_by_user": "Test Friendly Name",
-                    "disabled_by": device_registry.DISABLED_USER,
-                    "suggested_area": "Kitchen",
+                    "via_device_id": None,
                 }
             ],
             "deleted_devices": [
@@ -192,6 +194,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "connections": [["Zigbee", "23.45.67.89.01"]],
                     "id": "bcdefghijklmn",
                     "identifiers": [["serial", "34:56:AB:CD:EF:12"]],
+                    "orphaned_timestamp": None,
                 }
             ],
         },
@@ -229,6 +232,79 @@ async def test_loading_from_storage(hass, hass_storage):
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)
     assert isinstance(entry.identifiers, set)
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_1_to_1_2(hass, hass_storage):
+    """Test migration from version 1.1 to 1.2."""
+    hass_storage[device_registry.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "devices": [
+                {
+                    "config_entries": ["1234"],
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "entry_type": "service",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "sw_version": "version",
+                }
+            ],
+        },
+    }
+
+    await device_registry.async_load(hass)
+    registry = device_registry.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "12:34:56:AB:CD:EF")},
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Update to trigger a store
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        sw_version="new_version",
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+    assert hass_storage[device_registry.STORAGE_KEY] == {
+        "version": device_registry.STORAGE_VERSION_MAJOR,
+        "minor_version": device_registry.STORAGE_VERSION_MINOR,
+        "key": device_registry.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["1234"],
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "name_by_user": None,
+                    "sw_version": "new_version",
+                    "via_device_id": None,
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
 
 
 async def test_removing_config_entries(hass, registry, update_events):
