@@ -1,8 +1,11 @@
 """Constants for the pi_hole integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+
+from hole import Hole
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_UPDATE,
@@ -99,12 +102,20 @@ SENSOR_TYPES: tuple[PiHoleSensorEntityDescription, ...] = (
 
 
 @dataclass
-class PiHoleBinarySensorEntityDescription(BinarySensorEntityDescription):
+class RequiredPiHoleBinaryDescription:
+    """Represent the required attributes of the PiHole binary description."""
+
+    state_value: Callable[[Hole], bool]
+
+
+@dataclass
+class PiHoleBinarySensorEntityDescription(
+    BinarySensorEntityDescription, RequiredPiHoleBinaryDescription
+):
     """Describes PiHole binary sensor entity."""
 
     version_current: str = ""
     version_latest: str = ""
-    version_update: str = ""
 
 
 BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
@@ -112,30 +123,33 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
         key="core_update_available",
         name="Core Update Available",
         device_class=DEVICE_CLASS_UPDATE,
+        state_value=lambda api: bool(api.versions["core_update"]),
         version_current="core_current",
         version_latest="core_latest",
-        version_update="core_update",
     ),
     PiHoleBinarySensorEntityDescription(
         key="web_update_available",
         name="Web Update Available",
         device_class=DEVICE_CLASS_UPDATE,
+        state_value=lambda api: bool(api.versions["web_update"]),
         version_current="web_current",
         version_latest="web_latest",
-        version_update="web_update",
     ),
     PiHoleBinarySensorEntityDescription(
         key="ftl_update_available",
         name="FTL Update Available",
         device_class=DEVICE_CLASS_UPDATE,
+        state_value=lambda api: bool(api.versions["FTL_update"]),
         version_current="FTL_current",
         version_latest="FTL_latest",
-        version_update="FTL_update",
     ),
 )
 
 BINARY_SENSOR_TYPES_STATISTICS_ONLY: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
-        key="status", name="Status", icon="mdi:pi-hole"
+        key="status",
+        name="Status",
+        icon="mdi:pi-hole",
+        state_value=lambda api: bool(api.data.get("status") == "enabled"),
     ),
 )
