@@ -109,6 +109,35 @@ def convert(
         return default
 
 
+def convert_to_int(
+    value: Any, default: int | None = None, little_endian: bool = False
+) -> int | None:
+    """Convert value or bytes to int, returns default if fails.
+
+    This supports bitwise integer operations on `bytes` objects.
+    By default the conversion is in Big-endian style (The last byte contains the least significant bit).
+    In Little-endian style the first byte contains the least significat bit.
+    """
+    try:
+        if isinstance(value, int):
+            return value
+        if isinstance(value, bytes):
+            bytes_value = bytearray(value)
+            return_value = 0
+            while len(bytes_value):
+                return_value <<= 8
+                if little_endian:
+                    return_value |= bytes_value.pop(len(bytes_value) - 1)
+                else:
+                    return_value |= bytes_value.pop(0)
+
+            return return_value
+        return convert(value, int, default)
+    except (ValueError, TypeError):
+        # If value could not be converted
+        return default
+
+
 def ensure_unique_string(
     preferred_string: str, current_strings: Iterable[str] | KeysView[str]
 ) -> str:
