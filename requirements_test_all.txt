@@ -828,6 +828,9 @@ pyalmond==0.0.2
 # homeassistant.components.arlo
 pyarlo==0.2.4
 
+# homeassistant.components.radarr
+aiopyarr==0.0.1
+
 # homeassistant.components.atag
 pyatag==0.3.5.3
 
