@@ -1,13 +1,14 @@
 """Support for MQTT discovery."""
 import asyncio
 from collections import deque
+from dataclasses import dataclass
 import datetime as dt
 import functools
 import json
 import logging
 import re
 import time
-from typing import TypedDict
+from typing import Any
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
@@ -17,6 +18,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.frame import report
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -89,7 +91,8 @@ class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
 
 
-class MqttServiceInfo(TypedDict):
+@dataclass
+class MqttServiceInfo:
     """Prepared info from mqtt entries."""
 
     topic: str
@@ -98,6 +101,24 @@ class MqttServiceInfo(TypedDict):
     retain: bool
     subscribed_topic: str
     timestamp: dt.datetime
+
+    # Used to prevent log flooding. To be removed in 2022.6
+    _warning_logged: bool = False
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={"mqtt"},
+                error_if_core=False,
+            )
+            self._warning_logged = True
+        return getattr(self, name)
 
 
 async def async_start(  # noqa: C901
