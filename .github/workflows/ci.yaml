@@ -8,6 +8,7 @@ on:
       - rc
       - master
   pull_request: ~
+  workflow_call:
 
 env:
   CACHE_VERSION: 3
