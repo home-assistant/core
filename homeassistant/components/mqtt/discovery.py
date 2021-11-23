@@ -118,7 +118,6 @@ class MqttServiceInfo:
                 error_if_core=False,
             )
             self._warning_logged = True
-        raise Exception("Ouch")
         return getattr(self, name)
 
 
