@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -98,3 +99,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
     return unload_ok
+
+
+def get_device_info(coordinates: str, name: str) -> DeviceInfo:
+    """Return device registry information."""
+    return DeviceInfo(
+        entry_type="service",
+        identifiers={(DOMAIN, coordinates)},
+        manufacturer="Met Office",
+        name=f"Met Office {name}",
+    )
