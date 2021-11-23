@@ -13,6 +13,7 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
+    DEVICE_CLASS_BATTERY,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
@@ -54,8 +55,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     ),
     "charging_status": BMWSensorEntityDescription(
         key="charging_status",
-        icon="mdi:battery-charging",
-        device_class="battery",
+        icon="mdi:ev-station",
         value=lambda x, y: x.value,
     ),
     # No icon as this is dealt with directly as a special case in icon()
@@ -63,6 +63,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key="charging_level_hv",
         unit_metric=PERCENTAGE,
         unit_imperial=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
     ),
     # --- Specific ---
     "mileage": BMWSensorEntityDescription(
