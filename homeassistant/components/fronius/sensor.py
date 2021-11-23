@@ -624,6 +624,9 @@ class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
         self.entity_description = next(
             desc for desc in self.entity_descriptions if desc.key == key
         )
+        # default entity_id added 2021.12
+        # used for migration from non-unique_id entities of previous integration implementation
+        # when removed after migration period `_entity_id_prefix` will also no longer be needed
         self.entity_id = f"{SENSOR_DOMAIN}.{key}_{DOMAIN}_{self._entity_id_prefix}_{coordinator.solar_net.host}"
         self.solar_net_id = solar_net_id
         self._attr_native_value = self._get_entity_value()
