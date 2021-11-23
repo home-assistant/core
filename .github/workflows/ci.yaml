@@ -662,7 +662,7 @@ jobs:
         uses: dorny/paths-filter@v2.10.2
         id: core-changes
         with:
-          filters: .core_files.yaml
+          filters: core_files.yml
       - name: Create a list of integrations to filter for changes
         id: integration-filters
         run: |
