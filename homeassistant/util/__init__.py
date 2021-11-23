@@ -116,7 +116,7 @@ def convert_to_int(
 
     This supports bitwise integer operations on `bytes` objects.
     By default the conversion is in Big-endian style (The last byte contains the least significant bit).
-    In Little-endian style the first byte contains the least significat bit.
+    In Little-endian style the first byte contains the least significant bit.
     """
     try:
         if isinstance(value, int):
