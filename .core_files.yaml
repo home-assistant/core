@@ -53,7 +53,6 @@ components: &components
   - homeassistant/components/demo/*
   - homeassistant/components/device_automation/*
   - homeassistant/components/dhcp/*
-  - homeassistant/components/dhcp/*
   - homeassistant/components/discovery/*
   - homeassistant/components/energy/*
   - homeassistant/components/ffmpeg/*
