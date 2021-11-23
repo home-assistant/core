@@ -918,7 +918,7 @@ async def websocket_parse_qr_code_string(
         vol.Required(TYPE): "zwave_js/supports_feature",
         vol.Required(ENTRY_ID): str,
         vol.Required(FEATURE): vol.All(
-            vol.Coerce(int), vol.In(val.value for val in ZwaveFeature)
+            vol.Coerce(int), vol.In([val.value for val in ZwaveFeature])
         ),
     }
 )
