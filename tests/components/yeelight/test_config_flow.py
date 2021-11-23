@@ -458,7 +458,11 @@ async def test_discovered_by_homekit_and_dhcp(hass):
             context={"source": config_entries.SOURCE_HOMEKIT},
             data=zeroconf.ZeroconfServiceInfo(
                 host=IP_ADDRESS,
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
                 properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()
@@ -523,7 +527,11 @@ async def test_discovered_by_homekit_and_dhcp(hass):
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
                 host=IP_ADDRESS,
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
                 properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                type="mock_type",
             ),
         ),
     ],
@@ -586,7 +594,11 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
                 host=IP_ADDRESS,
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
                 properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                type="mock_type",
             ),
         ),
     ],
