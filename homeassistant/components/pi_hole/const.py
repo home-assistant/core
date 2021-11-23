@@ -4,7 +4,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_UPDATE,
+    BinarySensorEntityDescription,
+)
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import PERCENTAGE
 
