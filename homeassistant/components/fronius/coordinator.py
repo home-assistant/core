@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Dict, TypeVar
 
 from pyfronius import FroniusError
@@ -37,14 +38,17 @@ class FroniusCoordinatorBase(
 ):
     """Query Fronius endpoint and keep track of seen conditions."""
 
+    default_interval: timedelta
+    error_interval: timedelta
     valid_descriptions: list[SensorEntityDescription]
 
     def __init__(self, *args: Any, solar_net: FroniusSolarNet, **kwargs: Any) -> None:
         """Set up the FroniusCoordinatorBase class."""
+        self._failed_update_count = 0
         self.solar_net = solar_net
         # unregistered_keys are used to create entities in platform module
         self.unregistered_keys: dict[SolarNetId, set[str]] = {}
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, update_interval=self.default_interval, **kwargs)
 
     @abstractmethod
     async def _update_method(self) -> dict[SolarNetId, Any]:
@@ -56,7 +60,14 @@ class FroniusCoordinatorBase(
             try:
                 data = await self._update_method()
             except FroniusError as err:
+                self._failed_update_count += 1
+                if self._failed_update_count == 3:
+                    self.update_interval = self.error_interval
                 raise UpdateFailed(err) from err
+
+            if self._failed_update_count != 0:
+                self._failed_update_count = 0
+                self.update_interval = self.default_interval
 
             for solar_net_id in data:
                 if solar_net_id not in self.unregistered_keys:
@@ -100,6 +111,8 @@ class FroniusCoordinatorBase(
 class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius device inverter endpoint and keep track of seen conditions."""
 
+    default_interval = timedelta(minutes=1)
+    error_interval = timedelta(minutes=10)
     valid_descriptions = INVERTER_ENTITY_DESCRIPTIONS
 
     def __init__(
@@ -122,6 +135,8 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
 class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius logger info endpoint and keep track of seen conditions."""
 
+    default_interval = timedelta(hours=1)
+    error_interval = timedelta(hours=1)
     valid_descriptions = LOGGER_ENTITY_DESCRIPTIONS
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
@@ -133,6 +148,8 @@ class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
 class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius system meter endpoint and keep track of seen conditions."""
 
+    default_interval = timedelta(minutes=1)
+    error_interval = timedelta(minutes=10)
     valid_descriptions = METER_ENTITY_DESCRIPTIONS
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
@@ -144,6 +161,8 @@ class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase):
 class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius power flow endpoint and keep track of seen conditions."""
 
+    default_interval = timedelta(seconds=10)
+    error_interval = timedelta(minutes=3)
     valid_descriptions = POWER_FLOW_ENTITY_DESCRIPTIONS
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
@@ -155,6 +174,8 @@ class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase):
 class FroniusStorageUpdateCoordinator(FroniusCoordinatorBase):
     """Query Fronius system storage endpoint and keep track of seen conditions."""
 
+    default_interval = timedelta(minutes=1)
+    error_interval = timedelta(minutes=10)
     valid_descriptions = STORAGE_ENTITY_DESCRIPTIONS
 
     async def _update_method(self) -> dict[SolarNetId, Any]:

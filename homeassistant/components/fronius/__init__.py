@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 from typing import Callable, TypeVar
 
@@ -16,14 +15,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 
-from .const import (
-    DEFAULT_UPDATE_INTERVAL,
-    DEFAULT_UPDATE_INTERVAL_LOGGER,
-    DEFAULT_UPDATE_INTERVAL_POWER_FLOW,
-    DOMAIN,
-    SOLAR_NET_ID_SYSTEM,
-    FroniusDeviceInfo,
-)
+from .const import DOMAIN, SOLAR_NET_ID_SYSTEM, FroniusDeviceInfo
 from .coordinator import (
     FroniusCoordinatorBase,
     FroniusInverterUpdateCoordinator,
@@ -101,7 +93,6 @@ class FroniusSolarNet:
                 solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_logger_{self.host}",
-                update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL_LOGGER),
             )
             await self.logger_coordinator.async_config_entry_first_refresh()
 
@@ -115,7 +106,6 @@ class FroniusSolarNet:
                 solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_inverter_{inverter_info.solar_net_id}_{self.host}",
-                update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
                 inverter_info=inverter_info,
             )
             await coordinator.async_config_entry_first_refresh()
@@ -127,7 +117,6 @@ class FroniusSolarNet:
                 solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_meters_{self.host}",
-                update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
             )
         )
 
@@ -137,7 +126,6 @@ class FroniusSolarNet:
                 solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_power_flow_{self.host}",
-                update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL_POWER_FLOW),
             )
         )
 
@@ -147,7 +135,6 @@ class FroniusSolarNet:
                 solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_storages_{self.host}",
-                update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
             )
         )
 

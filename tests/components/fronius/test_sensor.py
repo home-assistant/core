@@ -1,9 +1,7 @@
 """Tests for the Fronius sensor platform."""
-from datetime import timedelta
-
-from homeassistant.components.fronius.const import (
-    DEFAULT_UPDATE_INTERVAL,
-    DEFAULT_UPDATE_INTERVAL_POWER_FLOW,
+from homeassistant.components.fronius.coordinator import (
+    FroniusInverterUpdateCoordinator,
+    FroniusPowerFlowUpdateCoordinator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
@@ -35,7 +33,7 @@ async def test_symo_inverter(hass, aioclient_mock):
     # Second test at daytime when inverter is producing
     mock_responses(aioclient_mock, night=False)
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=DEFAULT_UPDATE_INTERVAL)
+        hass, dt.utcnow() + FroniusInverterUpdateCoordinator.default_interval
     )
     await hass.async_block_till_done()
 
@@ -200,7 +198,7 @@ async def test_symo_power_flow(hass, aioclient_mock):
     # Second test at daytime when inverter is producing
     mock_responses(aioclient_mock, night=False)
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=DEFAULT_UPDATE_INTERVAL_POWER_FLOW)
+        hass, dt.utcnow() + FroniusPowerFlowUpdateCoordinator.default_interval
     )
     await hass.async_block_till_done()
     # still 55 because power_flow update interval is shorter than others
