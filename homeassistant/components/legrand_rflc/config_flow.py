@@ -11,7 +11,7 @@ import lc7001.aio
 import voluptuous
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.components.dhcp import IP_ADDRESS, DhcpServiceInfo
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_HOST,
@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
 )
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -52,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # Linux requires the hass process have an effective cap_net_raw capability (or be run as root)
     # for this to work.
     async def async_step_dhcp(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initiated by dhcp discovery."""
         # example discovery_info
