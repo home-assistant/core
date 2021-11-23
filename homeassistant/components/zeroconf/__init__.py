@@ -26,6 +26,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.frame import report
@@ -92,7 +93,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @dataclass
-class ZeroconfServiceInfo:
+class ZeroconfServiceInfo(BaseServiceInfo):
     """Prepared info from mDNS entries."""
 
     host: str
@@ -116,6 +117,7 @@ class ZeroconfServiceInfo:
                 f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
                 exclude_integrations={"zeroconf"},
                 error_if_core=False,
+                level=logging.DEBUG,
             )
             self._warning_logged = True
         return getattr(self, name)
