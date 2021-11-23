@@ -15,6 +15,10 @@ env:
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   SQLALCHEMY_WARN_20: 1
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Separate job to pre-populate the base dependency cache
   # This prevent upcoming jobs to do the same individually
