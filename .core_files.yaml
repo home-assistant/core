@@ -61,7 +61,6 @@ components: &components
   - homeassistant/components/group/*
   - homeassistant/components/hassio/*
   - homeassistant/components/homeassistant/**
-  - homeassistant/components/homekit/*
   - homeassistant/components/image/*
   - homeassistant/components/input_boolean/*
   - homeassistant/components/input_datetime/*
