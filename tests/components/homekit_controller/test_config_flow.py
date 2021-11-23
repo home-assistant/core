@@ -141,10 +141,9 @@ def get_device_discovery_info(
     record = device.info
     result = zeroconf.ZeroconfServiceInfo(
         host=record["address"],
-        port=record["port"],
         hostname=record["name"],
-        type="_hap._tcp.local.",
         name=record["name"],
+        port=record["port"],
         properties={
             "md": record["md"],
             "pv": record["pv"],
@@ -156,6 +155,7 @@ def get_device_discovery_info(
             "sf": 0x01,  # record["sf"],
             "sh": "",
         },
+        type="_hap._tcp.local.",
     )
 
     if missing_csharp:
