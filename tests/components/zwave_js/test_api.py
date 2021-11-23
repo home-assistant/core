@@ -3159,7 +3159,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
     )
     msg = await ws_client.receive_json()
     assert not msg["success"]
-    assert "error" in msg and "value must be one of" in msg["error"]["message"]
+    assert "error" in msg and msg["error"]["code"] == "invalid_format"
 
     # Test error without service data
     await ws_client.send_json(

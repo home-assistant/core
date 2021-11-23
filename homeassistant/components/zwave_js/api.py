@@ -183,11 +183,7 @@ PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.All(
             vol.Required(DSK): str,
             vol.Required(SECURITY_CLASSES): vol.All(
                 cv.ensure_list,
-                [
-                    vol.All(
-                        vol.Coerce(int), vol.In([val.value for val in SecurityClass])
-                    )
-                ],
+                [vol.Coerce(SecurityClass)],
             ),
         },
         # Provisioning entries can have extra keys for SmartStart
@@ -199,16 +195,10 @@ PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.All(
 QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Required(VERSION): vol.All(
-                vol.Coerce(int), vol.In([val.value for val in QRCodeVersion])
-            ),
+            vol.Required(VERSION): vol.Coerce(QRCodeVersion),
             vol.Required(SECURITY_CLASSES): vol.All(
                 cv.ensure_list,
-                [
-                    vol.All(
-                        vol.Coerce(int), vol.In([val.value for val in SecurityClass])
-                    )
-                ],
+                [vol.Coerce(SecurityClass)],
             ),
             vol.Required(DSK): str,
             vol.Required(GENERIC_DEVICE_CLASS): int,
@@ -222,7 +212,7 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
             vol.Optional(UUID): str,
             vol.Optional(SUPPORTED_PROTOCOLS): vol.All(
                 cv.ensure_list,
-                [vol.All(vol.Coerce(int), vol.In([val.value for val in Protocols]))],
+                [vol.Coerce(Protocols)],
             ),
         }
     ),
@@ -718,12 +708,7 @@ async def websocket_add_node(
         vol.Required(ENTRY_ID): str,
         vol.Required(SECURITY_CLASSES): vol.All(
             cv.ensure_list,
-            [
-                vol.All(
-                    vol.Coerce(int),
-                    vol.In([sec_cls.value for sec_cls in SecurityClass]),
-                )
-            ],
+            [vol.Coerce(SecurityClass)],
         ),
         vol.Optional(CLIENT_SIDE_AUTH, default=False): bool,
     }
@@ -917,9 +902,7 @@ async def websocket_parse_qr_code_string(
     {
         vol.Required(TYPE): "zwave_js/supports_feature",
         vol.Required(ENTRY_ID): str,
-        vol.Required(FEATURE): vol.All(
-            vol.Coerce(int), vol.In([val.value for val in ZwaveFeature])
-        ),
+        vol.Required(FEATURE): vol.Coerce(ZwaveFeature),
     }
 )
 @websocket_api.async_response
@@ -933,9 +916,7 @@ async def websocket_supports_feature(
     client: Client,
 ) -> None:
     """Check if controller supports a particular feature."""
-    supported = await client.driver.controller.async_supports_feature(
-        ZwaveFeature(msg[FEATURE])
-    )
+    supported = await client.driver.controller.async_supports_feature(msg[FEATURE])
     connection.send_result(
         msg[ID],
         {"supported": supported},
@@ -1687,8 +1668,7 @@ async def websocket_subscribe_log_updates(
                     vol.Optional(LEVEL): vol.All(
                         str,
                         vol.Lower,
-                        vol.In([log_level.value for log_level in LogLevel]),
-                        lambda val: LogLevel(val),  # pylint: disable=unnecessary-lambda
+                        vol.Coerce(LogLevel),
                     ),
                     vol.Optional(LOG_TO_FILE): cv.boolean,
                     vol.Optional(FILENAME): str,
