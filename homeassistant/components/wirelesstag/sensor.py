@@ -14,11 +14,18 @@ from . import DOMAIN as WIRELESSTAG_DOMAIN, SIGNAL_TAG_UPDATE, WirelessTagBaseSe
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TEMPERATURE = "temperature"
+SENSOR_AMBIENT_TEMPERATURE = "ambient_temperature"
 SENSOR_HUMIDITY = "humidity"
 SENSOR_MOISTURE = "moisture"
 SENSOR_LIGHT = "light"
 
-SENSOR_TYPES = [SENSOR_TEMPERATURE, SENSOR_HUMIDITY, SENSOR_MOISTURE, SENSOR_LIGHT]
+SENSOR_TYPES = [
+    SENSOR_TEMPERATURE,
+    SENSOR_HUMIDITY,
+    SENSOR_MOISTURE,
+    SENSOR_LIGHT,
+    SENSOR_AMBIENT_TEMPERATURE,
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -90,7 +97,11 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return self._sensor_type
+        return (
+            SENSOR_TEMPERATURE
+            if self._sensor_type is SENSOR_AMBIENT_TEMPERATURE
+            else self._sensor_type
+        )
 
     @property
     def native_unit_of_measurement(self):
