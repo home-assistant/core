@@ -12,4 +12,3 @@ codenotary:
 labels:
   io.hass.type: core
   org.opencontainers.image.source: https://github.com/home-assistant/core
-version_tag: true

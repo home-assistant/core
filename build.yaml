@@ -18,4 +18,3 @@ labels:
   org.opencontainers.image.url: https://www.home-assistant.io/
   org.opencontainers.image.documentation: https://www.home-assistant.io/docs/
   org.opencontainers.image.licenses: Apache License 2.0
-version_tag: true
