@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import Any
 
 from hole import Hole
 
@@ -114,8 +115,7 @@ class PiHoleBinarySensorEntityDescription(
 ):
     """Describes PiHole binary sensor entity."""
 
-    version_current: str = ""
-    version_latest: str = ""
+    extra_value: Callable[[Hole], dict[str, Any] | None] = lambda api: None
 
 
 BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
@@ -123,25 +123,31 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
         key="core_update_available",
         name="Core Update Available",
         device_class=DEVICE_CLASS_UPDATE,
+        extra_value=lambda api: {
+            "current_version": api.versions["core_current"],
+            "latest_version": api.versions["core_latest"],
+        },
         state_value=lambda api: bool(api.versions["core_update"]),
-        version_current="core_current",
-        version_latest="core_latest",
     ),
     PiHoleBinarySensorEntityDescription(
         key="web_update_available",
         name="Web Update Available",
         device_class=DEVICE_CLASS_UPDATE,
+        extra_value=lambda api: {
+            "current_version": api.versions["web_current"],
+            "latest_version": api.versions["web_latest"],
+        },
         state_value=lambda api: bool(api.versions["web_update"]),
-        version_current="web_current",
-        version_latest="web_latest",
     ),
     PiHoleBinarySensorEntityDescription(
         key="ftl_update_available",
         name="FTL Update Available",
         device_class=DEVICE_CLASS_UPDATE,
+        extra_value=lambda api: {
+            "current_version": api.versions["FTL_current"],
+            "latest_version": api.versions["FTL_latest"],
+        },
         state_value=lambda api: bool(api.versions["FTL_update"]),
-        version_current="FTL_current",
-        version_latest="FTL_latest",
     ),
 )
 

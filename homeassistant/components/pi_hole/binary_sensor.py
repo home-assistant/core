@@ -87,17 +87,6 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
         return self.entity_description.state_value(self.api)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the Pi-hole."""
-
-        if self.entity_description.version_current != "":
-            return {
-                "current_version": self.api.versions[
-                    self.entity_description.version_current
-                ],
-                "latest_version": self.api.versions[
-                    self.entity_description.version_latest
-                ],
-            }
-
-        return {}
+        return self.entity_description.extra_value(self.api)
