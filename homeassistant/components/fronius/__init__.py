@@ -15,11 +15,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 
-from .const import (
-    DOMAIN,
-    SOLAR_NET_ID_SYSTEM,
-    FroniusDeviceInfo,
-)
+from .const import DOMAIN, SOLAR_NET_ID_SYSTEM, FroniusDeviceInfo
 from .coordinator import (
     FroniusCoordinatorBase,
     FroniusInverterUpdateCoordinator,
