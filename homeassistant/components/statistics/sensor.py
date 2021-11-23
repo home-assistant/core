@@ -181,29 +181,9 @@ class StatisticsSensor(SensorEntity):
             STAT_BUFFER_USAGE_RATIO: STATE_UNKNOWN,
             STAT_SOURCE_VALUE_VALID: STATE_UNKNOWN,
         }
-        self.statistics = {
-            STAT_AVERAGE_LINEAR: self._stat_average_linear,
-            STAT_AVERAGE_STEP: self._stat_average_step,
-            STAT_AVERAGE_TIMELESS: self._stat_average_timeless,
-            STAT_CHANGE_SAMPLE: self._stat_change_sample,
-            STAT_CHANGE_SECOND: self._stat_change_second,
-            STAT_CHANGE: self._stat_change,
-            STAT_COUNT: self._stat_count,
-            STAT_DATETIME_NEWEST: self._stat_datetime_newest,
-            STAT_DATETIME_OLDEST: self._stat_datetime_oldest,
-            STAT_DISTANCE_95P: self._stat_distance_95p,
-            STAT_DISTANCE_99P: self._stat_distance_99p,
-            STAT_DISTANCE_ABSOLUTE: self._stat_distance_absolute,
-            STAT_MEAN: self._stat_mean,
-            STAT_MEDIAN: self._stat_median,
-            STAT_NOISINESS: self._stat_noisiness,
-            STAT_QUANTILES: self._stat_quantiles,
-            STAT_STANDARD_DEVIATION: self._stat_standard_deviation,
-            STAT_TOTAL: self._stat_total,
-            STAT_VALUE_MAX: self._stat_value_max,
-            STAT_VALUE_MIN: self._stat_value_min,
-            STAT_VARIANCE: self._stat_variance,
-        }
+        self._state_characteristic_fn = getattr(
+            self, f"_stat_{self._state_characteristic}"
+        )
 
         self._update_listener = None
 
@@ -472,13 +452,16 @@ class StatisticsSensor(SensorEntity):
             self.attributes[STAT_AGE_COVERAGE_RATIO] = STATE_UNKNOWN
 
     def _update_value(self):
-        """Front to call the right statistical characteristics functions."""
+        """Front to call the right statistical characteristics functions.
+
+        One of the _stat_*() functions is represented by self._state_characteristic_fn().
+        """
 
         if self.is_binary:
             self._value = len(self.states)
             return
 
-        value = self.statistics[self._state_characteristic]()
+        value = self._state_characteristic_fn()
 
         if self._state_characteristic not in STATS_NOT_A_NUMBER:
             with contextlib.suppress(TypeError):
@@ -545,12 +528,12 @@ class StatisticsSensor(SensorEntity):
             return self.ages[0]
         return STATE_UNKNOWN
 
-    def _stat_distance_95p(self):
+    def _stat_distance_95_percent_of_values(self):
         if len(self.states) >= 2:
             return 2 * 1.96 * self._stat_standard_deviation()
         return STATE_UNKNOWN
 
-    def _stat_distance_99p(self):
+    def _stat_distance_99_percent_of_values(self):
         if len(self.states) >= 2:
             return 2 * 2.58 * self._stat_standard_deviation()
         return STATE_UNKNOWN
