@@ -10,7 +10,6 @@ from homeassistant.components.lock import (
     SERVICE_OPEN,
     STATE_LOCKED,
     STATE_UNLOCKED,
-    STATE_OPEN,
     SUPPORT_OPEN
 )
 from homeassistant.components.mqtt.lock import MQTT_LOCK_ATTRIBUTES_BLOCKED
@@ -292,8 +291,8 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(hass, mqtt_mock
                 "name": "test",
                 "command_topic": "command-topic",
                 "payload_lock": "LOCK",
-                "payload_unlock": "OPEN",
-                "payload_open": "UNLOCK",
+                "payload_unlock": "UNLOCK",
+                "payload_open": "OPEN",
                 "state_locked": "LOCKED",
                 "state_unlocked": "UNLOCKED",
                 "state_open": "OPEN",
@@ -334,7 +333,7 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(hass, mqtt_mock
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_OPEN
+    assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(hass, mqtt_mock):
@@ -392,7 +391,7 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(hass, 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
-    assert state.state is STATE_OPEN
+    assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 async def test_availability_when_connection_lost(hass, mqtt_mock):
