@@ -19,8 +19,11 @@ TEST_CONNECTION = {
 
 TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
     host="1.1.1.1",
+    hostname="mock_hostname",
+    name="mock_name",
     port=3000,
     properties={"volumioName": "discovered", "UUID": "2222-2222-2222-2222"},
+    type="mock_type",
 )
 
 TEST_DISCOVERY_RESULT = {

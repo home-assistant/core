@@ -403,8 +403,11 @@ async def test_zeroconf_success(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host=TEST_HOST,
+            hostname="mock_hostname",
             name=TEST_ZEROCONF_NAME,
+            port=None,
             properties={ZEROCONF_MAC: TEST_MAC},
+            type="mock_type",
         ),
     )
 
@@ -445,7 +448,12 @@ async def test_zeroconf_missing_data(hass):
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST, name=TEST_ZEROCONF_NAME, properties={}
+            host=TEST_HOST,
+            hostname="mock_hostname",
+            name=TEST_ZEROCONF_NAME,
+            port=None,
+            properties={},
+            type="mock_type",
         ),
     )
 
@@ -460,8 +468,11 @@ async def test_zeroconf_unknown_device(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host=TEST_HOST,
+            hostname="mock_hostname",
             name="not-a-xiaomi-aqara-gateway",
+            port=None,
             properties={ZEROCONF_MAC: TEST_MAC},
+            type="mock_type",
         ),
     )
 
