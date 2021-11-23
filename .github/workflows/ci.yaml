@@ -675,7 +675,8 @@ jobs:
         uses: dorny/paths-filter@v2.10.2
         id: integrations
         with:
-          filters: ${{ steps.integration-filters.outputs.filters }}
+          filters: |
+            ${{ steps.integration-filters.outputs.filters }}
 
   pytest-full:
     if: ${{ needs.changes.outputs.core == 'true' }}
