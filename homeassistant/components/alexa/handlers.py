@@ -4,6 +4,7 @@ import math
 
 from homeassistant import core as ha
 from homeassistant.components import (
+    button,
     camera,
     cover,
     fan,
@@ -313,9 +314,13 @@ async def async_api_activate(hass, config, directive, context):
     entity = directive.entity
     domain = entity.domain
 
+    service = SERVICE_TURN_ON
+    if domain == button.DOMAIN:
+        service = button.SERVICE_PRESS
+
     await hass.services.async_call(
         domain,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: entity.entity_id},
         blocking=False,
         context=context,
