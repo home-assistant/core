@@ -1393,7 +1393,7 @@ pycfdns==1.2.2
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==10.1.0
+pychromecast==10.1.1
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
