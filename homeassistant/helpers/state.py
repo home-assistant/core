@@ -10,6 +10,7 @@ from types import ModuleType, TracebackType
 from typing import Any
 
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
+from homeassistant.components.twitch.sensor import STATE_OFFLINE, STATE_STREAMING
 from homeassistant.const import (
     STATE_CLOSED,
     STATE_HOME,
@@ -130,6 +131,7 @@ def state_as_number(state: State) -> float:
         STATE_ABOVE_HORIZON,
         STATE_OPEN,
         STATE_HOME,
+        STATE_STREAMING,
     ):
         return 1
     if state.state in (
@@ -139,6 +141,7 @@ def state_as_number(state: State) -> float:
         STATE_BELOW_HORIZON,
         STATE_CLOSED,
         STATE_NOT_HOME,
+        STATE_OFFLINE,
     ):
         return 0
 
