@@ -92,6 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for (key, value) in discovery_info[zeroconf.ATTR_PROPERTIES].items()
         }
         await self.async_set_unique_id(properties[zeroconf.ATTR_PROPERTIES_ID])
+        self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
     def _username_already_configured(self, user_input):

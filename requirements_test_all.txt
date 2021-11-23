@@ -582,7 +582,7 @@ krakenex==2.1.0
 libpyfoscam==1.0
 
 # homeassistant.components.mikrotik
-librouteros==3.0.0
+librouteros==3.2.0
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.8

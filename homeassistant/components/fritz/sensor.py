@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Any, Callable, Literal
 
@@ -40,30 +40,29 @@ from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
 _LOGGER = logging.getLogger(__name__)
 
 
-def _uptime_calculation(seconds_uptime: float, last_value: str | None) -> str:
+def _uptime_calculation(seconds_uptime: float, last_value: datetime | None) -> datetime:
     """Calculate uptime with deviation."""
-    delta_uptime = utcnow() - datetime.timedelta(seconds=seconds_uptime)
+    delta_uptime = utcnow() - timedelta(seconds=seconds_uptime)
 
     if (
         not last_value
-        or abs(
-            (delta_uptime - datetime.datetime.fromisoformat(last_value)).total_seconds()
-        )
-        > UPTIME_DEVIATION
+        or abs((delta_uptime - last_value).total_seconds()) > UPTIME_DEVIATION
     ):
-        return delta_uptime.replace(microsecond=0).isoformat()
+        return delta_uptime
 
     return last_value
 
 
-def _retrieve_device_uptime_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_device_uptime_state(
+    status: FritzStatus, last_value: datetime
+) -> datetime:
     """Return uptime from device."""
     return _uptime_calculation(status.device_uptime, last_value)
 
 
 def _retrieve_connection_uptime_state(
-    status: FritzStatus, last_value: str | None
-) -> str:
+    status: FritzStatus, last_value: datetime | None
+) -> datetime:
     """Return uptime from connection."""
     return _uptime_calculation(status.connection_uptime, last_value)
 

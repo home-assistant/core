@@ -219,7 +219,6 @@ class KNXLight(KnxEntity, LightEntity):
             if rgb is not None:
                 if not self._device.supports_brightness:
                     # brightness will be calculated from color so color must not hold brightness again
-                    # pylint: disable=protected-access
                     return cast(
                         Tuple[int, int, int], color_util.match_max_scale((255,), rgb)
                     )
@@ -234,7 +233,6 @@ class KNXLight(KnxEntity, LightEntity):
             if rgb is not None and white is not None:
                 if not self._device.supports_brightness:
                     # brightness will be calculated from color so color must not hold brightness again
-                    # pylint: disable=protected-access
                     return cast(
                         Tuple[int, int, int, int],
                         color_util.match_max_scale((255,), (*rgb, white)),
