@@ -16,6 +16,7 @@ base_platforms: &base_platforms
   - homeassistant/components/alarm_control_panel/*
   - homeassistant/components/binary_sensor/*
   - homeassistant/components/button/*
+  - homeassistant/components/calendar/*
   - homeassistant/components/camera/*
   - homeassistant/components/climate/*
   - homeassistant/components/cover/*
