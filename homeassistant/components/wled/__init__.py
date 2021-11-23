@@ -34,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # For backwards compat, set unique ID
+    # Adding useless comment for test
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(
             entry, unique_id=coordinator.data.info.mac_address
