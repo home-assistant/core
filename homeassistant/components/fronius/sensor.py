@@ -21,6 +21,7 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_FREQUENCY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_TEMPERATURE,
@@ -145,6 +146,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="frequency_ac",
         name="Frequency AC",
         native_unit_of_measurement=FREQUENCY_HERTZ,
+        device_class=DEVICE_CLASS_FREQUENCY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -317,6 +319,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="frequency_phase_average",
         name="Frequency phase average",
         native_unit_of_measurement=FREQUENCY_HERTZ,
+        device_class=DEVICE_CLASS_FREQUENCY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
