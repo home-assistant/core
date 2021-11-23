@@ -35,7 +35,6 @@ from .binary_sensor import supported as binary_supported
 from .const import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
     CONF_REPLACE_DEVICE,
@@ -208,7 +207,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                 devices = {}
                 device = {
                     CONF_DEVICE_ID: device_id,
-                    CONF_FIRE_EVENT: user_input.get(CONF_FIRE_EVENT, False),
                     CONF_SIGNAL_REPETITIONS: user_input.get(CONF_SIGNAL_REPETITIONS, 1),
                 }
 
@@ -235,11 +233,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         device_data = self._selected_device
 
-        data_schema = {
-            vol.Optional(
-                CONF_FIRE_EVENT, default=device_data.get(CONF_FIRE_EVENT, False)
-            ): bool,
-        }
+        data_schema = {}
 
         if binary_supported(self._selected_device_object):
             if device_data.get(CONF_OFF_DELAY):

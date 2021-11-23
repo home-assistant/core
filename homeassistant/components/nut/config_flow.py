@@ -4,6 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_BASE,
@@ -14,6 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from . import PyNUTData
 from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -85,13 +87,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.ups_list = None
         self.title = None
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Prepare configuration for a discovered nut device."""
         self.discovery_info = discovery_info
         await self._async_handle_discovery_without_unique_id()
         self.context["title_placeholders"] = {
-            CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
-            CONF_HOST: discovery_info[CONF_HOST],
+            CONF_PORT: discovery_info[zeroconf.ATTR_PORT] or DEFAULT_PORT,
+            CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
         }
         return await self.async_step_user()
 

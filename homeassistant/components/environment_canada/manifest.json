@@ -2,7 +2,7 @@
   "domain": "environment_canada",
   "name": "Environment Canada",
   "documentation": "https://www.home-assistant.io/integrations/environment_canada",
-  "requirements": ["env_canada==0.5.14"],
+  "requirements": ["env_canada==0.5.18"],
   "codeowners": ["@gwww", "@michaeldavie"],
   "config_flow": true,
   "iot_class": "cloud_polling"

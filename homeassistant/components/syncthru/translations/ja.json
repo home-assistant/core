@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "syncthru_not_supported": "\u30c7\u30d0\u30a4\u30b9\u306fSyncThru\u3092\u30b5\u30dd\u30fc\u30c8\u3057\u3066\u3044\u307e\u305b\u3093"
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "\u540d\u524d"
+                }
+            }
+        }
+    }
+}

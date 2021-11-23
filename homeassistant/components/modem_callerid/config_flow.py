@@ -30,7 +30,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         self._device: str | None = None
 
-    async def async_step_usb(self, discovery_info: dict[str, str]) -> FlowResult:
+    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB Discovery."""
         device = discovery_info["device"]
 

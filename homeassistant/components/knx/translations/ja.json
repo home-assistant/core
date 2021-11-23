@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30b5\u30fc\u30d3\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "single_instance_allowed": "\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u5358\u4e00\u306e\u8a2d\u5b9a\u3057\u304b\u3067\u304d\u307e\u305b\u3093\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "individual_address": "\u63a5\u7d9a\u7528\u306e\u500b\u5225\u30a2\u30c9\u30ec\u30b9",
+                    "port": "\u30dd\u30fc\u30c8",
+                    "route_back": "\u30eb\u30fc\u30c8\u30d0\u30c3\u30af / NAT\u30e2\u30fc\u30c9"
+                },
+                "description": "\u30c8\u30f3\u30cd\u30ea\u30f3\u30b0\u30c7\u30d0\u30a4\u30b9\u306e\u63a5\u7d9a\u60c5\u5831\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+            },
+            "routing": {
+                "data": {
+                    "individual_address": "\u30eb\u30fc\u30c6\u30a3\u30f3\u30b0\u63a5\u7d9a\u306e\u500b\u5225\u306e\u30a2\u30c9\u30ec\u30b9",
+                    "multicast_group": "\u30eb\u30fc\u30c6\u30a3\u30f3\u30b0\u306b\u4f7f\u7528\u3059\u308b\u30de\u30eb\u30c1\u30ad\u30e3\u30b9\u30c8\u30b0\u30eb\u30fc\u30d7",
+                    "multicast_port": "\u30eb\u30fc\u30c6\u30a3\u30f3\u30b0\u306b\u4f7f\u7528\u3059\u308b\u30de\u30eb\u30c1\u30ad\u30e3\u30b9\u30c8\u30dd\u30fc\u30c8"
+                },
+                "description": "\u30eb\u30fc\u30c6\u30a3\u30f3\u30b0\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+            },
+            "tunnel": {
+                "data": {
+                    "gateway": "KNX\u30c8\u30f3\u30cd\u30eb\u63a5\u7d9a"
+                },
+                "description": "\u30ea\u30b9\u30c8\u304b\u3089\u30b2\u30fc\u30c8\u30a6\u30a7\u30a4\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+            },
+            "type": {
+                "data": {
+                    "connection_type": "KNX\u63a5\u7d9a\u30bf\u30a4\u30d7"
+                },
+                "description": "KNX\u63a5\u7d9a\u306b\u4f7f\u7528\u3059\u308b\u63a5\u7d9a\u30bf\u30a4\u30d7\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002 \n AUTOMATIC - \u30b2\u30fc\u30c8\u30a6\u30a7\u30a4\u30b9\u30ad\u30e3\u30f3\u3092\u5b9f\u884c\u3057\u3066\u3001KNX \u30d0\u30b9\u3078\u306e\u63a5\u7d9a\u3092\u884c\u3044\u307e\u3059\u3002 \n TUNNELING - \u30c8\u30f3\u30cd\u30ea\u30f3\u30b0\u3092\u4ecb\u3057\u3066\u3001KNX\u30d0\u30b9\u306b\u63a5\u7d9a\u3057\u307e\u3059\u3002 \n ROUTING - \u30eb\u30fc\u30c6\u30a3\u30f3\u30b0\u3092\u4ecb\u3057\u3066\u3001KNX \u30d0\u30b9\u306b\u63a5\u7d9a\u3057\u307e\u3059\u3002"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "connection_type": "KNX\u63a5\u7d9a\u30bf\u30a4\u30d7",
+                    "individual_address": "\u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u500b\u5225\u30a2\u30c9\u30ec\u30b9",
+                    "multicast_group": "\u30eb\u30fc\u30c6\u30a3\u30f3\u30b0\u3068\u691c\u51fa(discovery)\u306b\u4f7f\u7528\u3055\u308c\u308b\u30de\u30eb\u30c1\u30ad\u30e3\u30b9\u30c8\u30b0\u30eb\u30fc\u30d7",
+                    "multicast_port": "\u30eb\u30fc\u30c6\u30a3\u30f3\u30b0\u3068\u691c\u51fa(discovery)\u306b\u4f7f\u7528\u3055\u308c\u308b\u30de\u30eb\u30c1\u30ad\u30e3\u30b9\u30c8\u30dd\u30fc\u30c8",
+                    "rate_limit": "1 \u79d2\u3042\u305f\u308a\u306e\u6700\u5927\u9001\u4fe1\u96fb\u5831(telegrams )\u6570",
+                    "state_updater": "KNX\u30d0\u30b9\u304b\u3089\u306e\u8aad\u307f\u53d6\u308a\u72b6\u614b\u3092\u30b0\u30ed\u30fc\u30d0\u30eb\u306b\u6709\u52b9\u306b\u3059\u308b"
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8",
+                    "route_back": "\u30eb\u30fc\u30c8\u30d0\u30c3\u30af / NAT\u30e2\u30fc\u30c9"
+                }
+            }
+        }
+    }
+}

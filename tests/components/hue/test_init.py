@@ -10,12 +10,19 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_bridge_setup():
+@pytest.fixture(name="mock_bridge_setup")
+def get_mock_bridge_setup():
     """Mock bridge setup."""
     with patch.object(hue, "HueBridge") as mock_bridge:
-        mock_bridge.return_value.async_setup = AsyncMock(return_value=True)
-        mock_bridge.return_value.api.config = Mock(bridgeid="mock-id")
+        mock_bridge.return_value.async_initialize_bridge = AsyncMock(return_value=True)
+        mock_bridge.return_value.api_version = 1
+        mock_bridge.return_value.api.config = Mock(
+            bridge_id="mock-id",
+            mac_address="00:00:00:00:00:00",
+            software_version="1.0.0",
+            model_id="BSB002",
+        )
+        mock_bridge.return_value.api.config.name = "Mock Hue bridge"
         yield mock_bridge.return_value
 
 
@@ -108,11 +115,14 @@ async def test_fixing_unique_id_other_correct(hass, mock_bridge_setup):
 
 async def test_security_vuln_check(hass):
     """Test that we report security vulnerabilities."""
-
-    entry = MockConfigEntry(domain=hue.DOMAIN, data={"host": "0.0.0.0"})
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN, data={"host": "0.0.0.0", "api_version": 1}
+    )
     entry.add_to_hass(hass)
 
-    config = Mock(bridgeid="", mac="", modelid="BSB002", swversion="1935144020")
+    config = Mock(
+        bridge_id="", mac_address="", model_id="BSB002", software_version="1935144020"
+    )
     config.name = "Hue"
 
     with patch.object(
@@ -120,7 +130,9 @@ async def test_security_vuln_check(hass):
         "HueBridge",
         Mock(
             return_value=Mock(
-                async_setup=AsyncMock(return_value=True), api=Mock(config=config)
+                async_initialize_bridge=AsyncMock(return_value=True),
+                api=Mock(config=config),
+                api_version=1,
             )
         ),
     ):

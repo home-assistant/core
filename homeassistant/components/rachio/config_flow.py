@@ -7,8 +7,10 @@ from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_MANUAL_RUN_MINS,
@@ -78,13 +80,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle HomeKit discovery."""
         self._async_abort_entries_match()
-        properties = {
-            key.lower(): value for (key, value) in discovery_info["properties"].items()
-        }
-        await self.async_set_unique_id(properties["id"])
+        await self.async_set_unique_id(
+            discovery_info[zeroconf.ATTR_PROPERTIES][zeroconf.ATTR_PROPERTIES_ID]
+        )
         return await self.async_step_user()
 
     @staticmethod

@@ -8,6 +8,7 @@ from plugwise.exceptions import (
 )
 import pytest
 
+from homeassistant.components import zeroconf
 from homeassistant.components.plugwise.const import (
     API,
     DEFAULT_PORT,
@@ -39,28 +40,28 @@ TEST_PORT = 81
 TEST_USERNAME = "smile"
 TEST_USERNAME2 = "stretch"
 
-TEST_DISCOVERY = {
-    "host": TEST_HOST,
-    "port": DEFAULT_PORT,
-    "hostname": f"{TEST_HOSTNAME}.local.",
-    "server": f"{TEST_HOSTNAME}.local.",
-    "properties": {
+TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
+    host=TEST_HOST,
+    port=DEFAULT_PORT,
+    hostname=f"{TEST_HOSTNAME}.local.",
+    server=f"{TEST_HOSTNAME}.local.",
+    properties={
         "product": "smile",
         "version": "1.2.3",
         "hostname": f"{TEST_HOSTNAME}.local.",
     },
-}
-TEST_DISCOVERY2 = {
-    "host": TEST_HOST,
-    "port": DEFAULT_PORT,
-    "hostname": f"{TEST_HOSTNAME2}.local.",
-    "server": f"{TEST_HOSTNAME2}.local.",
-    "properties": {
+)
+TEST_DISCOVERY2 = zeroconf.ZeroconfServiceInfo(
+    host=TEST_HOST,
+    port=DEFAULT_PORT,
+    hostname=f"{TEST_HOSTNAME2}.local.",
+    server=f"{TEST_HOSTNAME2}.local.",
+    properties={
         "product": "stretch",
         "version": "1.2.3",
         "hostname": f"{TEST_HOSTNAME2}.local.",
     },
-}
+)
 
 
 @pytest.fixture(name="mock_smile")

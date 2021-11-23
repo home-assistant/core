@@ -1,12 +1,14 @@
 {
     "config": {
         "error": {
+            "already_configured": "\u30b5\u30fc\u30d3\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
             "invalid_sensor": "\u30bb\u30f3\u30b5\u30fc\u304c\u5229\u7528\u3067\u304d\u306a\u3044\u304b\u3001\u7121\u52b9\u3067\u3059"
         },
         "step": {
             "user": {
                 "data": {
-                    "show_on_map": "\u5730\u56f3\u3067\u8868\u793a",
+                    "show_on_map": "\u5730\u56f3\u306b\u8868\u793a",
                     "station_id": "Luftdaten\u30bb\u30f3\u30b5\u30fcID"
                 },
                 "title": "Luftdaten\u306e\u5b9a\u7fa9"

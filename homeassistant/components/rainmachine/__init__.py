@@ -21,8 +21,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -323,6 +327,38 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    version = entry.version
+
+    LOGGER.debug("Migrating from version %s", version)
+
+    # 1 -> 2: Update unique IDs to be consistent across platform (including removing
+    # the silly removal of colons in the MAC address that was added originally):
+    if version == 1:
+        version = entry.version = 2
+
+        ent_reg = er.async_get(hass)
+        for entity_entry in [
+            e for e in ent_reg.entities.values() if e.config_entry_id == entry.entry_id
+        ]:
+            unique_id_pieces = entity_entry.unique_id.split("_")
+            old_mac = unique_id_pieces[0]
+            new_mac = ":".join(old_mac[i : i + 2] for i in range(0, len(old_mac), 2))
+            unique_id_pieces[0] = new_mac
+
+            if entity_entry.entity_id.startswith("switch"):
+                unique_id_pieces[1] = unique_id_pieces[1][11:].lower()
+
+            ent_reg.async_update_entity(
+                entity_entry.entity_id, new_unique_id="_".join(unique_id_pieces)
+            )
+
+    LOGGER.info("Migration to version %s successful", version)
+
+    return True
+
+
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)
@@ -355,10 +391,7 @@ class RainMachineEntity(CoordinatorEntity):
         )
         self._attr_extra_state_attributes = {}
         self._attr_name = f"{controller.name} {description.name}"
-        # The colons are removed from the device MAC simply because that value
-        # (unnecessarily) makes up the existing unique ID formula and we want to avoid
-        # a breaking change:
-        self._attr_unique_id = f"{controller.mac.replace(':', '')}_{description.key}"
+        self._attr_unique_id = f"{controller.mac}_{description.key}"
         self._controller = controller
         self.entity_description = description
 

@@ -9,6 +9,7 @@ from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
+    ENTITY_CATEGORY_CONFIG,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.core import HomeAssistant
@@ -36,6 +37,7 @@ async def test_select_entity(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == f"{diffuser.hublot}{ROOM_SIZE_SUFFIX}"
     assert entry.unit_of_measurement == AREA_SQUARE_METERS
+    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
 
 
 async def test_select_option(hass: HomeAssistant) -> None:

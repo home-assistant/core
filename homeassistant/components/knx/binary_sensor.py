@@ -6,6 +6,7 @@ from typing import Any
 from xknx import XKNX
 from xknx.devices import BinarySensor as XknxBinarySensor
 
+from homeassistant import config_entries
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -18,28 +19,31 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_COUNTER, ATTR_SOURCE, DOMAIN
+from .const import (
+    ATTR_COUNTER,
+    ATTR_SOURCE,
+    DATA_KNX_CONFIG,
+    DOMAIN,
+    SupportedPlatforms,
+)
 from .knx_entity import KnxEntity
 from .schema import BinarySensorSchema
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up binary sensor(s) for KNX platform."""
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-
-    platform_config = discovery_info["platform_config"]
+    """Set up the KNX binary sensor platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
+    config: ConfigType = hass.data[DATA_KNX_CONFIG]
 
     async_add_entities(
-        KNXBinarySensor(xknx, entity_config) for entity_config in platform_config
+        KNXBinarySensor(xknx, entity_config)
+        for entity_config in config[SupportedPlatforms.BINARY_SENSOR.value]
     )
 
 

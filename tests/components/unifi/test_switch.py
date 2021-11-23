@@ -22,6 +22,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .test_controller import (
     CONTROLLER_HOST,
+    DEFAULT_CONFIG_ENTRY_ID,
     DESCRIPTION,
     ENTRY_CONFIG,
     setup_unifi_integration,
@@ -857,7 +858,7 @@ async def test_restore_client_succeed(hass, aioclient_mock):
         data=ENTRY_CONFIG,
         source="test",
         options={},
-        entry_id=1,
+        entry_id=DEFAULT_CONFIG_ENTRY_ID,
     )
 
     registry = er.async_get(hass)
@@ -947,7 +948,7 @@ async def test_restore_client_no_old_state(hass, aioclient_mock):
         data=ENTRY_CONFIG,
         source="test",
         options={},
-        entry_id=1,
+        entry_id=DEFAULT_CONFIG_ENTRY_ID,
     )
 
     registry = er.async_get(hass)

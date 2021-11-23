@@ -6,6 +6,11 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d4c\u5ea6",
+                    "name": "\u540d\u524d"
+                },
                 "title": "\u30b9\u30a6\u30a7\u30fc\u30c7\u30f3\u3067\u306e\u4f4d\u7f6e"
             }
         }

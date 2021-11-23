@@ -232,7 +232,7 @@ homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/honeywell/* @rdfurman
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
-homeassistant/components/hue/* @balloob @frenck
+homeassistant/components/hue/* @balloob @frenck @marcelveldt
 homeassistant/components/huisbaasje/* @dennisschroer
 homeassistant/components/humidifier/* @home-assistant/core @Shulyaka
 homeassistant/components/hunterdouglas_powerview/* @bdraco
@@ -547,7 +547,6 @@ homeassistant/components/tplink/* @rytilahti @thegardenmonkey
 homeassistant/components/traccar/* @ludeeus
 homeassistant/components/trace/* @home-assistant/core
 homeassistant/components/tractive/* @Danielhiversen @zhulik @bieniu
-homeassistant/components/tradfri/* @janiversen
 homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins

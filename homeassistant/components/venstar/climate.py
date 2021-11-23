@@ -120,6 +120,8 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             HVAC_MODE_COOL: self._client.MODE_COOL,
             HVAC_MODE_AUTO: self._client.MODE_AUTO,
         }
+        self._attr_unique_id = config.entry_id
+        self._attr_name = self._client.name
 
     @property
     def supported_features(self):

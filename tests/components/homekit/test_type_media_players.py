@@ -431,7 +431,7 @@ async def test_tv_restore(hass, hk_driver, events):
         "generic",
         "1234",
         suggested_object_id="simple",
-        device_class=DEVICE_CLASS_TV,
+        original_device_class=DEVICE_CLASS_TV,
     )
     registry.async_get_or_create(
         "media_player",
@@ -442,7 +442,7 @@ async def test_tv_restore(hass, hk_driver, events):
             ATTR_INPUT_SOURCE_LIST: ["HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4"],
         },
         supported_features=3469,
-        device_class=DEVICE_CLASS_TV,
+        original_device_class=DEVICE_CLASS_TV,
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})

@@ -1,6 +1,12 @@
 {
     "system_health": {
         "info": {
+            "arch": "CPU \u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3",
+            "dev": "\u958b\u767a",
+            "docker": "Docker",
+            "hassio": "Supervisor",
+            "installation_type": "\u30a4\u30f3\u30b9\u30c8\u30fc\u30eb\u306e\u7a2e\u985e",
+            "os_name": "\u30aa\u30da\u30ec\u30fc\u30c6\u30a3\u30f3\u30b0\u30b7\u30b9\u30c6\u30e0\u30d5\u30a1\u30df\u30ea\u30fc",
             "user": "\u30e6\u30fc\u30b6\u30fc"
         }
     }
