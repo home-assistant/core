@@ -654,7 +654,7 @@ jobs:
   changes:
     name: Determine what has changed
     outputs:
-      core: ${{ steps.core.outputs.changes }}
+      core: ${{ steps.core.outputs.any }}
       integrations: ${{ steps.integrations.outputs.changes }}
       tests: ${{ steps.tests.outputs.integrations }}
     runs-on: ubuntu-latest
@@ -698,7 +698,7 @@ jobs:
           echo "::set-output name=integrations::${integrations}"
 
   pytest-full:
-    if: ${{ needs.changes.outputs.core.any == 'true' }}
+    if: ${{ needs.changes.outputs.core == 'true' }}
     runs-on: ubuntu-latest
     needs:
       - changes
@@ -774,7 +774,7 @@ jobs:
           ./script/check_dirty
 
   pytest-partial:
-    if: ${{ needs.changes.outputs.core.any == 'false' }}
+    if: ${{ needs.changes.outputs.core == 'false' }}
     runs-on: ubuntu-latest
     needs:
       - changes
