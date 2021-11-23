@@ -661,6 +661,7 @@ jobs:
       - lint-json
       - lint-pyupgrade
       - lint-yaml
+      - mypy
       - prepare-tests
     strategy:
       fail-fast: false
