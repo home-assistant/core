@@ -17,6 +17,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.frame import report
@@ -33,7 +34,7 @@ REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
 
 
 @dataclasses.dataclass
-class UsbServiceInfo:
+class UsbServiceInfo(BaseServiceInfo):
     """Prepared info from usb entries."""
 
     device: str
