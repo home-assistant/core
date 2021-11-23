@@ -143,8 +143,8 @@ UNPROVISION = "unprovision"
 MINIMUM_QR_STRING_LENGTH = 52
 
 
-def handle_planned_provisioning_entry(info: dict) -> ProvisioningEntry:
-    """Handle provisioning entry as provisioning input."""
+def convert_planned_provisioning_entry(info: dict) -> ProvisioningEntry:
+    """Handle provisioning entry dict to ProvisioningEntry."""
     info = ProvisioningEntry(
         dsk=info[DSK],
         security_classes=[SecurityClass(sec_cls) for sec_cls in info[SECURITY_CLASSES]],
@@ -155,8 +155,8 @@ def handle_planned_provisioning_entry(info: dict) -> ProvisioningEntry:
     return info
 
 
-def handle_qr_provisioning_information(info: dict) -> QRProvisioningInformation:
-    """Handle QR provisioning information as provisioning input."""
+def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation:
+    """Convert QR provisioning information dict to QRProvisioningInformation."""
     protocols = [Protocols(proto) for proto in info.get(SUPPORTED_PROTOCOLS, [])]
     info = QRProvisioningInformation(
         version=QRCodeVersion(info[VERSION]),
@@ -193,7 +193,7 @@ PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.All(
         # Provisioning entries can have extra keys for SmartStart
         extra=vol.ALLOW_EXTRA,
     ),
-    handle_planned_provisioning_entry,
+    convert_planned_provisioning_entry,
 )
 
 QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
@@ -226,7 +226,7 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
             ),
         }
     ),
-    handle_qr_provisioning_information,
+    convert_qr_provisioning_information,
 )
 
 QR_CODE_STRING_SCHEMA = vol.All(str, vol.Length(min=MINIMUM_QR_STRING_LENGTH))
