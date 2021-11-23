@@ -1,0 +1,13 @@
+name: "CI-PR"
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request: ~
+
+concurrency:
+  group: ci-${{ github.github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  call-workflow-1:
+    uses: home-assistant/core/.github/workflows/ci.yaml@dev
