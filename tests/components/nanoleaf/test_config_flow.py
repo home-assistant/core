@@ -238,9 +238,11 @@ async def test_discovery_link_unavailable(
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host=TEST_HOST,
+                hostname="mock_hostname",
                 name=f"{TEST_NAME}.{type_in_discovery_info}",
-                type=type_in_discovery_info,
+                port=None,
                 properties={zeroconf.ATTR_PROPERTIES_ID: TEST_DEVICE_ID},
+                type=type_in_discovery_info,
             ),
         )
     assert result["type"] == "form"
@@ -420,9 +422,11 @@ async def test_import_discovery_integration(
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host=TEST_HOST,
+                hostname="mock_hostname",
                 name=f"{TEST_NAME}.{type_in_discovery}",
-                type=type_in_discovery,
+                port=None,
                 properties={zeroconf.ATTR_PROPERTIES_ID: TEST_DEVICE_ID},
+                type=type_in_discovery,
             ),
         )
     assert result["type"] == "create_entry"

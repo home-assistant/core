@@ -839,7 +839,7 @@ async def test_device_info_called(hass):
                         "name": "test-name",
                         "sw_version": "test-sw",
                         "suggested_area": "Heliport",
-                        "entry_type": "service",
+                        "entry_type": dr.DeviceEntryType.SERVICE,
                         "via_device": ("hue", "via-id"),
                     },
                 ),
@@ -863,7 +863,7 @@ async def test_device_info_called(hass):
     assert device.identifiers == {("hue", "1234")}
     assert device.configuration_url == "http://192.168.0.100/config"
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "abcd")}
-    assert device.entry_type == "service"
+    assert device.entry_type is dr.DeviceEntryType.SERVICE
     assert device.manufacturer == "test-manuf"
     assert device.model == "test-model"
     assert device.name == "test-name"

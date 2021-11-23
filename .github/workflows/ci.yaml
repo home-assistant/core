@@ -15,6 +15,10 @@ env:
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   SQLALCHEMY_WARN_20: 1
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Separate job to pre-populate the base dependency cache
   # This prevent upcoming jobs to do the same individually
@@ -41,7 +45,7 @@ jobs:
             hashFiles('homeassistant/package_constraints.txt') }}"
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: >-
@@ -65,7 +69,7 @@ jobs:
             hashFiles('.pre-commit-config.yaml') }}"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: >-
@@ -92,7 +96,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -104,7 +108,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -132,7 +136,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -144,7 +148,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -172,7 +176,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -184,7 +188,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -234,7 +238,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -246,7 +250,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -277,7 +281,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -289,7 +293,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -320,7 +324,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -332,7 +336,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -360,7 +364,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -372,7 +376,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -403,7 +407,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -415,7 +419,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -454,7 +458,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -466,7 +470,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
@@ -496,7 +500,7 @@ jobs:
         uses: actions/checkout@v2.4.0
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{
@@ -525,7 +529,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
@@ -561,7 +565,7 @@ jobs:
             hashFiles('homeassistant/package_constraints.txt') }}"
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: >-
@@ -598,7 +602,7 @@ jobs:
         uses: actions/checkout@v2.4.0
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{
@@ -629,7 +633,7 @@ jobs:
         uses: actions/checkout@v2.4.0
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{
@@ -649,11 +653,24 @@ jobs:
 
   pytest:
     runs-on: ubuntu-latest
-    needs: prepare-tests
+    needs:
+      - gen-requirements-all
+      - hassfest
+      - lint-bandit
+      - lint-black
+      - lint-codespell
+      - lint-dockerfile
+      - lint-executable-shebangs
+      - lint-isort
+      - lint-json
+      - lint-pyupgrade
+      - lint-yaml
+      - mypy
+      - prepare-tests
     strategy:
       fail-fast: false
       matrix:
-        group: [1, 2, 3, 4]
+        group: [1, 2, 3, 4, 5, 6]
         python-version: [3.8, 3.9]
     name: >-
       Run tests Python ${{ matrix.python-version }} (group ${{ matrix.group }})
@@ -663,7 +680,7 @@ jobs:
         uses: actions/checkout@v2.4.0
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{
@@ -692,7 +709,7 @@ jobs:
             --durations=10 \
             -n auto \
             --dist=loadfile \
-            --test-group-count 4 \
+            --test-group-count 6 \
             --test-group=${{ matrix.group }} \
             --cov homeassistant \
             --cov-report= \
@@ -721,7 +738,7 @@ jobs:
         uses: actions/checkout@v2.4.0
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{

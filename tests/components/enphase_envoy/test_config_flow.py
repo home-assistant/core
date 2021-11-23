@@ -159,8 +159,12 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            properties={"serialnum": "1234"},
             host="1.1.1.1",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234"},
+            type="mock_type",
         ),
     )
     await hass.async_block_till_done()
@@ -255,8 +259,12 @@ async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            properties={"serialnum": "1234"},
             host="1.1.1.1",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234"},
+            type="mock_type",
         ),
     )
 
@@ -290,8 +298,12 @@ async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                properties={"serialnum": "1234"},
                 host="1.1.1.1",
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={"serialnum": "1234"},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()

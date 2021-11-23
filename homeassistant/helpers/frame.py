@@ -51,7 +51,10 @@ class MissingIntegrationFrame(HomeAssistantError):
 
 
 def report(
-    what: str, exclude_integrations: set | None = None, error_if_core: bool = True
+    what: str,
+    exclude_integrations: set | None = None,
+    error_if_core: bool = True,
+    level: int = logging.WARNING,
 ) -> None:
     """Report incorrect usage.
 
@@ -68,11 +71,13 @@ def report(
         _LOGGER.warning(msg, stack_info=True)
         return
 
-    report_integration(what, integration_frame)
+    report_integration(what, integration_frame, level)
 
 
 def report_integration(
-    what: str, integration_frame: tuple[FrameSummary, str, str]
+    what: str,
+    integration_frame: tuple[FrameSummary, str, str],
+    level: int = logging.WARNING,
 ) -> None:
     """Report incorrect usage in an integration.
 
@@ -86,7 +91,8 @@ def report_integration(
     else:
         extra = ""
 
-    _LOGGER.warning(
+    _LOGGER.log(
+        level,
         "Detected integration that %s. "
         "Please report issue%s for %s using this method at %s, line %s: %s",
         what,

@@ -198,7 +198,12 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            name="test-bond-id.some-other-tail-info", host="test-host"
+            host="test-host",
+            hostname="mock_hostname",
+            name="test-bond-id.some-other-tail-info",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
     )
     assert result["type"] == "form"
@@ -230,7 +235,12 @@ async def test_zeroconf_form_token_unavailable(hass: core.HomeAssistant):
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                name="test-bond-id.some-other-tail-info", host="test-host"
+                host="test-host",
+                hostname="mock_hostname",
+                name="test-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()
@@ -265,7 +275,12 @@ async def test_zeroconf_form_with_token_available(hass: core.HomeAssistant):
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                name="test-bond-id.some-other-tail-info", host="test-host"
+                host="test-host",
+                hostname="mock_hostname",
+                name="test-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()
@@ -303,8 +318,12 @@ async def test_zeroconf_already_configured(hass: core.HomeAssistant):
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                name="already-registered-bond-id.some-other-tail-info",
                 host="updated-host",
+                hostname="mock_hostname",
+                name="already-registered-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
 
@@ -344,8 +363,12 @@ async def test_zeroconf_already_configured_refresh_token(hass: core.HomeAssistan
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                name="already-registered-bond-id.some-other-tail-info",
                 host="updated-host",
+                hostname="mock_hostname",
+                name="already-registered-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()
@@ -377,8 +400,12 @@ async def test_zeroconf_already_configured_no_reload_same_host(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                name="already-registered-bond-id.some-other-tail-info",
                 host="stored-host",
+                hostname="mock_hostname",
+                name="already-registered-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()
@@ -394,8 +421,12 @@ async def test_zeroconf_form_unexpected_error(hass: core.HomeAssistant):
         hass,
         source=config_entries.SOURCE_ZEROCONF,
         initial_input=zeroconf.ZeroconfServiceInfo(
-            name="test-bond-id.some-other-tail-info",
             host="test-host",
+            hostname="mock_hostname",
+            name="test-bond-id.some-other-tail-info",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
         user_input={CONF_ACCESS_TOKEN: "test-token"},
         error=Exception(),

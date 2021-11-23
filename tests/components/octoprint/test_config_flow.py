@@ -172,9 +172,11 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
-            port=80,
             hostname="example.local.",
+            name="mock_name",
+            port=80,
             properties={"uuid": "83747482", "path": "/foo/"},
+            type="mock_type",
         ),
     )
     assert result["type"] == "form"
@@ -487,9 +489,11 @@ async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
-            port=80,
             hostname="example.local.",
+            name="mock_name",
+            port=80,
             properties={"uuid": "83747482", "path": "/foo/"},
+            type="mock_type",
         ),
     )
     assert result["type"] == "abort"
