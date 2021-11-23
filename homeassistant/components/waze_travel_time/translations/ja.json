@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "\u76ee\u7684\u5730",
+                    "name": "\u540d\u524d",
+                    "origin": "\u30aa\u30ea\u30b8\u30f3",
+                    "region": "\u30ea\u30fc\u30b8\u30e7\u30f3"
+                },
+                "description": "\u51fa\u767a\u5730\u3068\u76ee\u7684\u5730\u306b\u3001\u5834\u6240\u306e\u4f4f\u6240\u307e\u305f\u306fGPS\u5ea7\u6a19\u3092\u5165\u529b\u3057\u307e\u3059(GPS\u306e\u5ea7\u6a19\u306f\u30ab\u30f3\u30de\u3067\u533a\u5207\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059)\u3002\u3053\u306e\u60c5\u5831\u3092\u72b6\u614b(state)\u3067\u63d0\u4f9b\u3059\u308b\u30a8\u30f3\u30c6\u30a3\u30c6\u30a3ID\u3001\u7def\u5ea6\u3068\u7d4c\u5ea6\u306e\u5c5e\u6027\u3092\u6301\u3064\u30a8\u30f3\u30c6\u30a3\u30c6\u30a3ID\u3001\u307e\u305f\u306f\u30be\u30fc\u30f3\u306e\u30d5\u30ec\u30f3\u30c9\u30ea\u30fc\u540d\u3092\u5165\u529b\u3059\u308b\u3053\u3068\u3082\u3067\u304d\u307e\u3059\u3002"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "\u30d5\u30a7\u30ea\u30fc\u3092\u907f\u3051\u307e\u3059\u304b\uff1f",
+                    "avoid_toll_roads": "\u6709\u6599\u9053\u8def\u3092\u907f\u3051\u307e\u3059\u304b\uff1f",
+                    "realtime": "\u30ea\u30a2\u30eb\u30bf\u30a4\u30e0\u3067\u306e\u79fb\u52d5\u6642\u9593\uff1f",
+                    "units": "\u5358\u4f4d",
+                    "vehicle_type": "\u8eca\u4e21\u30bf\u30a4\u30d7"
+                }
+            }
+        }
+    },
+    "title": "Waze Travel Time"
+}

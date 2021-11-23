@@ -65,7 +65,7 @@ async def daikin_api_setup(hass, host, key, uuid, password):
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
-        with timeout(TIMEOUT):
+        async with timeout(TIMEOUT):
             device = await Appliance.factory(
                 host, session, key=key, uuid=uuid, password=password
             )

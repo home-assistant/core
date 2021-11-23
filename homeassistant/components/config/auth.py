@@ -48,9 +48,7 @@ async def websocket_delete(hass, connection, msg):
         )
         return
 
-    user = await hass.auth.async_get_user(msg["user_id"])
-
-    if not user:
+    if not (user := await hass.auth.async_get_user(msg["user_id"])):
         connection.send_message(
             websocket_api.error_message(msg["id"], "not_found", "User not found")
         )
@@ -92,9 +90,7 @@ async def websocket_create(hass, connection, msg):
 )
 async def websocket_update(hass, connection, msg):
     """Update a user."""
-    user = await hass.auth.async_get_user(msg.pop("user_id"))
-
-    if not user:
+    if not (user := await hass.auth.async_get_user(msg.pop("user_id"))):
         connection.send_message(
             websocket_api.error_message(
                 msg["id"], websocket_api.const.ERR_NOT_FOUND, "User not found"

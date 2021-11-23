@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yamaha_musiccast",
   "requirements": [
-    "aiomusiccast==0.11.0"
+    "aiomusiccast==0.13.1"
   ],
   "ssdp": [
     {

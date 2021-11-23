@@ -7,7 +7,7 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "complete_pairing_failed": "Nie mo\u017cna uko\u0144czy\u0107 parowania. Upewnij si\u0119, \u017ce podany kod PIN jest prawid\u0142owy, a telewizor jest zasilany i pod\u0142\u0105czony do sieci przed ponownym przes\u0142aniem.",
+            "complete_pairing_failed": "Nie mo\u017cna uko\u0144czy\u0107 parowania. Upewnij si\u0119, \u017ce podany kod PIN jest prawid\u0142owy, a telewizor jest zasilany i pod\u0142\u0105czony do sieci przed ponownym zatwierdzeniem.",
             "existing_config_entry_found": "Istnieje ju\u017c wpis konfiguracyjny VIZIO SmartCast z tym samym numerem seryjnym. W celu skonfigurowania tego wpisu nale\u017cy usun\u0105\u0107 istniej\u0105cy."
         },
         "step": {

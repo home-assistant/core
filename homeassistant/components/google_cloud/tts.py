@@ -281,7 +281,7 @@ class GoogleCloudTTSProvider(Provider):
             )
             # pylint: enable=no-member
 
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            async with async_timeout.timeout(10):
                 response = await self.hass.async_add_executor_job(
                     self._client.synthesize_speech, synthesis_input, voice, audio_config
                 )

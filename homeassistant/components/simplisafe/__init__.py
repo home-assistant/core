@@ -16,11 +16,16 @@ from simplipy.errors import (
 from simplipy.system import SystemNotification
 from simplipy.system.v2 import SystemV2
 from simplipy.system.v3 import (
-    VOLUME_HIGH,
-    VOLUME_LOW,
-    VOLUME_MEDIUM,
-    VOLUME_OFF,
+    MAX_ALARM_DURATION,
+    MAX_ENTRY_DELAY_AWAY,
+    MAX_ENTRY_DELAY_HOME,
+    MAX_EXIT_DELAY_AWAY,
+    MAX_EXIT_DELAY_HOME,
+    MIN_ALARM_DURATION,
+    MIN_ENTRY_DELAY_AWAY,
+    MIN_EXIT_DELAY_AWAY,
     SystemV3,
+    Volume,
 )
 from simplipy.websocket import (
     EVENT_AUTOMATIC_TEST,
@@ -80,7 +85,6 @@ from .const import (
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
     CONF_USER_ID,
-    DATA_CLIENT,
     DOMAIN,
     LOGGER,
 )
@@ -103,8 +107,10 @@ ATTR_TIMESTAMP = "timestamp"
 
 DEFAULT_ENTITY_MODEL = "alarm_control_panel"
 DEFAULT_ENTITY_NAME = "Alarm Control Panel"
+DEFAULT_ERROR_THRESHOLD = 2
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
+
 
 DISPATCHER_TOPIC_WEBSOCKET_EVENT = "simplisafe_websocket_event_{0}"
 
@@ -118,7 +124,12 @@ PLATFORMS = (
     "sensor",
 )
 
-VOLUMES = [VOLUME_OFF, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_HIGH]
+VOLUME_MAP = {
+    "high": Volume.HIGH,
+    "low": Volume.LOW,
+    "medium": Volume.MEDIUM,
+    "off": Volume.OFF,
+}
 
 SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
 
@@ -135,29 +146,33 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         vol.Optional(ATTR_ALARM_DURATION): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
-            vol.Range(min=30, max=480),
+            vol.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
         ),
-        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
-        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
+        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
+        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
         vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
-            vol.Range(min=30, max=255),
+            vol.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
         ),
         vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
-            cv.time_period, lambda value: value.total_seconds(), vol.Range(max=255)
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(max=MAX_ENTRY_DELAY_HOME),
         ),
         vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
-            vol.Range(min=45, max=255),
+            vol.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
         ),
         vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
-            cv.time_period, lambda value: value.total_seconds(), vol.Range(max=255)
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(max=MAX_EXIT_DELAY_HOME),
         ),
         vol.Optional(ATTR_LIGHT): cv.boolean,
         vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-            vol.Coerce(int), vol.In(VOLUMES)
+            vol.In(VOLUME_MAP), VOLUME_MAP.get
         ),
     }
 )
@@ -216,11 +231,10 @@ def _async_register_base_station(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up SimpliSafe as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     _async_standardize_config_entry(hass, entry)
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
@@ -243,7 +257,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = simplisafe
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = simplisafe
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @callback
@@ -337,6 +353,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ):
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
+    current_options = {**entry.options}
+
+    async def async_reload_entry(_: HomeAssistant, updated_entry: ConfigEntry) -> None:
+        """Handle an options update.
+
+        This method will get called in two scenarios:
+          1. When SimpliSafeOptionsFlowHandler is initiated
+          2. When a new refresh token is saved to the config entry data
+
+        We only want #1 to trigger an actual reload.
+        """
+        nonlocal current_options
+        updated_options = {**updated_entry.options}
+
+        if updated_options == current_options:
+            return
+
+        await hass.config_entries.async_reload(entry.entry_id)
+
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
@@ -349,11 +384,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle an options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class SimpliSafe:
@@ -452,8 +482,8 @@ class SimpliSafe:
             assert self._api.refresh_token
             assert self._api.websocket
 
-        self._api.websocket.add_connect_listener(self._async_websocket_on_connect)
-        self._api.websocket.add_event_listener(self._async_websocket_on_event)
+        self._api.websocket.add_connect_callback(self._async_websocket_on_connect)
+        self._api.websocket.add_event_callback(self._async_websocket_on_event)
         asyncio.create_task(self._api.websocket.async_connect())
 
         async def async_websocket_disconnect_listener(_: Event) -> None:
@@ -505,7 +535,7 @@ class SimpliSafe:
             )
 
         self.entry.async_on_unload(
-            self._api.add_refresh_token_listener(async_save_refresh_token)
+            self._api.add_refresh_token_callback(async_save_refresh_token)
         )
 
         async_save_refresh_token(self._api.refresh_token)
@@ -550,6 +580,12 @@ class SimpliSafeEntity(CoordinatorEntity):
         assert simplisafe.coordinator
         super().__init__(simplisafe.coordinator)
 
+        # SimpliSafe can incorrectly return an error state when there isn't any
+        # error. This can lead to entities having an unknown state frequently.
+        # To protect against that, we measure an error count for each entity and only
+        # mark the state as unavailable if we detect a few in a row:
+        self._error_count = 0
+
         if device:
             model = device.type.name
             device_name = device.name
@@ -559,19 +595,20 @@ class SimpliSafeEntity(CoordinatorEntity):
             device_name = DEFAULT_ENTITY_NAME
             serial = system.serial
 
-        try:
-            device_type = DeviceTypes(
-                simplisafe.initial_event_to_use[system.system_id].get("sensorType")
-            )
-        except ValueError:
-            device_type = DeviceTypes.unknown
-
         event = simplisafe.initial_event_to_use[system.system_id]
+
+        if raw_type := event.get("sensorType"):
+            try:
+                device_type = DeviceTypes(raw_type)
+            except ValueError:
+                device_type = DeviceTypes.UNKNOWN
+        else:
+            device_type = DeviceTypes.UNKNOWN
 
         self._attr_extra_state_attributes = {
             ATTR_LAST_EVENT_INFO: event.get("info"),
             ATTR_LAST_EVENT_SENSOR_NAME: event.get("sensorName"),
-            ATTR_LAST_EVENT_SENSOR_TYPE: device_type.name,
+            ATTR_LAST_EVENT_SENSOR_TYPE: device_type.name.lower(),
             ATTR_LAST_EVENT_TIMESTAMP: event.get("eventTimestamp"),
             ATTR_SYSTEM_ID: system.system_id,
         }
@@ -612,11 +649,20 @@ class SimpliSafeEntity(CoordinatorEntity):
         else:
             system_offline = False
 
-        return super().available and self._online and not system_offline
+        return (
+            self._error_count < DEFAULT_ERROR_THRESHOLD
+            and self._online
+            and not system_offline
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update the entity with new REST API data."""
+        if self.coordinator.last_update_success:
+            self.async_reset_error_count()
+        else:
+            self.async_increment_error_count()
+
         self.async_update_from_rest_api()
         self.async_write_ha_state()
 
@@ -682,6 +728,21 @@ class SimpliSafeEntity(CoordinatorEntity):
         )
 
         self.async_update_from_rest_api()
+
+    @callback
+    def async_increment_error_count(self) -> None:
+        """Increment this entity's error count."""
+        LOGGER.debug('Error for entity "%s" (total: %s)', self.name, self._error_count)
+        self._error_count += 1
+
+    @callback
+    def async_reset_error_count(self) -> None:
+        """Reset this entity's error count."""
+        if self._error_count == 0:
+            return
+
+        LOGGER.debug('Resetting error count for "%s"', self.name)
+        self._error_count = 0
 
     @callback
     def async_update_from_rest_api(self) -> None:

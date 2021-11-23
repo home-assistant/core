@@ -182,9 +182,7 @@ class HangoutsBot:
         """Detect a matching intent."""
         for intent_type, data in intents.items():
             for matcher in data.get(CONF_MATCHERS, []):
-                match = matcher.match(text)
-
-                if not match:
+                if not (match := matcher.match(text)):
                     continue
                 if intent_type == INTENT_HELP:
                     return await self.hass.helpers.intent.async_handle(

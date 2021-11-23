@@ -1,0 +1,39 @@
+{
+    "config": {
+        "step": {
+            "hubv1": {
+                "data": {
+                    "host": "IP\u30a2\u30c9\u30ec\u30b9",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP\u30a2\u30c9\u30ec\u30b9",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "port": "\u30dd\u30fc\u30c8",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "add_x10": {
+                "data": {
+                    "unitcode": "\u30e6\u30cb\u30c3\u30c8\u30b3\u30fc\u30c9(1\u301c16)"
+                },
+                "description": "Insteon Hub\u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u5909\u66f4\u3059\u308b\u3002"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "IP\u30a2\u30c9\u30ec\u30b9",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "port": "\u30dd\u30fc\u30c8",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                },
+                "title": "Insteon"
+            }
+        }
+    }
+}

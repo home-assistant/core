@@ -1,4 +1,5 @@
 """Tests for 1-Wire devices connected on OWServer."""
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,7 +15,7 @@ from . import (
     check_entities,
     setup_owproxy_mock_devices,
 )
-from .const import ATTR_DEVICE_INFO, MOCK_OWPROXY_DEVICES
+from .const import ATTR_DEVICE_INFO, ATTR_UNKNOWN_DEVICE, MOCK_OWPROXY_DEVICES
 
 from tests.common import mock_device_registry, mock_registry
 
@@ -27,7 +28,11 @@ def override_platforms():
 
 
 async def test_owserver_binary_sensor(
-    hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock, device_id: str
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    owproxy: MagicMock,
+    device_id: str,
+    caplog: pytest.LogCaptureFixture,
 ):
     """Test for 1-Wire binary sensor.
 
@@ -41,8 +46,13 @@ async def test_owserver_binary_sensor(
     expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
 
     setup_owproxy_mock_devices(owproxy, BINARY_SENSOR_DOMAIN, [device_id])
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with caplog.at_level(logging.WARNING, logger="homeassistant.components.onewire"):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        if mock_device.get(ATTR_UNKNOWN_DEVICE):
+            assert "Ignoring unknown device family/type" in caplog.text
+        else:
+            assert "Ignoring unknown device family/type" not in caplog.text
 
     check_device_registry(device_registry, expected_devices)
     assert len(entity_registry.entities) == len(expected_entities)

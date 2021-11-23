@@ -3,14 +3,18 @@ from __future__ import annotations
 
 import logging
 
+from velbusaio.channels import Channel as VelbusChannel
 from velbusaio.controller import Velbus
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_INTERFACE,
@@ -30,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Velbus platform."""
     # Import from the configuration file if needed
     if DOMAIN not in config:
@@ -58,6 +62,22 @@ async def velbus_connect_task(
     await controller.connect()
 
 
+def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
+    """Migrate old device indentifiers."""
+    dev_reg = device_registry.async_get(hass)
+    devices: list[DeviceEntry] = device_registry.async_entries_for_config_entry(
+        dev_reg, entry_id
+    )
+    for device in devices:
+        old_identifier = list(next(iter(device.identifiers)))
+        if len(old_identifier) > 2:
+            new_identifier = {(old_identifier.pop(0), old_identifier.pop(0))}
+            _LOGGER.debug(
+                "migrate identifier '%s' to '%s'", device.identifiers, new_identifier
+            )
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Establish connection with velbus."""
     hass.data.setdefault(DOMAIN, {})
@@ -72,12 +92,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         velbus_connect_task(controller, hass, entry.entry_id)
     )
 
+    _migrate_device_identifiers(hass, entry.entry_id)
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     if hass.services.has_service(DOMAIN, SERVICE_SCAN):
         return True
 
-    def check_entry_id(interface: str):
+    def check_entry_id(interface: str) -> str:
         for entry in hass.config_entries.async_entries(DOMAIN):
             if "port" in entry.data and entry.data["port"] == interface:
                 return entry.entry_id
@@ -85,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "The interface provided is not defined as a port in a Velbus integration"
         )
 
-    async def scan(call):
+    async def scan(call: ServiceCall) -> None:
         await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].scan()
 
     hass.services.async_register(
@@ -95,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vol.Schema({vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id)}),
     )
 
-    async def syn_clock(call):
+    async def syn_clock(call: ServiceCall) -> None:
         await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].sync_clock()
 
     hass.services.async_register(
@@ -105,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         vol.Schema({vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id)}),
     )
 
-    async def set_memo_text(call):
+    async def set_memo_text(call: ServiceCall) -> None:
         """Handle Memo Text service call."""
         memo_text = call.data[CONF_MEMO_TEXT]
         memo_text.hass = hass
@@ -147,47 +169,27 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class VelbusEntity(Entity):
     """Representation of a Velbus entity."""
 
-    def __init__(self, channel):
+    _attr_should_poll: bool = False
+
+    def __init__(self, channel: VelbusChannel) -> None:
         """Initialize a Velbus entity."""
         self._channel = channel
+        self._attr_name = channel.get_name()
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, str(channel.get_module_address())),
+            },
+            manufacturer="Velleman",
+            model=channel.get_module_type_name(),
+            name=channel.get_full_name(),
+            sw_version=channel.get_module_sw_version(),
+        )
+        serial = channel.get_module_serial() or str(channel.get_module_address())
+        self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
 
-    @property
-    def unique_id(self):
-        """Get unique ID."""
-        if (serial := self._channel.get_module_serial()) == 0:
-            serial = self._channel.get_module_address()
-        return f"{serial}-{self._channel.get_channel_number()}"
-
-    @property
-    def name(self):
-        """Return the display name of this entity."""
-        return self._channel.get_name()
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Add listener for state changes."""
         self._channel.on_status_update(self._on_update)
 
-    async def _on_update(self):
+    async def _on_update(self) -> None:
         self.async_write_ha_state()
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {
-                (
-                    DOMAIN,
-                    self._channel.get_module_address(),
-                    self._channel.get_module_serial(),
-                )
-            },
-            "name": self._channel.get_full_name(),
-            "manufacturer": "Velleman",
-            "model": self._channel.get_module_type_name(),
-            "sw_version": self._channel.get_module_sw_version(),
-        }

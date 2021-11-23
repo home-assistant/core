@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription
+from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 
 
@@ -33,7 +33,7 @@ class RenaultBinarySensorRequiredKeysMixin:
 @dataclass
 class RenaultBinarySensorEntityDescription(
     BinarySensorEntityDescription,
-    RenaultEntityDescription,
+    RenaultDataEntityDescription,
     RenaultBinarySensorRequiredKeysMixin,
 ):
     """Class describing Renault binary sensor entities."""

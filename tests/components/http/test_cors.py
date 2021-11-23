@@ -52,8 +52,8 @@ async def mock_handler(request):
 def client(loop, aiohttp_client):
     """Fixture to set up a web.Application."""
     app = web.Application()
-    app.router.add_get("/", mock_handler)
     setup_cors(app, [TRUSTED_ORIGIN])
+    app["allow_configured_cors"](app.router.add_get("/", mock_handler))
     return loop.run_until_complete(aiohttp_client(app))
 
 

@@ -93,6 +93,11 @@ DHCP = [
     },
     {
         "domain": "flux_led",
+        "macaddress": "F0FE6B*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
         "macaddress": "8CCE4E*",
         "hostname": "lwip*"
     },
@@ -364,6 +369,11 @@ DHCP = [
     {
         "domain": "tplink",
         "hostname": "k[lp]*",
+        "macaddress": "60A4B7*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
         "macaddress": "005F67*"
     },
     {
@@ -533,6 +543,10 @@ DHCP = [
     {
         "domain": "verisure",
         "macaddress": "0023C1*"
+    },
+    {
+        "domain": "vicare",
+        "macaddress": "B87424*"
     },
     {
         "domain": "yeelight",

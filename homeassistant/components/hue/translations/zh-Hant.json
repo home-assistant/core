@@ -35,6 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "\u7b2c\u4e00\u500b\u6309\u9215",
+            "2": "\u7b2c\u4e8c\u500b\u6309\u9215",
+            "3": "\u7b2c\u4e09\u500b\u6309\u9215",
+            "4": "\u7b2c\u56db\u500b\u6309\u9215",
             "button_1": "\u7b2c\u4e00\u500b\u6309\u9215",
             "button_2": "\u7b2c\u4e8c\u500b\u6309\u9215",
             "button_3": "\u7b2c\u4e09\u500b\u6309\u9215",
@@ -47,11 +51,16 @@
             "turn_on": "\u958b\u555f"
         },
         "trigger_type": {
+            "double_short_release": "\"{subtype}\" \u4e00\u8d77\u91cb\u653e",
+            "initial_press": "\u6309\u9215 \"{subtype}\" \u6700\u521d\u6309\u4e0b",
+            "long_release": "\u6309\u9215 \"{subtype}\" \u9577\u6309\u5f8c\u91cb\u653e",
             "remote_button_long_release": "\"{subtype}\" \u6309\u9215\u9577\u6309\u5f8c\u91cb\u653e",
             "remote_button_short_press": "\"{subtype}\" \u6309\u9215\u5df2\u6309\u4e0b",
             "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e",
             "remote_double_button_long_press": "\"{subtype}\" \u4e00\u8d77\u9577\u6309\u5f8c\u91cb\u653e",
-            "remote_double_button_short_press": "\"{subtype}\" \u4e00\u8d77\u91cb\u653e"
+            "remote_double_button_short_press": "\"{subtype}\" \u4e00\u8d77\u91cb\u653e",
+            "repeat": "\u6309\u9215 \"{subtype}\" \u6309\u4e0b",
+            "short_release": "\u6309\u9215 \"{subtype}\" \u77ed\u6309\u5f8c\u91cb\u653e"
         }
     },
     "options": {
@@ -59,6 +68,7 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "\u5141\u8a31 Hue \u7fa4\u7d44",
+                    "allow_hue_scenes": "\u5141\u8a31 Hue \u5834\u666f",
                     "allow_unreachable": "\u5141\u8a31\u7121\u6cd5\u9023\u7dda\u7684\u71c8\u6ce1\u6b63\u78ba\u56de\u5831\u5176\u72c0\u614b"
                 }
             }

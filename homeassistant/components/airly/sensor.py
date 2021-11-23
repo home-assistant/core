@@ -27,6 +27,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -55,6 +56,7 @@ from .const import (
     MANUFACTURER,
     SUFFIX_LIMIT,
     SUFFIX_PERCENT,
+    URL,
 )
 
 PARALLEL_UPDATES = 1
@@ -153,10 +155,13 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{coordinator.latitude}-{coordinator.longitude}")},
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
+            configuration_url=URL.format(
+                latitude=coordinator.latitude, longitude=coordinator.longitude
+            ),
         )
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = (

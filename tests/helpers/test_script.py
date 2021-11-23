@@ -858,7 +858,7 @@ async def test_wait_basic_times_out(hass, action_type):
         assert script_obj.last_action == wait_alias
         hass.states.async_set("switch.test", "not_on")
 
-        with timeout(0.1):
+        async with timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True
@@ -1238,7 +1238,7 @@ async def test_wait_template_with_utcnow_no_match(hass):
         ):
             async_fire_time_changed(hass, second_non_matching_time)
 
-        with timeout(0.1):
+        async with timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True

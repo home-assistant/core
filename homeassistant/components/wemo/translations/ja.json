@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "description": "Wemo\u3092\u8a2d\u5b9a\u3092\u3057\u307e\u3059\u304b\uff1f"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Wemo\u30dc\u30bf\u30f3\u304c2\u79d2\u9593\u62bc\u3055\u308c\u307e\u3057\u305f"
+        }
+    }
+}

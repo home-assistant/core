@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import datetime
 import logging
+from pathlib import Path
 from typing import Any
 
 from google_nest_sdm.camera_traits import (
@@ -34,6 +35,8 @@ from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import NestDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
+
+PLACEHOLDER = Path(__file__).parent / "placeholder.png"
 
 # Used to schedule an alarm to refresh the stream before expiration
 STREAM_EXPIRATION_BUFFER = datetime.timedelta(seconds=30)
@@ -77,6 +80,7 @@ class NestCamera(Camera):
         self._event_image_bytes: bytes | None = None
         self._event_image_cleanup_unsub: Callable[[], None] | None = None
         self.is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
+        self._placeholder_image: bytes | None = None
 
     @property
     def should_poll(self) -> bool:
@@ -212,7 +216,15 @@ class NestCamera(Camera):
         # Fetch still image from the live stream
         stream_url = await self.stream_source()
         if not stream_url:
-            return None
+            if self.frontend_stream_type != STREAM_TYPE_WEB_RTC:
+                return None
+            # Nest Web RTC cams only have image previews for events, and not
+            # for "now" by design to save batter, and need a placeholder.
+            if not self._placeholder_image:
+                self._placeholder_image = await self.hass.async_add_executor_job(
+                    PLACEHOLDER.read_bytes
+                )
+            return self._placeholder_image
         return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
 
     async def _async_active_event_image(self) -> bytes | None:

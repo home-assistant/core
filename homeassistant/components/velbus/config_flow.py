@@ -1,6 +1,8 @@
 """Config flow for the Velbus platform."""
 from __future__ import annotations
 
+from typing import Any
+
 import velbusaio
 from velbusaio.exceptions import VelbusConnectionFailed
 import voluptuous as vol
@@ -8,16 +10,17 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import slugify
 
 from .const import DOMAIN
 
 
 @callback
-def velbus_entries(hass: HomeAssistant):
+def velbus_entries(hass: HomeAssistant) -> set[str]:
     """Return connections for Velbus domain."""
     return {
-        (entry.data[CONF_PORT]) for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data[CONF_PORT] for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
 
@@ -30,11 +33,11 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the velbus config flow."""
         self._errors: dict[str, str] = {}
 
-    def _create_device(self, name: str, prt: str):
+    def _create_device(self, name: str, prt: str) -> FlowResult:
         """Create an entry async."""
         return self.async_create_entry(title=name, data={CONF_PORT: prt})
 
-    async def _test_connection(self, prt):
+    async def _test_connection(self, prt: str) -> bool:
         """Try to connect to the velbus with the port specified."""
         try:
             controller = velbusaio.controller.Velbus(prt)
@@ -51,7 +54,9 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return True
         return False
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
@@ -78,7 +83,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
         user_input[CONF_NAME] = "Velbus Import"
         prt = user_input[CONF_PORT]

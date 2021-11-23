@@ -16,7 +16,6 @@ from pyairvisual.errors import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_IP_ADDRESS,
     CONF_LATITUDE,
@@ -105,9 +104,10 @@ def async_get_cloud_coordinators_by_api_key(
 ) -> list[DataUpdateCoordinator]:
     """Get all DataUpdateCoordinator objects related to a particular API key."""
     return [
-        attrs[DATA_COORDINATOR]
+        coordinator
         for entry_id, attrs in hass.data[DOMAIN].items()
         if (entry := hass.config_entries.async_get_entry(entry_id))
+        and (coordinator := attrs.get(DATA_COORDINATOR))
         and entry.data.get(CONF_API_KEY) == api_key
     ]
 
@@ -190,9 +190,6 @@ def _standardize_node_pro_config_entry(hass: HomeAssistant, entry: ConfigEntry) 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AirVisual as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     if CONF_API_KEY in entry.data:
         _standardize_geography_config_entry(hass, entry)
 
@@ -271,7 +268,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinator
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {DATA_COORDINATOR: coordinator}
 
     # Reassess the interval between 2 server requests
     if CONF_API_KEY in entry.data:
@@ -355,7 +353,7 @@ class AirVisualEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
         self._entry = entry
         self.entity_description = description
 

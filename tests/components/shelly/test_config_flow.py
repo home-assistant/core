@@ -8,6 +8,7 @@ import aioshelly
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.shelly.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -16,11 +17,14 @@ MOCK_SETTINGS = {
     "name": "Test name",
     "device": {"mac": "test-mac", "hostname": "test-host", "type": "SHSW-1"},
 }
-DISCOVERY_INFO = {
-    "host": "1.1.1.1",
-    "name": "shelly1pm-12345",
-    "properties": {"id": "shelly1pm-12345"},
-}
+DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    hostname="mock_hostname",
+    name="shelly1pm-12345",
+    port=None,
+    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+    type="mock_type",
+)
 MOCK_CONFIG = {
     "wifi": {"ap": {"ssid": "Test name"}},
 }

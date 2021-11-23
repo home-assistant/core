@@ -4,29 +4,21 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_BASE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.data_entry_flow import FlowResult
 
 from . import PyNUTData
-from .const import (
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    KEY_STATUS,
-    KEY_STATUS_DISPLAY,
-    SENSOR_TYPES,
-)
+from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,27 +38,6 @@ def _base_schema(discovery_info):
     )
 
     return vol.Schema(base_schema)
-
-
-def _resource_schema_base(available_resources, selected_resources):
-    """Resource selection schema."""
-
-    known_available_resources = {
-        sensor_id: sensor_desc.name
-        for sensor_id, sensor_desc in SENSOR_TYPES.items()
-        if sensor_id in available_resources
-    }
-
-    if KEY_STATUS in known_available_resources:
-        known_available_resources[KEY_STATUS_DISPLAY] = SENSOR_TYPES[
-            KEY_STATUS_DISPLAY
-        ].name
-
-    return {
-        vol.Required(CONF_RESOURCES, default=selected_resources): cv.multi_select(
-            known_available_resources
-        )
-    }
 
 
 def _ups_schema(ups_list):
@@ -112,18 +83,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the nut config flow."""
         self.nut_config = {}
-        self.available_resources = {}
         self.discovery_info = {}
         self.ups_list = None
         self.title = None
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Prepare configuration for a discovered nut device."""
         self.discovery_info = discovery_info
         await self._async_handle_discovery_without_unique_id()
         self.context["title_placeholders"] = {
-            CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
-            CONF_HOST: discovery_info[CONF_HOST],
+            CONF_PORT: discovery_info[zeroconf.ATTR_PORT] or DEFAULT_PORT,
+            CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
         }
         return await self.async_step_user()
 
@@ -135,7 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.update(
                     {
                         CONF_HOST: self.discovery_info[CONF_HOST],
-                        CONF_PORT: self.discovery_info.get(CONF_PORT, DEFAULT_PORT),
+                        CONF_PORT: self.discovery_info.port or DEFAULT_PORT,
                     }
                 )
             info, errors = await self._async_validate_or_error(user_input)
@@ -148,8 +120,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 if self._host_port_alias_already_configured(self.nut_config):
                     return self.async_abort(reason="already_configured")
-                self.available_resources.update(info["available_resources"])
-                return await self.async_step_resources()
+                title = _format_host_port_alias(self.nut_config)
+                return self.async_create_entry(title=title, data=self.nut_config)
 
         return self.async_show_form(
             step_id="user", data_schema=_base_schema(self.discovery_info), errors=errors
@@ -163,30 +135,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.nut_config.update(user_input)
             if self._host_port_alias_already_configured(self.nut_config):
                 return self.async_abort(reason="already_configured")
-            info, errors = await self._async_validate_or_error(self.nut_config)
+            _, errors = await self._async_validate_or_error(self.nut_config)
             if not errors:
-                self.available_resources.update(info["available_resources"])
-                return await self.async_step_resources()
+                title = _format_host_port_alias(self.nut_config)
+                return self.async_create_entry(title=title, data=self.nut_config)
 
         return self.async_show_form(
             step_id="ups",
             data_schema=_ups_schema(self.ups_list),
             errors=errors,
         )
-
-    async def async_step_resources(self, user_input=None):
-        """Handle the picking the resources."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="resources",
-                data_schema=vol.Schema(
-                    _resource_schema_base(self.available_resources, [])
-                ),
-            )
-
-        self.nut_config.update(user_input)
-        title = _format_host_port_alias(self.nut_config)
-        return self.async_create_entry(title=title, data=self.nut_config)
 
     def _host_port_alias_already_configured(self, user_input):
         """See if we already have a nut entry matching user input configured."""

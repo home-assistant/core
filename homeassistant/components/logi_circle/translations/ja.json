@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "external_setup": "Logi Circle\u306f\u5225\u306e\u30d5\u30ed\u30fc\u304b\u3089\u6b63\u5e38\u306b\u69cb\u6210\u3055\u308c\u307e\u3057\u305f\u3002"
+        },
+        "error": {
+            "follow_link": "\u9001\u4fe1(submit) \u3092\u62bc\u3059\u524d\u306b\u3001\u30ea\u30f3\u30af\u3092\u305f\u3069\u3063\u3066\u8a8d\u8a3c\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+        },
+        "step": {
+            "auth": {
+                "description": "\u4ee5\u4e0b\u306e\u30ea\u30f3\u30af\u3092\u30af\u30ea\u30c3\u30af\u3057\u3066\u3001Logi Circle\u30a2\u30ab\u30a6\u30f3\u30c8\u3078\u306e\u30a2\u30af\u30bb\u30b9\u3092 **\u627f\u8a8d(Accept)** \u3057\u3066\u304b\u3089\u3001\u623b\u3063\u3066\u304d\u3066\u4ee5\u4e0b\u306e **\u9001\u4fe1(submit)** \u3092\u62bc\u3057\u3066\u304f\u3060\u3055\u3044\u3002\n\n[\u30ea\u30f3\u30af]({authorization_url})",
+                "title": "Logi Circle\u3067\u8a8d\u8a3c\u3059\u308b"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "\u30d7\u30ed\u30d0\u30a4\u30c0\u30fc"
+                },
+                "title": "\u8a8d\u8a3c\u30d7\u30ed\u30d0\u30a4\u30c0\u30fc"
+            }
+        }
+    }
+}

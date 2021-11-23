@@ -27,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -358,7 +359,7 @@ class ClimaCellEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device registry information."""
         return DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._config_entry.data[CONF_API_KEY])},
             manufacturer="ClimaCell",
             name="ClimaCell",

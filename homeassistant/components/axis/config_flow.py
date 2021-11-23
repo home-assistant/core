@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
     CONF_HOST,
@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_link_local
 
@@ -151,13 +152,13 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_dhcp(self, discovery_info: dict):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Prepare configuration for a DHCP discovered Axis device."""
         return await self._process_discovered_device(
             {
-                CONF_HOST: discovery_info[IP_ADDRESS],
-                CONF_MAC: format_mac(discovery_info.get(MAC_ADDRESS, "")),
-                CONF_NAME: discovery_info.get(HOSTNAME),
+                CONF_HOST: discovery_info[dhcp.IP_ADDRESS],
+                CONF_MAC: format_mac(discovery_info[dhcp.MAC_ADDRESS]),
+                CONF_NAME: discovery_info[dhcp.HOSTNAME],
                 CONF_PORT: DEFAULT_PORT,
             }
         )
@@ -174,14 +175,18 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-    async def async_step_zeroconf(self, discovery_info: dict):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Prepare configuration for a Zeroconf discovered Axis device."""
         return await self._process_discovered_device(
             {
-                CONF_HOST: discovery_info[CONF_HOST],
-                CONF_MAC: format_mac(discovery_info["properties"]["macaddress"]),
-                CONF_NAME: discovery_info["name"].split(".", 1)[0],
-                CONF_PORT: discovery_info[CONF_PORT],
+                CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
+                CONF_MAC: format_mac(
+                    discovery_info[zeroconf.ATTR_PROPERTIES]["macaddress"]
+                ),
+                CONF_NAME: discovery_info[zeroconf.ATTR_NAME].split(".", 1)[0],
+                CONF_PORT: discovery_info[zeroconf.ATTR_PORT],
             }
         )
 

@@ -8,6 +8,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.lutron_caseta import DOMAIN
 import homeassistant.components.lutron_caseta.config_flow as CasetaConfigFlow
 from homeassistant.components.lutron_caseta.const import (
@@ -424,10 +425,14 @@ async def test_zeroconf_host_already_configured(hass, tmpdir):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            CONF_HOST: "1.1.1.1",
-            ATTR_HOSTNAME: "lutron-abc.local.",
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.1.1.1",
+            hostname="lutron-abc.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
     await hass.async_block_till_done()
 
@@ -447,10 +452,14 @@ async def test_zeroconf_lutron_id_already_configured(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            CONF_HOST: "1.1.1.1",
-            ATTR_HOSTNAME: "lutron-abc.local.",
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.1.1.1",
+            hostname="lutron-abc.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
     await hass.async_block_till_done()
 
@@ -465,10 +474,14 @@ async def test_zeroconf_not_lutron_device(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            CONF_HOST: "1.1.1.1",
-            ATTR_HOSTNAME: "notlutron-abc.local.",
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.1.1.1",
+            hostname="notlutron-abc.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
     await hass.async_block_till_done()
 
@@ -489,10 +502,14 @@ async def test_zeroconf(hass, source, tmpdir):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": source},
-        data={
-            CONF_HOST: "1.1.1.1",
-            ATTR_HOSTNAME: "lutron-abc.local.",
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.1.1.1",
+            hostname="lutron-abc.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
     await hass.async_block_till_done()
 

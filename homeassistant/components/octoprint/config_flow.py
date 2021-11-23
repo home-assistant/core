@@ -1,11 +1,12 @@
 """Config flow for OctoPrint integration."""
 import logging
-from urllib.parse import urlsplit
 
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant import config_entries, data_entry_flow, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -25,11 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 def _schema_with_defaults(username="", host="", port=80, path="/", ssl=False):
     return vol.Schema(
         {
-            vol.Required(CONF_USERNAME, default=username): cv.string,
-            vol.Required(CONF_HOST, default=host): cv.string,
-            vol.Optional(CONF_PORT, default=port): cv.port,
-            vol.Optional(CONF_PATH, default=path): cv.string,
-            vol.Optional(CONF_SSL, default=ssl): cv.boolean,
+            vol.Required(CONF_USERNAME, default=username): str,
+            vol.Required(CONF_HOST, default=host): str,
+            vol.Required(CONF_PORT, default=port): cv.port,
+            vol.Required(CONF_PATH, default=path): str,
+            vol.Required(CONF_SSL, default=ssl): bool,
         },
         extra=vol.ALLOW_EXTRA,
     )
@@ -138,20 +139,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import."""
         return await self.async_step_user(user_input)
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle discovery flow."""
-        uuid = discovery_info["properties"]["uuid"]
+        uuid = discovery_info[zeroconf.ATTR_PROPERTIES]["uuid"]
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured()
 
         self.context["title_placeholders"] = {
-            CONF_HOST: discovery_info[CONF_HOST],
+            CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
         }
 
         self.discovery_schema = _schema_with_defaults(
-            host=discovery_info[CONF_HOST],
-            port=discovery_info[CONF_PORT],
-            path=discovery_info["properties"][CONF_PATH],
+            host=discovery_info[zeroconf.ATTR_HOST],
+            port=discovery_info[zeroconf.ATTR_PORT],
+            path=discovery_info[zeroconf.ATTR_PROPERTIES][CONF_PATH],
         )
 
         return await self.async_step_user()
@@ -162,14 +165,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured()
 
-        url = urlsplit(discovery_info["presentationURL"])
+        url = URL(discovery_info["presentationURL"])
         self.context["title_placeholders"] = {
-            CONF_HOST: url.hostname,
+            CONF_HOST: url.host,
         }
 
         self.discovery_schema = _schema_with_defaults(
-            host=url.hostname,
+            host=url.host,
+            path=url.path,
             port=url.port,
+            ssl=url.scheme == "https",
         )
 
         return await self.async_step_user()
@@ -187,7 +192,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             user_input[CONF_API_KEY] = await octoprint.request_app_key(
-                "Home Assistant", user_input[CONF_USERNAME], 30
+                "Home Assistant", user_input[CONF_USERNAME], 300
             )
         finally:
             # Continue the flow after show progress when the task is done.

@@ -46,7 +46,7 @@ async def test_sensors(hass):
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=UTC)
     with patch("brother.datetime", utcnow=Mock(return_value=test_time)), patch(
         "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("brother_printer_data.json")),
+        return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -296,7 +296,7 @@ async def test_availability(hass):
     future = utcnow() + timedelta(minutes=10)
     with patch(
         "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("brother_printer_data.json")),
+        return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -311,7 +311,7 @@ async def test_manual_update_entity(hass):
     """Test manual update entity via service homeasasistant/update_entity."""
     await init_integration(hass)
 
-    data = json.loads(load_fixture("brother_printer_data.json"))
+    data = json.loads(load_fixture("printer_data.json", "brother"))
 
     await async_setup_component(hass, "homeassistant", {})
     with patch(

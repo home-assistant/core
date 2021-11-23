@@ -4,7 +4,9 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.yeelight import (
+from homeassistant.components import dhcp, zeroconf
+from homeassistant.components.yeelight.config_flow import MODEL_UNKNOWN, CannotConnect
+from homeassistant.components.yeelight.const import (
     CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
     CONF_MODEL,
@@ -20,7 +22,6 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.components.yeelight.config_flow import MODEL_UNKNOWN, CannotConnect
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
@@ -455,7 +456,14 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
-            data={"host": IP_ADDRESS, "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+            data=zeroconf.ZeroconfServiceInfo(
+                host=IP_ADDRESS,
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                type="mock_type",
+            ),
         )
         await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_FORM
@@ -467,7 +475,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": IP_ADDRESS, "macaddress": "aa:bb:cc:dd:ee:ff"},
+            data=dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+            ),
         )
         await hass.async_block_till_done()
     assert result2["type"] == RESULT_TYPE_ABORT
@@ -479,7 +489,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": IP_ADDRESS, "macaddress": "00:00:00:00:00:00"},
+            data=dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="00:00:00:00:00:00", hostname="mock_hostname"
+            ),
         )
         await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
@@ -493,7 +505,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": "1.2.3.5", "macaddress": "00:00:00:00:00:01"},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.2.3.5", macaddress="00:00:00:00:00:01", hostname="mock_hostname"
+            ),
         )
         await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
@@ -505,11 +519,20 @@ async def test_discovered_by_homekit_and_dhcp(hass):
     [
         (
             config_entries.SOURCE_DHCP,
-            {"ip": IP_ADDRESS, "macaddress": "aa:bb:cc:dd:ee:ff"},
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
-            {"host": IP_ADDRESS, "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+            zeroconf.ZeroconfServiceInfo(
+                host=IP_ADDRESS,
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                type="mock_type",
+            ),
         ),
     ],
 )
@@ -563,11 +586,20 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
     [
         (
             config_entries.SOURCE_DHCP,
-            {"ip": IP_ADDRESS, "macaddress": "aa:bb:cc:dd:ee:ff"},
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
-            {"host": IP_ADDRESS, "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+            zeroconf.ZeroconfServiceInfo(
+                host=IP_ADDRESS,
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                type="mock_type",
+            ),
         ),
     ],
 )

@@ -26,7 +26,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     """Connect to vacuum."""
     try:
-        with async_timeout.timeout(API_TIMEOUT):
+        async with async_timeout.timeout(API_TIMEOUT):
             _LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
     except SharkIqAuthError:
@@ -71,10 +71,11 @@ async def async_setup_entry(hass, config_entry):
 async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
     """Disconnect to vacuum."""
     _LOGGER.debug("Disconnecting from Ayla Api")
-    with async_timeout.timeout(5), suppress(
-        SharkIqAuthError, SharkIqAuthExpiringError, SharkIqNotAuthedError
-    ):
-        await coordinator.ayla_api.async_sign_out()
+    async with async_timeout.timeout(5):
+        with suppress(
+            SharkIqAuthError, SharkIqAuthExpiringError, SharkIqNotAuthedError
+        ):
+            await coordinator.ayla_api.async_sign_out()
 
 
 async def async_update_options(hass, config_entry):

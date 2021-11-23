@@ -66,6 +66,8 @@ from .const import (
     MODELS_PURIFIER_MIOT,
     MODELS_SWITCH,
     MODELS_VACUUM,
+    ROBOROCK_GENERIC,
+    ROCKROBO_GENERIC,
     AuthException,
     SetupException,
 )
@@ -267,7 +269,7 @@ async def async_create_miio_device_and_coordinator(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up a data coordinator and one miio device to service multiple entities."""
-    model = entry.data[CONF_MODEL]
+    model: str = entry.data[CONF_MODEL]
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
     name = entry.title
@@ -280,6 +282,8 @@ async def async_create_miio_device_and_coordinator(
         model not in MODELS_HUMIDIFIER
         and model not in MODELS_FAN
         and model not in MODELS_VACUUM
+        and not model.startswith(ROBOROCK_GENERIC)
+        and not model.startswith(ROCKROBO_GENERIC)
     ):
         return
 
@@ -304,7 +308,11 @@ async def async_create_miio_device_and_coordinator(
         device = AirPurifier(host, token)
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
-    elif model in MODELS_VACUUM:
+    elif (
+        model in MODELS_VACUUM
+        or model.startswith(ROBOROCK_GENERIC)
+        or model.startswith(ROCKROBO_GENERIC)
+    ):
         device = Vacuum(host, token)
         update_method = _async_update_data_vacuum
         coordinator_class = DataUpdateCoordinator[VacuumCoordinatorData]

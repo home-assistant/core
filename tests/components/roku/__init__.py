@@ -3,13 +3,14 @@ from http import HTTPStatus
 import re
 from socket import gaierror as SocketGIAError
 
+from homeassistant.components import zeroconf
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
 )
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -31,13 +32,16 @@ MOCK_SSDP_DISCOVERY_INFO = {
 
 HOMEKIT_HOST = "192.168.1.161"
 
-MOCK_HOMEKIT_DISCOVERY_INFO = {
-    CONF_NAME: "onn._hap._tcp.local.",
-    CONF_HOST: HOMEKIT_HOST,
-    "properties": {
-        CONF_ID: "2d:97:da:ee:dc:99",
+MOCK_HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    host=HOMEKIT_HOST,
+    hostname="mock_hostname",
+    name="onn._hap._tcp.local.",
+    port=None,
+    properties={
+        zeroconf.ATTR_PROPERTIES_ID: "2d:97:da:ee:dc:99",
     },
-}
+    type="mock_type",
+)
 
 
 def mock_connection(

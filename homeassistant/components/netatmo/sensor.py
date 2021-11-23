@@ -490,9 +490,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         self._station_id = module_info.get("main_device", self._id)
 
         station = self._data.get_station(self._station_id)
-        device = self._data.get_module(self._id)
-
-        if not device:
+        if not (device := self._data.get_module(self._id)):
             # Assume it's a station if module can't be found
             device = station
 

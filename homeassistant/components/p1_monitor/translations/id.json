@@ -9,7 +9,8 @@
                 "data": {
                     "host": "Host",
                     "name": "Nama"
-                }
+                },
+                "description": "Siapkan Monitor P1 untuk diintegrasikan dengan Home Assistant."
             }
         }
     }

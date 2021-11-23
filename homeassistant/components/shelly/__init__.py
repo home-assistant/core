@@ -36,6 +36,7 @@ from .const import (
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     BLOCK,
     CONF_COAP_PORT,
+    CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
     DEFAULT_COAP_PORT,
     DEVICE,
@@ -44,6 +45,7 @@ from .const import (
     ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_DICT,
+    MODELS_SUPPORTING_LIGHT_EFFECTS,
     POLLING_TIMEOUT_SEC,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -62,7 +64,14 @@ from .utils import (
     get_rpc_device_name,
 )
 
-BLOCK_PLATFORMS: Final = ["binary_sensor", "cover", "light", "sensor", "switch"]
+BLOCK_PLATFORMS: Final = [
+    "binary_sensor",
+    "climate",
+    "cover",
+    "light",
+    "sensor",
+    "switch",
+]
 BLOCK_SLEEPING_PLATFORMS: Final = ["binary_sensor", "sensor"]
 RPC_PLATFORMS: Final = ["binary_sensor", "light", "sensor", "switch"]
 _LOGGER: Final = logging.getLogger(__name__)
@@ -143,7 +152,7 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
-    sleep_period = entry.data.get("sleep_period")
+    sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
 
     @callback
     def _async_device_online(_: Any) -> None:
@@ -152,7 +161,7 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
 
         if sleep_period is None:
             data = {**entry.data}
-            data["sleep_period"] = get_block_device_sleep_period(device.settings)
+            data[CONF_SLEEP_PERIOD] = get_block_device_sleep_period(device.settings)
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
 
@@ -164,8 +173,12 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await device.initialize()
-        except (asyncio.TimeoutError, OSError) as err:
-            raise ConfigEntryNotReady from err
+        except asyncio.TimeoutError as err:
+            raise ConfigEntryNotReady(
+                str(err) or "Timeout during device setup"
+            ) from err
+        except OSError as err:
+            raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
 
         await async_block_device_setup(hass, entry, device)
     elif sleep_period is None or device_entry is None:
@@ -194,7 +207,7 @@ async def async_block_device_setup(
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 
-    if not entry.data.get("sleep_period"):
+    if not entry.data.get(CONF_SLEEP_PERIOD):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
             REST
         ] = ShellyDeviceRestWrapper(hass, device)
@@ -217,8 +230,10 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
             device = await RpcDevice.create(
                 aiohttp_client.async_get_clientsession(hass), options
             )
-    except (asyncio.TimeoutError, OSError) as err:
-        raise ConfigEntryNotReady from err
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady(str(err) or "Timeout during device setup") from err
+    except OSError as err:
+        raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
 
     device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         RPC
@@ -239,7 +254,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Initialize the Shelly device wrapper."""
         self.device_id: str | None = None
 
-        if sleep_period := entry.data["sleep_period"]:
+        if sleep_period := entry.data[CONF_SLEEP_PERIOD]:
             update_interval = SLEEP_PERIOD_MULTIPLIER * sleep_period
         else:
             update_interval = (
@@ -312,11 +327,12 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
             if self.model in DUAL_MODE_LIGHT_MODELS:
-                if "mode" in block.sensor_ids and self.model != "SHRGBW2":
+                if "mode" in block.sensor_ids:
                     if self._last_mode != block.mode:
                         self._last_cfg_changed = None
                     self._last_mode = block.mode
 
+            if self.model in MODELS_SUPPORTING_LIGHT_EFFECTS:
                 if "effect" in block.sensor_ids:
                     if self._last_effect != block.effect:
                         self._last_cfg_changed = None
@@ -369,7 +385,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
-        if sleep_period := self.entry.data.get("sleep_period"):
+        if sleep_period := self.entry.data.get(CONF_SLEEP_PERIOD):
             # Sleeping device, no point polling it, just mark it unavailable
             raise update_coordinator.UpdateFailed(
                 f"Sleeping device did not update within {sleep_period} seconds interval"
@@ -477,7 +493,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 
-    if not entry.data.get("sleep_period"):
+    if not entry.data.get(CONF_SLEEP_PERIOD):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][REST] = None
         platforms = BLOCK_PLATFORMS
 

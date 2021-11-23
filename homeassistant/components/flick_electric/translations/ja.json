@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "\u30af\u30e9\u30a4\u30a2\u30f3\u30c8ID(\u30aa\u30d7\u30b7\u30e7\u30f3)",
+                    "client_secret": "\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u30b7\u30fc\u30af\u30ec\u30c3\u30c8(\u30aa\u30d7\u30b7\u30e7\u30f3)",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                }
+            }
+        }
+    }
+}

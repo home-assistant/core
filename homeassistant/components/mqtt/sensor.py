@@ -11,6 +11,7 @@ from homeassistant.components import sensor
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
+    ENTITY_ID_FORMAT,
     STATE_CLASSES_SCHEMA,
     SensorEntity,
 )
@@ -20,6 +21,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    DEVICE_CLASS_DATE,
+    DEVICE_CLASS_TIMESTAMP,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -132,6 +135,7 @@ async def _async_setup_entity(
 class MqttSensor(MqttEntity, SensorEntity):
     """Representation of a sensor that can be updated using MQTT."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     _attr_last_reset = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
 
@@ -194,6 +198,18 @@ class MqttSensor(MqttEntity, SensorEntity):
                     self._state,
                     variables=variables,
                 )
+
+            if payload is not None and self.device_class in (
+                DEVICE_CLASS_DATE,
+                DEVICE_CLASS_TIMESTAMP,
+            ):
+                if (payload := dt_util.parse_datetime(payload)) is None:
+                    _LOGGER.warning(
+                        "Invalid state message '%s' from '%s'", msg.payload, msg.topic
+                    )
+                elif self.device_class == DEVICE_CLASS_DATE:
+                    payload = payload.date()
+
             self._state = payload
 
         def _update_last_reset(msg):

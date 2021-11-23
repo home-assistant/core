@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "already_in_progress": "\u69cb\u6210\u30d5\u30ed\u30fc\u306f\u3059\u3067\u306b\u9032\u884c\u4e2d\u3067\u3059",
+            "not_huawei_lte": "Huawei LTE\u30c7\u30d0\u30a4\u30b9\u3067\u306f\u3042\u308a\u307e\u305b\u3093"
+        },
+        "error": {
+            "connection_timeout": "\u63a5\u7d9a\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8",
+            "incorrect_password": "\u30d1\u30b9\u30ef\u30fc\u30c9\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093",
+            "incorrect_username": "\u30e6\u30fc\u30b6\u30fc\u540d\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093",
+            "invalid_url": "\u7121\u52b9\u306aURL",
+            "response_error": "\u30c7\u30d0\u30a4\u30b9\u304b\u3089\u306e\u4e0d\u660e\u306a\u30a8\u30e9\u30fc"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "url": "URL",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                },
+                "description": "\u30c7\u30d0\u30a4\u30b9\u30a2\u30af\u30bb\u30b9\u306e\u8a73\u7d30\u3092\u5165\u529b\u3057\u307e\u3059\u3002",
+                "title": "Huawei LTE\u306e\u8a2d\u5b9a"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "recipient": "SMS\u901a\u77e5\u306e\u53d7\u4fe1\u8005",
+                    "track_new_devices": "\u65b0\u3057\u3044\u30c7\u30d0\u30a4\u30b9\u306e\u8ffd\u8de1",
+                    "track_wired_clients": "\u6709\u7dda\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u3092\u8ffd\u8de1\u3059\u308b",
+                    "unauthenticated_mode": "\u8a8d\u8a3c\u306a\u3057\u306e\u30e2\u30fc\u30c9(\u5909\u66f4\u306b\u306f\u30ea\u30ed\u30fc\u30c9\u304c\u5fc5\u8981)"
+                }
+            }
+        }
+    }
+}

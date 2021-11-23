@@ -8,34 +8,47 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import (
+    ATTR_ID,
+    ATTR_IPADDR,
+    ATTR_MODEL,
+    ATTR_MODEL_DESCRIPTION,
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
 )
 from flux_led.protocol import LEDENETRawState
 
-from homeassistant.components.dhcp import (
-    HOSTNAME as DHCP_HOSTNAME,
-    IP_ADDRESS as DHCP_IP_ADDRESS,
-    MAC_ADDRESS as DHCP_MAC_ADDRESS,
-)
-from homeassistant.components.flux_led.const import FLUX_HOST, FLUX_MAC, FLUX_MODEL
+from homeassistant.components import dhcp
 from homeassistant.core import HomeAssistant
 
 MODULE = "homeassistant.components.flux_led"
 MODULE_CONFIG_FLOW = "homeassistant.components.flux_led.config_flow"
 IP_ADDRESS = "127.0.0.1"
 MODEL = "AZ120444"
+MODEL_DESCRIPTION = "RGBW Controller"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 FLUX_MAC_ADDRESS = "aabbccddeeff"
+SHORT_MAC_ADDRESS = "ddeeff"
 
-DEFAULT_ENTRY_TITLE = f"{MODEL} {FLUX_MAC_ADDRESS}"
+DEFAULT_ENTRY_TITLE = f"{MODEL_DESCRIPTION} {SHORT_MAC_ADDRESS}"
+DEFAULT_ENTRY_TITLE_PARTIAL = f"{MODEL} {SHORT_MAC_ADDRESS}"
 
-DHCP_DISCOVERY = {
-    DHCP_HOSTNAME: MODEL,
-    DHCP_IP_ADDRESS: IP_ADDRESS,
-    DHCP_MAC_ADDRESS: MAC_ADDRESS,
+
+DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+    hostname=MODEL,
+    ip=IP_ADDRESS,
+    macaddress=MAC_ADDRESS,
+)
+FLUX_DISCOVERY_PARTIAL = {
+    ATTR_IPADDR: IP_ADDRESS,
+    ATTR_MODEL: MODEL,
+    ATTR_ID: FLUX_MAC_ADDRESS,
 }
-FLUX_DISCOVERY = {FLUX_HOST: IP_ADDRESS, FLUX_MODEL: MODEL, FLUX_MAC: FLUX_MAC_ADDRESS}
+FLUX_DISCOVERY = {
+    ATTR_IPADDR: IP_ADDRESS,
+    ATTR_MODEL: MODEL,
+    ATTR_ID: FLUX_MAC_ADDRESS,
+    ATTR_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
+}
 
 
 def _mocked_bulb() -> AIOWifiLedBulb:
@@ -46,8 +59,10 @@ def _mocked_bulb() -> AIOWifiLedBulb:
 
     bulb.device_type = DeviceType.Bulb
     bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
+    bulb.effect_list = ["some_effect"]
     bulb.async_set_custom_pattern = AsyncMock()
     bulb.async_set_preset_pattern = AsyncMock()
+    bulb.async_set_effect = AsyncMock()
     bulb.async_set_white_temp = AsyncMock()
     bulb.async_stop = AsyncMock()
     bulb.async_update = AsyncMock()
@@ -68,8 +83,12 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.getWhiteTemperature = MagicMock(return_value=(2700, 128))
     bulb.brightness = 128
     bulb.model_num = 0x35
+    bulb.effect = None
+    bulb.speed = 50
     bulb.model = "Smart Bulb (0x35)"
     bulb.version_num = 8
+    bulb.original_addressable = False
+    bulb.addressable = False
     bulb.rgbwcapable = True
     bulb.color_modes = {FLUX_COLOR_MODE_RGB, FLUX_COLOR_MODE_CCT}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
@@ -112,6 +131,16 @@ async def async_mock_device_turn_on(hass: HomeAssistant, bulb: AIOWifiLedBulb) -
     """Mock the device being on."""
     bulb.is_on = True
     bulb.raw_state._replace(power_state=0x23)
+    bulb.data_receive_callback()
+    await hass.async_block_till_done()
+
+
+async def async_mock_effect_speed(
+    hass: HomeAssistant, bulb: AIOWifiLedBulb, effect: str, speed: int
+) -> None:
+    """Mock the device being on with an effect."""
+    bulb.speed = speed
+    bulb.effect = effect
     bulb.data_receive_callback()
     await hass.async_block_till_done()
 

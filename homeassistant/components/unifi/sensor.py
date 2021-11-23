@@ -172,8 +172,8 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
     def native_value(self) -> datetime:
         """Return the uptime of the client."""
         if self.client.uptime < 1000000000:
-            return (dt_util.now() - timedelta(seconds=self.client.uptime)).isoformat()
-        return dt_util.utc_from_timestamp(float(self.client.uptime)).isoformat()
+            return dt_util.now() - timedelta(seconds=self.client.uptime)
+        return dt_util.utc_from_timestamp(float(self.client.uptime))
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""

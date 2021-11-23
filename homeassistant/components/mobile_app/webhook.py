@@ -446,6 +446,26 @@ async def webhook_register_sensor(hass, config_entry, data):
             "Re-register for %s of existing sensor %s", device_name, unique_id
         )
 
+        entry = entity_registry.async_get(existing_sensor)
+        changes = {}
+
+        if (
+            new_name := f"{device_name} {data[ATTR_SENSOR_NAME]}"
+        ) != entry.original_name:
+            changes["original_name"] = new_name
+
+        for ent_reg_key, data_key in (
+            ("device_class", ATTR_SENSOR_DEVICE_CLASS),
+            ("unit_of_measurement", ATTR_SENSOR_UOM),
+            ("entity_category", ATTR_SENSOR_ENTITY_CATEGORY),
+            ("original_icon", ATTR_SENSOR_ICON),
+        ):
+            if data_key in data and getattr(entry, ent_reg_key) != data[data_key]:
+                changes[ent_reg_key] = data[data_key]
+
+        if changes:
+            entity_registry.async_update_entity(existing_sensor, **changes)
+
         async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, data)
     else:
         register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"

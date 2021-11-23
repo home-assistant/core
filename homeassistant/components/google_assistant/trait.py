@@ -6,6 +6,7 @@ import logging
 from homeassistant.components import (
     alarm_control_panel,
     binary_sensor,
+    button,
     camera,
     cover,
     fan,
@@ -35,7 +36,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    CAST_APP_ID_HOMEASSISTANT,
+    CAST_APP_ID_HOMEASSISTANT_MEDIA,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -307,7 +308,7 @@ class CameraStreamTrait(_Trait):
         )
         self.stream_info = {
             "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
-            "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT,
+            "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT_MEDIA,
         }
 
 
@@ -513,11 +514,11 @@ class SceneTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain in (scene.DOMAIN, script.DOMAIN)
+        return domain in (button.DOMAIN, scene.DOMAIN, script.DOMAIN)
 
     def sync_attributes(self):
         """Return scene attributes for a sync request."""
-        # Neither supported domain can support sceneReversible
+        # None of the supported domains can support sceneReversible
         return {}
 
     def query_attributes(self):
@@ -526,12 +527,16 @@ class SceneTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a scene command."""
-        # Don't block for scripts as they can be slow.
+        service = SERVICE_TURN_ON
+        if self.state.domain == button.DOMAIN:
+            service = button.SERVICE_PRESS
+
+        # Don't block for scripts or buttons, as they can be slow.
         await self.hass.services.async_call(
             self.state.domain,
-            SERVICE_TURN_ON,
+            service,
             {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=self.state.domain != script.DOMAIN,
+            blocking=self.state.domain not in (button.DOMAIN, script.DOMAIN),
             context=data.context,
         )
 

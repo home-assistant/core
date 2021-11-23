@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30a2\u30ab\u30a6\u30f3\u30c8\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "region": "ConnectedDrive\u30ea\u30fc\u30b8\u30e7\u30f3",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "account_options": {
+                "data": {
+                    "read_only": "\u30ea\u30fc\u30c9\u30aa\u30f3\u30ea\u30fc(\u30bb\u30f3\u30b5\u30fc\u3068\u901a\u77e5\u306e\u307f\u3001\u30b5\u30fc\u30d3\u30b9\u306e\u5b9f\u884c\u306f\u4e0d\u53ef\u3001\u30ed\u30c3\u30af\u4e0d\u53ef)"
+                }
+            }
+        }
+    }
+}

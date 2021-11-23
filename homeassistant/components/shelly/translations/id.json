@@ -33,12 +33,13 @@
             "button": "Tombol",
             "button1": "Tombol pertama",
             "button2": "Tombol kedua",
-            "button3": "Tombol ketiga"
+            "button3": "Tombol ketiga",
+            "button4": "Tombol keempat"
         },
         "trigger_type": {
             "double": "{subtype} diklik dua kali",
             "long": "{subtype} diklik lama",
-            "long_push": "Push lama  {subtype}",
+            "long_push": "Push lama {subtype}",
             "long_single": "{subtype} diklik lama kemudian diklik sekali",
             "single": "{subtype} diklik sekali",
             "single_long": "{subtype} diklik sekali kemudian diklik lama",

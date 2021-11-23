@@ -20,6 +20,8 @@ from .const import (
     SONOS_CREATE_SWITCHES,
 )
 from .entity import SonosEntity
+from .exception import SpeakerUnavailable
+from .helpers import soco_error
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,6 +138,7 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
         self._attr_icon = FEATURE_ICONS.get(feature_type)
 
         if feature_type in POLL_REQUIRED:
+            self._attr_entity_registry_enabled_default = False
             self._attr_should_poll = True
 
     async def _async_poll(self) -> None:
@@ -143,8 +146,12 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
         if not self.should_poll:
             await self.hass.async_add_executor_job(self.update)
 
+    @soco_error(raise_on_err=False)
     def update(self) -> None:
         """Fetch switch state if necessary."""
+        if not self.available:
+            raise SpeakerUnavailable
+
         state = getattr(self.soco, self.feature_type)
         setattr(self.speaker, self.feature_type, state)
 
@@ -163,6 +170,7 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
         """Turn the entity off."""
         self.send_command(False)
 
+    @soco_error()
     def send_command(self, enable: bool) -> None:
         """Enable or disable the feature on the device."""
         if self.needs_coordinator:

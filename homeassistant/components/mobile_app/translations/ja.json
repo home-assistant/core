@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "description": "\u30e2\u30d0\u30a4\u30eb\u30a2\u30d7\u30ea\u306e\u30b3\u30f3\u30dd\u30fc\u30cd\u30f3\u30c8\u3092\u8a2d\u5b9a\u3057\u307e\u3059\u304b\uff1f"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "\u901a\u77e5\u306e\u9001\u4fe1"
+        }
+    },
+    "title": "\u30e2\u30d0\u30a4\u30eb\u30a2\u30d7\u30ea"
+}

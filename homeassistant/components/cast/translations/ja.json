@@ -1,8 +1,42 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u5358\u4e00\u306e\u8a2d\u5b9a\u3057\u304b\u3067\u304d\u307e\u305b\u3093\u3002"
+        },
+        "error": {
+            "invalid_known_hosts": "\u65e2\u77e5\u306e\u30db\u30b9\u30c8\u306f\u3001\u30ab\u30f3\u30de\u3067\u533a\u5207\u3089\u308c\u305f\u30db\u30b9\u30c8\u306e\u30ea\u30b9\u30c8\u3067\u306a\u3051\u308c\u3070\u306a\u308a\u307e\u305b\u3093\u3002"
+        },
         "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "\u65e2\u77e5\u306e\u30db\u30b9\u30c8"
+                },
+                "description": "\u65e2\u77e5\u306e\u30db\u30b9\u30c8 - Cast\u30c7\u30d0\u30a4\u30b9\u306e\u30db\u30b9\u30c8\u540d\u3001\u307e\u305f\u306fIP\u30a2\u30c9\u30ec\u30b9\u306e\u30b3\u30f3\u30de\u533a\u5207\u308a\u30ea\u30b9\u30c8\u3002mDNS\u691c\u51fa\u304c\u6a5f\u80fd\u3057\u3066\u3044\u306a\u3044\u5834\u5408\u306b\u4f7f\u7528\u3057\u307e\u3059\u3002",
+                "title": "Google Cast\u306e\u8a2d\u5b9a"
+            },
             "confirm": {
                 "description": "Google Cast\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "\u65e2\u77e5\u306e\u30db\u30b9\u30c8\u306f\u3001\u30ab\u30f3\u30de\u3067\u533a\u5207\u3089\u308c\u305f\u30db\u30b9\u30c8\u306e\u30ea\u30b9\u30c8\u3067\u306a\u3051\u308c\u3070\u306a\u308a\u307e\u305b\u3093\u3002"
+        },
+        "step": {
+            "advanced_options": {
+                "data": {
+                    "ignore_cec": "CEC\u3092\u7121\u8996\u3059\u308b",
+                    "uuid": "\u8a31\u53ef\u3055\u308c\u305fUUID"
+                },
+                "title": "Google Cast\u306e\u9ad8\u5ea6\u306a\u8a2d\u5b9a"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "\u65e2\u77e5\u306e\u30db\u30b9\u30c8"
+                },
+                "description": "\u65e2\u77e5\u306e\u30db\u30b9\u30c8 - Cast\u30c7\u30d0\u30a4\u30b9\u306e\u30db\u30b9\u30c8\u540d\u3001\u307e\u305f\u306fIP\u30a2\u30c9\u30ec\u30b9\u306e\u30b3\u30f3\u30de\u533a\u5207\u308a\u30ea\u30b9\u30c8\u3002mDNS\u691c\u51fa\u304c\u6a5f\u80fd\u3057\u3066\u3044\u306a\u3044\u5834\u5408\u306b\u4f7f\u7528\u3057\u307e\u3059\u3002",
+                "title": "Google Cast\u306e\u8a2d\u5b9a"
             }
         }
     }

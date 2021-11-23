@@ -224,6 +224,7 @@ async def _async_setup_entity(
 class MqttCover(MqttEntity, CoverEntity):
     """Representation of a cover that can be controlled using MQTT."""
 
+    _entity_id_format = cover.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_COVER_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):

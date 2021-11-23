@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "auth_fail": "\u30e6\u30fc\u30b6\u30fc\u540d\u307e\u305f\u306f\u30d1\u30b9\u30ef\u30fc\u30c9\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093\u3002",
+            "connection_error": "ZoneMinder\u30b5\u30fc\u30d0\u30fc\u3078\u306e\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002"
+        },
+        "create_entry": {
+            "default": "ZoneMinder\u30b5\u30fc\u30d0\u30fc\u304c\u8ffd\u52a0\u3055\u308c\u307e\u3057\u305f\u3002"
+        },
+        "error": {
+            "auth_fail": "\u30e6\u30fc\u30b6\u30fc\u540d\u307e\u305f\u306f\u30d1\u30b9\u30ef\u30fc\u30c9\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093\u3002",
+            "connection_error": "ZoneMinder\u30b5\u30fc\u30d0\u30fc\u3078\u306e\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002"
+        },
+        "flow_title": "ZoneMinder",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8\u3068\u30dd\u30fc\u30c8(\u4f8b: 10.10.0.4:8010)",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "path": "ZM\u30d1\u30b9",
+                    "path_zms": "ZMS\u30d1\u30b9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                },
+                "title": "ZoneMinder\u30b5\u30fc\u30d0\u30fc\u3092\u8ffd\u52a0\u3057\u307e\u3059\u3002"
+            }
+        }
+    }
+}

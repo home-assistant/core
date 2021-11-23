@@ -53,6 +53,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
@@ -267,7 +268,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             manufacturer="Spotify AB",
             model=model,
             name=self._name,
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://open.spotify.com",
         )
 

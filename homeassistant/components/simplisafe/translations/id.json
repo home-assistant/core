@@ -11,6 +11,12 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "Kode Otorisasi"
+                },
+                "title": "Selesaikan Otorisasi"
+            },
             "mfa": {
                 "description": "Periksa email Anda untuk mendapatkan tautan dari SimpliSafe. Setelah memverifikasi tautan, kembali ke sini untuk menyelesaikan instalasi integrasi.",
                 "title": "Autentikasi Multi-Faktor SimpliSafe"

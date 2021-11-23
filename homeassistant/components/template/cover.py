@@ -40,7 +40,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -195,21 +195,20 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self._tilt_template = tilt_template
         self._device_class = device_class
         self._open_script = None
-        domain = __name__.split(".")[-2]
         if open_action is not None:
-            self._open_script = Script(hass, open_action, friendly_name, domain)
+            self._open_script = Script(hass, open_action, friendly_name, DOMAIN)
         self._close_script = None
         if close_action is not None:
-            self._close_script = Script(hass, close_action, friendly_name, domain)
+            self._close_script = Script(hass, close_action, friendly_name, DOMAIN)
         self._stop_script = None
         if stop_action is not None:
-            self._stop_script = Script(hass, stop_action, friendly_name, domain)
+            self._stop_script = Script(hass, stop_action, friendly_name, DOMAIN)
         self._position_script = None
         if position_action is not None:
-            self._position_script = Script(hass, position_action, friendly_name, domain)
+            self._position_script = Script(hass, position_action, friendly_name, DOMAIN)
         self._tilt_script = None
         if tilt_action is not None:
-            self._tilt_script = Script(hass, tilt_action, friendly_name, domain)
+            self._tilt_script = Script(hass, tilt_action, friendly_name, DOMAIN)
         self._optimistic = optimistic or (not state_template and not position_template)
         self._tilt_optimistic = tilt_optimistic or not tilt_template
         self._position = None

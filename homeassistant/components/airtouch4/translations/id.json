@@ -4,13 +4,15 @@
             "already_configured": "Perangkat sudah dikonfigurasi"
         },
         "error": {
-            "cannot_connect": "Gagal terhubung"
+            "cannot_connect": "Gagal terhubung",
+            "no_units": "Tidak dapat menemukan Grup AirTouch 4 apa pun."
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "title": "Siapkan detail koneksi AirTouch 4 Anda."
             }
         }
     }

@@ -153,7 +153,6 @@ light:
   payload_off: "off"
 
 """
-from os import path
 from unittest.mock import call, patch
 
 import pytest
@@ -198,7 +197,11 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import assert_setup_component, async_fire_mqtt_message
+from tests.common import (
+    assert_setup_component,
+    async_fire_mqtt_message,
+    get_fixture_path,
+)
 from tests.components.light import common
 
 DEFAULT_CONFIG = {
@@ -3389,11 +3392,8 @@ async def test_reloadable(hass, mqtt_mock):
     assert hass.states.get("light.test")
     assert len(hass.states.async_all("light")) == 1
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "mqtt/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "mqtt")
+
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "mqtt",
@@ -3407,7 +3407,3 @@ async def test_reloadable(hass, mqtt_mock):
 
     assert hass.states.get("light.test") is None
     assert hass.states.get("light.reload")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

@@ -107,7 +107,7 @@ async def try_connect(
         connect_task = None
         try:
             connect_task = asyncio.create_task(gateway.start())
-            with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+            async with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
                 await gateway_ready.wait()
                 return True
         except asyncio.TimeoutError:
@@ -319,7 +319,7 @@ async def _gw_start(
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
     try:
-        with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+        async with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
             await gateway_ready.wait()
     except asyncio.TimeoutError:
         _LOGGER.warning(

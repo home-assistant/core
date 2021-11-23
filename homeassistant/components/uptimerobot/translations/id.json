@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
             "reauth_successful": "Autentikasi ulang berhasil",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
