@@ -670,13 +670,15 @@ jobs:
         run: |
           # for integration in $(ls -Ad ./homeassistant/components/[!_]*  | xargs -n 1 basename); do echo "${integration}: homeassistant/components/${integration}"; done
           integrations=$(ls -Ad ./homeassistant/components/[!_]*  | xargs -n 1 basename)
-          echo "::set-output name=filters::$(for integration in $integrations; do echo "${integration}: homeassistant/components/${integration}"; done)"
+          touch .integration_paths.yaml
+          for integration in $integrations; do
+            echo "${integration}: homeassistant/components/${integration}" >> .integration_paths.yaml;
+          done
       - name: Filter for core changes
         uses: dorny/paths-filter@v2.10.2
         id: integrations
         with:
-          filters: |
-            ${{ steps.integration-filters.outputs.filters }}
+          filters: .integration_paths.yaml
 
   pytest-full:
     if: ${{ needs.changes.outputs.core == 'true' }}
