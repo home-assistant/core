@@ -24,7 +24,6 @@ CONF_PAYLOAD_OPEN = "payload_open"
 
 CONF_STATE_LOCKED = "state_locked"
 CONF_STATE_UNLOCKED = "state_unlocked"
-CONF_STATE_OPEN = "state_open"
 
 DEFAULT_NAME = "MQTT Lock"
 DEFAULT_OPTIMISTIC = False
