@@ -111,6 +111,7 @@ def test_convert_to_int():
     assert util.convert_to_int("\xc2\x9b", 10) == 10
     assert util.convert_to_int(None, 10) == 10
     assert util.convert_to_int(None) is None
+    assert util.convert_to_int("NOT A NUMBER", 1) == 1
 
 
 def test_ensure_unique_string():

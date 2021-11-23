@@ -118,24 +118,20 @@ def convert_to_int(
     By default the conversion is in Big-endian style (The last byte contains the least significant bit).
     In Little-endian style the first byte contains the least significant bit.
     """
-    try:
-        if isinstance(value, int):
-            return value
-        if isinstance(value, bytes):
-            bytes_value = bytearray(value)
-            return_value = 0
-            while len(bytes_value):
-                return_value <<= 8
-                if little_endian:
-                    return_value |= bytes_value.pop(len(bytes_value) - 1)
-                else:
-                    return_value |= bytes_value.pop(0)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, bytes):
+        bytes_value = bytearray(value)
+        return_value = 0
+        while len(bytes_value):
+            return_value <<= 8
+            if little_endian:
+                return_value |= bytes_value.pop(len(bytes_value) - 1)
+            else:
+                return_value |= bytes_value.pop(0)
 
-            return return_value
-        return convert(value, int, default)
-    except (ValueError, TypeError):
-        # If value could not be converted
-        return default
+        return return_value
+    return convert(value, int, default=default)
 
 
 def ensure_unique_string(
