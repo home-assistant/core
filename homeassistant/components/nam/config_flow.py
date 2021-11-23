@@ -126,7 +126,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        self.host = discovery_info[CONF_HOST]
+        self.host = discovery_info[zeroconf.ATTR_HOST]
         self.context["title_placeholders"] = {"host": self.host}
 
         # Do not probe the device if the host is already configured

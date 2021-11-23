@@ -160,20 +160,15 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Prepare configuration for a discovered forked-daapd device."""
         version_num = 0
-        if discovery_info.get(zeroconf.ATTR_PROPERTIES) and discovery_info[
-            zeroconf.ATTR_PROPERTIES
-        ].get("Machine Name"):
+        zeroconf_properties = discovery_info[zeroconf.ATTR_PROPERTIES]
+        if zeroconf_properties.get("Machine Name"):
             with suppress(ValueError):
                 version_num = int(
-                    discovery_info[zeroconf.ATTR_PROPERTIES]
-                    .get("mtd-version", "0")
-                    .split(".")[0]
+                    zeroconf_properties.get("mtd-version", "0").split(".")[0]
                 )
         if version_num < 27:
             return self.async_abort(reason="not_forked_daapd")
-        await self.async_set_unique_id(
-            discovery_info[zeroconf.ATTR_PROPERTIES]["Machine Name"]
-        )
+        await self.async_set_unique_id(zeroconf_properties["Machine Name"])
         self._abort_if_unique_id_configured()
 
         # Update title and abort if we already have an entry for this host
@@ -182,14 +177,14 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 continue
             self.hass.config_entries.async_update_entry(
                 entry,
-                title=discovery_info[zeroconf.ATTR_PROPERTIES]["Machine Name"],
+                title=zeroconf_properties["Machine Name"],
             )
             return self.async_abort(reason="already_configured")
 
         zeroconf_data = {
             CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
             CONF_PORT: discovery_info[zeroconf.ATTR_PORT],
-            CONF_NAME: discovery_info[zeroconf.ATTR_PROPERTIES]["Machine Name"],
+            CONF_NAME: zeroconf_properties["Machine Name"],
         }
         self.discovery_schema = vol.Schema(fill_in_schema_dict(zeroconf_data))
         self.context.update({"title_placeholders": zeroconf_data})

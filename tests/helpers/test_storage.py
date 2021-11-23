@@ -28,13 +28,13 @@ MOCK_DATA2 = {"goodbye": "cruel world"}
 @pytest.fixture
 def store(hass):
     """Fixture of a store that prevents writing on Home Assistant stop."""
-    yield storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    return storage.Store(hass, MOCK_VERSION, MOCK_KEY)
 
 
 @pytest.fixture
 def store_v_1_1(hass):
     """Fixture of a store that prevents writing on Home Assistant stop."""
-    yield storage.Store(
+    return storage.Store(
         hass, MOCK_VERSION, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
     )
 
@@ -42,7 +42,7 @@ def store_v_1_1(hass):
 @pytest.fixture
 def store_v_1_2(hass):
     """Fixture of a store that prevents writing on Home Assistant stop."""
-    yield storage.Store(
+    return storage.Store(
         hass, MOCK_VERSION, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_2
     )
 
@@ -50,7 +50,7 @@ def store_v_1_2(hass):
 @pytest.fixture
 def store_v_2_1(hass):
     """Fixture of a store that prevents writing on Home Assistant stop."""
-    yield storage.Store(
+    return storage.Store(
         hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
     )
 
@@ -91,8 +91,8 @@ async def test_loading_parallel(hass, store, hass_storage, caplog):
 
     results = await asyncio.gather(store.async_load(), store.async_load())
 
-    assert results[0] is MOCK_DATA
-    assert results[1] is MOCK_DATA
+    assert results[0] == MOCK_DATA
+    assert results[0] is results[1]
     assert caplog.text.count(f"Loading data for {store.key}")
 
 
@@ -435,4 +435,26 @@ async def test_legacy_migration(hass, hass_storage, store_v_1_2):
         "version": 2,
         "minor_version": 1,
         "data": MOCK_DATA,
+    }
+
+
+async def test_changing_delayed_written_data(hass, store, hass_storage):
+    """Test changing data that is written with delay."""
+    data_to_store = {"hello": "world"}
+    store.async_delay_save(lambda: data_to_store, 1)
+    assert store.key not in hass_storage
+
+    loaded_data = await store.async_load()
+    assert loaded_data == data_to_store
+    assert loaded_data is not data_to_store
+
+    loaded_data["hello"] = "earth"
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "minor_version": 1,
+        "key": MOCK_KEY,
+        "data": {"hello": "world"},
     }

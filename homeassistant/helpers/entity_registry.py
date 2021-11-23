@@ -36,7 +36,7 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import MaxLengthExceeded
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, storage
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
@@ -58,7 +58,8 @@ DISABLED_HASS = "hass"
 DISABLED_INTEGRATION = "integration"
 DISABLED_USER = "user"
 
-STORAGE_VERSION = 1
+STORAGE_VERSION_MAJOR = 1
+STORAGE_VERSION_MINOR = 3
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -104,6 +105,7 @@ class RegistryEntry:
     icon: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
     # As set by integration
+    original_device_class: str | None = attr.ib(default=None)
     original_icon: str | None = attr.ib(default=None)
     original_name: str | None = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
@@ -127,8 +129,9 @@ class RegistryEntry:
         if self.capabilities is not None:
             attrs.update(self.capabilities)
 
-        if self.device_class is not None:
-            attrs[ATTR_DEVICE_CLASS] = self.device_class
+        device_class = self.device_class or self.original_device_class
+        if device_class is not None:
+            attrs[ATTR_DEVICE_CLASS] = device_class
 
         icon = self.icon or self.original_icon
         if icon is not None:
@@ -147,6 +150,16 @@ class RegistryEntry:
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
 
+class EntityRegistryStore(storage.Store):
+    """Store entity registry data."""
+
+    async def _async_migrate_func(
+        self, old_major_version: int, old_minor_version: int, old_data: dict
+    ) -> dict:
+        """Migrate to the new version."""
+        return await _async_migrate(old_major_version, old_minor_version, old_data)
+
+
 class EntityRegistry:
     """Class to hold a registry of entities."""
 
@@ -155,8 +168,12 @@ class EntityRegistry:
         self.hass = hass
         self.entities: dict[str, RegistryEntry]
         self._index: dict[tuple[str, str, str], str] = {}
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        self._store = EntityRegistryStore(
+            hass,
+            STORAGE_VERSION_MAJOR,
+            STORAGE_KEY,
+            atomic_writes=True,
+            minor_version=STORAGE_VERSION_MINOR,
         )
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
@@ -175,7 +192,8 @@ class EntityRegistry:
         for entity in self.entities.values():
             if not entity.device_id:
                 continue
-            domain_device_class = (entity.domain, entity.device_class)
+            device_class = entity.device_class or entity.original_device_class
+            domain_device_class = (entity.domain, device_class)
             if domain_device_class not in domain_device_classes:
                 continue
             if entity.device_id not in lookup:
@@ -253,9 +271,9 @@ class EntityRegistry:
         area_id: str | None = None,
         capabilities: Mapping[str, Any] | None = None,
         config_entry: ConfigEntry | None = None,
-        device_class: str | None = None,
         device_id: str | None = None,
         entity_category: str | None = None,
+        original_device_class: str | None = None,
         original_icon: str | None = None,
         original_name: str | None = None,
         supported_features: int | None = None,
@@ -274,9 +292,9 @@ class EntityRegistry:
                 area_id=area_id or UNDEFINED,
                 capabilities=capabilities or UNDEFINED,
                 config_entry_id=config_entry_id or UNDEFINED,
-                device_class=device_class or UNDEFINED,
                 device_id=device_id or UNDEFINED,
                 entity_category=entity_category or UNDEFINED,
+                original_device_class=original_device_class or UNDEFINED,
                 original_icon=original_icon or UNDEFINED,
                 original_name=original_name or UNDEFINED,
                 supported_features=supported_features or UNDEFINED,
@@ -305,11 +323,11 @@ class EntityRegistry:
             area_id=area_id,
             capabilities=capabilities,
             config_entry_id=config_entry_id,
-            device_class=device_class,
             device_id=device_id,
             disabled_by=disabled_by,
             entity_category=entity_category,
             entity_id=entity_id,
+            original_device_class=original_device_class,
             original_icon=original_icon,
             original_name=original_name,
             platform=platform,
@@ -394,6 +412,7 @@ class EntityRegistry:
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
+        original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
@@ -410,6 +429,7 @@ class EntityRegistry:
             name=name,
             new_entity_id=new_entity_id,
             new_unique_id=new_unique_id,
+            original_device_class=original_device_class,
             original_icon=original_icon,
             original_name=original_name,
             unit_of_measurement=unit_of_measurement,
@@ -431,6 +451,7 @@ class EntityRegistry:
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
+        original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
@@ -452,6 +473,7 @@ class EntityRegistry:
             ("entity_category", entity_category),
             ("icon", icon),
             ("name", name),
+            ("original_device_class", original_device_class),
             ("original_icon", original_icon),
             ("original_name", original_name),
             ("supported_features", supported_features),
@@ -509,11 +531,12 @@ class EntityRegistry:
         """Load the entity registry."""
         async_setup_entity_restore(self.hass, self)
 
-        data = await self.hass.helpers.storage.async_migrator(
+        data = await storage.async_migrator(
+            self.hass,
             self.hass.config.path(PATH_REGISTRY),
             self._store,
             old_conf_load_func=load_yaml,
-            old_conf_migrate_func=_async_migrate,
+            old_conf_migrate_func=_async_migrate_yaml_to_json,
         )
         entities: dict[str, RegistryEntry] = OrderedDict()
 
@@ -526,22 +549,23 @@ class EntityRegistry:
                     continue
 
                 entities[entity["entity_id"]] = RegistryEntry(
-                    area_id=entity.get("area_id"),
-                    capabilities=entity.get("capabilities") or {},
-                    config_entry_id=entity.get("config_entry_id"),
-                    device_class=entity.get("device_class"),
-                    device_id=entity.get("device_id"),
-                    disabled_by=entity.get("disabled_by"),
-                    entity_category=entity.get("entity_category"),
+                    area_id=entity["area_id"],
+                    capabilities=entity["capabilities"],
+                    config_entry_id=entity["config_entry_id"],
+                    device_class=entity["device_class"],
+                    device_id=entity["device_id"],
+                    disabled_by=entity["disabled_by"],
+                    entity_category=entity["entity_category"],
                     entity_id=entity["entity_id"],
-                    icon=entity.get("icon"),
-                    name=entity.get("name"),
-                    original_icon=entity.get("original_icon"),
-                    original_name=entity.get("original_name"),
+                    icon=entity["icon"],
+                    name=entity["name"],
+                    original_device_class=entity["original_device_class"],
+                    original_icon=entity["original_icon"],
+                    original_name=entity["original_name"],
                     platform=entity["platform"],
-                    supported_features=entity.get("supported_features", 0),
+                    supported_features=entity["supported_features"],
                     unique_id=entity["unique_id"],
-                    unit_of_measurement=entity.get("unit_of_measurement"),
+                    unit_of_measurement=entity["unit_of_measurement"],
                 )
 
         self.entities = entities
@@ -569,6 +593,7 @@ class EntityRegistry:
                 "entity_id": entry.entity_id,
                 "icon": entry.icon,
                 "name": entry.name,
+                "original_device_class": entry.original_device_class,
                 "original_icon": entry.original_icon,
                 "original_name": entry.original_name,
                 "platform": entry.platform,
@@ -703,13 +728,51 @@ def async_config_entry_disabled_by_changed(
         )
 
 
-async def _async_migrate(entities: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+async def _async_migrate(
+    old_major_version: int, old_minor_version: int, data: dict
+) -> dict:
+    """Migrate to the new version."""
+    if old_major_version < 2 and old_minor_version < 2:
+        # From version 1.1
+        for entity in data["entities"]:
+            # Populate all keys
+            entity["area_id"] = entity.get("area_id")
+            entity["capabilities"] = entity.get("capabilities") or {}
+            entity["config_entry_id"] = entity.get("config_entry_id")
+            entity["device_class"] = entity.get("device_class")
+            entity["device_id"] = entity.get("device_id")
+            entity["disabled_by"] = entity.get("disabled_by")
+            entity["entity_category"] = entity.get("entity_category")
+            entity["icon"] = entity.get("icon")
+            entity["name"] = entity.get("name")
+            entity["original_icon"] = entity.get("original_icon")
+            entity["original_name"] = entity.get("original_name")
+            entity["platform"] = entity["platform"]
+            entity["supported_features"] = entity.get("supported_features", 0)
+            entity["unit_of_measurement"] = entity.get("unit_of_measurement")
+
+    if old_major_version < 2 and old_minor_version < 3:
+        # From version 1.2
+        for entity in data["entities"]:
+            # Move device_class to original_device_class
+            entity["original_device_class"] = entity["device_class"]
+            entity["device_class"] = None
+
+    if old_major_version > 1:
+        raise NotImplementedError
+    return data
+
+
+async def _async_migrate_yaml_to_json(
+    entities: dict[str, Any]
+) -> dict[str, list[dict[str, Any]]]:
     """Migrate the YAML config file to storage helper format."""
-    return {
+    entities_1_1 = {
         "entities": [
             {"entity_id": entity_id, **info} for entity_id, info in entities.items()
         ]
     }
+    return await _async_migrate(1, 1, entities_1_1)
 
 
 @callback

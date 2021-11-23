@@ -6,7 +6,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "\u30db\u30b9\u30c8"
+                    "host": "\u30db\u30b9\u30c8",
+                    "off": "\u30aa\u30d5\u306b\u3067\u304d\u307e\u3059"
                 }
             }
         }

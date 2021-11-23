@@ -1,7 +1,44 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+        },
         "error": {
             "complete_pairing_failed": "\u30da\u30a2\u30ea\u30f3\u30b0\u3092\u5b8c\u4e86\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f\u3002\u518d\u9001\u4fe1\u3059\u308b\u524d\u306b\u3001\u5165\u529b\u3057\u305fPIN\u304c\u6b63\u3057\u304f\u3001\u30c6\u30ec\u30d3\u306e\u96fb\u6e90\u304c\u5165\u3063\u3066\u3044\u3066\u3001\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u306b\u63a5\u7d9a\u3055\u308c\u3066\u3044\u308b\u3053\u3068\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+        },
+        "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN\u30b3\u30fc\u30c9"
+                }
+            },
+            "pairing_complete": {
+                "title": "\u30da\u30a2\u30ea\u30f3\u30b0\u5b8c\u4e86"
+            },
+            "pairing_complete_import": {
+                "title": "\u30da\u30a2\u30ea\u30f3\u30b0\u5b8c\u4e86"
+            },
+            "user": {
+                "data": {
+                    "access_token": "\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3",
+                    "device_class": "\u30c7\u30d0\u30a4\u30b9\u30bf\u30a4\u30d7",
+                    "host": "\u30db\u30b9\u30c8",
+                    "name": "\u540d\u524d"
+                },
+                "title": "VIZIO SmartCast\u30c7\u30d0\u30a4\u30b9"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "\u542b\u3081\u308b\u30a2\u30d7\u30ea\u3001\u307e\u305f\u306f\u9664\u5916\u3059\u308b\u30a2\u30d7\u30ea",
+                    "include_or_exclude": "\u30a2\u30d7\u30ea\u3092\u542b\u3081\u308b\u304b\u3001\u9664\u5916\u3057\u307e\u3059\u304b\uff1f",
+                    "volume_step": "\u30dc\u30ea\u30e5\u30fc\u30e0 \u30b9\u30c6\u30c3\u30d7\u30b5\u30a4\u30ba"
+                },
+                "description": "\u30b9\u30de\u30fc\u30c8\u30c6\u30ec\u30d3\u3092\u304a\u6301\u3061\u306e\u5834\u5408\u306f\u3001\u30aa\u30d7\u30b7\u30e7\u30f3\u3067\u3001\u30bd\u30fc\u30b9\u30ea\u30b9\u30c8\u306b\u542b\u3081\u308b\u307e\u305f\u306f\u9664\u5916\u3059\u308b\u30a2\u30d7\u30ea\u3092\u9078\u629e\u3057\u3066\u30bd\u30fc\u30b9\u30ea\u30b9\u30c8\u3092\u30d5\u30a3\u30eb\u30bf\u30ea\u30f3\u30b0\u3067\u304d\u307e\u3059\u3002"
+            }
         }
     }
 }

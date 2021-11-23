@@ -8,7 +8,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.hue import config_flow, const
 from homeassistant.components.hue.errors import CannotConnect
 
@@ -515,12 +515,10 @@ async def test_bridge_homekit(hass, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data={
-            "host": "0.0.0.0",
-            "serial": "1234",
-            "manufacturerURL": config_flow.HUE_MANUFACTURERURL,
-            "properties": {"id": "aa:bb:cc:dd:ee:ff"},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="0.0.0.0",
+            properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+        ),
     )
 
     assert result["type"] == "form"
@@ -560,7 +558,10 @@ async def test_bridge_homekit_already_configured(hass, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="0.0.0.0",
+            properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+        ),
     )
 
     assert result["type"] == "abort"
@@ -659,18 +660,18 @@ async def test_bridge_zeroconf(hass, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "host": "192.168.1.217",
-            "port": 443,
-            "hostname": "Philips-hue.local.",
-            "type": "_hue._tcp.local.",
-            "name": "Philips Hue - ABCABC._hue._tcp.local.",
-            "properties": {
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.217",
+            port=443,
+            hostname="Philips-hue.local.",
+            type="_hue._tcp.local.",
+            name="Philips Hue - ABCABC._hue._tcp.local.",
+            properties={
                 "_raw": {"bridgeid": b"ecb5fafffeabcabc", "modelid": b"BSB002"},
                 "bridgeid": "ecb5fafffeabcabc",
                 "modelid": "BSB002",
             },
-        },
+        ),
     )
 
     assert result["type"] == "form"
@@ -690,18 +691,18 @@ async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "host": "192.168.1.217",
-            "port": 443,
-            "hostname": "Philips-hue.local.",
-            "type": "_hue._tcp.local.",
-            "name": "Philips Hue - ABCABC._hue._tcp.local.",
-            "properties": {
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.217",
+            port=443,
+            hostname="Philips-hue.local.",
+            type="_hue._tcp.local.",
+            name="Philips Hue - ABCABC._hue._tcp.local.",
+            properties={
                 "_raw": {"bridgeid": b"ecb5faabcabc", "modelid": b"BSB002"},
                 "bridgeid": "ecb5faabcabc",
                 "modelid": "BSB002",
             },
-        },
+        ),
     )
 
     assert result["type"] == "abort"

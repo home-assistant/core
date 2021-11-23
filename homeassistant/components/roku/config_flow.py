@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from rokuecp import Roku, RokuError
 import voluptuous as vol
 
+from homeassistant.components import zeroconf
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
@@ -84,14 +85,16 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=info["title"], data=user_input)
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle a flow initialized by homekit discovery."""
 
         # If we already have the host configured do
         # not open connections to it if we can avoid it.
-        self._async_abort_entries_match({CONF_HOST: discovery_info[CONF_HOST]})
+        self._async_abort_entries_match({CONF_HOST: discovery_info[zeroconf.ATTR_HOST]})
 
-        self.discovery_info.update({CONF_HOST: discovery_info[CONF_HOST]})
+        self.discovery_info.update({CONF_HOST: discovery_info[zeroconf.ATTR_HOST]})
 
         try:
             info = await validate_input(self.hass, self.discovery_info)
@@ -104,7 +107,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(info["serial_number"])
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info[CONF_HOST]},
+            updates={CONF_HOST: discovery_info[zeroconf.ATTR_HOST]},
         )
 
         self.context.update({"title_placeholders": {"name": info["title"]}})

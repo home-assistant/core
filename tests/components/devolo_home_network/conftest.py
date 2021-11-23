@@ -39,3 +39,8 @@ def mock_validate_input():
         return_value=info,
     ):
         yield info
+
+
+@pytest.fixture(autouse=True)
+def devolo_home_network_mock_async_zeroconf(mock_async_zeroconf):
+    """Auto mock zeroconf."""

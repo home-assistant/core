@@ -7,6 +7,7 @@
                     "advertise_port": "\u30a2\u30c9\u30d0\u30bf\u30a4\u30ba \u30dd\u30fc\u30c8",
                     "host_ip": "\u30db\u30b9\u30c8\u306eIP\u30a2\u30c9\u30ec\u30b9",
                     "listen_port": "\u30ea\u30c3\u30b9\u30f3 \u30dd\u30fc\u30c8",
+                    "name": "\u540d\u524d",
                     "upnp_bind_multicast": "\u30d0\u30a4\u30f3\u30c9 \u30de\u30eb\u30c1\u30ad\u30e3\u30b9\u30c8 (True/False)"
                 },
                 "title": "\u30b5\u30fc\u30d0\u30fc\u69cb\u6210\u306e\u5b9a\u7fa9"

@@ -1,5 +1,5 @@
 """Tests for the Twente Milieu sensors."""
-from homeassistant.components.twentemilieu.const import DOMAIN, ENTRY_TYPE_SERVICE
+from homeassistant.components.twentemilieu.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -72,7 +72,7 @@ async def test_waste_pickup_sensors(
     assert device_entry.identifiers == {(DOMAIN, "12345")}
     assert device_entry.manufacturer == "Twente Milieu"
     assert device_entry.name == "Twente Milieu"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert device_entry.configuration_url == "https://www.twentemilieu.nl"
     assert not device_entry.model
     assert not device_entry.sw_version

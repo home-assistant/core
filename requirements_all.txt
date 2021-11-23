@@ -179,7 +179,7 @@ aioguardian==2021.11.0
 aioharmony==0.2.8
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.6.3
+aiohomekit==0.6.4
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -219,7 +219,7 @@ aiomodernforms==0.1.8
 aiomusiccast==0.13.1
 
 # homeassistant.components.nanoleaf
-aionanoleaf==0.0.3
+aionanoleaf==0.0.4
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
@@ -246,7 +246,7 @@ aiorecollect==1.0.8
 aioridwell==0.2.0
 
 # homeassistant.components.shelly
-aioshelly==1.0.4
+aioshelly==1.0.5
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
@@ -440,7 +440,7 @@ brother==1.1.0
 brottsplatskartan==0.0.1
 
 # homeassistant.components.brunt
-brunt==0.1.3
+brunt==1.0.0
 
 # homeassistant.components.bsblan
 bsblan==0.4.0
@@ -540,7 +540,7 @@ denonavr==0.10.9
 devolo-home-control-api==0.17.4
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==0.6.2
+devolo-plc-api==0.6.3
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -600,7 +600,7 @@ enocean==0.50
 enturclient==0.2.2
 
 # homeassistant.components.environment_canada
-env_canada==0.5.14
+env_canada==0.5.18
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -658,7 +658,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.24.24
+flux_led==0.24.27
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -738,7 +738,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.3.9
+google-nest-sdm==0.4.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1011,7 +1011,10 @@ micloud==0.4
 miflora==0.7.0
 
 # homeassistant.components.mill
-millheater==0.8.0
+mill-local==0.1.0
+
+# homeassistant.components.mill
+millheater==0.9.0
 
 # homeassistant.components.minio
 minio==5.0.10
@@ -1360,7 +1363,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==6.1.0
+pyatmo==6.2.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1471,7 +1474,7 @@ pyeverlights==0.1.0
 pyevilgenius==1.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.1.9.8
+pyezviz==0.2.0.5
 
 # homeassistant.components.fido
 pyfido==2.1.1
@@ -1553,7 +1556,7 @@ pyipma==2.0.5
 pyipp==0.11.0
 
 # homeassistant.components.iqvia
-pyiqvia==1.1.0
+pyiqvia==2021.11.0
 
 # homeassistant.components.irish_rail_transport
 pyirishrail==0.0.2
@@ -1604,7 +1607,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.10.1
+pylitterbot==2021.11.0
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -1688,7 +1691,7 @@ pyoctoprintapi==0.1.6
 pyombi==0.1.10
 
 # homeassistant.components.openuv
-pyopenuv==2.2.1
+pyopenuv==2021.11.0
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
@@ -2070,7 +2073,7 @@ rocketchat-API==0.6.1
 rokuecp==0.8.1
 
 # homeassistant.components.roomba
-roombapy==1.6.3
+roombapy==1.6.4
 
 # homeassistant.components.roon
 roonapi==0.0.38
@@ -2143,7 +2146,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2021.11.0
+simplisafe-python==2021.11.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2471,7 +2474,7 @@ youtube_dl==2021.06.06
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.13
+zeroconf==0.37.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.63

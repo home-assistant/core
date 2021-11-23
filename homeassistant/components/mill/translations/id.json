@@ -7,8 +7,21 @@
             "cannot_connect": "Gagal terhubung"
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "Alamat IP"
+                },
+                "description": "Alamat IP lokal perangkat."
+            },
             "user": {
                 "data": {
+                    "connection_type": "Pilih jenis koneksi",
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
                 }

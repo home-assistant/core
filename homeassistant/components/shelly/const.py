@@ -141,6 +141,12 @@ SHBLB_1_RGB_EFFECTS: Final = {
     6: "Red/Green Change",
 }
 
+SHTRV_01_TEMPERATURE_SETTINGS: Final = {
+    "min": 4,
+    "max": 31,
+    "step": 1,
+}
+
 # Kelvin value for colorTemp
 KELVIN_MAX_VALUE: Final = 6500
 KELVIN_MIN_VALUE_WHITE: Final = 2700

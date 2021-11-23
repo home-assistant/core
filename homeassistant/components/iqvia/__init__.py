@@ -51,6 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(entry.data[CONF_ZIP_CODE], session=websession)
 
+    # We disable the client's request retry abilities here to avoid a lengthy (and
+    # blocking) startup:
+    client.disable_request_retries()
+
     async def async_get_data_from_api(
         api_coro: Callable[..., Awaitable]
     ) -> dict[str, Any]:
@@ -89,6 +93,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # API calls could fail. We only retry integration setup if *all* of the initial
         # API calls fail:
         raise ConfigEntryNotReady()
+
+    # Once we've successfully authenticated, we re-enable client request retries:
+    client.enable_request_retries()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinators

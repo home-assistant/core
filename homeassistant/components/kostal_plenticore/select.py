@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SELECT_SETTINGS_DATA
@@ -19,15 +20,21 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add kostal plenticore Select widget."""
     plenticore: Plenticore = hass.data[DOMAIN][entry.entry_id]
+    select_data_update_coordinator = SelectDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        "Settings Data",
+        timedelta(seconds=30),
+        plenticore,
+    )
 
     async_add_entities(
         PlenticoreDataSelect(
-            hass=hass,
-            plenticore=plenticore,
+            select_data_update_coordinator,
             entry_id=entry.entry_id,
             platform_name=entry.title,
             device_class="kostal_plenticore__battery",
@@ -45,12 +52,11 @@ async def async_setup_entry(
 
 
 class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
-    """Representation of a Plenticore Switch."""
+    """Representation of a Plenticore Select."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        plenticore: Plenticore,
+        coordinator,
         entry_id: str,
         platform_name: str,
         device_class: str | None,
@@ -63,17 +69,8 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         device_info: DeviceInfo,
         unique_id: str,
     ) -> None:
-        """Create a new switch Entity for Plenticore process data."""
-        super().__init__(
-            coordinator=SelectDataUpdateCoordinator(
-                hass,
-                _LOGGER,
-                "Select Data",
-                timedelta(seconds=30),
-                plenticore,
-            )
-        )
-        self.plenticore = plenticore
+        """Create a new Select Entity for Plenticore process data."""
+        super().__init__(coordinator)
         self.entry_id = entry_id
         self.platform_name = platform_name
         self._attr_device_class = device_class
@@ -90,19 +87,12 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        is_available = (
+        return (
             super().available
             and self.coordinator.data is not None
             and self.module_id in self.coordinator.data
             and self.data_id in self.coordinator.data[self.module_id]
         )
-
-        if is_available:
-            self._attr_current_option = self.coordinator.data[self.module_id][
-                self.data_id
-            ]
-
-        return is_available
 
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
@@ -127,3 +117,11 @@ class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):
         if option != "None":
             await self.coordinator.async_write_data(self.module_id, {option: "1"})
         self.async_write_ha_state()
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        if self.available:
+            return self.coordinator.data[self.module_id][self.data_id]
+
+        return None

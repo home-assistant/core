@@ -5,7 +5,7 @@ import pytest
 import respx
 
 from homeassistant import data_entry_flow
-from homeassistant.components import zeroconf
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
     CONF_EVENTS,
@@ -16,7 +16,6 @@ from homeassistant.components.axis.const import (
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_IGNORE,
@@ -256,11 +255,11 @@ async def test_reauth_flow_update_configuration(hass):
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: f"axis-{MAC}",
-                IP_ADDRESS: DEFAULT_HOST,
-                MAC_ADDRESS: MAC,
-            },
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip=DEFAULT_HOST,
+                macaddress=MAC,
+            ),
         ),
         (
             SOURCE_SSDP,
@@ -347,11 +346,11 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: f"axis-{MAC}",
-                IP_ADDRESS: DEFAULT_HOST,
-                MAC_ADDRESS: MAC,
-            },
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip=DEFAULT_HOST,
+                macaddress=MAC,
+            ),
         ),
         (
             SOURCE_SSDP,
@@ -393,11 +392,11 @@ async def test_discovered_device_already_configured(
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: f"axis-{MAC}",
-                IP_ADDRESS: "2.3.4.5",
-                MAC_ADDRESS: MAC,
-            },
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip="2.3.4.5",
+                macaddress=MAC,
+            ),
             80,
         ),
         (
@@ -463,11 +462,11 @@ async def test_discovery_flow_updated_configuration(
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: "",
-                IP_ADDRESS: "",
-                MAC_ADDRESS: "01234567890",
-            },
+            dhcp.DhcpServiceInfo(
+                hostname="",
+                ip="",
+                macaddress="01234567890",
+            ),
         ),
         (
             SOURCE_SSDP,
@@ -505,7 +504,11 @@ async def test_discovery_flow_ignore_non_axis_device(
     [
         (
             SOURCE_DHCP,
-            {HOSTNAME: f"axis-{MAC}", IP_ADDRESS: "169.254.3.4", MAC_ADDRESS: MAC},
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip="169.254.3.4",
+                macaddress=MAC,
+            ),
         ),
         (
             SOURCE_SSDP,
