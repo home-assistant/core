@@ -189,5 +189,4 @@ class IPPUptimeSensor(IPPSensor):
     @property
     def native_value(self) -> datetime:
         """Return the state of the sensor."""
-        uptime = utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
-        return uptime
+        return utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
