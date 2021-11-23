@@ -700,7 +700,6 @@ async def test_add_node(
     msg = await ws_client.receive_json()
     assert not msg["success"]
 
-    # Even though inclusion fails, provision_smart_start_node should be called
     assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
