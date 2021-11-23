@@ -635,6 +635,7 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
         ("XBMC Foundation", "Kodi"),
         ("Samsung", "Smart TV"),
         ("LG Electronics.", "LG TV"),
+        ("Royal Philips Electronics", "Philips TV DMR"),
     ]:
         discovery = dict(MOCK_DISCOVERY)
         discovery[ssdp.ATTR_UPNP_MANUFACTURER] = manufacturer

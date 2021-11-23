@@ -478,6 +478,11 @@ def _is_ignored_device(discovery_info: Mapping[str, Any]) -> bool:
     if manufacturer.startswith("xbmc") or model == "kodi":
         # kodi
         return True
+    if "philips" in manufacturer and "tv" in model:
+        # philips_js
+        # These TVs don't have a stable UDN, so also get discovered as a new
+        # device every time they are turned on.
+        return True
     if manufacturer.startswith("samsung") and "tv" in model:
         # samsungtv
         return True
