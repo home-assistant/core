@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
+from python_awair.air_data import AirData
 from python_awair.devices import AwairDevice
 
 from homeassistant.components.sensor import SensorEntityDescription
@@ -134,4 +135,4 @@ class AwairResult:
     """Wrapper class to hold an awair device and set of air data."""
 
     device: AwairDevice
-    air_data: dict
+    air_data: AirData
