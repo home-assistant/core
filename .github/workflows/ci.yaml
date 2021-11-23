@@ -679,6 +679,14 @@ jobs:
         id: integrations
         with:
           filters: .integration_paths.yaml
+      - name: Determine integration tests to run
+        id: tests
+        run: |
+          integrations=$(echo "${{ needs.changes.outputs.integrations }}" | | jq -cSr '. | join(" ")')
+          echo "::set-output name=integrations::$(for integration in $integrations; do [[ -d "tests/components/${integration}" ]] && echo "${integration}: homeassistant/components/${integration}"; done)"
+      - name: Test
+        run: |
+          tests/components/{${{ steps.tests.outputs.integrations }}}
 
   pytest-full:
     if: ${{ needs.changes.outputs.core == 'true' }}
@@ -760,6 +768,7 @@ jobs:
     if: ${{ needs.changes.outputs.core == 'false' }}
     runs-on: ubuntu-latest
     needs:
+      - changes
       - gen-requirements-all
       - hassfest
       - lint-bandit
