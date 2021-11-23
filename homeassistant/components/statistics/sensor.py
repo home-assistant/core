@@ -526,11 +526,10 @@ class StatisticsSensor(SensorEntity):
         return STATE_UNKNOWN
 
     def _stat_change_second(self):
-        if len(self.states) <= 1:
-            return STATE_UNKNOWN
-        age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
-        if age_range_seconds > 0:
-            return (self.states[-1] - self.states[0]) / age_range_seconds
+        if len(self.states) > 1:
+            age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
+            if age_range_seconds > 0:
+                return (self.states[-1] - self.states[0]) / age_range_seconds
         return STATE_UNKNOWN
 
     def _stat_count(self):
