@@ -6,7 +6,6 @@ from dataclasses import dataclass
 import logging
 from typing import cast
 
-from bimmer_connected.const import SERVICE_STATUS
 from bimmer_connected.vehicle import ConnectedDriveVehicle
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -58,7 +57,6 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         icon="mdi:ev-station",
         value=lambda x, y: x.value,
     ),
-    # No icon as this is dealt with directly as a special case in icon()
     "charging_level_hv": BMWSensorEntityDescription(
         key="charging_level_hv",
         unit_metric=PERCENTAGE,
@@ -129,12 +127,6 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
 }
 
 
-DEFAULT_BMW_DESCRIPTION = BMWSensorEntityDescription(
-    key="",
-    entity_registry_enabled_default=True,
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -148,17 +140,13 @@ async def async_setup_entry(
     entities: list[BMWConnectedDriveSensor] = []
 
     for vehicle in account.account.vehicles:
-        for service in vehicle.available_state_services:
-            if service == SERVICE_STATUS:
-                entities.extend(
-                    [
-                        BMWConnectedDriveSensor(
-                            account, vehicle, description, unit_system
-                        )
-                        for attribute_name in vehicle.available_attributes
-                        if (description := SENSOR_TYPES.get(attribute_name))
-                    ]
-                )
+        entities.extend(
+            [
+                BMWConnectedDriveSensor(account, vehicle, description, unit_system)
+                for attribute_name in vehicle.available_attributes
+                if (description := SENSOR_TYPES.get(attribute_name))
+            ]
+        )
 
     async_add_entities(entities, True)
 
@@ -174,19 +162,10 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
         vehicle: ConnectedDriveVehicle,
         description: BMWSensorEntityDescription,
         unit_system: UnitSystem,
-        service: str | None = None,
     ) -> None:
         """Initialize BMW vehicle sensor."""
         super().__init__(account, vehicle)
         self.entity_description = description
-
-        self._service = service
-        if service:
-            self._attr_name = f"{vehicle.name} {service.lower()}_{description.key}"
-            self._attr_unique_id = f"{vehicle.vin}-{service.lower()}-{description.key}"
-        else:
-            self._attr_name = f"{vehicle.name} {description.key}"
-            self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
         if unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL:
             self._attr_native_unit_of_measurement = description.unit_imperial
