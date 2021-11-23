@@ -1,6 +1,7 @@
 """Config flow for Samsung TV."""
 from __future__ import annotations
 
+from functools import partial
 import socket
 from types import MappingProxyType
 from typing import Any
@@ -167,7 +168,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._udn = _strip_uuid(dev_info.get("udn", info["id"]))
         if mac := mac_from_device_info(info):
             self._mac = mac
-        elif mac := getmac.get_mac_address(ip=self._host):
+        elif mac := await self.hass.async_add_executor_job(
+            partial(getmac.get_mac_address, ip=self._host)
+        ):
             self._mac = mac
         self._device_info = info
         return True
