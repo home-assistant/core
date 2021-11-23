@@ -176,8 +176,7 @@ class SynoDSMInfoSensor(SynoDSMSensor):
         if self.entity_description.key == "uptime":
             # reboot happened or entity creation
             if self._previous_uptime is None or self._previous_uptime > attr:
-                last_boot = utcnow() - timedelta(seconds=attr)
-                self._last_boot = last_boot.replace(microsecond=0)
+                self._last_boot = utcnow() - timedelta(seconds=attr)
 
             self._previous_uptime = attr
             return self._last_boot
