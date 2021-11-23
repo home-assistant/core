@@ -4,10 +4,11 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from regenmaschine.errors import RainMachineError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import zeroconf
 from homeassistant.components.rainmachine import CONF_ZONE_RUN_TIME, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -68,6 +69,68 @@ async def test_invalid_password(hass):
         await hass.async_block_till_done()
 
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+
+@pytest.mark.parametrize(
+    "platform,entity_name,entity_id,old_unique_id,new_unique_id",
+    [
+        (
+            "binary_sensor",
+            "Home Flow Sensor",
+            "binary_sensor.home_flow_sensor",
+            "60e32719b6cf_flow_sensor",
+            "60:e3:27:19:b6:cf_flow_sensor",
+        ),
+        (
+            "switch",
+            "Home Landscaping",
+            "switch.home_landscaping",
+            "60e32719b6cf_RainMachineZone_1",
+            "60:e3:27:19:b6:cf_zone_1",
+        ),
+    ],
+)
+async def test_migrate_1_2(
+    hass, platform, entity_name, entity_id, old_unique_id, new_unique_id
+):
+    """Test migration from version 1 to 2 (consistent unique IDs)."""
+    conf = {
+        CONF_IP_ADDRESS: "192.168.1.100",
+        CONF_PASSWORD: "password",
+        CONF_PORT: 8080,
+        CONF_SSL: True,
+    }
+
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="aa:bb:cc:dd:ee:ff", data=conf)
+    entry.add_to_hass(hass)
+
+    ent_reg = er.async_get(hass)
+
+    # Create entity RegistryEntry using old unique ID format:
+    entity_entry = ent_reg.async_get_or_create(
+        platform,
+        DOMAIN,
+        old_unique_id,
+        suggested_object_id=entity_name,
+        config_entry=entry,
+        original_name=entity_name,
+    )
+    assert entity_entry.entity_id == entity_id
+    assert entity_entry.unique_id == old_unique_id
+
+    with patch(
+        "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.rainmachine.config_flow.Client",
+        return_value=_get_mock_client(),
+    ):
+        await setup.async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    # Check that new RegistryEntry is using new unique ID format
+    entity_entry = ent_reg.async_get(entity_id)
+    assert entity_entry.unique_id == new_unique_id
+    assert ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id) is None
 
 
 async def test_options_flow(hass):
