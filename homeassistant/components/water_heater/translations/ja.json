@@ -8,7 +8,9 @@
     "state": {
         "_": {
             "eco": "\u30a8\u30b3",
+            "electric": "\u30a8\u30ec\u30af\u30c8\u30ea\u30c3\u30af",
             "gas": "\u30ac\u30b9",
+            "heat_pump": "\u30d2\u30fc\u30c8\u30dd\u30f3\u30d7",
             "off": "\u30aa\u30d5",
             "performance": "\u30d1\u30d5\u30a9\u30fc\u30de\u30f3\u30b9"
         }

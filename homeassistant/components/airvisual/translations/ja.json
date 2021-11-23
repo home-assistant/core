@@ -6,7 +6,9 @@
         "step": {
             "geography_by_coords": {
                 "data": {
-                    "api_key": "API\u30ad\u30fc"
+                    "api_key": "API\u30ad\u30fc",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d4c\u5ea6"
                 },
                 "description": "AirVisual cloud API\u3092\u4f7f\u7528\u3057\u3066\u3001\u7def\u5ea6/\u7d4c\u5ea6\u3092\u76e3\u8996\u3057\u307e\u3059\u3002",
                 "title": "Geography\u306e\u8a2d\u5b9a"

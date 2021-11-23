@@ -1,6 +1,8 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_carbon_dioxide": "\u73fe\u5728\u306e {entity_name} \u4e8c\u9178\u5316\u70ad\u7d20\u6fc3\u5ea6\u30ec\u30d9\u30eb",
+            "is_carbon_monoxide": "\u73fe\u5728\u306e {entity_name} \u4e00\u9178\u5316\u70ad\u7d20\u6fc3\u5ea6\u30ec\u30d9\u30eb",
             "is_frequency": "\u73fe\u5728\u306e {entity_name} \u983b\u5ea6(frequency)",
             "is_gas": "\u73fe\u5728\u306e {entity_name} \u30ac\u30b9",
             "is_nitrogen_dioxide": "\u73fe\u5728\u306e {entity_name} \u4e8c\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u30ec\u30d9\u30eb",
@@ -15,6 +17,8 @@
             "is_volatile_organic_compounds": "\u73fe\u5728\u306e {entity_name} \u63ee\u767a\u6027\u6709\u6a5f\u5316\u5408\u7269\u306e\u6fc3\u5ea6\u30ec\u30d9\u30eb"
         },
         "trigger_type": {
+            "carbon_dioxide": "{entity_name} \u4e8c\u9178\u5316\u70ad\u7d20\u6fc3\u5ea6\u306e\u5909\u5316",
+            "carbon_monoxide": "{entity_name} \u4e00\u9178\u5316\u70ad\u7d20\u6fc3\u5ea6\u306e\u5909\u5316",
             "frequency": "{entity_name} \u983b\u5ea6(frequency)\u306e\u5909\u66f4",
             "gas": "{entity_name} \u30ac\u30b9\u306e\u5909\u66f4",
             "nitrogen_dioxide": "{entity_name} \u4e8c\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u306e\u5909\u5316",
