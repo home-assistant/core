@@ -102,7 +102,6 @@ SENSOR_TYPES: tuple[PiHoleSensorEntityDescription, ...] = (
 class PiHoleBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes PiHole binary sensor entity."""
 
-    icon: str = "mdi:pi-hole"
     version_current: str = ""
     version_latest: str = ""
     version_update: str = ""
@@ -120,7 +119,6 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="web_update_available",
         name="Web Update Available",
-        icon="mdi:update",
         device_class=DEVICE_CLASS_UPDATE,
         version_current="web_current",
         version_latest="web_latest",
@@ -129,7 +127,6 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="ftl_update_available",
         name="FTL Update Available",
-        icon="mdi:update",
         device_class=DEVICE_CLASS_UPDATE,
         version_current="FTL_current",
         version_latest="FTL_latest",
