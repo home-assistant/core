@@ -321,9 +321,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress="00:00:00:00:00:00", hostname="mock_hostname"
-            ),
+            data=dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress="00:00:00:00:00:00"),
         )
         await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
@@ -333,9 +331,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
-                ip="1.2.3.5", macaddress="00:00:00:00:00:01", hostname="mock_hostname"
-            ),
+            data=dhcp.DhcpServiceInfo(ip="1.2.3.5", macaddress="00:00:00:00:00:01"),
         )
         await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
