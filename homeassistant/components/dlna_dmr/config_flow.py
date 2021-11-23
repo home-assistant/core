@@ -236,6 +236,10 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="already_in_progress")
 
+        # Abort if another config entry has the same location, in case the
+        # device doesn't have a static and unique UDN (breaking the UPnP spec).
+        self._async_abort_entries_match({CONF_URL: self._location})
+
         self.context["title_placeholders"] = {"name": self._name}
 
         return await self.async_step_confirm()
@@ -477,6 +481,11 @@ def _is_ignored_device(discovery_info: Mapping[str, Any]) -> bool:
 
     if manufacturer.startswith("xbmc") or model == "kodi":
         # kodi
+        return True
+    if "philips" in manufacturer and "tv" in model:
+        # philips_js
+        # These TVs don't have a stable UDN, so also get discovered as a new
+        # device every time they are turned on.
         return True
     if manufacturer.startswith("samsung") and "tv" in model:
         # samsungtv
