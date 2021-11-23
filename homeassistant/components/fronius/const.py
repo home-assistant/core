@@ -3,9 +3,6 @@ from typing import Final, NamedTuple, TypedDict
 
 from homeassistant.helpers.entity import DeviceInfo
 
-DEFAULT_UPDATE_INTERVAL = 60
-DEFAULT_UPDATE_INTERVAL_LOGGER = 60 * 60
-DEFAULT_UPDATE_INTERVAL_POWER_FLOW = 10
 DOMAIN: Final = "fronius"
 
 SolarNetId = str
