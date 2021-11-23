@@ -40,8 +40,7 @@ PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Screenlogic component."""
-    domain_data = hass.data[DOMAIN] = {}
-    domain_data[DISCOVERED_GATEWAYS] = await async_discover_gateways_by_unique_id(hass)
+    hass.data[DOMAIN] = {}
     return True
 
 
@@ -67,7 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
-    entry.async_on_unload(coordinator.gateway.async_disconnect)
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
@@ -80,6 +78,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
+        coordinator = hass.data[DOMAIN][entry.entry_id]
+        await coordinator.gateway.async_disconnect()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     async_unload_screenlogic_services(hass)
@@ -95,8 +95,10 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 async def async_get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
     """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id
-    # Attempt to find named gateway in discovered gateways to follow IP changes
-    discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
+    # Attempt to rediscover gateway to follow IP changes
+    discovered_gateways = hass.data[DOMAIN][
+        DISCOVERED_GATEWAYS
+    ] = await async_discover_gateways_by_unique_id(hass)
     if mac in discovered_gateways:
         connect_info = discovered_gateways[mac]
     else:
