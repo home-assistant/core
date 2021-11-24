@@ -22,31 +22,48 @@ import logging
 
 import async_timeout
 from rtsp_to_webrtc.client import Client
-from rtsp_to_webrtc.exceptions import ClientError
+from rtsp_to_webrtc.exceptions import ClientError, ResponseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "rtsptowebrtc"
 DATA_SERVER_URL = "server_url"
+DATA_CLIENT = "client"
+DATA_UNAVAILABLE = "unavailable"
 TIMEOUT = 10
 RTSP_PREFIXES = {"rtsp://", "rtsps://"}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RTSPtoWebRTC from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
 
     if DATA_SERVER_URL not in entry.data:
         _LOGGER.error("Invalid ConfigEntry for webrtc, missing '%s'", DATA_SERVER_URL)
         return False
 
-    hass.data[DOMAIN] = Client(
-        async_get_clientsession(hass), entry.data[DATA_SERVER_URL]
-    )
+    client = Client(async_get_clientsession(hass), entry.data[DATA_SERVER_URL])
+    try:
+        async with async_timeout.timeout(TIMEOUT):
+            await client.heartbeat()
+    except ResponseError as err:
+        if DATA_UNAVAILABLE not in hass.data[DOMAIN]:
+            _LOGGER.error("RTSPtoWebRTC server returned failure: %s", err)
+            hass.data[DOMAIN][DATA_UNAVAILABLE] = True
+        raise ConfigEntryNotReady from err
+    except (TimeoutError, ClientError) as err:
+        if DATA_UNAVAILABLE not in hass.data[DOMAIN]:
+            _LOGGER.error("RTSPtoWebRTC server communication failure: %s", err)
+            hass.data[DOMAIN][DATA_UNAVAILABLE] = True
+        raise ConfigEntryNotReady from err
+
+    hass.data[DOMAIN].pop(DATA_UNAVAILABLE, None)
+    hass.data[DOMAIN][DATA_CLIENT] = client
 
     return True
 
@@ -76,7 +93,7 @@ async def async_offer_for_stream_source(
     """
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError(f"'{DOMAIN}' integration is not set up.")
-    client: Client = hass.data[DOMAIN]
+    client: Client = hass.data[DOMAIN][DATA_CLIENT]
     try:
         async with async_timeout.timeout(TIMEOUT):
             return await client.offer(offer_sdp, stream_source)

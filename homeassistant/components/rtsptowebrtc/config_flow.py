@@ -60,8 +60,6 @@ class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(DOMAIN)
         return self.async_create_entry(
-            title="RTSPtoWebRTC",
-            data={
-                DATA_SERVER_URL: user_input[DATA_SERVER_URL],
-            },
+            title=url,
+            data={DATA_SERVER_URL: url},
         )
