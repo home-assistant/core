@@ -52,17 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with async_timeout.timeout(TIMEOUT):
             await client.heartbeat()
     except ResponseError as err:
-        if DATA_UNAVAILABLE not in hass.data[DOMAIN]:
-            _LOGGER.error("RTSPtoWebRTC server returned failure: %s", err)
-            hass.data[DOMAIN][DATA_UNAVAILABLE] = True
         raise ConfigEntryNotReady from err
     except (TimeoutError, ClientError) as err:
-        if DATA_UNAVAILABLE not in hass.data[DOMAIN]:
-            _LOGGER.error("RTSPtoWebRTC server communication failure: %s", err)
-            hass.data[DOMAIN][DATA_UNAVAILABLE] = True
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN].pop(DATA_UNAVAILABLE, None)
     hass.data[DOMAIN][DATA_CLIENT] = client
 
     return True
