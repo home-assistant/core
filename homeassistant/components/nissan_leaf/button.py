@@ -35,6 +35,7 @@ class LeafChargingButton(LeafEntity, ButtonEntity):
 
     @property
     def available(self):
+        """Button availability."""
         return self.car.data[DATA_CHARGING] is not None
 
     async def async_press(self):
@@ -54,6 +55,7 @@ class LeafUpdateButton(LeafEntity, ButtonEntity):
 
     @property
     def available(self):
+        """Button availability."""
         return self.car.next_update is not None
 
     async def async_press(self):
