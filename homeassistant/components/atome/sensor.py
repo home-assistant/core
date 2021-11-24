@@ -70,17 +70,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def format_receive_value(value):
     """Format if pb then return None."""
-    if value == None or value == STATE_UNKNOWN:
+    if value is None or value == STATE_UNKNOWN:
         return None
-    else:
-        return float(value)
+    return float(value)
 
 
 async def async_create_period_coordinator(
-    hass, atome_client, name, sensor_type,scan_interval
+    hass, atome_client, name, sensor_type, scan_interval
 ):
     """Create coordinator for period data."""
-    atome_period_end_point = AtomePeriodServerEndPoint( atome_client, name, sensor_type)
+    atome_period_end_point = AtomePeriodServerEndPoint(atome_client, name, sensor_type)
 
     async def async_period_update_data():
         data = await hass.async_add_executor_job(atome_period_end_point.retrieve_data)
@@ -161,6 +160,8 @@ class AtomeGenericServerEndPoint:
 
 
 class AtomeLiveData:
+    """Class used to store Live Data."""
+
     def __init__(self):
         """Initialize the data."""
         self.live_power = None
@@ -210,6 +211,8 @@ class AtomeLiveServerEndPoint(AtomeGenericServerEndPoint):
 
 
 class AtomePeriodData:
+    """Class used to store period Data."""
+
     def __init__(self):
         """Initialize the data."""
         self.usage = None
@@ -261,6 +264,7 @@ class AtomeGenericSensor(CoordinatorEntity, SensorEntity):
         self._name = name
         self._period_type = period_type
 
+    @property
     def should_poll(self):
         return True
 
@@ -360,6 +364,6 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
         new_period_data = self.coordinator.data
         if new_period_data.usage and self._period_data.usage:
             # Take a margin to avoid storage of previous data
-            if ((new_period_data.usage - self._period_data.usage) < (-0.1)):
+            if (new_period_data.usage - self._period_data.usage) < (-0.1):
                 self._previous_period_data = self._period_data
         self._period_data = new_period_data
