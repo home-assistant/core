@@ -1367,7 +1367,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self, discovery_info: MqttServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by MQTT discovery."""
-        return await self.async_step_discovery(cast(dict, discovery_info))
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_ssdp(
         self, discovery_info: DiscoveryInfoType
