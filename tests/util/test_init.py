@@ -98,6 +98,22 @@ def test_convert():
     assert util.convert(object, int, 1) == 1
 
 
+def test_convert_to_int():
+    """Test convert of bytes and numbers to int."""
+    assert util.convert_to_int(b"\x9b\xc2") == 39874
+    assert util.convert_to_int(b"") is None
+    assert util.convert_to_int(b"\x9b\xc2", 10) == 39874
+    assert util.convert_to_int(b"\xc2\x9b", little_endian=True) == 39874
+    assert util.convert_to_int(b"\xc2\x9b", 10, little_endian=True) == 39874
+    assert util.convert_to_int("abc", 10) == 10
+    assert util.convert_to_int("11.0", 10) == 10
+    assert util.convert_to_int("12", 10) == 12
+    assert util.convert_to_int("\xc2\x9b", 10) == 10
+    assert util.convert_to_int(None, 10) == 10
+    assert util.convert_to_int(None) is None
+    assert util.convert_to_int("NOT A NUMBER", 1) == 1
+
+
 def test_ensure_unique_string():
     """Test ensure_unique_string."""
     assert util.ensure_unique_string("Beer", ["Beer", "Beer_2"]) == "Beer_3"
