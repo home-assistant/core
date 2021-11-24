@@ -18,8 +18,8 @@ from homeassistant.const import (
     CONF_COMMAND_STATE,
     CONF_NAME,
     CONF_PIN,
-    HTTP_OK,
     STATE_LOCKED,
+    STATE_OK,
     STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant
@@ -108,7 +108,7 @@ class CVeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
         result = self.vera_device.set_new_pin(
             name=kwargs[CONF_NAME], pin=kwargs[CONF_PIN]
         )
-        if result.status_code == HTTP_OK:
+        if result.status_code == STATE_OK:
             self._cmd_status = "Removed"
         else:
             self._cmd_status = result.text
@@ -119,7 +119,7 @@ class CVeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
         """Clear pin on the device."""
         _LOGGER.debug("calling veralock.celarpin")
         result = self.vera_device.clear_slot_pin(slot=kwargs["slot"])
-        if result.status_code == HTTP_OK:
+        if result.status_code == STATE_OK:
             self._cmd_status = "Removed"
         else:
             self._cmd_status = result.text
