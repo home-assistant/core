@@ -267,6 +267,10 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             # extract host/port from ssdp_location
             netloc = urlparse(discovery_info["ssdp_location"]).netloc.split(":")
+            self._async_abort_entries_match(
+                {CONF_HOST: netloc[0], CONF_PORT: int(netloc[1])}
+            )
+
             try:
                 status = await get_status(self.hass, netloc[0], int(netloc[1]))
             except CannotConnect:
