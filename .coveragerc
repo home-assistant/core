@@ -1136,6 +1136,7 @@ omit =
     homeassistant/components/tuya/__init__.py
     homeassistant/components/tuya/base.py
     homeassistant/components/tuya/binary_sensor.py
+    homeassistant/components/tuya/button.py
     homeassistant/components/tuya/camera.py
     homeassistant/components/tuya/climate.py
     homeassistant/components/tuya/const.py
