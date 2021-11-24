@@ -591,11 +591,12 @@ async def test_ssdp_already_configured(
 
 async def test_import_legacy(hass: HomeAssistant, remote: Mock, no_mac_address: Mock):
     """Test importing from yaml with hostname."""
+
+    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
         return_value="fake_host",
     ):
-        no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
