@@ -6,14 +6,18 @@ import pytest
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
-    SERVICE_UNLOCK,
     SERVICE_OPEN,
+    SERVICE_UNLOCK,
     STATE_LOCKED,
     STATE_UNLOCKED,
-    SUPPORT_OPEN
+    SUPPORT_OPEN,
 )
 from homeassistant.components.mqtt.lock import MQTT_LOCK_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+)
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -338,7 +342,9 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(hass, mqtt_mock
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(hass, mqtt_mock):
+async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
+    hass, mqtt_mock
+):
     """Test open function of the lock without state topic."""
     assert await async_setup_component(
         hass,
