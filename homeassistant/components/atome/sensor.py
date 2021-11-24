@@ -95,6 +95,7 @@ async def async_create_period_coordinator(
     await period_coordinator.async_refresh()
     return period_coordinator
 
+
 async def async_create_live_coordinator(hass, atome_client):
     """Create coordinator for live data."""
     atome_live_end_point = AtomeLiveServerEndPoint(atome_client)
@@ -112,6 +113,7 @@ async def async_create_live_coordinator(hass, atome_client):
     )
     await live_coordinator.async_refresh()
     return live_coordinator
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Atome sensor."""
