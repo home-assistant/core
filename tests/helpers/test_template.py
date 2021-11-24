@@ -1148,6 +1148,8 @@ def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone
     freezer = freeze_time(now)
     freezer.start()
 
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
     timezone = dt_util.get_time_zone(timezone_str)
     dt_util.set_default_time_zone(timezone)
 
@@ -1179,6 +1181,7 @@ def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone
         template.Template("{{ today_at('bad') }}", hass).async_render()
 
     freezer.stop()
+    dt_util.set_default_time_zone(original_tz)
 
 
 @patch(
