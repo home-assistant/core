@@ -131,6 +131,7 @@ homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.tile.*
 homeassistant.components.tplink.*
+homeassistant.components.tolo.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
 homeassistant.components.tts.*
