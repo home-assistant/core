@@ -176,7 +176,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "config_entries": ["1234"],
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
-                    "disabled_by": device_registry.DISABLED_USER,
+                    "disabled_by": device_registry.DeviceEntryDisabler.USER,
                     "entry_type": device_registry.DeviceEntryType.SERVICE,
                     "id": "abcdefghijklm",
                     "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
