@@ -149,8 +149,7 @@ class GraphiteFeeder(threading.Thread):
     def run(self):
         """Run the process to export the data."""
         while True:
-            event = self._queue.get()
-            if event == self._quit_object:
+            if (event := self._queue.get()) == self._quit_object:
                 _LOGGER.debug("Event processing thread stopped")
                 self._queue.task_done()
                 return

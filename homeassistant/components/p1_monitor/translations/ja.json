@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "name": "\u540d\u524d"
+                },
+                "description": "P1 Monitor\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u3066\u3001Home Assistant\u3068\u9023\u643a\u3059\u308b\u3088\u3046\u306b\u3057\u307e\u3059\u3002"
+            }
+        }
+    }
+}

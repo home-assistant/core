@@ -29,7 +29,7 @@
             },
             "plm": {
                 "data": {
-                    "device": "Ruta del port USB del dispositiu"
+                    "device": "Ruta del dispositiu USB"
                 },
                 "description": "Configura el m\u00f2dem Insteon PowerLink (PLM).",
                 "title": "Insteon PLM"

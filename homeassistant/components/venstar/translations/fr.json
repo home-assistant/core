@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "password": "Mot de passe",
+                    "pin": "Code PIN",
+                    "ssl": "Utilise un certificat SSL",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

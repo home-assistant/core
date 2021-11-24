@@ -975,10 +975,18 @@ async def test_discovery_removal_humidifier(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_humidifier(hass, mqtt_mock, caplog):
     """Test update of discovered humidifier."""
-    data1 = '{ "name": "Beer", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
-    data2 = '{ "name": "Milk", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
+    config1 = {
+        "name": "Beer",
+        "command_topic": "test_topic",
+        "target_humidity_command_topic": "test-topic2",
+    }
+    config2 = {
+        "name": "Milk",
+        "command_topic": "test_topic",
+        "target_humidity_command_topic": "test-topic2",
+    }
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, humidifier.DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, humidifier.DOMAIN, config1, config2
     )
 
 

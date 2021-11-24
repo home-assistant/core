@@ -1,0 +1,13 @@
+{
+    "domain": "amberelectric",
+    "name": "Amber Electric",
+    "documentation": "https://www.home-assistant.io/integrations/amberelectric",
+    "config_flow": true,
+    "codeowners": [
+        "@madpilot"
+    ],
+    "requirements": [
+        "amberelectric==1.0.3"
+    ],
+    "iot_class": "cloud_polling"
+}

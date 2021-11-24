@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "address": "IP\u30a2\u30c9\u30ec\u30b9\u307e\u305f\u306f\u30c9\u30e1\u30a4\u30f3\u3001\u30b7\u30ea\u30a2\u30eb\u3067\u63a5\u7d9a\u3059\u308b\u5834\u5408\u306f\u30b7\u30ea\u30a2\u30eb\u30dd\u30fc\u30c8\u3002",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "protocol": "\u30d7\u30ed\u30c8\u30b3\u30eb",
+                    "temperature_unit": "ElkM1\u304c\u4f7f\u7528\u3059\u308b\u6e29\u5ea6\u5358\u4f4d\u3002",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                }
+            }
+        }
+    }
+}

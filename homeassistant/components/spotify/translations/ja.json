@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "\u8a8d\u8a3cURL\u306e\u751f\u6210\u304c\u30bf\u30a4\u30e0\u30a2\u30a6\u30c8\u3057\u307e\u3057\u305f\u3002"
+        },
+        "create_entry": {
+            "default": "Spotify\u306e\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f\u3002"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "\u8a8d\u8a3c\u65b9\u6cd5\u306e\u9078\u629e"
+            }
+        }
+    }
+}

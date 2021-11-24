@@ -1,5 +1,12 @@
 """Support for Eight Sleep sensors."""
+from __future__ import annotations
+
+from collections.abc import Mapping
 import logging
+from typing import Any
+
+from pyeight.eight import EightSleep
+from pyeight.user import EightUser
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
@@ -8,13 +15,20 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_SENSORS,
+    DATA_API,
     DATA_EIGHT,
+    DATA_HEAT,
+    DATA_USER,
     NAME_MAP,
-    EightSleepHeatEntity,
-    EightSleepUserEntity,
+    EightSleepEntity,
+    EightSleepHeatDataCoordinator,
+    EightSleepUserDataCoordinator,
 )
 
 ATTR_ROOM_TEMP = "Room Temperature"
@@ -45,39 +59,56 @@ ATTR_FIT_WAKEUP_SCORE = "Fitness Wakeup Score"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType = None,
+) -> None:
     """Set up the eight sleep sensors."""
     if discovery_info is None:
         return
 
     name = "Eight"
     sensors = discovery_info[CONF_SENSORS]
-    eight = hass.data[DATA_EIGHT]
+    eight = hass.data[DATA_EIGHT][DATA_API]
+    heat_coordinator: EightSleepHeatDataCoordinator = hass.data[DATA_EIGHT][DATA_HEAT]
+    user_coordinator: EightSleepUserDataCoordinator = hass.data[DATA_EIGHT][DATA_USER]
 
     if hass.config.units.is_metric:
         units = "si"
     else:
         units = "us"
 
-    all_sensors = []
+    all_sensors: list[EightSleepEntity] = []
 
     for sensor in sensors:
         if "bed_state" in sensor:
-            all_sensors.append(EightHeatSensor(name, eight, sensor))
+            all_sensors.append(EightHeatSensor(name, heat_coordinator, eight, sensor))
         elif "room_temp" in sensor:
-            all_sensors.append(EightRoomSensor(name, eight, sensor, units))
+            all_sensors.append(
+                EightRoomSensor(name, user_coordinator, eight, sensor, units)
+            )
         else:
-            all_sensors.append(EightUserSensor(name, eight, sensor, units))
+            all_sensors.append(
+                EightUserSensor(name, user_coordinator, eight, sensor, units)
+            )
 
     async_add_entities(all_sensors, True)
 
 
-class EightHeatSensor(EightSleepHeatEntity, SensorEntity):
+class EightHeatSensor(EightSleepEntity, SensorEntity):
     """Representation of an eight sleep heat-based sensor."""
 
-    def __init__(self, name, eight, sensor):
+    def __init__(
+        self,
+        name: str,
+        coordinator: EightSleepHeatDataCoordinator,
+        eight: EightSleep,
+        sensor: str,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(eight)
+        super().__init__(coordinator, eight)
 
         self._sensor = sensor
         self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
@@ -86,7 +117,7 @@ class EightHeatSensor(EightSleepHeatEntity, SensorEntity):
 
         self._side = self._sensor.split("_")[0]
         self._userid = self._eight.fetch_userid(self._side)
-        self._usrobj = self._eight.users[self._userid]
+        self._usrobj: EightUser = self._eight.users[self._userid]
 
         _LOGGER.debug(
             "Heat Sensor: %s, Side: %s, User: %s",
@@ -96,27 +127,29 @@ class EightHeatSensor(EightSleepHeatEntity, SensorEntity):
         )
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor, if any."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str:
         """Return the unit the value is expressed in."""
         return PERCENTAGE
 
-    async def async_update(self):
-        """Retrieve latest state."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         _LOGGER.debug("Updating Heat sensor: %s", self._sensor)
         self._state = self._usrobj.heating_level
+        super()._handle_coordinator_update()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return device state attributes."""
         return {
             ATTR_TARGET_HEAT: self._usrobj.target_heating_level,
@@ -125,12 +158,19 @@ class EightHeatSensor(EightSleepHeatEntity, SensorEntity):
         }
 
 
-class EightUserSensor(EightSleepUserEntity, SensorEntity):
+class EightUserSensor(EightSleepEntity, SensorEntity):
     """Representation of an eight sleep user-based sensor."""
 
-    def __init__(self, name, eight, sensor, units):
+    def __init__(
+        self,
+        name: str,
+        coordinator: EightSleepUserDataCoordinator,
+        eight: EightSleep,
+        sensor: str,
+        units: str,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(eight)
+        super().__init__(coordinator, eight)
 
         self._sensor = sensor
         self._sensor_root = self._sensor.split("_", 1)[1]
@@ -142,7 +182,7 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
 
         self._side = self._sensor.split("_", 1)[0]
         self._userid = self._eight.fetch_userid(self._side)
-        self._usrobj = self._eight.users[self._userid]
+        self._usrobj: EightUser = self._eight.users[self._userid]
 
         _LOGGER.debug(
             "User Sensor: %s, Side: %s, User: %s",
@@ -152,17 +192,17 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         )
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor, if any."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if (
             "current_sleep" in self._sensor
@@ -177,14 +217,15 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         return None
 
     @property
-    def device_class(self):
+    def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         if "bed_temp" in self._sensor:
             return DEVICE_CLASS_TEMPERATURE
         return None
 
-    async def async_update(self):
-        """Retrieve latest state."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         _LOGGER.debug("Updating User sensor: %s", self._sensor)
         if "current" in self._sensor:
             if "fitness" in self._sensor:
@@ -208,8 +249,10 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         elif "sleep_stage" in self._sensor:
             self._state = self._usrobj.current_values["stage"]
 
+        super()._handle_coordinator_update()
+
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return device state attributes."""
         if self._attr is None:
             # Skip attributes if sensor type doesn't support
@@ -296,12 +339,19 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         return state_attr
 
 
-class EightRoomSensor(EightSleepUserEntity, SensorEntity):
+class EightRoomSensor(EightSleepEntity, SensorEntity):
     """Representation of an eight sleep room sensor."""
 
-    def __init__(self, name, eight, sensor, units):
+    def __init__(
+        self,
+        name: str,
+        coordinator: EightSleepUserDataCoordinator,
+        eight: EightSleep,
+        sensor: str,
+        units: str,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(eight)
+        super().__init__(coordinator, eight)
 
         self._sensor = sensor
         self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
@@ -311,17 +361,18 @@ class EightRoomSensor(EightSleepUserEntity, SensorEntity):
         self._units = units
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor, if any."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
 
-    async def async_update(self):
-        """Retrieve latest state."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         _LOGGER.debug("Updating Room sensor: %s", self._sensor)
         temp = self._eight.room_temperature()
         try:
@@ -331,15 +382,16 @@ class EightRoomSensor(EightSleepUserEntity, SensorEntity):
                 self._state = round((temp * 1.8) + 32, 2)
         except TypeError:
             self._state = None
+        super()._handle_coordinator_update()
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str:
         """Return the unit the value is expressed in."""
         if self._units == "si":
             return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_TEMPERATURE

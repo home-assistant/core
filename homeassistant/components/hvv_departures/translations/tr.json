@@ -5,15 +5,42 @@
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "no_results": "Sonu\u00e7 yok. Farkl\u0131 bir istasyon/adres ile deneyin"
         },
         "step": {
+            "station": {
+                "data": {
+                    "station": "\u0130stasyon/Adres"
+                },
+                "title": "\u0130stasyon/Adres Girin"
+            },
+            "station_select": {
+                "data": {
+                    "station": "\u0130stasyon/Adres"
+                },
+                "title": "\u0130stasyon/Adres Se\u00e7in"
+            },
             "user": {
                 "data": {
                     "host": "Ana Bilgisayar",
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "title": "HVV API'sine ba\u011flan\u0131n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "Sat\u0131rlar\u0131 se\u00e7in",
+                    "offset": "Uzakl\u0131k (dakika)",
+                    "real_time": "Ger\u00e7ek zamanl\u0131 verileri kullan\u0131n"
+                },
+                "description": "Bu hareket sens\u00f6r\u00fc i\u00e7in se\u00e7enekleri de\u011fi\u015ftirin",
+                "title": "Se\u00e7enekler"
             }
         }
     }

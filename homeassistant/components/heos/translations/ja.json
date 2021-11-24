@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                },
+                "description": "Heos\u30c7\u30d0\u30a4\u30b9(\u3067\u304d\u308c\u3070\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u306b\u6709\u7dda\u3067\u63a5\u7d9a\u3055\u308c\u3066\u3044\u308b\u30c7\u30d0\u30a4\u30b9)\u306e\u30db\u30b9\u30c8\u540d\u307e\u305f\u306fIP\u30a2\u30c9\u30ec\u30b9\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002",
+                "title": "Heos\u306b\u63a5\u7d9a"
+            }
+        }
+    }
+}

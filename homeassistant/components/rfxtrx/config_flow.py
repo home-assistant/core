@@ -35,7 +35,6 @@ from .binary_sensor import supported as binary_supported
 from .const import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
     CONF_REPLACE_DEVICE,
@@ -208,7 +207,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                 devices = {}
                 device = {
                     CONF_DEVICE_ID: device_id,
-                    CONF_FIRE_EVENT: user_input.get(CONF_FIRE_EVENT, False),
                     CONF_SIGNAL_REPETITIONS: user_input.get(CONF_SIGNAL_REPETITIONS, 1),
                 }
 
@@ -235,11 +233,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         device_data = self._selected_device
 
-        data_schema = {
-            vol.Optional(
-                CONF_FIRE_EVENT, default=device_data.get(CONF_FIRE_EVENT, False)
-            ): bool,
-        }
+        data_schema = {}
 
         if binary_supported(self._selected_device_object):
             if device_data.get(CONF_OFF_DELAY):
@@ -386,9 +380,8 @@ class OptionsFlow(config_entries.OptionsFlow):
     def _can_replace_device(self, entry_id):
         """Check if device can be replaced with selected device."""
         device_data = self._get_device_data(entry_id)
-        event_code = device_data[CONF_EVENT_CODE]
 
-        if event_code is not None:
+        if (event_code := device_data[CONF_EVENT_CODE]) is not None:
             rfx_obj = get_rfx_object(event_code)
             if (
                 rfx_obj.device.packettype
@@ -452,8 +445,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input is not None:
-            user_selection = user_input[CONF_TYPE]
-            if user_selection == "Serial":
+            if user_input[CONF_TYPE] == "Serial":
                 return await self.async_step_setup_serial()
 
             return await self.async_step_setup_network()

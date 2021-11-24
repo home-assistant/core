@@ -91,8 +91,7 @@ class HomeAirQualitySensor(HomeKitEntity, AirQualityEntity):
         """Return the device state attributes."""
         data = {"air_quality_text": self.air_quality_text}
 
-        voc = self.volatile_organic_compounds
-        if voc:
+        if voc := self.volatile_organic_compounds:
             data["volatile_organic_compounds"] = voc
 
         return data

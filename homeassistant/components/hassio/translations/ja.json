@@ -1,0 +1,14 @@
+{
+    "system_health": {
+        "info": {
+            "docker_version": "Docker\u306e\u30d0\u30fc\u30b8\u30e7\u30f3",
+            "healthy": "\u5143\u6c17",
+            "host_os": "\u30db\u30b9\u30c8\u30aa\u30da\u30ec\u30fc\u30c6\u30a3\u30f3\u30b0\u30b7\u30b9\u30c6\u30e0",
+            "installed_addons": "\u30a4\u30f3\u30b9\u30c8\u30fc\u30eb\u6e08\u307f\u306e\u30a2\u30c9\u30aa\u30f3",
+            "supervisor_api": "Supervisor API",
+            "supervisor_version": "Supervisor\u306e\u30d0\u30fc\u30b8\u30e7\u30f3",
+            "supported": "\u30b5\u30dd\u30fc\u30c8\u3055\u308c\u3066\u3044\u307e\u3059",
+            "version_api": "\u30d0\u30fc\u30b8\u30e7\u30f3API"
+        }
+    }
+}

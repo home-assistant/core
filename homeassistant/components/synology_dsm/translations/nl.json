@@ -39,6 +39,13 @@
                 "description": "Reden: {details}",
                 "title": "Synology DSM Verifieer de integratie opnieuw"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Synology DSM Integratie opnieuw verifi\u00ebren"
+            },
             "user": {
                 "data": {
                     "host": "Host",

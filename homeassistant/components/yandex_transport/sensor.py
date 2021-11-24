@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from aioymaps import YandexMapsRequester
+from aioymaps import CaptchaError, YandexMapsRequester
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -42,8 +42,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     routes = config[CONF_ROUTE]
 
     client_session = async_create_clientsession(hass, requote_redirect_url=False)
-    data = YandexMapsRequester(user_agent=USER_AGENT, client_session=client_session)
-    async_add_entities([DiscoverYandexTransport(data, stop_id, routes, name)], True)
+    ymaps = YandexMapsRequester(user_agent=USER_AGENT, client_session=client_session)
+    try:
+        await ymaps.set_new_session()
+    except CaptchaError as ex:
+        _LOGGER.error(
+            "%s. You may need to disable the integration for some time",
+            ex,
+        )
+        return
+    async_add_entities([DiscoverYandexTransport(ymaps, stop_id, routes, name)], True)
 
 
 class DiscoverYandexTransport(SensorEntity):
@@ -53,7 +61,6 @@ class DiscoverYandexTransport(SensorEntity):
         """Initialize sensor."""
         self.requester = requester
         self._stop_id = stop_id
-        self._routes = []
         self._routes = routes
         self._state = None
         self._name = name
@@ -63,7 +70,14 @@ class DiscoverYandexTransport(SensorEntity):
         """Get the latest data from maps.yandex.ru and update the states."""
         attrs = {}
         closer_time = None
-        yandex_reply = await self.requester.get_stop_info(self._stop_id)
+        try:
+            yandex_reply = await self.requester.get_stop_info(self._stop_id)
+        except CaptchaError as ex:
+            _LOGGER.error(
+                "%s. You may need to disable the integration for some time",
+                ex,
+            )
+            return
         try:
             data = yandex_reply["data"]
         except KeyError as key_error:
@@ -81,22 +95,35 @@ class DiscoverYandexTransport(SensorEntity):
         stop_name = data["name"]
         transport_list = data["transports"]
         for transport in transport_list:
-            route = transport["name"]
             for thread in transport["threads"]:
-                if self._routes and route not in self._routes:
-                    # skip unnecessary route info
-                    continue
                 if "Events" not in thread["BriefSchedule"]:
                     continue
+                if thread.get("noBoarding") is True:
+                    continue
                 for event in thread["BriefSchedule"]["Events"]:
-                    if "Estimated" not in event:
+                    # Railway route depends on the essential stops and
+                    # can vary over time.
+                    # City transport has the fixed name for the route
+                    if "railway" in transport["Types"]:
+                        route = " - ".join(
+                            [x["name"] for x in thread["EssentialStops"]]
+                        )
+                    else:
+                        route = transport["name"]
+
+                    if self._routes and route not in self._routes:
+                        # skip unnecessary route info
                         continue
-                    posix_time_next = int(event["Estimated"]["value"])
+                    if "Estimated" not in event and "Scheduled" not in event:
+                        continue
+
+                    departure = event.get("Estimated") or event["Scheduled"]
+                    posix_time_next = int(departure["value"])
                     if closer_time is None or closer_time > posix_time_next:
                         closer_time = posix_time_next
                     if route not in attrs:
                         attrs[route] = []
-                    attrs[route].append(event["Estimated"]["text"])
+                    attrs[route].append(departure["text"])
         attrs[STOP_NAME] = stop_name
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         if closer_time is None:

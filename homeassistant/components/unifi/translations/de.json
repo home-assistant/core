@@ -48,12 +48,6 @@
                 "description": "Konfiguriere die Ger\u00e4teverfolgung",
                 "title": "UniFi-Optionen 1/3"
             },
-            "init": {
-                "data": {
-                    "one": "eins",
-                    "other": "andere"
-                }
-            },
             "simple_options": {
                 "data": {
                     "block_client": "Clients mit Netzwerkzugriffskontrolle",

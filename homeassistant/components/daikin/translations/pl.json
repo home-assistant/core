@@ -5,6 +5,7 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "error": {
+            "api_password": "Niepoprawne uwierzytelnienie, u\u017cyj klucza API albo has\u0142a.",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
             "unknown": "Nieoczekiwany b\u0142\u0105d"

@@ -7,7 +7,7 @@ Support for uptime sensors of network clients.
 from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN, SensorEntity
-from homeassistant.const import DATA_MEGABYTES
+from homeassistant.const import DATA_MEGABYTES, ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
@@ -86,6 +86,7 @@ class UniFiBandwidthSensor(UniFiClient, SensorEntity):
 
     DOMAIN = DOMAIN
 
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
     _attr_native_unit_of_measurement = DATA_MEGABYTES
 
     @property
@@ -132,6 +133,7 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
     TYPE = UPTIME_SENSOR
 
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, client, controller):
         """Set up tracked client."""
@@ -170,8 +172,8 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
     def native_value(self) -> datetime:
         """Return the uptime of the client."""
         if self.client.uptime < 1000000000:
-            return (dt_util.now() - timedelta(seconds=self.client.uptime)).isoformat()
-        return dt_util.utc_from_timestamp(float(self.client.uptime)).isoformat()
+            return dt_util.now() - timedelta(seconds=self.client.uptime)
+        return dt_util.utc_from_timestamp(float(self.client.uptime))
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""

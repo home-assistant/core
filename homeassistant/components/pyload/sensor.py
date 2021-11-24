@@ -116,8 +116,7 @@ class PyLoadSensor(SensorEntity):
             )
             return
 
-        value = self.api.status.get(self.type)
-        if value is None:
+        if (value := self.api.status.get(self.type)) is None:
             _LOGGER.warning("Unable to locate value for %s", self.type)
             return
 

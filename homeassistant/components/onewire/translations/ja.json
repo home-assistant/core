@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "owserver": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            },
+            "user": {
+                "data": {
+                    "type": "\u63a5\u7d9a\u30bf\u30a4\u30d7"
+                },
+                "title": "1-Wire\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+            }
+        }
+    }
+}

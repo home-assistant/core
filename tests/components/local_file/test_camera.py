@@ -1,4 +1,5 @@
 """The tests for local file camera component."""
+from http import HTTPStatus
 from unittest import mock
 
 from homeassistant.components.local_file.const import DOMAIN, SERVICE_UPDATE_FILE_PATH
@@ -35,7 +36,7 @@ async def test_loading_file(hass, hass_client):
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "hello"
 
@@ -107,23 +108,23 @@ async def test_camera_content_type(hass, hass_client):
         resp_3 = await client.get("/api/camera_proxy/camera.test_svg")
         resp_4 = await client.get("/api/camera_proxy/camera.test_no_ext")
 
-    assert resp_1.status == 200
+    assert resp_1.status == HTTPStatus.OK
     assert resp_1.content_type == "image/jpeg"
     body = await resp_1.text()
     assert body == image
 
-    assert resp_2.status == 200
+    assert resp_2.status == HTTPStatus.OK
     assert resp_2.content_type == "image/png"
     body = await resp_2.text()
     assert body == image
 
-    assert resp_3.status == 200
+    assert resp_3.status == HTTPStatus.OK
     assert resp_3.content_type == "image/svg+xml"
     body = await resp_3.text()
     assert body == image
 
     # default mime type
-    assert resp_4.status == 200
+    assert resp_4.status == HTTPStatus.OK
     assert resp_4.content_type == "image/jpeg"
     body = await resp_4.text()
     assert body == image

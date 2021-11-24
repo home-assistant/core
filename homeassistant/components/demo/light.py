@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import DOMAIN
 
@@ -138,15 +139,15 @@ class DemoLight(LightEntity):
             self._features |= SUPPORT_EFFECT
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            "name": self.name,
-        }
+            name=self.name,
+        )
 
     @property
     def should_poll(self) -> bool:

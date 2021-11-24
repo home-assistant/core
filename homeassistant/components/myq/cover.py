@@ -1,6 +1,4 @@
 """Support for MyQ-Enabled Garage Doors."""
-import logging
-
 from pymyq.const import DEVICE_TYPE_GATE as MYQ_DEVICE_TYPE_GATE
 from pymyq.errors import MyQError
 
@@ -16,8 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import MyQEntity
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, MYQ_TO_HASS
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

@@ -1,6 +1,5 @@
 """Support for Samsung Printers with SyncThru web interface."""
-
-import logging
+from __future__ import annotations
 
 from pysyncthru import SyncThru, SyncthruState
 
@@ -10,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -17,8 +17,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import device_identifiers
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SYNCTHRU_STATE_PROBLEM = {
     SyncthruState.INVALID: True,
@@ -67,9 +65,13 @@ class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device information."""
-        return {"identifiers": device_identifiers(self.syncthru)}
+        if (identifiers := device_identifiers(self.syncthru)) is None:
+            return None
+        return DeviceInfo(
+            identifiers=identifiers,
+        )
 
 
 class SyncThruOnlineSensor(SyncThruBinarySensor):

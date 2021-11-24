@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -94,8 +95,12 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
 
         self._value = self._binary_sensor_property.state
 
+        if self._attr_device_class == DEVICE_CLASS_SAFETY:
+            self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+
         if element_uid.startswith("devolo.WarningBinaryFI:"):
             self._attr_device_class = DEVICE_CLASS_PROBLEM
+            self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
             self._attr_entity_registry_enabled_default = False
 
     @property

@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "not_zha_device": "\u3053\u306e\u30c7\u30d0\u30a4\u30b9\u306fzha\u30c7\u30d0\u30a4\u30b9\u3067\u306f\u3042\u308a\u307e\u305b\u3093",
+            "single_instance_allowed": "\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u5358\u4e00\u306e\u8a2d\u5b9a\u3057\u304b\u3067\u304d\u307e\u305b\u3093\u3002",
+            "usb_probe_failed": "USB\u30c7\u30d0\u30a4\u30b9\u3092\u63a2\u3057\u51fa\u3059\u3053\u3068\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "{name} \u3092\u8a2d\u5b9a\u3057\u307e\u3059\u304b\uff1f"
+            },
+            "pick_radio": {
+                "data": {
+                    "radio_type": "\u7121\u7dda\u30bf\u30a4\u30d7"
+                },
+                "description": "Zigbee\u7121\u7dda\u6a5f\u306e\u30bf\u30a4\u30d7\u3092\u9078\u3076",
+                "title": "\u7121\u7dda\u30bf\u30a4\u30d7"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "\u30dd\u30fc\u30c8\u901f\u5ea6",
+                    "flow_control": "\u30c7\u30fc\u30bf\u30d5\u30ed\u30fc\u30b3\u30f3\u30c8\u30ed\u30fc\u30eb",
+                    "path": "\u30b7\u30ea\u30a2\u30eb \u30c7\u30d0\u30a4\u30b9\u306e\u30d1\u30b9"
+                },
+                "description": "\u30dd\u30fc\u30c8\u56fa\u6709\u306e\u8a2d\u5b9a\u3092\u5165\u529b",
+                "title": "\u8a2d\u5b9a"
+            },
+            "user": {
+                "data": {
+                    "path": "\u30b7\u30ea\u30a2\u30eb \u30c7\u30d0\u30a4\u30b9\u306e\u30d1\u30b9"
+                },
+                "description": "Zigbee radio\u7528\u30b7\u30ea\u30a2\u30eb\u30dd\u30fc\u30c8\u3092\u9078\u629e",
+                "title": "ZHA"
+            }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_master_code": "\u30a2\u30e9\u30fc\u30e0 \u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30d1\u30cd\u30eb\u306e\u30de\u30b9\u30bf\u30fc\u30b3\u30fc\u30c9",
+            "title": "\u30a2\u30e9\u30fc\u30e0 \u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30d1\u30cd\u30eb\u306e\u30aa\u30d7\u30b7\u30e7\u30f3"
+        },
+        "zha_options": {
+            "title": "\u30b0\u30ed\u30fc\u30d0\u30eb\u30aa\u30d7\u30b7\u30e7\u30f3"
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "\u4e21\u65b9\u306e\u30dc\u30bf\u30f3",
+            "button_1": "1\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_2": "2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_3": "3\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_4": "4\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_5": "5\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_6": "6\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "close": "\u9589\u3058\u308b",
+            "dim_down": "\u8584\u6697\u304f\u3059\u308b",
+            "dim_up": "\u8584\u660e\u308b\u304f\u3059\u308b",
+            "left": "\u5de6",
+            "open": "\u958b\u304f",
+            "right": "\u53f3",
+            "turn_off": "\u30aa\u30d5\u306b\u3059\u308b",
+            "turn_on": "\u30aa\u30f3\u306b\u3059\u308b"
+        },
+        "trigger_type": {
+            "device_offline": "\u30c7\u30d0\u30a4\u30b9\u304c\u30aa\u30d5\u30e9\u30a4\u30f3",
+            "device_shaken": "\u30c7\u30d0\u30a4\u30b9\u304c\u63fa\u308c\u308b",
+            "device_tilted": "\u30c7\u30d0\u30a4\u30b9\u304c\u50be\u3044\u3066\u3044\u308b"
+        }
+    }
+}

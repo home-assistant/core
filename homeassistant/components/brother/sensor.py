@@ -5,6 +5,7 @@ from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,13 +33,14 @@ async def async_setup_entry(
 
     sensors = []
 
-    device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, coordinator.data.serial)},
-        "name": coordinator.data.model,
-        "manufacturer": ATTR_MANUFACTURER,
-        "model": coordinator.data.model,
-        "sw_version": getattr(coordinator.data, "firmware", None),
-    }
+    device_info = DeviceInfo(
+        configuration_url=f"http://{entry.data[CONF_HOST]}/",
+        identifiers={(DOMAIN, coordinator.data.serial)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=coordinator.data.model,
+        name=coordinator.data.model,
+        sw_version=getattr(coordinator.data, "firmware", None),
+    )
 
     for description in SENSOR_TYPES:
         if description.key in coordinator.data:

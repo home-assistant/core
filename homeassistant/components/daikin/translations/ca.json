@@ -5,6 +5,7 @@
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "error": {
+            "api_password": "Autenticaci\u00f3 inv\u00e0lida, utilitza la clau API o la contrasenya.",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat"

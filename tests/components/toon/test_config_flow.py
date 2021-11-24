@@ -1,4 +1,5 @@
 """Tests for the Toon config flow."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from toonapi import Agreement, ToonError
@@ -77,7 +78,7 @@ async def test_full_flow_implementation(
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(

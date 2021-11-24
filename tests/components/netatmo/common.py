@@ -71,6 +71,17 @@ async def fake_post_request(*args, **kwargs):
     )
 
 
+async def fake_get_image(*args, **kwargs):
+    """Return fake data."""
+    if "url" not in kwargs:
+        return "{}"
+
+    endpoint = kwargs["url"].split("/")[-1]
+
+    if endpoint in "snapshot_720.jpg":
+        return b"test stream image bytes"
+
+
 async def fake_post_request_no_data(*args, **kwargs):
     """Fake error during requesting backend data."""
     return "{}"

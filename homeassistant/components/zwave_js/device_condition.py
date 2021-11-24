@@ -14,7 +14,6 @@ from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
-from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
@@ -24,34 +23,37 @@ from .const import (
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
+    VALUE_SCHEMA,
+)
+from .device_automation_helpers import (
+    CONF_SUBTYPE,
+    CONF_VALUE_ID,
+    NODE_STATUSES,
+    get_config_parameter_value_schema,
 )
 from .helpers import (
     async_get_node_from_device_id,
     async_is_device_config_entry_not_loaded,
     check_type_schema_map,
-    get_value_state_schema,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
 )
 
-CONF_SUBTYPE = "subtype"
-CONF_VALUE_ID = "value_id"
 CONF_STATUS = "status"
 
 NODE_STATUS_TYPE = "node_status"
-NODE_STATUS_TYPES = ["asleep", "awake", "dead", "alive"]
 CONFIG_PARAMETER_TYPE = "config_parameter"
 VALUE_TYPE = "value"
 CONDITION_TYPES = {NODE_STATUS_TYPE, CONFIG_PARAMETER_TYPE, VALUE_TYPE}
 
-NODE_STATUS_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
+NODE_STATUS_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): NODE_STATUS_TYPE,
-        vol.Required(CONF_STATUS): vol.In(NODE_STATUS_TYPES),
+        vol.Required(CONF_STATUS): vol.In(NODE_STATUSES),
     }
 )
 
-CONFIG_PARAMETER_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
+CONFIG_PARAMETER_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): CONFIG_PARAMETER_TYPE,
         vol.Required(CONF_VALUE_ID): cv.string,
@@ -60,20 +62,14 @@ CONFIG_PARAMETER_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     }
 )
 
-VALUE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
+VALUE_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): VALUE_TYPE,
         vol.Required(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
         vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
         vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
         vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
-        vol.Required(ATTR_VALUE): vol.Any(
-            bool,
-            vol.Coerce(int),
-            vol.Coerce(float),
-            cv.boolean,
-            cv.string,
-        ),
+        vol.Required(ATTR_VALUE): VALUE_SCHEMA,
     }
 )
 
@@ -204,10 +200,9 @@ async def async_get_condition_capabilities(
     # Add additional fields to the automation trigger UI
     if config[CONF_TYPE] == CONFIG_PARAMETER_TYPE:
         value_id = config[CONF_VALUE_ID]
-        value_schema = get_value_state_schema(node.values[value_id])
-        if not value_schema:
+        value_schema = get_config_parameter_value_schema(node, value_id)
+        if value_schema is None:
             return {}
-
         return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}
 
     if config[CONF_TYPE] == VALUE_TYPE:
@@ -234,7 +229,7 @@ async def async_get_condition_capabilities(
     if config[CONF_TYPE] == NODE_STATUS_TYPE:
         return {
             "extra_fields": vol.Schema(
-                {vol.Required(CONF_STATUS): vol.In(NODE_STATUS_TYPES)}
+                {vol.Required(CONF_STATUS): vol.In(NODE_STATUSES)}
             )
         }
 

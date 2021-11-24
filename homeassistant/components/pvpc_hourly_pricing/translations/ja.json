@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "power": "\u5951\u7d04\u96fb\u529b (kW)"
+                },
+                "title": "\u30bb\u30f3\u30b5\u30fc\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "power": "\u5951\u7d04\u96fb\u529b (kW)",
+                    "tariff": "\u5730\u57df\u5225\u9069\u7528\u95a2\u7a0e"
+                },
+                "title": "\u30bb\u30f3\u30b5\u30fc\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+            }
+        }
+    }
+}

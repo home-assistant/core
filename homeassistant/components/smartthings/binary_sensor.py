@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SOUND,
     BinarySensorEntity,
 )
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -40,6 +41,9 @@ ATTRIB_TO_CLASS = {
     Attribute.tamper: DEVICE_CLASS_PROBLEM,
     Attribute.valve: DEVICE_CLASS_OPENING,
     Attribute.water: DEVICE_CLASS_MOISTURE,
+}
+ATTRIB_TO_ENTTIY_CATEGORY = {
+    Attribute.tamper: ENTITY_CATEGORY_DIAGNOSTIC,
 }
 
 
@@ -88,3 +92,8 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
     def device_class(self):
         """Return the class of this device."""
         return ATTRIB_TO_CLASS[self._attribute]
+
+    @property
+    def entity_category(self):
+        """Return the entity category of this device."""
+        return ATTRIB_TO_ENTTIY_CATEGORY.get(self._attribute)

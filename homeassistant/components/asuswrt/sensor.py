@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from numbers import Real
 
 from homeassistant.components.sensor import (
@@ -12,7 +11,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
+from homeassistant.const import (
+    DATA_GIGABYTES,
+    DATA_RATE_MEGABITS_PER_SECOND,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -90,6 +93,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="Load Avg (1m)",
         icon="mdi:cpu-32-bit",
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
         factor=1,
         precision=1,
@@ -99,6 +103,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="Load Avg (5m)",
         icon="mdi:cpu-32-bit",
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
         factor=1,
         precision=1,
@@ -108,13 +113,12 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="Load Avg (15m)",
         icon="mdi:cpu-32-bit",
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
         factor=1,
         precision=1,
     ),
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from homematicip.aio.auth import AsyncAuth
 from homematicip.aio.home import AsyncHome

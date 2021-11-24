@@ -210,8 +210,7 @@ class NestTempSensor(NestSensorDevice, SensorEntity):
         else:
             self._unit = TEMP_FAHRENHEIT
 
-        temp = getattr(self.device, self.variable)
-        if temp is None:
+        if (temp := getattr(self.device, self.variable)) is None:
             self._state = None
 
         if isinstance(temp, tuple):

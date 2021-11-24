@@ -1,14 +1,16 @@
 """Tests for the Roku component."""
+from http import HTTPStatus
 import re
 from socket import gaierror as SocketGIAError
 
+from homeassistant.components import zeroconf
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
 )
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -30,13 +32,16 @@ MOCK_SSDP_DISCOVERY_INFO = {
 
 HOMEKIT_HOST = "192.168.1.161"
 
-MOCK_HOMEKIT_DISCOVERY_INFO = {
-    CONF_NAME: "onn._hap._tcp.local.",
-    CONF_HOST: HOMEKIT_HOST,
-    "properties": {
-        CONF_ID: "2d:97:da:ee:dc:99",
+MOCK_HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    host=HOMEKIT_HOST,
+    hostname="mock_hostname",
+    name="onn._hap._tcp.local.",
+    port=None,
+    properties={
+        zeroconf.ATTR_PROPERTIES_ID: "2d:97:da:ee:dc:99",
     },
-}
+    type="mock_type",
+)
 
 
 def mock_connection(
@@ -150,15 +155,29 @@ def mock_connection_server_error(
     """Mock the Roku server error."""
     roku_url = f"http://{host}:8060"
 
-    aioclient_mock.get(f"{roku_url}/query/device-info", status=500)
-    aioclient_mock.get(f"{roku_url}/query/apps", status=500)
-    aioclient_mock.get(f"{roku_url}/query/active-app", status=500)
-    aioclient_mock.get(f"{roku_url}/query/tv-active-channel", status=500)
-    aioclient_mock.get(f"{roku_url}/query/tv-channels", status=500)
+    aioclient_mock.get(
+        f"{roku_url}/query/device-info", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{roku_url}/query/apps", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{roku_url}/query/active-app", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{roku_url}/query/tv-active-channel", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{roku_url}/query/tv-channels", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
 
-    aioclient_mock.post(re.compile(f"{roku_url}/keypress/.*"), status=500)
-    aioclient_mock.post(re.compile(f"{roku_url}/launch/.*"), status=500)
-    aioclient_mock.post(f"{roku_url}/search", status=500)
+    aioclient_mock.post(
+        re.compile(f"{roku_url}/keypress/.*"), status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.post(
+        re.compile(f"{roku_url}/launch/.*"), status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.post(f"{roku_url}/search", status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
 async def setup_integration(

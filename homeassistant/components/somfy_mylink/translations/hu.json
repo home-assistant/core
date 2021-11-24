@@ -12,7 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "port": "Port",
                     "system_id": "Rendszerazonos\u00edt\u00f3"
                 },
@@ -44,7 +44,7 @@
                 "data": {
                     "reverse": "A bor\u00edt\u00f3 megfordult"
                 },
-                "description": "A(z) `{target_name}` be\u00e1ll\u00edt\u00e1sainak konfigur\u00e1l\u00e1sa",
+                "description": "`{target_name}` be\u00e1ll\u00edt\u00e1sainak konfigur\u00e1l\u00e1sa",
                 "title": "MyLink \u00e1rny\u00e9kol\u00f3 konfigur\u00e1l\u00e1sa"
             }
         }

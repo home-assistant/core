@@ -86,7 +86,8 @@ class AirNowSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state."""
-        self._state = self.coordinator.data[self.entity_description.key]
+        self._state = self.coordinator.data.get(self.entity_description.key)
+
         return self._state
 
     @property

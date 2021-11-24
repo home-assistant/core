@@ -6,9 +6,32 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import (
+    CURRENT_STATE_PROPERTY,
+    CURRENT_VALUE_PROPERTY,
+    TARGET_STATE_PROPERTY,
+    TARGET_VALUE_PROPERTY,
+    CommandClass,
+)
+from zwave_js_server.const.command_class.barrier_operator import (
+    SIGNALING_STATE_PROPERTY,
+)
+from zwave_js_server.const.command_class.lock import (
+    CURRENT_MODE_PROPERTY,
+    DOOR_STATUS_PROPERTY,
+    LOCKED_PROPERTY,
+)
+from zwave_js_server.const.command_class.meter import VALUE_PROPERTY
+from zwave_js_server.const.command_class.protection import LOCAL_PROPERTY, RF_PROPERTY
+from zwave_js_server.const.command_class.sound_switch import (
+    DEFAULT_TONE_ID_PROPERTY,
+    DEFAULT_VOLUME_PROPERTY,
+    TONE_ID_PROPERTY,
+)
 from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
+    THERMOSTAT_MODE_PROPERTY,
+    THERMOSTAT_SETPOINT_PROPERTY,
 )
 from zwave_js_server.exceptions import UnknownValueData
 from zwave_js_server.model.device_class import DeviceClassItem
@@ -21,6 +44,8 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
+    ConfigurableFanSpeedDataTemplate,
+    CoverTiltDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
     NumericSensorDataTemplate,
     ZwaveValueID,
@@ -179,16 +204,18 @@ def get_config_parameter_discovery_schema(
 
 SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SWITCH_MULTILEVEL},
-    property={"currentValue"},
+    property={CURRENT_VALUE_PROPERTY},
     type={"number"},
 )
 
 SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
-    command_class={CommandClass.SWITCH_BINARY}, property={"currentValue"}
+    command_class={CommandClass.SWITCH_BINARY}, property={CURRENT_VALUE_PROPERTY}
 )
 
 SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
-    command_class={CommandClass.SOUND_SWITCH}, property={"toneId"}, type={"number"}
+    command_class={CommandClass.SOUND_SWITCH},
+    property={TONE_ID_PROPERTY},
+    type={"number"},
 )
 
 # For device class mapping see:
@@ -229,18 +256,48 @@ DISCOVERY_SCHEMAS = [
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
             endpoint={2},
-            property={"currentValue"},
+            property={CURRENT_VALUE_PROPERTY},
             type={"number"},
         ),
     ),
-    # Fibaro Shutter Fibaro FGS222
+    # HomeSeer HS-FC200+
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="configured_fan_speed",
+        manufacturer_id={0x000C},
+        product_id={0x0001},
+        product_type={0x0203},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=ConfigurableFanSpeedDataTemplate(
+            configuration_option=ZwaveValueID(
+                5, CommandClass.CONFIGURATION, endpoint=0
+            ),
+            configuration_value_to_speeds={0: [33, 66, 99], 1: [24, 49, 74, 99]},
+        ),
+    ),
+    # Fibaro Shutter Fibaro FGR222
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="window_shutter",
+        hint="window_shutter_tilt",
         manufacturer_id={0x010F},
-        product_id={0x1000},
-        product_type={0x0302},
+        product_id={0x1000, 0x1001},
+        product_type={0x0301, 0x0302},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=CoverTiltDataTemplate(
+            tilt_value_id=ZwaveValueID(
+                "fibaro",
+                CommandClass.MANUFACTURER_PROPRIETARY,
+                endpoint=0,
+                property_key="venetianBlindsTilt",
+            )
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.MANUFACTURER_PROPRIETARY},
+                property={"fibaro"},
+                property_key={"venetianBlindsTilt"},
+            )
+        ],
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
@@ -287,11 +344,11 @@ DISCOVERY_SCHEMAS = [
         product_type={0x0003},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
-            property={"mode"},
+            property={THERMOSTAT_MODE_PROPERTY},
             type={"number"},
         ),
         data_template=DynamicCurrentTempClimateDataTemplate(
-            {
+            lookup_table={
                 # Internal Sensor
                 "A": ZwaveValueID(
                     THERMOSTAT_CURRENT_TEMP_PROPERTY,
@@ -321,7 +378,7 @@ DISCOVERY_SCHEMAS = [
                     endpoint=4,
                 ),
             },
-            ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+            dependent_value=ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
         ),
     ),
     # Heatit Z-TRM2fx
@@ -334,11 +391,11 @@ DISCOVERY_SCHEMAS = [
         firmware_version_range=FirmwareVersionRange(min="3.0"),
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
-            property={"mode"},
+            property={THERMOSTAT_MODE_PROPERTY},
             type={"number"},
         ),
         data_template=DynamicCurrentTempClimateDataTemplate(
-            {
+            lookup_table={
                 # External Sensor
                 "A2": ZwaveValueID(
                     THERMOSTAT_CURRENT_TEMP_PROPERTY,
@@ -357,7 +414,24 @@ DISCOVERY_SCHEMAS = [
                     endpoint=3,
                 ),
             },
-            ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+            dependent_value=ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+        ),
+    ),
+    # FortrezZ SSA1/SSA2
+    ZWaveDiscoverySchema(
+        platform="select",
+        hint="multilevel_switch",
+        manufacturer_id={0x0084},
+        product_id={0x0107, 0x0108, 0x010B, 0x0205},
+        product_type={0x0311, 0x0313, 0x0341, 0x0343},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=BaseDiscoverySchemaDataTemplate(
+            {
+                0: "Off",
+                33: "Strobe ONLY",
+                66: "Siren ONLY",
+                99: "Siren & Strobe FULL Alarm",
+            },
         ),
     ),
     # ====== START OF CONFIG PARAMETER SPECIFIC MAPPING SCHEMAS =======
@@ -376,7 +450,7 @@ DISCOVERY_SCHEMAS = [
                 CommandClass.LOCK,
                 CommandClass.DOOR_LOCK,
             },
-            property={"currentMode", "locked"},
+            property={CURRENT_MODE_PROPERTY, LOCKED_PROPERTY},
             type={"number", "boolean"},
         ),
     ),
@@ -389,7 +463,7 @@ DISCOVERY_SCHEMAS = [
                 CommandClass.LOCK,
                 CommandClass.DOOR_LOCK,
             },
-            property={"doorStatus"},
+            property={DOOR_STATUS_PROPERTY},
             type={"any"},
         ),
     ),
@@ -399,7 +473,7 @@ DISCOVERY_SCHEMAS = [
         platform="climate",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
-            property={"mode"},
+            property={THERMOSTAT_MODE_PROPERTY},
             type={"number"},
         ),
     ),
@@ -408,13 +482,13 @@ DISCOVERY_SCHEMAS = [
         platform="climate",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_SETPOINT},
-            property={"setpoint"},
+            property={THERMOSTAT_SETPOINT_PROPERTY},
             type={"number"},
         ),
         absent_values=[  # mode must not be present to prevent dupes
             ZWaveValueDiscoverySchema(
                 command_class={CommandClass.THERMOSTAT_MODE},
-                property={"mode"},
+                property={THERMOSTAT_MODE_PROPERTY},
                 type={"number"},
             ),
         ],
@@ -515,7 +589,7 @@ DISCOVERY_SCHEMAS = [
                 CommandClass.METER,
             },
             type={"number"},
-            property={"value"},
+            property={VALUE_PROPERTY},
         ),
         data_template=NumericSensorDataTemplate(),
     ),
@@ -541,7 +615,7 @@ DISCOVERY_SCHEMAS = [
                 CommandClass.BASIC,
             },
             type={"number"},
-            property={"currentValue"},
+            property={CURRENT_VALUE_PROPERTY},
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
@@ -549,7 +623,7 @@ DISCOVERY_SCHEMAS = [
                     CommandClass.BASIC,
                 },
                 type={"number"},
-                property={"targetValue"},
+                property={TARGET_VALUE_PROPERTY},
             )
         ],
         data_template=NumericSensorDataTemplate(),
@@ -567,7 +641,7 @@ DISCOVERY_SCHEMAS = [
         hint="barrier_event_signaling_state",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.BARRIER_OPERATOR},
-            property={"signalingState"},
+            property={SIGNALING_STATE_PROPERTY},
             type={"number"},
         ),
     ),
@@ -592,13 +666,13 @@ DISCOVERY_SCHEMAS = [
         hint="motorized_barrier",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.BARRIER_OPERATOR},
-            property={"currentState"},
+            property={CURRENT_STATE_PROPERTY},
             type={"number"},
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
                 command_class={CommandClass.BARRIER_OPERATOR},
-                property={"targetState"},
+                property={TARGET_STATE_PROPERTY},
                 type={"number"},
             ),
         ],
@@ -640,7 +714,7 @@ DISCOVERY_SCHEMAS = [
         hint="Default tone",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SOUND_SWITCH},
-            property={"defaultToneId"},
+            property={DEFAULT_TONE_ID_PROPERTY},
             type={"number"},
         ),
         required_values=[SIREN_TONE_SCHEMA],
@@ -652,7 +726,7 @@ DISCOVERY_SCHEMAS = [
         hint="volume",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SOUND_SWITCH},
-            property={"defaultVolume"},
+            property={DEFAULT_VOLUME_PROPERTY},
             type={"number"},
         ),
         required_values=[SIREN_TONE_SCHEMA],
@@ -663,7 +737,7 @@ DISCOVERY_SCHEMAS = [
         platform="select",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.PROTECTION},
-            property={"local", "rf"},
+            property={LOCAL_PROPERTY, RF_PROPERTY},
             type={"number"},
         ),
     ),

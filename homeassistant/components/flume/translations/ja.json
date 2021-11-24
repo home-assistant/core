@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"
+                },
+                "description": "{username} \u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u306f\u7121\u52b9\u306b\u306a\u308a\u307e\u3057\u305f\u3002",
+                "title": "Flume\u30a2\u30ab\u30a6\u30f3\u30c8\u306e\u518d\u8a8d\u8a3c"
+            },
+            "user": {
+                "data": {
+                    "client_id": "\u30af\u30e9\u30a4\u30a2\u30f3\u30c8ID",
+                    "client_secret": "\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u30b7\u30fc\u30af\u30ec\u30c3\u30c8",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                }
+            }
+        }
+    }
+}

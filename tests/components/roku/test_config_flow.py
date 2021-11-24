@@ -1,4 +1,5 @@
 """Test the Roku config flow."""
+import dataclasses
 from unittest.mock import patch
 
 from homeassistant.components.roku.const import DOMAIN
@@ -10,7 +11,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.setup import async_setup_component
 
 from tests.components.roku import (
     HOMEKIT_HOST,
@@ -59,7 +59,7 @@ async def test_duplicate_error(
 
 async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test the user step."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     mock_connection(aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
@@ -137,7 +137,7 @@ async def test_homekit_cannot_connect(
         error=True,
     )
 
-    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_HOMEKIT},
@@ -152,7 +152,7 @@ async def test_homekit_unknown_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort homekit flow on unknown error."""
-    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
     with patch(
         "homeassistant.components.roku.config_flow.Roku.update",
         side_effect=Exception,
@@ -173,7 +173,7 @@ async def test_homekit_discovery(
     """Test the homekit discovery flow."""
     mock_connection(aioclient_mock, device="rokutv", host=HOMEKIT_HOST)
 
-    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
     )
@@ -201,7 +201,7 @@ async def test_homekit_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
     # test abort on existing host
-    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
     )

@@ -1,5 +1,6 @@
 """Support for sending data to Emoncms."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
@@ -10,7 +11,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_URL,
     CONF_WHITELIST,
-    HTTP_OK,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -59,7 +59,7 @@ def setup(hass, config):
             _LOGGER.error("Error saving data '%s' to '%s'", payload, fullurl)
 
         else:
-            if req.status_code != HTTP_OK:
+            if req.status_code != HTTPStatus.OK:
                 _LOGGER.error(
                     "Error saving data %s to %s (http status code = %d)",
                     payload,

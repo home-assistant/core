@@ -1,0 +1,49 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "\u95dc\u9589",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "\u81ea\u52d5",
+            "1": "\u95dc\u9589",
+            "2": "\u958b\u555f"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "\u4f4e\u654f\u611f\u5ea6",
+            "1": "\u9ad8\u654f\u611f\u5ea6"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "\u4f4e\u529f\u8017\u6a21\u5f0f",
+            "1": "\u6301\u7e8c\u5de5\u4f5c\u6a21\u5f0f"
+        },
+        "tuya__led_type": {
+            "halogen": "\u9e75\u7d20\u71c8",
+            "incandescent": "\u767d\u71be\u71c8",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "\u95dc\u9589",
+            "pos": "\u6307\u793a\u958b\u95dc\u4f4d\u7f6e",
+            "relay": "\u6307\u793a\u958b\u95dc\u958b\u555f/\u95dc\u9589\u72c0\u614b"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "\u4f4e\u654f\u611f\u5ea6",
+            "1": "\u4e2d\u654f\u611f\u5ea6",
+            "2": "\u9ad8\u654f\u611f\u5ea6"
+        },
+        "tuya__record_mode": {
+            "1": "\u50c5\u8a18\u9304\u4e8b\u4ef6",
+            "2": "\u6301\u7e8c\u7d00\u9304"
+        },
+        "tuya__relay_status": {
+            "last": "\u8a18\u4f4f\u6700\u5f8c\u72c0\u614b",
+            "memory": "\u8a18\u4f4f\u6700\u5f8c\u72c0\u614b",
+            "off": "\u95dc\u9589",
+            "on": "\u958b\u555f",
+            "power_off": "\u95dc\u9589",
+            "power_on": "\u958b\u555f"
+        }
+    }
+}

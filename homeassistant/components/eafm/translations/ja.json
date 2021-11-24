@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "no_stations": "\u6d2a\u6c34\u76e3\u8996(Track a flood monitoring)\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3067\u3057\u305f\u3002"
+        },
+        "step": {
+            "user": {
+                "title": "\u6d2a\u6c34\u76e3\u8996(Track a flood monitoring)\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u3092\u8ffd\u8de1"
+            }
+        }
+    }
+}

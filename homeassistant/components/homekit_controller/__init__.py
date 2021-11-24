@@ -14,13 +14,21 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components import zeroconf
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .config_flow import normalize_hkid
-from .connection import HKDevice
-from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
+from .connection import HKDevice, valid_serial_number
+from .const import (
+    CONTROLLER,
+    DOMAIN,
+    ENTITY_MAP,
+    IDENTIFIER_ACCESSORY_ID,
+    IDENTIFIER_SERIAL_NUMBER,
+    KNOWN_DEVICES,
+    TRIGGERS,
+)
 from .storage import EntityMapStorage
 
 
@@ -131,8 +139,12 @@ class HomeKitEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
-        serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
-        return f"homekit-{serial}-{self._iid}"
+        info = self.accessory_info
+        serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        if valid_serial_number(serial):
+            return f"homekit-{serial}-{self._iid}"
+        # Some accessories do not have a serial number
+        return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
 
     @property
     def name(self) -> str:
@@ -145,24 +157,37 @@ class HomeKitEntity(Entity):
         return self._accessory.available and self.service.available
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         info = self.accessory_info
         accessory_serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        if valid_serial_number(accessory_serial):
+            # Some accessories do not have a serial number
+            identifier = (DOMAIN, IDENTIFIER_SERIAL_NUMBER, accessory_serial)
+        else:
+            identifier = (
+                DOMAIN,
+                IDENTIFIER_ACCESSORY_ID,
+                f"{self._accessory.unique_id}_{self._aid}",
+            )
 
-        device_info = {
-            "identifiers": {(DOMAIN, "serial-number", accessory_serial)},
-            "name": info.value(CharacteristicsTypes.NAME),
-            "manufacturer": info.value(CharacteristicsTypes.MANUFACTURER, ""),
-            "model": info.value(CharacteristicsTypes.MODEL, ""),
-            "sw_version": info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
-        }
+        device_info = DeviceInfo(
+            identifiers={identifier},
+            manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
+            model=info.value(CharacteristicsTypes.MODEL, ""),
+            name=info.value(CharacteristicsTypes.NAME),
+            sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+        )
 
         # Some devices only have a single accessory - we don't add a
         # via_device otherwise it would be self referential.
         bridge_serial = self._accessory.connection_info["serial-number"]
         if accessory_serial != bridge_serial:
-            device_info["via_device"] = (DOMAIN, "serial-number", bridge_serial)
+            device_info[ATTR_VIA_DEVICE] = (
+                DOMAIN,
+                IDENTIFIER_SERIAL_NUMBER,
+                bridge_serial,
+            )
 
         return device_info
 

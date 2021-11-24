@@ -1,9 +1,10 @@
 """Support for August sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Callable, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from yalexs.activity import ActivityType
 from yalexs.keypad import KeypadDetail
@@ -15,7 +16,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -54,7 +60,7 @@ T = TypeVar("T", LockDetail, KeypadDetail)
 class AugustRequiredKeysMixin(Generic[T]):
     """Mixin for required keys."""
 
-    state_provider: Callable[[T], int | None]
+    value_fn: Callable[[T], int | None]
 
 
 @dataclass
@@ -67,13 +73,15 @@ class AugustSensorEntityDescription(
 SENSOR_TYPE_DEVICE_BATTERY = AugustSensorEntityDescription[LockDetail](
     key="device_battery",
     name="Battery",
-    state_provider=_retrieve_device_battery_state,
+    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    value_fn=_retrieve_device_battery_state,
 )
 
 SENSOR_TYPE_KEYPAD_BATTERY = AugustSensorEntityDescription[KeypadDetail](
     key="linked_keypad_battery",
     name="Battery",
-    state_provider=_retrieve_linked_keypad_battery_state,
+    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    value_fn=_retrieve_linked_keypad_battery_state,
 )
 
 
@@ -96,7 +104,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for device in batteries["device_battery"]:
         detail = data.get_device_detail(device.device_id)
-        if detail is None or SENSOR_TYPE_DEVICE_BATTERY.state_provider(detail) is None:
+        if detail is None or SENSOR_TYPE_DEVICE_BATTERY.value_fn(detail) is None:
             _LOGGER.debug(
                 "Not adding battery sensor for %s because it is not present",
                 device.device_name,
@@ -267,7 +275,7 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity, Generic[T]):
     @callback
     def _update_from_data(self):
         """Get the latest state of the sensor."""
-        self._attr_native_value = self.entity_description.state_provider(self._detail)
+        self._attr_native_value = self.entity_description.value_fn(self._detail)
         self._attr_available = self._attr_native_value is not None
 
     @property

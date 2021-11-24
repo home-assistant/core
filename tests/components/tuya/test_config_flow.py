@@ -1,80 +1,85 @@
 """Tests for the Tuya config flow."""
-from unittest.mock import Mock, patch
+from __future__ import annotations
+
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
-from tuyaha.devices.climate import STEP_HALVES
-from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException
+from tuya_iot import TuyaCloudOpenAPIEndpoint
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.tuya.config_flow import (
-    CONF_LIST_DEVICES,
-    ERROR_DEV_MULTI_TYPE,
-    ERROR_DEV_NOT_CONFIG,
-    ERROR_DEV_NOT_FOUND,
-    RESULT_AUTH_FAILED,
-    RESULT_CONN_ERROR,
-    RESULT_SINGLE_INSTANCE,
-)
 from homeassistant.components.tuya.const import (
-    CONF_BRIGHTNESS_RANGE_MODE,
-    CONF_COUNTRYCODE,
-    CONF_CURR_TEMP_DIVIDER,
-    CONF_DISCOVERY_INTERVAL,
-    CONF_MAX_KELVIN,
-    CONF_MAX_TEMP,
-    CONF_MIN_KELVIN,
-    CONF_MIN_TEMP,
-    CONF_QUERY_DEVICE,
-    CONF_QUERY_INTERVAL,
-    CONF_SET_TEMP_DIVIDED,
-    CONF_SUPPORT_COLOR,
-    CONF_TEMP_DIVIDER,
-    CONF_TEMP_STEP_OVERRIDE,
-    CONF_TUYA_MAX_COLTEMP,
-    DOMAIN,
-    TUYA_DATA,
-)
-from homeassistant.const import (
+    CONF_ACCESS_ID,
+    CONF_ACCESS_SECRET,
+    CONF_APP_TYPE,
+    CONF_AUTH_TYPE,
+    CONF_COUNTRY_CODE,
+    CONF_ENDPOINT,
     CONF_PASSWORD,
-    CONF_PLATFORM,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
-    TEMP_CELSIUS,
+    DOMAIN,
+    SMARTLIFE_APP,
+    TUYA_COUNTRIES,
+    TUYA_SMART_APP,
 )
+from homeassistant.core import HomeAssistant
 
-from .common import CLIMATE_ID, LIGHT_ID, LIGHT_ID_FAKE1, LIGHT_ID_FAKE2, MockTuya
+MOCK_SMART_HOME_PROJECT_TYPE = 0
+MOCK_INDUSTRY_PROJECT_TYPE = 1
 
-from tests.common import MockConfigEntry
+MOCK_COUNTRY = "India"
+MOCK_ACCESS_ID = "myAccessId"
+MOCK_ACCESS_SECRET = "myAccessSecret"
+MOCK_USERNAME = "myUsername"
+MOCK_PASSWORD = "myPassword"
+MOCK_ENDPOINT = TuyaCloudOpenAPIEndpoint.INDIA
 
-USERNAME = "myUsername"
-PASSWORD = "myPassword"
-COUNTRY_CODE = "1"
-TUYA_PLATFORM = "tuya"
-
-TUYA_USER_DATA = {
-    CONF_USERNAME: USERNAME,
-    CONF_PASSWORD: PASSWORD,
-    CONF_COUNTRYCODE: COUNTRY_CODE,
-    CONF_PLATFORM: TUYA_PLATFORM,
+TUYA_INPUT_DATA = {
+    CONF_COUNTRY_CODE: MOCK_COUNTRY,
+    CONF_ACCESS_ID: MOCK_ACCESS_ID,
+    CONF_ACCESS_SECRET: MOCK_ACCESS_SECRET,
+    CONF_USERNAME: MOCK_USERNAME,
+    CONF_PASSWORD: MOCK_PASSWORD,
 }
+
+RESPONSE_SUCCESS = {
+    "success": True,
+    "code": 1024,
+    "result": {"platform_url": MOCK_ENDPOINT},
+}
+RESPONSE_ERROR = {"success": False, "code": 123, "msg": "Error"}
 
 
 @pytest.fixture(name="tuya")
-def tuya_fixture() -> Mock:
+def tuya_fixture() -> MagicMock:
     """Patch libraries."""
-    with patch("homeassistant.components.tuya.config_flow.TuyaApi") as tuya:
+    with patch("homeassistant.components.tuya.config_flow.TuyaOpenAPI") as tuya:
         yield tuya
 
 
 @pytest.fixture(name="tuya_setup", autouse=True)
-def tuya_setup_fixture():
+def tuya_setup_fixture() -> None:
     """Mock tuya entry setup."""
     with patch("homeassistant.components.tuya.async_setup_entry", return_value=True):
         yield
 
 
-async def test_user(hass, tuya):
-    """Test user config."""
+@pytest.mark.parametrize(
+    "app_type,side_effects, project_type",
+    [
+        ("", [RESPONSE_SUCCESS], 1),
+        (TUYA_SMART_APP, [RESPONSE_ERROR, RESPONSE_SUCCESS], 0),
+        (SMARTLIFE_APP, [RESPONSE_ERROR, RESPONSE_ERROR, RESPONSE_SUCCESS], 0),
+    ],
+)
+async def test_user_flow(
+    hass: HomeAssistant,
+    tuya: MagicMock,
+    app_type: str,
+    side_effects: list[dict[str, Any]],
+    project_type: int,
+):
+    """Test user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -82,193 +87,43 @@ async def test_user(hass, tuya):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    tuya().connect = MagicMock(side_effect=side_effects)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=TUYA_USER_DATA
+        result["flow_id"], user_input=TUYA_INPUT_DATA
     )
     await hass.async_block_till_done()
 
+    country = [country for country in TUYA_COUNTRIES if country.name == MOCK_COUNTRY][0]
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == USERNAME
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_COUNTRYCODE] == COUNTRY_CODE
-    assert result["data"][CONF_PLATFORM] == TUYA_PLATFORM
+    assert result["title"] == MOCK_USERNAME
+    assert result["data"][CONF_ACCESS_ID] == MOCK_ACCESS_ID
+    assert result["data"][CONF_ACCESS_SECRET] == MOCK_ACCESS_SECRET
+    assert result["data"][CONF_USERNAME] == MOCK_USERNAME
+    assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
+    assert result["data"][CONF_ENDPOINT] == country.endpoint
+    assert result["data"][CONF_APP_TYPE] == app_type
+    assert result["data"][CONF_AUTH_TYPE] == project_type
+    assert result["data"][CONF_COUNTRY_CODE] == country.country_code
     assert not result["result"].unique_id
 
 
-async def test_abort_if_already_setup(hass, tuya):
-    """Test we abort if Tuya is already setup."""
-    MockConfigEntry(domain=DOMAIN, data=TUYA_USER_DATA).add_to_hass(hass)
-
-    # Should fail, config exist (import)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TUYA_USER_DATA
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_SINGLE_INSTANCE
-
-
-async def test_abort_on_invalid_credentials(hass, tuya):
+async def test_error_on_invalid_credentials(hass, tuya):
     """Test when we have invalid credentials."""
-    tuya().init.side_effect = TuyaAPIException("Boom")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TUYA_USER_DATA
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": RESULT_AUTH_FAILED}
+    assert result["step_id"] == "user"
 
-
-async def test_abort_on_connection_error(hass, tuya):
-    """Test when we have a network error."""
-    tuya().init.side_effect = TuyaNetException("Boom")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TUYA_USER_DATA
+    tuya().connect = MagicMock(return_value=RESPONSE_ERROR)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=TUYA_INPUT_DATA
     )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_CONN_ERROR
-
-
-async def test_options_flow(hass):
-    """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TUYA_USER_DATA,
-    )
-    config_entry.add_to_hass(hass)
-
-    # Set up the integration to make sure the config flow module is loaded.
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Unload the integration to prepare for the test.
-    with patch("homeassistant.components.tuya.async_unload_entry", return_value=True):
-        assert await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Test check for integration not loaded
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_CONN_ERROR
-
-    # Load integration and enter options
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    hass.data[DOMAIN] = {TUYA_DATA: MockTuya()}
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    # Test dev not found error
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_LIST_DEVICES: [f"light-{LIGHT_ID_FAKE1}"]},
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": ERROR_DEV_NOT_FOUND}
-
-    # Test dev type error
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_LIST_DEVICES: [f"light-{LIGHT_ID_FAKE2}"]},
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": ERROR_DEV_NOT_CONFIG}
-
-    # Test multi dev error
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_LIST_DEVICES: [f"climate-{CLIMATE_ID}", f"light-{LIGHT_ID}"]},
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": ERROR_DEV_MULTI_TYPE}
-
-    # Test climate options form
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_LIST_DEVICES: [f"climate-{CLIMATE_ID}"]}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "device"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-            CONF_TEMP_DIVIDER: 10,
-            CONF_CURR_TEMP_DIVIDER: 5,
-            CONF_SET_TEMP_DIVIDED: False,
-            CONF_TEMP_STEP_OVERRIDE: STEP_HALVES,
-            CONF_MIN_TEMP: 12,
-            CONF_MAX_TEMP: 22,
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    # Test light options form
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_LIST_DEVICES: [f"light-{LIGHT_ID}"]}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "device"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_SUPPORT_COLOR: True,
-            CONF_BRIGHTNESS_RANGE_MODE: 1,
-            CONF_MIN_KELVIN: 4000,
-            CONF_MAX_KELVIN: 5000,
-            CONF_TUYA_MAX_COLTEMP: 12000,
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    # Test common options
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_DISCOVERY_INTERVAL: 100,
-            CONF_QUERY_INTERVAL: 50,
-            CONF_QUERY_DEVICE: LIGHT_ID,
-        },
-    )
-
-    # Verify results
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-    climate_options = config_entry.options[CLIMATE_ID]
-    assert climate_options[CONF_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
-    assert climate_options[CONF_TEMP_DIVIDER] == 10
-    assert climate_options[CONF_CURR_TEMP_DIVIDER] == 5
-    assert climate_options[CONF_SET_TEMP_DIVIDED] is False
-    assert climate_options[CONF_TEMP_STEP_OVERRIDE] == STEP_HALVES
-    assert climate_options[CONF_MIN_TEMP] == 12
-    assert climate_options[CONF_MAX_TEMP] == 22
-
-    light_options = config_entry.options[LIGHT_ID]
-    assert light_options[CONF_SUPPORT_COLOR] is True
-    assert light_options[CONF_BRIGHTNESS_RANGE_MODE] == 1
-    assert light_options[CONF_MIN_KELVIN] == 4000
-    assert light_options[CONF_MAX_KELVIN] == 5000
-    assert light_options[CONF_TUYA_MAX_COLTEMP] == 12000
-
-    assert config_entry.options[CONF_DISCOVERY_INTERVAL] == 100
-    assert config_entry.options[CONF_QUERY_INTERVAL] == 50
-    assert config_entry.options[CONF_QUERY_DEVICE] == LIGHT_ID
+    assert result["errors"]["base"] == "login_error"
+    assert result["description_placeholders"]["code"] == RESPONSE_ERROR["code"]
+    assert result["description_placeholders"]["msg"] == RESPONSE_ERROR["msg"]

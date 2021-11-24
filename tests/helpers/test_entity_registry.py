@@ -71,26 +71,39 @@ def test_get_or_create_updates_data(registry):
         "light",
         "hue",
         "5678",
+        area_id="mock-area-id",
+        capabilities={"max": 100},
         config_entry=orig_config_entry,
         device_id="mock-dev-id",
-        capabilities={"max": 100},
-        supported_features=5,
-        device_class="mock-device-class",
         disabled_by=er.DISABLED_HASS,
-        unit_of_measurement="initial-unit_of_measurement",
-        original_name="initial-original_name",
+        entity_category="config",
+        original_device_class="mock-device-class",
         original_icon="initial-original_icon",
+        original_name="initial-original_name",
+        supported_features=5,
+        unit_of_measurement="initial-unit_of_measurement",
     )
 
-    assert orig_entry.config_entry_id == orig_config_entry.entry_id
-    assert orig_entry.device_id == "mock-dev-id"
-    assert orig_entry.capabilities == {"max": 100}
-    assert orig_entry.supported_features == 5
-    assert orig_entry.device_class == "mock-device-class"
-    assert orig_entry.disabled_by == er.DISABLED_HASS
-    assert orig_entry.unit_of_measurement == "initial-unit_of_measurement"
-    assert orig_entry.original_name == "initial-original_name"
-    assert orig_entry.original_icon == "initial-original_icon"
+    assert orig_entry == er.RegistryEntry(
+        "light.hue_5678",
+        "5678",
+        "hue",
+        area_id="mock-area-id",
+        capabilities={"max": 100},
+        config_entry_id=orig_config_entry.entry_id,
+        device_class=None,
+        device_id="mock-dev-id",
+        disabled_by=er.DISABLED_HASS,
+        entity_category="config",
+        icon=None,
+        id=orig_entry.id,
+        name=None,
+        original_device_class="mock-device-class",
+        original_icon="initial-original_icon",
+        original_name="initial-original_name",
+        supported_features=5,
+        unit_of_measurement="initial-unit_of_measurement",
+    )
 
     new_config_entry = MockConfigEntry(domain="light")
 
@@ -98,27 +111,39 @@ def test_get_or_create_updates_data(registry):
         "light",
         "hue",
         "5678",
+        area_id="new-mock-area-id",
+        capabilities={"new-max": 100},
         config_entry=new_config_entry,
         device_id="new-mock-dev-id",
-        capabilities={"new-max": 100},
-        supported_features=10,
-        device_class="new-mock-device-class",
         disabled_by=er.DISABLED_USER,
-        unit_of_measurement="updated-unit_of_measurement",
-        original_name="updated-original_name",
+        entity_category=None,
+        original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
+        original_name="updated-original_name",
+        supported_features=10,
+        unit_of_measurement="updated-unit_of_measurement",
     )
 
-    assert new_entry.config_entry_id == new_config_entry.entry_id
-    assert new_entry.device_id == "new-mock-dev-id"
-    assert new_entry.capabilities == {"new-max": 100}
-    assert new_entry.supported_features == 10
-    assert new_entry.device_class == "new-mock-device-class"
-    assert new_entry.unit_of_measurement == "updated-unit_of_measurement"
-    assert new_entry.original_name == "updated-original_name"
-    assert new_entry.original_icon == "updated-original_icon"
-    # Should not be updated
-    assert new_entry.disabled_by == er.DISABLED_HASS
+    assert new_entry == er.RegistryEntry(
+        "light.hue_5678",
+        "5678",
+        "hue",
+        area_id="new-mock-area-id",
+        capabilities={"new-max": 100},
+        config_entry_id=new_config_entry.entry_id,
+        device_class=None,
+        device_id="new-mock-dev-id",
+        disabled_by=er.DISABLED_HASS,  # Should not be updated
+        entity_category="config",
+        icon=None,
+        id=orig_entry.id,
+        name=None,
+        original_device_class="new-mock-device-class",
+        original_icon="updated-original_icon",
+        original_name="updated-original_name",
+        supported_features=10,
+        unit_of_measurement="updated-unit_of_measurement",
+    )
 
 
 def test_get_or_create_suggested_object_id_conflict_register(registry):
@@ -158,18 +183,23 @@ async def test_loading_saving_data(hass, registry):
         "light",
         "hue",
         "5678",
-        device_id="mock-dev-id",
         area_id="mock-area-id",
-        config_entry=mock_config,
         capabilities={"max": 100},
-        supported_features=5,
-        device_class="mock-device-class",
+        config_entry=mock_config,
+        device_id="mock-dev-id",
         disabled_by=er.DISABLED_HASS,
-        original_name="Original Name",
+        entity_category="config",
+        original_device_class="mock-device-class",
         original_icon="hass:original-icon",
+        original_name="Original Name",
+        supported_features=5,
+        unit_of_measurement="initial-unit_of_measurement",
     )
     orig_entry2 = registry.async_update_entity(
-        orig_entry2.entity_id, name="User Name", icon="hass:user-icon"
+        orig_entry2.entity_id,
+        device_class="user-class",
+        name="User Name",
+        icon="hass:user-icon",
     )
 
     assert len(registry.entities) == 2
@@ -187,16 +217,20 @@ async def test_loading_saving_data(hass, registry):
     assert orig_entry1 == new_entry1
     assert orig_entry2 == new_entry2
 
-    assert new_entry2.device_id == "mock-dev-id"
     assert new_entry2.area_id == "mock-area-id"
-    assert new_entry2.disabled_by == er.DISABLED_HASS
     assert new_entry2.capabilities == {"max": 100}
-    assert new_entry2.supported_features == 5
-    assert new_entry2.device_class == "mock-device-class"
-    assert new_entry2.name == "User Name"
+    assert new_entry2.config_entry_id == mock_config.entry_id
+    assert new_entry2.device_class == "user-class"
+    assert new_entry2.device_id == "mock-dev-id"
+    assert new_entry2.disabled_by == er.DISABLED_HASS
+    assert new_entry2.entity_category == "config"
     assert new_entry2.icon == "hass:user-icon"
-    assert new_entry2.original_name == "Original Name"
+    assert new_entry2.name == "User Name"
+    assert new_entry2.original_device_class == "mock-device-class"
     assert new_entry2.original_icon == "hass:original-icon"
+    assert new_entry2.original_name == "Original Name"
+    assert new_entry2.supported_features == 5
+    assert new_entry2.unit_of_measurement == "initial-unit_of_measurement"
 
 
 def test_generate_entity_considers_registered_entities(registry):
@@ -223,7 +257,8 @@ def test_is_registered(registry):
 async def test_loading_extra_values(hass, hass_storage):
     """Test we load extra data from the registry."""
     hass_storage[er.STORAGE_KEY] = {
-        "version": er.STORAGE_VERSION,
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": 1,
         "data": {
             "entities": [
                 {
@@ -353,8 +388,8 @@ async def test_removing_area_id(registry):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration(hass):
-    """Test migration from old data to new."""
+async def test_migration_yaml_to_json(hass):
+    """Test migration from old (yaml) data to new."""
     mock_config = MockConfigEntry(domain="test-platform", entry_id="test-config-id")
 
     old_conf = {
@@ -384,51 +419,88 @@ async def test_migration(hass):
     assert entry.config_entry_id == "test-config-id"
 
 
-async def test_loading_invalid_entity_id(hass, hass_storage):
-    """Test we autofix invalid entity IDs."""
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_1(hass, hass_storage):
+    """Test migration from version 1.1."""
     hass_storage[er.STORAGE_KEY] = {
-        "version": er.STORAGE_VERSION,
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "entities": [
+                {
+                    "device_class": "best_class",
+                    "entity_id": "test.entity",
+                    "platform": "super_platform",
+                    "unique_id": "very_unique",
+                },
+            ]
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    entry = registry.async_get_or_create("test", "super_platform", "very_unique")
+
+    assert entry.device_class is None
+    assert entry.original_device_class == "best_class"
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_invalid_entity_id(hass, hass_storage):
+    """Test we skip entities with invalid entity IDs."""
+    hass_storage[er.STORAGE_KEY] = {
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
         "data": {
             "entities": [
                 {
                     "entity_id": "test.invalid__middle",
                     "platform": "super_platform",
                     "unique_id": "id-invalid-middle",
-                    "name": "registry override",
+                    "name": "registry override 1",
                 },
                 {
                     "entity_id": "test.invalid_end_",
                     "platform": "super_platform",
                     "unique_id": "id-invalid-end",
+                    "name": "registry override 2",
                 },
                 {
                     "entity_id": "test._invalid_start",
                     "platform": "super_platform",
                     "unique_id": "id-invalid-start",
+                    "name": "registry override 3",
                 },
             ]
         },
     }
 
+    await er.async_load(hass)
     registry = er.async_get(hass)
+    assert len(registry.entities) == 0
 
     entity_invalid_middle = registry.async_get_or_create(
         "test", "super_platform", "id-invalid-middle"
     )
 
     assert valid_entity_id(entity_invalid_middle.entity_id)
+    # Check name to make sure we created a new entity
+    assert entity_invalid_middle.name is None
 
     entity_invalid_end = registry.async_get_or_create(
         "test", "super_platform", "id-invalid-end"
     )
 
     assert valid_entity_id(entity_invalid_end.entity_id)
+    assert entity_invalid_end.name is None
 
     entity_invalid_start = registry.async_get_or_create(
         "test", "super_platform", "id-invalid-start"
     )
 
     assert valid_entity_id(entity_invalid_start.entity_id)
+    assert entity_invalid_start.name is None
 
 
 async def test_update_entity_unique_id(registry):
@@ -562,7 +634,7 @@ async def test_restore_states(hass):
         suggested_object_id="all_info_set",
         capabilities={"max": 100},
         supported_features=5,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
         original_name="Mock Original Name",
         original_icon="hass:original-icon",
     )
@@ -612,14 +684,14 @@ async def test_async_get_device_class_lookup(hass):
         "light",
         "battery_charging",
         device_id="light_device_entry_id",
-        device_class="battery_charging",
+        original_device_class="battery_charging",
     )
     ent_reg.async_get_or_create(
         "sensor",
         "light",
         "battery",
         device_id="light_device_entry_id",
-        device_class="battery",
+        original_device_class="battery",
     )
     ent_reg.async_get_or_create(
         "light", "light", "demo", device_id="light_device_entry_id"
@@ -629,14 +701,14 @@ async def test_async_get_device_class_lookup(hass):
         "vacuum",
         "battery_charging",
         device_id="vacuum_device_entry_id",
-        device_class="battery_charging",
+        original_device_class="battery_charging",
     )
     ent_reg.async_get_or_create(
         "sensor",
         "vacuum",
         "battery",
         device_id="vacuum_device_entry_id",
-        device_class="battery",
+        original_device_class="battery",
     )
     ent_reg.async_get_or_create(
         "vacuum", "vacuum", "demo", device_id="vacuum_device_entry_id"
@@ -646,7 +718,7 @@ async def test_async_get_device_class_lookup(hass):
         "remote",
         "battery_charging",
         device_id="remote_device_entry_id",
-        device_class="battery_charging",
+        original_device_class="battery_charging",
     )
     ent_reg.async_get_or_create(
         "remote", "remote", "demo", device_id="remote_device_entry_id"

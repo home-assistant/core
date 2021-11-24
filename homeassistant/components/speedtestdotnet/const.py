@@ -1,7 +1,8 @@
-"""Consts used by Speedtest.net."""
+"""Constants used by Speedtest.net."""
 from __future__ import annotations
 
-from typing import Final
+from dataclasses import dataclass
+from typing import Callable, Final
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -13,24 +14,34 @@ DOMAIN: Final = "speedtestdotnet"
 
 SPEED_TEST_SERVICE: Final = "speedtest"
 
-SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
-    SensorEntityDescription(
+
+@dataclass
+class SpeedtestSensorEntityDescription(SensorEntityDescription):
+    """Class describing Speedtest sensor entities."""
+
+    value: Callable = round
+
+
+SENSOR_TYPES: Final[tuple[SpeedtestSensorEntityDescription, ...]] = (
+    SpeedtestSensorEntityDescription(
         key="ping",
         name="Ping",
         native_unit_of_measurement=TIME_MILLISECONDS,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SpeedtestSensorEntityDescription(
         key="download",
         name="Download",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
         state_class=STATE_CLASS_MEASUREMENT,
+        value=lambda value: round(value / 10 ** 6, 2),
     ),
-    SensorEntityDescription(
+    SpeedtestSensorEntityDescription(
         key="upload",
         name="Upload",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
         state_class=STATE_CLASS_MEASUREMENT,
+        value=lambda value: round(value / 10 ** 6, 2),
     ),
 )
 

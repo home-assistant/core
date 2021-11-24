@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import functools
 import logging
 from traceback import FrameSummary, extract_stack
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -49,24 +50,34 @@ class MissingIntegrationFrame(HomeAssistantError):
     """Raised when no integration is found in the frame."""
 
 
-def report(what: str) -> None:
+def report(
+    what: str,
+    exclude_integrations: set | None = None,
+    error_if_core: bool = True,
+    level: int = logging.WARNING,
+) -> None:
     """Report incorrect usage.
 
     Async friendly.
     """
     try:
-        integration_frame = get_integration_frame()
+        integration_frame = get_integration_frame(
+            exclude_integrations=exclude_integrations
+        )
     except MissingIntegrationFrame as err:
-        # Did not source from an integration? Hard error.
-        raise RuntimeError(
-            f"Detected code that {what}. Please report this issue."
-        ) from err
+        msg = f"Detected code that {what}. Please report this issue."
+        if error_if_core:
+            raise RuntimeError(msg) from err
+        _LOGGER.warning(msg, stack_info=True)
+        return
 
-    report_integration(what, integration_frame)
+    report_integration(what, integration_frame, level)
 
 
 def report_integration(
-    what: str, integration_frame: tuple[FrameSummary, str, str]
+    what: str,
+    integration_frame: tuple[FrameSummary, str, str],
+    level: int = logging.WARNING,
 ) -> None:
     """Report incorrect usage in an integration.
 
@@ -80,7 +91,8 @@ def report_integration(
     else:
         extra = ""
 
-    _LOGGER.warning(
+    _LOGGER.log(
+        level,
         "Detected integration that %s. "
         "Please report issue%s for %s using this method at %s, line %s: %s",
         what,

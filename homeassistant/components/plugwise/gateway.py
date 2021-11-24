@@ -15,6 +15,9 @@ from plugwise.smile import Smile
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONFIGURATION_URL,
+    ATTR_MODEL,
+    ATTR_VIA_DEVICE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -120,7 +123,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, api.gateway_id)},
@@ -192,17 +195,22 @@ class SmileGateway(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        device_information = {
-            "identifiers": {(DOMAIN, self._dev_id)},
-            "name": self._entity_name,
-            "manufacturer": "Plugwise",
-        }
+        device_information = DeviceInfo(
+            identifiers={(DOMAIN, self._dev_id)},
+            name=self._entity_name,
+            manufacturer="Plugwise",
+        )
+
+        if entry := self.coordinator.config_entry:
+            device_information[
+                ATTR_CONFIGURATION_URL
+            ] = f"http://{entry.data[CONF_HOST]}"
 
         if self._model is not None:
-            device_information["model"] = self._model.replace("_", " ").title()
+            device_information[ATTR_MODEL] = self._model.replace("_", " ").title()
 
         if self._dev_id != self._api.gateway_id:
-            device_information["via_device"] = (DOMAIN, self._api.gateway_id)
+            device_information[ATTR_VIA_DEVICE] = (DOMAIN, self._api.gateway_id)
 
         return device_information
 

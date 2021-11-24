@@ -9,9 +9,13 @@
             "unknown": "Beklenmeyen hata"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Home Asistan\u0131'na Volumio \"{name}\" eklemek istiyor musunuz?",
+                "title": "Bulunan Volumio"
+            },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "port": "Port"
                 }
             }

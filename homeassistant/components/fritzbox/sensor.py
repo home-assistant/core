@@ -1,8 +1,9 @@
 """Support for AVM FRITZ!SmartHome temperature sensor only devices."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Final
+from typing import Final
 
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
@@ -16,9 +17,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -52,16 +55,27 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         suitable=lambda device: (
             device.has_temperature_sensor and not device.has_thermostat
         ),
         native_value=lambda device: device.temperature,  # type: ignore[no-any-return]
     ),
     FritzSensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: device.rel_humidity is not None,
+        native_value=lambda device: device.rel_humidity,  # type: ignore[no-any-return]
+    ),
+    FritzSensorEntityDescription(
         key="battery",
         name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         suitable=lambda device: device.battery_level is not None,
         native_value=lambda device: device.battery_level,  # type: ignore[no-any-return]
     ),

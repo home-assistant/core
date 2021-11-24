@@ -29,6 +29,7 @@
             },
             "cameras": {
                 "data": {
+                    "camera_audio": "Kameras, die Audio unterst\u00fctzen",
                     "camera_copy": "Kameras, die native H.264-Streams unterst\u00fctzen"
                 },
                 "description": "Pr\u00fcfe alle Kameras, die native H.264-Streams unterst\u00fctzen. Wenn die Kamera keinen H.264-Stream ausgibt, transkodiert das System das Video in H.264 f\u00fcr HomeKit. Die Transkodierung erfordert eine leistungsstarke CPU und wird wahrscheinlich nicht auf Einplatinencomputern funktionieren.",

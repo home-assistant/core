@@ -16,13 +16,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -30,7 +23,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .const import DATA_ELGATO_CLIENT, DOMAIN, SERVICE_IDENTIFY
+from .const import DOMAIN, SERVICE_IDENTIFY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato Light based on a config entry."""
-    elgato: Elgato = hass.data[DOMAIN][entry.entry_id][DATA_ELGATO_CLIENT]
+    elgato: Elgato = hass.data[DOMAIN][entry.entry_id]
     info = await elgato.info()
     settings = await elgato.settings()
     async_add_entities([ElgatoLight(elgato, info, settings)], True)
@@ -187,13 +180,13 @@ class ElgatoLight(LightEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Elgato Light."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._info.serial_number)},
-            ATTR_NAME: self._info.product_name,
-            ATTR_MANUFACTURER: "Elgato",
-            ATTR_MODEL: self._info.product_name,
-            ATTR_SW_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._info.serial_number)},
+            manufacturer="Elgato",
+            model=self._info.product_name,
+            name=self._info.product_name,
+            sw_version=f"{self._info.firmware_version} ({self._info.firmware_build_number})",
+        )
 
     async def async_identify(self) -> None:
         """Identify the light, will make it blink."""

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "reauth": {
+                "data": {
+                    "email": "E\u30e1\u30fc\u30eb"
+                }
+            },
+            "user": {
+                "data": {
+                    "email": "E\u30e1\u30fc\u30eb"
+                }
+            }
+        }
+    }
+}

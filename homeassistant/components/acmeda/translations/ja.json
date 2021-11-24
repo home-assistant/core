@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "id": "\u30db\u30b9\u30c8ID"
+                },
+                "title": "\u8ffd\u52a0\u3059\u308b\u30cf\u30d6\u306e\u9078\u629e"
+            }
+        }
+    }
+}

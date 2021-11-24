@@ -5,6 +5,7 @@ import pytest
 import respx
 
 from homeassistant import data_entry_flow
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
     CONF_EVENTS,
@@ -15,7 +16,6 @@ from homeassistant.components.axis.const import (
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_IGNORE,
@@ -255,11 +255,11 @@ async def test_reauth_flow_update_configuration(hass):
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: f"axis-{MAC}",
-                IP_ADDRESS: DEFAULT_HOST,
-                MAC_ADDRESS: MAC,
-            },
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip=DEFAULT_HOST,
+                macaddress=MAC,
+            ),
         ),
         (
             SOURCE_SSDP,
@@ -292,17 +292,17 @@ async def test_reauth_flow_update_configuration(hass):
         ),
         (
             SOURCE_ZEROCONF,
-            {
-                "host": DEFAULT_HOST,
-                "port": 80,
-                "hostname": f"axis-{MAC.lower()}.local.",
-                "type": "_axis-video._tcp.local.",
-                "name": f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
-                "properties": {
+            zeroconf.ZeroconfServiceInfo(
+                host=DEFAULT_HOST,
+                port=80,
+                hostname=f"axis-{MAC.lower()}.local.",
+                type="_axis-video._tcp.local.",
+                name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
+                properties={
                     "_raw": {"macaddress": MAC.encode()},
                     "macaddress": MAC,
                 },
-            },
+            ),
         ),
     ],
 )
@@ -346,11 +346,11 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: f"axis-{MAC}",
-                IP_ADDRESS: DEFAULT_HOST,
-                MAC_ADDRESS: MAC,
-            },
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip=DEFAULT_HOST,
+                macaddress=MAC,
+            ),
         ),
         (
             SOURCE_SSDP,
@@ -362,12 +362,14 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
         ),
         (
             SOURCE_ZEROCONF,
-            {
-                CONF_HOST: DEFAULT_HOST,
-                CONF_PORT: 80,
-                "name": f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
-                "properties": {"macaddress": MAC},
-            },
+            zeroconf.ZeroconfServiceInfo(
+                host=DEFAULT_HOST,
+                hostname="mock_hostname",
+                name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
+                port=80,
+                properties={"macaddress": MAC},
+                type="mock_type",
+            ),
         ),
     ],
 )
@@ -392,11 +394,11 @@ async def test_discovered_device_already_configured(
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: f"axis-{MAC}",
-                IP_ADDRESS: "2.3.4.5",
-                MAC_ADDRESS: MAC,
-            },
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip="2.3.4.5",
+                macaddress=MAC,
+            ),
             80,
         ),
         (
@@ -410,12 +412,14 @@ async def test_discovered_device_already_configured(
         ),
         (
             SOURCE_ZEROCONF,
-            {
-                CONF_HOST: "2.3.4.5",
-                CONF_PORT: 8080,
-                "name": f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
-                "properties": {"macaddress": MAC},
-            },
+            zeroconf.ZeroconfServiceInfo(
+                host="2.3.4.5",
+                hostname="mock_hostname",
+                name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
+                port=8080,
+                properties={"macaddress": MAC},
+                type="mock_type",
+            ),
             8080,
         ),
     ],
@@ -462,11 +466,11 @@ async def test_discovery_flow_updated_configuration(
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: "",
-                IP_ADDRESS: "",
-                MAC_ADDRESS: "01234567890",
-            },
+            dhcp.DhcpServiceInfo(
+                hostname="",
+                ip="",
+                macaddress="01234567890",
+            ),
         ),
         (
             SOURCE_SSDP,
@@ -478,12 +482,14 @@ async def test_discovery_flow_updated_configuration(
         ),
         (
             SOURCE_ZEROCONF,
-            {
-                CONF_HOST: "",
-                CONF_PORT: 0,
-                "name": "",
-                "properties": {"macaddress": "01234567890"},
-            },
+            zeroconf.ZeroconfServiceInfo(
+                host="",
+                hostname="mock_hostname",
+                name="",
+                port=0,
+                properties={"macaddress": "01234567890"},
+                type="mock_type",
+            ),
         ),
     ],
 )
@@ -504,7 +510,11 @@ async def test_discovery_flow_ignore_non_axis_device(
     [
         (
             SOURCE_DHCP,
-            {HOSTNAME: f"axis-{MAC}", IP_ADDRESS: "169.254.3.4", MAC_ADDRESS: MAC},
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip="169.254.3.4",
+                macaddress=MAC,
+            ),
         ),
         (
             SOURCE_SSDP,
@@ -516,12 +526,14 @@ async def test_discovery_flow_ignore_non_axis_device(
         ),
         (
             SOURCE_ZEROCONF,
-            {
-                CONF_HOST: "169.254.3.4",
-                CONF_PORT: 80,
-                "name": f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
-                "properties": {"macaddress": MAC},
-            },
+            zeroconf.ZeroconfServiceInfo(
+                host="169.254.3.4",
+                hostname="mock_hostname",
+                name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
+                port=80,
+                properties={"macaddress": MAC},
+                type="mock_type",
+            ),
         ),
     ],
 )

@@ -20,6 +20,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_S
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_USB_PATH,
@@ -96,7 +97,6 @@ class CrownstoneEntryManager:
         # Makes HA aware of the Crownstone environment HA is placed in, a user can have multiple
         self.usb_sphere_id = self.config_entry.options[CONF_USB_SPHERE]
 
-        self.hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
         self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         # HA specific listeners
@@ -114,8 +114,7 @@ class CrownstoneEntryManager:
         async with sse_client as client:
             async for event in client:
                 if event is not None:
-                    # Make SSE updates, like ability change, available to the user
-                    self.hass.bus.async_fire(f"{DOMAIN}_{event.type}", event.data)
+                    async_dispatcher_send(self.hass, f"{DOMAIN}_{event.type}", event)
 
     async def async_setup_usb(self) -> None:
         """Attempt setup of a Crownstone usb dongle."""

@@ -235,8 +235,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             CONF_SITE_ID: DEFAULT_SITE_ID,
         }
 
-        port = MODEL_PORTS.get(model_description)
-        if port is not None:
+        if (port := MODEL_PORTS.get(model_description)) is not None:
             self.config[CONF_PORT] = port
 
         return await self.async_step_user()

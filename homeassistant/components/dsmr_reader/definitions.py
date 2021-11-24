@@ -1,8 +1,9 @@
 """Definitions for DSMR Reader sensors added to MQTT."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Final
+from typing import Final
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,

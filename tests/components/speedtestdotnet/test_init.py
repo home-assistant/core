@@ -1,4 +1,5 @@
 """Tests for SpeedTest integration."""
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 import speedtest
@@ -13,8 +14,9 @@ from homeassistant.components.speedtestdotnet.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SCAN_INTERVAL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_successful_config_entry(hass: HomeAssistant) -> None:
@@ -74,6 +76,10 @@ async def test_server_not_found(hass: HomeAssistant, mock_api: MagicMock) -> Non
 
     entry = MockConfigEntry(
         domain=DOMAIN,
+        options={
+            CONF_MANUAL: False,
+            CONF_SCAN_INTERVAL: 60,
+        },
     )
     entry.add_to_hass(hass)
 
@@ -82,7 +88,10 @@ async def test_server_not_found(hass: HomeAssistant, mock_api: MagicMock) -> Non
     assert hass.data[DOMAIN]
 
     mock_api.return_value.get_servers.side_effect = speedtest.NoMatchedServers
-    await hass.data[DOMAIN].async_refresh()
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=entry.options[CONF_SCAN_INTERVAL] + 1),
+    )
     await hass.async_block_till_done()
     state = hass.states.get("sensor.speedtest_ping")
     assert state is not None

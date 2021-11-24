@@ -1,7 +1,6 @@
 """Lighting channels module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
 from contextlib import suppress
 
 from zigpy.zcl.clusters import lighting
@@ -36,6 +35,12 @@ class ColorChannel(ZigbeeChannel):
     )
     MAX_MIREDS: int = 500
     MIN_MIREDS: int = 153
+    ZCL_INIT_ATTRS = {
+        "color_temp_physical_min": True,
+        "color_temp_physical_max": True,
+        "color_capabilities": True,
+        "color_loop_active": False,
+    }
 
     @property
     def color_capabilities(self) -> int:
@@ -75,22 +80,3 @@ class ColorChannel(ZigbeeChannel):
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this channel supports."""
         return self.cluster.get("color_temp_physical_max", self.MAX_MIREDS)
-
-    def async_configure_channel_specific(self) -> Coroutine:
-        """Configure channel."""
-        return self.fetch_color_capabilities(False)
-
-    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
-        """Initialize channel."""
-        return self.fetch_color_capabilities(True)
-
-    async def fetch_color_capabilities(self, from_cache: bool) -> None:
-        """Get the color configuration."""
-        attributes = [
-            "color_temp_physical_min",
-            "color_temp_physical_max",
-            "color_capabilities",
-            "color_temperature",
-        ]
-        # just populates the cache, if not already done
-        await self.get_attributes(attributes, from_cache=from_cache)
