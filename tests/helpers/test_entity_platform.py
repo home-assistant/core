@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -1108,6 +1108,7 @@ async def test_entity_info_added_to_entity_registry(hass):
         device_class=None,
         entity_category="config",
         icon=None,
+        id=ANY,
         name=None,
         original_device_class="mock-device-class",
         original_icon="nice:icon",
