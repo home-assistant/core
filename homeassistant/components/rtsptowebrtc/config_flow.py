@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 
-from . import DATA_RTSP_TO_WEBRTC_URL, DOMAIN
+from . import DATA_SERVER_URL, DOMAIN
 
 
 class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -26,11 +26,11 @@ class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title="RTSPtoWebRTC",
                 data={
-                    DATA_RTSP_TO_WEBRTC_URL: user_input[DATA_RTSP_TO_WEBRTC_URL],
+                    DATA_SERVER_URL: user_input[DATA_SERVER_URL],
                 },
             )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(DATA_RTSP_TO_WEBRTC_URL): str}),
+            data_schema=vol.Schema({vol.Required(DATA_SERVER_URL): str}),
         )

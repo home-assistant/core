@@ -18,15 +18,15 @@ async def test_web_full_flow(hass: HomeAssistant):
     )
     assert result.get("type") == "form"
     assert result.get("step_id") == "user"
-    assert result.get("data_schema").schema.get("rtsp_to_webrtc_url") == str
+    assert result.get("data_schema").schema.get("server_url") == str
     assert result.get("errors") is None
     assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"rtsp_to_webrtc_url": "https://example.com"}
+        result["flow_id"], {"server_url": "https://example.com"}
     )
     assert result.get("type") == "create_entry"
     assert "result" in result
-    assert result["result"].data == {"rtsp_to_webrtc_url": "https://example.com"}
+    assert result["result"].data == {"server_url": "https://example.com"}
 
 
 async def test_single_config_entry(hass):
