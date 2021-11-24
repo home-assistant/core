@@ -6,15 +6,27 @@ from typing import Any
 
 import pyvera as veraApi
 import voluptuous as vol
-from homeassistant.components.lock import DOMAIN as PLATFORM_DOMAIN
-from homeassistant.components.lock import ENTITY_ID_FORMAT, LockEntity
+
+from homeassistant.components.lock import (
+    DOMAIN as PLATFORM_DOMAIN,
+    ENTITY_ID_FORMAT,
+    LockEntity,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (ATTR_CREDENTIALS, CONF_COMMAND_STATE,
-                                 CONF_NAME, CONF_PIN, HTTP_OK, STATE_LOCKED,
-                                 STATE_UNLOCKED)
+from homeassistant.const import (
+    ATTR_CREDENTIALS,
+    CONF_COMMAND_STATE,
+    CONF_NAME,
+    CONF_PIN,
+    HTTP_OK,
+    STATE_LOCKED,
+    STATE_UNLOCKED,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import (AddEntitiesCallback,
-                                                   async_get_current_platform)
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data

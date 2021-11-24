@@ -10,7 +10,7 @@ setpin:
       name: Name
       description: Name of the user you need code for
       example: "John Doe"
-      default: "John Doe" 
+      default: "John Doe"
       required: true
     pin:
       name: Pin
@@ -18,7 +18,7 @@ setpin:
       example: 12345678
       default: 12345678
       required: true
-    
+
 clearpin:
   # Service name as shown in UI
   name: Remove/Delete A Door Code From The Lock
