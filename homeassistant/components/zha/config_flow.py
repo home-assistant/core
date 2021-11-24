@@ -164,9 +164,9 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Hostname is format: livingroom.local.
-        local_name = discovery_info[zeroconf.ATTR_HOSTNAME][:-1]
+        local_name = discovery_info.hostname[:-1]
         node_name = local_name[: -len(".local")]
-        host = discovery_info[zeroconf.ATTR_HOST]
+        host = discovery_info.host
         device_path = f"socket://{host}:6638"
 
         if current_entry := await self.async_set_unique_id(node_name):
