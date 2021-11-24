@@ -778,18 +778,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - changes
-      - gen-requirements-all
-      - hassfest
-      - lint-bandit
-      - lint-black
-      - lint-codespell
-      - lint-dockerfile
-      - lint-executable-shebangs
-      - lint-isort
-      - lint-json
-      - lint-pyupgrade
-      - lint-yaml
-      - mypy
       - prepare-tests
     strategy:
       fail-fast: false
