@@ -3,6 +3,7 @@ import pytest
 
 from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON
+from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import DISABLED_USER, RegistryEntry
 
 from tests.common import (
@@ -325,7 +326,7 @@ async def test_enable_entity_disabled_device(hass, client, device_registry):
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
-        disabled_by=DISABLED_USER,
+        disabled_by=DeviceEntryDisabler.USER,
     )
 
     mock_registry(
