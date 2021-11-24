@@ -62,9 +62,7 @@ async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=DUMMY_DATA
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "unknown"}
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
 async def test_step_user(hass: HomeAssistant) -> None:

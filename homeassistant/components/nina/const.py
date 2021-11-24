@@ -18,3 +18,5 @@ ATTR_ID: str = "ID"
 ATTR_SENT: str = "Sent"
 ATTR_START: str = "Start"
 ATTR_EXPIRES: str = "Expires"
+
+CORONA_FILTER: str = "Corona Filter"

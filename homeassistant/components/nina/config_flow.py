@@ -1,22 +1,16 @@
-"""Config flow for Nina integration."""  # pylint: disable=R0801
+"""Config flow for Nina integration."""
 from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol  # pylint: disable=E0401
-from pynina import ApiError, Nina  # pylint: disable=E0401
+from pynina import ApiError, Nina
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import (  # pylint: disable=W0611
-    _LOGGER,
-    CONF_FILTER_CORONA,
-    CONF_MESSAGE_SLOTS,
-    CONF_REGIONS,
-    DOMAIN,
-)
+from .const import _LOGGER, CONF_FILTER_CORONA, CONF_MESSAGE_SLOTS, CONF_REGIONS, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -27,27 +21,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         super().__init__()
-        self._all_region_codes_sorted: dict[str, str] = {}  # pylint: disable=E1136
-        self.regions_a: dict[str, Any] = {}  # pylint: disable=E1136
-        self.regions_b: dict[str, Any] = {}  # pylint: disable=E1136
-        self.regions_c: dict[str, Any] = {}  # pylint: disable=E1136
-        self.regions_d: dict[str, Any] = {}  # pylint: disable=E1136
-        self.regions_e: dict[str, Any] = {}  # pylint: disable=E1136
-        self.regions_f: dict[str, Any] = {}  # pylint: disable=E1136
+        self._all_region_codes_sorted: dict[str, str] = {}
+        self.regions_a: dict[str, Any] = {}
+        self.regions_b: dict[str, Any] = {}
+        self.regions_c: dict[str, Any] = {}
+        self.regions_d: dict[str, Any] = {}
+        self.regions_e: dict[str, Any] = {}
+        self.regions_f: dict[str, Any] = {}
 
-    async def async_step_user(  # pylint: disable=R0914,R0912
-        self: ConfigFlow,  # pylint: disable=C0330
-        user_input: dict[str, Any] | None = None,  # pylint: disable=E1136,C0326,C0330
+    async def async_step_user(
+        self: ConfigFlow,
+        user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, Any] = {}  # pylint: disable=E1136
+        errors: dict[str, Any] = {}
 
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         has_error: bool = False
 
-        if len(self._all_region_codes_sorted) == 0:  # pylint: disable=R1702
+        if len(self._all_region_codes_sorted) == 0:
             try:
                 nina: Nina = Nina()
 
@@ -62,10 +56,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
-                has_error = True
+                return self.async_abort(reason="unknown")
 
         if user_input is not None and not has_error:
-            config: dict[str, Any] = user_input  # pylint: disable=E1136
+            config: dict[str, Any] = user_input
 
             config[CONF_REGIONS] = []
 
@@ -83,12 +77,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 config[CONF_REGIONS] += user_input[CONF_REGIONS + "6"]
 
             if len(config[CONF_REGIONS]) > 0:
-                tmp: dict[str, Any] = {}  # pylint: disable=E1136
+                tmp: dict[str, Any] = {}
 
                 for reg in config[CONF_REGIONS]:
                     tmp[self._all_region_codes_sorted[reg]] = reg.split("_", 1)[0]
 
-                compact: dict[str, Any] = {}  # pylint: disable=E1136
+                compact: dict[str, Any] = {}
 
                 for key, val in tmp.items():
                     if val in compact:
@@ -124,11 +118,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    def swap_key_value(
-        dict_to_sort: dict[str, str]  # pylint: disable=E1136,C0330
-    ) -> dict[str, str]:  # pylint: disable=E1136
+    def swap_key_value(dict_to_sort: dict[str, str]) -> dict[str, str]:
         """Swap keys and values in dict."""
-        all_region_codes_swaped: dict[str, str] = {}  # pylint: disable=E1136
+        all_region_codes_swaped: dict[str, str] = {}
 
         for key, value in dict_to_sort.items():
             if value not in all_region_codes_swaped:
@@ -152,20 +144,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if name[0] == "I" or name[0] == "J" or name[0] == "K" or name[0] == "L":
                 self.regions_c[i] = name
             if (
-                name[0] == "M"  # pylint: disable=C0330
-                or name[0] == "N"  # pylint: disable=C0330
-                or name[0] == "O"  # pylint: disable=C0330
-                or name[0] == "P"  # pylint: disable=C0330
-                or name[0] == "Q"  # pylint: disable=C0330
+                name[0] == "M"
+                or name[0] == "N"
+                or name[0] == "O"
+                or name[0] == "P"
+                or name[0] == "Q"
             ):
                 self.regions_d[i] = name
             if name[0] == "R" or name[0] == "S" or name[0] == "T" or name[0] == "U":
                 self.regions_e[i] = name
             if (
-                name[0] == "V"  # pylint: disable=C0330
-                or name[0] == "W"  # pylint: disable=C0330
-                or name[0] == "X"  # pylint: disable=C0330
-                or name[0] == "Y"  # pylint: disable=C0330
-                or name[0] == "Z"  # pylint: disable=C0330
+                name[0] == "V"
+                or name[0] == "W"
+                or name[0] == "X"
+                or name[0] == "Y"
+                or name[0] == "Z"
             ):
                 self.regions_f[i] = name

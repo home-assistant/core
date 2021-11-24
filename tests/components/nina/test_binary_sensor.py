@@ -1,9 +1,9 @@
 """Test the Nina binary sensor."""
+import json
 from typing import Any, Dict
 from unittest.mock import patch
 
 from pynina import ApiError
-import pytest
 
 from homeassistant.components.binary_sensor import DEVICE_CLASS_SAFETY
 from homeassistant.components.nina.const import (
@@ -19,7 +19,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 ENTRY_DATA: Dict[str, Any] = {
     "slots": 5,
@@ -27,58 +27,19 @@ ENTRY_DATA: Dict[str, Any] = {
     "regions": {"083350000000": "Aach, Stadt"},
 }
 
-
-@pytest.fixture
-def dummy_response() -> Dict[str, Any]:
-    """Sample data for tests."""
-    return [
-        {
-            "id": "mow.DE-BW-S-SE018-20211102-18-001",
-            "payload": {
-                "version": 1,
-                "type": "ALERT",
-                "id": "mow.DE-BW-S-SE018-20211102-18-001",
-                "hash": "cae97b1c11bde900017305f681904ad5a6e8fd1c841241ced524b83eaa3522f4",
-                "data": {
-                    "headline": "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen",
-                    "provider": "MOWAS",
-                    "severity": "Minor",
-                    "msgType": "Update",
-                    "transKeys": {"event": "BBK-EVC-040"},
-                    "area": {"type": "ZGEM", "data": "9956+1102,100001"},
-                },
-            },
-            "i18nTitle": {
-                "de": "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen"
-            },
-            "sent": "2021-11-02T20:07:16+01:00",
-        },
-        {
-            "id": "mow.DE-NW-BN-SE030-20201014-30-000",
-            "payload": {
-                "version": 1,
-                "type": "ALERT",
-                "id": "mow.DE-NW-BN-SE030-20201014-30-000",
-                "hash": "551db820a43be7e4f39283e1dfb71b212cd520c3ee478d44f43519e9c48fde4c",
-                "data": {
-                    "headline": "Ausfall Notruf 112",
-                    "provider": "MOWAS",
-                    "severity": "Minor",
-                    "msgType": "Update",
-                    "transKeys": {"event": "BBK-EVC-040"},
-                    "area": {"type": "ZGEM", "data": "1+11057,100001"},
-                },
-            },
-            "i18nTitle": {"de": "Ausfall Notruf 112"},
-            "start": "2021-11-01T05:20:00+01:00",
-            "sent": "2021-10-11T05:20:00+01:00",
-            "expires": "2021-11-22T05:19:00+01:00",
-        },
-    ]
+ENTRY_DATA_NO_CORONA: Dict[str, Any] = {
+    "slots": 5,
+    "corona_filter": False,
+    "regions": {"083350000000": "Aach, Stadt"},
+}
 
 
-async def test_sensors(hass: HomeAssistant, dummy_response: Dict[str, Any]) -> None:
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test the creation and values of the NINA sensors."""
+
+    dummy_response: Dict[str, Any] = json.loads(
+        load_fixture("nina/sample_warnings.json")
+    )
 
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
@@ -118,7 +79,99 @@ async def test_sensors(hass: HomeAssistant, dummy_response: Dict[str, Any]) -> N
         assert state_w2.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
         assert state_w2.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
         assert state_w2.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
-        assert state_w2.attributes.get(ATTR_EXPIRES) == "2021-11-22T05:19:00+01:00"
+        assert state_w2.attributes.get(ATTR_EXPIRES) == "3021-11-22T05:19:00+01:00"
+
+        assert entry_w2.unique_id == "083350000000-2"
+
+        state_w3 = hass.states.get("binary_sensor.warnung_aach_stadt_3")
+        entry_w3 = entity_registry.async_get("binary_sensor.warnung_aach_stadt_3")
+
+        assert state_w3.state == STATE_OFF
+        assert state_w3.attributes.get(ATTR_HEADLINE) == ""
+        assert state_w3.attributes.get(ATTR_ID) == ""
+        assert state_w3.attributes.get(ATTR_SENT) == ""
+        assert state_w3.attributes.get(ATTR_START) == ""
+        assert state_w3.attributes.get(ATTR_EXPIRES) == ""
+
+        assert entry_w3.unique_id == "083350000000-3"
+        assert entry_w3.device_class == DEVICE_CLASS_SAFETY
+
+        state_w4 = hass.states.get("binary_sensor.warnung_aach_stadt_4")
+        entry_w4 = entity_registry.async_get("binary_sensor.warnung_aach_stadt_4")
+
+        assert state_w4.state == STATE_OFF
+        assert state_w4.attributes.get(ATTR_HEADLINE) == ""
+        assert state_w4.attributes.get(ATTR_ID) == ""
+        assert state_w4.attributes.get(ATTR_SENT) == ""
+        assert state_w4.attributes.get(ATTR_START) == ""
+        assert state_w4.attributes.get(ATTR_EXPIRES) == ""
+
+        assert entry_w4.unique_id == "083350000000-4"
+        assert entry_w4.device_class == DEVICE_CLASS_SAFETY
+
+        state_w5 = hass.states.get("binary_sensor.warnung_aach_stadt_5")
+        entry_w5 = entity_registry.async_get("binary_sensor.warnung_aach_stadt_5")
+
+        assert state_w5.state == STATE_OFF
+        assert state_w5.attributes.get(ATTR_HEADLINE) == ""
+        assert state_w5.attributes.get(ATTR_ID) == ""
+        assert state_w5.attributes.get(ATTR_SENT) == ""
+        assert state_w5.attributes.get(ATTR_START) == ""
+        assert state_w5.attributes.get(ATTR_EXPIRES) == ""
+
+        assert entry_w5.unique_id == "083350000000-5"
+        assert entry_w5.device_class == DEVICE_CLASS_SAFETY
+
+
+async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
+    """Test the creation and values of the NINA sensors without the corona filter."""
+
+    dummy_response: Dict[str, Any] = json.loads(
+        load_fixture("nina/sample_warnings.json")
+    )
+
+    with patch(
+        "pynina.baseApi.BaseAPI._makeRequest",
+        return_value=dummy_response,
+    ):
+
+        conf_entry: MockConfigEntry = MockConfigEntry(
+            domain=DOMAIN, title="NINA", data=ENTRY_DATA_NO_CORONA
+        )
+
+        entity_registry: er = er.async_get(hass)
+        conf_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(conf_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert conf_entry.state == ConfigEntryState.LOADED
+
+        state_w1 = hass.states.get("binary_sensor.warnung_aach_stadt_1")
+        entry_w1 = entity_registry.async_get("binary_sensor.warnung_aach_stadt_1")
+
+        assert state_w1.state == STATE_ON
+        assert (
+            state_w1.attributes.get(ATTR_HEADLINE)
+            == "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen"
+        )
+        assert state_w1.attributes.get(ATTR_ID) == "mow.DE-BW-S-SE018-20211102-18-001"
+        assert state_w1.attributes.get(ATTR_SENT) == "2021-11-02T20:07:16+01:00"
+        assert state_w1.attributes.get(ATTR_START) == ""
+        assert state_w1.attributes.get(ATTR_EXPIRES) == ""
+
+        assert entry_w1.unique_id == "083350000000-1"
+        assert entry_w1.device_class == DEVICE_CLASS_SAFETY
+
+        state_w2 = hass.states.get("binary_sensor.warnung_aach_stadt_2")
+        entry_w2 = entity_registry.async_get("binary_sensor.warnung_aach_stadt_2")
+
+        assert state_w2.state == STATE_ON
+        assert state_w2.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
+        assert state_w2.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
+        assert state_w2.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
+        assert state_w2.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
+        assert state_w2.attributes.get(ATTR_EXPIRES) == "3021-11-22T05:19:00+01:00"
 
         assert entry_w2.unique_id == "083350000000-2"
 
@@ -177,7 +230,7 @@ async def test_sensors_connection_error(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(conf_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert conf_entry.state == ConfigEntryState.LOADED
+        assert conf_entry.state == ConfigEntryState.SETUP_RETRY
 
         state_w1 = hass.states.get("binary_sensor.warnung_aach_stadt_1")
 

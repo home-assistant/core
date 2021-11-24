@@ -1,4 +1,5 @@
 """Test the Nina init file."""
+
 from typing import Any, Dict
 
 from homeassistant.components.nina.const import DOMAIN
@@ -15,8 +16,8 @@ ENTRY_DATA: Dict[str, Any] = {
 }
 
 
-async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
-    """Test the configuration entry."""
+async def init_integration(hass) -> MockConfigEntry:
+    """Set up the NINA integration in Home Assistant."""
     entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN, title="NINA", data=ENTRY_DATA
     )
@@ -24,5 +25,11 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
+    return entry
+
+
+async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
+    """Test the configuration entry."""
+    entry: MockConfigEntry = await init_integration(hass)
 
     assert entry.state == ConfigEntryState.LOADED
