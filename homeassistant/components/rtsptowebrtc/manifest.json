@@ -3,7 +3,7 @@
   "name": "RTSPtoWebRTC",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rtsptowebrtc",
-  "requirements": ["rtsp-to-webrtc==0.2.6"],
+  "requirements": ["rtsp-to-webrtc==0.2.7"],
   "dependencies": [],
   "codeowners": [
     "@allenporter"
