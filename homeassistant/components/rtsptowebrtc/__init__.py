@@ -1,4 +1,4 @@
-"""WebRTC integration with an external RTSPToWebRTC Server.
+"""RTSPtoWebRTC integration with an external RTSPToWebRTC Server.
 
 WebRTC uses a direct communication from the client (e.g. a web browser) to a
 camera device. Home Assistant acts as the signal path for initial set up,
@@ -10,7 +10,7 @@ for camera devices that support RTSP streams only, relying on an external
 server RTSPToWebRTC that is a proxy. Home Assistant does not participate in
 the offer/answer SDP protocol, other than as a signal path pass through.
 
-Other integrations may use this webrtc integration with these steps:
+Other integrations may use this integration with these steps:
 - Check if this integration is loaded
 - Call is_suported_stream_source for compatibility
 - Call async_offer_for_stream_source to get back an answer for a client offer
@@ -33,13 +33,13 @@ from .const import DATA_RTSP_TO_WEBRTC_URL
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "webrtc"
+DOMAIN = "rtsptowebrtc"
 TIMEOUT = 10
 RTSP_PREFIXES = {"rtsp://", "rtsps://"}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up WebRTC from a config entry."""
+    """Set up RTSPtoWebRTC from a config entry."""
 
     if DATA_RTSP_TO_WEBRTC_URL not in entry.data:
         _LOGGER.error(
@@ -78,7 +78,7 @@ async def async_offer_for_stream_source(
     the stream itself happens directly between the client and proxy.
     """
     if DOMAIN not in hass.config.components:
-        raise HomeAssistantError("webrtc integration is not set up.")
+        raise HomeAssistantError(f"'{DOMAIN}' integration is not set up.")
     client: Client = hass.data[DOMAIN]
     try:
         async with async_timeout.timeout(TIMEOUT):
