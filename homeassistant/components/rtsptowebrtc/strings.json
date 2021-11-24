@@ -6,7 +6,7 @@
       },
       "user": {
         "title": "Configure RTSPtoWebRTC",
-        "description": "The RTSPtoWebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.\n",
+        "description": "The RTSPtoWebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.",
         "data": {
           "server_url": "RTSPtoWebRTC server URL e.g. https://example.com"
         }
