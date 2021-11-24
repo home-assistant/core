@@ -46,7 +46,6 @@ MOCK_DISCOVER = ssdp.SsdpServiceInfo(
         ssdp.ATTR_UPNP_UDN: MOCK_UDN,
         ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:MediaRenderer:1",
     },
-    x_homeassistant_matching_domains=set(),
 )
 
 
