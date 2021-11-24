@@ -95,7 +95,7 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("colorloop", 100)
+    bulb.async_set_effect.assert_called_with("colorloop", 100, 50)
     bulb.async_set_effect.reset_mock()
 
     await async_mock_effect_speed(hass, bulb, "red_fade", 50)
@@ -105,7 +105,7 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 50},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("red_fade", 50)
+    bulb.async_set_effect.assert_called_with("red_fade", 50, 50)
     bulb.async_set_effect.reset_mock()
 
     state = hass.states.get(number_entity_id)
@@ -161,7 +161,7 @@ async def test_original_addressable_light_effect_speed(hass: HomeAssistant) -> N
         {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("7 colors change gradually", 100)
+    bulb.async_set_effect.assert_called_with("7 colors change gradually", 100, 50)
     bulb.async_set_effect.reset_mock()
     await async_mock_effect_speed(hass, bulb, "7 colors run in olivary", 100)
 
@@ -209,7 +209,7 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("RBM 1", 100)
+    bulb.async_set_effect.assert_called_with("RBM 1", 100, 50)
     bulb.async_set_effect.reset_mock()
 
     await async_mock_device_turn_on(hass, bulb)
@@ -219,7 +219,7 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("RBM 1", 100)
+    bulb.async_set_effect.assert_called_with("RBM 1", 100, 50)
     bulb.async_set_effect.reset_mock()
     await async_mock_effect_speed(hass, bulb, "RBM 2", 100)
 
