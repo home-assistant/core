@@ -92,7 +92,7 @@ _LOGGER = logging.getLogger(__name__)
 class _HaServiceDescription:
     """Keys added by HA."""
 
-    x_homeassistant_matching_domains: set[str]
+    x_homeassistant_matching_domains: set[str] = field(default_factory=set)
 
 
 @dataclass
