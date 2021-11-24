@@ -241,10 +241,10 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         )  # for rounding
         self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
         self._attr_supported_color_modes = _hass_color_modes(self._device)
-        effect_list: list[str] = self._device.effect_list
+        custom_effects: list[str] = []
         if custom_effect_colors:
-            effect_list.append(EFFECT_CUSTOM)
-        self._attr_effect_list = effect_list
+            custom_effects.append(EFFECT_CUSTOM)
+        self._attr_effect_list = [*self._device.effect_list, *custom_effects]
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
