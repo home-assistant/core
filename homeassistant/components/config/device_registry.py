@@ -8,7 +8,7 @@ from homeassistant.components.websocket_api.decorators import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
-    DeviceEntryDisabledBy,
+    DeviceEntryDisabler,
     async_get_registry,
 )
 
@@ -26,7 +26,7 @@ SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
         vol.Optional("name_by_user"): vol.Any(str, None),
         # We only allow setting disabled_by user via API.
         # No Enum support like this in voluptuous, use .value
-        vol.Optional("disabled_by"): vol.Any(DeviceEntryDisabledBy.USER.value, None),
+        vol.Optional("disabled_by"): vol.Any(DeviceEntryDisabler.USER.value, None),
     }
 )
 
