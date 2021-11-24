@@ -141,7 +141,7 @@ class FroniusSolarNet:
     async def _create_solar_net_device(self) -> DeviceInfo:
         """Create a device for the Fronius SolarNet system."""
         solar_net_device: DeviceInfo = DeviceInfo(
-            configuration_url=self.host,
+            configuration_url=self.fronius.url,
             identifiers={(DOMAIN, self.solar_net_device_id)},
             manufacturer="Fronius",
             name="SolarNet",
