@@ -459,7 +459,7 @@ class ConfigurableFanSpeedValueMix:
         """
         Validate inputs.
 
-        These inputs are hardcoded in  `discovery.py`, so these checks should
+        These inputs are hardcoded in `discovery.py`, so these checks should
         only fail due to developer error.
         """
         for speeds in self.configuration_value_to_speeds.values():
