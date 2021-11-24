@@ -281,7 +281,7 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "purple_fade"},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("purple_fade", 50)
+    bulb.async_set_effect.assert_called_with("purple_fade", 50, 50)
     bulb.async_set_effect.reset_mock()
 
 
@@ -359,7 +359,7 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "purple_fade"},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("purple_fade", 50)
+    bulb.async_set_effect.assert_called_with("purple_fade", 50, 50)
     bulb.async_set_effect.reset_mock()
     bulb.color_mode = FLUX_COLOR_MODE_CCT
     bulb.getWhiteTemperature = Mock(return_value=(5000, 128))
@@ -500,10 +500,10 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "purple_fade"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "purple_fade", ATTR_BRIGHTNESS: 255},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("purple_fade", 50)
+    bulb.async_set_effect.assert_called_with("purple_fade", 50, 100)
     bulb.async_set_effect.reset_mock()
 
 
@@ -584,10 +584,10 @@ async def test_rgb_or_w_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "purple_fade"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "purple_fade", ATTR_BRIGHTNESS: 255},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("purple_fade", 50)
+    bulb.async_set_effect.assert_called_with("purple_fade", 50, 100)
     bulb.async_set_effect.reset_mock()
 
     await hass.services.async_call(
@@ -741,7 +741,18 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "purple_fade"},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("purple_fade", 50)
+    bulb.async_set_effect.assert_called_with("purple_fade", 50, 50)
+    bulb.async_set_effect.reset_mock()
+    bulb.effect = "purple_fade"
+    bulb.brightness = 128
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
+        blocking=True,
+    )
+    bulb.async_set_effect.assert_called_with("purple_fade", 50, 100)
     bulb.async_set_effect.reset_mock()
 
 
