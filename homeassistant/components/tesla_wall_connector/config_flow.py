@@ -82,11 +82,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.info(
             "No entry found for wall connector with IP %s. Serial nr: %s",
-            str(self.ip_address),
-            str(self.serial_number),
+            self.ip_address,
+            self.serial_number,
         )
 
-        self.context["description_placeholders"] = {CONF_HOST: self.ip_address}
+        placeholders = {
+            CONF_HOST: self.ip_address,
+            WALLCONNECTOR_SERIAL_NUMBER: self.serial_number,
+        }
+
+        self.context["description_placeholders"] = placeholders
+        self.context["title_placeholders"] = placeholders
         return await self.async_step_user()
 
     async def async_step_user(

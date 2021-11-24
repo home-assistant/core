@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{serial_number} ({host})",
     "step": {
       "user": {
         "title": "Configure Tesla Wall Connector",
