@@ -46,7 +46,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PROTOCOL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -313,6 +313,15 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             await self._device.async_turn_on()
         if not kwargs:
             return
+
+        if MODE_ATTRS.intersection(kwargs):
+            await self._async_set_mode(**kwargs)
+            return
+        await self._async_adjust_brightness(self._async_brightness(**kwargs))
+
+    @callback
+    def _async_brightness(self, **kwargs: Any) -> int:
+        """Determine brightness from kwargs or current value."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
             brightness = self.brightness
         if not brightness:
@@ -321,15 +330,11 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             # If the device was on and brightness was not
             # set, it means it was masked by an effect
             brightness = 255 if self.is_on else 1
-        if MODE_ATTRS.intersection(kwargs):
-            await self._async_set_mode(
-                brightness, **{k: v for k, v in kwargs.items() if k != ATTR_BRIGHTNESS}
-            )
-            return
-        await self._async_adjust_brightness(brightness)
+        return brightness
 
-    async def _async_set_mode(self, brightness: int, **kwargs: Any) -> None:
+    async def _async_set_mode(self, **kwargs: Any) -> None:
         """Set an effect or color mode."""
+        brightness = self._async_brightness(**kwargs)
         # Handle switch to Effect Mode
         if effect := kwargs.get(ATTR_EFFECT):
             await self._async_set_effect(effect, brightness)
