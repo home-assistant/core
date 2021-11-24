@@ -148,85 +148,6 @@ async def test_view_empty_namespace(hass, hass_client):
     )
 
     assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
-
-    assert (
-        'battery_level_percent{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 12.0' in body
-    )
-
-    assert (
-        'climate_current_temperature_celsius{domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 25.0' in body
-    )
-
-    assert (
-        'climate_target_temperature_celsius{domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 20.0' in body
-    )
-
-    assert (
-        'climate_target_temperature_low_celsius{domain="climate",'
-        'entity="climate.ecobee",'
-        'friendly_name="Ecobee"} 21.0' in body
-    )
-
-    assert (
-        'climate_target_temperature_high_celsius{domain="climate",'
-        'entity="climate.ecobee",'
-        'friendly_name="Ecobee"} 24.0' in body
-    )
-
-    assert (
-        'humidifier_target_humidity_percent{domain="humidifier",'
-        'entity="humidifier.humidifier",'
-        'friendly_name="Humidifier"} 68.0' in body
-    )
-
-    assert (
-        'humidifier_state{domain="humidifier",'
-        'entity="humidifier.dehumidifier",'
-        'friendly_name="Dehumidifier"} 1.0' in body
-    )
-
-    assert (
-        'humidifier_mode{domain="humidifier",'
-        'entity="humidifier.hygrostat",'
-        'friendly_name="Hygrostat",'
-        'mode="home"} 1.0' in body
-    )
-    assert (
-        'humidifier_mode{domain="humidifier",'
-        'entity="humidifier.hygrostat",'
-        'friendly_name="Hygrostat",'
-        'mode="eco"} 0.0' in body
-    )
-
-    assert (
-        'sensor_humidity_percent{domain="sensor",'
-        'entity="sensor.outside_humidity",'
-        'friendly_name="Outside Humidity"} 54.0' in body
-    )
-
-    assert (
-        'sensor_unit_kwh{domain="sensor",'
-        'entity="sensor.television_energy",'
-        'friendly_name="Television Energy"} 74.0' in body
-    )
-
-    assert (
-        'sensor_power_kwh{domain="sensor",'
-        'entity="sensor.radio_energy",'
-        'friendly_name="Radio Energy"} 14.0' in body
-    )
-
-    assert (
         'entity_available{domain="sensor",'
         'entity="sensor.radio_energy",'
         'friendly_name="Radio Energy"} 1.0' in body
@@ -236,24 +157,6 @@ async def test_view_empty_namespace(hass, hass_client):
         'last_updated_time_seconds{domain="sensor",'
         'entity="sensor.radio_energy",'
         'friendly_name="Radio Energy"} 86400.0' in body
-    )
-
-    assert (
-        'sensor_unit_sek_per_kwh{domain="sensor",'
-        'entity="sensor.electricity_price",'
-        'friendly_name="Electricity price"} 0.123' in body
-    )
-
-    assert (
-        'sensor_unit_u0xb0{domain="sensor",'
-        'entity="sensor.wind_direction",'
-        'friendly_name="Wind Direction"} 25.0' in body
-    )
-
-    assert (
-        'sensor_unit_u0xb5g_per_mu0xb3{domain="sensor",'
-        'entity="sensor.sps30_pm_1um_weight_concentration",'
-        'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
     )
 
     assert (
@@ -272,18 +175,6 @@ async def test_view_empty_namespace(hass, hass_client):
         'sensor_unit_text{domain="sensor",'
         'entity="sensor.text_unit",'
         'friendly_name="Text Unit"} 0' not in body
-    )
-
-    assert (
-        'input_number_state{domain="input_number",'
-        'entity="input_number.threshold",'
-        'friendly_name="Threshold"} 5.2' in body
-    )
-
-    assert (
-        'input_number_state{domain="input_number",'
-        'entity="input_number.brightness",'
-        'friendly_name="None"} 60.0' in body
     )
 
 
@@ -309,6 +200,181 @@ async def test_view_default_namespace(hass, hass_client):
         'homeassistant_sensor_temperature_celsius{domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 15.6' in body
+    )
+
+
+async def test_sensor_unit(hass, hass_client):
+    """Test prometheus metrics for sensors with a unit."""
+    client = await prometheus_client(hass, hass_client, "")
+    resp = await client.get(prometheus.API_ENDPOINT)
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert (
+        'sensor_unit_kwh{domain="sensor",'
+        'entity="sensor.television_energy",'
+        'friendly_name="Television Energy"} 74.0' in body
+    )
+
+    assert (
+        'sensor_unit_sek_per_kwh{domain="sensor",'
+        'entity="sensor.electricity_price",'
+        'friendly_name="Electricity price"} 0.123' in body
+    )
+
+    assert (
+        'sensor_unit_u0xb0{domain="sensor",'
+        'entity="sensor.wind_direction",'
+        'friendly_name="Wind Direction"} 25.0' in body
+    )
+
+    assert (
+        'sensor_unit_u0xb5g_per_mu0xb3{domain="sensor",'
+        'entity="sensor.sps30_pm_1um_weight_concentration",'
+        'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
+    )
+
+
+async def test_sensor_device_class(hass, hass_client):
+    """Test prometheus metrics for sensor with a device_class."""
+    client = await prometheus_client(hass, hass_client, "")
+    resp = await client.get(prometheus.API_ENDPOINT)
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert (
+        'sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 15.6' in body
+    )
+
+    assert (
+        'sensor_humidity_percent{domain="sensor",'
+        'entity="sensor.outside_humidity",'
+        'friendly_name="Outside Humidity"} 54.0' in body
+    )
+
+    assert (
+        'sensor_power_kwh{domain="sensor",'
+        'entity="sensor.radio_energy",'
+        'friendly_name="Radio Energy"} 14.0' in body
+    )
+
+
+async def test_input_number(hass, hass_client):
+    """Test prometheus metrics for input_number."""
+    client = await prometheus_client(hass, hass_client, "")
+    resp = await client.get(prometheus.API_ENDPOINT)
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert (
+        'input_number_state{domain="input_number",'
+        'entity="input_number.threshold",'
+        'friendly_name="Threshold"} 5.2' in body
+    )
+
+    assert (
+        'input_number_state{domain="input_number",'
+        'entity="input_number.brightness",'
+        'friendly_name="None"} 60.0' in body
+    )
+
+
+async def test_battery(hass, hass_client):
+    """Test prometheus metrics for battery."""
+    client = await prometheus_client(hass, hass_client, "")
+    resp = await client.get(prometheus.API_ENDPOINT)
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert (
+        'battery_level_percent{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 12.0' in body
+    )
+
+
+async def test_climate(hass, hass_client):
+    """Test prometheus metrics for battery."""
+    client = await prometheus_client(hass, hass_client, "")
+    resp = await client.get(prometheus.API_ENDPOINT)
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert (
+        'climate_current_temperature_celsius{domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 25.0' in body
+    )
+
+    assert (
+        'climate_target_temperature_celsius{domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 20.0' in body
+    )
+
+    assert (
+        'climate_target_temperature_low_celsius{domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee"} 21.0' in body
+    )
+
+    assert (
+        'climate_target_temperature_high_celsius{domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee"} 24.0' in body
+    )
+
+
+async def test_humidifier(hass, hass_client):
+    """Test prometheus metrics for battery."""
+    client = await prometheus_client(hass, hass_client, "")
+    resp = await client.get(prometheus.API_ENDPOINT)
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert (
+        'humidifier_target_humidity_percent{domain="humidifier",'
+        'entity="humidifier.humidifier",'
+        'friendly_name="Humidifier"} 68.0' in body
+    )
+
+    assert (
+        'humidifier_state{domain="humidifier",'
+        'entity="humidifier.dehumidifier",'
+        'friendly_name="Dehumidifier"} 1.0' in body
+    )
+
+    assert (
+        'humidifier_mode{domain="humidifier",'
+        'entity="humidifier.hygrostat",'
+        'friendly_name="Hygrostat",'
+        'mode="home"} 1.0' in body
+    )
+    assert (
+        'humidifier_mode{domain="humidifier",'
+        'entity="humidifier.hygrostat",'
+        'friendly_name="Hygrostat",'
+        'mode="eco"} 0.0' in body
     )
 
 
