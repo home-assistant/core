@@ -319,6 +319,30 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             return
         await self._async_adjust_brightness(self._async_brightness(**kwargs))
 
+    async def _async_set_effect(self, effect: str, brightness: int) -> None:
+        """Set an effect."""
+        # Random color effect
+        if effect == EFFECT_RANDOM:
+            await self._device.async_set_levels(
+                random.randint(0, 255),
+                random.randint(0, 255),
+                random.randint(0, 255),
+            )
+            return
+        # Custom effect
+        if effect == EFFECT_CUSTOM:
+            if self._custom_effect_colors:
+                await self._device.async_set_custom_pattern(
+                    self._custom_effect_colors,
+                    self._custom_effect_speed_pct,
+                    self._custom_effect_transition,
+                )
+            return
+        effect_brightness = round(brightness / 255 * 100)
+        await self._device.async_set_effect(
+            effect, self._device.speed or DEFAULT_EFFECT_SPEED, effect_brightness
+        )
+
     @callback
     def _async_brightness(self, **kwargs: Any) -> int:
         """Determine brightness from kwargs or current value."""
@@ -410,30 +434,6 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         if self.color_mode in {COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS}:
             await self._device.async_set_levels(w=brightness)
             return
-
-    async def _async_set_effect(self, effect: str, brightness: int) -> None:
-        """Set an effect."""
-        # Random color effect
-        if effect == EFFECT_RANDOM:
-            await self._device.async_set_levels(
-                random.randint(0, 255),
-                random.randint(0, 255),
-                random.randint(0, 255),
-            )
-            return
-        # Custom effect
-        if effect == EFFECT_CUSTOM:
-            if self._custom_effect_colors:
-                await self._device.async_set_custom_pattern(
-                    self._custom_effect_colors,
-                    self._custom_effect_speed_pct,
-                    self._custom_effect_transition,
-                )
-            return
-        effect_brightness = round(brightness / 255 * 100)
-        await self._device.async_set_effect(
-            effect, self._device.speed or DEFAULT_EFFECT_SPEED, effect_brightness
-        )
 
     async def async_set_custom_effect(
         self, colors: list[tuple[int, int, int]], speed_pct: int, transition: str
