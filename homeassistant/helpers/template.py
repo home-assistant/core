@@ -1462,9 +1462,7 @@ def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SE
 def timestamp_local(value, default=_SENTINEL):
     """Filter to convert given timestamp to local date/time."""
     try:
-        return dt_util.as_local(dt_util.utc_from_timestamp(value)).strftime(
-            DATE_STR_FORMAT
-        )
+        return dt_util.as_local(dt_util.utc_from_timestamp(value)).isoformat()
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
@@ -1476,7 +1474,7 @@ def timestamp_local(value, default=_SENTINEL):
 def timestamp_utc(value, default=_SENTINEL):
     """Filter to convert given timestamp to UTC date/time."""
     try:
-        return dt_util.utc_from_timestamp(value).strftime(DATE_STR_FORMAT)
+        return dt_util.utc_from_timestamp(value).isoformat()
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
