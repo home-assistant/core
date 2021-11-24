@@ -418,14 +418,11 @@ class PrometheusMetrics:
                 break
 
         if metric is not None:
-            if unit in (None, ""):
-                _metric = self._metric(
-                    metric, self.prometheus_cli.Gauge, "State of the sensor"
-                )
-            else:
-                _metric = self._metric(
-                    metric, self.prometheus_cli.Gauge, f"Sensor data measured in {unit}"
-                )
+            documentation = "State of the sensor"
+            if unit:
+                documentation = f"Sensor data measured in {unit}"
+
+            _metric = self._metric(metric, self.prometheus_cli.Gauge, documentation)
 
             try:
                 value = self.state_as_number(state)
@@ -465,10 +462,10 @@ class PrometheusMetrics:
         if unit in (None, ""):
             try:
                 state_helper.state_as_number(state)
-                return "sensor_state"
             except ValueError:
                 _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
                 return None
+            return "sensor_state"
         return f"sensor_unit_{unit}"
 
     @staticmethod
