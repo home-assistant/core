@@ -399,7 +399,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.24.29
+flux_led==0.24.30
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1211,7 +1211,7 @@ pyzerproc==0.4.8
 rachiopy==1.0.3
 
 # homeassistant.components.rainmachine
-regenmaschine==3.1.5
+regenmaschine==2021.10.0
 
 # homeassistant.components.renault
 renault-api==0.1.4
