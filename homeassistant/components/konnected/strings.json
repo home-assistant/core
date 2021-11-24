@@ -103,7 +103,8 @@
     },
     "abort": {
       "not_konn_panel": "Not a recognized Konnected.io device",
-      "connection_error": "Failed to connect to Konnected.io device"
+      "connection_error": "Failed to connect to Konnected.io device",
+      "already_configured": "Konnected.io device already configured"
     }
   }
 }
