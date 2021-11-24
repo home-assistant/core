@@ -1689,16 +1689,16 @@ def random_every_time(context, values):
 
 def today_at(time_str: str = "") -> datetime:
     """Record fetching now where the time has been replaced with value."""
-    start = dt_util.start_of_local_day(datetime.now())
+    today = dt_util.start_of_local_day()
+    if not time_str:
+        return today
 
-    dttime = start.time() if time_str == "" else dt_util.parse_time(time_str)
+    if (time_today := dt_util.parse_time(time_str)) is None:
+        raise ValueError(
+            f"could not convert {type(time_str).__name__} to datetime: '{time_str}'"
+        )
 
-    if dttime:
-        return datetime.combine(start.date(), dttime, tzinfo=dt_util.DEFAULT_TIME_ZONE)
-
-    raise ValueError(
-        f"could not convert {type(time_str).__name__} to datetime: '{time_str}'"
-    )
+    return datetime.combine(today, time_today, today.tzinfo)
 
 
 def relative_time(value):
