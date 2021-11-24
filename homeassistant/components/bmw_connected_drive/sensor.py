@@ -158,6 +158,9 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
         super().__init__(account, vehicle)
         self.entity_description = description
 
+        self._attr_name = f"{vehicle.name} {description.key}"
+        self._attr_unique_id = f"{vehicle.vin}-{description.key}"
+
         if unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL:
             self._attr_native_unit_of_measurement = description.unit_imperial
         else:
