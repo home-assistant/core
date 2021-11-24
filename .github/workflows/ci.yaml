@@ -31,8 +31,8 @@ jobs:
       integrations_glob: ${{ steps.info.outputs.integrations_glob }}
       tests: ${{ steps.info.outputs.tests }}
       tests_glob: ${{ steps.info.outputs.tests_glob }}
-      test_groups: ${{ steps.info.outputs.groups }}
-      test_group_count: ${{ steps.info.outputs.group_count }}
+      test_groups: ${{ steps.info.outputs.test_groups }}
+      test_group_count: ${{ steps.info.outputs.test_group_count }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out code from GitHub
