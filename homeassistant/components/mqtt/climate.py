@@ -410,7 +410,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 self._action = payload
                 self.async_write_ha_state()
             else:
-                _LOGGER.error(
+                _LOGGER.warning(
                     "Invalid %s action: %s",
                     CURRENT_HVAC_ACTIONS,
                     payload,
