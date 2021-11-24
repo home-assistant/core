@@ -4,8 +4,7 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import lock
-from homeassistant.components.lock import LockEntity
-from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
+from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -120,8 +119,6 @@ class MqttLock(MqttEntity, LockEntity):
                 self._state = True
             elif payload == self._config[CONF_STATE_UNLOCKED]:
                 self._state = False
-            elif payload == self._config[CONF_STATE_OPEN]:
-                self._state = False
 
             self.async_write_ha_state()
 
@@ -203,6 +200,6 @@ class MqttLock(MqttEntity, LockEntity):
             self._config[CONF_RETAIN],
         )
         if self._optimistic:
-            # Optimistically assume that the lock has changed state.
+            # Optimistically assume that the lock unlocks when opened.
             self._state = False
             self.async_write_ha_state()

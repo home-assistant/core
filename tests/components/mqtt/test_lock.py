@@ -280,6 +280,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
+
 async def test_sending_mqtt_commands_support_open_and_optimistic(hass, mqtt_mock):
     """Test open function of the lock without state topic."""
     assert await async_setup_component(
@@ -335,6 +336,7 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(hass, mqtt_mock
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
+
 
 async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(hass, mqtt_mock):
     """Test open function of the lock without state topic."""
@@ -393,6 +395,7 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(hass, 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
+
 
 async def test_availability_when_connection_lost(hass, mqtt_mock):
     """Test availability after MQTT disconnection."""
