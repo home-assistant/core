@@ -1,1 +1,1 @@
-"""Tests for the UniFi Network component."""
+"""Tests for the UniFi Network integration."""

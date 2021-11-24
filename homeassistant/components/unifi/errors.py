@@ -1,4 +1,4 @@
-"""Errors for the UniFi Network component."""
+"""Errors for the UniFi Network integration."""
 from homeassistant.exceptions import HomeAssistantError
 
 
@@ -19,7 +19,7 @@ class CannotConnect(UnifiException):
 
 
 class LoginRequired(UnifiException):
-    """Component got logged out."""
+    """Integration got logged out."""
 
 
 class UserLevel(UnifiException):

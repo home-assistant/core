@@ -3,7 +3,7 @@
     "flow_title": "{site} ({host})",
     "step": {
       "user": {
-        "title": "Set up UniFi Network Controller",
+        "title": "Set up UniFi Network",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
@@ -20,7 +20,7 @@
       "unknown_client_mac": "No client available on that MAC address"
     },
     "abort": {
-      "already_configured": "Controller site is already configured",
+      "already_configured": "UniFi Network site is already configured",
       "configuration_updated": "Configuration updated.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }

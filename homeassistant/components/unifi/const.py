@@ -1,4 +1,4 @@
-"""Constants for the UniFi Network component."""
+"""Constants for the UniFi Network integration."""
 import logging
 
 LOGGER = logging.getLogger(__package__)

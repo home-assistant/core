@@ -35,7 +35,7 @@ CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up switches for UniFi Network component.
+    """Set up switches for UniFi Network integration.
 
     Switches are controlling network access and switch ports with POE.
     """
@@ -373,6 +373,6 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
             entry_type="service",
             identifiers={(DOMAIN, f"unifi_controller_{self._item.site_id}")},
             manufacturer=ATTR_MANUFACTURER,
-            model="UniFi Network Controller",
-            name="UniFi Network Controller",
+            model="UniFi Network",
+            name="UniFi Network",
         )

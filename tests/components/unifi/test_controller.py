@@ -1,4 +1,4 @@
-"""Test UniFi Network Controller."""
+"""Test UniFi Network."""
 
 import asyncio
 from copy import deepcopy

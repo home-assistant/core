@@ -1,8 +1,8 @@
-"""Config flow for UniFi Network.
+"""Config flow for UniFi Network integration.
 
 Provides user initiated configuration flow.
-Discovery of controllers hosted on UDM and UDM Pro devices through SSDP.
-Reauthentication when issue with credentials are reported.
+Discovery of Newtwork Applications hosted on UDM and UDM Pro devices
+through SSDP. Reauthentication when issue with credentials are reported.
 Configuration of options through options flow.
 """
 import socket
