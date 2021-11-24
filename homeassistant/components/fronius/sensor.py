@@ -21,6 +21,7 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_FREQUENCY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_TEMPERATURE,
@@ -145,7 +146,9 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="frequency_ac",
         name="Frequency AC",
         native_unit_of_measurement=FREQUENCY_HERTZ,
+        device_class=DEVICE_CLASS_FREQUENCY,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="current_ac",
@@ -183,6 +186,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="voltage_dc",
@@ -220,11 +224,13 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="led_state",
         name="LED state",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="led_color",
         name="LED color",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 ]
 
@@ -256,6 +262,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="current_ac_phase_2",
@@ -263,6 +270,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="current_ac_phase_3",
@@ -270,6 +278,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="energy_reactive_ac_consumed",
@@ -277,6 +286,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ENERGY_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         icon="mdi:lightning-bolt-outline",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="energy_reactive_ac_produced",
@@ -284,6 +294,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ENERGY_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         icon="mdi:lightning-bolt-outline",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="energy_real_ac_minus",
@@ -291,6 +302,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="energy_real_ac_plus",
@@ -298,6 +310,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="energy_real_consumed",
@@ -317,6 +330,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="frequency_phase_average",
         name="Frequency phase average",
         native_unit_of_measurement=FREQUENCY_HERTZ,
+        device_class=DEVICE_CLASS_FREQUENCY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -330,6 +344,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash-outline",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_apparent_phase_2",
@@ -337,6 +352,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash-outline",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_apparent_phase_3",
@@ -344,6 +360,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash-outline",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_apparent",
@@ -351,24 +368,28 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash-outline",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_factor_phase_1",
         name="Power factor phase 1",
         device_class=DEVICE_CLASS_POWER_FACTOR,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_factor_phase_2",
         name="Power factor phase 2",
         device_class=DEVICE_CLASS_POWER_FACTOR,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_factor_phase_3",
         name="Power factor phase 3",
         device_class=DEVICE_CLASS_POWER_FACTOR,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_factor",
@@ -382,6 +403,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash-outline",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_reactive_phase_2",
@@ -389,6 +411,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash-outline",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_reactive_phase_3",
@@ -396,6 +419,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash-outline",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_reactive",
@@ -403,6 +427,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash-outline",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_real_phase_1",
@@ -410,6 +435,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_real_phase_2",
@@ -417,6 +443,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_real_phase_3",
@@ -424,6 +451,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="power_real",
@@ -438,6 +466,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="voltage_ac_phase_2",
@@ -445,6 +474,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="voltage_ac_phase_3",
@@ -452,6 +482,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="voltage_ac_phase_to_phase_12",
@@ -459,6 +490,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="voltage_ac_phase_to_phase_23",
@@ -466,6 +498,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="voltage_ac_phase_to_phase_31",
@@ -473,6 +506,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
 ]
 
@@ -483,6 +517,7 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="energy_year",
@@ -490,6 +525,7 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="energy_total",
@@ -497,6 +533,7 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="meter_mode",
@@ -552,11 +589,13 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         key="capacity_maximum",
         name="Capacity maximum",
         native_unit_of_measurement=ELECTRIC_CHARGE_AMPERE_HOURS,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="capacity_designed",
         name="Capacity designed",
         native_unit_of_measurement=ELECTRIC_CHARGE_AMPERE_HOURS,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="current_dc",
@@ -581,6 +620,7 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:current-dc",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="voltage_dc_minimum_cell",
@@ -589,6 +629,7 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:current-dc",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="state_of_charge",
