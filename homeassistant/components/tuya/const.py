@@ -271,6 +271,7 @@ class DPCode(str, Enum):
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
     SWITCH_CHARGE = "switch_charge"
     SWITCH_CONTROLLER = "switch_controller"
+    SWITCH_DISTURB = "switch_disturb"
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
     SWITCH_LED = "switch_led"  # Switch
     SWITCH_LED_1 = "switch_led_1"
@@ -304,6 +305,8 @@ class DPCode(str, Enum):
     VA_TEMPERATURE = "va_temperature"
     VOC_STATE = "voc_state"
     VOC_VALUE = "voc_value"
+    VOICE_SWITCH = "voice_switch"
+    VOLUME_SET = "volume_set"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
     WATER_RESET = "water_reset"  # Resetting of water usage days
