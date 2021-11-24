@@ -142,7 +142,7 @@ async def test_ssdp(hass, mock_panel):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
 
     # Test abort if invalid data
     mock_panel.get_status.side_effect = KeyError

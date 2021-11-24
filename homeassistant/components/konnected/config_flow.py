@@ -274,7 +274,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 status = await get_status(self.hass, netloc[0], int(netloc[1]))
             except CannotConnect:
-                return self.async_abort(reason="connection_error")
+                return self.async_abort(reason="cannot_connect")
             else:
                 self.data[CONF_HOST] = netloc[0]
                 self.data[CONF_PORT] = int(netloc[1])
