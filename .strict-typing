@@ -109,6 +109,7 @@ homeassistant.components.renault.*
 homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.rpi_power.*
+homeassistant.components.rtsptowebrtc.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*

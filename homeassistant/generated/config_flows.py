@@ -253,6 +253,7 @@ FLOWS = [
     "roomba",
     "roon",
     "rpi_power",
+    "rtsptowebrtc",
     "ruckus_unleashed",
     "samsungtv",
     "screenlogic",
