@@ -46,7 +46,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PROTOCOL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -87,6 +87,16 @@ from .util import _flux_color_mode_to_hass, _hass_color_modes
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLUX_LED: Final = SUPPORT_TRANSITION
+
+
+MODE_ATTRS = {
+    ATTR_EFFECT,
+    ATTR_COLOR_TEMP,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
+    ATTR_WHITE,
+}
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
@@ -303,12 +313,13 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             await self._device.async_turn_on()
         if not kwargs:
             return
-        if effect := kwargs.get(ATTR_EFFECT):
-            await self._async_set_effect(effect)
-            return
-        await self._async_set_colors(**kwargs)
 
-    async def _async_set_effect(self, effect: str) -> None:
+        if MODE_ATTRS.intersection(kwargs):
+            await self._async_set_mode(**kwargs)
+            return
+        await self._async_adjust_brightness(self._async_brightness(**kwargs))
+
+    async def _async_set_effect(self, effect: str, brightness: int) -> None:
         """Set an effect."""
         # Random color effect
         if effect == EFFECT_RANDOM:
@@ -327,12 +338,14 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
                     self._custom_effect_transition,
                 )
             return
+        effect_brightness = round(brightness / 255 * 100)
         await self._device.async_set_effect(
-            effect, self._device.speed or DEFAULT_EFFECT_SPEED
+            effect, self._device.speed or DEFAULT_EFFECT_SPEED, effect_brightness
         )
 
-    async def _async_set_colors(self, **kwargs: Any) -> None:
-        """Set color (can be done before turning on)."""
+    @callback
+    def _async_brightness(self, **kwargs: Any) -> int:
+        """Determine brightness from kwargs or current value."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
             brightness = self.brightness
         if not brightness:
@@ -341,7 +354,15 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             # If the device was on and brightness was not
             # set, it means it was masked by an effect
             brightness = 255 if self.is_on else 1
+        return brightness
 
+    async def _async_set_mode(self, **kwargs: Any) -> None:
+        """Set an effect or color mode."""
+        brightness = self._async_brightness(**kwargs)
+        # Handle switch to Effect Mode
+        if effect := kwargs.get(ATTR_EFFECT):
+            await self._async_set_effect(effect, brightness)
+            return
         # Handle switch to CCT Color Mode
         if ATTR_COLOR_TEMP in kwargs:
             color_temp_mired = kwargs[ATTR_COLOR_TEMP]
@@ -385,7 +406,12 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             await self._device.async_set_levels(w=kwargs[ATTR_WHITE])
             return
 
-        # Handle brightness adjustment in CCT Color Mode
+    async def _async_adjust_brightness(self, brightness: int) -> None:
+        """Adjust brightness."""
+        # Handle brightness adjustment in effect mode
+        if effect := self.effect:
+            await self._async_set_effect(effect, brightness)
+            return
         if self.color_mode == COLOR_MODE_COLOR_TEMP:
             await self._device.async_set_white_temp(self._device.color_temp, brightness)
             return

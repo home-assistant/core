@@ -68,6 +68,7 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     async def async_set_value(self, value: float) -> None:
         """Set the flux speed value."""
         current_effect = self._device.effect
+        current_brightness = self._device.brightness
         new_speed = int(value)
         if not current_effect:
             raise HomeAssistantError(
@@ -75,5 +76,8 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
             )
         if self._device.original_addressable and not self._device.is_on:
             raise HomeAssistantError("Speed can only be adjusted when the light is on")
-        await self._device.async_set_effect(current_effect, new_speed)
+        effect_brightness = round(current_brightness / 255 * 100)
+        await self._device.async_set_effect(
+            current_effect, new_speed, effect_brightness
+        )
         await self.coordinator.async_request_refresh()
