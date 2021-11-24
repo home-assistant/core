@@ -701,8 +701,11 @@ PRECISION_TENTHS: Final = 0.1
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
+# Config: An entity which allows changing the configuration of a device
 ENTITY_CATEGORY_CONFIG: Final = "config"
+# Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
 ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
+# System: An entity which is not useful for the user to interact with
 ENTITY_CATEGORY_SYSTEM: Final = "system"
 
 # Entity categories which will:
