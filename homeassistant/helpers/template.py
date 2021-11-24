@@ -52,7 +52,12 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util import convert, dt as dt_util, location as loc_util
+from homeassistant.util import (
+    convert,
+    convert_to_int,
+    dt as dt_util,
+    location as loc_util,
+)
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
@@ -1462,9 +1467,7 @@ def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SE
 def timestamp_local(value, default=_SENTINEL):
     """Filter to convert given timestamp to local date/time."""
     try:
-        return dt_util.as_local(dt_util.utc_from_timestamp(value)).strftime(
-            DATE_STR_FORMAT
-        )
+        return dt_util.as_local(dt_util.utc_from_timestamp(value)).isoformat()
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
@@ -1476,7 +1479,7 @@ def timestamp_local(value, default=_SENTINEL):
 def timestamp_utc(value, default=_SENTINEL):
     """Filter to convert given timestamp to UTC date/time."""
     try:
-        return dt_util.utc_from_timestamp(value).strftime(DATE_STR_FORMAT)
+        return dt_util.utc_from_timestamp(value).isoformat()
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
@@ -1494,6 +1497,16 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
             warn_no_default("as_timestamp", value, None)
             return None
         return default
+
+
+def as_datetime(value):
+    """Filter and to convert a time string or UNIX timestamp to datetime object."""
+    try:
+        # Check for a valid UNIX timestamp string, int or float
+        timestamp = float(value)
+        return dt_util.utc_from_timestamp(timestamp)
+    except ValueError:
+        return dt_util.parse_datetime(value)
 
 
 def strptime(string, fmt, default=_SENTINEL):
@@ -1621,14 +1634,18 @@ def regex_findall(value, find="", ignorecase=False):
     return re.findall(find, value, flags)
 
 
-def bitwise_and(first_value, second_value):
+def bitwise_and(first_value, second_value, little_endian=False):
     """Perform a bitwise and operation."""
-    return first_value & second_value
+    return convert_to_int(first_value, little_endian=little_endian) & convert_to_int(
+        second_value, little_endian=little_endian
+    )
 
 
-def bitwise_or(first_value, second_value):
+def bitwise_or(first_value, second_value, little_endian=False):
     """Perform a bitwise or operation."""
-    return first_value | second_value
+    return convert_to_int(first_value, little_endian=little_endian) | convert_to_int(
+        second_value, little_endian=little_endian
+    )
 
 
 def base64_encode(value):
@@ -1791,7 +1808,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan"] = arc_tangent
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
-        self.filters["as_datetime"] = dt_util.parse_datetime
+        self.filters["as_datetime"] = as_datetime
         self.filters["as_timestamp"] = forgiving_as_timestamp
         self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
@@ -1832,7 +1849,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan"] = arc_tangent
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
-        self.globals["as_datetime"] = dt_util.parse_datetime
+        self.globals["as_datetime"] = as_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["today_at"] = today_at

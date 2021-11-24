@@ -1,8 +1,10 @@
 """Tests for the Fronius integration."""
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_HOST = "http://fronius"
@@ -22,6 +24,7 @@ async def setup_fronius_integration(hass):
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    return entry
 
 
 def mock_responses(
@@ -70,3 +73,16 @@ def mock_responses(
         f"{host}/solar_api/v1/GetStorageRealtimeData.cgi?Scope=System",
         text=load_fixture("symo/GetStorageRealtimeData_System.json", "fronius"),
     )
+
+
+async def enable_all_entities(hass, config_entry_id, time_till_next_update):
+    """Enable all entities for a config entry and fast forward time to receive data."""
+    registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(registry, config_entry_id)
+    for entry in [
+        entry for entry in entities if entry.disabled_by == er.DISABLED_INTEGRATION
+    ]:
+        registry.async_update_entity(entry.entity_id, **{"disabled_by": None})
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt.utcnow() + time_till_next_update)
+    await hass.async_block_till_done()

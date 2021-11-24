@@ -39,7 +39,7 @@ from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, storage
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
-from homeassistant.util import slugify
+from homeassistant.util import slugify, uuid as uuid_util
 from homeassistant.util.yaml import load_yaml
 
 from .typing import UNDEFINED, UndefinedType
@@ -59,7 +59,7 @@ DISABLED_INTEGRATION = "integration"
 DISABLED_USER = "user"
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -103,6 +103,7 @@ class RegistryEntry:
     )
     entity_category: str | None = attr.ib(default=None)
     icon: str | None = attr.ib(default=None)
+    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     name: str | None = attr.ib(default=None)
     # As set by integration
     original_device_class: str | None = attr.ib(default=None)
@@ -558,6 +559,7 @@ class EntityRegistry:
                     entity_category=entity["entity_category"],
                     entity_id=entity["entity_id"],
                     icon=entity["icon"],
+                    id=entity["id"],
                     name=entity["name"],
                     original_device_class=entity["original_device_class"],
                     original_icon=entity["original_icon"],
@@ -592,6 +594,7 @@ class EntityRegistry:
                 "entity_category": entry.entity_category,
                 "entity_id": entry.entity_id,
                 "icon": entry.icon,
+                "id": entry.id,
                 "name": entry.name,
                 "original_device_class": entry.original_device_class,
                 "original_icon": entry.original_icon,
@@ -752,11 +755,16 @@ async def _async_migrate(
             entity["unit_of_measurement"] = entity.get("unit_of_measurement")
 
     if old_major_version < 2 and old_minor_version < 3:
-        # From version 1.2
+        # Version 1.3 adds original_device_class
         for entity in data["entities"]:
             # Move device_class to original_device_class
             entity["original_device_class"] = entity["device_class"]
             entity["device_class"] = None
+
+    if old_major_version < 2 and old_minor_version < 4:
+        # Version 1.4 adds id
+        for entity in data["entities"]:
+            entity["id"] = uuid_util.random_uuid_hex()
 
     if old_major_version > 1:
         raise NotImplementedError
