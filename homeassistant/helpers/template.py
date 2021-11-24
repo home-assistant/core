@@ -1494,6 +1494,16 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
         return default
 
 
+def as_datetime(value):
+    """Filter and to convert a time string or UNIX timestamp to datetime object."""
+    try:
+        # Check for a valid UNIX timestamp string, int or float
+        timestamp = float(value)
+        return dt_util.utc_from_timestamp(timestamp)
+    except ValueError:
+        return dt_util.parse_datetime(value)
+
+
 def strptime(string, fmt, default=_SENTINEL):
     """Parse a time string to datetime."""
     try:
@@ -1789,7 +1799,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan"] = arc_tangent
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
-        self.filters["as_datetime"] = dt_util.parse_datetime
+        self.filters["as_datetime"] = as_datetime
         self.filters["as_timestamp"] = forgiving_as_timestamp
         self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
@@ -1830,7 +1840,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan"] = arc_tangent
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
-        self.globals["as_datetime"] = dt_util.parse_datetime
+        self.globals["as_datetime"] = as_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["today_at"] = today_at
