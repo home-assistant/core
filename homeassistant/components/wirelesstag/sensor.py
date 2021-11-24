@@ -80,9 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             key = description.key
             if key in config.get(CONF_MONITORED_CONDITIONS):
                 if key in tag.allowed_sensor_types:
-                    sensors.append(
-                        WirelessTagSensor(platform, tag, description, hass.config)
-                    )
+                    sensors.append(WirelessTagSensor(platform, tag, description))
 
     add_entities(sensors, True)
 
@@ -92,10 +90,11 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
 
     entity_description: SensorEntityDescription
 
-    def __init__(self, api, tag, description, config):
+    def __init__(self, api, tag, description):
         """Initialize a WirelessTag sensor."""
         super().__init__(api, tag)
 
+        self._sensor_type = description.key
         self.entity_description = description
         self._name = self._tag.name
 
@@ -104,7 +103,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         # and not as sensor.bedroom for temperature and
         # sensor.bedroom_2 for humidity
         self._entity_id = (
-            f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{description.key}"
+            f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{self._sensor_type}"
         )
 
     async def async_added_to_hass(self):
@@ -133,11 +132,6 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         return self._state
 
     @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return self.entity_description.device_class
-
-    @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor.unit
@@ -151,11 +145,6 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
     def _sensor(self):
         """Return tag sensor entity."""
         return self._tag.sensor[self._sensor_type]
-
-    @property
-    def _sensor_type(self):
-        """Return internal sensor type."""
-        return self.entity_description.key
 
     @callback
     def _update_tag_info_callback(self, new_tag):
