@@ -17,7 +17,6 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    ENTITY_CATEGORY_SYSTEM,
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
@@ -230,7 +229,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         key="ups.type",
         name="UPS Type",
         icon="mdi:information-outline",
-        entity_category=ENTITY_CATEGORY_SYSTEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     "ups.watchdog.status": SensorEntityDescription(
