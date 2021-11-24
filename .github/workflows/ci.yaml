@@ -654,7 +654,9 @@ jobs:
   changes:
     name: Determine what has changed
     outputs:
-      core: ${{ steps.core.outputs.any }}
+      # core: ${{ steps.core.outputs.any }}
+      # Temporary disable
+      core: 'true'
       integrations: ${{ steps.integrations.outputs.changes }}
       tests: ${{ steps.tests.outputs.integrations }}
     runs-on: ubuntu-latest
