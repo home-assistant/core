@@ -1,7 +1,6 @@
 """Support for the Brother service."""
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
@@ -319,7 +318,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType:
         """Return the state."""
         if self.entity_description.key == ATTR_UPTIME:
             return cast(
