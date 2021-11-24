@@ -266,6 +266,7 @@ class AtomeGenericSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def should_poll(self):
+        """Return the should poll state."""
         return True
 
     @property
