@@ -456,7 +456,12 @@ class ConfigurableFanSpeedValueMix:
     configuration_value_to_speeds: dict[int, list[int]]
 
     def __post_init__(self) -> None:
-        """Validate inputs."""
+        """
+        Validate inputs.
+
+        These inputs are hardcoded in  `discovery.py`, so these checks should
+        only fail due to developer error.
+        """
         for speeds in self.configuration_value_to_speeds.values():
             assert len(speeds) > 0
             assert sorted(speeds) == speeds
