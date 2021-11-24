@@ -98,10 +98,12 @@ jobs:
             test_full_suite="false"
           fi
 
-          # We need to run the full suite on certain branches
+          # We need to run the full suite on certain branches.
+          # Or, in case core files are touched, for the full suite as well.
           if [[ "${{ github.ref }}" == "refs/heads/dev" ]] \
             || [[ "${{ github.ref }}" == "refs/heads/master" ]] \
-            || [[ "${{ github.ref }}" == "refs/heads/rc" ]];
+            || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
+            || [[ "${{ steps.core.outputs.any }}" == "true" ]];
           then
             test_full_suite="true"
           fi
