@@ -746,6 +746,7 @@ async def test_wait_basic(hass, action_type):
             "to": "off",
         }
     sequence = cv.SCRIPT_SCHEMA(action)
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, wait_alias)
 
@@ -846,6 +847,7 @@ async def test_wait_basic_times_out(hass, action_type):
             "to": "off",
         }
     sequence = cv.SCRIPT_SCHEMA(action)
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, wait_alias)
     timed_out = False
@@ -902,6 +904,7 @@ async def test_multiple_runs_wait(hass, action_type):
             {"event": event, "event_data": {"value": 2}},
         ]
     )
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(
         hass, sequence, "Test Name", "test_domain", script_mode="parallel", max_runs=2
     )
@@ -950,6 +953,7 @@ async def test_cancel_wait(hass, action_type):
             }
         }
     sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1047,6 +1051,7 @@ async def test_wait_timeout(hass, caplog, timeout_param, action_type):
     action["timeout"] = timeout_param
     action["continue_on_timeout"] = True
     sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1114,6 +1119,7 @@ async def test_wait_continue_on_timeout(
     if continue_on_timeout is not None:
         action["continue_on_timeout"] = continue_on_timeout
     sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1285,6 +1291,7 @@ async def test_wait_variables_out(hass, mode, action_type):
         },
     ]
     sequence = cv.SCRIPT_SCHEMA(sequence)
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1324,11 +1331,13 @@ async def test_wait_variables_out(hass, mode, action_type):
 
 async def test_wait_for_trigger_bad(hass, caplog):
     """Test bad wait_for_trigger."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(
         hass,
-        cv.SCRIPT_SCHEMA(
-            {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
-        ),
+        sequence,
         "Test Name",
         "test_domain",
     )
@@ -1354,11 +1363,13 @@ async def test_wait_for_trigger_bad(hass, caplog):
 
 async def test_wait_for_trigger_generated_exception(hass, caplog):
     """Test bad wait_for_trigger."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(
         hass,
-        cv.SCRIPT_SCHEMA(
-            {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
-        ),
+        sequence,
         "Test Name",
         "test_domain",
     )
