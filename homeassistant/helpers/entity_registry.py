@@ -841,3 +841,25 @@ async def async_migrate_entries(
 
         if updates is not None:
             ent_reg.async_update_entity(entry.entity_id, **updates)
+
+
+async def resolve_entity_ids(
+    registry: EntityRegistry, entity_ids_or_uuids: list[str]
+) -> list[str]:
+    """Resolve a list of entity ids or UUIDs to a list of entity ids."""
+
+    def resolve_entity(entity_id_or_uuid: str) -> str | None:
+        """Resolve an entity id or UUID to an entity id or None."""
+        if valid_entity_id(entity_id_or_uuid):
+            return entity_id_or_uuid
+        for entry in registry.entities.values():
+            if entry.id == entity_id_or_uuid:
+                return entry.entity_id
+        return None
+
+    tmp = [
+        resolved_item
+        for item in entity_ids_or_uuids
+        if (resolved_item := resolve_entity(item)) is not None
+    ]
+    return tmp

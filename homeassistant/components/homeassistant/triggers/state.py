@@ -10,7 +10,11 @@ import voluptuous as vol
 from homeassistant import exceptions
 from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    template,
+)
 from homeassistant.helpers.event import (
     Event,
     async_track_same_state,
@@ -30,7 +34,7 @@ CONF_TO = "to"
 BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "state",
-        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+        vol.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
         vol.Optional(CONF_FOR): cv.positive_time_period_template,
         vol.Optional(CONF_ATTRIBUTE): cv.match_all,
     }
@@ -74,7 +78,8 @@ async def async_attach_trigger(
     platform_type: str = "state",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    entity_id = config.get(CONF_ENTITY_ID)
+    registry = er.async_get(hass)
+    entity_ids = await er.resolve_entity_ids(registry, config[CONF_ENTITY_ID])
     if (from_state := config.get(CONF_FROM)) is None:
         from_state = MATCH_ALL
     if (to_state := config.get(CONF_TO)) is None:
@@ -196,7 +201,7 @@ async def async_attach_trigger(
             entity_ids=entity,
         )
 
-    unsub = async_track_state_change_event(hass, entity_id, state_automation_listener)
+    unsub = async_track_state_change_event(hass, entity_ids, state_automation_listener)
 
     @callback
     def async_remove():
