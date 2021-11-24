@@ -67,14 +67,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
 def format_receive_value(value):
-    """format if pb then return None"""
+    """Format if pb then return None."""
     if value == None or value == STATE_UNKNOWN:
         return None
     else:
         return float(value)
 
-async def async_create_period_coordinator(hass, atome_client, name, sensor_type,scan_interval):
+
+async def async_create_period_coordinator(
+    hass, atome_client, name, sensor_type,scan_interval
+):
+    """Create coordinator for period data."""
     atome_period_end_point = AtomePeriodServerEndPoint( atome_client, name, sensor_type)
 
     async def async_period_update_data():
@@ -90,6 +95,7 @@ async def async_create_period_coordinator(hass, atome_client, name, sensor_type,
     )
     await period_coordinator.async_refresh()
     return period_coordinator
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Atome sensor."""
@@ -120,23 +126,31 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await live_coordinator.async_refresh()
 
     # Periodic Data
-    daily_coordinator=await async_create_period_coordinator(hass, atome_client, DAILY_NAME, DAILY_TYPE, DAILY_SCAN_INTERVAL)
-    weekly_coordinator=await async_create_period_coordinator(hass, atome_client, WEEKLY_NAME, WEEKLY_TYPE, WEEKLY_SCAN_INTERVAL)
-    monthly_coordinator=await async_create_period_coordinator(hass, atome_client, MONTHLY_NAME, MONTHLY_TYPE, MONTHLY_SCAN_INTERVAL)
-    yearly_coordinator=await async_create_period_coordinator(hass, atome_client, YEARLY_NAME, YEARLY_TYPE, YEARLY_SCAN_INTERVAL)
+    daily_coordinator = await async_create_period_coordinator(
+        hass, atome_client, DAILY_NAME, DAILY_TYPE, DAILY_SCAN_INTERVAL
+    )
+    weekly_coordinator = await async_create_period_coordinator(
+        hass, atome_client, WEEKLY_NAME, WEEKLY_TYPE, WEEKLY_SCAN_INTERVAL
+    )
+    monthly_coordinator = await async_create_period_coordinator(
+        hass, atome_client, MONTHLY_NAME, MONTHLY_TYPE, MONTHLY_SCAN_INTERVAL
+    )
+    yearly_coordinator = await async_create_period_coordinator(
+        hass, atome_client, YEARLY_NAME, YEARLY_TYPE, YEARLY_SCAN_INTERVAL
+    )
 
     sensors = [
         AtomeLiveSensor(live_coordinator),
-        AtomePeriodSensor(daily_coordinator,DAILY_NAME, DAILY_TYPE),
-        AtomePeriodSensor(weekly_coordinator,WEEKLY_NAME, WEEKLY_TYPE),
-        AtomePeriodSensor(monthly_coordinator,MONTHLY_NAME, MONTHLY_TYPE),
+        AtomePeriodSensor(daily_coordinator, DAILY_NAME, DAILY_TYPE),
+        AtomePeriodSensor(weekly_coordinator, WEEKLY_NAME, WEEKLY_TYPE),
+        AtomePeriodSensor(monthly_coordinator, MONTHLY_NAME, MONTHLY_TYPE),
         AtomePeriodSensor(yearly_coordinator, YEARLY_NAME, YEARLY_TYPE),
     ]
 
     async_add_entities(sensors, True)
 
 
-class AtomeGenericServerEndPoint():
+class AtomeGenericServerEndPoint:
     """Basic class to retrieve data from server."""
 
     def __init__(self, atome_client, name, period_type):
@@ -145,7 +159,8 @@ class AtomeGenericServerEndPoint():
         self._name = name
         self._period_type = period_type
 
-class AtomeLiveData():
+
+class AtomeLiveData:
     def __init__(self):
         """Initialize the data."""
         self.live_power = None
@@ -158,7 +173,7 @@ class AtomeLiveServerEndPoint(AtomeGenericServerEndPoint):
 
     def __init__(self, atome_client):
         """Initialize the data."""
-        super().__init__( atome_client, LIVE_NAME, LIVE_TYPE)
+        super().__init__(atome_client, LIVE_NAME, LIVE_TYPE)
         self._live_data = AtomeLiveData()
 
     def _retrieve_live(self):
@@ -193,18 +208,20 @@ class AtomeLiveServerEndPoint(AtomeGenericServerEndPoint):
             self._retrieve_live()
         return self._live_data
 
-class AtomePeriodData():
+
+class AtomePeriodData:
     def __init__(self):
         """Initialize the data."""
         self.usage = None
         self.price = None
+
 
 class AtomePeriodServerEndPoint(AtomeGenericServerEndPoint):
     """Class used to retrieve Period Data."""
 
     def __init__(self, atome_client, name, period_type):
         """Initialize the data."""
-        super().__init__( atome_client, name, period_type)
+        super().__init__(atome_client, name, period_type)
         self._period_data = AtomePeriodData()
 
     def _retrieve_period_usage(self):
@@ -214,7 +231,9 @@ class AtomePeriodServerEndPoint(AtomeGenericServerEndPoint):
             self._period_data.usage = values["total"] / 1000
             self._period_data.price = values["price"]
             _LOGGER.debug(
-                "Updating Atome %s data. Got: %d", self._period_type, self._period_data.usage
+                "Updating Atome %s data. Got: %d",
+                self._period_type,
+                self._period_data.usage,
             )
             return True
 
@@ -309,18 +328,14 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
         state_recorded = await self.async_get_last_state()
         if state_recorded:
             self._period_data.usage = format_receive_value(state_recorded.state)
-            self._period_data.price = format_receive_value (
+            self._period_data.price = format_receive_value(
                 state_recorded.attributes.get(ATTR_PERIOD_PRICE)
             )
             self._previous_period_data.usage = format_receive_value(
-                state_recorded.attributes.get(
-                    ATTR_PREVIOUS_PERIOD_USAGE
-                )
+                state_recorded.attributes.get(ATTR_PREVIOUS_PERIOD_USAGE)
             )
             self._previous_period_data.price = format_receive_value(
-                state_recorded.attributes.get(
-                    ATTR_PREVIOUS_PERIOD_PRICE
-                )
+                state_recorded.attributes.get(ATTR_PREVIOUS_PERIOD_PRICE)
             )
         self.schedule_update_ha_state(force_refresh=True)
 
@@ -338,13 +353,13 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
         """Return the state of this device."""
         return self._period_data.usage
 
-
     async def async_update(self):
         """Fetch new state data for this sensor."""
         # await self.coordinator.async_refresh()
         _LOGGER.debug("Async Update sensor %s", self._name)
         new_period_data = self.coordinator.data
         if new_period_data.usage and self._period_data.usage:
-            if  new_period_data.usage < self._period_data.usage:
+            # Take a margin to avoid storage of previous data
+            if ((new_period_data.usage - self._period_data.usage) < (-0.1)):
                 self._previous_period_data = self._period_data
         self._period_data = new_period_data
