@@ -149,10 +149,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data[CONF_PORT] = user_input[CONF_PORT]
                 if key is not None:
                     data[CONF_AUTHENTICATION] = key.hex()
-                entry = self.context["entry"]
+                entry_id = self.context["entry_id"]
+                entry = self.hass.config_entries.async_get_entry(entry_id)
+                assert entry is not None
                 self.hass.config_entries.async_update_entry(entry, data=data)
                 self.hass.async_create_task(
-                    self.hass.config_entries.async_setup(entry.entry_id)
+                    self.hass.config_entries.async_setup(entry_id)
                 )
                 return self.async_abort(reason=self.ABORT_REAUTH_SUCCESSFUL)
 

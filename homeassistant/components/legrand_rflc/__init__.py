@@ -10,7 +10,6 @@ from typing import Final
 import lc7001.aio
 
 from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_AUTHENTICATION, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -38,15 +37,7 @@ async def async_setup_entry(
 
     async def _reauth() -> None:
         await hass.config_entries.async_unload(entry_id)
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "entry": entry,
-                "unique_id": entry.unique_id,
-            },
-            data=data,
-        )
+        entry.async_start_reauth(hass)
 
     async def reauth() -> None:
         hass.async_create_task(_reauth())
