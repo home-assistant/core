@@ -5,6 +5,7 @@ import math
 import random
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -1149,42 +1150,68 @@ def test_utcnow(mock_is_safe, hass):
     assert info.has_time is True
 
 
+@pytest.mark.parametrize(
+    "now, expected, expected_midnight, timezone_str",
+    [
+        # Host clock in UTC
+        (
+            "2021-11-24 03:00:00+00:00",
+            "2021-11-23T10:00:00-08:00",
+            "2021-11-23T00:00:00-08:00",
+            "America/Los_Angeles",
+        ),
+        # Host clock in local time
+        (
+            "2021-11-23 19:00:00-08:00",
+            "2021-11-23T10:00:00-08:00",
+            "2021-11-23T00:00:00-08:00",
+            "America/Los_Angeles",
+        ),
+    ],
+)
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_today_at(mock_is_safe, hass):
+def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone_str):
     """Test today_at method."""
-    now = dt_util.now()
-    with patch("homeassistant.util.dt.now", return_value=now):
-        now = now.replace(hour=10, minute=0, second=0, microsecond=0)
-        result = template.Template(
-            "{{ today_at('10:00').isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    freezer = freeze_time(now)
+    freezer.start()
 
-        result = template.Template(
-            "{{ today_at('10:00:00').isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    original_tz = dt_util.DEFAULT_TIME_ZONE
 
-        result = template.Template(
-            "{{ ('10:00:00' | today_at).isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    timezone = dt_util.get_time_zone(timezone_str)
+    dt_util.set_default_time_zone(timezone)
 
-        now = now.replace(hour=0)
-        result = template.Template(
-            "{{ today_at().isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    result = template.Template(
+        "{{ today_at('10:00').isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
 
-        with pytest.raises(TemplateError):
-            template.Template("{{ today_at('bad') }}", hass).async_render()
+    result = template.Template(
+        "{{ today_at('10:00:00').isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
+
+    result = template.Template(
+        "{{ ('10:00:00' | today_at).isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
+
+    result = template.Template(
+        "{{ today_at().isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected_midnight
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ today_at('bad') }}", hass).async_render()
+
+    freezer.stop()
+    dt_util.set_default_time_zone(original_tz)
 
 
 @patch(
