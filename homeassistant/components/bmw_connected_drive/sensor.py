@@ -100,15 +100,6 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
             hass.config.units.length(x[0], UNIT_MAP.get(x[1], x[1]))
         ),
     ),
-    "max_range_electric": BMWSensorEntityDescription(
-        key="max_range_electric",
-        icon="mdi:map-marker-distance",
-        unit_metric=LENGTH_KILOMETERS,
-        unit_imperial=LENGTH_MILES,
-        value=lambda x, hass: round(
-            hass.config.units.length(x[0], UNIT_MAP.get(x[1], x[1]))
-        ),
-    ),
     "remaining_fuel": BMWSensorEntityDescription(
         key="remaining_fuel",
         icon="mdi:gas-station",
