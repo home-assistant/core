@@ -29,11 +29,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_RTSP_TO_WEBRTC_URL
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "rtsptowebrtc"
+DATA_SERVER_URL = "server_url"
 TIMEOUT = 10
 RTSP_PREFIXES = {"rtsp://", "rtsps://"}
 
@@ -41,14 +40,12 @@ RTSP_PREFIXES = {"rtsp://", "rtsps://"}
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RTSPtoWebRTC from a config entry."""
 
-    if DATA_RTSP_TO_WEBRTC_URL not in entry.data:
-        _LOGGER.error(
-            "Invalid ConfigEntry for webrtc, missing '%s'", DATA_RTSP_TO_WEBRTC_URL
-        )
+    if DATA_SERVER_URL not in entry.data:
+        _LOGGER.error("Invalid ConfigEntry for webrtc, missing '%s'", DATA_SERVER_URL)
         return False
 
     hass.data[DOMAIN] = Client(
-        async_get_clientsession(hass), entry.data[DATA_RTSP_TO_WEBRTC_URL]
+        async_get_clientsession(hass), entry.data[DATA_SERVER_URL]
     )
 
     return True
