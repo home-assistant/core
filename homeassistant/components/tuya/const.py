@@ -100,6 +100,7 @@ SMARTLIFE_APP = "smartlife"
 
 PLATFORMS = [
     "binary_sensor",
+    "button",
     "camera",
     "climate",
     "cover",
@@ -173,8 +174,8 @@ class DPCode(str, Enum):
     CO2_STATE = "co2_state"
     CO2_VALUE = "co2_value"  # CO2 concentration
     COLOR_DATA_V2 = "color_data_v2"
-    COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA = "colour_data"  # Colored light mode
+    COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
     CONTROL = "control"
@@ -243,6 +244,11 @@ class DPCode(str, Enum):
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
+    RESET_DUSTER_CLOTH = "reset_duster_cloth"
+    RESET_EDGE_BRUSH = "reset_edge_brush"
+    RESET_FILTER = "reset_filter"
+    RESET_MAP = "reset_map"
+    RESET_ROLL_BRUSH = "reset_roll_brush"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SENSOR_HUMIDITY = "sensor_humidity"
