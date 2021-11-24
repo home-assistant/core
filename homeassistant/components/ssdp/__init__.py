@@ -25,6 +25,7 @@ from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
 
@@ -122,6 +123,28 @@ class SsdpServiceInfo(
     BaseServiceInfo,
 ):
     """Prepared info from ssdp/upnp entries."""
+
+    # Used to prevent log flooding. To be removed in 2022.6
+    _warning_logged: bool = False
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={"ssdp"},
+                error_if_core=False,
+                level=logging.DEBUG,
+            )
+            self._warning_logged = True
+        # Use a property if it is available, fallback to upnp data
+        if hasattr(self, name):
+            return getattr(self, name)
+        return self.upnp.get(name)
 
 
 @bind_hass
