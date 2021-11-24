@@ -55,9 +55,11 @@ async def test_discovery(detect_mock, hass):
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
-        port=6053,
         hostname="_tube_zb_gw._tcp.local.",
+        name="mock_name",
+        port=6053,
         properties={"name": "tube_123456"},
+        type="mock_type",
     )
     flow = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
@@ -97,9 +99,11 @@ async def test_discovery_via_zeroconf_ip_change(detect_mock, hass):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.22",
-        port=6053,
         hostname="tube_zb_gw_cc2652p2_poe.local.",
+        name="mock_name",
+        port=6053,
         properties={"address": "tube_zb_gw_cc2652p2_poe.local"},
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
@@ -127,9 +131,11 @@ async def test_discovery_via_zeroconf_ip_change_ignored(detect_mock, hass):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.22",
-        port=6053,
         hostname="tube_zb_gw_cc2652p2_poe.local.",
+        name="mock_name",
+        port=6053,
         properties={"address": "tube_zb_gw_cc2652p2_poe.local"},
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
@@ -383,9 +389,11 @@ async def test_discovery_already_setup(detect_mock, hass):
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
-        port=6053,
         hostname="_tube_zb_gw._tcp.local.",
+        name="mock_name",
+        port=6053,
         properties={"name": "tube_123456"},
+        type="mock_type",
     )
 
     MockConfigEntry(

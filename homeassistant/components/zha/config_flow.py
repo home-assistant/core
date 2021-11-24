@@ -96,12 +96,12 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle usb discovery."""
-        vid = discovery_info[usb.ATTR_VID]
-        pid = discovery_info[usb.ATTR_PID]
-        serial_number = discovery_info[usb.ATTR_SERIAL_NUMBER]
-        device = discovery_info[usb.ATTR_DEVICE]
-        manufacturer = discovery_info[usb.ATTR_MANUFACTURER]
-        description = discovery_info[usb.ATTR_DESCRIPTION]
+        vid = discovery_info.vid
+        pid = discovery_info.pid
+        serial_number = discovery_info.serial_number
+        device = discovery_info.device
+        manufacturer = discovery_info.manufacturer
+        description = discovery_info.description
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
         unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         if current_entry := await self.async_set_unique_id(unique_id):
