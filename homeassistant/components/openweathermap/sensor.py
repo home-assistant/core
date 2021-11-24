@@ -1,7 +1,13 @@
 """Support for the OpenWeatherMap (OWM) service."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from datetime import datetime
+
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_TIMESTAMP,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
@@ -10,6 +16,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_API_FORECAST,
@@ -143,9 +150,14 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
         self._weather_coordinator = weather_coordinator
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
         forecasts = self._weather_coordinator.data.get(ATTR_API_FORECAST)
-        if forecasts is not None and len(forecasts) > 0:
-            return forecasts[0].get(self.entity_description.key, None)
-        return None
+        if not forecasts:
+            return None
+
+        value = forecasts[0].get(self.entity_description.key, None)
+        if value and self.entity_description.device_class == DEVICE_CLASS_TIMESTAMP:
+            return dt_util.parse_datetime(value)
+
+        return value
