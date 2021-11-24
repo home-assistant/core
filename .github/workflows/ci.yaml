@@ -105,6 +105,8 @@ jobs:
             || [[ "${{ github.ref }}" == "refs/heads/rc" ]] \
             || [[ "${{ steps.core.outputs.any }}" == "true" ]];
           then
+            test_groups="[1, 2, 3, 4, 5, 6]"
+            test_group_count=6
             test_full_suite="true"
           fi
 
