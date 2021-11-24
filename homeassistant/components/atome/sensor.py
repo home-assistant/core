@@ -289,6 +289,7 @@ class AtomeLiveSensor(AtomeGenericSensor):
         super().__init__(coordinator, LIVE_NAME, LIVE_TYPE)
         self._live_data = None
 
+        # HA attributes
         self._attr_device_class = DEVICE_CLASS_POWER
         self._attr_native_unit_of_measurement = POWER_WATT
         self._attr_state_class = STATE_CLASS_MEASUREMENT
@@ -328,6 +329,7 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
         self._period_data = AtomePeriodData()
         self._previous_period_data = AtomePeriodData()
 
+        # HA attributes
         self._attr_device_class = DEVICE_CLASS_ENERGY
         self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
         self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
