@@ -243,7 +243,6 @@ class DPCode(str, Enum):
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
-    RESET_MAP = "reset_map"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SENSOR_HUMIDITY = "sensor_humidity"
