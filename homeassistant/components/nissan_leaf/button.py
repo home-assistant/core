@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.util.dt import utcnow
 
 from . import DATA_CHARGING, DATA_LEAF, LeafEntity
 
@@ -53,4 +54,4 @@ class LeafUpdateButton(LeafEntity, ButtonEntity):
 
     async def async_press(self):
         """Start charging."""
-        return await self.car.async_refresh_data()
+        return await self.car.async_refresh_data(utcnow())
