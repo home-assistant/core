@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
@@ -117,8 +117,8 @@ class _UpnpServiceDescription:
 
 @dataclass
 class SsdpServiceInfo(
-    _SsdpServiceDescription,
     _HaServiceDescription,
+    _SsdpServiceDescription,
     _UpnpServiceDescription,
     BaseServiceInfo,
 ):
