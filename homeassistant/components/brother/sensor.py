@@ -3,9 +3,18 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (
+    CONF_HOST,
+    DEVICE_CLASS_TIMESTAMP,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    PERCENTAGE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -13,15 +22,258 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BrotherDataUpdateCoordinator
-from .const import (
-    ATTR_COUNTER,
-    ATTR_MANUFACTURER,
-    ATTR_REMAINING_PAGES,
-    ATTR_UPTIME,
-    ATTRS_MAP,
-    DATA_CONFIG_ENTRY,
-    DOMAIN,
-    SENSOR_TYPES,
+from .const import DATA_CONFIG_ENTRY, DOMAIN
+
+ATTR_BELT_UNIT_REMAINING_LIFE = "belt_unit_remaining_life"
+ATTR_BLACK_DRUM_COUNTER = "black_drum_counter"
+ATTR_BLACK_DRUM_REMAINING_LIFE = "black_drum_remaining_life"
+ATTR_BLACK_DRUM_REMAINING_PAGES = "black_drum_remaining_pages"
+ATTR_BLACK_INK_REMAINING = "black_ink_remaining"
+ATTR_BLACK_TONER_REMAINING = "black_toner_remaining"
+ATTR_BW_COUNTER = "b/w_counter"
+ATTR_COLOR_COUNTER = "color_counter"
+ATTR_COUNTER = "counter"
+ATTR_CYAN_DRUM_COUNTER = "cyan_drum_counter"
+ATTR_CYAN_DRUM_REMAINING_LIFE = "cyan_drum_remaining_life"
+ATTR_CYAN_DRUM_REMAINING_PAGES = "cyan_drum_remaining_pages"
+ATTR_CYAN_INK_REMAINING = "cyan_ink_remaining"
+ATTR_CYAN_TONER_REMAINING = "cyan_toner_remaining"
+ATTR_DRUM_COUNTER = "drum_counter"
+ATTR_DRUM_REMAINING_LIFE = "drum_remaining_life"
+ATTR_DRUM_REMAINING_PAGES = "drum_remaining_pages"
+ATTR_DUPLEX_COUNTER = "duplex_unit_pages_counter"
+ATTR_FUSER_REMAINING_LIFE = "fuser_remaining_life"
+ATTR_LASER_REMAINING_LIFE = "laser_remaining_life"
+ATTR_MAGENTA_DRUM_COUNTER = "magenta_drum_counter"
+ATTR_MAGENTA_DRUM_REMAINING_LIFE = "magenta_drum_remaining_life"
+ATTR_MAGENTA_DRUM_REMAINING_PAGES = "magenta_drum_remaining_pages"
+ATTR_MAGENTA_INK_REMAINING = "magenta_ink_remaining"
+ATTR_MAGENTA_TONER_REMAINING = "magenta_toner_remaining"
+ATTR_MANUFACTURER = "Brother"
+ATTR_PAGE_COUNTER = "page_counter"
+ATTR_PF_KIT_1_REMAINING_LIFE = "pf_kit_1_remaining_life"
+ATTR_PF_KIT_MP_REMAINING_LIFE = "pf_kit_mp_remaining_life"
+ATTR_REMAINING_PAGES = "remaining_pages"
+ATTR_STATUS = "status"
+ATTR_UPTIME = "uptime"
+ATTR_YELLOW_DRUM_COUNTER = "yellow_drum_counter"
+ATTR_YELLOW_DRUM_REMAINING_LIFE = "yellow_drum_remaining_life"
+ATTR_YELLOW_DRUM_REMAINING_PAGES = "yellow_drum_remaining_pages"
+ATTR_YELLOW_INK_REMAINING = "yellow_ink_remaining"
+ATTR_YELLOW_TONER_REMAINING = "yellow_toner_remaining"
+
+UNIT_PAGES = "p"
+
+ATTRS_MAP: dict[str, tuple[str, str]] = {
+    ATTR_DRUM_REMAINING_LIFE: (ATTR_DRUM_REMAINING_PAGES, ATTR_DRUM_COUNTER),
+    ATTR_BLACK_DRUM_REMAINING_LIFE: (
+        ATTR_BLACK_DRUM_REMAINING_PAGES,
+        ATTR_BLACK_DRUM_COUNTER,
+    ),
+    ATTR_CYAN_DRUM_REMAINING_LIFE: (
+        ATTR_CYAN_DRUM_REMAINING_PAGES,
+        ATTR_CYAN_DRUM_COUNTER,
+    ),
+    ATTR_MAGENTA_DRUM_REMAINING_LIFE: (
+        ATTR_MAGENTA_DRUM_REMAINING_PAGES,
+        ATTR_MAGENTA_DRUM_COUNTER,
+    ),
+    ATTR_YELLOW_DRUM_REMAINING_LIFE: (
+        ATTR_YELLOW_DRUM_REMAINING_PAGES,
+        ATTR_YELLOW_DRUM_COUNTER,
+    ),
+}
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_STATUS,
+        icon="mdi:printer",
+        name=ATTR_STATUS.title(),
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_PAGE_COUNTER,
+        icon="mdi:file-document-outline",
+        name=ATTR_PAGE_COUNTER.replace("_", " ").title(),
+        native_unit_of_measurement=UNIT_PAGES,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_BW_COUNTER,
+        icon="mdi:file-document-outline",
+        name=ATTR_BW_COUNTER.replace("_", " ").title(),
+        native_unit_of_measurement=UNIT_PAGES,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_COLOR_COUNTER,
+        icon="mdi:file-document-outline",
+        name=ATTR_COLOR_COUNTER.replace("_", " ").title(),
+        native_unit_of_measurement=UNIT_PAGES,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_DUPLEX_COUNTER,
+        icon="mdi:file-document-outline",
+        name=ATTR_DUPLEX_COUNTER.replace("_", " ").title(),
+        native_unit_of_measurement=UNIT_PAGES,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_DRUM_REMAINING_LIFE,
+        icon="mdi:chart-donut",
+        name=ATTR_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_BLACK_DRUM_REMAINING_LIFE,
+        icon="mdi:chart-donut",
+        name=ATTR_BLACK_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_CYAN_DRUM_REMAINING_LIFE,
+        icon="mdi:chart-donut",
+        name=ATTR_CYAN_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_MAGENTA_DRUM_REMAINING_LIFE,
+        icon="mdi:chart-donut",
+        name=ATTR_MAGENTA_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_YELLOW_DRUM_REMAINING_LIFE,
+        icon="mdi:chart-donut",
+        name=ATTR_YELLOW_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_BELT_UNIT_REMAINING_LIFE,
+        icon="mdi:current-ac",
+        name=ATTR_BELT_UNIT_REMAINING_LIFE.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_FUSER_REMAINING_LIFE,
+        icon="mdi:water-outline",
+        name=ATTR_FUSER_REMAINING_LIFE.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_LASER_REMAINING_LIFE,
+        icon="mdi:spotlight-beam",
+        name=ATTR_LASER_REMAINING_LIFE.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_PF_KIT_1_REMAINING_LIFE,
+        icon="mdi:printer-3d",
+        name=ATTR_PF_KIT_1_REMAINING_LIFE.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_PF_KIT_MP_REMAINING_LIFE,
+        icon="mdi:printer-3d",
+        name=ATTR_PF_KIT_MP_REMAINING_LIFE.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_BLACK_TONER_REMAINING,
+        icon="mdi:printer-3d-nozzle",
+        name=ATTR_BLACK_TONER_REMAINING.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_CYAN_TONER_REMAINING,
+        icon="mdi:printer-3d-nozzle",
+        name=ATTR_CYAN_TONER_REMAINING.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_MAGENTA_TONER_REMAINING,
+        icon="mdi:printer-3d-nozzle",
+        name=ATTR_MAGENTA_TONER_REMAINING.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_YELLOW_TONER_REMAINING,
+        icon="mdi:printer-3d-nozzle",
+        name=ATTR_YELLOW_TONER_REMAINING.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_BLACK_INK_REMAINING,
+        icon="mdi:printer-3d-nozzle",
+        name=ATTR_BLACK_INK_REMAINING.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_CYAN_INK_REMAINING,
+        icon="mdi:printer-3d-nozzle",
+        name=ATTR_CYAN_INK_REMAINING.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_MAGENTA_INK_REMAINING,
+        icon="mdi:printer-3d-nozzle",
+        name=ATTR_MAGENTA_INK_REMAINING.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_YELLOW_INK_REMAINING,
+        icon="mdi:printer-3d-nozzle",
+        name=ATTR_YELLOW_INK_REMAINING.replace("_", " ").title(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key=ATTR_UPTIME,
+        name=ATTR_UPTIME.title(),
+        entity_registry_enabled_default=False,
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
 )
 
 
