@@ -162,8 +162,6 @@ jobs:
           . venv/bin/activate
           pre-commit run --hook-stage manual black --all-files --show-diff-on-failure
 
-          exit 1
-
   lint-flake8:
     name: Check flake8
     runs-on: ubuntu-latest
