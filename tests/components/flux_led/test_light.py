@@ -743,6 +743,17 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     )
     bulb.async_set_effect.assert_called_with("purple_fade", 50, 50)
     bulb.async_set_effect.reset_mock()
+    bulb.effect = "purple_fade"
+    bulb.brightness = 128
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
+        blocking=True,
+    )
+    bulb.async_set_effect.assert_called_with("purple_fade", 50, 100)
+    bulb.async_set_effect.reset_mock()
 
 
 async def test_white_light(hass: HomeAssistant) -> None:
