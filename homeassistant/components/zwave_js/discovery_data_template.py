@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+import logging
 from typing import Any
 
 from zwave_js_server.const import CommandClass
@@ -76,7 +77,11 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     MultilevelSensorType,
 )
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
+from zwave_js_server.model.value import (
+    ConfigurationValue as ZwaveConfigurationValue,
+    Value as ZwaveValue,
+    get_value_id,
+)
 from zwave_js_server.util.command_class.meter import get_meter_scale_type
 from zwave_js_server.util.command_class.multilevel_sensor import (
     get_multilevel_sensor_scale_type,
@@ -217,6 +222,8 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
     POWER_WATT: SENSOR_UNIT_WATT,
     IRRADIATION_WATTS_PER_SQUARE_METER: UNIT_WATT_PER_SQUARE_METER,
 }
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -422,3 +429,98 @@ class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
     def current_tilt_value(resolved_data: dict[str, Any]) -> ZwaveValue | None:
         """Get current tilt ZwaveValue from resolved data."""
         return resolved_data["tilt_value"]
+
+
+@dataclass
+class FanSpeedDataTemplate:
+    """Mixin to define get_speed_config."""
+
+    def get_speed_config(self, resolved_data: dict[str, Any]) -> list[int] | None:
+        """
+        Get the fan speed configuration for this device.
+
+        Values should indicate the highest allowed device setting for each
+        actual speed, and should be sorted in ascending order.
+
+        Empty lists are not permissible.
+        """
+        # pylint: disable=no-self-use
+        raise NotImplementedError
+
+
+@dataclass
+class ConfigurableFanSpeedValueMix:
+    """Mixin data class for defining configurable fan speeds."""
+
+    configuration_option: ZwaveValueID
+    configuration_value_to_speeds: dict[int, list[int]]
+
+    def __post_init__(self) -> None:
+        """
+        Validate inputs.
+
+        These inputs are hardcoded in `discovery.py`, so these checks should
+        only fail due to developer error.
+        """
+        for speeds in self.configuration_value_to_speeds.values():
+            assert len(speeds) > 0
+            assert sorted(speeds) == speeds
+
+
+@dataclass
+class ConfigurableFanSpeedDataTemplate(
+    BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate, ConfigurableFanSpeedValueMix
+):
+    """
+    Gets fan speeds based on a configuration value.
+
+    Example:
+      ZWaveDiscoverySchema(
+          platform="fan",
+          hint="configured_fan_speed",
+          ...
+          data_template=ConfigurableFanSpeedDataTemplate(
+            configuration_option=ZwaveValueID(
+                5, CommandClass.CONFIGURATION, endpoint=0
+            ),
+            configuration_value_to_speeds={0: [32, 65, 99], 1: [24, 49, 74, 99]},
+          ),
+      ),
+
+    `configuration_option` is a reference to the setting that determines how
+    many speeds are supported.
+
+    `configuration_value_to_speeds` maps the values from `configuration_option`
+    to a list of speeds.  The specified speeds indicate the maximum setting on
+    the underlying switch for each actual speed.
+    """
+
+    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveConfigurationValue]:
+        """Resolve helper class data for a discovered value."""
+        zwave_value: ZwaveValue = self._get_value_from_id(
+            value.node, self.configuration_option
+        )
+        return {"configuration_value": zwave_value}
+
+    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+        """Return list of all ZwaveValues that should be watched."""
+        return [
+            resolved_data["configuration_value"],
+        ]
+
+    def get_speed_config(
+        self, resolved_data: dict[str, ZwaveConfigurationValue]
+    ) -> list[int] | None:
+        """Get current speed configuration from resolved data."""
+        zwave_value: ZwaveValue = resolved_data["configuration_value"]
+
+        if zwave_value.value is None:
+            _LOGGER.warning("Unable to read fan speed configuration value")
+            return None
+
+        speed_config = self.configuration_value_to_speeds.get(zwave_value.value)
+        if speed_config is None:
+            _LOGGER.warning("Unrecognized speed configuration value")
+            return None
+
+        return speed_config

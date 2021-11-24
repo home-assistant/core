@@ -44,6 +44,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
+    ConfigurableFanSpeedDataTemplate,
     CoverTiltDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
     NumericSensorDataTemplate,
@@ -257,6 +258,21 @@ DISCOVERY_SCHEMAS = [
             endpoint={2},
             property={CURRENT_VALUE_PROPERTY},
             type={"number"},
+        ),
+    ),
+    # HomeSeer HS-FC200+
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="configured_fan_speed",
+        manufacturer_id={0x000C},
+        product_id={0x0001},
+        product_type={0x0203},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=ConfigurableFanSpeedDataTemplate(
+            configuration_option=ZwaveValueID(
+                5, CommandClass.CONFIGURATION, endpoint=0
+            ),
+            configuration_value_to_speeds={0: [33, 66, 99], 1: [24, 49, 74, 99]},
         ),
     ),
     # Fibaro Shutter Fibaro FGR222
