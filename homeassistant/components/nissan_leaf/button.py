@@ -8,6 +8,7 @@ from . import DATA_CHARGING, DATA_LEAF, LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up of a Nissan Leaf button."""
     if discovery_info is None:
