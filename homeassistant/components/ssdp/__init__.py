@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
@@ -20,6 +21,7 @@ from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback as core_callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
@@ -83,6 +85,43 @@ SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class _HaServiceDescription:
+    """Keys added by HA."""
+
+    x_homeassistant_matching_domains: set[str]
+
+
+@dataclass
+class _SsdpServiceDescription:
+    """SSDP info with optional keys."""
+
+    ssdp_usn: str
+    ssdp_st: str
+    ssdp_location: str | None = None
+    ssdp_nt: str | None = None
+    ssdp_udn: str | None = None
+    ssdp_ext: str | None = None
+    ssdp_server: str | None = None
+
+
+@dataclass
+class _UpnpServiceDescription:
+    """UPnP info."""
+
+    upnp: dict[str, Any]
+
+
+@dataclass
+class SsdpServiceInfo(
+    _SsdpServiceDescription,
+    _HaServiceDescription,
+    _UpnpServiceDescription,
+    BaseServiceInfo,
+):
+    """Prepared info from ssdp/upnp entries."""
 
 
 @bind_hass
