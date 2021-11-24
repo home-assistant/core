@@ -50,4 +50,4 @@ class UptimeSensor(SensorEntity):
         self._attr_name: str = name
         self._attr_device_class: str = DEVICE_CLASS_TIMESTAMP
         self._attr_should_poll: bool = False
-        self._attr_native_value = dt_util.now()
+        self._attr_native_value = dt_util.utcnow()
