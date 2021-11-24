@@ -53,7 +53,7 @@ class LeafUpdateButton(LeafEntity, ButtonEntity):
 
     @property
     def available(self):
-        return self.car.request_in_progress is not None
+        return self.car.next_update is not None
 
     async def async_press(self):
         """Start charging."""
