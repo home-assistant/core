@@ -1045,5 +1045,8 @@ async def test_resolve_entity_ids(hass, registry):
     expected = ["light.beer"]
     assert er.async_resolve_entity_ids(registry, ["light.beer", "bad_uuid"]) == expected
 
+    expected = ["light.unknown"]
+    assert er.async_resolve_entity_ids(registry, ["light.unknown"]) == expected
+
     expected = []
     assert er.async_resolve_entity_ids(registry, ["unknown_uuid"]) == expected
