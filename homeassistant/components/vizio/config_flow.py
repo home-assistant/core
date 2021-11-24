@@ -339,15 +339,15 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        host = discovery_info[zeroconf.ATTR_HOST]
+        host = discovery_info.host
         # If host already has port, no need to add it again
         if ":" not in host:
-            host = f"{host}:{discovery_info[zeroconf.ATTR_PORT]}"
+            host = f"{host}:{discovery_info.port}"
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`
-        num_chars_to_strip = len(discovery_info[zeroconf.ATTR_TYPE]) + 1
-        name = discovery_info[zeroconf.ATTR_NAME][:-num_chars_to_strip]
+        num_chars_to_strip = len(discovery_info.type) + 1
+        name = discovery_info.name[:-num_chars_to_strip]
 
         device_class = await async_guess_device_type(host)
 

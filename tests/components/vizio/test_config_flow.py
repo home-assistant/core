@@ -1,4 +1,6 @@
 """Tests for Vizio config flow."""
+import dataclasses
+
 import pytest
 import voluptuous as vol
 
@@ -728,7 +730,7 @@ async def test_zeroconf_flow(
     vizio_guess_device_type: pytest.fixture,
 ) -> None:
     """Test zeroconf config flow."""
-    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
@@ -776,7 +778,7 @@ async def test_zeroconf_flow_already_configured(
     entry.add_to_hass(hass)
 
     # Try rediscovering same device
-    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
@@ -802,10 +804,8 @@ async def test_zeroconf_flow_with_port_in_host(
     entry.add_to_hass(hass)
 
     # Try rediscovering same device, this time with port already in host
-    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
-    discovery_info[
-        zeroconf.ATTR_HOST
-    ] = f"{discovery_info[zeroconf.ATTR_HOST]}:{discovery_info[zeroconf.ATTR_PORT]}"
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
+    discovery_info.host = f"{discovery_info.host}:{discovery_info.port}"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
@@ -822,7 +822,7 @@ async def test_zeroconf_dupe_fail(
     vizio_guess_device_type: pytest.fixture,
 ) -> None:
     """Test zeroconf config flow when device gets discovered multiple times."""
-    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
@@ -831,7 +831,7 @@ async def test_zeroconf_dupe_fail(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
@@ -856,7 +856,7 @@ async def test_zeroconf_ignore(
     )
     entry.add_to_hass(hass)
 
-    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
@@ -871,7 +871,7 @@ async def test_zeroconf_no_unique_id(
 ) -> None:
     """Test zeroconf discovery aborts when unique_id is None."""
 
-    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
@@ -896,7 +896,7 @@ async def test_zeroconf_abort_when_ignored(
     )
     entry.add_to_hass(hass)
 
-    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
@@ -924,7 +924,7 @@ async def test_zeroconf_flow_already_configured_hostname(
     entry.add_to_hass(hass)
 
     # Try rediscovering same device
-    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )

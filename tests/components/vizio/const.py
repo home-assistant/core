@@ -198,9 +198,10 @@ ZEROCONF_HOST = HOST.split(":")[0]
 ZEROCONF_PORT = HOST.split(":")[1]
 
 MOCK_ZEROCONF_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
-    type=VIZIO_ZEROCONF_SERVICE_TYPE,
-    name=ZEROCONF_NAME,
     host=ZEROCONF_HOST,
+    hostname="mock_hostname",
+    name=ZEROCONF_NAME,
     port=ZEROCONF_PORT,
     properties={"name": "SB4031-D5"},
+    type=VIZIO_ZEROCONF_SERVICE_TYPE,
 )
