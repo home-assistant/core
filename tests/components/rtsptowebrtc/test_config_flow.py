@@ -1,7 +1,7 @@
-"""Test the WebRTC config flow."""
+"""Test the RTSPtoWebRTC config flow."""
 
 from homeassistant import config_entries, setup
-from homeassistant.components.webrtc.const import DOMAIN
+from homeassistant.components.rtsptowebrtc import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
