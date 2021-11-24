@@ -59,7 +59,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
 }
 
-SENSOR_KEYS: list[str] = list(SENSOR_TYPES.keys())
+SENSOR_KEYS: list[str] = list(SENSOR_TYPES)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
