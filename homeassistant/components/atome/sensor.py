@@ -95,20 +95,8 @@ async def async_create_period_coordinator(
     await period_coordinator.async_refresh()
     return period_coordinator
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Atome sensor."""
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-
-    try:
-        atome_client = AtomeClient(username, password)
-        await hass.async_add_executor_job(atome_client.login)
-    except PyAtomeError as exp:
-        _LOGGER.error(exp)
-        return
-
-    # Live Data
+async def async_create_live_coordinator(hass, atome_client):
+    """Create coordinator for live data."""
     atome_live_end_point = AtomeLiveServerEndPoint(atome_client)
 
     async def async_live_update_data():
@@ -123,6 +111,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         update_interval=LIVE_SCAN_INTERVAL,
     )
     await live_coordinator.async_refresh()
+    return live_coordinator
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Atome sensor."""
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+
+    try:
+        atome_client = AtomeClient(username, password)
+        await hass.async_add_executor_job(atome_client.login)
+    except PyAtomeError as exp:
+        _LOGGER.error(exp)
+        return
+
+    # Live Data
+    live_coordinator = await async_create_live_coordinator(hass, atome_client)
 
     # Periodic Data
     daily_coordinator = await async_create_period_coordinator(
@@ -289,7 +293,7 @@ class AtomeLiveSensor(AtomeGenericSensor):
 
     async def async_added_to_hass(self):
         """Handle added to Hass."""
-        # restore from previous run
+        # trigger update
         await super().async_added_to_hass()
         self.schedule_update_ha_state(force_refresh=True)
 
