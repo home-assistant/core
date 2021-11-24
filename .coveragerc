@@ -1091,6 +1091,8 @@ omit =
     homeassistant/components/todoist/calendar.py
     homeassistant/components/todoist/const.py
     homeassistant/components/tof/sensor.py
+    homeassistant/components/tolo/__init__.py
+    homeassistant/components/tolo/climate.py
     homeassistant/components/tomato/device_tracker.py
     homeassistant/components/toon/__init__.py
     homeassistant/components/toon/binary_sensor.py
@@ -1134,6 +1136,7 @@ omit =
     homeassistant/components/tuya/__init__.py
     homeassistant/components/tuya/base.py
     homeassistant/components/tuya/binary_sensor.py
+    homeassistant/components/tuya/button.py
     homeassistant/components/tuya/camera.py
     homeassistant/components/tuya/climate.py
     homeassistant/components/tuya/const.py

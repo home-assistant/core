@@ -658,7 +658,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.24.33
+flux_led==0.24.34
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1150,7 +1150,7 @@ opensensemap-api==0.1.5
 openwebifpy==3.2.7
 
 # homeassistant.components.luci
-openwrt-luci-rpc==1.1.8
+openwrt-luci-rpc==1.1.11
 
 # homeassistant.components.ubus
 openwrt-ubus-rpc==0.0.2
@@ -2318,6 +2318,9 @@ tmb==0.0.4
 
 # homeassistant.components.todoist
 todoist-python==8.0.0
+
+# homeassistant.components.tolo
+tololib==0.1.0b2
 
 # homeassistant.components.toon
 toonapi==0.2.1
