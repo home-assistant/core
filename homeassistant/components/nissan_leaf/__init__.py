@@ -470,6 +470,7 @@ class LeafDataStore:
             )
         return result
 
+
 class LeafEntity(Entity):
     """Base class for Nissan Leaf entity."""
 
