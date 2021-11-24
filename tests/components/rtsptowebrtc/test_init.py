@@ -23,7 +23,7 @@ ANSWER_SDP = "v=0\r\no=bob 2890844730 2890844730 IN IP4 host.example.com\r\n..."
 
 SERVER_URL = "http://127.0.0.1:8083"
 
-CONFIG_ENTRY_DATA = {"rtsp_to_webrtc_url": SERVER_URL}
+CONFIG_ENTRY_DATA = {"server_url": SERVER_URL}
 
 
 async def async_setup_rtsptowebrtc(hass: HomeAssistant):
