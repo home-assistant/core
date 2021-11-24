@@ -68,7 +68,7 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle a flow initialized by discovery."""
         await self.async_set_unique_id(format_mac(discovery_info[MAC_ADDRESS]))
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info[IP_ADDRESS]})
         self._async_abort_entries_match({CONF_HOST: discovery_info[IP_ADDRESS]})
 
         device_available = await self.hass.async_add_executor_job(

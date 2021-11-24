@@ -27,46 +27,6 @@ def toloclient_fixture() -> Mock:
         yield toloclient
 
 
-async def test_user_no_input(hass: HomeAssistant):
-    """Test starting a flow by user."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == SOURCE_USER
-
-
-async def test_user_with_valid_host(hass: HomeAssistant, toloclient: Mock):
-    """Test a user initiated config flow with provided host."""
-    toloclient().get_status_info.side_effect = lambda *args, **kwargs: object()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1"},
-    )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "TOLO Sauna"
-    assert result["data"][CONF_HOST] == "127.0.0.1"
-
-
-async def test_user_with_unreachable_host(hass: HomeAssistant, toloclient: Mock):
-    """Test a user initiated config flow with provided host which is not reachable."""
-    toloclient().get_status_info.side_effect = lambda *args, **kwargs: None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1"},
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == SOURCE_USER
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
 async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock):
     """Test a user initiated config flow with provided host which times out."""
     toloclient().get_status_info.side_effect = lambda *args, **kwargs: (
