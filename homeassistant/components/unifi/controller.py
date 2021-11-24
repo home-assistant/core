@@ -301,7 +301,7 @@ class UniFiController:
             unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
 
     async def async_setup(self):
-        """Set up a UniFi controller."""
+        """Set up a UniFi Network instance."""
         try:
             self.api = await get_controller(
                 self.hass,

@@ -21,7 +21,7 @@
                     "username": "Nome utente",
                     "verify_ssl": "Verificare il certificato SSL"
                 },
-                "title": "Configura l'UniFi Controller"
+                "title": "Configura l'UniFi Network"
             }
         }
     },
