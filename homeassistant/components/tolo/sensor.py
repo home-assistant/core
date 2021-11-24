@@ -5,7 +5,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    PERCENTAGE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -33,13 +32,10 @@ async def async_setup_entry(
 class ToloWaterLevelSensor(ToloSaunaCoordinatorEntity, SensorEntity):
     """Sensor for tank water level."""
 
-    WATER_LEVELS = {0: 0, 1: 33, 2: 66, 3: 100}
-
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
     _attr_name = "Water Level"
     _attr_icon = "mdi:waves-arrow-up"
-    _attr_state_class = "measurement"
-    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = "tolo__water_level"
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
@@ -52,7 +48,7 @@ class ToloWaterLevelSensor(ToloSaunaCoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> int:
         """Return current tank water level."""
-        return self.WATER_LEVELS[self.coordinator.data.status.water_level]
+        return self.coordinator.data.status.water_level
 
 
 class ToloTankTemperatureSensor(ToloSaunaCoordinatorEntity, SensorEntity):
