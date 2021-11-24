@@ -332,6 +332,12 @@ def in_wall_smart_fan_control_state_fixture():
     return json.loads(load_fixture("zwave_js/in_wall_smart_fan_control_state.json"))
 
 
+@pytest.fixture(name="hs_fc200_state", scope="session")
+def hs_fc200_state_fixture():
+    """Load the HS FC200+ node state fixture data."""
+    return json.loads(load_fixture("zwave_js/fan_hs_fc200_state.json"))
+
+
 @pytest.fixture(name="gdc_zw062_state", scope="session")
 def motorized_barrier_cover_state_fixture():
     """Load the motorized barrier cover node state fixture data."""
@@ -693,6 +699,14 @@ def window_cover_fixture(client, chain_actuator_zws12_state):
 def in_wall_smart_fan_control_fixture(client, in_wall_smart_fan_control_state):
     """Mock a fan node."""
     node = Node(client, copy.deepcopy(in_wall_smart_fan_control_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="hs_fc200")
+def hs_fc200_fixture(client, hs_fc200_state):
+    """Mock a fan node."""
+    node = Node(client, copy.deepcopy(hs_fc200_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
