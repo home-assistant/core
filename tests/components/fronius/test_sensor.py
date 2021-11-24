@@ -1,13 +1,14 @@
 """Tests for the Fronius sensor platform."""
 from homeassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
+    FroniusMeterUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.util import dt
 
-from . import mock_responses, setup_fronius_integration
+from . import enable_all_entities, mock_responses, setup_fronius_integration
 
 from tests.common import async_fire_time_changed
 
@@ -21,8 +22,12 @@ async def test_symo_inverter(hass, aioclient_mock):
 
     # Init at night
     mock_responses(aioclient_mock, night=True)
-    await setup_fronius_integration(hass)
+    config_entry = await setup_fronius_integration(hass)
 
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 23
+    await enable_all_entities(
+        hass, config_entry.entry_id, FroniusInverterUpdateCoordinator.default_interval
+    )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 55
     assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 0)
     assert_state("sensor.energy_day_fronius_inverter_1_http_fronius", 10828)
@@ -36,7 +41,10 @@ async def test_symo_inverter(hass, aioclient_mock):
         hass, dt.utcnow() + FroniusInverterUpdateCoordinator.default_interval
     )
     await hass.async_block_till_done()
-
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 57
+    await enable_all_entities(
+        hass, config_entry.entry_id, FroniusInverterUpdateCoordinator.default_interval
+    )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     # 4 additional AC entities
     assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 2.19)
@@ -60,8 +68,8 @@ async def test_symo_logger(hass, aioclient_mock):
 
     mock_responses(aioclient_mock)
     await setup_fronius_integration(hass)
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 25
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     # ignored constant entities:
     # hardware_platform, hardware_version, product_type
     # software_version, time_zone, time_zone_location
@@ -91,8 +99,12 @@ async def test_symo_meter(hass, aioclient_mock):
         assert state.state == str(expected_state)
 
     mock_responses(aioclient_mock)
-    await setup_fronius_integration(hass)
+    config_entry = await setup_fronius_integration(hass)
 
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 25
+    await enable_all_entities(
+        hass, config_entry.entry_id, FroniusMeterUpdateCoordinator.default_interval
+    )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     # ignored entities:
     # manufacturer, model, serial, enable, timestamp, visible, meter_location
@@ -152,8 +164,12 @@ async def test_symo_power_flow(hass, aioclient_mock):
 
     # First test at night
     mock_responses(aioclient_mock, night=True)
-    await setup_fronius_integration(hass)
+    config_entry = await setup_fronius_integration(hass)
 
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 23
+    await enable_all_entities(
+        hass, config_entry.entry_id, FroniusInverterUpdateCoordinator.default_interval
+    )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 55
     # ignored: location, mode, timestamp
     #
