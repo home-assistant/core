@@ -128,6 +128,20 @@ async def test_ssdp(hass, mock_panel):
         "port": 1234,
     }
 
+    mock_panel.get_status.side_effect = config_flow.CannotConnect
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data={
+            "ssdp_location": "http://1.2.3.4:1234/Device.xml",
+            "manufacturer": config_flow.KONN_MANUFACTURER,
+            "modelName": config_flow.KONN_MODEL,
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "connection_error"
+
 
 async def test_import_no_host_user_finish(hass, mock_panel):
     """Test importing a panel with no host info."""
