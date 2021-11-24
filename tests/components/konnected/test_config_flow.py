@@ -203,6 +203,7 @@ async def test_ssdp(hass, mock_panel):
     )
 
     assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_import_no_host_user_finish(hass, mock_panel):
