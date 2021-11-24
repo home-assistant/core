@@ -90,15 +90,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ) from ex
 
         if previous_contactor_closed != vitals.contactor_closed:
-            coordinator.update_interval = (
-                timedelta(seconds=poll_interval)
-                if not vitals.contactor_closed
-                else timedelta(seconds=poll_interval_charging)
-            )
+            if vitals.contactor_closed:
+                coordinator.update_interval = timedelta(seconds=poll_interval_charging)
+            else:
+                coordinator.update_interval = timedelta(seconds=poll_interval)
+
             _LOGGER.debug(
                 "Contactor closed: %s. Update interval: %s",
-                str(vitals.contactor_closed),
-                str(coordinator.update_interval),
+                vitals.contactor_closed,
+                coordinator.update_interval,
             )
 
         return {
