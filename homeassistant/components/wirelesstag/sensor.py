@@ -31,35 +31,35 @@ SENSOR_HUMIDITY = "humidity"
 SENSOR_MOISTURE = "moisture"
 SENSOR_LIGHT = "light"
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    SENSOR_TEMPERATURE: SensorEntityDescription(
         key=SENSOR_TEMPERATURE,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SENSOR_AMBIENT_TEMPERATURE: SensorEntityDescription(
         key=SENSOR_AMBIENT_TEMPERATURE,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SENSOR_HUMIDITY: SensorEntityDescription(
         key=SENSOR_HUMIDITY,
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SENSOR_MOISTURE: SensorEntityDescription(
         key=SENSOR_MOISTURE,
         device_class=SENSOR_MOISTURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    SensorEntityDescription(
+    SENSOR_LIGHT: SensorEntityDescription(
         key=SENSOR_LIGHT,
         device_class=DEVICE_CLASS_ILLUMINANCE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-)
+}
 
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+SENSOR_KEYS: list[str] = list(SENSOR_TYPES.keys())
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -76,11 +76,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
     tags = platform.tags
     for tag in tags.values():
-        for description in SENSOR_TYPES:
-            key = description.key
-            if key in config.get(CONF_MONITORED_CONDITIONS):
-                if key in tag.allowed_sensor_types:
-                    sensors.append(WirelessTagSensor(platform, tag, description))
+        for key in config[CONF_MONITORED_CONDITIONS]:
+            if key not in tag.allowed_sensor_types:
+                continue
+            description = SENSOR_TYPES[key]
+            sensors.append(WirelessTagSensor(platform, tag, description))
 
     add_entities(sensors, True)
 
