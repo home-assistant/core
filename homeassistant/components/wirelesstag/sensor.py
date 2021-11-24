@@ -1,10 +1,22 @@
 """Sensor support for Wireless Sensor Tags platform."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -19,18 +31,40 @@ SENSOR_HUMIDITY = "humidity"
 SENSOR_MOISTURE = "moisture"
 SENSOR_LIGHT = "light"
 
-SENSOR_TYPES = [
-    SENSOR_TEMPERATURE,
-    SENSOR_HUMIDITY,
-    SENSOR_MOISTURE,
-    SENSOR_LIGHT,
-    SENSOR_AMBIENT_TEMPERATURE,
-]
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_TEMPERATURE,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_AMBIENT_TEMPERATURE,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_HUMIDITY,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_MOISTURE,
+        device_class=SENSOR_MOISTURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_LIGHT,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         )
     }
 )
@@ -42,11 +76,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
     tags = platform.tags
     for tag in tags.values():
-        for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-            if sensor_type in tag.allowed_sensor_types:
-                sensors.append(
-                    WirelessTagSensor(platform, tag, sensor_type, hass.config)
-                )
+        for description in SENSOR_TYPES:
+            key = description.key
+            if key in config.get(CONF_MONITORED_CONDITIONS):
+                if key in tag.allowed_sensor_types:
+                    sensors.append(
+                        WirelessTagSensor(platform, tag, description, hass.config)
+                    )
 
     add_entities(sensors, True)
 
@@ -54,11 +90,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, api, tag, sensor_type, config):
+    entity_description: SensorEntityDescription
+
+    def __init__(self, api, tag, description, config):
         """Initialize a WirelessTag sensor."""
         super().__init__(api, tag)
 
-        self._sensor_type = sensor_type
+        self.entity_description = description
         self._name = self._tag.name
 
         # I want to see entity_id as:
@@ -66,7 +104,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         # and not as sensor.bedroom for temperature and
         # sensor.bedroom_2 for humidity
         self._entity_id = (
-            f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{self._sensor_type}"
+            f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{description.key}"
         )
 
     async def async_added_to_hass(self):
@@ -97,11 +135,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return (
-            SENSOR_TEMPERATURE
-            if self._sensor_type is SENSOR_AMBIENT_TEMPERATURE
-            else self._sensor_type
-        )
+        return self.entity_description.device_class
 
     @property
     def native_unit_of_measurement(self):
@@ -117,6 +151,11 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
     def _sensor(self):
         """Return tag sensor entity."""
         return self._tag.sensor[self._sensor_type]
+
+    @property
+    def _sensor_type(self):
+        """Return internal sensor type."""
+        return self.entity_description.key
 
     @callback
     def _update_tag_info_callback(self, new_tag):
