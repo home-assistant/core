@@ -1672,7 +1672,7 @@ def random_every_time(context, values):
 
 def today_at(time_str: str = "") -> datetime:
     """Record fetching now where the time has been replaced with value."""
-    start = dt_util.start_of_local_day(datetime.now())
+    start = dt_util.start_of_local_day()
 
     dttime = start.time() if time_str == "" else dt_util.parse_time(time_str)
 
