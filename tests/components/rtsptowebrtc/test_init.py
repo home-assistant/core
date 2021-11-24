@@ -1,9 +1,11 @@
 """Tests for RTSPtoWebRTC inititalization."""
 
 import base64
+from unittest.mock import patch
 
 import aiohttp
 import pytest
+import rtsp_to_webrtc
 
 from homeassistant.components import rtsptowebrtc
 from homeassistant.components.rtsptowebrtc import DOMAIN
@@ -43,7 +45,9 @@ async def test_setup_success(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_rtsptowebrtc(hass)
+    with patch("rtsp_to_webrtc.client.Client.heartbeat"):
+        assert await async_setup_rtsptowebrtc(hass)
+        await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -68,6 +72,46 @@ async def test_invalid_config_entry(hass: HomeAssistant) -> None:
     assert entries[0].state is ConfigEntryState.SETUP_ERROR
 
 
+async def test_setup_server_failure(hass: HomeAssistant) -> None:
+    """Test server responds with a failure on startup."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "rtsp_to_webrtc.client.Client.heartbeat",
+        side_effect=rtsp_to_webrtc.exceptions.ResponseError(),
+    ):
+        assert await async_setup_rtsptowebrtc(hass)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_setup_communication_failure(hass: HomeAssistant) -> None:
+    """Test unable to talk to server on startup."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "rtsp_to_webrtc.client.Client.heartbeat",
+        side_effect=rtsp_to_webrtc.exceptions.ClientError(),
+    ):
+        assert await async_setup_rtsptowebrtc(hass)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_offer_for_stream_source(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -75,7 +119,9 @@ async def test_offer_for_stream_source(
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_rtsptowebrtc(hass)
+    with patch("rtsp_to_webrtc.client.Client.heartbeat"):
+        assert await async_setup_rtsptowebrtc(hass)
+        await hass.async_block_till_done()
 
     aioclient_mock.post(
         f"{SERVER_URL}/stream",
@@ -95,7 +141,9 @@ async def test_offer_failure(
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_rtsptowebrtc(hass)
+    with patch("rtsp_to_webrtc.client.Client.heartbeat"):
+        assert await async_setup_rtsptowebrtc(hass)
+        await hass.async_block_till_done()
 
     aioclient_mock.post(
         f"{SERVER_URL}/stream",
