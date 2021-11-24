@@ -1021,3 +1021,29 @@ async def test_entity_max_length_exceeded(hass, registry):
     assert exc_info.value.property_name == "generated_entity_id"
     assert exc_info.value.max_length == 255
     assert exc_info.value.value == f"sensor.{long_entity_id_name}_2"
+
+
+async def test_resolve_entity_ids(hass, registry):
+    """Test resolving entity IDs."""
+
+    entry1 = registry.async_get_or_create(
+        "light", "hue", "1234", suggested_object_id="beer"
+    )
+    assert entry1.entity_id == "light.beer"
+
+    entry2 = registry.async_get_or_create(
+        "light", "hue", "2345", suggested_object_id="milk"
+    )
+    assert entry2.entity_id == "light.milk"
+
+    expected = ["light.beer", "light.milk"]
+    assert er.async_resolve_entity_ids(registry, [entry1.id, entry2.id]) == expected
+
+    expected = ["light.beer", "light.milk"]
+    assert er.async_resolve_entity_ids(registry, ["light.beer", entry2.id]) == expected
+
+    expected = ["light.beer"]
+    assert er.async_resolve_entity_ids(registry, ["light.beer", "bad_uuid"]) == expected
+
+    expected = []
+    assert er.async_resolve_entity_ids(registry, ["unknown_uuid"]) == expected
