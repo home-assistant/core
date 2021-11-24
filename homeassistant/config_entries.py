@@ -1385,7 +1385,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self, discovery_info: DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by DHCP discovery."""
-        return await self.async_step_discovery(cast(dict, discovery_info))
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_usb(
         self, discovery_info: UsbServiceInfo
