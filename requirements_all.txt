@@ -1981,7 +1981,7 @@ pyuptimerobot==21.9.0
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.13
+pyvera==0.3.14
 
 # homeassistant.components.versasense
 pyversasense==0.0.6
