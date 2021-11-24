@@ -300,7 +300,6 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(hass, mqtt_mock
                 "payload_open": "OPEN",
                 "state_locked": "LOCKED",
                 "state_unlocked": "UNLOCKED",
-                "state_open": "OPEN",
             }
         },
     )
@@ -360,7 +359,6 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
                 "payload_open": "UNLOCK",
                 "state_locked": "LOCKED",
                 "state_unlocked": "UNLOCKED",
-                "state_open": "OPEN",
                 "optimistic": True,
             }
         },
