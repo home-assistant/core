@@ -371,7 +371,6 @@ class Camera(Entity):
 
     # Entity Properties
     _attr_brand: str | None = None
-    _attr_entity_picture: str
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
     _attr_frontend_stream_type: str | None
     _attr_is_on: bool = True
@@ -395,7 +394,7 @@ class Camera(Entity):
     @property
     def entity_picture(self) -> str:
         """Return a link to the camera feed as entity picture."""
-        if hasattr(self, "_attr_entity_picture"):
+        if self._attr_entity_picture is not None:
             return self._attr_entity_picture
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
