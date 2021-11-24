@@ -460,6 +460,7 @@ class LeafDataStore:
         return False
 
     async def async_start_charging(self):
+        """Request to start charging the car. Used by the button platform."""
         result = await self.hass.async_add_executor_job(self.leaf.start_charging)
         if result:
             _LOGGER.debug("Start charging sent, request updated data in 1 minute")
