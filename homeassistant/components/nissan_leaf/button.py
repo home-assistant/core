@@ -8,7 +8,6 @@ from . import DATA_CHARGING, DATA_LEAF, LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up of a Nissan Leaf button."""
     if discovery_info is None:
@@ -26,6 +25,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LeafChargingButton(LeafEntity, ButtonEntity):
     """Charging Button class."""
 
+    _attr_icon = "mdi:power"
+
     @property
     def name(self):
         """Sensor name."""
@@ -42,6 +43,8 @@ class LeafChargingButton(LeafEntity, ButtonEntity):
 
 class LeafUpdateButton(LeafEntity, ButtonEntity):
     """Update Button class."""
+
+    _attr_icon = "mdi:refresh"
 
     @property
     def name(self):
