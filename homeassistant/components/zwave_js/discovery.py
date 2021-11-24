@@ -260,7 +260,7 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
         ),
     ),
-    # HomeSeer HS-FS200+
+    # HomeSeer HS-FC200+
     ZWaveDiscoverySchema(
         platform="fan",
         hint="configured_fan_speed",
