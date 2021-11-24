@@ -138,6 +138,45 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Air Quality Monitor
+    # No specification on Tuya portal
+    "hjjcy": (
+        SensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.HUMIDITY_VALUE,
+            name="Humidity",
+            device_class=DEVICE_CLASS_HUMIDITY,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.CO2_VALUE,
+            name="Carbon Dioxide",
+            device_class=DEVICE_CLASS_CO2,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.CH2O_VALUE,
+            name="Formaldehyde",
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.VOC_VALUE,
+            name="Volatile Organic Compound",
+            device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key=DPCode.PM25_VALUE,
+            name="Particulate Matter 2.5 µm",
+            device_class=DEVICE_CLASS_PM25,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+    ),
     # Switch
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
     "kg": (
