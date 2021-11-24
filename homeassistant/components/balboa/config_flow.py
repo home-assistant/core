@@ -14,9 +14,6 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_HOST] == data[CONF_HOST]:
-            raise AlreadyConfigured
 
     _LOGGER.debug("Attempting to connect to %s", data[CONF_HOST])
     spa = BalboaSpaWifi(data[CONF_HOST])
@@ -55,10 +52,9 @@ class BalboaSpaClientFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 info = await validate_input(self.hass, user_input)
-            except AlreadyConfigured:
-                return self.async_abort(reason="already_configured")
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except

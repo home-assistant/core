@@ -59,8 +59,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # At this point we have a configured spa.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    # call update_listener on startup
+    # call update_listener on startup and for options change as well.
     await update_listener(hass, entry)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -72,9 +73,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     spa = hass.data[DOMAIN][entry.entry_id]
     await spa.disconnect()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -95,7 +94,7 @@ async def update_listener(hass, entry):
                 time.strptime(str(dt_util.now()), "%Y-%m-%d %H:%M:%S.%f%z")
             )
 
-    sync_time()
+    await sync_time()
     entry.async_on_unload(
         async_track_time_interval(hass, sync_time, SYNC_TIME_INTERVAL)
     )
