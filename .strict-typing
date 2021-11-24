@@ -109,6 +109,7 @@ homeassistant.components.renault.*
 homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.rpi_power.*
+homeassistant.components.rtsptowebrtc.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
@@ -146,7 +147,6 @@ homeassistant.components.wallbox.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*
-homeassistant.components.webrtc.*
 homeassistant.components.websocket_api.*
 homeassistant.components.zodiac.*
 homeassistant.components.zeroconf.*

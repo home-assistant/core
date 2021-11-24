@@ -1,12 +1,12 @@
-"""Tests for WebRTC inititalization."""
+"""Tests for RTSPtoWebRTC inititalization."""
 
 import base64
 
 import aiohttp
 import pytest
 
-from homeassistant.components import webrtc
-from homeassistant.components.webrtc.const import DOMAIN
+from homeassistant.components import rtsptowebrtc
+from homeassistant.components.rtsptowebrtc import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -26,16 +26,16 @@ SERVER_URL = "http://127.0.0.1:8083"
 CONFIG_ENTRY_DATA = {"rtsp_to_webrtc_url": SERVER_URL}
 
 
-async def async_setup_webrtc(hass: HomeAssistant):
+async def async_setup_rtsptowebrtc(hass: HomeAssistant):
     """Set up the component."""
     return await async_setup_component(hass, DOMAIN, {})
 
 
 async def test_supported_stream_source(hass: HomeAssistant) -> None:
     """Test successful setup."""
-    assert webrtc.is_suported_stream_source("rtsp://")
-    assert not webrtc.is_suported_stream_source("http://")
-    assert not webrtc.is_suported_stream_source("rtsp")
+    assert rtsptowebrtc.is_suported_stream_source("rtsp://")
+    assert not rtsptowebrtc.is_suported_stream_source("http://")
+    assert not rtsptowebrtc.is_suported_stream_source("rtsp")
 
 
 async def test_setup_success(hass: HomeAssistant) -> None:
@@ -43,7 +43,7 @@ async def test_setup_success(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_webrtc(hass)
+    assert await async_setup_rtsptowebrtc(hass)
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -61,7 +61,7 @@ async def test_invalid_config_entry(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_webrtc(hass)
+    assert await async_setup_rtsptowebrtc(hass)
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -75,14 +75,14 @@ async def test_offer_for_stream_source(
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_webrtc(hass)
+    assert await async_setup_rtsptowebrtc(hass)
 
     aioclient_mock.post(
         f"{SERVER_URL}/stream",
         json={"sdp64": base64.b64encode(ANSWER_SDP.encode("utf-8")).decode("utf-8")},
     )
 
-    answer_sdp = await webrtc.async_offer_for_stream_source(
+    answer_sdp = await rtsptowebrtc.async_offer_for_stream_source(
         hass, OFFER_SDP, STREAM_SOURCE
     )
     assert answer_sdp == ANSWER_SDP
@@ -95,7 +95,7 @@ async def test_offer_failure(
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_webrtc(hass)
+    assert await async_setup_rtsptowebrtc(hass)
 
     aioclient_mock.post(
         f"{SERVER_URL}/stream",
@@ -105,12 +105,14 @@ async def test_offer_failure(
     with pytest.raises(
         HomeAssistantError, match=r"WebRTC server communication failure.*"
     ):
-        await webrtc.async_offer_for_stream_source(hass, OFFER_SDP, STREAM_SOURCE)
+        await rtsptowebrtc.async_offer_for_stream_source(hass, OFFER_SDP, STREAM_SOURCE)
 
 
 async def test_integration_not_loaded(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test invoking the integration when not loaded."""
-    with pytest.raises(HomeAssistantError, match=r"webrtc integration is not set up.*"):
-        await webrtc.async_offer_for_stream_source(hass, OFFER_SDP, STREAM_SOURCE)
+    with pytest.raises(
+        HomeAssistantError, match=r"'rtsptowebrtc' integration is not set up.*"
+    ):
+        await rtsptowebrtc.async_offer_for_stream_source(hass, OFFER_SDP, STREAM_SOURCE)

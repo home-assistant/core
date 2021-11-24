@@ -5,8 +5,8 @@
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
       "user": {
-        "title": "Configure WebRTC",
-        "description": "The WebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.\n",
+        "title": "Configure RTSPtoWebRTC",
+        "description": "The RTSPtoWebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.\n",
         "data": {
           "rtsp_to_webrtc_url": "Enter server url e.g. https://example.com"
         }
