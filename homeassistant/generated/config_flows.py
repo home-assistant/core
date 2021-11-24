@@ -295,7 +295,7 @@ FLOWS = [
     "tellduslive",
     "tibber",
     "tile",
-    "tolosauna",
+    "tolo",
     "toon",
     "totalconnect",
     "tplink",

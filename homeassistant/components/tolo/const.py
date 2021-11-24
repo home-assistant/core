@@ -1,6 +1,6 @@
-"""Constants for the tolosauna integration."""
+"""Constants for the tolo integration."""
 
-DOMAIN = "tolosauna"
+DOMAIN = "tolo"
 DEFAULT_NAME = "TOLO Sauna"
 
 DEFAULT_RETRY_TIMEOUT = 1

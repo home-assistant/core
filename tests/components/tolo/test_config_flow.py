@@ -5,7 +5,7 @@ import pytest
 from tololib.errors import ResponseTimedOutError
 
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
-from homeassistant.components.tolosauna.const import DOMAIN
+from homeassistant.components.tolo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -21,9 +21,7 @@ MOCK_DHCP_DATA = {IP_ADDRESS: "127.0.0.2", MAC_ADDRESS: "00:11:22:33:44:55"}
 @pytest.fixture(name="toloclient")
 def toloclient_fixture() -> Mock:
     """Patch libraries."""
-    with patch(
-        "homeassistant.components.tolosauna.config_flow.ToloClient"
-    ) as toloclient:
+    with patch("homeassistant.components.tolo.config_flow.ToloClient") as toloclient:
         yield toloclient
 
 

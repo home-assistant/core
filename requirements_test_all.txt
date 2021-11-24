@@ -1341,7 +1341,7 @@ tellduslive==0.10.11
 # homeassistant.components.powerwall
 tesla-powerwall==0.3.12
 
-# homeassistant.components.tolosauna
+# homeassistant.components.tolo
 tololib==0.1.0b2
 
 # homeassistant.components.toon

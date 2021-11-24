@@ -1,8 +1,8 @@
 {
-  "domain": "tolosauna",
+  "domain": "tolo",
   "name": "TOLO Sauna",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/tolosauna",
+  "documentation": "https://www.home-assistant.io/integrations/tolo",
   "requirements": [
     "tololib==0.1.0b2"
   ],

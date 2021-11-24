@@ -357,7 +357,7 @@ DHCP = [
         "hostname": "tado*"
     },
     {
-        "domain": "tolosauna",
+        "domain": "tolo",
         "hostname": "usr-tcp232-ed2"
     },
     {

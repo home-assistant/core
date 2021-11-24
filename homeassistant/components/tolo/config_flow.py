@@ -1,4 +1,4 @@
-"""Config flow for tolosauna."""
+"""Config flow for tolo."""
 
 from __future__ import annotations
 
@@ -78,7 +78,7 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
         if device_available:
             self._discovered_host = discovery_info[IP_ADDRESS]
             return await self.async_step_confirm()
-        return self.async_abort(reason="not_tolosauna_device")
+        return self.async_abort(reason="not_tolo_device")
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
