@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, cast
+from typing import Any, Union, cast
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -133,7 +133,8 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return cast(
-            StateType | datetime, getattr(self.coordinator.data, self.entity_description.key)
+            Union[StateType, datetime],
+            getattr(self.coordinator.data, self.entity_description.key),
         )
 
     @property
