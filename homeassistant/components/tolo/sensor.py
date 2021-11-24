@@ -1,8 +1,13 @@
 """TOLO Sauna (non-binary, general) sensors."""
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -55,8 +60,8 @@ class ToloTankTemperatureSensor(ToloSaunaCoordinatorEntity, SensorEntity):
 
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
     _attr_name = "Tank Temperature"
-    _attr_icon = "mdi:thermometer"
-    _attr_state_class = "measurement"
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(
