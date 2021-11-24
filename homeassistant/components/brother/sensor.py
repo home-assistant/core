@@ -133,7 +133,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return cast(
-            StateType, getattr(self.coordinator.data, self.entity_description.key)
+            StateType | datetime, getattr(self.coordinator.data, self.entity_description.key)
         )
 
     @property
