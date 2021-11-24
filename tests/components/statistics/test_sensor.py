@@ -41,26 +41,13 @@ class TestStatisticsSensor(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.values_binary = ["on", "off", "on", "off", "on", "off", "on"]
         self.values = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
-        self.count = len(self.values)
-        self.min = min(self.values)
-        self.max = max(self.values)
-        self.total = sum(self.values)
         self.mean = round(sum(self.values) / len(self.values), 2)
-        self.median = round(statistics.median(self.values), 2)
-        self.deviation = round(statistics.stdev(self.values), 2)
-        self.variance = round(statistics.variance(self.values), 2)
-        self.quantiles = [
-            round(quantile, 2) for quantile in statistics.quantiles(self.values)
-        ]
-        self.change = round(self.values[-1] - self.values[0], 2)
-        self.average_change = round(self.change / (len(self.values) - 1), 2)
-        self.change_rate = round(self.change / (60 * (self.count - 1)), 2)
         self.addCleanup(self.hass.stop)
 
-    def test_binary_sensor_source(self):
-        """Test if source is a sensor."""
-        values = ["on", "off", "on", "off", "on", "off", "on"]
+    def test_sensor_defaults_binary(self):
+        """Test the general behavior of the sensor, with binary source sensor."""
         assert setup_component(
             self.hass,
             "sensor",
@@ -84,7 +71,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        for value in values:
+        for value in self.values_binary:
             self.hass.states.set(
                 "binary_sensor.test_monitored",
                 value,
@@ -94,24 +81,29 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        assert state.state == str(len(values))
+        assert state.state == str(len(self.values_binary))
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+        assert state.attributes.get("buffer_usage_ratio") == round(7 / 20, 2)
+        assert state.attributes.get("source_value_valid") is True
+        assert "age_coverage_ratio" not in state.attributes
 
         state = self.hass.states.get("sensor.test_unitless")
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
-    def test_sensor_source(self):
-        """Test if source is a sensor."""
+    def test_sensor_defaults_numeric(self):
+        """Test the general behavior of the sensor, with numeric source sensor."""
         assert setup_component(
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                    },
+                ]
             },
         )
 
@@ -128,21 +120,12 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        assert str(self.mean) == state.state
-        assert self.min == state.attributes.get("min_value")
-        assert self.max == state.attributes.get("max_value")
-        assert self.variance == state.attributes.get("variance")
-        assert self.median == state.attributes.get("median")
-        assert self.deviation == state.attributes.get("standard_deviation")
-        assert self.quantiles == state.attributes.get("quantiles")
-        assert self.mean == state.attributes.get("mean")
-        assert self.count == state.attributes.get("count")
-        assert self.total == state.attributes.get("total")
-        assert self.change == state.attributes.get("change")
-        assert self.average_change == state.attributes.get("average_change")
-
+        assert state.state == str(self.mean)
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+        assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
+        assert state.attributes.get("source_value_valid") is True
+        assert "age_coverage_ratio" not in state.attributes
 
         # Source sensor turns unavailable, then available with valid value,
         # statistics sensor should follow
@@ -154,6 +137,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
         assert new_state.state == STATE_UNAVAILABLE
+        assert new_state.attributes.get("source_value_valid") is None
         self.hass.states.set(
             "sensor.test_monitored",
             0,
@@ -161,35 +145,53 @@ class TestStatisticsSensor(unittest.TestCase):
         )
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
-        assert new_state.state != STATE_UNAVAILABLE
-        assert new_state.attributes.get("count") == state.attributes.get("count") + 1
+        new_mean = round(sum(self.values) / (len(self.values) + 1), 2)
+        assert new_state.state == str(new_mean)
+        assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+        assert new_state.attributes.get("buffer_usage_ratio") == round(10 / 20, 2)
+        assert new_state.attributes.get("source_value_valid") is True
 
-        # Source sensor has a non-float state, unit and state should not change
+        # Source sensor has a nonnumerical state, unit and state should not change
         state = self.hass.states.get("sensor.test")
         self.hass.states.set("sensor.test_monitored", "beer", {})
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
-        assert state == new_state
+        assert new_state.state == str(new_mean)
+        assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+        assert new_state.attributes.get("source_value_valid") is False
+
+        # Source sensor has the STATE_UNKNOWN state, unit and state should not change
+        state = self.hass.states.get("sensor.test")
+        self.hass.states.set("sensor.test_monitored", STATE_UNKNOWN, {})
+        self.hass.block_till_done()
+        new_state = self.hass.states.get("sensor.test")
+        assert new_state.state == str(new_mean)
+        assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+        assert new_state.attributes.get("source_value_valid") is False
 
         # Source sensor is removed, unit and state should not change
         # This is equal to a None value being published
         self.hass.states.remove("sensor.test_monitored")
         self.hass.block_till_done()
         new_state = self.hass.states.get("sensor.test")
-        assert state == new_state
+        assert new_state.state == str(new_mean)
+        assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+        assert new_state.attributes.get("source_value_valid") is False
 
-    def test_sampling_size(self):
+    def test_sampling_size_non_default(self):
         """Test rotation."""
         assert setup_component(
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                    "sampling_size": 5,
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "sampling_size": 5,
+                    },
+                ]
             },
         )
 
@@ -206,9 +208,9 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-
-        assert state.attributes.get("min_value") == 3.8
-        assert state.attributes.get("max_value") == 14
+        new_mean = round(sum(self.values[-5:]) / len(self.values[-5:]), 2)
+        assert state.state == str(new_mean)
+        assert state.attributes.get("buffer_usage_ratio") == round(5 / 5, 2)
 
     def test_sampling_size_1(self):
         """Test validity of stats requiring only one sample."""
@@ -216,12 +218,14 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                    "sampling_size": 1,
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "sampling_size": 1,
+                    },
+                ]
             },
         )
 
@@ -238,23 +242,12 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
+        new_mean = float(self.values[-1])
+        assert state.state == str(new_mean)
+        assert state.attributes.get("buffer_usage_ratio") == round(1 / 1, 2)
 
-        # require only one data point
-        assert self.values[-1] == state.attributes.get("min_value")
-        assert self.values[-1] == state.attributes.get("max_value")
-        assert self.values[-1] == state.attributes.get("mean")
-        assert self.values[-1] == state.attributes.get("median")
-        assert self.values[-1] == state.attributes.get("total")
-        assert state.attributes.get("change") == 0
-        assert state.attributes.get("average_change") == 0
-
-        # require at least two data points
-        assert state.attributes.get("variance") == STATE_UNKNOWN
-        assert state.attributes.get("standard_deviation") == STATE_UNKNOWN
-        assert state.attributes.get("quantiles") == STATE_UNKNOWN
-
-    def test_max_age(self):
-        """Test value deprecation."""
+    def test_age_limit_expiry(self):
+        """Test that values are removed after certain age."""
         now = dt_util.utcnow()
         mock_data = {
             "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
@@ -270,12 +263,14 @@ class TestStatisticsSensor(unittest.TestCase):
                 self.hass,
                 "sensor",
                 {
-                    "sensor": {
-                        "platform": "statistics",
-                        "name": "test",
-                        "entity_id": "sensor.test_monitored",
-                        "max_age": {"minutes": 3},
-                    }
+                    "sensor": [
+                        {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                            "max_age": {"minutes": 4},
+                        },
+                    ]
                 },
             )
 
@@ -290,118 +285,50 @@ class TestStatisticsSensor(unittest.TestCase):
                     {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
                 )
                 self.hass.block_till_done()
-                # insert the next value one minute later
                 mock_data["return_time"] += timedelta(minutes=1)
 
-            state = self.hass.states.get("sensor.test")
-
-        assert state.attributes.get("min_value") == 6
-        assert state.attributes.get("max_value") == 14
-
-    def test_max_age_without_sensor_change(self):
-        """Test value deprecation."""
-        now = dt_util.utcnow()
-        mock_data = {
-            "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
-        }
-
-        def mock_now():
-            return mock_data["return_time"]
-
-        with patch(
-            "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
-        ):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "statistics",
-                        "name": "test",
-                        "entity_id": "sensor.test_monitored",
-                        "max_age": {"minutes": 3},
-                    }
-                },
-            )
-
-            self.hass.block_till_done()
-            self.hass.start()
-            self.hass.block_till_done()
-
-            for value in self.values:
-                self.hass.states.set(
-                    "sensor.test_monitored",
-                    value,
-                    {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
-                )
-                self.hass.block_till_done()
-                # insert the next value 30 seconds later
-                mock_data["return_time"] += timedelta(seconds=30)
+            # After adding all values, we should only see 5 values in memory
 
             state = self.hass.states.get("sensor.test")
+            new_mean = round(sum(self.values[-5:]) / len(self.values[-5:]), 2)
+            assert state.state == str(new_mean)
+            assert state.attributes.get("buffer_usage_ratio") == round(5 / 20, 2)
+            assert state.attributes.get("age_coverage_ratio") == 1.0
 
-            assert state.attributes.get("min_value") == 3.8
-            assert state.attributes.get("max_value") == 15.2
+            # Values expire over time. Only two are left
 
-            # wait for 3 minutes (max_age).
-            mock_data["return_time"] += timedelta(minutes=3)
+            mock_data["return_time"] += timedelta(minutes=2)
             fire_time_changed(self.hass, mock_data["return_time"])
             self.hass.block_till_done()
 
             state = self.hass.states.get("sensor.test")
+            new_mean = round(sum(self.values[-2:]) / len(self.values[-2:]), 2)
+            assert state.state == str(new_mean)
+            assert state.attributes.get("buffer_usage_ratio") == round(2 / 20, 2)
+            assert state.attributes.get("age_coverage_ratio") == 1 / 4
 
-            assert state.attributes.get("min_value") == STATE_UNKNOWN
-            assert state.attributes.get("max_value") == STATE_UNKNOWN
-            assert state.attributes.get("count") == 0
+            # Values expire over time. Only one is left
 
-    def test_change_rate(self):
-        """Test min_age/max_age and change_rate."""
-        now = dt_util.utcnow()
-        mock_data = {
-            "return_time": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
-        }
-
-        def mock_now():
-            return mock_data["return_time"]
-
-        with patch(
-            "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
-        ):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "statistics",
-                        "name": "test",
-                        "entity_id": "sensor.test_monitored",
-                    }
-                },
-            )
-
+            mock_data["return_time"] += timedelta(minutes=1)
+            fire_time_changed(self.hass, mock_data["return_time"])
             self.hass.block_till_done()
-            self.hass.start()
-            self.hass.block_till_done()
-
-            for value in self.values:
-                self.hass.states.set(
-                    "sensor.test_monitored",
-                    value,
-                    {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
-                )
-                self.hass.block_till_done()
-                # insert the next value one minute later
-                mock_data["return_time"] += timedelta(minutes=1)
 
             state = self.hass.states.get("sensor.test")
+            new_mean = float(self.values[-1])
+            assert state.state == str(new_mean)
+            assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
+            assert state.attributes.get("age_coverage_ratio") == 0
 
-        assert datetime(
-            now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC
-        ) == state.attributes.get("min_age")
-        assert datetime(
-            now.year + 1, 8, 2, 12, 23 + self.count - 1, 42, tzinfo=dt_util.UTC
-        ) == state.attributes.get("max_age")
-        assert self.change_rate == state.attributes.get("change_rate")
+            # Values expire over time. Memory is empty
+
+            mock_data["return_time"] += timedelta(minutes=1)
+            fire_time_changed(self.hass, mock_data["return_time"])
+            self.hass.block_till_done()
+
+            state = self.hass.states.get("sensor.test")
+            assert state.state == STATE_UNKNOWN
+            assert state.attributes.get("buffer_usage_ratio") == round(0 / 20, 2)
+            assert state.attributes.get("age_coverage_ratio") == STATE_UNKNOWN
 
     def test_precision_0(self):
         """Test correct result with precision=0 as integer."""
@@ -409,12 +336,14 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                    "precision": 0,
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "precision": 0,
+                    },
+                ]
             },
         )
 
@@ -431,7 +360,7 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        assert state.state == str(int(state.attributes.get("mean")))
+        assert state.state == str(int(round(self.mean)))
 
     def test_precision_1(self):
         """Test correct result with precision=1 rounded to one decimal."""
@@ -439,12 +368,14 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                    "precision": 1,
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "precision": 1,
+                    },
+                ]
             },
         )
 
@@ -463,72 +394,6 @@ class TestStatisticsSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test")
         assert state.state == str(round(sum(self.values) / len(self.values), 1))
 
-    def test_state_characteristic_unit(self):
-        """Test statistics characteristic selection (via config)."""
-        assert setup_component(
-            self.hass,
-            "sensor",
-            {
-                "sensor": [
-                    {
-                        "platform": "statistics",
-                        "name": "test_min_age",
-                        "entity_id": "sensor.test_monitored",
-                        "state_characteristic": "min_age",
-                    },
-                    {
-                        "platform": "statistics",
-                        "name": "test_variance",
-                        "entity_id": "sensor.test_monitored",
-                        "state_characteristic": "variance",
-                    },
-                    {
-                        "platform": "statistics",
-                        "name": "test_average_change",
-                        "entity_id": "sensor.test_monitored",
-                        "state_characteristic": "average_change",
-                    },
-                    {
-                        "platform": "statistics",
-                        "name": "test_change_rate",
-                        "entity_id": "sensor.test_monitored",
-                        "state_characteristic": "change_rate",
-                    },
-                ]
-            },
-        )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        for value in self.values:
-            self.hass.states.set(
-                "sensor.test_monitored",
-                value,
-                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
-            )
-            self.hass.states.set(
-                "sensor.test_monitored_unitless",
-                value,
-            )
-            self.hass.block_till_done()
-
-        state = self.hass.states.get("sensor.test_min_age")
-        assert state.state == str(state.attributes.get("min_age"))
-        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-        state = self.hass.states.get("sensor.test_variance")
-        assert state.state == str(state.attributes.get("variance"))
-        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS + "²"
-        state = self.hass.states.get("sensor.test_average_change")
-        assert state.state == str(state.attributes.get("average_change"))
-        assert (
-            state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS + "/sample"
-        )
-        state = self.hass.states.get("sensor.test_change_rate")
-        assert state.state == str(state.attributes.get("change_rate"))
-        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS + "/s"
-
     def test_state_class(self):
         """Test state class, which depends on the characteristic configured."""
         assert setup_component(
@@ -546,7 +411,7 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test_nan",
                         "entity_id": "sensor.test_monitored",
-                        "state_characteristic": "min_age",
+                        "state_characteristic": "datetime_oldest",
                     },
                 ]
             },
@@ -592,7 +457,7 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test_unitless_3",
                         "entity_id": "sensor.test_monitored_unitless",
-                        "state_characteristic": "change_rate",
+                        "state_characteristic": "change_second",
                     },
                 ]
             },
@@ -616,7 +481,281 @@ class TestStatisticsSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test_unitless_3")
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
-        assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    def test_state_characteristics(self):
+        """Test configured state characteristic for value and unit."""
+        now = dt_util.utcnow()
+        mock_data = {
+            "return_time": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
+        }
+
+        def mock_now():
+            return mock_data["return_time"]
+
+        value_spacing_minutes = 1
+
+        characteristics = (
+            {
+                "name": "average_linear",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": 10.68,
+                "unit": "°C",
+            },
+            {
+                "name": "average_step",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": 11.36,
+                "unit": "°C",
+            },
+            {
+                "name": "average_timeless",
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(self.mean),
+                "unit": "°C",
+            },
+            {
+                "name": "change",
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(0),
+                "value_9": float(round(self.values[-1] - self.values[0], 2)),
+                "unit": "°C",
+            },
+            {
+                "name": "change_sample",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(
+                    round(
+                        (self.values[-1] - self.values[0]) / (len(self.values) - 1), 2
+                    )
+                ),
+                "unit": "°C/sample",
+            },
+            {
+                "name": "change_second",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(
+                    round(
+                        (self.values[-1] - self.values[0])
+                        / (60 * (len(self.values) - 1)),
+                        2,
+                    )
+                ),
+                "unit": "°C/s",
+            },
+            {
+                "name": "count",
+                "value_0": 0,
+                "value_1": 1,
+                "value_9": len(self.values),
+                "unit": None,
+            },
+            {
+                "name": "datetime_newest",
+                "value_0": STATE_UNKNOWN,
+                "value_1": datetime(
+                    now.year + 1,
+                    8,
+                    2,
+                    12,
+                    23 + len(self.values) + 10,
+                    42,
+                    tzinfo=dt_util.UTC,
+                ),
+                "value_9": datetime(
+                    now.year + 1,
+                    8,
+                    2,
+                    12,
+                    23 + len(self.values) - 1,
+                    42,
+                    tzinfo=dt_util.UTC,
+                ),
+                "unit": None,
+            },
+            {
+                "name": "datetime_oldest",
+                "value_0": STATE_UNKNOWN,
+                "value_1": datetime(
+                    now.year + 1,
+                    8,
+                    2,
+                    12,
+                    23 + len(self.values) + 10,
+                    42,
+                    tzinfo=dt_util.UTC,
+                ),
+                "value_9": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC),
+                "unit": None,
+            },
+            {
+                "name": "distance_95_percent_of_values",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(round(2 * 1.96 * statistics.stdev(self.values), 2)),
+                "unit": "°C",
+            },
+            {
+                "name": "distance_99_percent_of_values",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(round(2 * 2.58 * statistics.stdev(self.values), 2)),
+                "unit": "°C",
+            },
+            {
+                "name": "distance_absolute",
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(0),
+                "value_9": float(max(self.values) - min(self.values)),
+                "unit": "°C",
+            },
+            {
+                "name": "mean",
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(self.mean),
+                "unit": "°C",
+            },
+            {
+                "name": "median",
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(round(statistics.median(self.values), 2)),
+                "unit": "°C",
+            },
+            {
+                "name": "noisiness",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(
+                    round(sum([3, 4.8, 10.2, 1.2, 5.4, 2.5, 7.3, 8]) / 8, 2)
+                ),
+                "unit": "°C",
+            },
+            {
+                "name": "quantiles",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": [
+                    round(quantile, 2) for quantile in statistics.quantiles(self.values)
+                ],
+                "unit": None,
+            },
+            {
+                "name": "standard_deviation",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(round(statistics.stdev(self.values), 2)),
+                "unit": "°C",
+            },
+            {
+                "name": "total",
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(sum(self.values)),
+                "unit": "°C",
+            },
+            {
+                "name": "value_max",
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(max(self.values)),
+                "unit": "°C",
+            },
+            {
+                "name": "value_min",
+                "value_0": STATE_UNKNOWN,
+                "value_1": float(self.values[0]),
+                "value_9": float(min(self.values)),
+                "unit": "°C",
+            },
+            {
+                "name": "variance",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": float(round(statistics.variance(self.values), 2)),
+                "unit": "°C²",
+            },
+        )
+        sensors_config = []
+        for characteristic in characteristics:
+            sensors_config.append(
+                {
+                    "platform": "statistics",
+                    "name": "test_" + characteristic["name"],
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": characteristic["name"],
+                    "max_age": {"minutes": 10},
+                }
+            )
+
+        with patch(
+            "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
+        ):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {"sensor": sensors_config},
+            )
+
+            self.hass.block_till_done()
+            self.hass.start()
+            self.hass.block_till_done()
+
+            # With all values in buffer
+
+            for value in self.values:
+                self.hass.states.set(
+                    "sensor.test_monitored",
+                    value,
+                    {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                )
+                self.hass.block_till_done()
+                mock_data["return_time"] += timedelta(minutes=value_spacing_minutes)
+
+            for characteristic in characteristics:
+                state = self.hass.states.get("sensor.test_" + characteristic["name"])
+                assert state.state == str(characteristic["value_9"]), (
+                    f"value mismatch for characteristic '{characteristic['name']}' (buffer filled) "
+                    f"- assert {state.state} == {str(characteristic['value_9'])}"
+                )
+                assert (
+                    state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                    == characteristic["unit"]
+                ), f"unit mismatch for characteristic '{characteristic['name']}'"
+
+            # With empty buffer
+
+            mock_data["return_time"] += timedelta(minutes=10)
+            fire_time_changed(self.hass, mock_data["return_time"])
+            self.hass.block_till_done()
+
+            for characteristic in characteristics:
+                state = self.hass.states.get("sensor.test_" + characteristic["name"])
+                assert state.state == str(characteristic["value_0"]), (
+                    f"value mismatch for characteristic '{characteristic['name']}' (buffer empty) "
+                    f"- assert {state.state} == {str(characteristic['value_0'])}"
+                )
+
+            # With single value in buffer
+
+            self.hass.states.set(
+                "sensor.test_monitored",
+                self.values[0],
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.block_till_done()
+            mock_data["return_time"] += timedelta(minutes=1)
+
+            for characteristic in characteristics:
+                state = self.hass.states.get("sensor.test_" + characteristic["name"])
+                assert state.state == str(characteristic["value_1"]), (
+                    f"value mismatch for characteristic '{characteristic['name']}' (one stored value) "
+                    f"- assert {state.state} == {str(characteristic['value_1'])}"
+                )
 
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
@@ -640,12 +779,14 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass,
             "sensor",
             {
-                "sensor": {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                    "sampling_size": 100,
-                }
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "sampling_size": 100,
+                    },
+                ]
             },
         )
 
@@ -672,13 +813,6 @@ class TestStatisticsSensor(unittest.TestCase):
         # want purging to occur within the class itself.
         def mock_purge(self):
             return
-
-        # Set maximum age to 3 hours.
-        max_age = 3
-        # Determine what our minimum age should be based on test values.
-        expected_min_age = mock_data["return_time"] + timedelta(
-            hours=len(self.values) - max_age
-        )
 
         # enable the recorder
         init_recorder_component(self.hass)
@@ -707,13 +841,16 @@ class TestStatisticsSensor(unittest.TestCase):
                 self.hass,
                 "sensor",
                 {
-                    "sensor": {
-                        "platform": "statistics",
-                        "name": "test",
-                        "entity_id": "sensor.test_monitored",
-                        "sampling_size": 100,
-                        "max_age": {"hours": max_age},
-                    }
+                    "sensor": [
+                        {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                            "sampling_size": 100,
+                            "state_characteristic": "datetime_newest",
+                            "max_age": {"hours": 3},
+                        },
+                    ]
                 },
             )
             self.hass.block_till_done()
@@ -725,12 +862,12 @@ class TestStatisticsSensor(unittest.TestCase):
             # check if the result is as in test_sensor_source()
             state = self.hass.states.get("sensor.test")
 
-        assert expected_min_age == state.attributes.get("min_age")
+        assert state.attributes.get("age_coverage_ratio") == round(2 / 3, 2)
         # The max_age timestamp should be 1 hour before what we have right
         # now in mock_data['return_time'].
-        assert mock_data["return_time"] == state.attributes.get("max_age") + timedelta(
-            hours=1
-        )
+        assert mock_data["return_time"] == datetime.strptime(
+            state.state, "%Y-%m-%d %H:%M:%S%z"
+        ) + timedelta(hours=1)
 
 
 async def test_reload(hass):
@@ -744,12 +881,14 @@ async def test_reload(hass):
         hass,
         "sensor",
         {
-            "sensor": {
-                "platform": "statistics",
-                "name": "test",
-                "entity_id": "sensor.test_monitored",
-                "sampling_size": 100,
-            }
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "sampling_size": 100,
+                },
+            ]
         },
     )
     await hass.async_block_till_done()
