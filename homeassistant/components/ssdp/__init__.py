@@ -56,7 +56,7 @@ ATTR_UPNP_UDN = "UDN"
 ATTR_UPNP_UPC = "UPC"
 ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 # Attributes for accessing info added by Home Assistant
-ATTR_HA_MATCHING_DOMAINS = "x-homeassistant-matching-domains"
+ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
 PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
 
