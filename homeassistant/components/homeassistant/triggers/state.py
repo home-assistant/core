@@ -79,7 +79,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     registry = er.async_get(hass)
-    entity_ids = await er.resolve_entity_ids(registry, config[CONF_ENTITY_ID])
+    entity_ids = er.async_resolve_entity_ids(registry, config[CONF_ENTITY_ID])
     if (from_state := config.get(CONF_FROM)) is None:
         from_state = MATCH_ALL
     if (to_state := config.get(CONF_TO)) is None:
