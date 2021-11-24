@@ -8,7 +8,7 @@
         "title": "Configure RTSPtoWebRTC",
         "description": "The RTSPtoWebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.\n",
         "data": {
-          "rtsp_to_webrtc_url": "Enter server URL e.g. https://example.com"
+          "server_url": "RTSPtoWebRTC server URL e.g. https://example.com"
         }
       }
     },
