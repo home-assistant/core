@@ -12,4 +12,9 @@ comment: false
 # we need to carry forward.
 flag_management:
   default_rules:
-    carryforward: true
+    carryforward: false
+  individual_flags:
+    - name: full-suite
+      paths:
+        - ".*"
+      carryforward: true
