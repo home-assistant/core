@@ -211,7 +211,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 if username is not None and password is not None:
                     # Use digest or basic authentication
                     auth_: HTTPDigestAuth | HTTPBasicAuth
-                    if ATTR_IMAGE_AUTH_DIGEST == auth or ATTR_ICON_AUTH_DIGEST == auth:
+                    if auth in (ATTR_IMAGE_AUTH_DIGEST, ATTR_ICON_AUTH_DIGEST):
                         auth_ = HTTPDigestAuth(username, password)
                     else:
                         auth_ = HTTPBasicAuth(username, password)
