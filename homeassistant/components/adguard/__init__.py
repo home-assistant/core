@@ -197,6 +197,11 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
+        if self.adguard.tls:
+            config_url = f"https://{self.adguard.host}/"
+        else:
+            config_url = f"http://{self.adguard.host}/"
+        
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
@@ -207,4 +212,5 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
             sw_version=self.hass.data[DOMAIN][self._entry.entry_id].get(
                 DATA_ADGUARD_VERSION
             ),
+            configuration_url=config_url,
         )
