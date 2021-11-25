@@ -270,12 +270,6 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         return rgbcw
 
     @property
-    def rgbwc_color(self) -> tuple[int, int, int, int, int]:
-        """Return the rgbwc color value."""
-        rgbwc: tuple[int, int, int, int, int] = self._device.rgbww
-        return rgbwc
-
-    @property
     def color_mode(self) -> str:
         """Return the color mode of the light."""
         return _flux_color_mode_to_hass(
