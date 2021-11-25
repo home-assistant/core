@@ -230,6 +230,7 @@ jobs:
           pre-commit run --hook-stage manual bandit --all-files --show-diff-on-failure
       - name: Run bandit (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
+        shell: bash
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual bandit --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/* --show-diff-on-failure
@@ -278,6 +279,7 @@ jobs:
           pre-commit run --hook-stage manual black --all-files --show-diff-on-failure
       - name: Run black (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
+        shell: bash
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual black --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/* --show-diff-on-failure
@@ -329,6 +331,7 @@ jobs:
           pre-commit run --hook-stage manual flake8 --all-files
       - name: Run flake8 (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
+        shell: bash
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/*
@@ -596,6 +599,7 @@ jobs:
           pylint homeassistant
       - name: Run pylint (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
+        shell: bash
         run: |
           . venv/bin/activate
           pylint homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
@@ -635,6 +639,7 @@ jobs:
           mypy homeassistant
       - name: Run mypy (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
+        shell: bash
         run: |
           . venv/bin/activate
           mypy homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
