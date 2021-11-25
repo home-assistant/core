@@ -11,7 +11,6 @@ from flux_led.utils import (
     rgbcw_brightness,
     rgbcw_to_rgbwc,
     rgbw_brightness,
-    rgbww_brightness,
 )
 import voluptuous as vol
 
@@ -24,12 +23,7 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
-    COLOR_MODE_WHITE,
     PLATFORM_SCHEMA,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
@@ -51,8 +45,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import (
-    color_hs_to_RGB,
-    color_RGB_to_hs,
     color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
 )
@@ -79,7 +71,7 @@ from .const import (
     TRANSITION_STROBE,
 )
 from .entity import FluxOnOffEntity
-from .util import _flux_color_mode_to_hass, _hass_color_modes
+from .util import _effect_brightness, _flux_color_mode_to_hass, _hass_color_modes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -262,10 +254,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     @property
     def rgb_color(self) -> tuple[int, int, int]:
         """Return the rgb color value."""
-        # Note that we call color_RGB_to_hs and not color_RGB_to_hsv
-        # to get the unscaled value since this is what the frontend wants
-        # https://github.com/home-assistant/frontend/blob/e797c017614797bb11671496d6bd65863de22063/src/dialogs/more-info/controls/more-info-light.ts#L263
-        rgb: tuple[int, int, int] = color_hs_to_RGB(*color_RGB_to_hs(*self._device.rgb))
+        rgb: tuple[int, int, int] = self._device.rgb_unscaled
         return rgb
 
     @property
@@ -279,12 +268,6 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         """Return the rgbww aka rgbcw color value."""
         rgbcw: tuple[int, int, int, int, int] = self._device.rgbcw
         return rgbcw
-
-    @property
-    def rgbwc_color(self) -> tuple[int, int, int, int, int]:
-        """Return the rgbwc color value."""
-        rgbwc: tuple[int, int, int, int, int] = self._device.rgbww
-        return rgbwc
 
     @property
     def color_mode(self) -> str:
@@ -311,7 +294,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         if MODE_ATTRS.intersection(kwargs):
             await self._async_set_mode(**kwargs)
             return
-        await self._async_adjust_brightness(self._async_brightness(**kwargs))
+        await self._device.async_set_brightness(self._async_brightness(**kwargs))
 
     async def _async_set_effect(self, effect: str, brightness: int) -> None:
         """Set an effect."""
@@ -324,9 +307,10 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
                     self._custom_effect_transition,
                 )
             return
-        effect_brightness = round(brightness / 255 * 100)
         await self._device.async_set_effect(
-            effect, self._device.speed or DEFAULT_EFFECT_SPEED, effect_brightness
+            effect,
+            self._device.speed or DEFAULT_EFFECT_SPEED,
+            _effect_brightness(brightness),
         )
 
     @callback
@@ -383,35 +367,6 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             return
         if (white := kwargs.get(ATTR_WHITE)) is not None:
             await self._device.async_set_levels(w=white)
-            return
-
-    async def _async_adjust_brightness(self, brightness: int) -> None:
-        """Adjust brightness."""
-        # Handle brightness adjustment in effect mode
-        if effect := self.effect:
-            await self._async_set_effect(effect, brightness)
-            return
-        if self.color_mode == COLOR_MODE_COLOR_TEMP:
-            await self._device.async_set_white_temp(self._device.color_temp, brightness)
-            return
-        # Handle brightness adjustment in RGB Color Mode
-        if self.color_mode == COLOR_MODE_RGB:
-            await self._device.async_set_levels(*self.rgb_color, brightness=brightness)
-            return
-        # Handle brightness adjustment in RGBW Color Mode
-        if self.color_mode == COLOR_MODE_RGBW:
-            await self._device.async_set_levels(
-                *rgbw_brightness(self.rgbw_color, brightness)
-            )
-            return
-        # Handle brightness adjustment in RGBWW Color Mode
-        if self.color_mode == COLOR_MODE_RGBWW:
-            rgbwc = self.rgbwc_color
-            await self._device.async_set_levels(*rgbww_brightness(rgbwc, brightness))
-            return
-        # Handle Brightness Only Color Mode
-        if self.color_mode in {COLOR_MODE_WHITE, COLOR_MODE_BRIGHTNESS}:
-            await self._device.async_set_levels(w=brightness)
             return
 
     async def async_set_custom_effect(
