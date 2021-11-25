@@ -596,6 +596,7 @@ jobs:
           pylint homeassistant
       - name: Run pylint (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
+        shell: bash
         run: |
           . venv/bin/activate
           pylint homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
@@ -635,6 +636,7 @@ jobs:
           mypy homeassistant
       - name: Run mypy (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
+        shell: bash
         run: |
           . venv/bin/activate
           mypy homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
