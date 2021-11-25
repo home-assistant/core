@@ -333,11 +333,15 @@ async def test_bridge_ssdp(hass, mf_url, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: mf_url,
-            ssdp.ATTR_UPNP_SERIAL: "1234",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://0.0.0.0/",
+            upnp={
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: mf_url,
+                ssdp.ATTR_UPNP_SERIAL: "1234",
+            },
+        ),
     )
 
     assert result["type"] == "form"
@@ -349,7 +353,12 @@ async def test_bridge_ssdp_discover_other_bridge(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.notphilips.com"},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="https://fake_host:12345/test",
+            upnp={ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.notphilips.com"},
+        ),
     )
 
     assert result["type"] == "abort"
@@ -361,12 +370,16 @@ async def test_bridge_ssdp_emulated_hue(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Home Assistant Bridge",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-            ssdp.ATTR_UPNP_SERIAL: "1234",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://0.0.0.0/",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Home Assistant Bridge",
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
+                ssdp.ATTR_UPNP_SERIAL: "1234",
+            },
+        ),
     )
 
     assert result["type"] == "abort"
@@ -378,10 +391,15 @@ async def test_bridge_ssdp_missing_location(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-            ssdp.ATTR_UPNP_SERIAL: "1234",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="",
+            upnp={
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
+                ssdp.ATTR_UPNP_SERIAL: "1234",
+            },
+        ),
     )
 
     assert result["type"] == "abort"
@@ -393,10 +411,14 @@ async def test_bridge_ssdp_missing_serial(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://0.0.0.0/",
+            upnp={
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
+            },
+        ),
     )
 
     assert result["type"] == "abort"
@@ -408,12 +430,16 @@ async def test_bridge_ssdp_espalexa(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Espalexa (0.0.0.0)",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-            ssdp.ATTR_UPNP_SERIAL: "1234",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://0.0.0.0/",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Espalexa (0.0.0.0)",
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
+                ssdp.ATTR_UPNP_SERIAL: "1234",
+            },
+        ),
     )
 
     assert result["type"] == "abort"
@@ -430,11 +456,15 @@ async def test_bridge_ssdp_already_configured(hass, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-            ssdp.ATTR_UPNP_SERIAL: "1234",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://0.0.0.0/",
+            upnp={
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
+                ssdp.ATTR_UPNP_SERIAL: "1234",
+            },
+        ),
     )
 
     assert result["type"] == "abort"
@@ -587,11 +617,15 @@ async def test_ssdp_discovery_update_configuration(hass, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
-            ssdp.ATTR_UPNP_SERIAL: "aabbccddeeff",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.1.1.1/",
+            upnp={
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
+                ssdp.ATTR_UPNP_SERIAL: "aabbccddeeff",
+            },
+        ),
     )
 
     assert result["type"] == "abort"
@@ -692,7 +726,9 @@ async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
     entry = MockConfigEntry(
         domain="hue",
         source=config_entries.SOURCE_SSDP,
-        data={"host": "0.0.0.0"},
+        data={
+            "host": "0.0.0.0",
+        },
         unique_id="ecb5faabcabc",
     )
     entry.add_to_hass(hass)
