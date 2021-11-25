@@ -13,6 +13,7 @@ class Server:
 
     HOST: Final = "127.0.0.1"  # do not depend on "localhost" name resolution
     ADDRESS: Final = "127.0.0.1"
+    MAC = "0026EC000000"
 
     # https://static.developer.legrand.com/files/2021/03/LC7001-AU7000-Security-Addendum-RevB.pdf
     # 7.3
@@ -92,7 +93,7 @@ class Server:
             # create a mock config entry referencing emulated server
             self._entry = entry = MockConfigEntry(
                 domain=DOMAIN,
-                unique_id=self.HOST,
+                unique_id=self.MAC.lower(),
                 data={
                     CONF_AUTHENTICATION: self.AUTHENTICATION,
                     CONF_HOST: self.HOST,

@@ -3,6 +3,8 @@
 from collections.abc import Mapping
 from typing import Final
 
+import lc7001.aio
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
@@ -28,6 +30,7 @@ async def async_setup_entry(
     Adds a Dimmer or Switch for each like zone on this entry's hub.
     """
     hub = hass.data[DOMAIN][entry.entry_id]
+    entry_unique_id = entry.unique_id
 
     async def zones(message: Mapping) -> None:
         async def zone(message: Mapping) -> None:
@@ -35,9 +38,13 @@ async def async_setup_entry(
             properties = message[hub.PROPERTY_LIST]
             device_type = properties[hub.DEVICE_TYPE]
             if device_type == hub.DIMMER:
-                async_add_entities([LegrandRflcDimmer(hub, zid, properties)], False)
+                async_add_entities(
+                    [LegrandRflcDimmer(entry_unique_id, hub, zid, properties)], False
+                )
             elif device_type == hub.SWITCH:
-                async_add_entities([LegrandRflcSwitch(hub, zid, properties)], False)
+                async_add_entities(
+                    [LegrandRflcSwitch(entry_unique_id, hub, zid, properties)], False
+                )
 
         hub.StatusError(message).raise_if()
         for item in message[hub.ZONE_LIST]:
@@ -56,8 +63,11 @@ class LegrandRflcSwitch(LightEntity):
     _attr_color_mode = COLOR_MODE_ONOFF
     _attr_supported_color_modes = {COLOR_MODE_ONOFF}
 
-    def __init__(self, hub, zid: int, properties: Mapping):
+    def __init__(
+        self, entry_unique_id, hub: lc7001.aio.Hub, zid: int, properties: Mapping
+    ):
         """Initialize the Legrand RFLC Switch."""
+        self._entry_unique_id = entry_unique_id
         self._hub = hub
         self._attr_name = properties[hub.NAME]
         self._attr_is_on = properties[hub.POWER]
@@ -65,8 +75,8 @@ class LegrandRflcSwitch(LightEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return the unique id of this hub's switch."""
-        return f"{self._hub.host()}:{self._zid}"
+        """Return the unique id of this entry's switch."""
+        return f"{self._entry_unique_id}:{self._zid}"
 
     @property
     def available(self) -> bool:
@@ -153,9 +163,11 @@ class LegrandRflcDimmer(LegrandRflcSwitch):
             LegrandRflcDimmer.US,
         )
 
-    def __init__(self, hub, zid: int, properties: Mapping):
+    def __init__(
+        self, entry_unique_id, hub: lc7001.aio.Hub, zid: int, properties: Mapping
+    ):
         """Initialize the Legrand RFLC Dimmer."""
-        super().__init__(hub, zid, properties)
+        super().__init__(entry_unique_id, hub, zid, properties)
         self._attr_brightness = self._to_ha(properties[hub.POWER_LEVEL])
 
     async def _zone_properties_changed(self, message: Mapping) -> None:

@@ -11,14 +11,8 @@ import lc7001.aio
 import voluptuous
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dhcp import IP_ADDRESS, DhcpServiceInfo
-from homeassistant.const import (
-    CONF_AUTHENTICATION,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_PASSWORD,
-    CONF_PORT,
-)
+from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS, DhcpServiceInfo
+from homeassistant.const import CONF_AUTHENTICATION, CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from .const import DOMAIN
 
@@ -67,7 +61,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for resolution in resolutions
             if resolution[0] == socket.AF_INET
         ):
-            await self._async_handle_discovery_without_unique_id()
+            await self.async_set_unique_id(
+                discovery_info[MAC_ADDRESS].lower()
+            )  # already_in_progress
+            self._abort_if_unique_id_configured()  # already_configured
             # wait for user interaction in the next step
             return await self.async_step_user()
         _LOGGER.warning("%s does not resolve to discovered %s", self.HOST, address)
@@ -81,8 +78,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = self.HOST
         if user_input is not None:
             host = user_input[CONF_HOST]
-            await self.async_set_unique_id(host)  # already_in_progress?
-            self._abort_if_unique_id_configured()  # already_configured?
             key = None
             kwargs = {"key": key, "loop_timeout": -1}
             if CONF_PASSWORD in user_input:
@@ -100,7 +95,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except lc7001.aio.Authenticator.Error:
                 errors[CONF_PASSWORD] = self.ERROR_INVALID_AUTH
             else:
-                data = {CONF_HOST: host, CONF_MAC: mac}
+                await self.async_set_unique_id(mac.lower())  # already_in_progress
+                self._abort_if_unique_id_configured()  # already_configured
+                data = {CONF_HOST: host}
                 if key is not None:
                     data[CONF_AUTHENTICATION] = key.hex()
                 return self.async_create_entry(title=host, data=data)
@@ -121,11 +118,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle configuration by reauth."""
-        host = self.context["unique_id"]
+        host = self.HOST
         errors = {CONF_PASSWORD: self.ERROR_INVALID_AUTH}
         if user_input is not None:
             key: bytes | None = None
             kwargs = {"key": key, "loop_timeout": -1}
+            if CONF_HOST in user_input:
+                host = user_input[CONF_HOST]
             if CONF_AUTHENTICATION in user_input:
                 key = kwargs["key"] = bytes.fromhex(user_input[CONF_AUTHENTICATION])
             if CONF_PORT in user_input:  # for testing server emulation on localhost
@@ -134,29 +133,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 key = kwargs["key"] = lc7001.aio.hash_password(
                     user_input[CONF_PASSWORD].encode()
                 )
-            task = self.hass.async_create_task(
-                lc7001.aio.Connector(host, **kwargs).loop()
-            )
             try:
-                mac = await task
+                mac = await lc7001.aio.Connector(host, **kwargs).loop()
             except OSError:
                 errors[CONF_HOST] = self.ERROR_INVALID_HOST
             except lc7001.aio.Authenticator.Error:
                 pass
             else:
-                data = {CONF_HOST: host, CONF_MAC: mac}
-                if CONF_PORT in user_input:  # for testing server emulation on localhost
-                    data[CONF_PORT] = user_input[CONF_PORT]
-                if key is not None:
-                    data[CONF_AUTHENTICATION] = key.hex()
-                entry_id = self.context["entry_id"]
-                entry = self.hass.config_entries.async_get_entry(entry_id)
-                assert entry is not None
-                self.hass.config_entries.async_update_entry(entry, data=data)
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_setup(entry_id)
-                )
-                return self.async_abort(reason=self.ABORT_REAUTH_SUCCESSFUL)
+                if mac.lower() != self.unique_id:
+                    _LOGGER.warning(
+                        "expected %s but found %s at %s",
+                        self.unique_id,
+                        mac.lower(),
+                        self.HOST,
+                    )
+                    errors[CONF_HOST] = self.ERROR_INVALID_HOST
+                else:
+                    data = {CONF_HOST: host}
+                    if (
+                        CONF_PORT in user_input
+                    ):  # for testing server emulation on localhost
+                        data[CONF_PORT] = user_input[CONF_PORT]
+                    if key is not None:
+                        data[CONF_AUTHENTICATION] = key.hex()
+                    entry_id = self.context["entry_id"]
+                    entry = self.hass.config_entries.async_get_entry(entry_id)
+                    assert entry is not None
+                    self.hass.config_entries.async_update_entry(entry, data=data)
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_setup(entry_id)
+                    )
+                    return self.async_abort(reason=self.ABORT_REAUTH_SUCCESSFUL)
 
         # get user_input
         return self.async_show_form(

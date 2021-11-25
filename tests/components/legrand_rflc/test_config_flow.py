@@ -7,7 +7,7 @@ from unittest.mock import PropertyMock, patch
 import lc7001.aio
 
 from homeassistant import setup
-from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.legrand_rflc.config_flow import ConfigFlow
 from homeassistant.components.legrand_rflc.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_REAUTH, SOURCE_USER
@@ -28,6 +28,7 @@ COMPOSER: Final = lc7001.aio.Composer()
 
 HOST: Final = Server.HOST
 ADDRESS: Final = Server.ADDRESS
+MAC: Final = Server.MAC
 INVALID_HOST: Final = "name.invalid."
 INVALID_ADDRESS: Final = "0.0.0.0"
 
@@ -42,7 +43,9 @@ async def test_step_dhcp_form(hass):
     with PATCH_HOST as mock:
         mock.return_value = HOST
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_DHCP}, data={IP_ADDRESS: ADDRESS}
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data={IP_ADDRESS: ADDRESS, MAC_ADDRESS: MAC},
         )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -54,7 +57,9 @@ async def test_step_dhcp_invalid_host(hass):
     with PATCH_HOST as mock:
         mock.return_value = INVALID_HOST
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_DHCP}, data={IP_ADDRESS: ADDRESS}
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data={IP_ADDRESS: ADDRESS, MAC_ADDRESS: MAC},
         )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == ConfigFlow.ABORT_NO_DEVICES_FOUND
@@ -68,7 +73,7 @@ async def test_step_dhcp_invalid_address(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
-            data={IP_ADDRESS: INVALID_ADDRESS},
+            data={IP_ADDRESS: INVALID_ADDRESS, MAC_ADDRESS: MAC},
         )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == ConfigFlow.ABORT_NO_DEVICES_FOUND
@@ -154,7 +159,7 @@ async def test_step_reauth(hass, socket_enabled):
             context={
                 "source": SOURCE_REAUTH,
                 "entry_id": entry.entry_id,
-                "unique_id": Server.HOST,
+                "unique_id": Server.MAC.lower(),
             },
             data={
                 CONF_HOST: Server.HOST,
@@ -176,7 +181,7 @@ async def test_step_reauth_invalid_authentication(hass, socket_enabled):
         DOMAIN,
         context={
             "source": SOURCE_REAUTH,
-            "unique_id": Server.HOST,
+            "unique_id": Server.MAC.lower(),
         },
         data={
             CONF_HOST: Server.HOST,
@@ -202,3 +207,24 @@ async def test_step_reauth_invalid_host(hass):
         },
     )
     assert result["type"] == RESULT_TYPE_FORM
+
+
+async def test_step_reauth_invalid_host_mac(hass, socket_enabled):
+    """Test invalid host mac reauth step in configuration flow."""
+    sessions = [Server.SECURITY_HELLO_AUTHENTICATION_OK]
+    server_port = await Server(hass, sessions).start(False)
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": Server.MAC.upper(),
+        },
+        data={
+            CONF_HOST: Server.HOST,
+            CONF_PORT: server_port,
+            CONF_PASSWORD: Server.PASSWORD,
+        },
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    await hass.async_block_till_done()
