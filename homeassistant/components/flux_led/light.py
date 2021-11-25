@@ -71,7 +71,7 @@ from .const import (
     TRANSITION_STROBE,
 )
 from .entity import FluxOnOffEntity
-from .util import _flux_color_mode_to_hass, _hass_color_modes
+from .util import _effect_brightness, _flux_color_mode_to_hass, _hass_color_modes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -307,9 +307,10 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
                     self._custom_effect_transition,
                 )
             return
-        effect_brightness = round(brightness / 255 * 100)
         await self._device.async_set_effect(
-            effect, self._device.speed or DEFAULT_EFFECT_SPEED, effect_brightness
+            effect,
+            self._device.speed or DEFAULT_EFFECT_SPEED,
+            _effect_brightness(brightness),
         )
 
     @callback
