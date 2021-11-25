@@ -615,7 +615,6 @@ jobs:
       - changes
       - gen-requirements-all
       - hassfest
-      - lint-bandit
       - lint-black
       - lint-other
       - lint-isort
