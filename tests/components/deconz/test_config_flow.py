@@ -450,7 +450,6 @@ async def test_flow_ssdp_bad_discovery(hass, aioclient_mock):
         data=ssdp.SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
-            ssdp_location="mock_location",
             upnp={ATTR_UPNP_MANUFACTURER_URL: "other"},
         ),
         context={"source": SOURCE_SSDP},
