@@ -163,18 +163,20 @@ class SlowPWMEntity(NumberEntity, RestoreEntity):
                 True
             )  # Largest possible value: set all continuously on
             return
-        range = self._attr_max_value - self._attr_min_value
+        val_range = self._attr_max_value - self._attr_min_value
         outputs = len(self._outputs)
-        range_per_output = range / outputs
+        range_per_output = val_range / outputs
         output_thres = self._attr_min_value
         last = ""
-        for o in self._outputs.keys():
-            self._outputs[o] = value > output_thres  # Decide if this output will be on
+        for output in self._outputs:
+            self._outputs[output] = (
+                value > output_thres
+            )  # Decide if this output will be on
             output_thres += range_per_output
-            if self._outputs[o]:
-                last = o  # Remember the output we have set last
+            if self._outputs[output]:
+                last = output  # Remember the output we have set last
         # From now calculate the amount of time the timed-output should be on
-        on_normalized = value / range
+        on_normalized = value / val_range
         output_normalized = 1.0 / outputs
         remaining = (
             on_normalized
@@ -182,8 +184,7 @@ class SlowPWMEntity(NumberEntity, RestoreEntity):
         ) * outputs
         if round(remaining, 2) > 0:
             minimal = self._attr_min_switch_time / self._attr_cycle_time
-            if remaining < minimal:
-                remaining = minimal  # Increase to minimal time on
+            remaining = max(remaining, minimal)  # Increase to minimal time on
             if (1.0 - remaining) < minimal:
                 self._attr_timed_output = ("", 0.0)  # Just leave it continuously on
             else:
@@ -204,8 +205,8 @@ class SlowPWMEntity(NumberEntity, RestoreEntity):
 
     async def _async_set_all(self, value: bool):
         """Set all outputs."""
-        for o in self._outputs.keys():
-            self._outputs[o] = value
+        for output in self._outputs:
+            self._outputs[output] = value
         self._attr_timed_output = ("", 0.0)  # all are on or or off; no timed output
         await self._async_apply()
 
@@ -255,9 +256,9 @@ class SlowPWMEntity(NumberEntity, RestoreEntity):
     async def _async_apply(self):
         """Set outputs accordingly to output states by service calls to hass."""
         # Check where in the cycle we are: before or after the high time?
-        for o, v in self._outputs.items():
-            action = SERVICE_TURN_ON if v else SERVICE_TURN_OFF
-            service_data = {ATTR_ENTITY_ID: o}
+        for output, on in self._outputs.items():
+            action = SERVICE_TURN_ON if on else SERVICE_TURN_OFF
+            service_data = {ATTR_ENTITY_ID: output}
             await self._hass.services.async_call(
                 "homeassistant", action, service_data, False
             )
