@@ -146,6 +146,24 @@ class SsdpServiceInfo(
             return getattr(self, name)
         return self.upnp.get(name)
 
+    def get(self, name: str, default: Any = None) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={"ssdp"},
+                error_if_core=False,
+                level=logging.DEBUG,
+            )
+            self._warning_logged = True
+        if hasattr(self, name):
+            return getattr(self, name)
+        return self.upnp.get(name, default)
+
 
 @bind_hass
 async def async_register_callback(
