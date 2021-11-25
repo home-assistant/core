@@ -4,6 +4,7 @@ import datetime
 from http import HTTPStatus
 import unittest.mock as mock
 
+import prometheus_client
 import pytest
 
 from homeassistant.components import climate, humidifier, sensor
@@ -33,8 +34,12 @@ class FilterTest:
     should_pass: bool
 
 
-async def prometheus_client(hass, hass_client, namespace):
+async def setup_prometheus_client(hass, hass_client, namespace):
     """Initialize an hass_client with Prometheus component."""
+
+    # Reset registry
+    prometheus_client.REGISTRY = prometheus_client.CollectorRegistry(auto_describe=True)
+
     config = {}
     if namespace is not None:
         config[prometheus.CONF_PROM_NAMESPACE] = namespace
@@ -131,7 +136,8 @@ async def prometheus_client(hass, hass_client, namespace):
 
 async def test_view_empty_namespace(hass, hass_client):
     """Test prometheus metrics view."""
-    client = await prometheus_client(hass, hass_client, "")
+    client = await setup_prometheus_client(hass, hass_client, "")
+
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == HTTPStatus.OK
@@ -180,7 +186,7 @@ async def test_view_empty_namespace(hass, hass_client):
 
 async def test_view_default_namespace(hass, hass_client):
     """Test prometheus metrics view."""
-    client = await prometheus_client(hass, hass_client, None)
+    client = await setup_prometheus_client(hass, hass_client, None)
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == HTTPStatus.OK
@@ -205,7 +211,7 @@ async def test_view_default_namespace(hass, hass_client):
 
 async def test_sensor_unit(hass, hass_client):
     """Test prometheus metrics for sensors with a unit."""
-    client = await prometheus_client(hass, hass_client, "")
+    client = await setup_prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == HTTPStatus.OK
@@ -240,7 +246,7 @@ async def test_sensor_unit(hass, hass_client):
 
 async def test_sensor_device_class(hass, hass_client):
     """Test prometheus metrics for sensor with a device_class."""
-    client = await prometheus_client(hass, hass_client, "")
+    client = await setup_prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == HTTPStatus.OK
@@ -269,7 +275,7 @@ async def test_sensor_device_class(hass, hass_client):
 
 async def test_input_number(hass, hass_client):
     """Test prometheus metrics for input_number."""
-    client = await prometheus_client(hass, hass_client, "")
+    client = await setup_prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == HTTPStatus.OK
@@ -292,7 +298,7 @@ async def test_input_number(hass, hass_client):
 
 async def test_battery(hass, hass_client):
     """Test prometheus metrics for battery."""
-    client = await prometheus_client(hass, hass_client, "")
+    client = await setup_prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == HTTPStatus.OK
@@ -309,7 +315,7 @@ async def test_battery(hass, hass_client):
 
 async def test_climate(hass, hass_client):
     """Test prometheus metrics for battery."""
-    client = await prometheus_client(hass, hass_client, "")
+    client = await setup_prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == HTTPStatus.OK
@@ -344,7 +350,7 @@ async def test_climate(hass, hass_client):
 
 async def test_humidifier(hass, hass_client):
     """Test prometheus metrics for battery."""
-    client = await prometheus_client(hass, hass_client, "")
+    client = await setup_prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == HTTPStatus.OK
