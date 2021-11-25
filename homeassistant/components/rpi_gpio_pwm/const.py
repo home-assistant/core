@@ -1,4 +1,4 @@
-"""Constants for the Slow PWM integration."""
+"""Constants for the rpi_gpio_pwm integration."""
 
 from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
