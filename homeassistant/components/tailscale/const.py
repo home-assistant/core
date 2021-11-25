@@ -10,5 +10,4 @@ DOMAIN: Final = "tailscale"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(minutes=1)
 
-ENTRY_TYPE_SERVICE: Final = "service"
 CONF_TAILNET: Final = "tailnet"

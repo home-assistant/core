@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -20,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, ENTRY_TYPE_SERVICE
+from .const import DOMAIN
 
 
 @dataclass
@@ -95,7 +96,7 @@ class TailscaleBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
 
         return DeviceInfo(
             configuration_url=configuration_url,
-            entry_type=ENTRY_TYPE_SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, device.device_id)},
             manufacturer="Tailscale Inc.",
             model=device.os,
