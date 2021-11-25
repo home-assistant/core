@@ -240,8 +240,8 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.async_set_levels.assert_called_with(255, 0, 0, brightness=100)
-    bulb.async_set_levels.reset_mock()
+    bulb.async_set_brightness.assert_called_with(100)
+    bulb.async_set_brightness.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -331,8 +331,8 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.async_set_levels.assert_called_with(255, 0, 0, brightness=100)
-    bulb.async_set_levels.reset_mock()
+    bulb.async_set_brightness.assert_called_with(100)
+    bulb.async_set_brightness.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -391,8 +391,8 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
         blocking=True,
     )
-    bulb.async_set_white_temp.assert_called_with(5000, 255)
-    bulb.async_set_white_temp.reset_mock()
+    bulb.async_set_brightness.assert_called_with(255)
+    bulb.async_set_brightness.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -400,8 +400,8 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
-    bulb.async_set_white_temp.assert_called_with(5000, 128)
-    bulb.async_set_white_temp.reset_mock()
+    bulb.async_set_brightness.assert_called_with(128)
+    bulb.async_set_brightness.reset_mock()
 
 
 async def test_rgbw_light(hass: HomeAssistant) -> None:
@@ -451,8 +451,8 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.async_set_levels.assert_called_with(168, 0, 0, 33)
-    bulb.async_set_levels.reset_mock()
+    bulb.async_set_brightness.assert_called_with(100)
+    bulb.async_set_brightness.reset_mock()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
@@ -553,8 +553,8 @@ async def test_rgb_or_w_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.async_set_levels.assert_called_with(255, 0, 0, brightness=100)
-    bulb.async_set_levels.reset_mock()
+    bulb.async_set_brightness.assert_called_with(100)
+    bulb.async_set_brightness.reset_mock()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
@@ -612,8 +612,8 @@ async def test_rgb_or_w_light(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
-    bulb.async_set_levels.assert_called_with(w=100)
-    bulb.async_set_levels.reset_mock()
+    bulb.async_set_brightness.assert_called_with(100)
+    bulb.async_set_brightness.reset_mock()
 
 
 async def test_rgbcw_light(hass: HomeAssistant) -> None:
@@ -663,8 +663,8 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.async_set_levels.assert_called_with(250, 0, 0, 49, 0)
-    bulb.async_set_levels.reset_mock()
+    bulb.async_set_brightness.assert_called_with(100)
+    bulb.async_set_brightness.reset_mock()
     bulb.is_on = True
 
     await hass.services.async_call(
@@ -751,8 +751,8 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("purple_fade", 50, 100)
-    bulb.async_set_effect.reset_mock()
+    bulb.async_set_brightness.assert_called_with(255)
+    bulb.async_set_brightness.reset_mock()
 
 
 async def test_white_light(hass: HomeAssistant) -> None:
@@ -802,8 +802,8 @@ async def test_white_light(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.async_set_levels.assert_called_with(w=100)
-    bulb.async_set_levels.reset_mock()
+    bulb.async_set_brightness.assert_called_with(100)
+    bulb.async_set_brightness.reset_mock()
 
 
 async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:

@@ -294,7 +294,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         if MODE_ATTRS.intersection(kwargs):
             await self._async_set_mode(**kwargs)
             return
-        await self._device.async_adjust_brightness(self._async_brightness(**kwargs))
+        await self._device.async_set_brightness(self._async_brightness(**kwargs))
 
     async def _async_set_effect(self, effect: str, brightness: int) -> None:
         """Set an effect."""
