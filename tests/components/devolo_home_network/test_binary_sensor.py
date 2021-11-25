@@ -26,8 +26,7 @@ from .const import PLCNET_ATTACHED
 from tests.common import async_fire_time_changed
 
 
-@pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.usefixtures("mock_device", "mock_zeroconf")
 async def test_binary_sensor_setup(hass: HomeAssistant):
     """Test default setup of the binary sensor component."""
     entry = configure_integration(hass)
@@ -40,8 +39,7 @@ async def test_binary_sensor_setup(hass: HomeAssistant):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.usefixtures("mock_device", "mock_zeroconf")
 async def test_update_firmware_update_available(hass: HomeAssistant):
     """Test state change of a firmware_update_available binary sensor device."""
     state_key = f"{DOMAIN}.{FIRMWARE_UPDATE_AVAILABLE}"
@@ -84,8 +82,7 @@ async def test_update_firmware_update_available(hass: HomeAssistant):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.usefixtures("mock_device", "mock_zeroconf")
 async def test_update_attached_to_router(hass: HomeAssistant):
     """Test state change of a attached_to_router binary sensor device."""
     state_key = f"{DOMAIN}.{CONNECTED_TO_ROUTER}"
