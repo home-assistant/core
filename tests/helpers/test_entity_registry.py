@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
@@ -1042,11 +1043,11 @@ async def test_resolve_entity_ids(hass, registry):
     expected = ["light.beer", "light.milk"]
     assert er.async_resolve_entity_ids(registry, ["light.beer", entry2.id]) == expected
 
-    expected = ["light.beer"]
-    assert er.async_resolve_entity_ids(registry, ["light.beer", "bad_uuid"]) == expected
+    with pytest.raises(vol.Invalid):
+        er.async_resolve_entity_ids(registry, ["light.beer", "bad_uuid"])
 
     expected = ["light.unknown"]
     assert er.async_resolve_entity_ids(registry, ["light.unknown"]) == expected
 
-    expected = []
-    assert er.async_resolve_entity_ids(registry, ["unknown_uuid"]) == expected
+    with pytest.raises(vol.Invalid):
+        er.async_resolve_entity_ids(registry, ["unknown_uuid"])

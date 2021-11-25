@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -21,6 +20,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     process_state_match,
 )
+from homeassistant.helpers.typing import ConfigType
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
@@ -56,17 +56,24 @@ TRIGGER_ATTRIBUTE_SCHEMA = BASE_SCHEMA.extend(
 )
 
 
-def TRIGGER_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
-    """Validate trigger."""
-    if not isinstance(value, dict):
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate trigger config."""
+    if not isinstance(config, dict):
         raise vol.Invalid("Expected a dictionary")
+
+    registry = er.async_get(hass)
+    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+        registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
+    )
 
     # We use this approach instead of vol.Any because
     # this gives better error messages.
-    if CONF_ATTRIBUTE in value:
-        return TRIGGER_ATTRIBUTE_SCHEMA(value)
+    if CONF_ATTRIBUTE in config:
+        return TRIGGER_ATTRIBUTE_SCHEMA(config)
 
-    return TRIGGER_STATE_SCHEMA(value)
+    return TRIGGER_STATE_SCHEMA(config)
 
 
 async def async_attach_trigger(
@@ -78,8 +85,7 @@ async def async_attach_trigger(
     platform_type: str = "state",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    registry = er.async_get(hass)
-    entity_ids = er.async_resolve_entity_ids(registry, config[CONF_ENTITY_ID])
+    entity_ids = config[CONF_ENTITY_ID]
     if (from_state := config.get(CONF_FROM)) is None:
         from_state = MATCH_ALL
     if (to_state := config.get(CONF_TO)) is None:

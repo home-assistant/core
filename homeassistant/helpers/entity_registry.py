@@ -15,6 +15,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 import attr
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -855,7 +856,7 @@ def async_resolve_entity_ids(
         for entry in registry.entities.values():
             if entry.id == entity_id_or_uuid:
                 return entry.entity_id
-        return None
+        raise vol.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
 
     tmp = [
         resolved_item
