@@ -208,7 +208,7 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
                 config_url = f"https://{self.adguard.host}:{self.adguard.port}"
             else:
                 config_url = f"http://{self.adguard.host}:{self.adguard.port}"
-        
+
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
