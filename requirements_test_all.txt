@@ -837,6 +837,9 @@ pyatmo==6.2.0
 # homeassistant.components.apple_tv
 pyatv==0.8.2
 
+# homeassistant.components.balboa
+pybalboa==0.13
+
 # homeassistant.components.blackbird
 pyblackbird==0.5
 
