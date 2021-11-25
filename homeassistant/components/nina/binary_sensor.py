@@ -1,5 +1,7 @@
 """NINA sensor platform."""
-from typing import Any, Dict, List
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SAFETY,
@@ -35,10 +37,10 @@ async def async_setup_entry(
     coordinator: NINADataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     filter_corona: bool = config_entry.data[CONF_FILTER_CORONA]
-    regions: Dict[str, str] = config_entry.data[CONF_REGIONS]
+    regions: dict[str, str] = config_entry.data[CONF_REGIONS]
     message_slots: int = config_entry.data[CONF_MESSAGE_SLOTS]
 
-    entities: List[NINAMessage] = []
+    entities: list[NINAMessage] = []
 
     for ent in coordinator.data:
         for i in range(0, message_slots):
@@ -83,19 +85,19 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
         if not len(self._coordinator.data[self._region]) > self._warning_index:
             return False
 
-        data: Dict[str, Any] = self._coordinator.data[self._region][self._warning_index]
+        data: dict[str, Any] = self._coordinator.data[self._region][self._warning_index]
 
         return not (data[CORONA_FILTER] and self._filter_corona)
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes of the sensor."""
         if (
             not len(self._coordinator.data[self._region]) > self._warning_index
         ) or not self.is_on:
             return {}
 
-        data: Dict[str, Any] = self._coordinator.data[self._region][self._warning_index]
+        data: dict[str, Any] = self._coordinator.data[self._region][self._warning_index]
 
         return {
             ATTR_HEADLINE: data[ATTR_HEADLINE],
