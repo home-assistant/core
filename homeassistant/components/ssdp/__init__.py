@@ -8,7 +8,7 @@ from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Iterator, Mapping
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
@@ -163,6 +163,21 @@ class SsdpServiceInfo(
         if hasattr(self, name):
             return getattr(self, name)
         return self.upnp.get(name, default)
+
+    def __iter__(self) -> Iterator[str]:
+        """
+        Implement iter(self) on upnp data.
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                "accessed discovery_info.__iter__() instead of discovery_info.upnp.__iter__(); this will fail in version 2022.6",
+                exclude_integrations={"ssdp"},
+                error_if_core=False,
+                level=logging.DEBUG,
+            )
+            self._warning_logged = True
+        return self.upnp.__iter__()
 
 
 @bind_hass
