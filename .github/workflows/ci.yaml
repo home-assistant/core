@@ -702,7 +702,7 @@ jobs:
             --dist=loadfile \
             --test-group-count ${{ needs.changes.outputs.test_group_count }} \
             --test-group=${{ matrix.group }} \
-            --test-group-random-seed=${{ github.run_id }}-${{ github.run_attempt }} \
+            --test-group-random-seed=${{ github.run_id }}${{ github.run_attempt }} \
             --cov homeassistant \
             --cov-report=xml \
             -o console_output_style=count \
