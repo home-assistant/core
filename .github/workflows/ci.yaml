@@ -365,10 +365,17 @@ jobs:
           echo "Failed to restore pre-commit environment from cache"
           exit 1
 
-      - name: Run pyupgrade
+      - name: Run pyupgrade (fully)
+        if: needs.changes.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual pyupgrade --all-files --show-diff-on-failure
+      - name: Run pyupgrade (partially)
+        if: needs.changes.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual pyupgrade --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/* --show-diff-on-failure
 
       - name: Register yamllint problem matcher
         run: |
