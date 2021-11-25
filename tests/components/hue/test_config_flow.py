@@ -356,7 +356,6 @@ async def test_bridge_ssdp_discover_other_bridge(hass):
         data=ssdp.SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
-            ssdp_location="https://fake_host:12345/test",
             upnp={ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.notphilips.com"},
         ),
     )
@@ -394,7 +393,6 @@ async def test_bridge_ssdp_missing_location(hass):
         data=ssdp.SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
-            ssdp_location="",
             upnp={
                 ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
                 ssdp.ATTR_UPNP_SERIAL: "1234",
@@ -726,9 +724,7 @@ async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
     entry = MockConfigEntry(
         domain="hue",
         source=config_entries.SOURCE_SSDP,
-        data={
-            "host": "0.0.0.0",
-        },
+        data={"host": "0.0.0.0"},
         unique_id="ecb5faabcabc",
     )
     entry.add_to_hass(hass)
