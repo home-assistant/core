@@ -1,8 +1,8 @@
 {
     "state": {
         "tolo__lamp_mode": {
-            "AUTOMATIC": "Automatic",
-            "MANUAL": "Manual"
+            "automatic": "automatic",
+            "manual": "manual"
         }
     }
 }

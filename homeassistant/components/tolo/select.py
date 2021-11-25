@@ -1,4 +1,5 @@
 """TOLO Sauna Select controls."""
+from typing import List
 
 from tololib.const import LampMode
 
@@ -39,15 +40,15 @@ class ToloLampModeSelect(ToloSaunaCoordinatorEntity, SelectEntity):
         self._attr_unique_id = f"{entry.entry_id}_lamp_mode"
 
     @property
-    def options(self) -> list[str]:
+    def options(self) -> List[str]:
         """Return list of supported lamp modes."""
-        return [lamp_mode.name for lamp_mode in LampMode]
+        return [lamp_mode.name.lower() for lamp_mode in LampMode]
 
     @property
     def current_option(self) -> str:
         """Return current lamp mode."""
-        return self.coordinator.data.settings.lamp_mode.name
+        return self.coordinator.data.settings.lamp_mode.name.lower()
 
     def select_option(self, option: str) -> None:
         """Select lamp mode."""
-        self.coordinator.client.set_lamp_mode(LampMode[option])
+        self.coordinator.client.set_lamp_mode(LampMode[option.upper()])
