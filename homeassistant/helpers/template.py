@@ -1525,9 +1525,9 @@ def fail_when_undefined(value):
     return value
 
 
-def global_from_builtin_filter(builtin_filter: Any, name: str) -> Any:
+def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
     """
-    Convert a built-in Jinja filter to a global function.
+    Convert a built-in min/max Jinja filter to a global function.
 
     The parameters may be passed as an iterable or as separate arguments.
     """
@@ -1931,8 +1931,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         self.globals["average"] = average
-        self.globals["max"] = global_from_builtin_filter(self.filters["max"], "max")
-        self.globals["min"] = global_from_builtin_filter(self.filters["min"], "min")
+        self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
+        self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
