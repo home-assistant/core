@@ -1,0 +1,63 @@
+{
+  "config": {
+    "step": {
+      "type": {
+        "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing.",
+        "data": {
+          "connection_type": "KNX Connection Type"
+        }
+      },
+      "tunnel": {
+        "description": "Please select a gateway from the list.",
+        "data": {
+          "gateway": "KNX Tunnel Connection"
+        }
+      },
+      "manual_tunnel": {
+        "description": "Please enter the connection information of your tunneling device.",
+        "data": {
+          "port": "[%key:common::config_flow::data::port%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "individual_address": "Individual address for the connection",
+          "route_back": "Route Back / NAT Mode"
+        }
+      },
+      "routing": {
+        "description": "Please configure the routing options.",
+        "data": {
+          "individual_address": "Individual address for the routing connection",
+          "multicast_group": "The multicast group used for routing",
+          "multicast_port": "The multicast port used for routing"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "connection_type": "KNX Connection Type",
+          "individual_address": "Default individual address",
+          "multicast_group": "Multicast group used for routing and discovery",
+          "multicast_port": "Multicast port used for routing and discovery",
+          "state_updater": "Globally enable reading states from the KNX Bus",
+          "rate_limit": "Maximum outgoing telegrams per second"
+        }
+      },
+      "tunnel": {
+        "data": {
+          "port": "[%key:common::config_flow::data::port%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "route_back": "Route Back / NAT Mode"
+        }
+      }
+    }
+  }
+}

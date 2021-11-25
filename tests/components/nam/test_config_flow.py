@@ -6,12 +6,20 @@ from nettigo_air_monitor import ApiError, AuthFailed, CannotGetMac
 import pytest
 
 from homeassistant import data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.nam.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 
 from tests.common import MockConfigEntry
 
-DISCOVERY_INFO = {"host": "10.10.2.3"}
+DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    host="10.10.2.3",
+    hostname="mock_hostname",
+    name="mock_name",
+    port=None,
+    properties={},
+    type="mock_type",
+)
 VALID_CONFIG = {"host": "10.10.2.3"}
 VALID_AUTH = {"username": "fake_username", "password": "fake_password"}
 

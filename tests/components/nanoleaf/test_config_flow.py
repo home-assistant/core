@@ -7,6 +7,7 @@ from aionanoleaf import InvalidToken, NanoleafException, Unauthorized, Unavailab
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.nanoleaf.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -235,12 +236,14 @@ async def test_discovery_link_unavailable(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data={
-                "host": TEST_HOST,
-                "name": f"{TEST_NAME}.{type_in_discovery_info}",
-                "type": type_in_discovery_info,
-                "properties": {"id": TEST_DEVICE_ID},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host=TEST_HOST,
+                hostname="mock_hostname",
+                name=f"{TEST_NAME}.{type_in_discovery_info}",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: TEST_DEVICE_ID},
+                type=type_in_discovery_info,
+            ),
         )
     assert result["type"] == "form"
     assert result["step_id"] == "link"
@@ -417,12 +420,14 @@ async def test_import_discovery_integration(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data={
-                "host": TEST_HOST,
-                "name": f"{TEST_NAME}.{type_in_discovery}",
-                "type": type_in_discovery,
-                "properties": {"id": TEST_DEVICE_ID},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host=TEST_HOST,
+                hostname="mock_hostname",
+                name=f"{TEST_NAME}.{type_in_discovery}",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: TEST_DEVICE_ID},
+                type=type_in_discovery,
+            ),
         )
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME

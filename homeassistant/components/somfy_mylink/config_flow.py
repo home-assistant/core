@@ -7,9 +7,10 @@ from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -58,18 +59,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.mac = None
         self.ip_address = None
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self._async_abort_entries_match({CONF_HOST: discovery_info[IP_ADDRESS]})
+        self._async_abort_entries_match({CONF_HOST: discovery_info[dhcp.IP_ADDRESS]})
 
-        formatted_mac = format_mac(discovery_info[MAC_ADDRESS])
+        formatted_mac = format_mac(discovery_info[dhcp.MAC_ADDRESS])
         await self.async_set_unique_id(format_mac(formatted_mac))
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info[IP_ADDRESS]}
+            updates={CONF_HOST: discovery_info[dhcp.IP_ADDRESS]}
         )
-        self.host = discovery_info[HOSTNAME]
+        self.host = discovery_info[dhcp.HOSTNAME]
         self.mac = formatted_mac
-        self.ip_address = discovery_info[IP_ADDRESS]
+        self.ip_address = discovery_info[dhcp.IP_ADDRESS]
         self.context["title_placeholders"] = {"ip": self.ip_address, "mac": self.mac}
         return await self.async_step_user()
 

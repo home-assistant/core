@@ -118,7 +118,7 @@ async def test_sensor_entity_migration(
             f"{device_mac}-{dev_class}",
             suggested_object_id=f"hue_migrated_{dev_class}_sensor",
             device_id=device.id,
-            device_class=dev_class,
+            original_device_class=dev_class,
         )
 
     # now run the migration and check results

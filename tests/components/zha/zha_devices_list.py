@@ -117,6 +117,8 @@ DEVICES = [
         },
         DEV_SIG_ENTITIES: [
             "sensor.centralite_3210_l_77665544_electrical_measurement",
+            "sensor.centralite_3210_l_77665544_electrical_measurement_apparent_power",
+            "sensor.centralite_3210_l_77665544_electrical_measurement_apparent_power",
             "sensor.centralite_3210_l_77665544_electrical_measurement_rms_current",
             "sensor.centralite_3210_l_77665544_electrical_measurement_rms_voltage",
             "sensor.centralite_3210_l_77665544_smartenergy_metering",
@@ -143,6 +145,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_77665544_electrical_measurement",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_77665544_electrical_measurement_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -1448,6 +1455,7 @@ DEVICES = [
             "sensor.lumi_lumi_plug_maus01_77665544_analog_input",
             "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
             "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
+            "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_apparent_power",
             "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_rms_current",
             "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_rms_voltage",
             "switch.lumi_lumi_plug_maus01_77665544_on_off",
@@ -1472,6 +1480,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -1517,6 +1530,7 @@ DEVICES = [
             "light.lumi_lumi_relay_c2acn01_77665544_on_off",
             "light.lumi_lumi_relay_c2acn01_77665544_on_off_2",
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement",
+            "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_apparent_power",
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_rms_current",
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_rms_voltage",
         ],
@@ -1530,6 +1544,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -2602,6 +2621,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "light.osram_lightify_rt_tunable_white_77665544_level_light_color_on_off",
             "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement",
+            "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_apparent_power",
             "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_rms_current",
             "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_rms_voltage",
         ],
@@ -2615,6 +2635,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-2820-apparent_power"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -2646,6 +2671,7 @@ DEVICES = [
         },
         DEV_SIG_ENTITIES: [
             "sensor.osram_plug_01_77665544_electrical_measurement",
+            "sensor.osram_plug_01_77665544_electrical_measurement_apparent_power",
             "sensor.osram_plug_01_77665544_electrical_measurement_rms_current",
             "sensor.osram_plug_01_77665544_electrical_measurement_rms_voltage",
             "switch.osram_plug_01_77665544_on_off",
@@ -2660,6 +2686,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_77665544_electrical_measurement",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-2820-apparent_power"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_77665544_electrical_measurement_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-3-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -2930,6 +2961,7 @@ DEVICES = [
         },
         DEV_SIG_ENTITIES: [
             "sensor.securifi_ltd_unk_model_77665544_electrical_measurement",
+            "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_apparent_power",
             "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_rms_current",
             "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_rms_voltage",
             "switch.securifi_ltd_unk_model_77665544_on_off",
@@ -2944,6 +2976,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_77665544_electrical_measurement",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -3020,6 +3057,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "light.sercomm_corp_sz_esw01_77665544_on_off",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement",
+            "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_apparent_power",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_rms_current",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_rms_voltage",
             "sensor.sercomm_corp_sz_esw01_77665544_smartenergy_metering",
@@ -3045,6 +3083,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -3119,6 +3162,7 @@ DEVICES = [
         },
         DEV_SIG_ENTITIES: [
             "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement",
+            "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_apparent_power",
             "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_rms_current",
             "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_rms_voltage",
             "switch.sinope_technologies_rm3250zb_77665544_on_off",
@@ -3133,6 +3177,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -3171,6 +3220,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "climate.sinope_technologies_th1123zb_77665544_thermostat",
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement",
+            "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_apparent_power",
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_rms_current",
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_rms_voltage",
             "sensor.sinope_technologies_th1123zb_77665544_temperature",
@@ -3191,6 +3241,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -3234,6 +3289,7 @@ DEVICES = [
         },
         DEV_SIG_ENTITIES: [
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement",
+            "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_apparent_power",
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_rms_current",
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_rms_voltage",
             "sensor.sinope_technologies_th1124zb_77665544_temperature",
@@ -3260,6 +3316,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -3291,6 +3352,7 @@ DEVICES = [
         },
         DEV_SIG_ENTITIES: [
             "sensor.smartthings_outletv4_77665544_electrical_measurement",
+            "sensor.smartthings_outletv4_77665544_electrical_measurement_apparent_power",
             "sensor.smartthings_outletv4_77665544_electrical_measurement_rms_current",
             "sensor.smartthings_outletv4_77665544_electrical_measurement_rms_voltage",
             "switch.smartthings_outletv4_77665544_on_off",
@@ -3305,6 +3367,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurement",
                 DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_77665544_electrical_measurement",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-2820-apparent_power"): {
+                DEV_SIG_CHANNELS: ["electrical_measurement"],
+                DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementApparentPower",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_77665544_electrical_measurement_apparent_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820-rms_current"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],

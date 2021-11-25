@@ -4,12 +4,12 @@ from __future__ import annotations
 from abc import ABC
 from datetime import timedelta
 import logging
-from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SWITCH_SETTINGS_DATA
@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     """Add kostal plenticore Switch."""
     plenticore = hass.data[DOMAIN][entry.entry_id]
@@ -87,13 +87,12 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         attr_name: str,
         attr_unique_id: str,
     ):
-        """Create a new switch Entity for Plenticore process data."""
+        """Create a new Switch Entity for Plenticore process data."""
         super().__init__(coordinator)
         self.entry_id = entry_id
         self.platform_name = platform_name
         self.module_id = module_id
         self.data_id = data_id
-        self._last_run_success: bool | None = None
         self._name = name
         self._is_on = is_on
         self._attr_name = attr_name
@@ -130,24 +129,18 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
         if await self.coordinator.async_write_data(
             self.module_id, {self.data_id: self.on_value}
         ):
-            self._last_run_success = True
             self.coordinator.name = f"{self.platform_name} {self._name} {self.on_label}"
             await self.coordinator.async_request_refresh()
-        else:
-            self._last_run_success = False
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn device off."""
         if await self.coordinator.async_write_data(
             self.module_id, {self.data_id: self.off_value}
         ):
-            self._last_run_success = True
             self.coordinator.name = (
                 f"{self.platform_name} {self._name} {self.off_label}"
             )
             await self.coordinator.async_request_refresh()
-        else:
-            self._last_run_success = False
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -164,8 +157,3 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
                 f"{self.platform_name} {self._name} {self.off_label}"
             )
         return bool(self.coordinator.data[self.module_id][self.data_id] == self._is_on)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {"last_run_success": self._last_run_success}

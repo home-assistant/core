@@ -126,7 +126,7 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
                     continue
                 # migrate sensors
                 matched_dev_class = sensor_class_mapping.get(
-                    ent.device_class or "unknown"
+                    ent.original_device_class or "unknown"
                 )
                 if matched_dev_class is None:
                     # this may happen if we're looking at orphaned or unsupported entity
@@ -147,7 +147,18 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
                         ent.unique_id,
                         new_unique_id,
                     )
-                    ent_reg.async_update_entity(ent.entity_id, new_unique_id=sensor.id)
+                    try:
+                        ent_reg.async_update_entity(
+                            ent.entity_id, new_unique_id=sensor.id
+                        )
+                    except ValueError:
+                        # assume edge case where the entity was already migrated in a previous run
+                        # which got aborted somehow and we do not want
+                        # to crash the entire integration init
+                        LOGGER.warning(
+                            "Skip migration of %s because it already exists",
+                            ent.entity_id,
+                        )
                     break
 
         # migrate entities that are not connected to a device (groups)
@@ -170,5 +181,14 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
                 ent.unique_id,
                 new_unique_id,
             )
-            ent_reg.async_update_entity(ent.entity_id, new_unique_id=new_unique_id)
+            try:
+                ent_reg.async_update_entity(ent.entity_id, new_unique_id=new_unique_id)
+            except ValueError:
+                # assume edge case where the entity was already migrated in a previous run
+                # which got aborted somehow and we do not want
+                # to crash the entire integration init
+                LOGGER.warning(
+                    "Skip migration of %s because it already exists",
+                    ent.entity_id,
+                )
     LOGGER.info("Migration of devices and entities to support API schema 2 finished")

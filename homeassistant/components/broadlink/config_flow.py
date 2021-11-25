@@ -13,7 +13,7 @@ from broadlink.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
 
@@ -53,10 +53,12 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "host": device.host[0],
         }
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle dhcp discovery."""
-        host = discovery_info[IP_ADDRESS]
-        unique_id = discovery_info[MAC_ADDRESS].lower().replace(":", "")
+        host = discovery_info[dhcp.IP_ADDRESS]
+        unique_id = discovery_info[dhcp.MAC_ADDRESS].lower().replace(":", "")
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 

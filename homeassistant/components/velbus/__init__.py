@@ -169,26 +169,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class VelbusEntity(Entity):
     """Representation of a Velbus entity."""
 
+    _attr_should_poll: bool = False
+
     def __init__(self, channel: VelbusChannel) -> None:
         """Initialize a Velbus entity."""
         self._channel = channel
-
-    @property
-    def unique_id(self) -> str:
-        """Get unique ID."""
-        if (serial := self._channel.get_module_serial()) == "":
-            serial = str(self._channel.get_module_address())
-        return f"{serial}-{self._channel.get_channel_number()}"
-
-    @property
-    def name(self) -> str:
-        """Return the display name of this entity."""
-        return self._channel.get_name()
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling."""
-        return False
+        self._attr_name = channel.get_name()
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, str(channel.get_module_address())),
+            },
+            manufacturer="Velleman",
+            model=channel.get_module_type_name(),
+            name=channel.get_full_name(),
+            sw_version=channel.get_module_sw_version(),
+        )
+        serial = channel.get_module_serial() or str(channel.get_module_address())
+        self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
 
     async def async_added_to_hass(self) -> None:
         """Add listener for state changes."""
@@ -196,16 +193,3 @@ class VelbusEntity(Entity):
 
     async def _on_update(self) -> None:
         self.async_write_ha_state()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, str(self._channel.get_module_address())),
-            },
-            manufacturer="Velleman",
-            model=self._channel.get_module_type_name(),
-            name=self._channel.get_full_name(),
-            sw_version=self._channel.get_module_sw_version(),
-        )

@@ -19,6 +19,7 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -68,7 +69,7 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         )
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.location_key)},
             manufacturer=MANUFACTURER,
             name=NAME,

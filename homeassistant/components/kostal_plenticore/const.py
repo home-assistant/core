@@ -1,5 +1,4 @@
 """Constants for the Kostal Plenticore Solar Inverter integration."""
-from collections import namedtuple
 from typing import NamedTuple
 
 from homeassistant.components.sensor import (
@@ -692,6 +691,20 @@ SENSOR_SETTINGS_DATA = [
     ),
 ]
 
+
+class SwitchData(NamedTuple):
+    """Representation of a SelectData tuple."""
+
+    module_id: str
+    data_id: str
+    name: str
+    is_on: str
+    on_value: str
+    on_label: str
+    off_value: str
+    off_label: str
+
+
 # Defines all entities for switches.
 #
 # Each entry is defined with a tuple of these values:
@@ -702,11 +715,8 @@ SENSOR_SETTINGS_DATA = [
 #  - on Label (str)
 #  - off Value (str)
 #  - off Label (str)
-SWITCH = namedtuple(
-    "SWITCH", "module_id data_id name is_on on_value on_label off_value off_label"
-)
 SWITCH_SETTINGS_DATA = [
-    SWITCH(
+    SwitchData(
         "devices:local",
         "Battery:Strategy",
         "Battery Strategy:",

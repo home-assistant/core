@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import BRAND, CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
+from .const import BRAND, CONF_SERIAL, CONF_UPNP_DESC, DEFAULT_ZONE, DOMAIN
 
 PLATFORMS = ["media_player"]
 
@@ -150,22 +150,43 @@ class MusicCastEntity(CoordinatorEntity):
 class MusicCastDeviceEntity(MusicCastEntity):
     """Defines a MusicCast device entity."""
 
+    _zone_id: str = DEFAULT_ZONE
+
+    @property
+    def device_id(self):
+        """Return the ID of the current device."""
+        if self._zone_id == DEFAULT_ZONE:
+            return self.coordinator.data.device_id
+        return f"{self.coordinator.data.device_id}_{self._zone_id}"
+
+    @property
+    def device_name(self):
+        """Return the name of the current device."""
+        return self.coordinator.data.zones[self._zone_id].name
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this MusicCast device."""
-        return DeviceInfo(
-            connections={
-                (CONNECTION_NETWORK_MAC, format_mac(mac))
-                for mac in self.coordinator.data.mac_addresses.values()
-            },
+
+        device_info = DeviceInfo(
+            name=self.device_name,
             identifiers={
                 (
                     DOMAIN,
-                    self.coordinator.data.device_id,
+                    self.device_id,
                 )
             },
-            name=self.coordinator.data.network_name,
             manufacturer=BRAND,
             model=self.coordinator.data.model_name,
             sw_version=self.coordinator.data.system_version,
         )
+
+        if self._zone_id == DEFAULT_ZONE:
+            device_info["connections"] = {
+                (CONNECTION_NETWORK_MAC, format_mac(mac))
+                for mac in self.coordinator.data.mac_addresses.values()
+            }
+        else:
+            device_info["via_device"] = (DOMAIN, self.coordinator.data.device_id)
+
+        return device_info

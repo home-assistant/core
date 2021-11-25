@@ -185,7 +185,7 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
             attrs[ATTR_STATE_HOLIDAY_MODE] = self.device.holiday_active
         if self.device.summer_active is not None:
             attrs[ATTR_STATE_SUMMER_MODE] = self.device.summer_active
-        if ATTR_STATE_WINDOW_OPEN is not None:
+        if self.device.window_open is not None:
             attrs[ATTR_STATE_WINDOW_OPEN] = self.device.window_open
 
         return attrs

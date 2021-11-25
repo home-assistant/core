@@ -4,6 +4,7 @@ from unittest.mock import patch
 from pyoctoprintapi import ApiError, DiscoverySettings
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.octoprint.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -169,13 +170,14 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "host": "192.168.1.123",
-            "port": 80,
-            "hostname": "example.local.",
-            "uuid": "83747482",
-            "properties": {"uuid": "83747482", "path": "/foo/"},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            hostname="example.local.",
+            name="mock_name",
+            port=80,
+            properties={"uuid": "83747482", "path": "/foo/"},
+            type="mock_type",
+        ),
     )
     assert result["type"] == "form"
     assert not result["errors"]
@@ -485,13 +487,14 @@ async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "host": "192.168.1.123",
-            "port": 80,
-            "hostname": "example.local.",
-            "uuid": "83747482",
-            "properties": {"uuid": "83747482", "path": "/foo/"},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            hostname="example.local.",
+            name="mock_name",
+            port=80,
+            properties={"uuid": "83747482", "path": "/foo/"},
+            type="mock_type",
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"

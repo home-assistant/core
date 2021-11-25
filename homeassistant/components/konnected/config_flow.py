@@ -267,9 +267,27 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             # extract host/port from ssdp_location
             netloc = urlparse(discovery_info["ssdp_location"]).netloc.split(":")
-            return await self.async_step_user(
-                user_input={CONF_HOST: netloc[0], CONF_PORT: int(netloc[1])}
+            self._async_abort_entries_match(
+                {CONF_HOST: netloc[0], CONF_PORT: int(netloc[1])}
             )
+
+            try:
+                status = await get_status(self.hass, netloc[0], int(netloc[1]))
+            except CannotConnect:
+                return self.async_abort(reason="cannot_connect")
+            else:
+                self.data[CONF_HOST] = netloc[0]
+                self.data[CONF_PORT] = int(netloc[1])
+                self.data[CONF_ID] = status.get(
+                    "chipId", status["mac"].replace(":", "")
+                )
+                self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
+
+                KonnectedFlowHandler.discovered_hosts[self.data[CONF_ID]] = {
+                    CONF_HOST: self.data[CONF_HOST],
+                    CONF_PORT: self.data[CONF_PORT],
+                }
+                return await self.async_step_confirm()
 
         return self.async_abort(reason="unknown")
 

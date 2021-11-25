@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
+            "alternative_integration": "Perangkat dapat didukung lebih baik lewat integrasi lainnya",
             "cannot_connect": "Gagal terhubung",
             "could_not_connect": "Gagal terhubung ke perangkat DLNA",
             "discovery_error": "Gagal menemukan perangkat DLNA yang cocok",
@@ -40,8 +41,16 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_url": "URL tidak valid"
+        },
         "step": {
             "init": {
+                "data": {
+                    "callback_url_override": "URL panggilan balik pendengar peristiwa",
+                    "listen_port": "Port pendengar peristiwa (acak jika tidak diatur)",
+                    "poll_availability": "Polling untuk ketersediaan perangkat"
+                },
                 "title": "Konfigurasi Digital Media Renderer DLNA"
             }
         }
