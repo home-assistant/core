@@ -7,7 +7,7 @@ from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from websocket import WebSocketException, WebSocketProtocolException
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, zeroconf
+from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -24,7 +24,6 @@ from homeassistant.components.samsungtv.const import (
     TIMEOUT_WEBSOCKET,
 )
 from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MANUFACTURER,
     ATTR_UPNP_MODEL_NAME,
@@ -63,27 +62,39 @@ MOCK_IMPORT_WSDATA = {
     CONF_PORT: 8002,
 }
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
-MOCK_SSDP_DATA = {
-    ATTR_SSDP_LOCATION: "https://fake_host:12345/test",
-    ATTR_UPNP_FRIENDLY_NAME: "[TV] fake_name",
-    ATTR_UPNP_MANUFACTURER: "Samsung fake_manufacturer",
-    ATTR_UPNP_MODEL_NAME: "fake_model",
-    ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
-}
-MOCK_SSDP_DATA_NOPREFIX = {
-    ATTR_SSDP_LOCATION: "http://fake2_host:12345/test",
-    ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
-    ATTR_UPNP_MANUFACTURER: "Samsung fake2_manufacturer",
-    ATTR_UPNP_MODEL_NAME: "fake2_model",
-    ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
-}
-MOCK_SSDP_DATA_WRONGMODEL = {
-    ATTR_SSDP_LOCATION: "http://fake2_host:12345/test",
-    ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
-    ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
-    ATTR_UPNP_MODEL_NAME: "HW-Qfake",
-    ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
-}
+MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location="https://fake_host:12345/test",
+    upnp={
+        ATTR_UPNP_FRIENDLY_NAME: "[TV] fake_name",
+        ATTR_UPNP_MANUFACTURER: "Samsung fake_manufacturer",
+        ATTR_UPNP_MODEL_NAME: "fake_model",
+        ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
+    },
+)
+MOCK_SSDP_DATA_NOPREFIX = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location="http://fake2_host:12345/test",
+    upnp={
+        ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
+        ATTR_UPNP_MANUFACTURER: "Samsung fake2_manufacturer",
+        ATTR_UPNP_MODEL_NAME: "fake2_model",
+        ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
+    },
+)
+MOCK_SSDP_DATA_WRONGMODEL = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location="http://fake2_host:12345/test",
+    upnp={
+        ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
+        ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
+        ATTR_UPNP_MODEL_NAME: "HW-Qfake",
+        ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
+    },
+)
 MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
     ip="fake_host", macaddress="aa:bb:cc:dd:ee:ff", hostname="fake_hostname"
 )
