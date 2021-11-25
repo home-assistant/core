@@ -51,8 +51,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import (
-    color_hs_to_RGB,
-    color_RGB_to_hs,
     color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
 )
@@ -262,10 +260,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     @property
     def rgb_color(self) -> tuple[int, int, int]:
         """Return the rgb color value."""
-        # Note that we call color_RGB_to_hs and not color_RGB_to_hsv
-        # to get the unscaled value since this is what the frontend wants
-        # https://github.com/home-assistant/frontend/blob/e797c017614797bb11671496d6bd65863de22063/src/dialogs/more-info/controls/more-info-light.ts#L263
-        rgb: tuple[int, int, int] = color_hs_to_RGB(*color_RGB_to_hs(*self._device.rgb))
+        rgb: tuple[int, int, int] = self._device.rgb_unscaled
         return rgb
 
     @property
