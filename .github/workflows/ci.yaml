@@ -711,19 +711,22 @@ jobs:
             --timeout=9 \
             --durations=10 \
             -n auto \
-            --dist=loadfile \
             --cov homeassistant.components.${{ matrix.group }} \
             --cov-report= \
+            --cov-report=term-missing \
             -o console_output_style=count \
             -p no:sugar \
             tests/components/${{ matrix.group }}
       - name: Upload coverage to Codecov (full coverage)
         if: needs.changes.outputs.test_full_suite == 'true'
         uses: codecov/codecov-action@v2.1.0
+        with:
+          files: .coverage
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.changes.outputs.test_full_suite == 'false'
         uses: codecov/codecov-action@v2.1.0
         with:
+          files: .coverage
           flags: ${{ matrix.group }}
       - name: Check dirty
         run: |
