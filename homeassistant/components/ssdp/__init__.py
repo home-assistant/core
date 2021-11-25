@@ -167,6 +167,7 @@ class SsdpServiceInfo(
     def __iter__(self) -> Iterator[str]:
         """
         Implement iter(self) on upnp data.
+
         Deprecated, and will be removed in version 2022.6.
         """
         if not self._warning_logged:
