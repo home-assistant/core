@@ -5,6 +5,7 @@ import logging
 from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
@@ -270,10 +271,24 @@ class AtomeGenericSensor(CoordinatorEntity, SensorEntity):
         self._name = name
         self._period_type = period_type
 
-    @property
-    def should_poll(self):
-        """Return the should poll state."""
-        return True
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+
+        @callback
+        def update() -> None:
+            """Update the state."""
+            self.update_from_latest_data()
+            self.async_write_ha_state()
+
+        self.async_on_remove(self.coordinator.async_add_listener(update))
+
+        self.update_from_latest_data()
+
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the entity from the latest data."""
+        raise NotImplementedError
+
 
     @property
     def name(self):
@@ -294,12 +309,6 @@ class AtomeLiveSensor(AtomeGenericSensor):
         self._attr_native_unit_of_measurement = POWER_WATT
         self._attr_state_class = STATE_CLASS_MEASUREMENT
 
-    async def async_added_to_hass(self):
-        """Handle added to Hass."""
-        # trigger update
-        await super().async_added_to_hass()
-        self.schedule_update_ha_state(force_refresh=True)
-
     @property
     def extra_state_attributes(self):
         """Return the state attributes of this device."""
@@ -309,12 +318,12 @@ class AtomeLiveSensor(AtomeGenericSensor):
         return attr
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of this device."""
         _LOGGER.debug("Live Data : display")
         return self._live_data.live_power
 
-    async def async_update(self):
+    def update_from_latest_data(self):
         """Fetch new state data for this sensor."""
         _LOGGER.debug("Async Update sensor %s", self._name)
         self._live_data = self.coordinator.data
@@ -337,7 +346,6 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
     async def async_added_to_hass(self):
         """Handle added to Hass."""
         # restore from previous run
-        await super().async_added_to_hass()
         state_recorded = await self.async_get_last_state()
         if state_recorded:
             self._period_data.usage = format_receive_value(state_recorded.state)
@@ -350,7 +358,7 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
             self._previous_period_data.price = format_receive_value(
                 state_recorded.attributes.get(ATTR_PREVIOUS_PERIOD_PRICE)
             )
-        self.schedule_update_ha_state(force_refresh=True)
+        await super().async_added_to_hass()
 
     @property
     def extra_state_attributes(self):
@@ -362,17 +370,18 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
         return attr
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of this device."""
         return self._period_data.usage
 
-    async def async_update(self):
+    def update_from_latest_data(self):
         """Fetch new state data for this sensor."""
-        # await self.coordinator.async_refresh()
         _LOGGER.debug("Async Update sensor %s", self._name)
         new_period_data = self.coordinator.data
         if new_period_data.usage and self._period_data.usage:
+            _LOGGER.debug("Check period %s : New %s ; Current %s", self._name, new_period_data.usage, self._period_data.usage)
             # Take a margin to avoid storage of previous data
             if (new_period_data.usage - self._period_data.usage) < (-0.1):
+                _LOGGER.debug("Previous period %s : New", self._name, self._period_data.usage)
                 self._previous_period_data = self._period_data
         self._period_data = new_period_data
