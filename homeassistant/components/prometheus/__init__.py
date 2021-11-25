@@ -210,7 +210,12 @@ class PrometheusMetrics:
             full_metric_name = self._sanitize_metric_name(
                 f"{self.metrics_prefix}{metric}"
             )
-            self._metrics[metric] = factory(full_metric_name, documentation, labels)
+            self._metrics[metric] = factory(
+                full_metric_name,
+                documentation,
+                labels,
+                registry=self.prometheus_cli.REGISTRY,
+            )
             return self._metrics[metric]
 
     @staticmethod
