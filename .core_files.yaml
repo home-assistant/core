@@ -108,6 +108,11 @@ tests: &tests
   - tests/test_util/*
   - tests/testing_config/**
 
+# Components which tests only pass if the whole testsuite is run
+# Don't add anything here, unless absolutely necessary!
+broken_tests: &broken_tests
+  - homeassistant/components/xiaomi_miio/*
+
 other: &other
   - .github/workflows/*
   - homeassistant/scripts/**
@@ -118,3 +123,4 @@ any:
   - *core
   - *other
   - *tests
+  - *broken_tests
