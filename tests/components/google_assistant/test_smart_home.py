@@ -1,5 +1,5 @@
 """Test Google Smart Home."""
-from unittest.mock import patch
+from unittest.mock import ANY, call, patch
 
 import pytest
 
@@ -367,7 +367,10 @@ async def test_query_message(hass):
     }
 
 
-async def test_execute(hass):
+@pytest.mark.parametrize(
+    "report_state,on,brightness,value", [(False, True, 20, 0.2), (True, ANY, ANY, ANY)]
+)
+async def test_execute(hass, report_state, on, brightness, value):
     """Test an execute command."""
     await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -375,45 +378,82 @@ async def test_execute(hass):
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.ceiling_lights"}, blocking=True
     )
+    await hass.async_block_till_done()
 
     events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
     service_events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
-    result = await sh.async_handle_message(
-        hass,
-        BASIC_CONFIG,
-        None,
-        {
-            "requestId": REQ_ID,
-            "inputs": [
-                {
-                    "intent": "action.devices.EXECUTE",
-                    "payload": {
-                        "commands": [
-                            {
-                                "devices": [
-                                    {"id": "light.non_existing"},
-                                    {"id": "light.ceiling_lights"},
-                                    {"id": "light.kitchen_lights"},
-                                ],
-                                "execution": [
-                                    {
-                                        "command": "action.devices.commands.OnOff",
-                                        "params": {"on": True},
-                                    },
-                                    {
-                                        "command": "action.devices.commands.BrightnessAbsolute",
-                                        "params": {"brightness": 20},
-                                    },
-                                ],
-                            }
-                        ]
-                    },
-                }
-            ],
-        },
-        const.SOURCE_CLOUD,
-    )
+    with patch.object(
+        hass.services, "async_call", wraps=hass.services.async_call
+    ) as call_service_mock:
+        result = await sh.async_handle_message(
+            hass,
+            MockConfig(should_report_state=report_state),
+            None,
+            {
+                "requestId": REQ_ID,
+                "inputs": [
+                    {
+                        "intent": "action.devices.EXECUTE",
+                        "payload": {
+                            "commands": [
+                                {
+                                    "devices": [
+                                        {"id": "light.non_existing"},
+                                        {"id": "light.ceiling_lights"},
+                                        {"id": "light.kitchen_lights"},
+                                    ],
+                                    "execution": [
+                                        {
+                                            "command": "action.devices.commands.OnOff",
+                                            "params": {"on": True},
+                                        },
+                                        {
+                                            "command": "action.devices.commands.BrightnessAbsolute",
+                                            "params": {"brightness": 20},
+                                        },
+                                    ],
+                                }
+                            ]
+                        },
+                    }
+                ],
+            },
+            const.SOURCE_CLOUD,
+        )
+        assert call_service_mock.call_count == 4
+        expected_calls = [
+            call(
+                "light",
+                "turn_on",
+                {"entity_id": "light.ceiling_lights"},
+                blocking=not report_state,
+                context=ANY,
+            ),
+            call(
+                "light",
+                "turn_on",
+                {"entity_id": "light.kitchen_lights"},
+                blocking=not report_state,
+                context=ANY,
+            ),
+            call(
+                "light",
+                "turn_on",
+                {"entity_id": "light.ceiling_lights", "brightness_pct": 20},
+                blocking=not report_state,
+                context=ANY,
+            ),
+            call(
+                "light",
+                "turn_on",
+                {"entity_id": "light.kitchen_lights", "brightness_pct": 20},
+                blocking=not report_state,
+                context=ANY,
+            ),
+        ]
+        call_service_mock.assert_has_awaits(expected_calls, any_order=True)
+    await hass.async_block_till_done()
 
     assert result == {
         "requestId": REQ_ID,
@@ -428,9 +468,9 @@ async def test_execute(hass):
                     "ids": ["light.ceiling_lights"],
                     "status": "SUCCESS",
                     "states": {
-                        "on": True,
+                        "on": on,
                         "online": True,
-                        "brightness": 20,
+                        "brightness": brightness,
                         "color": {"temperatureK": 2631},
                     },
                 },
@@ -440,12 +480,12 @@ async def test_execute(hass):
                     "states": {
                         "on": True,
                         "online": True,
-                        "brightness": 20,
+                        "brightness": brightness,
                         "color": {
                             "spectrumHsv": {
                                 "hue": 345,
                                 "saturation": 0.75,
-                                "value": 0.2,
+                                "value": value,
                             },
                         },
                     },
