@@ -653,6 +653,9 @@ jobs:
           # However this plugin is fairly new and doesn't run correctly
           # on a non-GitHub environment.
           pip install pytest-github-actions-annotate-failures==0.1.3
+      - name: Register pytest slow test problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Run pytest (fully)
         if: needs.changes.outputs.test_full_suite == 'true'
         run: |
@@ -683,6 +686,8 @@ jobs:
             --cov-report=xml \
             --cov-report=term-missing \
             -o console_output_style=count \
+            --durations=0 \
+            --durations-min=1 \
             -p no:sugar \
             tests/components/${{ matrix.group }}
       - name: Upload coverage to Codecov (full coverage)
