@@ -207,7 +207,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_hue_bridge")
 
         if (
-            ssdp.ATTR_SSDP_LOCATION not in discovery_info
+            not discovery_info.get(ssdp.ATTR_SSDP_LOCATION)
             or ssdp.ATTR_UPNP_SERIAL not in discovery_info
         ):
             return self.async_abort(reason="not_hue_bridge")
