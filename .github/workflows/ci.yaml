@@ -330,7 +330,9 @@ jobs:
   lint-other:
     name: Check other linters
     runs-on: ubuntu-latest
-    needs: prepare-base
+    needs:
+      - changes
+      - prepare-base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2.4.0
