@@ -142,7 +142,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 if mac.lower() != self.unique_id:
                     _LOGGER.warning(
-                        "expected %s but found %s at %s",
+                        "Expected %s but found %s at %s",
                         self.unique_id,
                         mac.lower(),
                         self.HOST,
