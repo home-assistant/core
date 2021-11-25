@@ -79,12 +79,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def update_listener(hass, config_entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_time_sync(hass, entry):
+async def async_setup_time_sync(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up the time sync."""
     if not entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
         return
@@ -93,11 +93,8 @@ async def async_setup_time_sync(hass, entry):
     spa = hass.data[DOMAIN][entry.entry_id]
 
     async def sync_time():
-        if entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
-            _LOGGER.debug("Syncing time with Home Assistant")
-            await spa.set_time(
-                time.strptime(str(dt_util.now()), "%Y-%m-%d %H:%M:%S.%f%z")
-            )
+        _LOGGER.debug("Syncing time with Home Assistant")
+        await spa.set_time(time.strptime(str(dt_util.now()), "%Y-%m-%d %H:%M:%S.%f%z"))
 
     await sync_time()
     entry.async_on_unload(

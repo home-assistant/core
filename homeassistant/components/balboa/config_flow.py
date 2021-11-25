@@ -74,10 +74,6 @@ class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class AlreadyConfigured(exceptions.HomeAssistantError):
-    """Error to indicate this device is already configured."""
-
-
 class BalboaSpaClientOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Balboa Spa Client options."""
 

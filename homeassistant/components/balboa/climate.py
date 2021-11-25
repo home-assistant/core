@@ -101,9 +101,7 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
     def fan_mode(self) -> str:
         """Return the current fan mode."""
         fanmode = self._client.get_blower()
-        if fanmode in self.balboa_to_ha_blower_map:
-            return self.balboa_to_ha_blower_map[fanmode]
-        return FAN_OFF
+        return self.balboa_to_ha_blower_map.get(fanmode, FAN_OFF)
 
     @property
     def precision(self) -> float:
