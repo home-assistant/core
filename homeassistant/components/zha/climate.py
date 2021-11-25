@@ -693,6 +693,7 @@ class MoesThermostat(Thermostat):
 
         return False
 
+
 @STRICT_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     manufacturers={
