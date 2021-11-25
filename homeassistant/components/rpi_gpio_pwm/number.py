@@ -169,6 +169,6 @@ class PwmNumber(NumberEntity, RestoreEntity):
         # Scale to range of the driver
         scaled_value = int(round((used_value / 100.0) * max_pwm))
         # Set value to driver
-        self._driver._set_pwm([scaled_value])
+        self._driver._set_pwm([scaled_value])  # pylint: disable=W0212
         self._attr_value = value
         self.schedule_update_ha_state()
