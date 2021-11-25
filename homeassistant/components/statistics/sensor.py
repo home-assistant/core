@@ -177,9 +177,9 @@ class StatisticsSensor(SensorEntity):
         self.states = deque(maxlen=self._samples_max_buffer_size)
         self.ages = deque(maxlen=self._samples_max_buffer_size)
         self.attributes = {
-            STAT_AGE_COVERAGE_RATIO: STATE_UNKNOWN,
-            STAT_BUFFER_USAGE_RATIO: STATE_UNKNOWN,
-            STAT_SOURCE_VALUE_VALID: STATE_UNKNOWN,
+            STAT_AGE_COVERAGE_RATIO: None,
+            STAT_BUFFER_USAGE_RATIO: None,
+            STAT_SOURCE_VALUE_VALID: None,
         }
         self._state_characteristic_fn = getattr(
             self, f"_stat_{self._state_characteristic}"
@@ -319,15 +319,8 @@ class StatisticsSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        extra_attr = {}
-        if self._samples_max_age is not None:
-            extra_attr = {
-                STAT_AGE_COVERAGE_RATIO: self.attributes[STAT_AGE_COVERAGE_RATIO]
-            }
         return {
-            **extra_attr,
-            STAT_BUFFER_USAGE_RATIO: self.attributes[STAT_BUFFER_USAGE_RATIO],
-            STAT_SOURCE_VALUE_VALID: self.attributes[STAT_SOURCE_VALUE_VALID],
+            key: value for key, value in self.attributes.items() if value is not None
         }
 
     @property
@@ -449,7 +442,7 @@ class StatisticsSensor(SensorEntity):
                 2,
             )
         else:
-            self.attributes[STAT_AGE_COVERAGE_RATIO] = STATE_UNKNOWN
+            self.attributes[STAT_AGE_COVERAGE_RATIO] = None
 
     def _update_value(self):
         """Front to call the right statistical characteristics functions.
