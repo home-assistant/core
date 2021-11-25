@@ -89,8 +89,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.speed = 50
     bulb.model = "Smart Bulb (0x35)"
     bulb.version_num = 8
-    bulb.original_addressable = False
-    bulb.addressable = False
+    bulb.speed_adjust_off = True
     bulb.rgbwcapable = True
     bulb.color_modes = {FLUX_COLOR_MODE_RGB, FLUX_COLOR_MODE_CCT}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
