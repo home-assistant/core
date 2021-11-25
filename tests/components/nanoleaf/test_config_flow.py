@@ -7,7 +7,7 @@ from aionanoleaf import InvalidToken, NanoleafException, Unauthorized, Unavailab
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.nanoleaf.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -462,11 +462,15 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data={
-                "_host": TEST_HOST,
-                "nl-devicename": TEST_NAME,
-                "nl-deviceid": TEST_DEVICE_ID,
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={
+                    "_host": TEST_HOST,
+                    "nl-devicename": TEST_NAME,
+                    "nl-deviceid": TEST_DEVICE_ID,
+                },
+            ),
         )
 
         assert result["type"] == "form"
