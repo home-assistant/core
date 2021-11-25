@@ -5,7 +5,6 @@ import logging
 from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
@@ -23,6 +22,7 @@ from homeassistant.const import (
     POWER_WATT,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import (
@@ -289,7 +289,6 @@ class AtomeGenericSensor(CoordinatorEntity, SensorEntity):
         """Update the entity from the latest data."""
         raise NotImplementedError
 
-
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -379,9 +378,16 @@ class AtomePeriodSensor(RestoreEntity, AtomeGenericSensor):
         _LOGGER.debug("Async Update sensor %s", self._name)
         new_period_data = self.coordinator.data
         if new_period_data.usage and self._period_data.usage:
-            _LOGGER.debug("Check period %s : New %s ; Current %s", self._name, new_period_data.usage, self._period_data.usage)
+            _LOGGER.debug(
+                "Check period %s : New %s ; Current %s",
+                self._name,
+                new_period_data.usage,
+                self._period_data.usage,
+            )
             # Take a margin to avoid storage of previous data
             if (new_period_data.usage - self._period_data.usage) < (-0.1):
-                _LOGGER.debug("Previous period %s : New", self._name, self._period_data.usage)
+                _LOGGER.debug(
+                    "Previous period %s becomes %s", self._name, self._period_data.usage
+                )
                 self._previous_period_data = self._period_data
         self._period_data = new_period_data
