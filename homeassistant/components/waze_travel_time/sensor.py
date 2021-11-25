@@ -169,6 +169,7 @@ class WazeTravelTime(SensorEntity):
         entry_type=DeviceEntryType.SERVICE,
         name="Waze",
         identifiers={(DOMAIN, DOMAIN)},
+        configuration_url="https://www.waze.com",
     )
 
     def __init__(self, unique_id, name, origin, destination, waze_data):
