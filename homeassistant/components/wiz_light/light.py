@@ -11,7 +11,6 @@ from pywizlight.exceptions import (
     WizLightNotKnownBulb,
     WizLightTimeOutError,
 )
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -19,7 +18,6 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
-    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
@@ -27,8 +25,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
 import homeassistant.util.color as color_utils
 
 from .const import DOMAIN
@@ -41,9 +37,6 @@ SUPPORT_FEATURES_RGB = (
 SUPPORT_FEATURES_DIM = SUPPORT_BRIGHTNESS
 SUPPORT_FEATURES_WHITE = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_NAME): cv.string}
-)
 
 # set poll interval to 15 sec because of changes from external to the bulb
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -56,30 +49,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     ip_address = config[CONF_HOST]
     try:
         bulb = wizlight(ip_address)
-        # Add devices
-        async_add_entities([WizBulb(bulb, config[CONF_NAME])], update_before_add=True)
     except WizLightConnectionError:
         _LOGGER.error("Can't add bulb with ip %s", ip_address)
         return False
+
+    # Add devices
+    async_add_entities([WizBulb(bulb, config[CONF_NAME])], update_before_add=True)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the WiZ Light platform from config_flow."""
     # Assign configuration variables.
-    bulb = hass.data[DOMAIN][entry.entry_id]
-    wizbulb = WizBulb(bulb, entry.data.get(CONF_NAME))
+    wizbulb = hass.data[DOMAIN][entry.entry_id]
     # Add devices with defined name
     async_add_entities([wizbulb], update_before_add=True)
-
-    # Register services
-    async def async_update(call=None):
-        """Trigger update."""
-        _LOGGER.debug("[wizlight %s] update requested", entry.data.get(CONF_HOST))
-        await wizbulb.async_update()
-        await wizbulb.async_update_ha_state()
-
-    service_name = slugify(f"{entry.data.get(CONF_NAME)} updateService")
-    hass.services.async_register(DOMAIN, service_name, async_update)
     return True
 
 
@@ -100,6 +83,11 @@ class WizBulb(LightEntity):
         self._scenes: list[str] = []
         self._bulbtype: BulbType = None
         self._mac = None
+        # new init states
+        # self._attr_device_info = self.get_device_info()
+        self._attr_min_mireds = self.get_min_mireds()
+        self._attr_max_mireds = self.get_max_mireds()
+        self._attr_supported_features = self.get_supported_features()
 
     @property
     def brightness(self):
@@ -199,8 +187,7 @@ class WizBulb(LightEntity):
         """Return the CT color value in mireds."""
         return self._temperature
 
-    @property
-    def min_mireds(self):
+    def get_min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
         if self._bulbtype is None:
             return color_utils.color_temperature_kelvin_to_mired(6500)
@@ -214,8 +201,7 @@ class WizBulb(LightEntity):
             _LOGGER.info("Kelvin is not present in the library. Fallback to 6500")
             return color_utils.color_temperature_kelvin_to_mired(6500)
 
-    @property
-    def max_mireds(self):
+    def get_max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         if self._bulbtype is None:
             return color_utils.color_temperature_kelvin_to_mired(2200)
@@ -228,8 +214,7 @@ class WizBulb(LightEntity):
             _LOGGER.info("Kelvin is not present in the library. Fallback to 2200")
             return color_utils.color_temperature_kelvin_to_mired(2200)
 
-    @property
-    def supported_features(self) -> int:
+    def get_supported_features(self) -> int:
         """Flag supported features."""
         if self._bulbtype:
             return self.featuremap()
@@ -268,13 +253,6 @@ class WizBulb(LightEntity):
     @property
     def device_info(self):
         """Get device specific attributes."""
-        _LOGGER.debug(
-            "[wizlight %s] Call device info: MAC: %s - Name: %s - Type: %s",
-            self._light.ip,
-            self._mac,
-            self._name,
-            self._bulbtype.name,
-        )
         return {
             "identifiers": {(DOMAIN, self._mac)},
             "name": self._name,
@@ -300,14 +278,7 @@ class WizBulb(LightEntity):
                 self.update_state_unavailable()
             else:
                 self.update_state_available()
-                # Update the rest of the missing info if available
-                if self._mac is None or self._bulbtype is None:
-                    await self.get_bulb_type()
-                    await self.get_mac()
-        except TimeoutError as ex:
-            _LOGGER.debug(ex)
-            self.update_state_unavailable()
-        except WizLightTimeOutError as ex:
+        except (TimeoutError, WizLightTimeOutError) as ex:
             _LOGGER.debug(ex)
             self.update_state_unavailable()
         _LOGGER.debug(
@@ -341,17 +312,12 @@ class WizBulb(LightEntity):
         if colortemp is None or colortemp == 0:
             self._temperature = None
             return
-        try:
-            _LOGGER.debug(
-                "[wizlight %s] kelvin from the bulb: %s", self._light.ip, colortemp
-            )
-            temperature = color_utils.color_temperature_kelvin_to_mired(colortemp)
-            self._temperature = temperature
 
-        # pylint: disable=broad-except
-        except Exception:
-            _LOGGER.error("Cannot evaluate temperature", exc_info=True)
-            self._temperature = None
+        _LOGGER.debug(
+            "[wizlight %s] kelvin from the bulb: %s", self._light.ip, colortemp
+        )
+        temperature = color_utils.color_temperature_kelvin_to_mired(colortemp)
+        self._temperature = temperature
 
     def update_color(self):
         """Update the hs color."""

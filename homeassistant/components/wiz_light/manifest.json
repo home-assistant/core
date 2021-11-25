@@ -6,10 +6,6 @@
   "requirements": [
     "pywizlight==0.4.13"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "iot_class": "local_polling",
   "codeowners": [
     "@sbidy"
