@@ -1,10 +1,11 @@
 """AVM FRITZ!Box binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
