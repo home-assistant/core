@@ -481,7 +481,7 @@ class StatisticsSensor(SensorEntity):
                 )
             age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
             return area / age_range_seconds
-        return STATE_UNKNOWN
+        return None
 
     def _stat_average_step(self):
         if len(self.states) >= 2:
@@ -493,7 +493,7 @@ class StatisticsSensor(SensorEntity):
                 )
             age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
             return area / age_range_seconds
-        return STATE_UNKNOWN
+        return None
 
     def _stat_average_timeless(self):
         return self._stat_mean()
@@ -501,19 +501,19 @@ class StatisticsSensor(SensorEntity):
     def _stat_change(self):
         if len(self.states) > 0:
             return self.states[-1] - self.states[0]
-        return STATE_UNKNOWN
+        return None
 
     def _stat_change_sample(self):
         if len(self.states) > 1:
             return (self.states[-1] - self.states[0]) / (len(self.states) - 1)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_change_second(self):
         if len(self.states) > 1:
             age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
             if age_range_seconds > 0:
                 return (self.states[-1] - self.states[0]) / age_range_seconds
-        return STATE_UNKNOWN
+        return None
 
     def _stat_count(self):
         return len(self.states)
@@ -521,37 +521,37 @@ class StatisticsSensor(SensorEntity):
     def _stat_datetime_newest(self):
         if len(self.states) > 0:
             return self.ages[-1]
-        return STATE_UNKNOWN
+        return None
 
     def _stat_datetime_oldest(self):
         if len(self.states) > 0:
             return self.ages[0]
-        return STATE_UNKNOWN
+        return None
 
     def _stat_distance_95_percent_of_values(self):
         if len(self.states) >= 2:
             return 2 * 1.96 * self._stat_standard_deviation()
-        return STATE_UNKNOWN
+        return None
 
     def _stat_distance_99_percent_of_values(self):
         if len(self.states) >= 2:
             return 2 * 2.58 * self._stat_standard_deviation()
-        return STATE_UNKNOWN
+        return None
 
     def _stat_distance_absolute(self):
         if len(self.states) > 0:
             return max(self.states) - min(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_mean(self):
         if len(self.states) > 0:
             return statistics.mean(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_median(self):
         if len(self.states) > 0:
             return statistics.median(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_noisiness(self):
         if len(self.states) >= 2:
@@ -559,7 +559,7 @@ class StatisticsSensor(SensorEntity):
                 abs(j - i) for i, j in zip(list(self.states), list(self.states)[1:])
             )
             return diff_sum / (len(self.states) - 1)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_quantiles(self):
         if len(self.states) > self._quantile_intervals:
@@ -571,29 +571,29 @@ class StatisticsSensor(SensorEntity):
                     method=self._quantile_method,
                 )
             ]
-        return STATE_UNKNOWN
+        return None
 
     def _stat_standard_deviation(self):
         if len(self.states) >= 2:
             return statistics.stdev(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_total(self):
         if len(self.states) > 0:
             return sum(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_value_max(self):
         if len(self.states) > 0:
             return max(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_value_min(self):
         if len(self.states) > 0:
             return min(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_variance(self):
         if len(self.states) >= 2:
             return statistics.variance(self.states)
-        return STATE_UNKNOWN
+        return None
