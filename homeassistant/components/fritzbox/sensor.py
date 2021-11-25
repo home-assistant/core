@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Final
 
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
@@ -42,7 +43,7 @@ from .model import FritzEntityDescriptionMixinBase
 class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
     """Sensor description mixin for Fritz!Smarthome entities."""
 
-    native_value: Callable[[FritzhomeDevice], float | int | str | None]
+    native_value: Callable[[FritzhomeDevice], StateType | datetime]
 
 
 @dataclass
@@ -135,9 +136,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_TIMESTAMP,
         suitable=lambda device: device.has_thermostat
         and device.nextchange_endperiod is not None,
-        native_value=lambda device: utc_from_timestamp(
-            device.nextchange_endperiod
-        ).isoformat(),
+        native_value=lambda device: utc_from_timestamp(device.nextchange_endperiod),
     ),
     FritzSensorEntityDescription(
         key="nextchange_preset",
@@ -182,6 +181,6 @@ class FritzBoxSensor(FritzBoxEntity, SensorEntity):
     entity_description: FritzSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.native_value(self.device)
