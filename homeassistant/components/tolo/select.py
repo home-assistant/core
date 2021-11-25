@@ -31,6 +31,7 @@ class ToloLampModeSelect(ToloSaunaCoordinatorEntity, SelectEntity):
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
     _attr_icon = "mdi:lightbulb-multiple-outline"
     _attr_name = "Lamp Mode"
+    _attr_options = [lamp_mode.name.lower() for lamp_mode in LampMode]
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
@@ -39,11 +40,6 @@ class ToloLampModeSelect(ToloSaunaCoordinatorEntity, SelectEntity):
         super().__init__(coordinator, entry)
 
         self._attr_unique_id = f"{entry.entry_id}_lamp_mode"
-
-    @property
-    def options(self) -> list[str]:
-        """Return list of supported lamp modes."""
-        return [lamp_mode.name.lower() for lamp_mode in LampMode]
 
     @property
     def current_option(self) -> str:
