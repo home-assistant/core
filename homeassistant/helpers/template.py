@@ -1865,8 +1865,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["average"] = average
-        self.filters["max"] = max
-        self.filters["min"] = min
         self.filters["random"] = random_every_time
         self.filters["base64_encode"] = base64_encode
         self.filters["base64_decode"] = base64_decode

@@ -843,6 +843,57 @@ def test_max(hass):
     assert template.Template("{{ max(1, 2, 3) }}", hass).async_render() == 3
 
 
+@pytest.mark.parametrize(
+    "attribute",
+    (
+        "a",
+        "b",
+        "c",
+    ),
+)
+def test_min_max_attribute(hass, attribute):
+    """Test the min and max filters with attribute."""
+    hass.states.async_set(
+        "test.object",
+        "test",
+        {
+            "objects": [
+                {
+                    "a": 1,
+                    "b": 2,
+                    "c": 3,
+                },
+                {
+                    "a": 2,
+                    "b": 1,
+                    "c": 2,
+                },
+                {
+                    "a": 3,
+                    "b": 3,
+                    "c": 1,
+                },
+            ],
+        },
+    )
+    assert (
+        template.Template(
+            "{{ (state_attr('test.object', 'objects') | min(attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 1
+    )
+    assert (
+        template.Template(
+            "{{ (state_attr('test.object', 'objects') | max(attribute='%s'))['%s']}}"
+            % (attribute, attribute),
+            hass,
+        ).async_render()
+        == 3
+    )
+
+
 def test_ord(hass):
     """Test the ord filter."""
     assert template.Template('{{ "d" | ord }}', hass).async_render() == 100
