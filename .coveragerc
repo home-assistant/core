@@ -1094,6 +1094,7 @@ omit =
     homeassistant/components/todoist/const.py
     homeassistant/components/tof/sensor.py
     homeassistant/components/tolo/__init__.py
+    homeassistant/components/tolo/binary_sensor.py
     homeassistant/components/tolo/button.py
     homeassistant/components/tolo/climate.py
     homeassistant/components/tolo/light.py
