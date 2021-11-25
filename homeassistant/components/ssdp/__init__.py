@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Iterator
 from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
@@ -144,7 +144,7 @@ class SsdpServiceInfo(
         # Use a property if it is available, fallback to upnp data
         if hasattr(self, name):
             return getattr(self, name)
-        return self.upnp.get(name)
+        return self.upnp[name]
 
     def get(self, name: str, default: Any = None) -> Any:
         """
@@ -163,6 +163,22 @@ class SsdpServiceInfo(
         if hasattr(self, name):
             return getattr(self, name)
         return self.upnp.get(name, default)
+
+    def __iter__(self) -> Iterator[str]:
+        """
+        Implement iter(self) on upnp data.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                "accessed discovery_info.__iter__() instead of discovery_info.upnp.__iter__(); this will fail in version 2022.6",
+                exclude_integrations={"ssdp"},
+                error_if_core=False,
+                level=logging.DEBUG,
+            )
+            self._warning_logged = True
+        return self.upnp.__iter__()
 
 
 @bind_hass

@@ -286,4 +286,5 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
             identifiers={(DOMAIN,)},  # type: ignore[arg-type]
             manufacturer="Met.no",
             model="Forecast",
+            configuration_url="https://www.met.no/en",
         )

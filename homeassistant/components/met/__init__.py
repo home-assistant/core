@@ -1,11 +1,12 @@
 """The met component."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 from random import randrange
 from types import MappingProxyType
-from typing import Any, Callable
+from typing import Any
 
 import metno
 

@@ -1,9 +1,9 @@
 """Constants for the Tuya integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
@@ -236,6 +236,7 @@ class DPCode(str, Enum):
     PM25_STATE = "pm25_state"
     PM25_VALUE = "pm25_value"
     POWDER_SET = "powder_set"  # Powder
+    POWER = "power"
     POWER_GO = "power_go"
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
