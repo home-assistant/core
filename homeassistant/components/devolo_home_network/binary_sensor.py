@@ -27,6 +27,15 @@ from .const import (
 from .entity import DevoloEntity
 
 
+def _is_connected_to_router(entity: DevoloBinarySensorEntity) -> bool:
+    """Check, if device is attached to the router."""
+    return all(
+        device["attached_to_router"]
+        for device in entity.coordinator.data["network"]["devices"]
+        if device["mac_address"] == entity.device.mac
+    )
+
+
 @dataclass
 class DevoloBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
@@ -49,11 +58,7 @@ SENSOR_TYPES: dict[str, DevoloBinarySensorEntityDescription] = {
         entity_registry_enabled_default=False,
         icon="mdi:router-network",
         name="Connected to router",
-        value_func=lambda entity: all(
-            device["attached_to_router"]
-            for device in entity.coordinator.data["network"]["devices"]
-            if device["mac_address"] == entity.device.mac
-        ),
+        value_func=_is_connected_to_router,
     ),
     FIRMWARE_UPDATE_AVAILABLE: DevoloBinarySensorEntityDescription(
         key=FIRMWARE_UPDATE_AVAILABLE,
