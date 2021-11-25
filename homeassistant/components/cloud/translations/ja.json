@@ -2,6 +2,8 @@
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa\u6709\u52b9",
+            "can_reach_cert_server": "\u8a3c\u660e\u66f8\u30b5\u30fc\u30d0\u30fc\u306b\u5230\u9054\u30a2\u30af\u30bb\u30b9\u3059\u308b",
+            "can_reach_cloud": "Home AssistantCloud\u306b\u30a2\u30af\u30bb\u30b9\u3059\u308b",
             "can_reach_cloud_auth": "\u8a8d\u8a3c\u30b5\u30fc\u30d0\u30fc\u306b\u5230\u9054",
             "google_enabled": "Google\u6709\u52b9",
             "logged_in": "\u30ed\u30b0\u30a4\u30f3\u6e08",

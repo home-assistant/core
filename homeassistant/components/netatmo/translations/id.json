@@ -15,6 +15,7 @@
                 "title": "Pilih Metode Autentikasi"
             },
             "reauth_confirm": {
+                "description": "Integrasi Netatmo perlu mengautentikasi ulang akun Anda",
                 "title": "Autentikasi Ulang Integrasi"
             }
         }

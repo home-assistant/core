@@ -2,15 +2,26 @@
     "config": {
         "abort": {
             "already_configured": "Lokasi sudah dikonfigurasi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "scan_options": "Opsi pemindaian mentah yang dapat dikonfigurasi untuk Nmap"
+                },
+                "description": "Konfigurasikan host untuk dipindai oleh Nmap. Alamat jaringan dan pengecualian dapat berupa alamat IP (192.168.1.1), jaringan IP (192.168.0.0/24), atau rentang IP (192.168.1.0-32)."
+            }
         }
     },
     "options": {
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Waktu tunggu dalam detik untuk pelacak perangkat agar mempertimbangkan perangkat sebagai 'tidak di rumah' jika tidak ditemukan",
                     "interval_seconds": "Interval pindai",
+                    "scan_options": "Opsi pemindaian mentah yang dapat dikonfigurasi untuk Nmap",
                     "track_new_devices": "Lacak perangkat baru"
-                }
+                },
+                "description": "Konfigurasikan host untuk dipindai oleh Nmap. Alamat jaringan dan pengecualian dapat berupa alamat IP (192.168.1.1), jaringan IP (192.168.0.0/24), atau rentang IP (192.168.1.0-32)."
             }
         }
     },
