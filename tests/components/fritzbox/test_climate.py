@@ -39,6 +39,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -83,6 +84,65 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.state == "23"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Battery"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ATTR_STATE_CLASS not in state.attributes
+
+    state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_comfort_temperature")
+    assert state
+    assert state.state == "22.0"
+    assert (
+        state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Comfort Temperature"
+    )
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert ATTR_STATE_CLASS not in state.attributes
+
+    state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_eco_temperature")
+    assert state
+    assert state.state == "16.0"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Eco Temperature"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert ATTR_STATE_CLASS not in state.attributes
+
+    state = hass.states.get(
+        f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_next_scheduled_temperature"
+    )
+    assert state
+    assert state.state == "22.0"
+    assert (
+        state.attributes[ATTR_FRIENDLY_NAME]
+        == f"{CONF_FAKE_NAME} Next Scheduled Temperature"
+    )
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert ATTR_STATE_CLASS not in state.attributes
+
+    state = hass.states.get(
+        f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_next_scheduled_change_time"
+    )
+    assert state
+    assert state.state == "1970-01-01T00:00:00+00:00"
+    assert (
+        state.attributes[ATTR_FRIENDLY_NAME]
+        == f"{CONF_FAKE_NAME} Next Scheduled Change Time"
+    )
+    assert ATTR_STATE_CLASS not in state.attributes
+
+    state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_next_scheduled_preset")
+    assert state
+    assert state.state == PRESET_COMFORT
+    assert (
+        state.attributes[ATTR_FRIENDLY_NAME]
+        == f"{CONF_FAKE_NAME} Next Scheduled Preset"
+    )
+    assert ATTR_STATE_CLASS not in state.attributes
+
+    state = hass.states.get(
+        f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_current_scheduled_preset"
+    )
+    assert state
+    assert state.state == PRESET_ECO
+    assert (
+        state.attributes[ATTR_FRIENDLY_NAME]
+        == f"{CONF_FAKE_NAME} Current Scheduled Preset"
+    )
     assert ATTR_STATE_CLASS not in state.attributes
 
 
