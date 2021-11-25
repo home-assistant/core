@@ -121,7 +121,7 @@ async def test_original_addressable_light_effect_speed(hass: HomeAssistant) -> N
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    bulb.original_addressable = True
+    bulb.speed_adjust_off = False
     bulb.raw_state = bulb.raw_state._replace(
         model_num=0xA1
     )  # Original addressable model
