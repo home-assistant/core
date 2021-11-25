@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import ast
 import logging
-import random
 from typing import Any, Final, cast
 
 from flux_led.const import ATTR_ID, ATTR_IPADDR
@@ -31,7 +30,6 @@ from homeassistant.components.light import (
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
     COLOR_MODE_WHITE,
-    EFFECT_RANDOM,
     PLATFORM_SCHEMA,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
@@ -71,7 +69,6 @@ from .const import (
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
-    EFFECT_SUPPORT_MODES,
     FLUX_LED_DISCOVERY,
     MODE_AUTO,
     MODE_RGB,
@@ -85,9 +82,6 @@ from .entity import FluxOnOffEntity
 from .util import _flux_color_mode_to_hass, _hass_color_modes
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_FLUX_LED: Final = SUPPORT_TRANSITION
-
 
 MODE_ATTRS = {
     ATTR_EFFECT,
@@ -229,6 +223,8 @@ async def async_setup_entry(
 class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     """Representation of a Flux light."""
 
+    _attr_supported_features = SUPPORT_TRANSITION | SUPPORT_EFFECT
+
     def __init__(
         self,
         coordinator: FluxLedUpdateCoordinator,
@@ -240,17 +236,15 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator, unique_id, name)
-        self._attr_supported_features = SUPPORT_FLUX_LED
         self._attr_min_mireds = (
             color_temperature_kelvin_to_mired(self._device.max_temp) + 1
         )  # for rounding
         self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
         self._attr_supported_color_modes = _hass_color_modes(self._device)
-        if self._attr_supported_color_modes.intersection(EFFECT_SUPPORT_MODES):
-            self._attr_supported_features |= SUPPORT_EFFECT
-            self._attr_effect_list = [*self._device.effect_list, EFFECT_RANDOM]
-            if custom_effect_colors:
-                self._attr_effect_list.append(EFFECT_CUSTOM)
+        custom_effects: list[str] = []
+        if custom_effect_colors:
+            custom_effects.append(EFFECT_CUSTOM)
+        self._attr_effect_list = [*self._device.effect_list, *custom_effects]
         self._custom_effect_colors = custom_effect_colors
         self._custom_effect_speed_pct = custom_effect_speed_pct
         self._custom_effect_transition = custom_effect_transition
@@ -321,14 +315,6 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
 
     async def _async_set_effect(self, effect: str, brightness: int) -> None:
         """Set an effect."""
-        # Random color effect
-        if effect == EFFECT_RANDOM:
-            await self._device.async_set_levels(
-                random.randint(0, 255),
-                random.randint(0, 255),
-                random.randint(0, 255),
-            )
-            return
         # Custom effect
         if effect == EFFECT_CUSTOM:
             if self._custom_effect_colors:
@@ -364,8 +350,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             await self._async_set_effect(effect, brightness)
             return
         # Handle switch to CCT Color Mode
-        if ATTR_COLOR_TEMP in kwargs:
-            color_temp_mired = kwargs[ATTR_COLOR_TEMP]
+        if color_temp_mired := kwargs.get(ATTR_COLOR_TEMP):
             color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
             if self.color_mode != COLOR_MODE_RGBWW:
                 await self._device.async_set_white_temp(color_temp_kelvin, brightness)
@@ -381,29 +366,23 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             await self._device.async_set_levels(r=0, b=0, g=0, w=warm, w2=cold)
             return
         # Handle switch to RGB Color Mode
-        if ATTR_RGB_COLOR in kwargs:
-            await self._device.async_set_levels(
-                *kwargs[ATTR_RGB_COLOR], brightness=brightness
-            )
+        if rgb := kwargs.get(ATTR_RGB_COLOR):
+            await self._device.async_set_levels(*rgb, brightness=brightness)
             return
         # Handle switch to RGBW Color Mode
-        if ATTR_RGBW_COLOR in kwargs:
+        if rgbw := kwargs.get(ATTR_RGBW_COLOR):
             if ATTR_BRIGHTNESS in kwargs:
-                rgbw = rgbw_brightness(kwargs[ATTR_RGBW_COLOR], brightness)
-            else:
-                rgbw = kwargs[ATTR_RGBW_COLOR]
+                rgbw = rgbw_brightness(rgbw, brightness)
             await self._device.async_set_levels(*rgbw)
             return
         # Handle switch to RGBWW Color Mode
-        if ATTR_RGBWW_COLOR in kwargs:
+        if rgbcw := kwargs.get(ATTR_RGBWW_COLOR):
             if ATTR_BRIGHTNESS in kwargs:
                 rgbcw = rgbcw_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
-            else:
-                rgbcw = kwargs[ATTR_RGBWW_COLOR]
             await self._device.async_set_levels(*rgbcw_to_rgbwc(rgbcw))
             return
-        if ATTR_WHITE in kwargs:
-            await self._device.async_set_levels(w=kwargs[ATTR_WHITE])
+        if (white := kwargs.get(ATTR_WHITE)) is not None:
+            await self._device.async_set_levels(w=white)
             return
 
     async def _async_adjust_brightness(self, brightness: int) -> None:

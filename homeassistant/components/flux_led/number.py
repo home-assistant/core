@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FluxLedUpdateCoordinator
-from .const import DOMAIN, EFFECT_SUPPORT_MODES
+from .const import DOMAIN, EFFECT_SPEED_SUPPORT_MODES
 from .entity import FluxEntity
 from .util import _hass_color_modes
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     color_modes = _hass_color_modes(coordinator.device)
-    if not color_modes.intersection(EFFECT_SUPPORT_MODES):
+    if not color_modes.intersection(EFFECT_SPEED_SUPPORT_MODES):
         return
 
     async_add_entities(
