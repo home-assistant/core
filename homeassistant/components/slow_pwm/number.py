@@ -256,8 +256,8 @@ class SlowPWMEntity(NumberEntity, RestoreEntity):
     async def _async_apply(self):
         """Set outputs accordingly to output states by service calls to hass."""
         # Check where in the cycle we are: before or after the high time?
-        for output, on in self._outputs.items():
-            action = SERVICE_TURN_ON if on else SERVICE_TURN_OFF
+        for output, switch_on in self._outputs.items():
+            action = SERVICE_TURN_ON if switch_on else SERVICE_TURN_OFF
             service_data = {ATTR_ENTITY_ID: output}
             await self._hass.services.async_call(
                 "homeassistant", action, service_data, False
