@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable
+from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
@@ -20,9 +21,11 @@ from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback as core_callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
 
@@ -83,6 +86,65 @@ SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class _HaServiceDescription:
+    """Keys added by HA."""
+
+    x_homeassistant_matching_domains: set[str] = field(default_factory=set)
+
+
+@dataclass
+class _SsdpServiceDescription:
+    """SSDP info with optional keys."""
+
+    ssdp_usn: str
+    ssdp_st: str
+    ssdp_location: str
+    ssdp_nt: str | None = None
+    ssdp_udn: str | None = None
+    ssdp_ext: str | None = None
+    ssdp_server: str | None = None
+
+
+@dataclass
+class _UpnpServiceDescription:
+    """UPnP info."""
+
+    upnp: dict[str, Any]
+
+
+@dataclass
+class SsdpServiceInfo(
+    _HaServiceDescription,
+    _SsdpServiceDescription,
+    _UpnpServiceDescription,
+    BaseServiceInfo,
+):
+    """Prepared info from ssdp/upnp entries."""
+
+    # Used to prevent log flooding. To be removed in 2022.6
+    _warning_logged: bool = False
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={"ssdp"},
+                error_if_core=False,
+                level=logging.DEBUG,
+            )
+            self._warning_logged = True
+        # Use a property if it is available, fallback to upnp data
+        if hasattr(self, name):
+            return getattr(self, name)
+        return self.upnp.get(name)
 
 
 @bind_hass
