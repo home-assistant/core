@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from aiohttp.client_exceptions import ClientConnectorError, ClientError
+from aiohttp.client_exceptions import ClientError
 from nettigo_air_monitor import ApiError, AuthFailed
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -69,7 +69,6 @@ class NAMButton(CoordinatorEntity, ButtonEntity):
         except (
             ApiError,
             ClientError,
-            ClientConnectorError,
             asyncio.TimeoutError,
         ) as err:
             _LOGGER.error("Failed to restart the device: %s", err)
