@@ -49,9 +49,7 @@ class BalboaEntity(Entity):
     @property
     def assumed_state(self) -> bool:
         """Return whether the state is based on actual reading from device."""
-        if (self._client.lastupd + 5 * 60) < time.time():
-            return True
-        return False
+        return (self._client.lastupd + 5 * 60) < time.time()
 
     @property
     def available(self) -> bool:

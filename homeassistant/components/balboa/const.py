@@ -32,4 +32,4 @@ MISTER = "Mister"
 PUMP = "Pump"
 TEMP_RANGE = "Temp Range"
 
-SIGNAL_UPDATE = "balboa_update {}"
+SIGNAL_UPDATE = "balboa_update_{}"

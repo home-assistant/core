@@ -4,8 +4,7 @@
       "user": {
         "title": "Connect to the Balboa Wi-Fi device",
         "data": {
-          "host": "Host",
-          "name": "Name"
+          "host": "Host"
         }
       }
     },
