@@ -1,4 +1,10 @@
 {
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "{entity_name} \u306eHVAC\u30e2\u30fc\u30c9\u3092\u5909\u66f4",
+            "set_preset_mode": "{entity_name} \u306e\u30d7\u30ea\u30bb\u30c3\u30c8\u3092\u5909\u66f4"
+        }
+    },
     "state": {
         "_": {
             "auto": "\u30aa\u30fc\u30c8",

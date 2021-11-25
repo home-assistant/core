@@ -10,5 +10,12 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Vera controller\u306e\u30aa\u30d7\u30b7\u30e7\u30f3"
+            }
+        }
     }
 }

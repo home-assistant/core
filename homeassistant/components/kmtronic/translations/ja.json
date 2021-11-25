@@ -17,5 +17,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "reverse": "\u30b9\u30a4\u30c3\u30c1\u306e\u8ad6\u7406\u3092\u9006\u306b\u3059\u308b(NC\u3092\u4f7f\u7528)"
+                }
+            }
+        }
     }
 }
