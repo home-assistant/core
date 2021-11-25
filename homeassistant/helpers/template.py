@@ -1525,7 +1525,7 @@ def fail_when_undefined(value):
     return value
 
 
-def global_from_builtin_filter(filter: Any, name: str) -> Any:
+def global_from_builtin_filter(builtin_filter: Any, name: str) -> Any:
     """
     Convert a built-in Jinja filter to a global function.
 
@@ -1533,18 +1533,18 @@ def global_from_builtin_filter(filter: Any, name: str) -> Any:
     """
 
     @pass_environment
-    @wraps(filter)
+    @wraps(builtin_filter)
     def wrapper(environment: jinja2.Environment, *args: Any, **kwargs: Any) -> Any:
         if len(args) == 0:
             raise TypeError(f"{name} expected at least 1 argument, got 0")
 
         if len(args) == 1:
             if isinstance(args[0], Iterable):
-                return filter(environment, args[0], **kwargs)
+                return builtin_filter(environment, args[0], **kwargs)
 
             raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
 
-        return filter(environment, args, **kwargs)
+        return builtin_filter(environment, args, **kwargs)
 
     return pass_environment(wrapper)
 
