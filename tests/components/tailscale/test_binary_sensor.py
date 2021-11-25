@@ -1,6 +1,6 @@
 """Tests for the sensors provided by the Tailscale integration."""
 from homeassistant.components.binary_sensor import DEVICE_CLASS_UPDATE, STATE_ON
-from homeassistant.components.tailscale.const import DOMAIN, ENTRY_TYPE_SERVICE
+from homeassistant.components.tailscale.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -33,7 +33,7 @@ async def test_tailscale_binary_sensors(
     assert device_entry.manufacturer == "Tailscale Inc."
     assert device_entry.model == "iOS"
     assert device_entry.name == "Frencks-iPhone"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type == dr.DeviceEntryType.SERVICE
     assert device_entry.sw_version == "1.12.3-td91ea7286-ge1bbbd90c"
     assert (
         device_entry.configuration_url
