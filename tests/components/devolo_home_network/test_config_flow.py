@@ -102,11 +102,15 @@ async def test_zeroconf(hass: HomeAssistant):
         == DISCOVERY_INFO["hostname"].split(".", maxsplit=1)[0]
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.devolo_home_network.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
 
     assert result2["title"] == "test"
     assert result2["data"] == {
@@ -131,13 +135,17 @@ async def test_abort_if_configued(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_IP_ADDRESS: IP,
-        },
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.devolo_home_network.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_IP_ADDRESS: IP,
+            },
+        )
+        await hass.async_block_till_done()
 
     # Abort on concurrent user flow
     result = await hass.config_entries.flow.async_init(
