@@ -47,7 +47,7 @@ ALARM: dict[str, tuple[TuyaAlarmControlPanelEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/categorymal?id=Kaiuz33clqxaf
     "mal": (
         TuyaAlarmControlPanelEntityDescription(
-            key=DPCode.ALARM_MODE,
+            key=DPCode.MASTER_MODE,
             name="Alarm",
         ),
     )
@@ -108,7 +108,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        status = self.device.status.get(DPCode.ALARM_MODE)
+        status = self.device.status.get(DPCode.MASTER_MODE)
 
         if status == MODE_ALARM_DISARMED:
             state = STATE_ALARM_DISARMED
@@ -124,16 +124,16 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send Disarm command."""
-        self._send_command([{"code": DPCode.ALARM_MODE, "value": MODE_ALARM_DISARMED}])
+        self._send_command([{"code": DPCode.MASTER_MODE, "value": MODE_ALARM_DISARMED}])
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send Home command."""
-        self._send_command([{"code": DPCode.ALARM_MODE, "value": MODE_ALARM_HOME}])
+        self._send_command([{"code": DPCode.MASTER_MODE, "value": MODE_ALARM_HOME}])
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send Arm command."""
-        self._send_command([{"code": DPCode.ALARM_MODE, "value": MODE_ALARM_ARM}])
+        self._send_command([{"code": DPCode.MASTER_MODE, "value": MODE_ALARM_ARM}])
 
     def alarm_trigger(self, code: str | None = None) -> None:
         """Send SOS command."""
-        self._send_command([{"code": DPCode.ALARM_MODE, "value": MODE_ALARM_SOS}])
+        self._send_command([{"code": DPCode.MASTER_MODE, "value": MODE_ALARM_SOS}])

@@ -111,7 +111,6 @@ class DPCode(str, Enum):
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
-    ALARM_MODE = "master_mode"
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
@@ -196,6 +195,7 @@ class DPCode(str, Enum):
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
+    MASTER_MODE = "master_mode"  # alarm mode
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
     MOTION_RECORD = "motion_record"
