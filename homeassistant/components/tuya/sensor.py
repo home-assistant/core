@@ -496,6 +496,8 @@ SENSORS: dict[str, tuple[SensorEntityDescription, ...]] = {
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": BATTERY_SENSORS,
+    # Fingerbot
+    "szjqr": BATTERY_SENSORS,
 }
 
 # Socket (duplicate of `kg`)

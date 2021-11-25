@@ -85,6 +85,7 @@ DEVICE_CLASS_TUYA_MOTION_SENSITIVITY = "tuya__motion_sensitivity"
 DEVICE_CLASS_TUYA_RECORD_MODE = "tuya__record_mode"
 DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
 DEVICE_CLASS_TUYA_STATUS = "tuya__status"
+DEVICE_CLASS_TUYA_FINGERBOT_MODE = "tuya__fingerbot_mode"
 
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
@@ -138,6 +139,8 @@ class DPCode(str, Enum):
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
+    ARM_DOWN_PERCENT = "arm_down_percent"
+    ARM_UP_PERCENT = "arm_up_percent"
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
@@ -168,6 +171,7 @@ class DPCode(str, Enum):
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
+    CLICK_SUSTAIN_TIME = "click_sustain_time"
     CO_STATE = "co_state"
     CO_STATUS = "co_status"
     CO_VALUE = "co_value"

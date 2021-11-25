@@ -44,6 +44,10 @@
             "on": "On",
             "power_off": "Off",
             "power_on": "On"
+        },
+       "tuya__fingerbot_mode": {
+            "click": "Push",
+            "switch": "Switch"
         }
     }
 }
