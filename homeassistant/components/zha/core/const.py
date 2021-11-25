@@ -220,6 +220,7 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 
 PRESET_SCHEDULE = "schedule"
 PRESET_COMPLEX = "complex"
+PRESET_TEMP_MANUAL = "temporary manual"
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"
