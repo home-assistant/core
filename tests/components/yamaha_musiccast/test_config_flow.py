@@ -308,11 +308,15 @@ async def test_ssdp_discovery_failed(hass, mock_ssdp_no_yamaha, mock_get_source_
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://127.0.0.1/desc.xml",
-            ssdp.ATTR_UPNP_MODEL_NAME: "MC20",
-            ssdp.ATTR_UPNP_SERIAL: "123456789",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://127.0.0.1/desc.xml",
+            upnp={
+                ssdp.ATTR_UPNP_MODEL_NAME: "MC20",
+                ssdp.ATTR_UPNP_SERIAL: "123456789",
+            },
+        ),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -326,11 +330,15 @@ async def test_ssdp_discovery_successful_add_device(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://127.0.0.1/desc.xml",
-            ssdp.ATTR_UPNP_MODEL_NAME: "MC20",
-            ssdp.ATTR_UPNP_SERIAL: "1234567890",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://127.0.0.1/desc.xml",
+            upnp={
+                ssdp.ATTR_UPNP_MODEL_NAME: "MC20",
+                ssdp.ATTR_UPNP_SERIAL: "1234567890",
+            },
+        ),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -364,11 +372,15 @@ async def test_ssdp_discovery_existing_device_update(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://127.0.0.1/desc.xml",
-            ssdp.ATTR_UPNP_MODEL_NAME: "MC20",
-            ssdp.ATTR_UPNP_SERIAL: "1234567890",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://127.0.0.1/desc.xml",
+            upnp={
+                ssdp.ATTR_UPNP_MODEL_NAME: "MC20",
+                ssdp.ATTR_UPNP_SERIAL: "1234567890",
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
