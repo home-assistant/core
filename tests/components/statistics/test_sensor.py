@@ -328,7 +328,7 @@ class TestStatisticsSensor(unittest.TestCase):
             state = self.hass.states.get("sensor.test")
             assert state.state == STATE_UNKNOWN
             assert state.attributes.get("buffer_usage_ratio") == round(0 / 20, 2)
-            assert state.attributes.get("age_coverage_ratio") == STATE_UNKNOWN
+            assert state.attributes.get("age_coverage_ratio") is None
 
     def test_precision_0(self):
         """Test correct result with precision=0 as integer."""

@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, zeroconf
+from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.yeelight.config_flow import MODEL_UNKNOWN, CannotConnect
 from homeassistant.components.yeelight.const import (
     CONF_DETECTED_MODEL,
@@ -51,6 +51,12 @@ DEFAULT_CONFIG = {
     CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
     CONF_NIGHTLIGHT_SWITCH: DEFAULT_NIGHTLIGHT_SWITCH,
 }
+
+SSDP_INFO = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    upnp=CAPABILITIES,
+)
 
 
 async def test_discovery(hass: HomeAssistant):
@@ -120,7 +126,9 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     alternate_bulb.capabilities["id"] = "0x000000000099999"
     alternate_bulb.capabilities["location"] = "yeelight://4.4.4.4"
 
-    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=alternate_bulb):
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=alternate_bulb
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -132,7 +140,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(), _patch_discovery_interval():
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval():
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -627,7 +635,7 @@ async def test_discovered_ssdp(hass):
         f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=CAPABILITIES
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=SSDP_INFO
         )
         await hass.async_block_till_done()
 
@@ -656,7 +664,7 @@ async def test_discovered_ssdp(hass):
         f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=CAPABILITIES
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=SSDP_INFO
         )
         await hass.async_block_till_done()
 
@@ -719,7 +727,7 @@ async def test_discovered_zeroconf(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data=CAPABILITIES,
+            data=SSDP_INFO,
         )
         await hass.async_block_till_done()
 

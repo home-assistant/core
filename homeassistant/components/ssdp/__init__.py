@@ -101,7 +101,7 @@ class _SsdpServiceDescription:
 
     ssdp_usn: str
     ssdp_st: str
-    ssdp_location: str
+    ssdp_location: str | None = None
     ssdp_nt: str | None = None
     ssdp_udn: str | None = None
     ssdp_ext: str | None = None

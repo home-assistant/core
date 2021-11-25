@@ -146,16 +146,20 @@ def dispatcher_fixture() -> Dispatcher:
 @pytest.fixture(name="discovery_data")
 def discovery_data_fixture() -> dict:
     """Return mock discovery data for testing."""
-    return {
-        ssdp.ATTR_SSDP_LOCATION: "http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml",
-        ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: "Office",
-        ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
-        ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
-        ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
-        ssdp.ATTR_UPNP_SERIAL: None,
-        ssdp.ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
-    }
+    return ssdp.SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml",
+        upnp={
+            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Office",
+            ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
+            ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
+            ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
+            ssdp.ATTR_UPNP_SERIAL: None,
+            ssdp.ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
+        },
+    )
 
 
 @pytest.fixture(name="quick_selects")
