@@ -1,13 +1,14 @@
 """Test the Nina init file."""
-
+import json
 from typing import Any, Dict
+from unittest.mock import patch
 
 from homeassistant.components.nina.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 ENTRY_DATA: Dict[str, Any] = {
     "slots": 5,
@@ -18,14 +19,24 @@ ENTRY_DATA: Dict[str, Any] = {
 
 async def init_integration(hass) -> MockConfigEntry:
     """Set up the NINA integration in Home Assistant."""
-    entry: MockConfigEntry = MockConfigEntry(
-        domain=DOMAIN, title="NINA", data=ENTRY_DATA
-    )
-    entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    return entry
+    dummy_response: Dict[str, Any] = json.loads(
+        load_fixture("nina/sample_warnings.json")
+    )
+
+    with patch(
+        "pynina.baseApi.BaseAPI._makeRequest",
+        return_value=dummy_response,
+    ):
+
+        entry: MockConfigEntry = MockConfigEntry(
+            domain=DOMAIN, title="NINA", data=ENTRY_DATA
+        )
+        entry.add_to_hass(hass)
+
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        return entry
 
 
 async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
