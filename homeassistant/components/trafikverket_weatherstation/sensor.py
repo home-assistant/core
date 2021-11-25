@@ -39,14 +39,9 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.util import Throttle
 
+from .const import ATTR_ACTIVE, ATTR_MEASURE_TIME, ATTRIBUTION, CONF_STATION, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = "trafikverket_weatherstation"
-
-ATTRIBUTION = "Data provided by Trafikverket"
-ATTR_MEASURE_TIME = "measure_time"
-ATTR_ACTIVE = "active"
-
-CONF_STATION = "station"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 

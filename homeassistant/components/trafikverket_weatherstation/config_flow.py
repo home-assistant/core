@@ -7,20 +7,12 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-SENSOR_TYPES: dict[str, str] = {
-    "air_temp": "Air temperature",
-    "road_temp": "Road temperature",
-    "precipitation": "Precipitation type",
-    "wind_direction": "Wind direction",
-    "wind_direction_text": "Wind direction text",
-    "wind_speed": "Wind speed",
-    "wind_speed_max": "Wind speed max",
-    "humidity": "Humidity",
-    "precipitation_amount": "Precipitation amount",
-    "precipitation_amountname": "Precipitation name",
+from .const import CONF_STATION, DOMAIN
+from .sensor import SENSOR_TYPES
+
+SENSOR_LIST: dict[str, str | None] = {
+    description.key: description.name for (description) in SENSOR_TYPES
 }
-DOMAIN = "trafikverket_weatherstation"
-CONF_STATION = "station"
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -28,14 +20,14 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_STATION): cv.string,
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): cv.multi_select(
-            SENSOR_TYPES
+            SENSOR_LIST
         ),
     }
 )
 
 
 class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Yale integration."""
+    """Handle a config flow for Trafikverket Weatherstation integration."""
 
     VERSION = 1
 

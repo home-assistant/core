@@ -6,13 +6,13 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-DOMAIN = "trafikverket_weatherstation"
-PLATFORMS = ["sensor"]
+from .const import DOMAIN, PLATFORMS
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Yale from a config entry."""
+    """Set up Trafikverket Weatherstation from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     title = entry.title
 
@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
+    """Unload Trafikverket Weatherstation config entry."""
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
