@@ -1,0 +1,15 @@
+{
+  "domain": "slow_pwm",
+  "name": "Slow PWM",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/slow_pwm",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@antonverburg"
+  ],
+  "iot_class": "local_polling"
+}
