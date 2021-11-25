@@ -42,7 +42,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["button", "sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
