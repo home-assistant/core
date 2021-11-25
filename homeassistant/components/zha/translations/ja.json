@@ -40,10 +40,13 @@
     },
     "config_panel": {
         "zha_alarm_options": {
+            "alarm_failed_tries": "\u30a2\u30e9\u30fc\u30e0\u3092\u30c8\u30ea\u30ac\u30fc\u3055\u305b\u308b\u305f\u3081\u306b\u9023\u7d9a\u3057\u3066\u5931\u6557\u3057\u305f\u30b3\u30fc\u30c9 \u30a8\u30f3\u30c8\u30ea\u306e\u6570",
             "alarm_master_code": "\u30a2\u30e9\u30fc\u30e0 \u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30d1\u30cd\u30eb\u306e\u30de\u30b9\u30bf\u30fc\u30b3\u30fc\u30c9",
             "title": "\u30a2\u30e9\u30fc\u30e0 \u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30d1\u30cd\u30eb\u306e\u30aa\u30d7\u30b7\u30e7\u30f3"
         },
         "zha_options": {
+            "default_light_transition": "\u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u30e9\u30a4\u30c8\u9077\u79fb\u6642\u9593(\u79d2)",
+            "enable_identify_on_join": "\u30c7\u30d0\u30a4\u30b9\u304c\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u306b\u53c2\u52a0\u3059\u308b\u969b\u306b\u3001\u8b58\u5225\u52b9\u679c\u3092\u6709\u52b9\u306b\u3059\u308b",
             "title": "\u30b0\u30ed\u30fc\u30d0\u30eb\u30aa\u30d7\u30b7\u30e7\u30f3"
         }
     },
@@ -60,7 +63,7 @@
             "dim_down": "\u8584\u6697\u304f\u3059\u308b",
             "dim_up": "\u8584\u660e\u308b\u304f\u3059\u308b",
             "left": "\u5de6",
-            "open": "\u958b\u304f",
+            "open": "\u30aa\u30fc\u30d7\u30f3",
             "right": "\u53f3",
             "turn_off": "\u30aa\u30d5\u306b\u3059\u308b",
             "turn_on": "\u30aa\u30f3\u306b\u3059\u308b"
@@ -68,7 +71,11 @@
         "trigger_type": {
             "device_offline": "\u30c7\u30d0\u30a4\u30b9\u304c\u30aa\u30d5\u30e9\u30a4\u30f3",
             "device_shaken": "\u30c7\u30d0\u30a4\u30b9\u304c\u63fa\u308c\u308b",
-            "device_tilted": "\u30c7\u30d0\u30a4\u30b9\u304c\u50be\u3044\u3066\u3044\u308b"
+            "device_tilted": "\u30c7\u30d0\u30a4\u30b9\u304c\u50be\u3044\u3066\u3044\u308b",
+            "remote_button_alt_long_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u3092\u62bc\u3057\u7d9a\u3051\u308b(\u4ee3\u66ff\u30e2\u30fc\u30c9)",
+            "remote_button_alt_short_press": "\"{subtype}\" \u62bc\u3057\u7d9a\u3051\u308b(\u4ee3\u66ff\u30e2\u30fc\u30c9)",
+            "remote_button_long_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u3092\u62bc\u3057\u7d9a\u3051\u308b",
+            "remote_button_short_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u304c\u62bc\u3055\u308c\u307e\u3057\u305f\u3002"
         }
     }
 }

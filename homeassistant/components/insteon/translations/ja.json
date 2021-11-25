@@ -1,5 +1,13 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "single_instance_allowed": "\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u5358\u4e00\u306e\u8a2d\u5b9a\u3057\u304b\u3067\u304d\u307e\u305b\u3093\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "select_single": "\u30aa\u30d7\u30b7\u30e7\u30f3\u30921\u3064\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+        },
         "step": {
             "hubv1": {
                 "data": {
@@ -14,16 +22,37 @@
                     "port": "\u30dd\u30fc\u30c8",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 }
+            },
+            "plm": {
+                "data": {
+                    "device": "USB\u30c7\u30d0\u30a4\u30b9\u306e\u30d1\u30b9"
+                },
+                "title": "Insteon PLM"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "\u30e2\u30c7\u30e0\u306e\u7a2e\u985e\u3002"
+                },
+                "title": "Insteon"
             }
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "select_single": "\u30aa\u30d7\u30b7\u30e7\u30f3\u30921\u3064\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+        },
         "step": {
+            "add_override": {
+                "title": "Insteon"
+            },
             "add_x10": {
                 "data": {
+                    "platform": "\u30d7\u30e9\u30c3\u30c8\u30db\u30fc\u30e0",
                     "unitcode": "\u30e6\u30cb\u30c3\u30c8\u30b3\u30fc\u30c9(1\u301c16)"
                 },
-                "description": "Insteon Hub\u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u5909\u66f4\u3059\u308b\u3002"
+                "description": "Insteon Hub\u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u5909\u66f4\u3059\u308b\u3002",
+                "title": "Insteon"
             },
             "change_hub_config": {
                 "data": {
@@ -32,6 +61,18 @@
                     "port": "\u30dd\u30fc\u30c8",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 },
+                "title": "Insteon"
+            },
+            "init": {
+                "data": {
+                    "add_x10": "X10 \u30c7\u30d0\u30a4\u30b9\u3092\u8ffd\u52a0\u3057\u307e\u3059\u3002"
+                },
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "title": "Insteon"
+            },
+            "remove_x10": {
                 "title": "Insteon"
             }
         }

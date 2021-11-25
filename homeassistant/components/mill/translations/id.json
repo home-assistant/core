@@ -24,7 +24,8 @@
                     "connection_type": "Pilih jenis koneksi",
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
-                }
+                },
+                "description": "Pilih jenis koneksi. Lokal membutuhkan pemanas generasi 3"
             }
         }
     }

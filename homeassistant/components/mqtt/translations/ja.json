@@ -29,18 +29,28 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "button_1": "1\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "button_2": "2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_3": "3\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_4": "4\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_5": "5\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_6": "6\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "turn_off": "\u30aa\u30d5\u306b\u3059\u308b",
             "turn_on": "\u30aa\u30f3\u306b\u3059\u308b"
+        },
+        "trigger_type": {
+            "button_long_press": "\"{subtype}\" \u304c\u3001\u7d99\u7d9a\u7684\u306b\u62bc\u3055\u308c\u305f",
+            "button_short_press": "\"{subtype}\"  \u304c\u3001\u62bc\u3055\u308c\u307e\u3057\u305f"
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+        },
         "step": {
             "broker": {
                 "data": {
+                    "broker": "\u30d6\u30ed\u30fc\u30ab\u30fc",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "port": "\u30dd\u30fc\u30c8",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"

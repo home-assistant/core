@@ -1,4 +1,10 @@
 {
+    "device_automation": {
+        "trigger_type": {
+            "enters": "{entity_name} \u304c\u3001\u30be\u30fc\u30f3\u306b\u5165\u308b",
+            "leaves": "{entity_name} \u304c\u3001\u30be\u30fc\u30f3\u304b\u3089\u96e2\u308c\u308b"
+        }
+    },
     "state": {
         "_": {
             "home": "\u5728\u5b85",
