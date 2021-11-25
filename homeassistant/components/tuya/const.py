@@ -136,7 +136,6 @@ class DPCode(str, Enum):
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
     ALARM_MODE = "master_mode"
-    ALARM_STATE = "master_state"
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
