@@ -33,7 +33,7 @@ from .const import (
 )
 from .device import XiaomiCoordinatedMiioEntity
 
-_LOGGER = logging.getLogger(__name__)  # some comment
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_NO_WATER = "no_water"
 ATTR_POWERSUPPLY_ATTACHED = "powersupply_attached"
