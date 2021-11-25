@@ -52,7 +52,7 @@ SENSOR_TYPES: dict[str, DevoloBinarySensorEntityDescription] = {
         value_func=lambda entity: all(
             device["attached_to_router"]
             for device in entity.coordinator.data["network"]["devices"]
-            if device["mac_address"] == entity._device.mac
+            if device["mac_address"] == entity.device.mac
         ),
     ),
     FIRMWARE_UPDATE_AVAILABLE: DevoloBinarySensorEntityDescription(
