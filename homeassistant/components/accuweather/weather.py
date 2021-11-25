@@ -73,6 +73,7 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
             identifiers={(DOMAIN, coordinator.location_key)},
             manufacturer=MANUFACTURER,
             name=NAME,
+            configuration_url="https://www.accuweather.com",
         )
 
     @property
