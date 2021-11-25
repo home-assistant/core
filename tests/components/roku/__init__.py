@@ -3,13 +3,9 @@ from http import HTTPStatus
 import re
 from socket import gaierror as SocketGIAError
 
-from homeassistant.components import zeroconf
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.roku.const import DOMAIN
-from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_SERIAL,
-)
+from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_SERIAL
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -24,11 +20,15 @@ SSDP_LOCATION = "http://192.168.1.160/"
 UPNP_FRIENDLY_NAME = "My Roku 3"
 UPNP_SERIAL = "1GU48T017973"
 
-MOCK_SSDP_DISCOVERY_INFO = {
-    ATTR_SSDP_LOCATION: SSDP_LOCATION,
-    ATTR_UPNP_FRIENDLY_NAME: UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_SERIAL: UPNP_SERIAL,
-}
+MOCK_SSDP_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location=SSDP_LOCATION,
+    upnp={
+        ATTR_UPNP_FRIENDLY_NAME: UPNP_FRIENDLY_NAME,
+        ATTR_UPNP_SERIAL: UPNP_SERIAL,
+    },
+)
 
 HOMEKIT_HOST = "192.168.1.161"
 

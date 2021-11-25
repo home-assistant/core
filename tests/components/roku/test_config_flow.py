@@ -48,7 +48,7 @@ async def test_duplicate_error(
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
@@ -216,7 +216,7 @@ async def test_ssdp_cannot_connect(
     """Test we abort SSDP flow on connection error."""
     mock_connection(aioclient_mock, error=True)
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_SSDP},
@@ -231,7 +231,7 @@ async def test_ssdp_unknown_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort SSDP flow on unknown error."""
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     with patch(
         "homeassistant.components.roku.config_flow.Roku.update",
         side_effect=Exception,
@@ -252,7 +252,7 @@ async def test_ssdp_discovery(
     """Test the SSDP discovery flow."""
     mock_connection(aioclient_mock)
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
