@@ -274,7 +274,7 @@ async def async_validate_action_config(
         )
 
     elif action_type == cv.SCRIPT_ACTION_REPEAT:
-        config[CONF_SEQUENCE] = await async_validate_actions_config(
+        config[CONF_REPEAT][CONF_SEQUENCE] = await async_validate_actions_config(
             hass, config[CONF_REPEAT][CONF_SEQUENCE]
         )
 
