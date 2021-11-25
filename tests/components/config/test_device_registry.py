@@ -97,7 +97,7 @@ async def test_update_device(hass, client, registry):
             "device_id": device.id,
             "area_id": "12345A",
             "name_by_user": "Test Friendly Name",
-            "disabled_by": helpers_dr.DISABLED_USER,
+            "disabled_by": helpers_dr.DeviceEntryDisabler.USER,
             "type": "config/device_registry/update",
         }
     )
@@ -107,5 +107,5 @@ async def test_update_device(hass, client, registry):
     assert msg["result"]["id"] == device.id
     assert msg["result"]["area_id"] == "12345A"
     assert msg["result"]["name_by_user"] == "Test Friendly Name"
-    assert msg["result"]["disabled_by"] == helpers_dr.DISABLED_USER
+    assert msg["result"]["disabled_by"] == helpers_dr.DeviceEntryDisabler.USER
     assert len(registry.devices) == 1

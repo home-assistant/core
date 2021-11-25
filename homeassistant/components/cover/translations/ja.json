@@ -1,7 +1,13 @@
 {
+    "device_automation": {
+        "action_type": {
+            "stop": "\u505c\u6b62 {entity_name}"
+        }
+    },
     "state": {
         "_": {
             "closed": "\u9589\u9396",
+            "open": "\u958b\u653e",
             "opening": "\u6249"
         }
     },

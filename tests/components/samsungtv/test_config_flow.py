@@ -300,13 +300,14 @@ async def test_user_not_successful_2(hass: HomeAssistant, remotews: Mock):
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-async def test_ssdp(hass: HomeAssistant, remote: Mock):
+async def test_ssdp(hass: HomeAssistant, remote: Mock, no_mac_address: Mock):
     """Test starting a flow from discovery."""
 
+    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
         return_value=MOCK_DEVICE_INFO,
-    ), patch("getmac.get_mac_address", return_value="aa:bb:cc:dd:ee:ff"):
+    ):
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -327,13 +328,14 @@ async def test_ssdp(hass: HomeAssistant, remote: Mock):
         assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-async def test_ssdp_noprefix(hass: HomeAssistant, remote: Mock):
+async def test_ssdp_noprefix(hass: HomeAssistant, remote: Mock, no_mac_address: Mock):
     """Test starting a flow from discovery without prefixes."""
 
+    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
         return_value=MOCK_DEVICE_INFO_2,
-    ), patch("getmac.get_mac_address", return_value="aa:bb:cc:dd:ee:ff"):
+    ):
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -529,13 +531,16 @@ async def test_ssdp_not_successful_2(
         assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
-async def test_ssdp_already_in_progress(hass: HomeAssistant, remote: Mock):
+async def test_ssdp_already_in_progress(
+    hass: HomeAssistant, remote: Mock, no_mac_address: Mock
+):
     """Test starting a flow from discovery twice."""
 
+    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
         return_value=MOCK_DEVICE_INFO,
-    ), patch("getmac.get_mac_address", return_value="aa:bb:cc:dd:ee:ff"):
+    ):
 
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
@@ -552,13 +557,16 @@ async def test_ssdp_already_in_progress(hass: HomeAssistant, remote: Mock):
         assert result["reason"] == RESULT_ALREADY_IN_PROGRESS
 
 
-async def test_ssdp_already_configured(hass: HomeAssistant, remote: Mock):
+async def test_ssdp_already_configured(
+    hass: HomeAssistant, remote: Mock, no_mac_address: Mock
+):
     """Test starting a flow from discovery when already configured."""
 
+    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
         return_value=MOCK_DEVICE_INFO,
-    ), patch("getmac.get_mac_address", return_value="aa:bb:cc:dd:ee:ff"):
+    ):
 
         # entry was added
         result = await hass.config_entries.flow.async_init(
@@ -581,12 +589,14 @@ async def test_ssdp_already_configured(hass: HomeAssistant, remote: Mock):
         assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-async def test_import_legacy(hass: HomeAssistant, remote: Mock):
+async def test_import_legacy(hass: HomeAssistant, remote: Mock, no_mac_address: Mock):
     """Test importing from yaml with hostname."""
+
+    no_mac_address.return_value = "aa:bb:cc:dd:ee:ff"
     with patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
         return_value="fake_host",
-    ), patch("getmac.get_mac_address", return_value="aa:bb:cc:dd:ee:ff"):
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},

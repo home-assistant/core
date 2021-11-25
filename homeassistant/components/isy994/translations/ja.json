@@ -1,7 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
         "error": {
-            "invalid_host": "\u30db\u30b9\u30c8\u30a8\u30f3\u30c8\u30ea\u306f\u304d\u3061\u3093\u3068\u3057\u305fURL\u5f62\u5f0f\u3067\u306f\u3042\u308a\u307e\u305b\u3093\u3067\u3057\u305f \u4f8b: http://192.168.10.100:80"
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "invalid_host": "\u30db\u30b9\u30c8\u30a8\u30f3\u30c8\u30ea\u306f\u304d\u3061\u3093\u3068\u3057\u305fURL\u5f62\u5f0f\u3067\u306f\u3042\u308a\u307e\u305b\u3093\u3067\u3057\u305f \u4f8b: http://192.168.10.100:80",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -11,13 +17,19 @@
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 },
-                "description": "\u30db\u30b9\u30c8\u30a8\u30f3\u30c8\u30ea\u306f\u304d\u3061\u3093\u3068\u3057\u305fURL\u5f62\u5f0f\u3067\u3042\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059 \u4f8b: http://192.168.10.100:80"
+                "description": "\u30db\u30b9\u30c8\u30a8\u30f3\u30c8\u30ea\u306f\u304d\u3061\u3093\u3068\u3057\u305fURL\u5f62\u5f0f\u3067\u3042\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059 \u4f8b: http://192.168.10.100:80",
+                "title": "\u3042\u306a\u305f\u306eISY994\u306b\u63a5\u7d9a"
             }
         }
     },
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "ignore_string": "\u7121\u8996\u3059\u308b\u6587\u5b57\u5217",
+                    "restore_light_state": "\u30e9\u30a4\u30c8\u306e\u660e\u308b\u3055\u3092\u5fa9\u5143\u3059\u308b",
+                    "sensor_string": "\u30ce\u30fc\u30c9 \u30bb\u30f3\u30b5\u30fc\u6587\u5b57\u5217"
+                },
                 "title": "ISY994\u30aa\u30d7\u30b7\u30e7\u30f3"
             }
         }
@@ -26,6 +38,7 @@
         "info": {
             "device_connected": "ISY\u63a5\u7d9a\u6e08",
             "host_reachable": "\u30db\u30b9\u30c8\u5230\u9054\u53ef\u80fd",
+            "last_heartbeat": "\u6700\u5f8c\u306e\u30cf\u30fc\u30c8\u30d3\u30fc\u30c8\u30bf\u30a4\u30e0",
             "websocket_status": "\u30a4\u30d9\u30f3\u30c8\u30bd\u30b1\u30c3\u30c8 \u30b9\u30c6\u30fc\u30bf\u30b9"
         }
     }
