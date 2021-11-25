@@ -326,11 +326,15 @@ async def test_form_ssdp_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
-            ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
+                ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
@@ -341,11 +345,15 @@ async def test_form_ssdp(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
-            ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
+                ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -385,11 +393,15 @@ async def test_form_ssdp_existing_entry(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_SSDP},
-            data={
-                ssdp.ATTR_SSDP_LOCATION: f"http://3.3.3.3{ISY_URL_POSTFIX}",
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
-                ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location=f"http://3.3.3.3{ISY_URL_POSTFIX}",
+                upnp={
+                    ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
+                    ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
+                },
+            ),
         )
         await hass.async_block_till_done()
 
@@ -412,11 +424,15 @@ async def test_form_ssdp_existing_entry_with_no_port(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_SSDP},
-            data={
-                ssdp.ATTR_SSDP_LOCATION: f"http://3.3.3.3/{ISY_URL_POSTFIX}",
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
-                ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location=f"http://3.3.3.3/{ISY_URL_POSTFIX}",
+                upnp={
+                    ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
+                    ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
+                },
+            ),
         )
         await hass.async_block_till_done()
 
@@ -439,11 +455,15 @@ async def test_form_ssdp_existing_entry_with_alternate_port(hass: HomeAssistant)
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_SSDP},
-            data={
-                ssdp.ATTR_SSDP_LOCATION: f"http://3.3.3.3:1443/{ISY_URL_POSTFIX}",
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
-                ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location=f"http://3.3.3.3:1443/{ISY_URL_POSTFIX}",
+                upnp={
+                    ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
+                    ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
+                },
+            ),
         )
         await hass.async_block_till_done()
 
@@ -466,11 +486,15 @@ async def test_form_ssdp_existing_entry_no_port_https(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_SSDP},
-            data={
-                ssdp.ATTR_SSDP_LOCATION: f"https://3.3.3.3/{ISY_URL_POSTFIX}",
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
-                ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location=f"https://3.3.3.3/{ISY_URL_POSTFIX}",
+                upnp={
+                    ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
+                    ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
+                },
+            ),
         )
         await hass.async_block_till_done()
 
