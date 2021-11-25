@@ -4,8 +4,12 @@ coverage:
   status:
     project:
       default:
-        target: 90
+        target: 65
         threshold: 0.09
+    patch:
+      default:
+        target: auto
+        threshold: 10
 comment: false
 
 # To make partial tests possible,
