@@ -834,9 +834,6 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "rgb"
-    import pprint
-
-    pprint.pprint([attributes[ATTR_EFFECT_LIST], [*bulb.effect_list, "custom"]])
     assert attributes[ATTR_EFFECT_LIST] == [*bulb.effect_list, "custom"]
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["rgb"]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
