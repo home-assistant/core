@@ -444,7 +444,6 @@ class FanSpeedDataTemplate:
 
         Empty lists are not permissible.
         """
-        # pylint: disable=no-self-use
         raise NotImplementedError
 
 

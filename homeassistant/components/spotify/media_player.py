@@ -234,7 +234,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self,
         session: OAuth2Session,
         spotify: Spotify,
-        me: dict,
+        me: dict,  # pylint: disable=invalid-name
         user_id: str,
         name: str,
     ) -> None:
