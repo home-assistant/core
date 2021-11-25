@@ -73,7 +73,7 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
             raise HomeAssistantError(
                 "Speed can only be adjusted when an effect is active"
             )
-        if self._device.original_addressable and not self._device.is_on:
+        if not self._device.speed_adjust_off and not self._device.is_on:
             raise HomeAssistantError("Speed can only be adjusted when the light is on")
         await self._device.async_set_effect(
             current_effect, new_speed, _effect_brightness(self._device.brightness)
