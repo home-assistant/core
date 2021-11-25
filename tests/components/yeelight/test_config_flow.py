@@ -126,7 +126,9 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     alternate_bulb.capabilities["id"] = "0x000000000099999"
     alternate_bulb.capabilities["location"] = "yeelight://4.4.4.4"
 
-    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=alternate_bulb):
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=alternate_bulb
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -138,7 +140,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(), _patch_discovery_interval():
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval():
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
         await hass.async_block_till_done()
