@@ -100,9 +100,8 @@ def setup(hass, config):
     async def async_handle_update(service):
         """Handle service to update leaf data from Nissan servers."""
         _LOGGER.warning(
-            "The 'nissan_leaf.start_charge' service is deprecated and has been"
-            "replaced by a dedicated button entity: Please use that to start"
-            "the charge instead"
+            "The 'nissan_leaf.update' service is deprecated and has been replaced by a"
+            "dedicated button entity: Please use that to refresh the data instead"
         )
         vin = service.data[ATTR_VIN]
 
@@ -115,8 +114,9 @@ def setup(hass, config):
     async def async_handle_start_charge(service):
         """Handle service to start charging."""
         _LOGGER.warning(
-            "The 'nissan_leaf.update' service is deprecated and has been replaced by a"
-            "dedicated button entity: Please use that to refresh the data instead"
+            "The 'nissan_leaf.start_charge' service is deprecated and has been"
+            "replaced by a dedicated button entity: Please use that to start"
+            "the charge instead"
         )
         vin = service.data[ATTR_VIN]
 
