@@ -144,7 +144,7 @@ class SsdpServiceInfo(
         # Use a property if it is available, fallback to upnp data
         if hasattr(self, name):
             return getattr(self, name)
-        return self.upnp.get(name)
+        return self.upnp[name]
 
     def get(self, name: str, default: Any = None) -> Any:
         """
