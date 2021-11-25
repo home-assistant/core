@@ -2317,7 +2317,7 @@ tmb==0.0.4
 todoist-python==8.0.0
 
 # homeassistant.components.tolo
-tololib==0.1.0b2
+tololib==0.1.0b3
 
 # homeassistant.components.toon
 toonapi==0.2.1

@@ -33,12 +33,10 @@ async def async_setup_entry(
 class ToloWaterLevelSensor(ToloSaunaCoordinatorEntity, SensorEntity):
     """Sensor for tank water level."""
 
-    WATER_LEVELS = {0: 0, 1: 33, 2: 66, 3: 100}
-
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
     _attr_name = "Water Level"
     _attr_icon = "mdi:waves-arrow-up"
-    _attr_state_class = "measurement"
+    _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
@@ -52,7 +50,7 @@ class ToloWaterLevelSensor(ToloSaunaCoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> int:
         """Return current tank water level."""
-        return self.WATER_LEVELS[self.coordinator.data.status.water_level]
+        return self.coordinator.data.status.water_level_percent
 
 
 class ToloTankTemperatureSensor(ToloSaunaCoordinatorEntity, SensorEntity):
