@@ -25,3 +25,8 @@ def _flux_color_mode_to_hass(flux_color_mode: str, flux_color_modes: set[str]) -
             return COLOR_MODE_WHITE
         return COLOR_MODE_BRIGHTNESS
     return FLUX_COLOR_MODE_TO_HASS.get(flux_color_mode, COLOR_MODE_ONOFF)
+
+
+def _effect_brightness(brightness: int) -> int:
+    """Convert hass brightness to effect brightness."""
+    return round(brightness / 255 * 100)
