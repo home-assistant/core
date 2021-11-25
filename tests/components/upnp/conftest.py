@@ -30,17 +30,19 @@ TEST_USN = f"{TEST_UDN}::{TEST_ST}"
 TEST_LOCATION = "http://192.168.1.1/desc.xml"
 TEST_HOSTNAME = urlparse(TEST_LOCATION).hostname
 TEST_FRIENDLY_NAME = "friendly name"
-TEST_DISCOVERY = {
-    ssdp.ATTR_SSDP_LOCATION: TEST_LOCATION,
-    ssdp.ATTR_SSDP_ST: TEST_ST,
-    ssdp.ATTR_SSDP_USN: TEST_USN,
-    ssdp.ATTR_UPNP_UDN: TEST_UDN,
-    "usn": TEST_USN,
-    "location": TEST_LOCATION,
-    "_host": TEST_HOSTNAME,
-    "_udn": TEST_UDN,
-    "friendlyName": TEST_FRIENDLY_NAME,
-}
+TEST_DISCOVERY = ssdp.SsdpServiceInfo(
+    ssdp_usn=TEST_USN,
+    ssdp_st=TEST_ST,
+    ssdp_location=TEST_LOCATION,
+    upnp={
+        ssdp.ATTR_UPNP_UDN: TEST_UDN,
+        "usn": TEST_USN,
+        "location": TEST_LOCATION,
+        "_host": TEST_HOSTNAME,
+        "_udn": TEST_UDN,
+        "friendlyName": TEST_FRIENDLY_NAME,
+    },
+)
 
 
 class MockDevice:
