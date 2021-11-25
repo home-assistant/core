@@ -468,7 +468,7 @@ jobs:
     needs: prepare-tests
     env:
       PYTHON_VERSION: 3.8
-    container: homeassistant/ci-azure:${{ env.PYTHON_VERSION }}
+    container: homeassistant/ci-azure:3.8
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2.4.0
@@ -571,7 +571,7 @@ jobs:
       - prepare-tests
     env:
       PYTHON_VERSION: 3.8
-    container: homeassistant/ci-azure:${{ env.PYTHON_VERSION }}
+    container: homeassistant/ci-azure:3.8
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2.4.0
@@ -610,7 +610,7 @@ jobs:
       - prepare-tests
     env:
       PYTHON_VERSION: 3.8
-    container: homeassistant/ci-azure:${{ env.PYTHON_VERSION }}
+    container: homeassistant/ci-azure:3.8
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2.4.0
