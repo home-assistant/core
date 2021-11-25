@@ -6,11 +6,7 @@ import logging
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    SOURCE_HASSIO,
-)
-
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
