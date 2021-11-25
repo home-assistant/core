@@ -89,6 +89,7 @@ async def async_setup_entry(
 class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     """Tuya Alarm Entity."""
 
+    entity_description: TuyaAlarmControlPanelEntityDescription
     _attr_supported_features = (
         SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_TRIGGER
     )
