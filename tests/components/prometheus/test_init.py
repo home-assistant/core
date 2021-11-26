@@ -47,17 +47,122 @@ async def setup_prometheus_client(hass, hass_client, namespace):
     if namespace is not None:
         config[prometheus.CONF_PROM_NAMESPACE] = namespace
     await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: config})
-
-    await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
+    await hass.async_block_till_done()
 
     await async_setup_component(
         hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
     )
     await hass.async_block_till_done()
 
-    await async_setup_component(
-        hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
+    sensor6 = DemoSensor(None, "Trend Gradient", 0.002, None, None, None, None)
+    sensor6.hass = hass
+    sensor6.entity_id = "sensor.trend_gradient"
+    await sensor6.async_update_ha_state()
+
+    sensor7 = DemoSensor(None, "Text", "should_not_work", None, None, None, None)
+    sensor7.hass = hass
+    sensor7.entity_id = "sensor.text"
+    await sensor7.async_update_ha_state()
+
+    sensor8 = DemoSensor(None, "Text Unit", "should_not_work", None, None, "Text", None)
+    sensor8.hass = hass
+    sensor8.entity_id = "sensor.text_unit"
+    await sensor8.async_update_ha_state()
+
+    return await hass_client()
+
+
+async def test_view_empty_namespace(hass, hass_client):
+    """Test prometheus metrics view."""
+    client = await setup_prometheus_client(hass, hass_client, "")
+
+    sensor2 = DemoSensor(
+        None, "Radio Energy", 14, DEVICE_CLASS_POWER, None, ENERGY_KILO_WATT_HOUR, None
     )
+    sensor2.hass = hass
+    sensor2.entity_id = "sensor.radio_energy"
+    with mock.patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC),
+    ):
+        await sensor2.async_update_ha_state()
+
+    resp = await client.get(prometheus.API_ENDPOINT)
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert len(body) > 3
+
+    assert "# HELP python_info Python platform information" in body
+    assert (
+        "# HELP python_gc_objects_collected_total "
+        "Objects collected during gc" in body
+    )
+
+    assert (
+        'entity_available{domain="sensor",'
+        'entity="sensor.radio_energy",'
+        'friendly_name="Radio Energy"} 1.0' in body
+    )
+
+    assert (
+        'last_updated_time_seconds{domain="sensor",'
+        'entity="sensor.radio_energy",'
+        'friendly_name="Radio Energy"} 86400.0' in body
+    )
+
+    assert (
+        'sensor_state{domain="sensor",'
+        'entity="sensor.trend_gradient",'
+        'friendly_name="Trend Gradient"} 0.002' in body
+    )
+
+    assert (
+        'sensor_state{domain="sensor",'
+        'entity="sensor.text",'
+        'friendly_name="Text"} 0' not in body
+    )
+
+    assert (
+        'sensor_unit_text{domain="sensor",'
+        'entity="sensor.text_unit",'
+        'friendly_name="Text Unit"} 0' not in body
+    )
+
+
+async def test_view_default_namespace(hass, hass_client):
+    """Test prometheus metrics view."""
+    client = await setup_prometheus_client(hass, hass_client, None)
+
+    await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
+    await hass.async_block_till_done()
+
+    resp = await client.get(prometheus.API_ENDPOINT)
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert len(body) > 3
+
+    assert "# HELP python_info Python platform information" in body
+    assert (
+        "# HELP python_gc_objects_collected_total "
+        "Objects collected during gc" in body
+    )
+
+    assert (
+        'homeassistant_sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 15.6' in body
+    )
+
+
+async def test_sensor_unit(hass, hass_client):
+    """Test prometheus metrics for sensors with a unit."""
+    client = await setup_prometheus_client(hass, hass_client, "")
 
     sensor1 = DemoSensor(
         None, "Television Energy", 74, None, None, ENERGY_KILO_WATT_HOUR, None
@@ -108,114 +213,7 @@ async def setup_prometheus_client(hass, hass_client, namespace):
     sensor5.entity_id = "sensor.sps30_pm_1um_weight_concentration"
     await sensor5.async_update_ha_state()
 
-    sensor6 = DemoSensor(None, "Trend Gradient", 0.002, None, None, None, None)
-    sensor6.hass = hass
-    sensor6.entity_id = "sensor.trend_gradient"
-    await sensor6.async_update_ha_state()
-
-    sensor7 = DemoSensor(None, "Text", "should_not_work", None, None, None, None)
-    sensor7.hass = hass
-    sensor7.entity_id = "sensor.text"
-    await sensor7.async_update_ha_state()
-
-    sensor8 = DemoSensor(None, "Text Unit", "should_not_work", None, None, "Text", None)
-    sensor8.hass = hass
-    sensor8.entity_id = "sensor.text_unit"
-    await sensor8.async_update_ha_state()
-
-    number1 = DemoNumber(None, "Threshold", 5.2, None, False, 0, 10, 0.1)
-    number1.hass = hass
-    number1.entity_id = "input_number.threshold"
-    await number1.async_update_ha_state()
-
-    number2 = DemoNumber(None, None, 60, None, False, 0, 100)
-    number2.hass = hass
-    number2.entity_id = "input_number.brightness"
-    number2._attr_name = None
-    await number2.async_update_ha_state()
-
-    return await hass_client()
-
-
-async def test_view_empty_namespace(hass, hass_client):
-    """Test prometheus metrics view."""
-    client = await setup_prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
-
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
-    body = await resp.text()
-    body = body.split("\n")
-
-    assert len(body) > 3
-
-    assert "# HELP python_info Python platform information" in body
-    assert (
-        "# HELP python_gc_objects_collected_total "
-        "Objects collected during gc" in body
-    )
-
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.radio_energy",'
-        'friendly_name="Radio Energy"} 1.0' in body
-    )
-
-    assert (
-        'last_updated_time_seconds{domain="sensor",'
-        'entity="sensor.radio_energy",'
-        'friendly_name="Radio Energy"} 86400.0' in body
-    )
-
-    assert (
-        'sensor_state{domain="sensor",'
-        'entity="sensor.trend_gradient",'
-        'friendly_name="Trend Gradient"} 0.002' in body
-    )
-
-    assert (
-        'sensor_state{domain="sensor",'
-        'entity="sensor.text",'
-        'friendly_name="Text"} 0' not in body
-    )
-
-    assert (
-        'sensor_unit_text{domain="sensor",'
-        'entity="sensor.text_unit",'
-        'friendly_name="Text Unit"} 0' not in body
-    )
-
-
-async def test_view_default_namespace(hass, hass_client):
-    """Test prometheus metrics view."""
-    client = await setup_prometheus_client(hass, hass_client, None)
-    resp = await client.get(prometheus.API_ENDPOINT)
-
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
-    body = await resp.text()
-    body = body.split("\n")
-
-    assert len(body) > 3
-
-    assert "# HELP python_info Python platform information" in body
-    assert (
-        "# HELP python_gc_objects_collected_total "
-        "Objects collected during gc" in body
-    )
-
-    assert (
-        'homeassistant_sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' in body
-    )
-
-
-async def test_sensor_unit(hass, hass_client):
-    """Test prometheus metrics for sensors with a unit."""
-    client = await setup_prometheus_client(hass, hass_client, "")
-    resp = await client.get(prometheus.API_ENDPOINT)
-
     assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
@@ -249,8 +247,21 @@ async def test_sensor_unit(hass, hass_client):
 async def test_sensor_device_class(hass, hass_client):
     """Test prometheus metrics for sensor with a device_class."""
     client = await setup_prometheus_client(hass, hass_client, "")
-    resp = await client.get(prometheus.API_ENDPOINT)
 
+    await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
+
+    sensor2 = DemoSensor(
+        None, "Radio Energy", 14, DEVICE_CLASS_POWER, None, ENERGY_KILO_WATT_HOUR, None
+    )
+    sensor2.hass = hass
+    sensor2.entity_id = "sensor.radio_energy"
+    with mock.patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC),
+    ):
+        await sensor2.async_update_ha_state()
+
+    resp = await client.get(prometheus.API_ENDPOINT)
     assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
@@ -278,8 +289,19 @@ async def test_sensor_device_class(hass, hass_client):
 async def test_input_number(hass, hass_client):
     """Test prometheus metrics for input_number."""
     client = await setup_prometheus_client(hass, hass_client, "")
-    resp = await client.get(prometheus.API_ENDPOINT)
 
+    number1 = DemoNumber(None, "Threshold", 5.2, None, False, 0, 10, 0.1)
+    number1.hass = hass
+    number1.entity_id = "input_number.threshold"
+    await number1.async_update_ha_state()
+
+    number2 = DemoNumber(None, None, 60, None, False, 0, 100)
+    number2.hass = hass
+    number2.entity_id = "input_number.brightness"
+    number2._attr_name = None
+    await number2.async_update_ha_state()
+
+    resp = await client.get(prometheus.API_ENDPOINT)
     assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
@@ -301,8 +323,10 @@ async def test_input_number(hass, hass_client):
 async def test_battery(hass, hass_client):
     """Test prometheus metrics for battery."""
     client = await setup_prometheus_client(hass, hass_client, "")
-    resp = await client.get(prometheus.API_ENDPOINT)
 
+    await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
+
+    resp = await client.get(prometheus.API_ENDPOINT)
     assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
@@ -318,8 +342,13 @@ async def test_battery(hass, hass_client):
 async def test_climate(hass, hass_client):
     """Test prometheus metrics for battery."""
     client = await setup_prometheus_client(hass, hass_client, "")
-    resp = await client.get(prometheus.API_ENDPOINT)
 
+    await async_setup_component(
+        hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
+    )
+    await hass.async_block_till_done()
+
+    resp = await client.get(prometheus.API_ENDPOINT)
     assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
@@ -353,8 +382,13 @@ async def test_climate(hass, hass_client):
 async def test_humidifier(hass, hass_client):
     """Test prometheus metrics for battery."""
     client = await setup_prometheus_client(hass, hass_client, "")
-    resp = await client.get(prometheus.API_ENDPOINT)
 
+    await async_setup_component(
+        hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
+    )
+    await hass.async_block_till_done()
+
+    resp = await client.get(prometheus.API_ENDPOINT)
     assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
