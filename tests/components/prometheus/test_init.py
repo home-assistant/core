@@ -39,6 +39,9 @@ async def setup_prometheus_client(hass, hass_client, namespace):
 
     # Reset registry
     prometheus_client.REGISTRY = prometheus_client.CollectorRegistry(auto_describe=True)
+    prometheus_client.ProcessCollector(registry=prometheus_client.REGISTRY)
+    prometheus_client.PlatformCollector(registry=prometheus_client.REGISTRY)
+    prometheus_client.GCCollector(registry=prometheus_client.REGISTRY)
 
     config = {}
     if namespace is not None:
@@ -137,7 +140,6 @@ async def setup_prometheus_client(hass, hass_client, namespace):
 async def test_view_empty_namespace(hass, hass_client):
     """Test prometheus metrics view."""
     client = await setup_prometheus_client(hass, hass_client, "")
-
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == HTTPStatus.OK
