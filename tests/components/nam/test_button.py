@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, STATE_UNKNOWN
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -17,7 +17,7 @@ async def test_button(hass):
 
     state = hass.states.get("button.nettigo_air_monitor_restart")
     assert state
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ICON) == "mdi:restart"
 
     entry = registry.async_get("button.nettigo_air_monitor_restart")

@@ -1,7 +1,6 @@
 """Support for the Nettigo Air Monitor service."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from aiohttp.client_exceptions import ClientError
@@ -12,10 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    ConfigEntryAuthFailed,
-    CoordinatorEntity,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NAMDataUpdateCoordinator
 from .const import DEFAULT_NAME, DOMAIN
@@ -64,11 +60,9 @@ class NAMButton(CoordinatorEntity, ButtonEntity):
         """Triggers the restart."""
         try:
             await self.coordinator.nam.async_restart()
-        except AuthFailed as err:
-            raise ConfigEntryAuthFailed from err
         except (
+            AuthFailed,
             ApiError,
             ClientError,
-            asyncio.TimeoutError,
         ) as err:
             _LOGGER.error("Failed to restart the device: %s", err)
