@@ -1051,3 +1051,31 @@ async def test_resolve_entity_ids(hass, registry):
 
     with pytest.raises(vol.Invalid):
         er.async_resolve_entity_ids(registry, ["unknown_uuid"])
+
+
+def test_entity_registry_items():
+    """Test the EntityRegistryItems container."""
+    entities = er.EntityRegistryItems()
+    assert entities.get_entity_id(("a", "b", "c")) is None
+    assert entities.get_entry("abc") is None
+
+    entry1 = er.RegistryEntry("test.entity1", "1234", "hue")
+    entry2 = er.RegistryEntry("test.entity2", "2345", "hue")
+    entities["test.entity1"] = entry1
+    entities["test.entity2"] = entry2
+
+    assert entities["test.entity1"] is entry1
+    assert entities["test.entity2"] is entry2
+
+    assert entities.get_entity_id(("test", "hue", "1234")) is entry1.entity_id
+    assert entities.get_entry(entry1.id) is entry1
+    assert entities.get_entity_id(("test", "hue", "2345")) is entry2.entity_id
+    assert entities.get_entry(entry2.id) is entry2
+
+    entities.pop("test.entity1")
+    del entities["test.entity2"]
+
+    assert entities.get_entity_id(("test", "hue", "1234")) is None
+    assert entities.get_entry(entry1.id) is None
+    assert entities.get_entity_id(("test", "hue", "2345")) is None
+    assert entities.get_entry(entry2.id) is None
