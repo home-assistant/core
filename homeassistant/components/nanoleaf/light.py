@@ -6,6 +6,7 @@ import math
 from typing import Any
 
 from aionanoleaf import Nanoleaf, Unavailable
+import entity_platform
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -24,8 +25,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv, entity_platform
+from homeassistant.core import HomeAssistant, ServiceCall
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.color import (
