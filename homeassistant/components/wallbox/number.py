@@ -1,8 +1,8 @@
 """Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Optional, cast
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -11,12 +11,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import InvalidAuth, WallboxCoordinator
+from . import InvalidAuth, WallboxCoordinator, WallboxData
 from .const import CONF_MAX_AVAILABLE_POWER_KEY, CONF_MAX_CHARGING_CURRENT_KEY, DOMAIN
 
 
 @dataclass
-class WallboxNumberEntityDescription(NumberEntityDescription):
+class WallboxRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[WallboxData], int | float]
+    max_value_fn: Callable[[WallboxData], int | float]
+
+
+@dataclass
+class WallboxNumberEntityDescription(NumberEntityDescription, WallboxRequiredKeysMixin):
     """Describes Wallbox sensor entity."""
 
     min_value: float = 0
@@ -28,6 +36,8 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
         name="Max. Charging Current",
         device_class=DEVICE_CLASS_CURRENT,
         min_value=6,
+        value_fn=lambda data: data[CONF_MAX_CHARGING_CURRENT_KEY],
+        max_value_fn=lambda data: data[CONF_MAX_AVAILABLE_POWER_KEY],
     ),
 }
 
@@ -75,14 +85,12 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
     @property
     def max_value(self) -> float:
         """Return the maximum available current."""
-        return cast(float, self.coordinator.data[CONF_MAX_AVAILABLE_POWER_KEY])
+        return self.entity_description.max_value_fn(self.coordinator.data)
 
     @property
-    def value(self) -> float | None:
+    def value(self) -> float:
         """Return the state of the sensor."""
-        return cast(
-            Optional[float], self.coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
-        )
+        return self.entity_description.value_fn(self.coordinator.data)
 
     async def async_set_value(self, value: float) -> None:
         """Set the value of the entity."""

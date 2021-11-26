@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any, Dict
+from typing import Any, TypedDict, cast
 
 import requests
 from wallbox import Wallbox
@@ -23,7 +23,27 @@ PLATFORMS = ["sensor", "number"]
 UPDATE_INTERVAL = 30
 
 
-class WallboxCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
+class WallboxData(TypedDict):
+    """Data structure for returned Wallbox data.
+
+    Assume 'total=True' although fields could be missing.
+    Entities are only added if fields are present.
+    """
+
+    depot_price: float
+    status_description: str
+    charging_power: int  # maybe float?
+    max_available_power: int
+    charging_speed: int  # maybe float?
+    added_range: int  # maybe float?
+    added_energy: float
+    cost: int  # maybe float?
+    current_mode: int
+    state_of_charge: str
+    max_charging_current: int
+
+
+class WallboxCoordinator(DataUpdateCoordinator[WallboxData]):
     """Wallbox Coordinator class."""
 
     def __init__(self, station: str, wallbox: Wallbox, hass: HomeAssistant) -> None:
@@ -56,7 +76,7 @@ class WallboxCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
-    def _get_data(self) -> dict[str, Any]:
+    def _get_data(self) -> WallboxData:
         """Get new sensor data for Wallbox component."""
         try:
             self._authenticate()
@@ -65,7 +85,7 @@ class WallboxCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 CONF_MAX_CHARGING_CURRENT_KEY
             ]
 
-            return data
+            return cast(WallboxData, data)
 
         except requests.exceptions.HTTPError as wallbox_connection_error:
             raise ConnectionError from wallbox_connection_error
@@ -87,7 +107,7 @@ class WallboxCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         )
         await self.async_request_refresh()
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> WallboxData:
         """Get new sensor data for Wallbox component."""
         return await self.hass.async_add_executor_job(self._get_data)
 
