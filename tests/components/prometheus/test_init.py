@@ -46,11 +46,8 @@ async def setup_prometheus_client(hass, hass_client, namespace):
     config = {}
     if namespace is not None:
         config[prometheus.CONF_PROM_NAMESPACE] = namespace
-    await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: config})
-    await hass.async_block_till_done()
-
-    await async_setup_component(
-        hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
+    assert await async_setup_component(
+        hass, prometheus.DOMAIN, {prometheus.DOMAIN: config}
     )
     await hass.async_block_till_done()
 
@@ -85,6 +82,7 @@ async def test_view_empty_namespace(hass, hass_client):
     ):
         await sensor2.async_update_ha_state()
 
+    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert "# HELP python_info Python platform information" in body
@@ -108,9 +106,17 @@ async def test_view_empty_namespace(hass, hass_client):
 
 async def test_view_default_namespace(hass, hass_client):
     """Test prometheus metrics view."""
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {},
+    )
+
     client = await setup_prometheus_client(hass, hass_client, None)
 
-    await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
+    assert await async_setup_component(
+        hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]}
+    )
     await hass.async_block_till_done()
 
     body = await generate_latest_metrics(client)
@@ -181,6 +187,7 @@ async def test_sensor_unit(hass, hass_client):
     sensor5.entity_id = "sensor.sps30_pm_1um_weight_concentration"
     await sensor5.async_update_ha_state()
 
+    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -250,9 +257,16 @@ async def test_sensor_without_unit(hass, hass_client):
 
 async def test_sensor_device_class(hass, hass_client):
     """Test prometheus metrics for sensor with a device_class."""
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {},
+    )
+
     client = await setup_prometheus_client(hass, hass_client, "")
 
     await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
+    await hass.async_block_till_done()
 
     sensor2 = DemoSensor(
         None, "Radio Energy", 14, DEVICE_CLASS_POWER, None, ENERGY_KILO_WATT_HOUR, None
@@ -265,6 +279,7 @@ async def test_sensor_device_class(hass, hass_client):
     ):
         await sensor2.async_update_ha_state()
 
+    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -318,9 +333,16 @@ async def test_input_number(hass, hass_client):
 
 async def test_battery(hass, hass_client):
     """Test prometheus metrics for battery."""
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {},
+    )
+
     client = await setup_prometheus_client(hass, hass_client, "")
 
     await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
+    await hass.async_block_till_done()
 
     body = await generate_latest_metrics(client)
 
@@ -333,13 +355,19 @@ async def test_battery(hass, hass_client):
 
 async def test_climate(hass, hass_client):
     """Test prometheus metrics for battery."""
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {},
+    )
+
     client = await setup_prometheus_client(hass, hass_client, "")
 
     await async_setup_component(
         hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
     )
-    await hass.async_block_till_done()
 
+    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
@@ -369,13 +397,19 @@ async def test_climate(hass, hass_client):
 
 async def test_humidifier(hass, hass_client):
     """Test prometheus metrics for battery."""
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {},
+    )
+
     client = await setup_prometheus_client(hass, hass_client, "")
 
     await async_setup_component(
         hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
     )
-    await hass.async_block_till_done()
 
+    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
