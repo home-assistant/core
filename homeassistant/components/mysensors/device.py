@@ -135,9 +135,8 @@ class MySensorsDevice:
         child = node.children[self.child_id]
 
         if child.description:
-            return f"{child.description}"
-        else:
-            return f"{self.node_name} {self.child_id}"
+            return child.description
+        return f"{self.node_name} {self.child_id}"
 
     @property
     def _extra_attributes(self) -> dict[str, Any]:
