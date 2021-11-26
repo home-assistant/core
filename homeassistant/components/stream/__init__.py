@@ -23,7 +23,7 @@ import secrets
 import threading
 import time
 from types import MappingProxyType
-from typing import cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -61,6 +61,14 @@ STREAM_SOURCE_REDACT_PATTERN = [
 ]
 
 
+class StreamLoggerAdapter(logging.LoggerAdapter):
+    """A LoggerAdapter that appends stream information to the logging call."""
+
+    def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:
+        """Append additional stream specific logging information."""
+        return "[{}] {}".format(self.extra["stream_label"], msg), kwargs
+
+
 def redact_credentials(data: str) -> str:
     """Redact credentials from string data."""
     for (pattern, repl) in STREAM_SOURCE_REDACT_PATTERN:
@@ -69,12 +77,17 @@ def redact_credentials(data: str) -> str:
 
 
 def create_stream(
-    hass: HomeAssistant, stream_source: str, options: dict[str, str]
+    hass: HomeAssistant,
+    stream_source: str,
+    options: dict[str, str],
+    stream_label: str | None = None,
 ) -> Stream:
     """Create a stream with the specified identfier based on the source url.
 
-    The stream_source is typically an rtsp url and options are passed into
-    pyav / ffmpeg as options.
+    The stream_source is typically an rtsp url (though any url accepted by ffmpeg is fine) and
+    options are passed into pyav / ffmpeg as options.
+
+    The stream_label is a string used as an additional message in logging.
     """
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
@@ -87,7 +100,7 @@ def create_stream(
             **options,
         }
 
-    stream = Stream(hass, stream_source, options=options)
+    stream = Stream(hass, stream_source, options=options, stream_label=stream_label)
     hass.data[DOMAIN][ATTR_STREAMS].append(stream)
     return stream
 
@@ -192,12 +205,17 @@ class Stream:
     """Represents a single stream."""
 
     def __init__(
-        self, hass: HomeAssistant, source: str, options: dict[str, str]
+        self,
+        hass: HomeAssistant,
+        source: str,
+        options: dict[str, str],
+        stream_label: str | None = None,
     ) -> None:
         """Initialize a stream."""
         self.hass = hass
         self.source = source
         self.options = options
+        self._stream_label = stream_label
         self.keepalive = False
         self.access_token: str | None = None
         self._thread: threading.Thread | None = None
@@ -206,6 +224,11 @@ class Stream:
         self._fast_restart_once = False
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
+        self._logger: logging.Logger | logging.LoggerAdapter = _LOGGER
+        if self._stream_label:
+            self._logger = StreamLoggerAdapter(
+                self._logger, {"stream_label": self._stream_label}
+            )
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -285,11 +308,13 @@ class Stream:
                 target=self._run_worker,
             )
             self._thread.start()
-            _LOGGER.info("Started stream: %s", redact_credentials(str(self.source)))
+            self._logger.info(
+                "Started stream: %s", redact_credentials(str(self.source))
+            )
 
     def update_source(self, new_source: str) -> None:
         """Restart the stream with a new stream source."""
-        _LOGGER.debug("Updating stream source %s", new_source)
+        self._logger.debug("Updating stream source %s", new_source)
         self.source = new_source
         self._fast_restart_once = True
         self._thread_quit.set()
@@ -313,7 +338,8 @@ class Stream:
                     self._thread_quit,
                 )
             except StreamWorkerError as err:
-                _LOGGER.error("Error from stream worker: %s", str(err))
+                self._logger.error("Error from stream worker: %s", str(err))
+                self._available = False
 
             stream_state.discontinuity()
             if not self.keepalive or self._thread_quit.is_set():
@@ -332,7 +358,7 @@ class Stream:
             if time.time() - start_time > STREAM_RESTART_RESET_TIME:
                 wait_timeout = 0
             wait_timeout += STREAM_RESTART_INCREMENT
-            _LOGGER.debug(
+            self._logger.debug(
                 "Restarting stream worker in %d seconds: %s",
                 wait_timeout,
                 self.source,
@@ -363,7 +389,9 @@ class Stream:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
-            _LOGGER.info("Stopped stream: %s", redact_credentials(str(self.source)))
+            self._logger.info(
+                "Stopped stream: %s", redact_credentials(str(self.source))
+            )
 
     async def async_record(
         self, video_path: str, duration: int = 30, lookback: int = 5
@@ -390,7 +418,7 @@ class Stream:
         recorder.video_path = video_path
 
         self.start()
-        _LOGGER.debug("Started a stream recording of %s seconds", duration)
+        self._logger.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
         hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
