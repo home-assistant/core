@@ -13,7 +13,9 @@
                 "data": {
                     "host": "IP\u30a2\u30c9\u30ec\u30b9",
                     "port": "\u30dd\u30fc\u30c8"
-                }
+                },
+                "description": "Insteon Hub Version 1(2014\u4ee5\u524d)\u306e\u8a2d\u5b9a\u3092\u884c\u3044\u307e\u3059\u3002",
+                "title": "Insteon Hub Version 1"
             },
             "hubv2": {
                 "data": {
@@ -21,7 +23,9 @@
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "port": "\u30dd\u30fc\u30c8",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
-                }
+                },
+                "description": "Insteon Hub Version 2\u306e\u8a2d\u5b9a\u3092\u884c\u3044\u307e\u3059\u3002",
+                "title": "Insteon Hub Version 2"
             },
             "plm": {
                 "data": {
@@ -33,6 +37,7 @@
                 "data": {
                     "modem_type": "\u30e2\u30c7\u30e0\u306e\u7a2e\u985e\u3002"
                 },
+                "description": "Insteon modem type\u3092\u9078\u629e\u3057\u307e\u3059\u3002",
                 "title": "Insteon"
             }
         }
@@ -44,6 +49,11 @@
         },
         "step": {
             "add_override": {
+                "data": {
+                    "address": "\u30c7\u30d0\u30a4\u30b9\u306e\u30a2\u30c9\u30ec\u30b9(\u4f8b: 1a2b3c)",
+                    "cat": "\u30c7\u30d0\u30a4\u30b9\u30ab\u30c6\u30b4\u30ea\u30fc(\u4f8b: 0x10)",
+                    "subcat": "\u30c7\u30d0\u30a4\u30b9 \u30b5\u30d6\u30ab\u30c6\u30b4\u30ea\u30fc(\u4f8b: 0x0a)"
+                },
                 "title": "Insteon"
             },
             "add_x10": {
@@ -65,14 +75,24 @@
             },
             "init": {
                 "data": {
-                    "add_x10": "X10 \u30c7\u30d0\u30a4\u30b9\u3092\u8ffd\u52a0\u3057\u307e\u3059\u3002"
+                    "add_x10": "X10 \u30c7\u30d0\u30a4\u30b9\u3092\u8ffd\u52a0\u3057\u307e\u3059\u3002",
+                    "change_hub_config": "Hub\u306e\u8a2d\u5b9a\u3092\u5909\u66f4\u3057\u307e\u3059\u3002",
+                    "remove_x10": "X10\u30c7\u30d0\u30a4\u30b9\u524a\u9664\u3092\u524a\u9664\u3057\u307e\u3059\u3002"
                 },
+                "description": "\u8a2d\u5b9a\u3059\u308b\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u9078\u629e\u3057\u307e\u3059\u3002",
                 "title": "Insteon"
             },
             "remove_override": {
+                "data": {
+                    "address": "\u524a\u9664\u3059\u308b\u30c7\u30d0\u30a4\u30b9\u306e\u30a2\u30c9\u30ec\u30b9\u3092\u9078\u629e"
+                },
                 "title": "Insteon"
             },
             "remove_x10": {
+                "data": {
+                    "address": "\u524a\u9664\u3059\u308b\u30c7\u30d0\u30a4\u30b9\u306e\u30a2\u30c9\u30ec\u30b9\u3092\u9078\u629e"
+                },
+                "description": "X10\u30c7\u30d0\u30a4\u30b9\u306e\u524a\u9664",
                 "title": "Insteon"
             }
         }

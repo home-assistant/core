@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Akun sudah dikonfigurasi",
+            "kamereon_no_account": "Tidak dapat menemukan akun Kamereon",
             "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {

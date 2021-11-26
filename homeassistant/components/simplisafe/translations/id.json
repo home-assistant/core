@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Akun SimpliSafe ini sudah digunakan.",
-            "reauth_successful": "Autentikasi ulang berhasil"
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "wrong_account": "Kredensial pengguna yang diberikan tidak cocok dengan akun SimpliSafe ini."
         },
         "error": {
             "identifier_exists": "Akun sudah terdaftar",
@@ -15,6 +16,7 @@
                 "data": {
                     "auth_code": "Kode Otorisasi"
                 },
+                "description": "Masukkan kode otorisasi dari URL aplikasi web SimpliSafe:",
                 "title": "Selesaikan Otorisasi"
             },
             "mfa": {
