@@ -162,34 +162,6 @@ def get_random_string(length: int = 10) -> str:
     return "".join(generator.choice(source_chars) for _ in range(length))
 
 
-class OrderedEnum(enum.Enum):
-    """Taken from Python 3.4.0 docs."""
-
-    def __ge__(self, other: ENUM_T) -> bool:
-        """Return the greater than element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value >= other.value)
-        return NotImplemented
-
-    def __gt__(self, other: ENUM_T) -> bool:
-        """Return the greater element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value > other.value)
-        return NotImplemented
-
-    def __le__(self, other: ENUM_T) -> bool:
-        """Return the lower than element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value <= other.value)
-        return NotImplemented
-
-    def __lt__(self, other: ENUM_T) -> bool:
-        """Return the lower element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value < other.value)
-        return NotImplemented
-
-
 class Throttle:
     """A class for throttling the execution of tasks.
 
