@@ -3,7 +3,9 @@
 import asyncio
 from contextlib import contextmanager
 from datetime import timedelta
+from functools import reduce
 import logging
+import operator
 from types import MappingProxyType
 from unittest import mock
 from unittest.mock import AsyncMock, patch
@@ -23,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import SERVICE_CALL_LIMIT, Context, CoreState, callback
 from homeassistant.exceptions import ConditionError, ServiceNotFound
-from homeassistant.helpers import config_validation as cv, script, trace
+from homeassistant.helpers import config_validation as cv, script, template, trace
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -3021,6 +3023,15 @@ async def test_set_redefines_variable(hass, caplog):
 
 async def test_validate_action_config(hass):
     """Validate action config."""
+
+    def templated_device_action(message):
+        return {
+            "device_id": "abcd",
+            "domain": "mobile_app",
+            "message": f"{message} {{{{ 5 + 5}}}}",
+            "type": "notify",
+        }
+
     configs = {
         cv.SCRIPT_ACTION_CALL_SERVICE: {"service": "light.turn_on"},
         cv.SCRIPT_ACTION_DELAY: {"delay": 5},
@@ -3031,24 +3042,22 @@ async def test_validate_action_config(hass):
         cv.SCRIPT_ACTION_CHECK_CONDITION: {
             "condition": "{{ states.light.kitchen.state == 'on' }}"
         },
-        cv.SCRIPT_ACTION_DEVICE_AUTOMATION: {
-            "domain": "light",
-            "entity_id": "light.kitchen",
-            "device_id": "abcd",
-            "type": "turn_on",
-        },
+        cv.SCRIPT_ACTION_DEVICE_AUTOMATION: templated_device_action("device"),
         cv.SCRIPT_ACTION_ACTIVATE_SCENE: {"scene": "scene.relax"},
         cv.SCRIPT_ACTION_REPEAT: {
-            "repeat": {"count": 3, "sequence": [{"event": "repeat_event"}]}
+            "repeat": {
+                "count": 3,
+                "sequence": [templated_device_action("repeat_event")],
+            }
         },
         cv.SCRIPT_ACTION_CHOOSE: {
             "choose": [
                 {
                     "condition": "{{ states.light.kitchen.state == 'on' }}",
-                    "sequence": [{"event": "choose_event"}],
+                    "sequence": [templated_device_action("choose_event")],
                 }
             ],
-            "default": [{"event": "choose_default_event"}],
+            "default": [templated_device_action("choose_default_event")],
         },
         cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: {
             "wait_for_trigger": [
@@ -3057,9 +3066,17 @@ async def test_validate_action_config(hass):
         },
         cv.SCRIPT_ACTION_VARIABLES: {"variables": {"hello": "world"}},
     }
+    expected_templates = {
+        cv.SCRIPT_ACTION_CHECK_CONDITION: None,
+        cv.SCRIPT_ACTION_DEVICE_AUTOMATION: [[]],
+        cv.SCRIPT_ACTION_REPEAT: [["repeat", "sequence", 0]],
+        cv.SCRIPT_ACTION_CHOOSE: [["choose", 0, "sequence", 0], ["default", 0]],
+        cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: None,
+    }
 
     for key in cv.ACTION_TYPE_SCHEMAS:
         assert key in configs, f"No validate config test found for {key}"
+        assert key in expected_templates or key in script.STATIC_VALIDATION_ACTION_TYPES
 
     # Verify we raise if we don't know the action type
     with patch(
@@ -3068,12 +3085,26 @@ async def test_validate_action_config(hass):
     ), pytest.raises(ValueError):
         await script.async_validate_action_config(hass, {})
 
+    # Verify each action can validate
+    validated_config = {}
     for action_type, config in configs.items():
         assert cv.determine_script_action(config) == action_type
         try:
-            await script.async_validate_action_config(hass, config)
+            validated_config[action_type] = await script.async_validate_action_config(
+                hass, config
+            )
         except vol.Invalid as err:
             assert False, f"{action_type} config invalid: {err}"
+
+    # Verify non-static actions have validated
+    for action_type, paths_to_templates in expected_templates.items():
+        if paths_to_templates is None:
+            continue
+        for path_to_template in paths_to_templates:
+            device_action = reduce(
+                operator.getitem, path_to_template, validated_config[action_type]
+            )
+            assert isinstance(device_action["message"], template.Template)
 
 
 async def test_embedded_wait_for_trigger_in_automation(hass):
