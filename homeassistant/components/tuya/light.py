@@ -652,6 +652,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         # else than "white".
         if (
             self.entity_description.color_mode
+            and self.entity_description.color_mode in self.device.function
             and self.device.status.get(self.entity_description.color_mode)
             != WorkMode.WHITE
         ):
