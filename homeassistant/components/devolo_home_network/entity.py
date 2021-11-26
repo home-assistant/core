@@ -22,16 +22,13 @@ class DevoloEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self.device = device
-        self.device_name = device_name
 
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{self.device.ip}",
-            identifiers={(DOMAIN, str(self.device.serial_number))},
+            configuration_url=f"http://{device.ip}",
+            identifiers={(DOMAIN, str(device.serial_number))},
             manufacturer="devolo",
-            model=self.device.product,
-            name=self.device_name,
-            sw_version=self.device.firmware_version,
+            model=device.product,
+            name=device_name,
+            sw_version=device.firmware_version,
         )
-        self._attr_unique_id = (
-            f"{self.device.serial_number}_{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{device.serial_number}_{self.entity_description.key}"
