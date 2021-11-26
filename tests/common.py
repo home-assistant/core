@@ -442,7 +442,9 @@ def mock_registry(hass, mock_entries=None):
     registry = entity_registry.EntityRegistry(hass)
     if mock_entries is None:
         mock_entries = {}
-    registry.entities = entity_registry.EntityRegistryItems(**mock_entries)
+    registry.entities = entity_registry.EntityRegistryItems()
+    for key, entry in mock_entries.items():
+        registry.entities[key] = entry
 
     hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
