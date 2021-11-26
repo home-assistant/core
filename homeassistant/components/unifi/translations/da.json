@@ -18,7 +18,7 @@
                     "username": "Brugernavn",
                     "verify_ssl": "Controller bruger korrekt certifikat"
                 },
-                "title": "Konfigurer UniFi Network"
+                "title": "Konfigurer UniFi Controller"
             }
         }
     },

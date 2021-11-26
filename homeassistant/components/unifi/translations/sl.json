@@ -18,7 +18,7 @@
                     "username": "Uporabni\u0161ko ime",
                     "verify_ssl": "Kontroler uporablja ustrezen certifikat"
                 },
-                "title": "Nastavi UniFi Network"
+                "title": "Nastavi UniFi Controller"
             }
         }
     },

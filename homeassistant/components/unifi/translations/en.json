@@ -21,7 +21,7 @@
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
                 },
-                "title": "Set up UniFi Network"
+                "title": "Set up UniFi Controller"
             }
         }
     },
