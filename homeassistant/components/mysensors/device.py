@@ -131,11 +131,10 @@ class MySensorsDevice:
     @property
     def name(self) -> str:
         """Return the name of this entity."""
-        node = self.gateway.sensors[self.node_id]
-        child = node.children[self.child_id]
+        child = self._child
 
         if child.description:
-            return child.description
+            return str(child.description)
         return f"{self.node_name} {self.child_id}"
 
     @property
