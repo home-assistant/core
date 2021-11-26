@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE_CLASS,
     CONF_ENTITIES,
     CONF_UNIQUE_ID,
     SERVICE_CLOSE_COVER,
@@ -81,6 +82,7 @@ CONFIG_ATTRIBUTES = {
         "platform": "group",
         CONF_ENTITIES: [DEMO_COVER, DEMO_COVER_POS, DEMO_COVER_TILT, DEMO_TILT],
         CONF_UNIQUE_ID: "unique_identifier",
+        CONF_DEVICE_CLASS: "garage",
     }
 }
 
@@ -357,6 +359,7 @@ async def test_attributes(hass, setup_comp):
     entry = entity_registry.async_get(COVER_GROUP)
     assert entry
     assert entry.unique_id == "unique_identifier"
+    assert entry.original_device_class == "garage"
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_TILT_ONLY, 2)])

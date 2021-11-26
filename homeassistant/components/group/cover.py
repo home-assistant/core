@@ -10,6 +10,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     PLATFORM_SCHEMA,
     SERVICE_CLOSE_COVER,
@@ -34,6 +35,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE_CLASS,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -63,6 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
 )
 
@@ -77,7 +80,10 @@ async def async_setup_platform(
     async_add_entities(
         [
             CoverGroup(
-                config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES]
+                config.get(CONF_UNIQUE_ID),
+                config[CONF_NAME],
+                config.get(CONF_DEVICE_CLASS),
+                config[CONF_ENTITIES],
             )
         ]
     )
@@ -92,7 +98,13 @@ class CoverGroup(GroupEntity, CoverEntity):
     _attr_current_cover_position: int | None = 100
     _attr_assumed_state: bool = True
 
-    def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
+    def __init__(
+        self,
+        unique_id: str | None,
+        name: str,
+        device_class: str | None,
+        entities: list[str],
+    ) -> None:
         """Initialize a CoverGroup entity."""
         self._entities = entities
         self._covers: dict[str, set[str]] = {
@@ -109,6 +121,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
+        self._device_class = device_class
 
     async def _update_supported_features_event(self, event: Event) -> None:
         self.async_set_context(event.context)
@@ -324,3 +337,8 @@ class CoverGroup(GroupEntity, CoverEntity):
                 if state and state.attributes.get(ATTR_ASSUMED_STATE):
                     self._attr_assumed_state = True
                     break
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the device class of the cover."""
+        return self._device_class
