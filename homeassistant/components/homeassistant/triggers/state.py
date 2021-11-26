@@ -67,8 +67,8 @@ async def async_validate_trigger_config(
     # this gives better error messages.
     if CONF_ATTRIBUTE in config:
         config = TRIGGER_ATTRIBUTE_SCHEMA(config)
-
-    config = TRIGGER_STATE_SCHEMA(config)
+    else:
+        config = TRIGGER_STATE_SCHEMA(config)
 
     registry = er.async_get(hass)
     config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
