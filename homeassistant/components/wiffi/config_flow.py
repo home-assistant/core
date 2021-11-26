@@ -38,8 +38,7 @@ class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._async_show_form()
 
         # received input from form or configuration.yaml
-        unique_id = f"{DOMAIN} {user_input[CONF_PORT]}"
-        await self.async_set_unique_id(unique_id)
+        await self.async_set_unique_id(user_input[CONF_PORT])
         self._abort_if_unique_id_configured()
 
         try:
