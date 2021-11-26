@@ -18,7 +18,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MusicCast sensor based on a config entry."""
+    """Set up MusicCast number entities based on a config entry."""
     coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     number_entities = []
@@ -36,7 +36,7 @@ async def async_setup_entry(
 
 
 class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
-    """Representation of a MusicCast Alarm entity."""
+    """Representation of a MusicCast Number entity."""
 
     capability: NumberSetter
 
@@ -46,7 +46,7 @@ class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
         capability: NumberSetter,
         zone_id: str = None,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the number entity."""
         super().__init__(coordinator, capability, zone_id)
         self._attr_min_value = capability.value_range.minimum
         self._attr_max_value = capability.value_range.maximum
@@ -54,7 +54,7 @@ class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
 
     @property
     def value(self):
-        """Return the current."""
+        """Return the current value."""
         return self.capability.current
 
     async def async_set_value(self, value: float):

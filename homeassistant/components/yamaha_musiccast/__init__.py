@@ -210,7 +210,7 @@ class MusicCastCapabilityEntity(MusicCastDeviceEntity):
         capability: Capability,
         zone_id: str = None,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize a capability based entity."""
         if zone_id is not None:
             self._zone_id = zone_id
         self.capability = capability
@@ -220,7 +220,7 @@ class MusicCastCapabilityEntity(MusicCastDeviceEntity):
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
         await super().async_added_to_hass()
-        # Sensors should also register callbacks to HA when their state changes
+        # All capability based entities should register callbacks to update HA when their state changes
         self.coordinator.musiccast.register_callback(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self):
@@ -230,5 +230,5 @@ class MusicCastCapabilityEntity(MusicCastDeviceEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID for this media_player."""
+        """Return the unique ID for this entity."""
         return f"{self.device_id}_{self.capability.id}"
