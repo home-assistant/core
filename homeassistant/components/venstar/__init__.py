@@ -1,4 +1,6 @@
 """The venstar component."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 
@@ -77,6 +79,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             update_interval=timedelta(seconds=60),
         )
         self.client = venstar_connection
+        self.runtimes: list[dict[str, int]] = []
 
     async def _async_update_data(self) -> None:
         """Update the state."""
@@ -106,6 +109,19 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             raise update_coordinator.UpdateFailed(
                 f"Exception during Venstar alert update: {ex}"
             ) from ex
+
+        # older venstars sometimes cannot handle rapid sequential connections
+        await asyncio.sleep(1)
+
+        try:
+            self.runtimes = await self.hass.async_add_executor_job(
+                self.client.get_runtimes
+            )
+        except (OSError, RequestException) as ex:
+            raise update_coordinator.UpdateFailed(
+                f"Exception during Venstar runtime update: {ex}"
+            ) from ex
+
         return None
 
 

@@ -37,6 +37,9 @@ async def test_setup_entry(hass: HomeAssistant):
         "homeassistant.components.venstar.VenstarColorTouch.update_alerts",
         new=VenstarColorTouchMock.update_alerts,
     ), patch(
+        "homeassistant.components.venstar.VenstarColorTouch.get_runtimes",
+        new=VenstarColorTouchMock.get_runtimes,
+    ), patch(
         "homeassistant.components.onewire.sensor.asyncio.sleep"
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -72,6 +75,9 @@ async def test_setup_entry_exception(hass: HomeAssistant):
     ), patch(
         "homeassistant.components.venstar.VenstarColorTouch.update_alerts",
         new=VenstarColorTouchMock.update_alerts,
+    ), patch(
+        "homeassistant.components.venstar.VenstarColorTouch.get_runtimes",
+        new=VenstarColorTouchMock.get_runtimes,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

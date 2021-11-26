@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
@@ -11,11 +12,42 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT, TIME_MINUTES
 from homeassistant.helpers.entity import Entity
 
 from . import VenstarDataUpdateCoordinator, VenstarEntity
 from .const import DOMAIN
+
+RUNTIME_HEAT1 = "heat1"
+RUNTIME_HEAT2 = "heat2"
+RUNTIME_COOL1 = "cool1"
+RUNTIME_COOL2 = "cool2"
+RUNTIME_AUX1 = "aux1"
+RUNTIME_AUX2 = "aux2"
+RUNTIME_FC = "fc"
+RUNTIME_OV = "ov"
+
+RUNTIME_DEVICES = [
+    RUNTIME_HEAT1,
+    RUNTIME_HEAT2,
+    RUNTIME_COOL1,
+    RUNTIME_COOL2,
+    RUNTIME_AUX1,
+    RUNTIME_AUX2,
+    RUNTIME_FC,
+    RUNTIME_OV,
+]
+
+RUNTIME_ATTRIBUTES = {
+    RUNTIME_HEAT1: "Heating Stage 1",
+    RUNTIME_HEAT2: "Heating Stage 2",
+    RUNTIME_COOL1: "Cooling Stage 1",
+    RUNTIME_COOL2: "Cooling Stage 2",
+    RUNTIME_AUX1: "Aux Stage 1",
+    RUNTIME_AUX2: "Aux Stage 2",
+    RUNTIME_FC: "Free Cooling",
+    RUNTIME_OV: "Override",
+}
 
 
 @dataclass
@@ -52,6 +84,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
             ]
         )
 
+    runtimes = coordinator.runtimes[-1]
+    for sensor_name in runtimes.keys():
+        if sensor_name in RUNTIME_DEVICES:
+            entities.append(
+                RUNTIME_ENTITY.cls(
+                    coordinator, config_entry, RUNTIME_ENTITY, sensor_name
+                )
+            )
+
     async_add_entities(entities)
 
 
@@ -72,6 +113,7 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         self.entity_description = entity_description
         self.sensor_name = sensor_name
         self._config = config
+        self.coordinator = coordinator
 
     @property
     def unique_id(self):
@@ -116,6 +158,34 @@ class VenstarTemperatureSensor(VenstarSensor):
         return round(float(self._client.get_sensor(self.sensor_name, "temp")), 1)
 
 
+class VenstarBatterySensor(VenstarSensor):
+    """Represent a Venstar battery sensor."""
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return f"{self._client.name} {self.sensor_name} Battery"
+
+    @property
+    def native_value(self) -> int:
+        """Return state of the sensor."""
+        return self._client.get_sensor(self.sensor_name, "battery")
+
+
+class VenstarRuntimeSensor(VenstarSensor):
+    """Represent a Venstar runtime sensor."""
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return f"{self._client.name} {RUNTIME_ATTRIBUTES[self.sensor_name]} Runtime"
+
+    @property
+    def native_value(self) -> int:
+        """Return state of the sensor."""
+        return self.coordinator.runtimes[-1][self.sensor_name]
+
+
 SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
     VenstarSensorEntityDescription(
         key="humidity",
@@ -132,4 +202,20 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         cls=VenstarTemperatureSensor,
         stype="temp",
     ),
+    VenstarSensorEntityDescription(
+        key="battery",
+        device_class=DEVICE_CLASS_BATTERY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        cls=VenstarBatterySensor,
+        stype="battery",
+    ),
+)
+
+RUNTIME_ENTITY = VenstarSensorEntityDescription(
+    key="runtime",
+    state_class=STATE_CLASS_MEASUREMENT,
+    native_unit_of_measurement=TIME_MINUTES,
+    cls=VenstarRuntimeSensor,
+    stype="runtime",
 )
