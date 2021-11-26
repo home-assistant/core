@@ -63,17 +63,19 @@ async def async_validate_trigger_config(
     if not isinstance(config, dict):
         raise vol.Invalid("Expected a dictionary")
 
+    # We use this approach instead of vol.Any because
+    # this gives better error messages.
+    if CONF_ATTRIBUTE in config:
+        config = TRIGGER_ATTRIBUTE_SCHEMA(config)
+
+    config = TRIGGER_STATE_SCHEMA(config)
+
     registry = er.async_get(hass)
     config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
 
-    # We use this approach instead of vol.Any because
-    # this gives better error messages.
-    if CONF_ATTRIBUTE in config:
-        return TRIGGER_ATTRIBUTE_SCHEMA(config)
-
-    return TRIGGER_STATE_SCHEMA(config)
+    return config
 
 
 async def async_attach_trigger(
