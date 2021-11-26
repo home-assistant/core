@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "unknown_license_plate": "\u4e0d\u660e\u306a\u30e9\u30a4\u30bb\u30f3\u30b9\u30d7\u30ec\u30fc\u30c8"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "license_plate": "\u30e9\u30a4\u30bb\u30f3\u30b9\u30d7\u30ec\u30fc\u30c8"
+                }
+            }
+        }
+    }
+}

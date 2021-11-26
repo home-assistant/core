@@ -1,0 +1,49 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Dinonaktifkan",
+            "1": "50Hz",
+            "2": "60Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Otomatis",
+            "1": "Mati",
+            "2": "Nyala"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "Sensitivitas rendah",
+            "1": "Sensitivitas tinggi"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "Mode daya rendah",
+            "1": "Mode kerja terus menerus"
+        },
+        "tuya__led_type": {
+            "halogen": "Halogen",
+            "incandescent": "Pijar",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Mati",
+            "pos": "Menunjukkan lokasi sakelar",
+            "relay": "Menunjukkan status sakelar nyala/mati"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "Sensitivitas rendah",
+            "1": "Sensitivitas sedang",
+            "2": "Sensitivitas tinggi"
+        },
+        "tuya__record_mode": {
+            "1": "Rekam peristiwa saja",
+            "2": "Perekaman terus menerus"
+        },
+        "tuya__relay_status": {
+            "last": "Ingat status terakhir",
+            "memory": "Ingat status terakhir",
+            "off": "Mati",
+            "on": "Nyala",
+            "power_off": "Mati",
+            "power_on": "Nyala"
+        }
+    }
+}

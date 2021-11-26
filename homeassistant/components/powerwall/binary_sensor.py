@@ -11,6 +11,7 @@ from homeassistant.const import DEVICE_CLASS_POWER
 from .const import (
     DOMAIN,
     POWERWALL_API_DEVICE_TYPE,
+    POWERWALL_API_GRID_SERVICES_ACTIVE,
     POWERWALL_API_GRID_STATUS,
     POWERWALL_API_METERS,
     POWERWALL_API_SERIAL_NUMBERS,
@@ -35,6 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     for sensor_class in (
         PowerWallRunningSensor,
+        PowerWallGridServicesActiveSensor,
         PowerWallGridStatusSensor,
         PowerWallConnectedSensor,
         PowerWallChargingStatusSensor,
@@ -94,6 +96,30 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
     def is_on(self):
         """Get the powerwall connected to tesla state."""
         return self.coordinator.data[POWERWALL_API_SITEMASTER].is_connected_to_tesla
+
+
+class PowerWallGridServicesActiveSensor(PowerWallEntity, BinarySensorEntity):
+    """Representation of a Powerwall grid services active sensor."""
+
+    @property
+    def name(self):
+        """Device Name."""
+        return "Grid Services Active"
+
+    @property
+    def device_class(self):
+        """Device Class."""
+        return DEVICE_CLASS_POWER
+
+    @property
+    def unique_id(self):
+        """Device Uniqueid."""
+        return f"{self.base_unique_id}_grid_services_active"
+
+    @property
+    def is_on(self):
+        """Grid services is active."""
+        return self.coordinator.data[POWERWALL_API_GRID_SERVICES_ACTIVE]
 
 
 class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):

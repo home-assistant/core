@@ -1,6 +1,5 @@
 """Support for WeMo binary sensors."""
 import asyncio
-import logging
 
 from pywemo import Insight, Maker
 
@@ -9,8 +8,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

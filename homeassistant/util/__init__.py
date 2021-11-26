@@ -5,10 +5,9 @@ import asyncio
 from collections.abc import Callable, Coroutine, Iterable, KeysView
 from datetime import datetime, timedelta
 import enum
-from functools import lru_cache, wraps
+from functools import wraps
 import random
 import re
-import socket
 import string
 import threading
 from types import MappingProxyType
@@ -110,6 +109,31 @@ def convert(
         return default
 
 
+def convert_to_int(
+    value: Any, default: int | None = None, little_endian: bool = False
+) -> int | None:
+    """Convert value or bytes to int, returns default if fails.
+
+    This supports bitwise integer operations on `bytes` objects.
+    By default the conversion is in Big-endian style (The last byte contains the least significant bit).
+    In Little-endian style the first byte contains the least significant bit.
+    """
+    if isinstance(value, int):
+        return value
+    if isinstance(value, bytes) and value:
+        bytes_value = bytearray(value)
+        return_value = 0
+        while len(bytes_value):
+            return_value <<= 8
+            if little_endian:
+                return_value |= bytes_value.pop(len(bytes_value) - 1)
+            else:
+                return_value |= bytes_value.pop(0)
+
+        return return_value
+    return convert(value, int, default=default)
+
+
 def ensure_unique_string(
     preferred_string: str, current_strings: Iterable[str] | KeysView[str]
 ) -> str:
@@ -127,26 +151,6 @@ def ensure_unique_string(
         test_string = f"{preferred_string}_{tries}"
 
     return test_string
-
-
-# Taken from: http://stackoverflow.com/a/11735897
-@lru_cache(maxsize=None)
-def get_local_ip() -> str:
-    """Try to determine the local IP address of the machine."""
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-        # Use Google Public DNS server to determine own IP
-        sock.connect(("8.8.8.8", 80))
-
-        return sock.getsockname()[0]  # type: ignore
-    except OSError:
-        try:
-            return socket.gethostbyname(socket.gethostname())
-        except socket.gaierror:
-            return "127.0.0.1"
-    finally:
-        sock.close()
 
 
 # Taken from http://stackoverflow.com/a/23728630

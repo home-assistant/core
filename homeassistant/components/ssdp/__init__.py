@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Iterator
+from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
@@ -18,18 +19,15 @@ from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STARTED,
-    EVENT_HOMEASSISTANT_STOP,
-    MATCH_ALL,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback as core_callback
+from homeassistant.data_entry_flow import BaseServiceInfo
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
-
-from .flow import FlowDispatcher, SSDPFlow
 
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -56,9 +54,12 @@ ATTR_UPNP_MODEL_NAME = "modelName"
 ATTR_UPNP_MODEL_NUMBER = "modelNumber"
 ATTR_UPNP_MODEL_URL = "modelURL"
 ATTR_UPNP_SERIAL = "serialNumber"
+ATTR_UPNP_SERVICE_LIST = "serviceList"
 ATTR_UPNP_UDN = "UDN"
 ATTR_UPNP_UPC = "UPC"
 ATTR_UPNP_PRESENTATION_URL = "presentationURL"
+# Attributes for accessing info added by Home Assistant
+ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
 PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
 
@@ -85,6 +86,99 @@ SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class _HaServiceDescription:
+    """Keys added by HA."""
+
+    x_homeassistant_matching_domains: set[str] = field(default_factory=set)
+
+
+@dataclass
+class _SsdpServiceDescription:
+    """SSDP info with optional keys."""
+
+    ssdp_usn: str
+    ssdp_st: str
+    ssdp_location: str | None = None
+    ssdp_nt: str | None = None
+    ssdp_udn: str | None = None
+    ssdp_ext: str | None = None
+    ssdp_server: str | None = None
+
+
+@dataclass
+class _UpnpServiceDescription:
+    """UPnP info."""
+
+    upnp: dict[str, Any]
+
+
+@dataclass
+class SsdpServiceInfo(
+    _HaServiceDescription,
+    _SsdpServiceDescription,
+    _UpnpServiceDescription,
+    BaseServiceInfo,
+):
+    """Prepared info from ssdp/upnp entries."""
+
+    # Used to prevent log flooding. To be removed in 2022.6
+    _warning_logged: bool = False
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={"ssdp"},
+                error_if_core=False,
+                level=logging.DEBUG,
+            )
+            self._warning_logged = True
+        # Use a property if it is available, fallback to upnp data
+        if hasattr(self, name):
+            return getattr(self, name)
+        return self.upnp[name]
+
+    def get(self, name: str, default: Any = None) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={"ssdp"},
+                error_if_core=False,
+                level=logging.DEBUG,
+            )
+            self._warning_logged = True
+        if hasattr(self, name):
+            return getattr(self, name)
+        return self.upnp.get(name, default)
+
+    def __iter__(self) -> Iterator[str]:
+        """
+        Implement iter(self) on upnp data.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                "accessed discovery_info.__iter__() instead of discovery_info.upnp.__iter__(); this will fail in version 2022.6",
+                exclude_integrations={"ssdp"},
+                error_if_core=False,
+                level=logging.DEBUG,
+            )
+            self._warning_logged = True
+        return self.upnp.__iter__()
 
 
 @bind_hass
@@ -222,7 +316,6 @@ class Scanner:
         self._cancel_scan: Callable[[], None] | None = None
         self._ssdp_listeners: list[SsdpListener] = []
         self._callbacks: list[tuple[SsdpCallback, dict[str, str]]] = []
-        self._flow_dispatcher: FlowDispatcher | None = None
         self._description_cache: DescriptionCache | None = None
         self.integration_matchers = integration_matchers
 
@@ -327,14 +420,10 @@ class Scanner:
         session = async_get_clientsession(self.hass)
         requester = AiohttpSessionRequester(session, True, 10)
         self._description_cache = DescriptionCache(requester)
-        self._flow_dispatcher = FlowDispatcher(self.hass)
 
         await self._async_start_ssdp_listeners()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, self._flow_dispatcher.async_start
-        )
         self._cancel_scan = async_track_time_interval(
             self.hass, self.async_scan, SCAN_INTERVAL
         )
@@ -408,6 +497,7 @@ class Scanner:
             return
 
         discovery_info = discovery_info_from_headers_and_description(info_with_desc)
+        discovery_info[ATTR_HA_MATCHING_DOMAINS] = matching_domains
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
 
@@ -417,13 +507,12 @@ class Scanner:
 
         for domain in matching_domains:
             _LOGGER.debug("Discovered %s at %s", domain, location)
-            flow: SSDPFlow = {
-                "domain": domain,
-                "context": {"source": config_entries.SOURCE_SSDP},
-                "data": discovery_info,
-            }
-            assert self._flow_dispatcher is not None
-            self._flow_dispatcher.create(flow)
+            discovery_flow.async_create_flow(
+                self.hass,
+                domain,
+                {"source": config_entries.SOURCE_SSDP},
+                discovery_info,
+            )
 
     async def _async_get_description_dict(
         self, location: str | None
@@ -487,6 +576,10 @@ def discovery_info_from_headers_and_description(
     if ATTR_UPNP_UDN not in info and ATTR_SSDP_USN in info:
         if udn := _udn_from_usn(info[ATTR_SSDP_USN]):
             info[ATTR_UPNP_UDN] = udn
+
+    # Increase compatibility.
+    if ATTR_SSDP_ST not in info and ATTR_SSDP_NT in info:
+        info[ATTR_SSDP_ST] = info[ATTR_SSDP_NT]
 
     return info
 

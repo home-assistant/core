@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u3053\u306e\u7a7a\u6e2f\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "invalid_airport": "\u7a7a\u6e2f\u30b3\u30fc\u30c9\u304c\u7121\u52b9\u3067\u3059",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "\u7a7a\u6e2f"
+                },
+                "description": "IATA\u5f62\u5f0f\u3067\u7c73\u56fd\u306e\u7a7a\u6e2f\u30b3\u30fc\u30c9(US Airport Code)\u3092\u5165\u529b\u3057\u307e\u3059",
+                "title": "FAA Delays"
+            }
+        }
+    }
+}

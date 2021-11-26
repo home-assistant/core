@@ -23,6 +23,7 @@ from homeassistant.const import (
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
     FREQUENCY_GIGAHERTZ,
+    FREQUENCY_HERTZ,
     FREQUENCY_MEGAHERTZ,
     PERCENTAGE,
     POWER_WATT,
@@ -41,6 +42,8 @@ ATTR_MOUNT: Final = "mount"
 ATTR_SIZE: Final = "size"
 ATTR_TYPE: Final = "type"
 ATTR_USED: Final = "used"
+
+PIXELS: Final = "px"
 
 
 @dataclass
@@ -83,6 +86,13 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         value=lambda bridge: bridge.cpu.cpu.voltage,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="displays_connected",
+        name="Displays Connected",
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:monitor",
+        value=lambda bridge: len(bridge.display.displays),
     ),
     SystemBridgeSensorEntityDescription(
         key="kernel",
@@ -224,6 +234,51 @@ async def async_setup_entry(
     if coordinator.data.battery.hasBattery:
         for description in BATTERY_SENSOR_TYPES:
             entities.append(SystemBridgeSensor(coordinator, description))
+
+    for index, _ in enumerate(coordinator.data.display.displays):
+        name = index + 1
+        entities = [
+            *entities,
+            SystemBridgeSensor(
+                coordinator,
+                SystemBridgeSensorEntityDescription(
+                    key=f"display_{name}_resolution_x",
+                    name=f"Display {name} Resolution X",
+                    state_class=STATE_CLASS_MEASUREMENT,
+                    native_unit_of_measurement=PIXELS,
+                    icon="mdi:monitor",
+                    value=lambda bridge, i=index: bridge.display.displays[
+                        i
+                    ].resolutionX,
+                ),
+            ),
+            SystemBridgeSensor(
+                coordinator,
+                SystemBridgeSensorEntityDescription(
+                    key=f"display_{name}_resolution_y",
+                    name=f"Display {name} Resolution Y",
+                    state_class=STATE_CLASS_MEASUREMENT,
+                    native_unit_of_measurement=PIXELS,
+                    icon="mdi:monitor",
+                    value=lambda bridge, i=index: bridge.display.displays[
+                        i
+                    ].resolutionY,
+                ),
+            ),
+            SystemBridgeSensor(
+                coordinator,
+                SystemBridgeSensorEntityDescription(
+                    key=f"display_{name}_refresh_rate",
+                    name=f"Display {name} Refresh Rate",
+                    state_class=STATE_CLASS_MEASUREMENT,
+                    native_unit_of_measurement=FREQUENCY_HERTZ,
+                    icon="mdi:monitor",
+                    value=lambda bridge, i=index: bridge.display.displays[
+                        i
+                    ].currentRefreshRate,
+                ),
+            ),
+        ]
 
     for index, _ in enumerate(coordinator.data.graphics.controllers):
         if coordinator.data.graphics.controllers[index].name is not None:

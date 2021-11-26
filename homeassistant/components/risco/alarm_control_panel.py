@@ -164,8 +164,7 @@ class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
             _LOGGER.warning("Wrong code entered for %s", mode)
             return
 
-        risco_state = self._ha_to_risco[mode]
-        if not risco_state:
+        if not (risco_state := self._ha_to_risco[mode]):
             _LOGGER.warning("No mapping for mode %s", mode)
             return
 

@@ -60,10 +60,25 @@ class FibaroLight(FibaroDevice, LightEntity):
         devconf = fibaro_device.device_config
         self._reset_color = devconf.get(CONF_RESET_COLOR, False)
         supports_color = (
-            "color" in fibaro_device.properties and "setColor" in fibaro_device.actions
+            "color" in fibaro_device.properties
+            or "colorComponents" in fibaro_device.properties
+            or "RGB" in fibaro_device.type
+            or "rgb" in fibaro_device.type
+            or "color" in fibaro_device.baseType
+        ) and (
+            "setColor" in fibaro_device.actions
+            or "setColorComponents" in fibaro_device.actions
         )
-        supports_dimming = "levelChange" in fibaro_device.interfaces
-        supports_white_v = "setW" in fibaro_device.actions
+        supports_white_v = (
+            "setW" in fibaro_device.actions
+            or "RGBW" in fibaro_device.type
+            or "rgbw" in fibaro_device.type
+        )
+        supports_dimming = (
+            "levelChange" in fibaro_device.interfaces
+            or supports_color
+            or supports_white_v
+        )
 
         # Configuration can override default capability detection
         if devconf.get(CONF_DIMMING, supports_dimming):

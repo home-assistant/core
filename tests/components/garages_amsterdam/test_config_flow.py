@@ -1,4 +1,5 @@
 """Test the Garages Amsterdam config flow."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from aiohttp import ClientResponseError
@@ -44,7 +45,10 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     "side_effect,reason",
     [
         (RuntimeError, "unknown"),
-        (ClientResponseError(None, None, status=500), "cannot_connect"),
+        (
+            ClientResponseError(None, None, status=HTTPStatus.INTERNAL_SERVER_ERROR),
+            "cannot_connect",
+        ),
     ],
 )
 async def test_error_handling(

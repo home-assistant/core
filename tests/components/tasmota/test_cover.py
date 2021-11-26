@@ -53,6 +53,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == STATE_UNKNOWN
     assert (
@@ -215,6 +216,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == STATE_UNKNOWN
     assert (
@@ -383,6 +385,7 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("cover.test_cover_1")
     assert state.state == STATE_UNKNOWN
     await hass.async_block_till_done()
@@ -446,6 +449,7 @@ async def test_sending_mqtt_commands_inverted(hass, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("cover.test_cover_1")
     assert state.state == STATE_UNKNOWN
     await hass.async_block_till_done()

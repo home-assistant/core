@@ -80,7 +80,5 @@ async def async_remove_user(
     """Remove Home Assistant Cast user."""
     user_id: str | None = entry.data.get("user_id")
 
-    if user_id is not None:
-        user = await hass.auth.async_get_user(user_id)
-        if user:
-            await hass.auth.async_remove_user(user)
+    if user_id is not None and (user := await hass.auth.async_get_user(user_id)):
+        await hass.auth.async_remove_user(user)

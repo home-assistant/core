@@ -26,7 +26,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.color import (
@@ -35,6 +34,7 @@ from homeassistant.util.color import (
 )
 
 from .const import DOMAIN
+from .entity import NanoleafEntity
 
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
 DEFAULT_NAME = "Nanoleaf"
@@ -74,25 +74,16 @@ async def async_setup_entry(
     async_add_entities([NanoleafLight(nanoleaf)])
 
 
-class NanoleafLight(LightEntity):
+class NanoleafLight(NanoleafEntity, LightEntity):
     """Representation of a Nanoleaf Light."""
 
     def __init__(self, nanoleaf: Nanoleaf) -> None:
-        """Initialize an Nanoleaf light."""
-        self._nanoleaf = nanoleaf
-        self._attr_unique_id = self._nanoleaf.serial_no
-        self._attr_name = self._nanoleaf.name
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._nanoleaf.serial_no)},
-            name=self._nanoleaf.name,
-            manufacturer=self._nanoleaf.manufacturer,
-            model=self._nanoleaf.model,
-            sw_version=self._nanoleaf.firmware_version,
-        )
-        self._attr_min_mireds = math.ceil(
-            1000000 / self._nanoleaf.color_temperature_max
-        )
-        self._attr_max_mireds = kelvin_to_mired(self._nanoleaf.color_temperature_min)
+        """Initialize the Nanoleaf light."""
+        super().__init__(nanoleaf)
+        self._attr_unique_id = nanoleaf.serial_no
+        self._attr_name = nanoleaf.name
+        self._attr_min_mireds = math.ceil(1000000 / nanoleaf.color_temperature_max)
+        self._attr_max_mireds = kelvin_to_mired(nanoleaf.color_temperature_min)
 
     @property
     def brightness(self) -> int:
@@ -182,8 +173,8 @@ class NanoleafLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        transition = kwargs.get(ATTR_TRANSITION)
-        await self._nanoleaf.turn_off(transition)
+        transition: float | None = kwargs.get(ATTR_TRANSITION)
+        await self._nanoleaf.turn_off(None if transition is None else int(transition))
 
     async def async_update(self) -> None:
         """Fetch new state data for this light."""

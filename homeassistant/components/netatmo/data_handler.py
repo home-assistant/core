@@ -70,11 +70,11 @@ class NetatmoDataClass:
 class NetatmoDataHandler:
     """Manages the Netatmo data handling."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize self."""
         self.hass = hass
-        self._auth = hass.data[DOMAIN][entry.entry_id][AUTH]
-        self.listeners: list[CALLBACK_TYPE] = []
+        self.config_entry = config_entry
+        self._auth = hass.data[DOMAIN][config_entry.entry_id][AUTH]
         self.data_classes: dict = {}
         self.data: dict = {}
         self._queue: deque = deque()
@@ -87,7 +87,7 @@ class NetatmoDataHandler:
             self.hass, self.async_update, timedelta(seconds=SCAN_INTERVAL)
         )
 
-        self.listeners.append(
+        self.config_entry.async_on_unload(
             async_dispatcher_connect(
                 self.hass,
                 f"signal-{DOMAIN}-webhook-None",
@@ -120,11 +120,6 @@ class NetatmoDataHandler:
         """Prioritize data retrieval for given data class entry."""
         self.data_classes[data_class_entry].next_scan = time()
         self._queue.rotate(-(self._queue.index(self.data_classes[data_class_entry])))
-
-    async def async_cleanup(self) -> None:
-        """Clean up the Netatmo data handler."""
-        for listener in self.listeners:
-            listener()
 
     async def handle_event(self, event: dict) -> None:
         """Handle webhook events."""

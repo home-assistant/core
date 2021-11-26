@@ -197,8 +197,7 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
     headers[hdrs.X_FORWARDED_FOR] = forward_for
 
     # Set X-Forwarded-Host
-    forward_host = request.headers.get(hdrs.X_FORWARDED_HOST)
-    if not forward_host:
+    if not (forward_host := request.headers.get(hdrs.X_FORWARDED_HOST)):
         forward_host = request.host
     headers[hdrs.X_FORWARDED_HOST] = forward_host
 

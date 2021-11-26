@@ -1,6 +1,7 @@
 """Config flow to configure the Synology DSM integration."""
 from __future__ import annotations
 
+from ipaddress import ip_address
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -90,6 +91,14 @@ def _ordered_shared_schema(
             default=schema_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         ): bool,
     }
+
+
+def _is_valid_ip(text: str) -> bool:
+    try:
+        ip_address(text)
+    except ValueError:
+        return False
+    return True
 
 
 class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -245,7 +254,17 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if not existing_entry:
             self._abort_if_unique_id_configured()
 
-        if existing_entry and existing_entry.data[CONF_HOST] != parsed_url.hostname:
+        fqdn_with_ssl_verification = (
+            existing_entry
+            and not _is_valid_ip(existing_entry.data[CONF_HOST])
+            and existing_entry.data[CONF_VERIFY_SSL]
+        )
+
+        if (
+            existing_entry
+            and existing_entry.data[CONF_HOST] != parsed_url.hostname
+            and not fqdn_with_ssl_verification
+        ):
             _LOGGER.debug(
                 "Update host from '%s' to '%s' for NAS '%s' via SSDP discovery",
                 existing_entry.data[CONF_HOST],

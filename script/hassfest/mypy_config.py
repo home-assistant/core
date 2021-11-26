@@ -14,11 +14,8 @@ from .model import Config, Integration
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.awair.*",
     "homeassistant.components.blueprint.*",
-    "homeassistant.components.bmw_connected_drive.*",
     "homeassistant.components.climacell.*",
-    "homeassistant.components.cloud.*",
     "homeassistant.components.config.*",
     "homeassistant.components.conversation.*",
     "homeassistant.components.deconz.*",
@@ -72,7 +69,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.luftdaten.*",
     "homeassistant.components.lutron_caseta.*",
     "homeassistant.components.lyric.*",
-    "homeassistant.components.media_source.*",
     "homeassistant.components.melcloud.*",
     "homeassistant.components.meteo_france.*",
     "homeassistant.components.metoffice.*",

@@ -1,4 +1,5 @@
 """Test the Roku config flow."""
+import dataclasses
 from unittest.mock import patch
 
 from homeassistant.components.roku.const import DOMAIN
@@ -47,7 +48,7 @@ async def test_duplicate_error(
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )
@@ -140,7 +141,7 @@ async def test_homekit_cannot_connect(
         error=True,
     )
 
-    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_HOMEKIT},
@@ -157,7 +158,7 @@ async def test_homekit_unknown_error(
     """Test we abort homekit flow on unknown error."""
     mock_connection(aioclient_mock)
 
-    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
     with patch(
         "homeassistant.components.roku.config_flow.Roku._request",
         side_effect=Exception,
@@ -178,7 +179,7 @@ async def test_homekit_discovery(
     """Test the homekit discovery flow."""
     mock_connection(aioclient_mock, device="rokutv", host=HOMEKIT_HOST)
 
-    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
     )
@@ -206,7 +207,7 @@ async def test_homekit_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
     # test abort on existing host
-    discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_HOMEKIT}, data=discovery_info
     )
@@ -221,7 +222,7 @@ async def test_ssdp_cannot_connect(
     """Test we abort SSDP flow on connection error."""
     mock_connection(aioclient_mock, error=True)
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_SSDP},
@@ -238,7 +239,7 @@ async def test_ssdp_unknown_error(
     """Test we abort SSDP flow on unknown error."""
     mock_connection(aioclient_mock)
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     with patch(
         "homeassistant.components.roku.config_flow.Roku._request",
         side_effect=Exception,
@@ -259,7 +260,7 @@ async def test_ssdp_discovery(
     """Test the SSDP discovery flow."""
     mock_connection(aioclient_mock)
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )

@@ -6,8 +6,10 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_FALLBACK, DOMAIN, UNIQUE_ID
 
@@ -80,13 +82,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle HomeKit discovery."""
         self._async_abort_entries_match()
         properties = {
-            key.lower(): value for (key, value) in discovery_info["properties"].items()
+            key.lower(): value
+            for (key, value) in discovery_info[zeroconf.ATTR_PROPERTIES].items()
         }
-        await self.async_set_unique_id(properties["id"])
+        await self.async_set_unique_id(properties[zeroconf.ATTR_PROPERTIES_ID])
+        self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
     def _username_already_configured(self, user_input):

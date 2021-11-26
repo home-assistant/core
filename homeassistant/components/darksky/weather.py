@@ -91,8 +91,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
     mode = config.get(CONF_MODE)
 
-    units = config.get(CONF_UNITS)
-    if not units:
+    if not (units := config.get(CONF_UNITS)):
         units = "ca" if hass.config.units.is_metric else "us"
 
     dark_sky = DarkSkyData(config.get(CONF_API_KEY), latitude, longitude, units)

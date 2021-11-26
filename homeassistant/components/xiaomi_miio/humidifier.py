@@ -1,5 +1,4 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier with humidifier entity."""
-from enum import Enum
 import logging
 import math
 
@@ -123,14 +122,6 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._state
-
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
 
     @property
     def mode(self):

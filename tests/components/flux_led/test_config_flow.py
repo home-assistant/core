@@ -6,12 +6,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
     DOMAIN,
-    MODE_AUTO,
     MODE_RGB,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
@@ -29,10 +29,8 @@ from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
 from . import (
     DEFAULT_ENTRY_TITLE,
+    DEFAULT_ENTRY_TITLE_PARTIAL,
     DHCP_DISCOVERY,
-    DHCP_HOSTNAME,
-    DHCP_IP_ADDRESS,
-    DHCP_MAC_ADDRESS,
     FLUX_DISCOVERY,
     IP_ADDRESS,
     MAC_ADDRESS,
@@ -248,7 +246,7 @@ async def test_import(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_manual(hass: HomeAssistant):
+async def test_manual_working_discovery(hass: HomeAssistant):
     """Test manually setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -277,8 +275,8 @@ async def test_manual(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
     assert result4["type"] == "create_entry"
-    assert result4["title"] == IP_ADDRESS
-    assert result4["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: IP_ADDRESS}
+    assert result4["title"] == DEFAULT_ENTRY_TITLE
+    assert result4["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
@@ -342,30 +340,25 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                DHCP_HOSTNAME: "any",
-                DHCP_IP_ADDRESS: IP_ADDRESS,
-                DHCP_MAC_ADDRESS: "00:00:00:00:00:00",
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="any",
+                ip=IP_ADDRESS,
+                macaddress="00:00:00:00:00:00",
+            ),
         )
         await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
     assert result3["reason"] == "already_in_progress"
 
 
-@pytest.mark.parametrize(
-    "source, data",
-    [
-        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
-        (config_entries.SOURCE_DISCOVERY, FLUX_DISCOVERY),
-    ],
-)
-async def test_discovered_by_dhcp_or_discovery(hass, source, data):
-    """Test we can setup when discovered from dhcp or discovery."""
+async def test_discovered_by_discovery(hass):
+    """Test we can setup when discovered from discovery."""
 
     with _patch_discovery(), _patch_wifibulb():
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": source}, data=data
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DISCOVERY},
+            data=FLUX_DISCOVERY,
         )
         await hass.async_block_till_done()
 
@@ -384,6 +377,74 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
     assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
+
+
+async def test_discovered_by_dhcp_udp_responds(hass):
+    """Test we can setup when discovered from dhcp but with udp response."""
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with _patch_discovery(), _patch_wifibulb(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_async_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
+    assert mock_async_setup.called
+    assert mock_async_setup_entry.called
+
+
+async def test_discovered_by_dhcp_no_udp_response(hass):
+    """Test we can setup when discovered from dhcp but no udp response."""
+
+    with _patch_discovery(no_device=True), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] is None
+
+    with _patch_discovery(no_device=True), _patch_wifibulb(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_async_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: DEFAULT_ENTRY_TITLE_PARTIAL,
+    }
+    assert mock_async_setup.called
+    assert mock_async_setup_entry.called
+
+
+async def test_discovered_by_dhcp_no_udp_response_or_tcp_response(hass):
+    """Test we can setup when discovered from dhcp but no udp response or tcp response."""
+
+    with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 @pytest.mark.parametrize(
@@ -436,7 +497,6 @@ async def test_options(hass: HomeAssistant):
     assert result["step_id"] == "init"
 
     user_input = {
-        CONF_MODE: MODE_AUTO,
         CONF_CUSTOM_EFFECT_COLORS: "[0,0,255], [255,0,0]",
         CONF_CUSTOM_EFFECT_SPEED_PCT: 50,
         CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_JUMP,
@@ -449,4 +509,4 @@ async def test_options(hass: HomeAssistant):
     assert result2["type"] == "create_entry"
     assert result2["data"] == user_input
     assert result2["data"] == config_entry.options
-    assert hass.states.get("light.az120444_aabbccddeeff") is not None
+    assert hass.states.get("light.rgbw_controller_ddeeff") is not None

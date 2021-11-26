@@ -1,0 +1,49 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Devre d\u0131\u015f\u0131",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Otomatik",
+            "1": "Kapal\u0131",
+            "2": "A\u00e7\u0131k"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "D\u00fc\u015f\u00fck hassasiyet",
+            "1": "Y\u00fcksek hassasiyet"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "D\u00fc\u015f\u00fck g\u00fc\u00e7 modu",
+            "1": "S\u00fcrekli \u00e7al\u0131\u015fma modu"
+        },
+        "tuya__led_type": {
+            "halogen": "Halojen",
+            "incandescent": "Akkor",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Kapal\u0131",
+            "pos": "Anahtar konumunu belirtin",
+            "relay": "A\u00e7ma/kapama durumunu belirtin"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "D\u00fc\u015f\u00fck hassasiyet",
+            "1": "Orta hassasiyet",
+            "2": "Y\u00fcksek hassasiyet"
+        },
+        "tuya__record_mode": {
+            "1": "Yaln\u0131zca olaylar\u0131 kaydet",
+            "2": "S\u00fcrekli kay\u0131t"
+        },
+        "tuya__relay_status": {
+            "last": "Son durumu hat\u0131rla",
+            "memory": "Son durumu hat\u0131rla",
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k",
+            "power_off": "Kapal\u0131",
+            "power_on": "A\u00e7\u0131k"
+        }
+    }
+}

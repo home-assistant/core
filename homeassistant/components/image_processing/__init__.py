@@ -161,8 +161,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
             if ATTR_CONFIDENCE not in face:
                 continue
 
-            f_co = face[ATTR_CONFIDENCE]
-            if f_co > confidence:
+            if (f_co := face[ATTR_CONFIDENCE]) > confidence:
                 confidence = f_co
                 for attr in (ATTR_NAME, ATTR_MOTION):
                     if attr in face:

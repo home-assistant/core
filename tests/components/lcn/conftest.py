@@ -21,7 +21,13 @@ class MockModuleConnection(ModuleConnection):
     status_request_handler = AsyncMock()
     activate_status_request_handler = AsyncMock()
     cancel_status_request_handler = AsyncMock()
+    request_name = AsyncMock(return_value="TestModule")
     send_command = AsyncMock(return_value=True)
+
+    def __init__(self, *args, **kwargs):
+        """Construct ModuleConnection instance."""
+        super().__init__(*args, **kwargs)
+        self.serials_request_handler.serial_known.set()
 
 
 class MockGroupConnection(GroupConnection):

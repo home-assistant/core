@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from . import local_auth
 from .const import DATA_NEST, DATA_NEST_CONFIG, DOMAIN, SIGNAL_NEST_UPDATE
@@ -377,7 +377,7 @@ class NestSensorDevice(Entity):
         return f"{self.device.serial}-{self.variable}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         if not hasattr(self.device, "name_long"):
             name = self.structure.name
@@ -393,12 +393,12 @@ class NestSensorDevice(Entity):
             else:
                 model = None
 
-        return {
-            "identifiers": {(DOMAIN, self.device.serial)},
-            "name": name,
-            "manufacturer": "Nest Labs",
-            "model": model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device.serial)},
+            manufacturer="Nest Labs",
+            model=model,
+            name=name,
+        )
 
     def update(self):
         """Do not use NestSensorDevice directly."""

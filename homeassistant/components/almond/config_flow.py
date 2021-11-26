@@ -24,7 +24,7 @@ async def async_verify_local_connection(hass: core.HomeAssistant, host: str):
     api = WebAlmondAPI(AlmondLocalAuth(host, websession))
 
     try:
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             await api.async_list_apps()
 
         return True

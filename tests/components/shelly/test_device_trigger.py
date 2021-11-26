@@ -109,7 +109,7 @@ async def test_get_triggers_button(hass):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"sleep_period": 43200, "model": "SHBTN-1"},
+        data={"sleep_period": 43200, "model": "SHBTN-1", "host": "1.2.3.4"},
         unique_id="12345678",
     )
     config_entry.add_to_hass(hass)

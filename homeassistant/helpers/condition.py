@@ -328,18 +328,18 @@ def async_numeric_state(  # noqa: C901
 
     if isinstance(entity, str):
         entity_id = entity
-        entity = hass.states.get(entity)
 
-        if entity is None:
+        if (entity := hass.states.get(entity)) is None:
             raise ConditionErrorMessage("numeric_state", f"unknown entity {entity_id}")
     else:
         entity_id = entity.entity_id
 
     if attribute is not None and attribute not in entity.attributes:
-        raise ConditionErrorMessage(
-            "numeric_state",
-            f"attribute '{attribute}' (of entity {entity_id}) does not exist",
+        condition_trace_set_result(
+            False,
+            message=f"attribute '{attribute}' of entity {entity_id} does not exist",
         )
+        return False
 
     value: Any = None
     if value_template is None:
@@ -357,8 +357,12 @@ def async_numeric_state(  # noqa: C901
                 "numeric_state", f"template error: {ex}"
             ) from ex
 
-    # Known states that never match the numeric condition
-    if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+    # Known states or attribute values that never match the numeric condition
+    if value in (None, STATE_UNAVAILABLE, STATE_UNKNOWN):
+        condition_trace_set_result(
+            False,
+            message=f"value '{value}' is non-numeric and treated as False",
+        )
         return False
 
     try:
@@ -371,8 +375,7 @@ def async_numeric_state(  # noqa: C901
 
     if below is not None:
         if isinstance(below, str):
-            below_entity = hass.states.get(below)
-            if not below_entity:
+            if not (below_entity := hass.states.get(below)):
                 raise ConditionErrorMessage(
                     "numeric_state", f"unknown 'below' entity {below}"
                 )
@@ -400,8 +403,7 @@ def async_numeric_state(  # noqa: C901
 
     if above is not None:
         if isinstance(above, str):
-            above_entity = hass.states.get(above)
-            if not above_entity:
+            if not (above_entity := hass.states.get(above)):
                 raise ConditionErrorMessage(
                     "numeric_state", f"unknown 'above' entity {above}"
                 )
@@ -497,17 +499,18 @@ def state(
 
     if isinstance(entity, str):
         entity_id = entity
-        entity = hass.states.get(entity)
 
-        if entity is None:
+        if (entity := hass.states.get(entity)) is None:
             raise ConditionErrorMessage("state", f"unknown entity {entity_id}")
     else:
         entity_id = entity.entity_id
 
     if attribute is not None and attribute not in entity.attributes:
-        raise ConditionErrorMessage(
-            "state", f"attribute '{attribute}' (of entity {entity_id}) does not exist"
+        condition_trace_set_result(
+            False,
+            message=f"attribute '{attribute}' of entity {entity_id} does not exist",
         )
+        return False
 
     assert isinstance(entity, State)
 
@@ -526,8 +529,7 @@ def state(
             isinstance(req_state_value, str)
             and INPUT_ENTITY_ID.match(req_state_value) is not None
         ):
-            state_entity = hass.states.get(req_state_value)
-            if not state_entity:
+            if not (state_entity := hass.states.get(req_state_value)):
                 raise ConditionErrorMessage(
                     "state", f"the 'state' entity {req_state_value} is unavailable"
                 )
@@ -738,8 +740,7 @@ def time(
     if after is None:
         after = dt_util.dt.time(0)
     elif isinstance(after, str):
-        after_entity = hass.states.get(after)
-        if not after_entity:
+        if not (after_entity := hass.states.get(after)):
             raise ConditionErrorMessage("time", f"unknown 'after' entity {after}")
         if after_entity.domain == "input_datetime":
             after = dt_util.dt.time(
@@ -763,8 +764,7 @@ def time(
     if before is None:
         before = dt_util.dt.time(23, 59, 59, 999999)
     elif isinstance(before, str):
-        before_entity = hass.states.get(before)
-        if not before_entity:
+        if not (before_entity := hass.states.get(before)):
             raise ConditionErrorMessage("time", f"unknown 'before' entity {before}")
         if before_entity.domain == "input_datetime":
             before = dt_util.dt.time(
@@ -840,9 +840,8 @@ def zone(
 
     if isinstance(zone_ent, str):
         zone_ent_id = zone_ent
-        zone_ent = hass.states.get(zone_ent)
 
-        if zone_ent is None:
+        if (zone_ent := hass.states.get(zone_ent)) is None:
             raise ConditionErrorMessage("zone", f"unknown zone {zone_ent_id}")
 
     if entity is None:
@@ -850,9 +849,8 @@ def zone(
 
     if isinstance(entity, str):
         entity_id = entity
-        entity = hass.states.get(entity)
 
-        if entity is None:
+        if (entity := hass.states.get(entity)) is None:
             raise ConditionErrorMessage("zone", f"unknown entity {entity_id}")
     else:
         entity_id = entity.entity_id
@@ -1029,9 +1027,7 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
         if condition != "device":
             continue
 
-        device_id = config.get(CONF_DEVICE_ID)
-
-        if device_id is not None:
+        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
             referenced.add(device_id)
 
     return referenced

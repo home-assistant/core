@@ -33,6 +33,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -288,6 +289,14 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         await self.coordinator.musiccast.set_volume_level(self._zone_id, volume)
         self.async_write_ha_state()
 
+    async def async_volume_up(self):
+        """Turn volume up for media player."""
+        await self.coordinator.musiccast.volume_up(self._zone_id)
+
+    async def async_volume_down(self):
+        """Turn volume down for media player."""
+        await self.coordinator.musiccast.volume_down(self._zone_id)
+
     async def async_media_play(self):
         """Send play command."""
         if self._is_netusb:
@@ -309,7 +318,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     async def async_media_stop(self):
         """Send stop command."""
         if self._is_netusb:
-            await self.coordinator.musiccast.netusb_pause()
+            await self.coordinator.musiccast.netusb_stop()
         else:
             raise HomeAssistantError(
                 "Service stop is not supported for non NetUSB sources."
@@ -333,9 +342,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             parts = media_id.split(":")
 
             if parts[0] == "list":
-                index = parts[3]
-
-                if index == "-1":
+                if (index := parts[3]) == "-1":
                     index = "0"
 
                 await self.coordinator.musiccast.play_list_media(index, self._zone_id)
@@ -460,7 +467,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         if ZoneFeature.POWER in zone.features:
             supported_features |= SUPPORT_TURN_ON | SUPPORT_TURN_OFF
         if ZoneFeature.VOLUME in zone.features:
-            supported_features |= SUPPORT_VOLUME_SET
+            supported_features |= SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
         if ZoneFeature.MUTE in zone.features:
             supported_features |= SUPPORT_VOLUME_MUTE
 
@@ -664,8 +671,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         """Return all media players of the current group, if the media player is server."""
         if self.is_client:
             # If we are a client we can still share group information, but we will take them from the server.
-            server = self.group_server
-            if server != self:
+            if (server := self.group_server) != self:
                 return server.musiccast_group
 
             return [self]

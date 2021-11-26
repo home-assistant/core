@@ -79,8 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.info("Skipping account %s for bank %s", account.iban, fints_name)
             continue
 
-        account_name = account_config.get(account.iban)
-        if not account_name:
+        if not (account_name := account_config.get(account.iban)):
             account_name = f"{fints_name} - {account.iban}"
         accounts.append(FinTsAccount(client, account, account_name))
         _LOGGER.debug("Creating account %s for bank %s", account.iban, fints_name)

@@ -8,7 +8,6 @@ from google_nest_sdm.exceptions import (
     ConfigurationException,
     GoogleNestException,
 )
-from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,23 +21,26 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_entry_oauth2_flow,
-    config_validation as cv,
-)
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
-from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import (
+    CONF_PROJECT_ID,
+    CONF_SUBSCRIBER_ID,
+    DATA_NEST_CONFIG,
+    DATA_SDM,
+    DATA_SUBSCRIBER,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+    OOB_REDIRECT_URI,
+)
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PROJECT_ID = "project_id"
-CONF_SUBSCRIBER_ID = "subscriber_id"
-DATA_NEST_CONFIG = "nest_config"
 DATA_NEST_UNAVAILABLE = "nest_unavailable"
 
 NEST_SETUP_NOTIFICATION = "nest_setup"
@@ -68,6 +70,51 @@ CONFIG_SCHEMA = vol.Schema(
 
 # Platforms for SDM API
 PLATFORMS = ["sensor", "camera", "climate"]
+WEB_AUTH_DOMAIN = DOMAIN
+INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
+
+
+class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
+    """OAuth implementation using OAuth for web applications."""
+
+    name = "OAuth for Web"
+
+    def __init__(
+        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
+    ) -> None:
+        """Initialize WebAuth."""
+        super().__init__(
+            hass,
+            WEB_AUTH_DOMAIN,
+            client_id,
+            client_secret,
+            OAUTH2_AUTHORIZE.format(project_id=project_id),
+            OAUTH2_TOKEN,
+        )
+
+
+class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
+    """OAuth implementation using OAuth for installed applications."""
+
+    name = "OAuth for Apps"
+
+    def __init__(
+        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
+    ) -> None:
+        """Initialize InstalledAppAuth."""
+        super().__init__(
+            hass,
+            INSTALLED_AUTH_DOMAIN,
+            client_id,
+            client_secret,
+            OAUTH2_AUTHORIZE.format(project_id=project_id),
+            OAUTH2_TOKEN,
+        )
+
+    @property
+    def redirect_uri(self) -> str:
+        """Return the redirect uri."""
+        return OOB_REDIRECT_URI
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -81,7 +128,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return await async_setup_legacy(hass, config)
 
     if CONF_SUBSCRIBER_ID not in config[DOMAIN]:
-        _LOGGER.error("Configuration option '{CONF_SUBSCRIBER_ID}' required")
+        _LOGGER.error("Configuration option 'subscriber_id' required")
         return False
 
     # For setup of ConfigEntry below
@@ -90,13 +137,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     config_flow.NestFlowHandler.register_sdm_api(hass)
     config_flow.NestFlowHandler.async_register_implementation(
         hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
+        InstalledAppAuth(
             hass,
-            DOMAIN,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
+            project_id,
+        ),
+    )
+    config_flow.NestFlowHandler.async_register_implementation(
+        hass,
+        WebAuth(
+            hass,
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
+            project_id,
         ),
     )
 
@@ -115,22 +169,21 @@ class SignalUpdateCallback:
         if not event_message.resource_update_name:
             return
         device_id = event_message.resource_update_name
-        events = event_message.resource_update_events
-        if not events:
+        if not (events := event_message.resource_update_events):
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = await self._hass.helpers.device_registry.async_get_registry()
         device_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         if not device_entry:
             return
-        for event in events:
-            event_type = EVENT_NAME_MAP.get(event)
-            if not event_type:
+        for api_event_type, image_event in events.items():
+            if not (event_type := EVENT_NAME_MAP.get(api_event_type)):
                 continue
             message = {
                 "device_id": device_entry.id,
                 "type": event_type,
                 "timestamp": event_message.timestamp,
+                "nest_event_id": image_event.event_id,
             }
             self._hass.bus.async_fire(NEST_EVENT, message)
 
@@ -141,24 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
-
-    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
-
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    auth = api.AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass),
-        session,
-        config[CONF_CLIENT_ID],
-        config[CONF_CLIENT_SECRET],
-    )
-    subscriber = GoogleNestSubscriber(
-        auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
-    )
+    subscriber = await api.new_subscriber(hass, entry)
     callback = SignalUpdateCallback(hass)
     subscriber.set_update_callback(callback.async_handle_event)
 

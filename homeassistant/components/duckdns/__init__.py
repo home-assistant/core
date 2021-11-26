@@ -1,5 +1,4 @@
 """Integrate with DuckDNS."""
-from asyncio import iscoroutinefunction
 from datetime import timedelta
 import logging
 
@@ -102,10 +101,6 @@ async def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False)
 @bind_hass
 def async_track_time_interval_backoff(hass, action, intervals) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
-    if not iscoroutinefunction:
-        _LOGGER.error("Action needs to be a coroutine and return True/False")
-        return
-
     if not isinstance(intervals, (list, tuple)):
         intervals = (intervals,)
     remove = None

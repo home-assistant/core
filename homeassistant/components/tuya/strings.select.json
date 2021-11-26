@@ -1,0 +1,49 @@
+{
+  "state": {
+    "tuya__basic_anti_flickr": {
+      "0": "Disabled",
+      "1": "50 Hz",
+      "2": "60 Hz"
+    },
+    "tuya__basic_nightvision": {
+      "0": "Automatic",
+      "1": "[%key:common::state::off%]",
+      "2": "[%key:common::state::on%]"
+    },
+    "tuya__decibel_sensitivity": {
+      "0": "Low sensitivity",
+      "1": "High sensitivity"
+    },
+    "tuya__ipc_work_mode": {
+      "0": "Low power mode",
+      "1": "Continuous working mode"
+    },
+    "tuya__led_type": {
+      "halogen": "Halogen",
+      "incandescent": "Incandescent",
+      "led": "LED"
+    },
+    "tuya__light_mode": {
+      "none": "[%key:common::state::off%]",
+      "pos": "Indicate switch location",
+      "relay": "Indicate switch on/off state"
+    },
+    "tuya__motion_sensitivity": {
+      "0": "Low sensitivity",
+      "1": "Medium sensitivity",
+      "2": "High sensitivity"
+    },
+    "tuya__record_mode": {
+      "1": "Record events only",
+      "2": "Continuous recording"
+    },
+    "tuya__relay_status": {
+      "last": "Remember last state",
+      "memory": "Remember last state",
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]",
+      "power_off": "[%key:common::state::off%]",
+      "power_on": "[%key:common::state::on%]"
+    }
+  }
+}

@@ -239,3 +239,25 @@ async def test_migrate_from_yaml(hass: HomeAssistant):
 
     assert migrated_entry is not None
     assert migrated_entry.data[CONF_HOST] == IP_ADDRESS
+
+
+async def test_migrate_from_legacy_entry(hass: HomeAssistant):
+    """Test migrate from legacy entry that was already imported from yaml."""
+    data = {
+        CONF_DISCOVERY: False,
+        CONF_SWITCH: [{CONF_HOST: IP_ADDRESS}],
+    }
+    config_entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+    with _patch_discovery(), _patch_single_discovery():
+        await setup.async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    migrated_entry = None
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.unique_id == MAC_ADDRESS:
+            migrated_entry = entry
+            break
+
+    assert migrated_entry is not None
+    assert migrated_entry.data[CONF_HOST] == IP_ADDRESS

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d4c\u5ea6",
+                    "name": "\u540d\u524d"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "\u3057\u304d\u3044\u5024(%)"
+                }
+            }
+        }
+    },
+    "title": "NOAA\u30aa\u30fc\u30ed\u30e9\u30bb\u30f3\u30b5\u30fc"
+}

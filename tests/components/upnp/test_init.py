@@ -9,7 +9,6 @@ from homeassistant.components.upnp.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ST, TEST_UDN
 
@@ -27,10 +26,6 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
             CONFIG_ENTRY_ST: TEST_ST,
         },
     )
-
-    # Initialisation of component, no device discovered.
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
 
     # Load config_entry.
     entry.add_to_hass(hass)

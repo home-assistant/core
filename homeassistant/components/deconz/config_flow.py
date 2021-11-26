@@ -85,7 +85,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 self.bridges = await deconz_discovery(session)
 
         except (asyncio.TimeoutError, ResponseError):
@@ -141,7 +141,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                with async_timeout.timeout(10):
+                async with async_timeout.timeout(10):
                     api_key = await deconz_session.get_api_key()
 
             except (ResponseError, RequestError, asyncio.TimeoutError):
@@ -159,7 +159,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             session = aiohttp_client.async_get_clientsession(self.hass)
 
             try:
-                with async_timeout.timeout(10):
+                async with async_timeout.timeout(10):
                     self.bridge_id = await deconz_get_bridge_id(
                         session, **self.deconz_config
                     )

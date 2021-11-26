@@ -95,8 +95,7 @@ class ThresholdSensor(BinarySensorEntity):
         @callback
         def async_threshold_sensor_state_listener(event):
             """Handle sensor state changes."""
-            new_state = event.data.get("new_state")
-            if new_state is None:
+            if (new_state := event.data.get("new_state")) is None:
                 return
 
             try:

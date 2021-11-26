@@ -8,7 +8,7 @@ from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_registry
 
 
 @pytest.fixture()
@@ -19,6 +19,30 @@ def cloud_stub():
 
 async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     """Test Alexa config should expose using prefs."""
+    entity_registry = mock_registry(hass)
+
+    entity_entry1 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_config_id",
+        suggested_object_id="config_light",
+        entity_category="config",
+    )
+    entity_entry2 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_diagnostic_id",
+        suggested_object_id="diagnostic_light",
+        entity_category="diagnostic",
+    )
+    entity_entry3 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_system_id",
+        suggested_object_id="system_light",
+        entity_category="system",
+    )
+
     entity_conf = {"should_expose": False}
     await cloud_prefs.async_update(
         alexa_entity_configs={"light.kitchen": entity_conf},
@@ -31,11 +55,23 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
     await conf.async_initialize()
 
     assert not conf.should_expose("light.kitchen")
+    assert not conf.should_expose(entity_entry1.entity_id)
+    assert not conf.should_expose(entity_entry2.entity_id)
+    assert not conf.should_expose(entity_entry3.entity_id)
+
     entity_conf["should_expose"] = True
     assert conf.should_expose("light.kitchen")
+    # config and diagnostic entities should not be exposed
+    assert not conf.should_expose(entity_entry1.entity_id)
+    assert not conf.should_expose(entity_entry2.entity_id)
+    assert not conf.should_expose(entity_entry3.entity_id)
 
     entity_conf["should_expose"] = None
     assert conf.should_expose("light.kitchen")
+    # config and diagnostic entities should not be exposed
+    assert not conf.should_expose(entity_entry1.entity_id)
+    assert not conf.should_expose(entity_entry2.entity_id)
+    assert not conf.should_expose(entity_entry3.entity_id)
 
     assert "alexa" not in hass.config.components
     await cloud_prefs.async_update(

@@ -9,7 +9,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, callback
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, BaseServiceInfo
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -349,7 +349,7 @@ async def test_remove_entry_cancels_reauth(hass, manager):
     await entry.async_setup(hass)
     await hass.async_block_till_done()
 
-    flows = hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress_by_handler("test")
     assert len(flows) == 1
     assert flows[0]["context"]["entry_id"] == entry.entry_id
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
@@ -357,7 +357,7 @@ async def test_remove_entry_cancels_reauth(hass, manager):
 
     await manager.async_remove(entry.entry_id)
 
-    flows = hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress_by_handler("test")
     assert len(flows) == 0
 
 
@@ -2100,11 +2100,11 @@ async def test_unignore_step_form(hass, manager):
 
         # Right after removal there shouldn't be an entry or active flows
         assert len(hass.config_entries.async_entries("comp")) == 0
-        assert len(hass.config_entries.flow.async_progress()) == 0
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
 
         # But after a 'tick' the unignore step has run and we can see an active flow again.
         await hass.async_block_till_done()
-        assert len(hass.config_entries.flow.async_progress()) == 1
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 1
 
         # and still not config entries
         assert len(hass.config_entries.async_entries("comp")) == 0
@@ -2144,7 +2144,7 @@ async def test_unignore_create_entry(hass, manager):
         await manager.async_remove(entry.entry_id)
 
         # Right after removal there shouldn't be an entry or flow
-        assert len(hass.config_entries.flow.async_progress()) == 0
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
         assert len(hass.config_entries.async_entries("comp")) == 0
 
         # But after a 'tick' the unignore step has run and we can see a config entry.
@@ -2155,7 +2155,7 @@ async def test_unignore_create_entry(hass, manager):
         assert entry.title == "yo"
 
         # And still no active flow
-        assert len(hass.config_entries.flow.async_progress()) == 0
+        assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
 
 
 async def test_unignore_default_impl(hass, manager):
@@ -2350,13 +2350,13 @@ async def test_async_setup_update_entry(hass):
 @pytest.mark.parametrize(
     "discovery_source",
     (
-        config_entries.SOURCE_DISCOVERY,
-        config_entries.SOURCE_SSDP,
-        config_entries.SOURCE_USB,
-        config_entries.SOURCE_HOMEKIT,
-        config_entries.SOURCE_DHCP,
-        config_entries.SOURCE_ZEROCONF,
-        config_entries.SOURCE_HASSIO,
+        (config_entries.SOURCE_DISCOVERY, {}),
+        (config_entries.SOURCE_SSDP, {}),
+        (config_entries.SOURCE_USB, BaseServiceInfo()),
+        (config_entries.SOURCE_HOMEKIT, BaseServiceInfo()),
+        (config_entries.SOURCE_DHCP, BaseServiceInfo()),
+        (config_entries.SOURCE_ZEROCONF, BaseServiceInfo()),
+        (config_entries.SOURCE_HASSIO, {}),
     ),
 )
 async def test_flow_with_default_discovery(hass, manager, discovery_source):
@@ -2382,7 +2382,7 @@ async def test_flow_with_default_discovery(hass, manager, discovery_source):
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         # Create one to be in progress
         result = await manager.flow.async_init(
-            "comp", context={"source": discovery_source}
+            "comp", context={"source": discovery_source[0]}, data=discovery_source[1]
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
@@ -2403,7 +2403,7 @@ async def test_flow_with_default_discovery(hass, manager, discovery_source):
 
     entry = hass.config_entries.async_entries("comp")[0]
     assert entry.title == "yo"
-    assert entry.source == discovery_source
+    assert entry.source == discovery_source[0]
     assert entry.unique_id is None
 
 

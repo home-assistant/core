@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_BATTERY,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     TIME_MINUTES,
 )
@@ -134,6 +135,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
         entity_class=TractiveHardwareSensor,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_ACTIVE,

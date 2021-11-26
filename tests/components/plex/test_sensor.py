@@ -1,5 +1,6 @@
 """Tests for Plex sensors."""
 from datetime import datetime, timedelta
+from http import HTTPStatus
 from unittest.mock import patch
 
 import requests.exceptions
@@ -165,7 +166,8 @@ async def test_library_sensor_values(
 
     # Handle library deletion
     requests_mock.get(
-        "/library/sections/2/all?includeCollections=0&type=2", status_code=404
+        "/library/sections/2/all?includeCollections=0&type=2",
+        status_code=HTTPStatus.NOT_FOUND,
     )
     trigger_plex_update(
         mock_websocket, msgtype="status", payload=LIBRARY_UPDATE_PAYLOAD

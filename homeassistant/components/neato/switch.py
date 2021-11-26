@@ -10,7 +10,7 @@ from pybotvac.robot import Robot
 
 from homeassistant.components.neato import NeatoHub
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -107,9 +107,14 @@ class NeatoConnectedSwitch(ToggleEntity):
         )
 
     @property
+    def entity_category(self) -> str:
+        """Device entity category."""
+        return ENTITY_CATEGORY_CONFIG
+
+    @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
+        return DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

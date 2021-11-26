@@ -87,7 +87,7 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
-            with timeout(API_TIMEOUT):
+            async with timeout(API_TIMEOUT):
                 return cast(Dict[str, Any], await self.gios.async_update())
         except (
             ApiError,

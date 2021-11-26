@@ -18,6 +18,13 @@
             "unknown": "Uventet feil"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Tilgangstoken"
+                },
+                "description": "For \u00e5 koble til Google-kontoen din, [autoriser kontoen din]( {url} ). \n\n Etter autorisasjon, kopier og lim inn den oppgitte Auth Token-koden nedenfor.",
+                "title": "Koble til Google-kontoen"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Tilbyder"

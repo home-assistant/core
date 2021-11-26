@@ -156,8 +156,9 @@ def register_services(hass):
             vol.Required(ATTR_GW_ID): vol.All(
                 cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])
             ),
-            vol.Optional(ATTR_DATE, default=date.today()): cv.date,
-            vol.Optional(ATTR_TIME, default=datetime.now().time()): cv.time,
+            # pylint: disable=unnecessary-lambda
+            vol.Optional(ATTR_DATE, default=lambda: date.today()): cv.date,
+            vol.Optional(ATTR_TIME, default=lambda: datetime.now().time()): cv.time,
         }
     )
     service_set_control_setpoint_schema = vol.Schema(

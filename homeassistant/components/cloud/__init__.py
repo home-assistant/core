@@ -253,9 +253,7 @@ def _remote_handle_prefs_updated(cloud: Cloud) -> None:
             if prefs.remote_enabled == cur_pref:
                 return
 
-            cur_pref = prefs.remote_enabled
-
-            if cur_pref:
+            if cur_pref := prefs.remote_enabled:
                 await cloud.remote.connect()
             else:
                 await cloud.remote.disconnect()

@@ -37,5 +37,26 @@
             "event.value_notification.scene_activation": "Aktivace sc\u00e9ny na {subtype}",
             "state.node_status": "Stav uzlu zm\u011bn\u011bn"
         }
+    },
+    "options": {
+        "error": {
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "log_level": "\u00darove\u0148 protokolu",
+                    "network_key": "S\u00ed\u0165ov\u00fd kl\u00ed\u010d"
+                }
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "title": "Vyberte metodu p\u0159ipojen\u00ed"
+            }
+        }
     }
 }

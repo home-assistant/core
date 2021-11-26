@@ -35,8 +35,10 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
+    POWER_VOLT_AMPERE,
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
@@ -60,9 +62,11 @@ from .core.const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
+    CHANNEL_LEAF_WETNESS,
     CHANNEL_POWER_CONFIGURATION,
     CHANNEL_PRESSURE,
     CHANNEL_SMARTENERGY_METERING,
+    CHANNEL_SOIL_MOISTURE,
     CHANNEL_TEMPERATURE,
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
@@ -223,6 +227,23 @@ class Battery(Sensor):
     _device_class = DEVICE_CLASS_BATTERY
     _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Unlike any other entity, PowerConfiguration cluster may not support
+        battery_percent_remaining attribute, but zha-device-handlers takes care of it
+        so create the entity regardless
+        """
+        return cls(unique_id, zha_device, channels, **kwargs)
 
     @staticmethod
     def formatter(value: int) -> int:
@@ -294,6 +315,23 @@ class ElectricalMeasurement(Sensor):
 
 
 @MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementApparentPower(
+    ElectricalMeasurement, id_suffix="apparent_power"
+):
+    """Apparent power measurement."""
+
+    SENSOR_ATTR = "apparent_power"
+    _device_class = DEVICE_CLASS_POWER
+    _unit = POWER_VOLT_AMPERE
+    _div_mul_prefix = "ac_power"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurementRMSCurrent(ElectricalMeasurement, id_suffix="rms_current"):
     """RMS current measurement."""
 
@@ -327,6 +365,28 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
 @STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)
 class Humidity(Sensor):
     """Humidity sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_HUMIDITY
+    _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
+    _unit = PERCENTAGE
+
+
+@STRICT_MATCH(channel_names=CHANNEL_SOIL_MOISTURE)
+class SoilMoisture(Sensor):
+    """Soil Moisture sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_HUMIDITY
+    _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
+    _unit = PERCENTAGE
+
+
+@STRICT_MATCH(channel_names=CHANNEL_LEAF_WETNESS)
+class LeafWetness(Sensor):
+    """Leaf Wetness sensor."""
 
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
@@ -388,8 +448,7 @@ class SmartEnergyMetering(Sensor):
         attrs = {}
         if self._channel.device_type is not None:
             attrs["device_type"] = self._channel.device_type
-        status = self._channel.status
-        if status is not None:
+        if (status := self._channel.status) is not None:
             attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
 
@@ -578,8 +637,7 @@ class ZenHVACAction(ThermostatHVACAction):
     def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
-        running_state = self._channel.running_state
-        if running_state is None:
+        if (running_state := self._channel.running_state) is None:
             return None
 
         rs_heat = (

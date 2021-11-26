@@ -125,8 +125,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         assert isinstance(host, str)
         self.context[CONF_HOST] = host
 
-        uuid = discovery_info.get(ATTR_UPNP_UDN)
-        if uuid:
+        if uuid := discovery_info.get(ATTR_UPNP_UDN):
             if uuid.startswith("uuid:"):
                 uuid = uuid[5:]
             await self.async_set_unique_id(uuid)
