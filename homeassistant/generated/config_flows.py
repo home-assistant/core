@@ -243,6 +243,7 @@ FLOWS = {
         "laundrify",
         "ld2410_ble",
         "led_ble",
+        "lektrico",
         "lg_soundbar",
         "lidarr",
         "life360",
