@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Iterator
+from collections.abc import Awaitable, Iterator, Mapping
 from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable, Mapping
+from typing import Any, Callable
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
@@ -73,18 +73,6 @@ DISCOVERY_MAPPING = {
     "nt": ATTR_SSDP_NT,
 }
 
-SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
-SsdpCallback = Callable[[Mapping[str, Any], SsdpChange], Awaitable]
-
-
-SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
-    SsdpSource.SEARCH_ALIVE: SsdpChange.ALIVE,
-    SsdpSource.SEARCH_CHANGED: SsdpChange.ALIVE,
-    SsdpSource.ADVERTISEMENT_ALIVE: SsdpChange.ALIVE,
-    SsdpSource.ADVERTISEMENT_BYEBYE: SsdpChange.BYEBYE,
-    SsdpSource.ADVERTISEMENT_UPDATE: SsdpChange.UPDATE,
-}
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -100,19 +88,20 @@ class _SsdpServiceDescription:
     """SSDP info with optional keys."""
 
     ssdp_usn: str
-    ssdp_st: str
+    ssdp_st: str | None = None
     ssdp_location: str | None = None
     ssdp_nt: str | None = None
     ssdp_udn: str | None = None
     ssdp_ext: str | None = None
     ssdp_server: str | None = None
+    ssdp_headers: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class _UpnpServiceDescription:
     """UPnP info."""
 
-    upnp: dict[str, Any]
+    upnp: Mapping[str, Any]
 
 
 @dataclass
@@ -144,6 +133,8 @@ class SsdpServiceInfo(
         # Use a property if it is available, fallback to upnp data
         if hasattr(self, name):
             return getattr(self, name)
+        if name in self.ssdp_headers and name not in self.upnp:
+            return self.ssdp_headers.get(name)
         return self.upnp[name]
 
     def get(self, name: str, default: Any = None) -> Any:
@@ -181,6 +172,18 @@ class SsdpServiceInfo(
         return self.upnp.__iter__()
 
 
+SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
+SsdpCallback = Callable[[SsdpServiceInfo, SsdpChange], Awaitable]
+
+SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
+    SsdpSource.SEARCH_ALIVE: SsdpChange.ALIVE,
+    SsdpSource.SEARCH_CHANGED: SsdpChange.ALIVE,
+    SsdpSource.ADVERTISEMENT_ALIVE: SsdpChange.ALIVE,
+    SsdpSource.ADVERTISEMENT_BYEBYE: SsdpChange.BYEBYE,
+    SsdpSource.ADVERTISEMENT_UPDATE: SsdpChange.UPDATE,
+}
+
+
 @bind_hass
 async def async_register_callback(
     hass: HomeAssistant,
@@ -198,7 +201,7 @@ async def async_register_callback(
 @bind_hass
 async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, udn: str, st: str
-) -> dict[str, str] | None:
+) -> SsdpServiceInfo | None:
     """Fetch the discovery info cache."""
     scanner: Scanner = hass.data[DOMAIN]
     return await scanner.async_get_discovery_info_by_udn_st(udn, st)
@@ -207,7 +210,7 @@ async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
 @bind_hass
 async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, st: str
-) -> list[dict[str, str]]:
+) -> list[SsdpServiceInfo]:
     """Fetch all the entries matching the st."""
     scanner: Scanner = hass.data[DOMAIN]
     return await scanner.async_get_discovery_info_by_st(st)
@@ -216,7 +219,7 @@ async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
 @bind_hass
 async def async_get_discovery_info_by_udn(
     hass: HomeAssistant, udn: str
-) -> list[dict[str, str]]:
+) -> list[SsdpServiceInfo]:
     """Fetch all the entries matching the udn."""
     scanner: Scanner = hass.data[DOMAIN]
     return await scanner.async_get_discovery_info_by_udn(udn)
@@ -237,7 +240,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_process_callbacks(
     callbacks: list[SsdpCallback],
-    discovery_info: dict[str, str],
+    discovery_info: SsdpServiceInfo,
     ssdp_change: SsdpChange,
 ) -> None:
     for callback in callbacks:
@@ -497,7 +500,7 @@ class Scanner:
             return
 
         discovery_info = discovery_info_from_headers_and_description(
-            info_with_desc, info_desc
+            combined_headers, info_desc
         )
         discovery_info.x_homeassistant_matching_domains = matching_domains
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
@@ -506,6 +509,8 @@ class Scanner:
         # Config flows should only be created for alive/update messages from alive devices
         if ssdp_change == SsdpChange.BYEBYE:
             return
+
+        _LOGGER.debug("Discovery info: %s", discovery_info)
 
         for domain in matching_domains:
             _LOGGER.debug("Discovered %s at %s", domain, location)
@@ -525,7 +530,7 @@ class Scanner:
 
     async def _async_headers_to_discovery_info(
         self, headers: Mapping[str, Any]
-    ) -> dict[str, Any]:
+    ) -> SsdpServiceInfo:
         """Combine the headers and description into discovery_info.
 
         Building this is a bit expensive so we only do it on demand.
@@ -535,13 +540,11 @@ class Scanner:
         info_desc = (
             await self._description_cache.async_get_description_dict(location) or {}
         )
-        return discovery_info_from_headers_and_description(
-            CaseInsensitiveDict(headers, **info_desc), info_desc
-        )
+        return discovery_info_from_headers_and_description(headers, info_desc)
 
     async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
         self, udn: str, st: str
-    ) -> dict[str, Any] | None:
+    ) -> SsdpServiceInfo | None:
         """Return discovery_info for a udn and st."""
         if headers := self._all_headers_from_ssdp_devices.get((udn, st)):
             return await self._async_headers_to_discovery_info(headers)
@@ -549,7 +552,7 @@ class Scanner:
 
     async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
         self, st: str
-    ) -> list[dict[str, Any]]:
+    ) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a st."""
         return [
             await self._async_headers_to_discovery_info(headers)
@@ -557,7 +560,7 @@ class Scanner:
             if udn_st[1] == st
         ]
 
-    async def async_get_discovery_info_by_udn(self, udn: str) -> list[dict[str, Any]]:
+    async def async_get_discovery_info_by_udn(self, udn: str) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a udn."""
         return [
             await self._async_headers_to_discovery_info(headers)
@@ -567,27 +570,30 @@ class Scanner:
 
 
 def discovery_info_from_headers_and_description(
-    info_with_desc: CaseInsensitiveDict,
-    info_desc: Mapping[str, str],
+    combined_headers: Mapping[str, Any],
+    info_desc: Mapping[str, Any],
 ) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
-    info = {
-        DISCOVERY_MAPPING.get(k.lower(), k): v
-        for k, v in info_with_desc.as_dict().items()
-    }
-
-    if ATTR_UPNP_UDN not in info and ATTR_SSDP_USN in info:
-        if udn := _udn_from_usn(info[ATTR_SSDP_USN]):
-            info[ATTR_UPNP_UDN] = udn
+    upnp_info = {**info_desc}
+    info = SsdpServiceInfo(
+        ssdp_usn=combined_headers["usn"],
+        ssdp_ext=combined_headers.get("ext"),
+        ssdp_server=combined_headers.get("server"),
+        ssdp_st=combined_headers.get("st"),
+        ssdp_location=combined_headers.get("location"),
+        ssdp_udn=combined_headers.get("_udn"),
+        ssdp_nt=combined_headers.get("nt"),
+        ssdp_headers=combined_headers,
+        upnp=upnp_info,
+    )
 
     # Increase compatibility.
-    if ATTR_SSDP_ST not in info and ATTR_SSDP_NT in info:
-        info[ATTR_SSDP_ST] = info[ATTR_SSDP_NT]
+    if not info.ssdp_st and info.ssdp_nt:
+        info.ssdp_st = info.ssdp_nt
 
-    # Duplicate upnp data
-    info.upnp = info_desc
     if ATTR_UPNP_UDN not in info.upnp:
-        info.upnp[ATTR_UPNP_UDN] = udn
+        if udn := _udn_from_usn(info.ssdp_usn):
+            upnp_info[ATTR_UPNP_UDN] = udn
 
     return info
 
