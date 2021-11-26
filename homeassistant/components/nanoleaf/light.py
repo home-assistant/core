@@ -33,7 +33,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, SERVICE_IDENTIFY
 from .entity import NanoleafEntity
 
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
@@ -72,6 +72,30 @@ async def async_setup_entry(
     """Set up the Nanoleaf light."""
     nanoleaf: Nanoleaf = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([NanoleafLight(nanoleaf)])
+
+    platform = entity_platform.current_platform.get()
+
+    async def async_service_handle(service_call: ServiceCall) -> None:
+        """Handle dispatched services."""
+        assert platform is not None
+        entities = await platform.async_extract_from_service(service_call)
+
+        if not entities:
+            return
+
+        for entity in entities:
+            assert isinstance(entity, NanoleafLight)
+
+        if service_call.service == SERVICE_IDENTIFY:
+            for light in entities:
+                await light.async_identify()
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_IDENTIFY,
+        async_service_handle,
+        cv.make_entity_service_schema({}),
+    )
 
 
 class NanoleafLight(NanoleafEntity, LightEntity):
@@ -188,3 +212,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         if not self.available:
             _LOGGER.info("Fetching %s data recovered", self.name)
         self._attr_available = True
+
+    async def async_identify(self) -> None:
+        """Identify the light"""
+        self._nanoleaf.identify()
