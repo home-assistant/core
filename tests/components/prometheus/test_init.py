@@ -72,6 +72,19 @@ async def setup_prometheus_client(hass, hass_client, namespace):
     return await hass_client()
 
 
+async def generate_latest_metrics(client):
+    """Generate the latest metrics and transform the body."""
+    resp = await client.get(prometheus.API_ENDPOINT)
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert len(body) > 3
+
+    return body
+
+
 async def test_view_empty_namespace(hass, hass_client):
     """Test prometheus metrics view."""
     client = await setup_prometheus_client(hass, hass_client, "")
@@ -87,13 +100,7 @@ async def test_view_empty_namespace(hass, hass_client):
     ):
         await sensor2.async_update_ha_state()
 
-    resp = await client.get(prometheus.API_ENDPOINT)
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
-    body = await resp.text()
-    body = body.split("\n")
-
-    assert len(body) > 3
+    body = await generate_latest_metrics(client)
 
     assert "# HELP python_info Python platform information" in body
     assert (
@@ -139,13 +146,7 @@ async def test_view_default_namespace(hass, hass_client):
     await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
     await hass.async_block_till_done()
 
-    resp = await client.get(prometheus.API_ENDPOINT)
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
-    body = await resp.text()
-    body = body.split("\n")
-
-    assert len(body) > 3
+    body = await generate_latest_metrics(client)
 
     assert "# HELP python_info Python platform information" in body
     assert (
@@ -213,11 +214,7 @@ async def test_sensor_unit(hass, hass_client):
     sensor5.entity_id = "sensor.sps30_pm_1um_weight_concentration"
     await sensor5.async_update_ha_state()
 
-    resp = await client.get(prometheus.API_ENDPOINT)
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
-    body = await resp.text()
-    body = body.split("\n")
+    body = await generate_latest_metrics(client)
 
     assert (
         'sensor_unit_kwh{domain="sensor",'
@@ -261,11 +258,7 @@ async def test_sensor_device_class(hass, hass_client):
     ):
         await sensor2.async_update_ha_state()
 
-    resp = await client.get(prometheus.API_ENDPOINT)
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
-    body = await resp.text()
-    body = body.split("\n")
+    body = await generate_latest_metrics(client)
 
     assert (
         'sensor_temperature_celsius{domain="sensor",'
@@ -301,11 +294,7 @@ async def test_input_number(hass, hass_client):
     number2._attr_name = None
     await number2.async_update_ha_state()
 
-    resp = await client.get(prometheus.API_ENDPOINT)
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
-    body = await resp.text()
-    body = body.split("\n")
+    body = await generate_latest_metrics(client)
 
     assert (
         'input_number_state{domain="input_number",'
@@ -326,11 +315,7 @@ async def test_battery(hass, hass_client):
 
     await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
 
-    resp = await client.get(prometheus.API_ENDPOINT)
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
-    body = await resp.text()
-    body = body.split("\n")
+    body = await generate_latest_metrics(client)
 
     assert (
         'battery_level_percent{domain="sensor",'
@@ -348,11 +333,7 @@ async def test_climate(hass, hass_client):
     )
     await hass.async_block_till_done()
 
-    resp = await client.get(prometheus.API_ENDPOINT)
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
-    body = await resp.text()
-    body = body.split("\n")
+    body = await generate_latest_metrics(client)
 
     assert (
         'climate_current_temperature_celsius{domain="climate",'
@@ -388,11 +369,7 @@ async def test_humidifier(hass, hass_client):
     )
     await hass.async_block_till_done()
 
-    resp = await client.get(prometheus.API_ENDPOINT)
-    assert resp.status == HTTPStatus.OK
-    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
-    body = await resp.text()
-    body = body.split("\n")
+    body = await generate_latest_metrics(client)
 
     assert (
         'humidifier_target_humidity_percent{domain="humidifier",'
