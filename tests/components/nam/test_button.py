@@ -4,6 +4,7 @@ from unittest.mock import patch
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from tests.components.nam import init_integration
 
@@ -28,9 +29,10 @@ async def test_button_press(hass):
     """Test button press."""
     await init_integration(hass)
 
+    now = dt_util.utcnow()
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_restart"
-    ) as mock_restart:
+    ) as mock_restart, patch("homeassistant.core.dt_util.utcnow", return_value=now):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             "press",
@@ -39,3 +41,7 @@ async def test_button_press(hass):
         )
 
         mock_restart.assert_called_once()
+
+        state = hass.states.get("button.nettigo_air_monitor_restart")
+        assert state
+        assert state.state == now.isoformat()
