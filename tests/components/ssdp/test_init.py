@@ -633,7 +633,7 @@ async def test_getting_existing_headers(
         discovery_info_by_udn_st.ssdp_usn
         == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
     )
-    assert discovery_info_by_udn_st.ssdp_udn[ssdp.ATTR_SSDP_UDN] == ANY
+    assert discovery_info_by_udn_st.ssdp_udn == ANY
     assert discovery_info_by_udn_st.ssdp_headers["_timestamp"] == ANY
     assert discovery_info_by_udn_st.upnp == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
