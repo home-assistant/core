@@ -9,6 +9,7 @@ from directv import DIRECTV, DIRECTVError
 import voluptuous as vol
 
 from homeassistant.components import ssdp
+from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -68,11 +69,11 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle SSDP discovery."""
-        host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
+        host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         receiver_id = None
 
-        if discovery_info.get(ssdp.ATTR_UPNP_SERIAL):
-            receiver_id = discovery_info[ssdp.ATTR_UPNP_SERIAL][4:]  # strips off RID-
+        if discovery_info.get(ATTR_UPNP_SERIAL):
+            receiver_id = discovery_info[ATTR_UPNP_SERIAL][4:]  # strips off RID-
 
         self.context.update({"title_placeholders": {"name": host}})
 

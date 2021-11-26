@@ -248,7 +248,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             "SSDP %s notification of device %s at %s",
             change,
             info[ssdp.ATTR_SSDP_USN],
-            info.ssdp_location,
+            info.get(ssdp.ATTR_SSDP_LOCATION),
         )
 
         try:
