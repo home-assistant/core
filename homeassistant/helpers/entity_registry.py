@@ -867,6 +867,7 @@ async def async_migrate_entries(
             ent_reg.async_update_entity(entry.entity_id, **updates)
 
 
+@callback
 def async_resolve_entity_ids(
     registry: EntityRegistry, entity_ids_or_uuids: list[str]
 ) -> list[str]:
