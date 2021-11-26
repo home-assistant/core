@@ -364,7 +364,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
         # Determine color mode DPCode
         if (
-            isinstance(description.color_mode, DPCode)
+            description.color_mode is not None
             and description.color_mode in device.function
         ):
             self._color_mode_dpcode = description.color_mode
