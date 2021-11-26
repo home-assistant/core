@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
+import os
 
 import aiohttp
 import async_timeout
@@ -144,9 +145,18 @@ class BrData:
             return
         self.rain_error_count = 0
 
+        # Pre-process data to use decimal point
+        rainContentProcessed = ""
+        lines = raincontent.get(CONTENT).splitlines()
+        for line in lines:
+            (val, key) = line.split("|")
+            rainContentProcessed += (
+                str(int(float(val.replace(",", ".")))) + "|" + key + os.linesep
+            )
+
         result = parse_data(
             content.get(CONTENT),
-            raincontent.get(CONTENT),
+            rainContentProcessed,
             self.coordinates[CONF_LATITUDE],
             self.coordinates[CONF_LONGITUDE],
             self.timeframe,
