@@ -5,7 +5,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import DEGREE, PRESSURE_MBAR, TEMP_CELSIUS
+from homeassistant.const import (
+    DEGREE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    PRESSURE_MBAR,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -32,6 +37,13 @@ UOM_MAP = {
     WIFFI_UOM_DEGREE: DEGREE,
     WIFFI_UOM_TEMP_CELSIUS: TEMP_CELSIUS,
     WIFFI_UOM_MILLI_BAR: PRESSURE_MBAR,
+}
+
+# map to determine HA entity category from wiffi's entity name
+NAME_TO_ENTITY_CAT = {
+    "rssi": ENTITY_CATEGORY_DIAGNOSTIC,
+    "uptime": ENTITY_CATEGORY_DIAGNOSTIC,
+    "ssid": ENTITY_CATEGORY_DIAGNOSTIC,
 }
 
 
@@ -63,7 +75,10 @@ class NumberEntity(WiffiEntity, SensorEntity):
     def __init__(self, device, metric, options):
         """Initialize the entity."""
         super().__init__(device, metric, options)
-        self._device_class = UOM_TO_DEVICE_CLASS_MAP.get(metric.unit_of_measurement)
+        self._attr_device_class = UOM_TO_DEVICE_CLASS_MAP.get(
+            metric.unit_of_measurement
+        )
+        self._attr_entity_category = NAME_TO_ENTITY_CAT.get(self._name)
         self._unit_of_measurement = UOM_MAP.get(
             metric.unit_of_measurement, metric.unit_of_measurement
         )
@@ -75,11 +90,6 @@ class NumberEntity(WiffiEntity, SensorEntity):
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
         self.reset_expiration_date()
-
-    @property
-    def device_class(self):
-        """Return the automatically determined device class."""
-        return self._device_class
 
     @property
     def native_unit_of_measurement(self):
@@ -113,6 +123,10 @@ class StringEntity(WiffiEntity, SensorEntity):
     def __init__(self, device, metric, options):
         """Initialize the entity."""
         super().__init__(device, metric, options)
+        if self._name.endswith("_ip"):
+            self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+        else:
+            self._attr_entity_category = NAME_TO_ENTITY_CAT.get(metric.description)
         self._value = metric.value
         self.reset_expiration_date()
 
