@@ -11,12 +11,14 @@
             "detect": {
                 "data": {
                     "path": "USB dongle el\u00e9r\u00e9si \u00fatja"
-                }
+                },
+                "title": "V\u00e1lassza ki az ENOcean-dongle el\u00e9r\u00e9si \u00fatvonal\u00e1t."
             },
             "manual": {
                 "data": {
                     "path": "USB dongle el\u00e9r\u00e9si \u00fatja"
-                }
+                },
+                "title": "Adja meg az ENOcean dongle el\u00e9r\u00e9si \u00fatvonal\u00e1t"
             }
         }
     }

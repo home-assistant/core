@@ -1,6 +1,6 @@
 """Test sensor of Nettigo Air Monitor integration."""
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from nettigo_air_monitor import ApiError
 
@@ -19,6 +19,9 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
@@ -93,6 +96,28 @@ async def test_sensor(hass):
     entry = registry.async_get("sensor.nettigo_air_monitor_bme280_pressure")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-bme280_pressure"
+
+    state = hass.states.get("sensor.nettigo_air_monitor_bmp180_temperature")
+    assert state
+    assert state.state == "7.6"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+
+    entry = registry.async_get("sensor.nettigo_air_monitor_bmp180_temperature")
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-bmp180_temperature"
+
+    state = hass.states.get("sensor.nettigo_air_monitor_bmp180_pressure")
+    assert state
+    assert state.state == "1032"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PRESSURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_HPA
+
+    entry = registry.async_get("sensor.nettigo_air_monitor_bmp180_pressure")
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-bmp180_pressure"
 
     state = hass.states.get("sensor.nettigo_air_monitor_bmp280_temperature")
     assert state
@@ -212,12 +237,12 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_particulate_matter_10")
     assert state
     assert state.state == "19"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM10
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get(
         "sensor.nettigo_air_monitor_sds011_particulate_matter_10"
@@ -228,12 +253,12 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_particulate_matter_2_5")
     assert state
     assert state.state == "11"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM25
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get(
         "sensor.nettigo_air_monitor_sds011_particulate_matter_2_5"
@@ -244,12 +269,12 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sps30_particulate_matter_1_0")
     assert state
     assert state.state == "31"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM1
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get(
         "sensor.nettigo_air_monitor_sps30_particulate_matter_1_0"
@@ -260,12 +285,12 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sps30_particulate_matter_10")
     assert state
     assert state.state == "21"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM10
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get("sensor.nettigo_air_monitor_sps30_particulate_matter_10")
     assert entry
@@ -274,12 +299,12 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sps30_particulate_matter_2_5")
     assert state
     assert state.state == "34"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM25
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get(
         "sensor.nettigo_air_monitor_sps30_particulate_matter_2_5"
@@ -295,7 +320,7 @@ async def test_sensor(hass):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:blur"
+    assert state.attributes.get(ATTR_ICON) == "mdi:molecule"
 
     entry = registry.async_get(
         "sensor.nettigo_air_monitor_sps30_particulate_matter_4_0"
@@ -348,9 +373,10 @@ async def test_incompleta_data_after_device_restart(hass):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     future = utcnow() + timedelta(minutes=6)
-    with patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_get_data",
-        return_value=INCOMPLETE_NAM_DATA,
+    update_response = Mock(json=AsyncMock(return_value=INCOMPLETE_NAM_DATA))
+    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+        return_value=update_response,
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -370,8 +396,8 @@ async def test_availability(hass):
     assert state.state == "7.6"
 
     future = utcnow() + timedelta(minutes=6)
-    with patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_get_data",
+    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
         side_effect=ApiError("API Error"),
     ):
         async_fire_time_changed(hass, future)
@@ -382,9 +408,10 @@ async def test_availability(hass):
     assert state.state == STATE_UNAVAILABLE
 
     future = utcnow() + timedelta(minutes=12)
-    with patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_get_data",
-        return_value=nam_data,
+    update_response = Mock(json=AsyncMock(return_value=nam_data))
+    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+        return_value=update_response,
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -401,9 +428,10 @@ async def test_manual_update_entity(hass):
 
     await async_setup_component(hass, "homeassistant", {})
 
-    with patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_get_data",
-        return_value=nam_data,
+    update_response = Mock(json=AsyncMock(return_value=nam_data))
+    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+        return_value=update_response,
     ) as mock_get_data:
         await hass.services.async_call(
             "homeassistant",

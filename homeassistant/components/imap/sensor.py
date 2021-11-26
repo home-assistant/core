@@ -95,7 +95,7 @@ class ImapSensor(SensorEntity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the number of emails found."""
         return self._email_count
 
@@ -134,7 +134,7 @@ class ImapSensor(SensorEntity):
                     idle = await self._connection.idle_start()
                     await self._connection.wait_server_push()
                     self._connection.idle_done()
-                    with async_timeout.timeout(10):
+                    async with async_timeout.timeout(10):
                         await idle
                 else:
                     self.async_write_ha_state()

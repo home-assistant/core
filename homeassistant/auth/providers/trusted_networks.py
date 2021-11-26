@@ -27,6 +27,8 @@ from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from .. import InvalidAuthError
 from ..models import Credentials, RefreshToken, UserMeta
 
+# mypy: disallow-any-generics
+
 IPAddress = Union[IPv4Address, IPv6Address]
 IPNetwork = Union[IPv4Network, IPv6Network]
 
@@ -97,7 +99,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         """Trusted Networks auth provider does not support MFA."""
         return False
 
-    async def async_login_flow(self, context: dict | None) -> LoginFlow:
+    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
         assert context is not None
         ip_addr = cast(IPAddress, context.get("ip_address"))
@@ -192,6 +194,12 @@ class TrustedNetworksAuthProvider(AuthProvider):
         if any(ip_addr in trusted_proxy for trusted_proxy in self.trusted_proxies):
             raise InvalidAuthError("Can't allow access from a proxy server")
 
+        if "cloud" in self.hass.config.components:
+            from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
+
+            if remote.is_cloud_request.get():
+                raise InvalidAuthError("Can't allow access from Home Assistant Cloud")
+
     @callback
     def async_validate_refresh_token(
         self, refresh_token: RefreshToken, remote_ip: str | None = None
@@ -242,5 +250,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({"user": vol.In(self._available_users)}),
+            data_schema=vol.Schema(
+                {vol.Required("user"): vol.In(self._available_users)}
+            ),
         )

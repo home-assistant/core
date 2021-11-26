@@ -21,7 +21,7 @@
                     "longitude": "Longitud",
                     "name": "Nom"
                 },
-                "description": "Configura Ambee per a integrar-lo amb Home Assistant."
+                "description": "Configura la integraci\u00f3 d'Ambee amb Home Assistant."
             }
         }
     }

@@ -1,8 +1,10 @@
 """Tests for the Bond module."""
-from unittest.mock import Mock
+import asyncio
+from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from bond_api import DeviceType
+import pytest
 
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -33,7 +35,16 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant):
     assert result is True
 
 
-async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant):
+@pytest.mark.parametrize(
+    "exc",
+    [
+        ClientConnectionError,
+        ClientResponseError(MagicMock(), MagicMock(), status=404),
+        asyncio.TimeoutError,
+        OSError,
+    ],
+)
+async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant, exc: Exception):
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -41,9 +52,24 @@ async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant):
     )
     config_entry.add_to_hass(hass)
 
-    with patch_bond_version(side_effect=ClientConnectionError()):
+    with patch_bond_version(side_effect=exc):
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_async_setup_raises_fails_if_auth_fails(hass: HomeAssistant):
+    """Test that setup fails if auth fails during setup."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch_bond_version(
+        side_effect=ClientResponseError(MagicMock(), MagicMock(), status=401)
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAssistant):

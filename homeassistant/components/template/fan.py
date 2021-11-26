@@ -18,6 +18,7 @@ from homeassistant.components.fan import (
     SPEED_OFF,
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
+    SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
     FanEntity,
     preset_modes_from_speed_list,
@@ -38,7 +39,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -208,39 +209,37 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._direction_template = direction_template
         self._supported_features = 0
 
-        domain = __name__.split(".")[-2]
-
-        self._on_script = Script(hass, on_action, friendly_name, domain)
-        self._off_script = Script(hass, off_action, friendly_name, domain)
+        self._on_script = Script(hass, on_action, friendly_name, DOMAIN)
+        self._off_script = Script(hass, off_action, friendly_name, DOMAIN)
 
         self._set_speed_script = None
         if set_speed_action:
             self._set_speed_script = Script(
-                hass, set_speed_action, friendly_name, domain
+                hass, set_speed_action, friendly_name, DOMAIN
             )
 
         self._set_percentage_script = None
         if set_percentage_action:
             self._set_percentage_script = Script(
-                hass, set_percentage_action, friendly_name, domain
+                hass, set_percentage_action, friendly_name, DOMAIN
             )
 
         self._set_preset_mode_script = None
         if set_preset_mode_action:
             self._set_preset_mode_script = Script(
-                hass, set_preset_mode_action, friendly_name, domain
+                hass, set_preset_mode_action, friendly_name, DOMAIN
             )
 
         self._set_oscillating_script = None
         if set_oscillating_action:
             self._set_oscillating_script = Script(
-                hass, set_oscillating_action, friendly_name, domain
+                hass, set_oscillating_action, friendly_name, DOMAIN
             )
 
         self._set_direction_script = None
         if set_direction_action:
             self._set_direction_script = Script(
-                hass, set_direction_action, friendly_name, domain
+                hass, set_direction_action, friendly_name, DOMAIN
             )
 
         self._state = STATE_OFF
@@ -250,12 +249,10 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._oscillating = None
         self._direction = None
 
-        if (
-            self._speed_template
-            or self._percentage_template
-            or self._preset_mode_template
-        ):
+        if self._speed_template or self._percentage_template:
             self._supported_features |= SUPPORT_SET_SPEED
+        if self._preset_mode_template and preset_modes:
+            self._supported_features |= SUPPORT_PRESET_MODE
         if self._oscillating_template:
             self._supported_features |= SUPPORT_OSCILLATE
         if self._direction_template:

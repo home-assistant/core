@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 
 from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 
@@ -30,7 +29,6 @@ from .const import (
 
 PLATFORMS = ["sensor"]
 SCAN_INTERVAL = timedelta(seconds=30)
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

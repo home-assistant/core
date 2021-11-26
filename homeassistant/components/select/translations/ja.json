@@ -1,0 +1,14 @@
+{
+    "device_automation": {
+        "action_type": {
+            "select_option": "{entity_name} \u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u5909\u66f4"
+        },
+        "condition_type": {
+            "selected_option": "\u73fe\u5728\u9078\u629e\u3055\u308c\u3066\u3044\u308b {entity_name} \u306e\u30aa\u30d7\u30b7\u30e7\u30f3"
+        },
+        "trigger_type": {
+            "current_option_changed": "{entity_name} \u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u304c\u5909\u66f4\u3055\u308c\u307e\u3057\u305f"
+        }
+    },
+    "title": "\u9078\u629e"
+}

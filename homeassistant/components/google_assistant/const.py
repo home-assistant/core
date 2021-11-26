@@ -2,6 +2,7 @@
 from homeassistant.components import (
     alarm_control_panel,
     binary_sensor,
+    button,
     camera,
     climate,
     cover,
@@ -120,6 +121,7 @@ EVENT_SYNC_RECEIVED = "google_assistant_sync"
 
 DOMAIN_TO_GOOGLE_TYPES = {
     alarm_control_panel.DOMAIN: TYPE_ALARM,
+    button.DOMAIN: TYPE_SCENE,
     camera.DOMAIN: TYPE_CAMERA,
     climate.DOMAIN: TYPE_THERMOSTAT,
     cover.DOMAIN: TYPE_BLINDS,
@@ -133,6 +135,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     media_player.DOMAIN: TYPE_SETTOP,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
+    sensor.DOMAIN: TYPE_SENSOR,
     select.DOMAIN: TYPE_SENSOR,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,

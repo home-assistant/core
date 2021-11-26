@@ -1,12 +1,18 @@
 """Test shopping list component."""
+from http import HTTPStatus
 
-from homeassistant.components.shopping_list.const import DOMAIN
+from homeassistant.components.shopping_list.const import (
+    DOMAIN,
+    SERVICE_ADD_ITEM,
+    SERVICE_CLEAR_COMPLETED_ITEMS,
+    SERVICE_COMPLETE_ITEM,
+)
 from homeassistant.components.websocket_api.const import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     TYPE_RESULT,
 )
-from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.const import ATTR_NAME
 from homeassistant.helpers import intent
 
 
@@ -53,6 +59,29 @@ async def test_update_list(hass, sl_setup):
     assert cheese["complete"] is False
 
 
+async def test_clear_completed_items(hass, sl_setup):
+    """Test clear completed list items."""
+    await intent.async_handle(
+        hass,
+        "test",
+        "HassShoppingListAddItem",
+        {"item": {"value": "beer"}},
+    )
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "cheese"}}
+    )
+
+    assert len(hass.data[DOMAIN].items) == 2
+
+    # Update a single attribute, other attributes shouldn't change
+    await hass.data[DOMAIN].async_update_list({"complete": True})
+
+    await hass.data[DOMAIN].async_clear_completed()
+
+    assert len(hass.data[DOMAIN].items) == 0
+
+
 async def test_recent_items_intent(hass, sl_setup):
     """Test recent items."""
 
@@ -87,7 +116,7 @@ async def test_deprecated_api_get_all(hass, hass_client, sl_setup):
     client = await hass_client()
     resp = await client.get("/api/shopping_list")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
     assert len(data) == 2
     assert data[0]["name"] == "beer"
@@ -141,7 +170,7 @@ async def test_deprecated_api_update(hass, hass_client, sl_setup):
         f"/api/shopping_list/item/{beer_id}", json={"name": "soda"}
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
     assert data == {"id": beer_id, "name": "soda", "complete": False}
 
@@ -149,7 +178,7 @@ async def test_deprecated_api_update(hass, hass_client, sl_setup):
         f"/api/shopping_list/item/{wine_id}", json={"complete": True}
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
     assert data == {"id": wine_id, "name": "wine", "complete": True}
 
@@ -210,12 +239,12 @@ async def test_api_update_fails(hass, hass_client, sl_setup):
     client = await hass_client()
     resp = await client.post("/api/shopping_list/non_existing", json={"name": "soda"})
 
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     beer_id = hass.data["shopping_list"].items[0]["id"]
     resp = await client.post(f"/api/shopping_list/item/{beer_id}", json={"name": 123})
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_ws_update_item_fail(hass, hass_ws_client, sl_setup):
@@ -260,10 +289,10 @@ async def test_deprecated_api_clear_completed(hass, hass_client, sl_setup):
     resp = await client.post(
         f"/api/shopping_list/item/{beer_id}", json={"complete": True}
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     resp = await client.post("/api/shopping_list/clear_completed")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     items = hass.data["shopping_list"].items
     assert len(items) == 1
@@ -306,7 +335,7 @@ async def test_deprecated_api_create(hass, hass_client, sl_setup):
     client = await hass_client()
     resp = await client.post("/api/shopping_list/item", json={"name": "soda"})
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
     assert data["name"] == "soda"
     assert data["complete"] is False
@@ -323,7 +352,7 @@ async def test_deprecated_api_create_fail(hass, hass_client, sl_setup):
     client = await hass_client()
     resp = await client.post("/api/shopping_list/item", json={"name": 1234})
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     assert len(hass.data["shopping_list"].items) == 0
 
 
@@ -471,3 +500,46 @@ async def test_ws_reorder_items_failure(hass, hass_ws_client, sl_setup):
     msg = await client.receive_json()
     assert msg["success"] is False
     assert msg["error"]["code"] == ERR_INVALID_FORMAT
+
+
+async def test_add_item_service(hass, sl_setup):
+    """Test adding shopping_list item service."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_ITEM,
+        {ATTR_NAME: "beer"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.data[DOMAIN].items) == 1
+
+
+async def test_clear_completed_items_service(hass, sl_setup):
+    """Test clearing completed shopping_list items service."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_ITEM,
+        {ATTR_NAME: "beer"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert len(hass.data[DOMAIN].items) == 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_COMPLETE_ITEM,
+        {ATTR_NAME: "beer"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert len(hass.data[DOMAIN].items) == 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLEAR_COMPLETED_ITEMS,
+        {},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert len(hass.data[DOMAIN].items) == 0

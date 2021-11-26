@@ -32,6 +32,7 @@ from .common import (
     make_zcl_header,
     send_attributes_report,
 )
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import async_capture_events, mock_coro, mock_restore_cache
 
@@ -42,9 +43,10 @@ def zigpy_cover_device(zigpy_device_mock):
 
     endpoints = {
         1: {
-            "device_type": zigpy.profiles.zha.DeviceType.IAS_ZONE,
-            "in_clusters": [closures.WindowCovering.cluster_id],
-            "out_clusters": [],
+            SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.IAS_ZONE,
+            SIG_EP_INPUT: [closures.WindowCovering.cluster_id],
+            SIG_EP_OUTPUT: [],
         }
     }
     return zigpy_device_mock(endpoints)
@@ -56,9 +58,10 @@ def zigpy_cover_remote(zigpy_device_mock):
 
     endpoints = {
         1: {
-            "device_type": zigpy.profiles.zha.DeviceType.WINDOW_COVERING_CONTROLLER,
-            "in_clusters": [],
-            "out_clusters": [closures.WindowCovering.cluster_id],
+            SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.WINDOW_COVERING_CONTROLLER,
+            SIG_EP_INPUT: [],
+            SIG_EP_OUTPUT: [closures.WindowCovering.cluster_id],
         }
     }
     return zigpy_device_mock(endpoints)
@@ -70,13 +73,14 @@ def zigpy_shade_device(zigpy_device_mock):
 
     endpoints = {
         1: {
-            "device_type": zigpy.profiles.zha.DeviceType.SHADE,
-            "in_clusters": [
+            SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.SHADE,
+            SIG_EP_INPUT: [
                 closures.Shade.cluster_id,
                 general.LevelControl.cluster_id,
                 general.OnOff.cluster_id,
             ],
-            "out_clusters": [],
+            SIG_EP_OUTPUT: [],
         }
     }
     return zigpy_device_mock(endpoints)
@@ -88,9 +92,10 @@ def zigpy_keen_vent(zigpy_device_mock):
 
     endpoints = {
         1: {
-            "device_type": zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT,
-            "in_clusters": [general.LevelControl.cluster_id, general.OnOff.cluster_id],
-            "out_clusters": [],
+            SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT,
+            SIG_EP_INPUT: [general.LevelControl.cluster_id, general.OnOff.cluster_id],
+            SIG_EP_OUTPUT: [],
         }
     }
     return zigpy_device_mock(

@@ -1,7 +1,17 @@
 {
+    "device_automation": {
+        "action_type": {
+            "trigger": "\u30c8\u30ea\u30ac\u30fc {entity_name}"
+        }
+    },
     "state": {
         "_": {
+            "armed": "\u8b66\u6212",
+            "disarmed": "\u89e3\u9664",
+            "disarming": "\u89e3\u9664",
+            "pending": "\u4fdd\u7559\u4e2d",
             "triggered": "\u30c8\u30ea\u30ac\u30fc"
         }
-    }
+    },
+    "title": "\u30a2\u30e9\u30fc\u30e0\u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30d1\u30cd\u30eb"
 }

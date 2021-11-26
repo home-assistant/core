@@ -1,57 +1,45 @@
 """Support for OpenUV binary sensors."""
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
-from . import OpenUV, OpenUvEntity
-from .const import (
-    DATA_CLIENT,
-    DATA_PROTECTION_WINDOW,
-    DOMAIN,
-    LOGGER,
-    TYPE_PROTECTION_WINDOW,
-)
+from . import OpenUvEntity
+from .const import DATA_PROTECTION_WINDOW, DOMAIN, LOGGER, TYPE_PROTECTION_WINDOW
 
 ATTR_PROTECTION_WINDOW_ENDING_TIME = "end_time"
 ATTR_PROTECTION_WINDOW_ENDING_UV = "end_uv"
 ATTR_PROTECTION_WINDOW_STARTING_TIME = "start_time"
 ATTR_PROTECTION_WINDOW_STARTING_UV = "start_uv"
 
-BINARY_SENSORS = {TYPE_PROTECTION_WINDOW: ("Protection Window", "mdi:sunglasses")}
+BINARY_SENSOR_DESCRIPTION_PROTECTION_WINDOW = BinarySensorEntityDescription(
+    key=TYPE_PROTECTION_WINDOW,
+    name="Protection Window",
+    icon="mdi:sunglasses",
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up an OpenUV sensor based on a config entry."""
-    openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-
-    binary_sensors = []
-    for kind, attrs in BINARY_SENSORS.items():
-        name, icon = attrs
-        binary_sensors.append(OpenUvBinarySensor(openuv, kind, name, icon))
-
-    async_add_entities(binary_sensors, True)
+    openuv = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [OpenUvBinarySensor(openuv, BINARY_SENSOR_DESCRIPTION_PROTECTION_WINDOW)]
+    )
 
 
 class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
 
-    def __init__(self, openuv: OpenUV, sensor_type: str, name: str, icon: str) -> None:
-        """Initialize the sensor."""
-        super().__init__(openuv, sensor_type)
-
-        self._attr_icon = icon
-        self._attr_name = name
-
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        data = self.openuv.data[DATA_PROTECTION_WINDOW]
-
-        if not data:
+        if not (data := self.openuv.data[DATA_PROTECTION_WINDOW]):
             self._attr_available = False
             return
 
@@ -62,7 +50,7 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
                 LOGGER.info("Skipping update due to missing data: %s", key)
                 return
 
-        if self._sensor_type == TYPE_PROTECTION_WINDOW:
+        if self.entity_description.key == TYPE_PROTECTION_WINDOW:
             from_dt = parse_datetime(data["from_time"])
             to_dt = parse_datetime(data["to_time"])
 

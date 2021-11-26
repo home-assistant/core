@@ -101,7 +101,7 @@ class BH1750Sensor(SensorEntity):
     def __init__(self, bh1750_sensor, name, unit, multiplier=1.0):
         """Initialize the sensor."""
         self._attr_name = name
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
         self._multiplier = multiplier
         self.bh1750_sensor = bh1750_sensor
 
@@ -109,7 +109,7 @@ class BH1750Sensor(SensorEntity):
         """Get the latest data from the BH1750 and update the states."""
         await self.hass.async_add_executor_job(self.bh1750_sensor.update)
         if self.bh1750_sensor.sample_ok and self.bh1750_sensor.light_level >= 0:
-            self._attr_state = int(
+            self._attr_native_value = int(
                 round(self.bh1750_sensor.light_level * self._multiplier)
             )
         else:

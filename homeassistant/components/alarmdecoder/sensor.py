@@ -32,6 +32,6 @@ class AlarmDecoderSensor(SensorEntity):
         )
 
     def _message_callback(self, message):
-        if self._attr_state != message.text:
-            self._attr_state = message.text
+        if self._attr_native_value != message.text:
+            self._attr_native_value = message.text
             self.schedule_update_ha_state()

@@ -6,14 +6,18 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
-                    "password": "\u015eifre",
+                    "host": "Ana bilgisayar",
+                    "passkey": "Ge\u00e7i\u015f anahtar\u0131 dizesi",
+                    "password": "Parola",
                     "port": "Port",
-                    "username": "Kullan\u0131c\u0131 ad\u0131"
-                }
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "BSB-Lan cihaz\u0131n\u0131z\u0131 Home Assistant ile entegre olacak \u015fekilde ayarlay\u0131n.",
+                "title": "BSB-Lan cihaz\u0131na ba\u011flan\u0131n"
             }
         }
     }

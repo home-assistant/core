@@ -125,8 +125,8 @@ class SIABaseEntity(RestoreEntity):
         """Return the device_info."""
         assert self._attr_name is not None
         assert self.unique_id is not None
-        return {
-            "name": self._attr_name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "via_device": (DOMAIN, f"{self._port}_{self._account}"),
-        }
+        return DeviceInfo(
+            name=self._attr_name,
+            identifiers={(DOMAIN, self.unique_id)},
+            via_device=(DOMAIN, f"{self._port}_{self._account}"),
+        )

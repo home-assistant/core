@@ -17,5 +17,16 @@
                 "title": "Completa tu informaci\u00f3n"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "\u00cdndice UV inicial para la ventana de protecci\u00f3n",
+                    "to_window": "\u00cdndice UV final para la ventana de protecci\u00f3n"
+                },
+                "title": "Configurar OpenUV"
+            }
+        }
     }
 }

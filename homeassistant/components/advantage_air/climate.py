@@ -10,12 +10,12 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
-from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
 
 from .const import (
@@ -54,7 +54,7 @@ HASS_FAN_MODES = {v: k for k, v in ADVANTAGE_AIR_FAN_MODES.items()}
 FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
 
 ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
-ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
+ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_HEAT_COOL]
 
 PARALLEL_UPDATES = 0
 
@@ -166,19 +166,22 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
         )
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
-
-    @callback
-    def _update_callback(self) -> None:
-        """Load data from integration."""
-        self._attr_current_temperature = self._zone["measuredTemp"]
-        self._attr_target_temperature = self._zone["setTemp"]
-        self._attr_hvac_mode = HVAC_MODE_OFF
+    @property
+    def hvac_mode(self):
+        """Return the current state as HVAC mode."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            self._attr_hvac_mode = HVAC_MODE_FAN_ONLY
-        self.async_write_ha_state()
+            return HVAC_MODE_HEAT_COOL
+        return HVAC_MODE_OFF
+
+    @property
+    def current_temperature(self):
+        """Return the current temperature."""
+        return self._zone["measuredTemp"]
+
+    @property
+    def target_temperature(self):
+        """Return the target temperature."""
+        return self._zone["setTemp"]
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the HVAC Mode and State."""

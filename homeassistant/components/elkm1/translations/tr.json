@@ -12,9 +12,15 @@
         "step": {
             "user": {
                 "data": {
+                    "address": "Seri yoluyla ba\u011flan\u0131l\u0131yorsa IP adresi veya etki alan\u0131 veya seri ba\u011flant\u0131 noktas\u0131.",
                     "password": "Parola",
+                    "prefix": "Benzersiz bir \u00f6nek (yaln\u0131zca bir ElkM1'iniz varsa bo\u015f b\u0131rak\u0131n).",
+                    "protocol": "Protokol",
+                    "temperature_unit": "ElkM1'in kulland\u0131\u011f\u0131 s\u0131cakl\u0131k birimi.",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "description": "Adres dizesi, 'g\u00fcvenli' ve 'g\u00fcvenli olmayan' i\u00e7in 'adres[:port]' bi\u00e7iminde olmal\u0131d\u0131r. \u00d6rnek: '192.168.1.1'. Ba\u011flant\u0131 noktas\u0131 iste\u011fe ba\u011fl\u0131d\u0131r ve varsay\u0131lan olarak 'g\u00fcvenli olmayan' i\u00e7in 2101 ve 'g\u00fcvenli' i\u00e7in 2601'dir. Seri protokol i\u00e7in adres 'tty[:baud]' bi\u00e7iminde olmal\u0131d\u0131r. \u00d6rnek: '/dev/ttyS1'. Baud iste\u011fe ba\u011fl\u0131d\u0131r ve varsay\u0131lan olarak 115200'd\u00fcr.",
+                "title": "Elk-M1 Kontrol\u00fcne Ba\u011flan\u0131n"
             }
         }
     }

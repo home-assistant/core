@@ -18,6 +18,13 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "\u5b58\u53d6\u6b0a\u6756"
+                },
+                "description": "\u6b32\u9023\u7d50 Google \u5e33\u865f\u3001\u8acb\u5148 [\u8a8d\u8b49\u5e33\u865f]({url})\u3002\n\n\u65bc\u8a8d\u8b49\u5f8c\u3001\u65bc\u4e0b\u65b9\u8cbc\u4e0a\u8a8d\u8b49\u6b0a\u6756\u4ee3\u78bc\u3002",
+                "title": "\u9023\u7d50 Google \u5e33\u865f"
+            },
             "init": {
                 "data": {
                     "flow_impl": "\u8a8d\u8b49\u63d0\u4f9b\u8005"

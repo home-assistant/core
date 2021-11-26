@@ -248,8 +248,7 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
             self._preset_list = []
             self._preset_mapping = {}
 
-            mode_list = self._mode().data_items
-            if mode_list:
+            if mode_list := self._mode().data_items:
                 for mode in mode_list:
                     ha_mode = HVAC_STATE_MAPPINGS.get(str(mode).lower())
                     ha_preset = PRESET_MAPPINGS.get(str(mode).lower())
@@ -268,7 +267,7 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
 
             # Default operation mode
             for mode in DEFAULT_HVAC_MODES:
-                if mode in self._hvac_mapping.keys():
+                if mode in self._hvac_mapping:
                     self._default_hvac_mode = mode
                     break
 
@@ -291,14 +290,14 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
                 # The current mode is not a hvac mode
                 if (
                     "heat" in current_mode.lower()
-                    and HVAC_MODE_HEAT in self._hvac_mapping.keys()
+                    and HVAC_MODE_HEAT in self._hvac_mapping
                 ):
                     # The current preset modes maps to HVAC_MODE_HEAT
                     _LOGGER.debug("Mapped to HEAT")
                     self._hvac_mode = HVAC_MODE_HEAT
                 elif (
                     "cool" in current_mode.lower()
-                    and HVAC_MODE_COOL in self._hvac_mapping.keys()
+                    and HVAC_MODE_COOL in self._hvac_mapping
                 ):
                     # The current preset modes maps to HVAC_MODE_COOL
                     _LOGGER.debug("Mapped to COOL")
@@ -342,8 +341,7 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
         """Update fan mode."""
         if self.values.fan_mode:
             self._current_fan_mode = self.values.fan_mode.data
-            fan_modes = self.values.fan_mode.data_items
-            if fan_modes:
+            if fan_modes := self.values.fan_mode.data_items:
                 self._fan_modes = list(fan_modes)
 
         _LOGGER.debug("self._fan_modes=%s", self._fan_modes)

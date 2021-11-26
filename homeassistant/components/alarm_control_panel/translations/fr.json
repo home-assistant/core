@@ -12,6 +12,7 @@
             "is_armed_away": "{entity_name} est arm\u00e9",
             "is_armed_home": "{entity_name} est arm\u00e9 \u00e0 la maison",
             "is_armed_night": "{entity_name} est arm\u00e9 la nuit",
+            "is_armed_vacation": "{entity_name} est arm\u00e9 en mode vacances",
             "is_disarmed": "{entity_name} est d\u00e9sarm\u00e9",
             "is_triggered": "{entity_name} est d\u00e9clench\u00e9"
         },

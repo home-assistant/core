@@ -1,7 +1,7 @@
 """Helpers for config validation using voluptuous."""
 from __future__ import annotations
 
-from collections.abc import Hashable
+from collections.abc import Callable, Hashable
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -15,7 +15,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Callable, Dict, TypeVar, cast
+from typing import Any, Dict, TypeVar, cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -78,7 +78,6 @@ from homeassistant.helpers import (
     script_variables as script_variables_helper,
     template as template_helper,
 )
-from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -120,7 +119,7 @@ def path(value: Any) -> str:
 
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(*keys: str) -> Callable:
+def has_at_least_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that at least one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -131,12 +130,13 @@ def has_at_least_one_key(*keys: str) -> Callable:
         for k in obj:
             if k in keys:
                 return obj
-        raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
+        expected = ", ".join(str(k) for k in keys)
+        raise vol.Invalid(f"must contain at least one of {expected}.")
 
     return validate
 
 
-def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
+def has_at_most_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that zero keys exist or one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -145,7 +145,8 @@ def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
             raise vol.Invalid("expected dictionary")
 
         if len(set(keys) & set(obj)) > 1:
-            raise vol.Invalid("must contain at most one of {}.".format(", ".join(keys)))
+            expected = ", ".join(str(k) for k in keys)
+            raise vol.Invalid(f"must contain at most one of {expected}.")
         return obj
 
     return validate
@@ -649,6 +650,16 @@ def url(value: Any) -> str:
     raise vol.Invalid("invalid url")
 
 
+def url_no_path(value: Any) -> str:
+    """Validate a url without a path."""
+    url_in = url(value)
+
+    if urlparse(url_in).path not in ("", "/"):
+        raise vol.Invalid("url it not allowed to have a path component")
+
+    return url_in
+
+
 def x10_address(value: str) -> str:
     """Validate an x10 address."""
     regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$")
@@ -697,23 +708,26 @@ class multi_select:
         return selected
 
 
-def deprecated(
+def _deprecated_or_removed(
     key: str,
-    replacement_key: str | None = None,
-    default: Any | None = None,
+    replacement_key: str | None,
+    default: Any | None,
+    raise_if_present: bool,
+    option_removed: bool,
 ) -> Callable[[dict], dict]:
     """
-    Log key as deprecated and provide a replacement (if exists).
+    Log key as deprecated and provide a replacement (if exists) or fail.
 
     Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected
+        - Outputs or throws the appropriate deprecation warning if key is detected
+        - Outputs or throws the appropriate error if key is detected and removed from support
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    module = inspect.getmodule(inspect.stack(context=0)[1].frame)
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
     if module is not None:
         module_name = module.__name__
     else:
@@ -721,36 +735,34 @@ def deprecated(
         # will be missing information, so let's guard.
         # https://github.com/home-assistant/core/issues/24982
         module_name = __name__
-
-    if replacement_key:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please replace it with '{replacement_key}'"
-        )
+    if option_removed:
+        logger_func = logging.getLogger(module_name).error
+        option_status = "has been removed"
     else:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please remove it from your configuration"
-        )
+        logger_func = logging.getLogger(module_name).warning
+        option_status = "is deprecated"
 
     def validator(config: dict) -> dict:
-        """Check if key is in config and log warning."""
+        """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
-                    warning.replace(
-                        "'{key}' option",
-                        f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
-                    ),
-                    key=key,
-                    replacement_key=replacement_key,
-                )
+                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore
             except AttributeError:
-                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
-                    warning,
-                    key=key,
-                    replacement_key=replacement_key,
+                near = ""
+            arguments: tuple[str, ...]
+            if replacement_key:
+                warning = "The '%s' option %s%s, please replace it with '%s'"
+                arguments = (key, near, option_status, replacement_key)
+            else:
+                warning = (
+                    "The '%s' option %s%s, please remove it from your configuration"
                 )
+                arguments = (key, near, option_status)
+
+            if raise_if_present:
+                raise vol.Invalid(warning % arguments)
+
+            logger_func(warning, *arguments)
             value = config[key]
             if replacement_key:
                 config.pop(key)
@@ -768,6 +780,52 @@ def deprecated(
         return has_at_most_one_key(*keys)(config)
 
     return validator
+
+
+def deprecated(
+    key: str,
+    replacement_key: str | None = None,
+    default: Any | None = None,
+    raise_if_present: bool | None = False,
+) -> Callable[[dict], dict]:
+    """
+    Log key as deprecated and provide a replacement (if exists).
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected or raises an exception
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning if neither key nor replacement_key are provided
+            - Adds replacement_key with default value in this case
+    """
+    return _deprecated_or_removed(
+        key,
+        replacement_key=replacement_key,
+        default=default,
+        raise_if_present=raise_if_present or False,
+        option_removed=False,
+    )
+
+
+def removed(
+    key: str,
+    default: Any | None = None,
+    raise_if_present: bool | None = True,
+) -> Callable[[dict], dict]:
+    """
+    Log key as deprecated and fail the config validation.
+
+    Expected behavior:
+        - Outputs the appropriate error if key is detected and removed from support or raises an exception
+    """
+    return _deprecated_or_removed(
+        key,
+        replacement_key=None,
+        default=default,
+        raise_if_present=raise_if_present or False,
+        option_removed=True,
+    )
 
 
 def key_value_schemas(
@@ -917,8 +975,10 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
                 service, dynamic_template
             ),
-            vol.Optional("data"): vol.All(dict, template_complex),
-            vol.Optional("data_template"): vol.All(dict, template_complex),
+            vol.Optional("data"): vol.Any(template, vol.All(dict, template_complex)),
+            vol.Optional("data_template"): vol.Any(
+                template, vol.All(dict, template_complex)
+            ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(ENTITY_SERVICE_FIELDS, dynamic_template),
         }
@@ -1015,13 +1075,13 @@ TIME_CONDITION_SCHEMA = vol.All(
         {
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "time",
-            "before": vol.Any(
+            vol.Optional("before"): vol.Any(
                 time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
             ),
-            "after": vol.Any(
+            vol.Optional("after"): vol.Any(
                 time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
             ),
-            "weekday": weekdays,
+            vol.Optional("weekday"): weekdays,
         }
     ),
     has_at_least_one_key("before", "after", "weekday"),
@@ -1040,7 +1100,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "zone",
         vol.Required(CONF_ENTITY_ID): entity_ids,
-        "zone": entity_ids,
+        vol.Required("zone"): entity_ids,
         # To support use_trigger_value in automation
         # Deprecated 2016/04/25
         vol.Optional("event"): vol.Any("enter", "leave"),
@@ -1297,6 +1357,7 @@ currency = vol.In(
         "BSD",
         "BTN",
         "BWP",
+        "BYN",
         "BYR",
         "BZD",
         "CAD",
@@ -1429,6 +1490,7 @@ currency = vol.In(
         "YER",
         "ZAR",
         "ZMK",
+        "ZMW",
         "ZWL",
     },
     msg="invalid ISO 4217 formatted currency",

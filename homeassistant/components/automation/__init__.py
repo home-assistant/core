@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable, Dict, cast
+from typing import Any, Awaitable, Callable, Dict, TypedDict, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -106,6 +106,23 @@ _LOGGER = logging.getLogger(__name__)
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
 
 
+class AutomationTriggerData(TypedDict):
+    """Automation trigger data."""
+
+    id: str
+    idx: str
+
+
+class AutomationTriggerInfo(TypedDict):
+    """Information about automation trigger."""
+
+    domain: str
+    name: str
+    home_assistant_start: bool
+    variables: TemplateVarsType
+    trigger_data: AutomationTriggerData
+
+
 @bind_hass
 def is_on(hass, entity_id):
     """
@@ -139,9 +156,7 @@ def entities_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    automation_entity = component.get_entity(entity_id)
-
-    if automation_entity is None:
+    if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(automation_entity.referenced_entities)
@@ -170,9 +185,7 @@ def devices_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    automation_entity = component.get_entity(entity_id)
-
-    if automation_entity is None:
+    if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(automation_entity.referenced_devices)
@@ -201,9 +214,7 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    automation_entity = component.get_entity(entity_id)
-
-    if automation_entity is None:
+    if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(automation_entity.referenced_areas)
@@ -211,7 +222,6 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 async def async_setup(hass, config):
     """Set up all automations."""
-    # Local import to avoid circular import
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 
     # To register the automation blueprints
@@ -246,8 +256,7 @@ async def async_setup(hass, config):
 
     async def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
-        conf = await component.async_prepare_reload()
-        if conf is None:
+        if (conf := await component.async_prepare_reload()) is None:
             return
         async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
@@ -376,8 +385,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         )
         self.action_script.update_logger(self._logger)
 
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             enable_automation = state.state == STATE_ON
             last_triggered = state.attributes.get("last_triggered")
             if last_triggered is not None:
@@ -443,8 +451,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             self._trace_config,
         ) as automation_trace:
             this = None
-            state = self.hass.states.get(self.entity_id)
-            if state:
+            if state := self.hass.states.get(self.entity_id):
                 this = state.as_dict()
             variables = {"this": this, **(run_variables or {})}
             if self._variables:
@@ -572,8 +579,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         this = None
         self.async_write_ha_state()
-        state = self.hass.states.get(self.entity_id)
-        if state:
+        if state := self.hass.states.get(self.entity_id):
             this = state.as_dict()
         variables = {"this": this}
         if self._trigger_variables:

@@ -9,7 +9,7 @@
         "flow_title": "Samsung TV: {model}",
         "step": {
             "confirm": {
-                "description": "Vill du st\u00e4lla in Samsung TV {model}? Om du aldrig har anslutit Home Assistant innan du ska se ett popup-f\u00f6nster p\u00e5 tv:n och be om auktorisering. Manuella konfigurationer f\u00f6r den h\u00e4r TV:n skrivs \u00f6ver.",
+                "description": "Vill du st\u00e4lla in Samsung TV {device}? Om du aldrig har anslutit Home Assistant innan du ska se ett popup-f\u00f6nster p\u00e5 tv:n och be om auktorisering. Manuella konfigurationer f\u00f6r den h\u00e4r TV:n skrivs \u00f6ver.",
                 "title": "Samsung TV"
             },
             "user": {

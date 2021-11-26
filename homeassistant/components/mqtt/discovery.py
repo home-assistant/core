@@ -1,19 +1,24 @@
 """Support for MQTT discovery."""
 import asyncio
 from collections import deque
+from dataclasses import dataclass
+import datetime as dt
 import functools
 import json
 import logging
 import re
 import time
+from typing import Any
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, BaseServiceInfo
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.frame import report
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -22,8 +27,11 @@ from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
+    CONF_AVAILABILITY,
+    CONF_TOPIC,
     DOMAIN,
 )
+from .models import ReceivePayloadType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +43,7 @@ TOPIC_MATCHER = re.compile(
 SUPPORTED_COMPONENTS = [
     "alarm_control_panel",
     "binary_sensor",
+    "button",
     "camera",
     "climate",
     "cover",
@@ -82,6 +91,36 @@ class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
 
 
+@dataclass
+class MqttServiceInfo(BaseServiceInfo):
+    """Prepared info from mqtt entries."""
+
+    topic: str
+    payload: ReceivePayloadType
+    qos: int
+    retain: bool
+    subscribed_topic: str
+    timestamp: dt.datetime
+
+    # Used to prevent log flooding. To be removed in 2022.6
+    _warning_logged: bool = False
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={"mqtt"},
+                error_if_core=False,
+            )
+            self._warning_logged = True
+        return getattr(self, name)
+
+
 async def async_start(  # noqa: C901
     hass: HomeAssistant, discovery_topic, config_entry=None
 ) -> None:
@@ -94,9 +133,8 @@ async def async_start(  # noqa: C901
         payload = msg.payload
         topic = msg.topic
         topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
-        match = TOPIC_MATCHER.match(topic_trimmed)
 
-        if not match:
+        if not (match := TOPIC_MATCHER.match(topic_trimmed)):
             if topic_trimmed.endswith("config"):
                 _LOGGER.warning(
                     "Received message on illegal discovery topic '%s'", topic
@@ -138,6 +176,15 @@ async def async_start(  # noqa: C901
                         payload[key] = f"{base}{value[1:]}"
                     if value[-1] == TOPIC_BASE and key.endswith("topic"):
                         payload[key] = f"{value[:-1]}{base}"
+            if payload.get(CONF_AVAILABILITY):
+                for availability_conf in cv.ensure_list(payload[CONF_AVAILABILITY]):
+                    if not isinstance(availability_conf, dict):
+                        continue
+                    if topic := availability_conf.get(CONF_TOPIC):
+                        if topic[0] == TOPIC_BASE:
+                            availability_conf[CONF_TOPIC] = f"{base}{topic[1:]}"
+                        if topic[-1] == TOPIC_BASE:
+                            availability_conf[CONF_TOPIC] = f"{topic[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = " ".join((node_id, object_id)) if node_id else object_id
@@ -276,14 +323,14 @@ async def async_start(  # noqa: C901
                 if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
                     return
 
-                data = {
-                    "topic": msg.topic,
-                    "payload": msg.payload,
-                    "qos": msg.qos,
-                    "retain": msg.retain,
-                    "subscribed_topic": msg.subscribed_topic,
-                    "timestamp": msg.timestamp,
-                }
+                data = MqttServiceInfo(
+                    topic=msg.topic,
+                    payload=msg.payload,
+                    qos=msg.qos,
+                    retain=msg.retain,
+                    subscribed_topic=msg.subscribed_topic,
+                    timestamp=msg.timestamp,
+                )
                 result = await hass.config_entries.flow.async_init(
                     integration, context={"source": DOMAIN}, data=data
                 )

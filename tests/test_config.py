@@ -215,6 +215,19 @@ def test_core_config_schema():
     )
 
 
+def test_core_config_schema_internal_external_warning(caplog):
+    """Test that we warn for internal/external URL with path."""
+    config_util.CORE_CONFIG_SCHEMA(
+        {
+            "external_url": "https://www.example.com/bla",
+            "internal_url": "http://example.local/yo",
+        }
+    )
+
+    assert "Invalid external_url set" in caplog.text
+    assert "Invalid internal_url set" in caplog.text
+
+
 def test_customize_dict_schema():
     """Test basic customize config validation."""
     values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
@@ -431,6 +444,7 @@ async def test_updating_configuration(hass, hass_storage):
         },
         "key": "core.config",
         "version": 1,
+        "minor_version": 1,
     }
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(

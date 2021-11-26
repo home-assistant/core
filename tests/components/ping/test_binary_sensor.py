@@ -1,13 +1,23 @@
 """The test for the ping binary_sensor platform."""
-from os import path
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant import config as hass_config, setup
 from homeassistant.components.ping import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 
+from tests.common import get_fixture_path
 
-async def test_reload(hass):
+
+@pytest.fixture
+def mock_ping():
+    """Mock icmplib.ping."""
+    with patch("homeassistant.components.ping.icmp_ping"):
+        yield
+
+
+async def test_reload(hass, mock_ping):
     """Verify we can reload trend sensors."""
 
     await setup.async_setup_component(
@@ -28,11 +38,7 @@ async def test_reload(hass):
 
     assert hass.states.get("binary_sensor.test")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "ping/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "ping")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -46,7 +52,3 @@ async def test_reload(hass):
 
     assert hass.states.get("binary_sensor.test") is None
     assert hass.states.get("binary_sensor.test2")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

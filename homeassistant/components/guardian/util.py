@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from typing import Any, Callable, Dict, cast
+from typing import Any, Dict, cast
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError

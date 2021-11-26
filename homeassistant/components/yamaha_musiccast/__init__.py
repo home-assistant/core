@@ -7,6 +7,7 @@ import logging
 from aiomusiccast import MusicCastConnectionException
 from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
 
+from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -19,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import BRAND, DOMAIN
+from .const import BRAND, CONF_SERIAL, CONF_UPNP_DESC, DEFAULT_ZONE, DOMAIN
 
 PLATFORMS = ["media_player"]
 
@@ -27,15 +28,49 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
+async def get_upnp_desc(hass: HomeAssistant, host: str):
+    """Get the upnp description URL for a given host, using the SSPD scanner."""
+    ssdp_entries = await ssdp.async_get_discovery_info_by_st(hass, "upnp:rootdevice")
+    matches = [w for w in ssdp_entries if w.get("_host", "") == host]
+    upnp_desc = None
+    for match in matches:
+        if match.get(ssdp.ATTR_SSDP_LOCATION):
+            upnp_desc = match[ssdp.ATTR_SSDP_LOCATION]
+            break
+
+    if not upnp_desc:
+        _LOGGER.warning(
+            "The upnp_description was not found automatically, setting a default one"
+        )
+        upnp_desc = f"http://{host}:49154/MediaRenderer/desc.xml"
+    return upnp_desc
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MusicCast from a config entry."""
 
-    client = MusicCastDevice(entry.data[CONF_HOST], async_get_clientsession(hass))
+    if entry.data.get(CONF_UPNP_DESC) is None:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                CONF_HOST: entry.data[CONF_HOST],
+                CONF_SERIAL: entry.data["serial"],
+                CONF_UPNP_DESC: await get_upnp_desc(hass, entry.data[CONF_HOST]),
+            },
+        )
+
+    client = MusicCastDevice(
+        entry.data[CONF_HOST],
+        async_get_clientsession(hass),
+        entry.data[CONF_UPNP_DESC],
+    )
     coordinator = MusicCastDataUpdateCoordinator(hass, client=client)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    await coordinator.musiccast.device.enable_polling()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -47,6 +82,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
+        hass.data[DOMAIN][entry.entry_id].musiccast.device.disable_polling()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -114,22 +150,43 @@ class MusicCastEntity(CoordinatorEntity):
 class MusicCastDeviceEntity(MusicCastEntity):
     """Defines a MusicCast device entity."""
 
+    _zone_id: str = DEFAULT_ZONE
+
+    @property
+    def device_id(self):
+        """Return the ID of the current device."""
+        if self._zone_id == DEFAULT_ZONE:
+            return self.coordinator.data.device_id
+        return f"{self.coordinator.data.device_id}_{self._zone_id}"
+
+    @property
+    def device_name(self):
+        """Return the name of the current device."""
+        return self.coordinator.data.zones[self._zone_id].name
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this MusicCast device."""
-        return DeviceInfo(
-            connections={
-                (CONNECTION_NETWORK_MAC, format_mac(mac))
-                for mac in self.coordinator.data.mac_addresses.values()
-            },
+
+        device_info = DeviceInfo(
+            name=self.device_name,
             identifiers={
                 (
                     DOMAIN,
-                    self.coordinator.data.device_id,
+                    self.device_id,
                 )
             },
-            name=self.coordinator.data.network_name,
             manufacturer=BRAND,
             model=self.coordinator.data.model_name,
             sw_version=self.coordinator.data.system_version,
         )
+
+        if self._zone_id == DEFAULT_ZONE:
+            device_info["connections"] = {
+                (CONNECTION_NETWORK_MAC, format_mac(mac))
+                for mac in self.coordinator.data.mac_addresses.values()
+            }
+        else:
+            device_info["via_device"] = (DOMAIN, self.coordinator.data.device_id)
+
+        return device_info

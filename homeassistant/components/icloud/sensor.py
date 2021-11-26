@@ -54,7 +54,7 @@ class IcloudDeviceBatterySensor(SensorEntity):
     """Representation of a iCloud device battery sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Initialize the battery sensor."""
@@ -73,7 +73,7 @@ class IcloudDeviceBatterySensor(SensorEntity):
         return f"{self._device.name} battery state"
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Battery state percentage."""
         return self._device.battery_level
 
@@ -93,12 +93,13 @@ class IcloudDeviceBatterySensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "name": self._device.name,
-            "manufacturer": "Apple",
-            "model": self._device.device_model,
-        }
+        return DeviceInfo(
+            configuration_url="https://icloud.com/",
+            identifiers={(DOMAIN, self._device.unique_id)},
+            manufacturer="Apple",
+            model=self._device.device_model,
+            name=self._device.name,
+        )
 
     @property
     def should_poll(self) -> bool:

@@ -171,8 +171,7 @@ class TfiacClimate(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self._client.set_state(TARGET_TEMP, temp)
 
     async def async_set_hvac_mode(self, hvac_mode):

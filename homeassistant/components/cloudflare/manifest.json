@@ -2,7 +2,7 @@
   "domain": "cloudflare",
   "name": "Cloudflare",
   "documentation": "https://www.home-assistant.io/integrations/cloudflare",
-  "requirements": ["pycfdns==1.2.1"],
+  "requirements": ["pycfdns==1.2.2"],
   "codeowners": ["@ludeeus", "@ctalkington"],
   "config_flow": true,
   "iot_class": "cloud_push"

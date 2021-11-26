@@ -59,8 +59,7 @@ class SuplaCover(SuplaChannel, CoverEntity):
     @property
     def current_cover_position(self):
         """Return current position of cover. 0 is closed, 100 is open."""
-        state = self.channel_data.get("state")
-        if state:
+        if state := self.channel_data.get("state"):
             return 100 - state["shut"]
         return None
 

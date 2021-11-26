@@ -1,8 +1,14 @@
 """Support for Coinbase sensors."""
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
+    SensorEntity,
+)
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     API_ACCOUNT_AMOUNT,
@@ -12,6 +18,8 @@ from .const import (
     API_ACCOUNT_NAME,
     API_ACCOUNT_NATIVE_BALANCE,
     API_RATES,
+    API_RESOURCE_TYPE,
+    API_TYPE_VAULT,
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,
     DOMAIN,
@@ -29,7 +37,7 @@ CURRENCY_ICONS = {
     "USD": "mdi:currency-usd",
 }
 
-DEFAULT_COIN_ICON = "mdi:currency-usd-circle"
+DEFAULT_COIN_ICON = "mdi:cash"
 
 ATTRIBUTION = "Data provided by coinbase.com"
 
@@ -41,7 +49,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
 
     provided_currencies = [
-        account[API_ACCOUNT_CURRENCY] for account in instance.accounts
+        account[API_ACCOUNT_CURRENCY]
+        for account in instance.accounts
+        if account[API_RESOURCE_TYPE] != API_TYPE_VAULT
     ]
 
     desired_currencies = []
@@ -82,7 +92,10 @@ class AccountSensor(SensorEntity):
         self._coinbase_data = coinbase_data
         self._currency = currency
         for account in coinbase_data.accounts:
-            if account[API_ACCOUNT_CURRENCY] == currency:
+            if (
+                account[API_ACCOUNT_CURRENCY] == currency
+                and account[API_RESOURCE_TYPE] != API_TYPE_VAULT
+            ):
                 self._name = f"Coinbase {account[API_ACCOUNT_NAME]}"
                 self._id = (
                     f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"
@@ -97,6 +110,14 @@ class AccountSensor(SensorEntity):
                     API_ACCOUNT_CURRENCY
                 ]
                 break
+        self._attr_state_class = STATE_CLASS_TOTAL
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.coinbase.com/settings/api",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._coinbase_data.user_id)},
+            manufacturer="Coinbase.com",
+            name=f"Coinbase {self._coinbase_data.user_id[-4:]}",
+        )
 
     @property
     def name(self):
@@ -109,12 +130,12 @@ class AccountSensor(SensorEntity):
         return self._id
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 
@@ -135,7 +156,10 @@ class AccountSensor(SensorEntity):
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
         for account in self._coinbase_data.accounts:
-            if account[API_ACCOUNT_CURRENCY] == self._currency:
+            if (
+                account[API_ACCOUNT_CURRENCY] == self._currency
+                and account[API_RESOURCE_TYPE] != API_TYPE_VAULT
+            ):
                 self._state = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
                 self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
                     API_ACCOUNT_AMOUNT
@@ -159,6 +183,14 @@ class ExchangeRateSensor(SensorEntity):
             1 / float(self._coinbase_data.exchange_rates[API_RATES][self.currency]), 2
         )
         self._unit_of_measurement = exchange_base
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://www.coinbase.com/settings/api",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._coinbase_data.user_id)},
+            manufacturer="Coinbase.com",
+            name=f"Coinbase {self._coinbase_data.user_id[-4:]}",
+        )
 
     @property
     def name(self):
@@ -171,12 +203,12 @@ class ExchangeRateSensor(SensorEntity):
         return self._id
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 

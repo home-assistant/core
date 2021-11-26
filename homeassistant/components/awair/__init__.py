@@ -58,7 +58,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> Any | None:
         """Update data via Awair client library."""
-        with timeout(API_TIMEOUT):
+        async with timeout(API_TIMEOUT):
             try:
                 LOGGER.debug("Fetching users and devices")
                 user = await self._awair.user()
@@ -74,6 +74,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _fetch_air_data(self, device):
         """Fetch latest air quality data."""
+        # pylint: disable=no-self-use
         LOGGER.debug("Fetching data for %s", device.uuid)
         air_data = await device.air_data_latest()
         LOGGER.debug(air_data)

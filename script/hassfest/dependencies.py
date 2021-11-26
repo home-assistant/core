@@ -94,7 +94,9 @@ ALLOWED_USED_COMPONENTS = {
     # Internal integrations
     "alert",
     "automation",
+    "button",
     "conversation",
+    "button",
     "device_automation",
     "frontend",
     "group",
@@ -134,14 +136,14 @@ IGNORE_VIOLATIONS = {
     # Demo
     ("demo", "manual"),
     ("demo", "openalpr_local"),
-    # Migration wizard from zwave to ozw.
-    "ozw",
-    # Migration of settings from zeroconf to network
-    ("network", "zeroconf"),
+    # This would be a circular dep
+    ("http", "network"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),
     "logbook",
+    # Migration wizard from zwave to zwave_js.
+    "zwave_js",
 }
 
 

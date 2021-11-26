@@ -5,7 +5,7 @@ import logging
 import aiohttp
 import tibber
 
-from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -62,7 +62,7 @@ async def async_setup_entry(hass, entry):
     # have to use discovery to load platform.
     hass.async_create_task(
         discovery.async_load_platform(
-            hass, "notify", DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
+            hass, "notify", DOMAIN, {CONF_NAME: DOMAIN}, hass.data[DATA_HASS_CONFIG]
         )
     )
     return True

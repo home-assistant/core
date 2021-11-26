@@ -1,6 +1,5 @@
 """Alarm control panels on Zigbee Home Automation networks."""
 import functools
-import logging
 
 from zigpy.zcl.clusters.security import IasAce
 
@@ -43,9 +42,6 @@ from .core.const import (
 from .core.helpers import async_get_zha_config_value
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
-
-_LOGGER = logging.getLogger(__name__)
-
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 

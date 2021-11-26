@@ -34,7 +34,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.setup import async_setup_component
 
 from . import (
     DISCOVERY_INFO,
@@ -52,7 +51,6 @@ from . import (
 
 async def test_user_form(hass, ezviz_config_flow):
     """Test the user initiated form."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -115,7 +113,6 @@ async def test_user_custom_url(hass, ezviz_config_flow):
 
 async def test_async_step_import(hass, ezviz_config_flow):
     """Test the config import flow."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -129,7 +126,6 @@ async def test_async_step_import(hass, ezviz_config_flow):
 
 async def test_async_step_import_camera(hass, ezviz_config_flow):
     """Test the config import camera flow."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -143,7 +139,6 @@ async def test_async_step_import_camera(hass, ezviz_config_flow):
 
 async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow):
     """Test we get the user initiated form."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -168,7 +163,6 @@ async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow
 
 async def test_async_step_import_abort(hass, ezviz_config_flow):
     """Test the config import flow with invalid data."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_INVALID
@@ -179,7 +173,6 @@ async def test_async_step_import_abort(hass, ezviz_config_flow):
 
 async def test_step_discovery_abort_if_cloud_account_missing(hass):
     """Test discovery and confirm step, abort if cloud account was removed."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DISCOVERY}, data=DISCOVERY_INFO
@@ -207,7 +200,6 @@ async def test_async_step_discovery(
     """Test discovery and confirm step."""
     with patch("homeassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
-    await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DISCOVERY}, data=DISCOVERY_INFO
@@ -359,8 +351,6 @@ async def test_discover_exception_step1(
     with patch("homeassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
 
-    await async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DISCOVERY},
@@ -435,7 +425,6 @@ async def test_discover_exception_step3(
     """Test we handle unexpected exception on discovery."""
     with patch("homeassistant.components.ezviz.PLATFORMS", []):
         await init_integration(hass)
-    await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

@@ -15,7 +15,7 @@
                     "api_key": "API-Schl\u00fcssel",
                     "url": "URL"
                 },
-                "description": "- URL: die Adresse deiner Nightscout-Instanz. Z.B.: https://myhomeassistant.duckdns.org:5423\n- API-Schl\u00fcssel (Optional): Nur verwenden, wenn deine Instanz gesch\u00fctzt ist (auth_default_roles != readable).",
+                "description": "- URL: die Adresse deiner Nightscout-Instanz. Z.B.: https://myhomeassistant.duckdns.org:5423\n- API-Schl\u00fcssel (optional): Nur verwenden, wenn deine Instanz gesch\u00fctzt ist (auth_default_roles != readable).",
                 "title": "Gib deine Nightscout-Serverinformationen ein."
             }
         }

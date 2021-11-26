@@ -11,14 +11,24 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Kl\u00ed\u010d API"
-                }
+                    "api_key": "Kl\u00ed\u010d API",
+                    "api_token": "API Secret",
+                    "exchange_rates": "Sm\u011bnn\u00e9 kurzy"
+                },
+                "title": "Podrobnosti o API kl\u00ed\u010di Coinbase"
             }
         }
     },
     "options": {
         "error": {
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "exchange_base": "Z\u00e1kladn\u00ed m\u011bna pro senzory sm\u011bnn\u00fdch kurz\u016f."
+                }
+            }
         }
     }
 }

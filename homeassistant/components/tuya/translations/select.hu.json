@@ -1,0 +1,49 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Letiltva",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Automatikus",
+            "1": "Ki",
+            "2": "Be"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "Alacsony \u00e9rz\u00e9kenys\u00e9g",
+            "1": "Magas \u00e9rz\u00e9kenys\u00e9g"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "Alacsony fogyaszt\u00e1s\u00fa m\u00f3d",
+            "1": "Folyamatos \u00fczemm\u00f3d"
+        },
+        "tuya__led_type": {
+            "halogen": "Halog\u00e9n",
+            "incandescent": "Izz\u00f3",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Ki",
+            "pos": "A kapcsol\u00f3 hely\u00e9nek jelz\u00e9se",
+            "relay": "Be-/kikapcsolt \u00e1llapot jelz\u00e9se"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "Alacsony \u00e9rz\u00e9kenys\u00e9g",
+            "1": "K\u00f6zepes \u00e9rz\u00e9kenys\u00e9g",
+            "2": "Magas \u00e9rz\u00e9kenys\u00e9g"
+        },
+        "tuya__record_mode": {
+            "1": "Csak esem\u00e9nyek r\u00f6gz\u00edt\u00e9se",
+            "2": "Folyamatos felv\u00e9tel"
+        },
+        "tuya__relay_status": {
+            "last": "Utols\u00f3 \u00e1llapot megjegyz\u00e9se",
+            "memory": "Utols\u00f3 \u00e1llapot megjegyz\u00e9se",
+            "off": "Ki",
+            "on": "Be",
+            "power_off": "Ki",
+            "power_on": "Be"
+        }
+    }
+}

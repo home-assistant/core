@@ -35,6 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "Pierwszy przycisk",
+            "2": "Drugi przycisk",
+            "3": "Trzeci przycisk",
+            "4": "Czwarty przycisk",
             "button_1": "pierwszy",
             "button_2": "drugi",
             "button_3": "trzeci",

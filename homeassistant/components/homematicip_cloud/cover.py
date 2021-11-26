@@ -37,7 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = []
+    entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
         if isinstance(device, AsyncBlindModule):
             entities.append(HomematicipBlindModule(hap, device))
@@ -72,14 +72,14 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
         return DEVICE_CLASS_BLIND
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         if self._device.primaryShadingLevel is not None:
             return int((1 - self._device.primaryShadingLevel) * 100)
         return None
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
         if self._device.secondaryShadingLevel is not None:
             return int((1 - self._device.secondaryShadingLevel) * 100)
@@ -165,7 +165,7 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
         return DEVICE_CLASS_SHUTTER
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         if self._device.functionalChannels[self._channel].shutterLevel is not None:
             return int(
@@ -227,7 +227,7 @@ class HomematicipMultiCoverSlats(HomematicipMultiCoverShutter, CoverEntity):
         )
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
         if self._device.functionalChannels[self._channel].slatsLevel is not None:
             return int(
@@ -267,7 +267,7 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
     """Representation of the HomematicIP Garage Door Module."""
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         door_state_to_position = {
             DoorState.CLOSED: 0,
@@ -314,14 +314,14 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         return DEVICE_CLASS_SHUTTER
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         if self._device.shutterLevel is not None:
             return int((1 - self._device.shutterLevel) * 100)
         return None
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
         if self._device.slatsLevel is not None:
             return int((1 - self._device.slatsLevel) * 100)

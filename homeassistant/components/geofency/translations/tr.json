@@ -3,6 +3,15 @@
         "abort": {
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
             "webhook_not_internet_accessible": "Webhook mesajlar\u0131n\u0131 alabilmek i\u00e7in Home Assistant \u00f6rne\u011finize internetten eri\u015filebilmelidir."
+        },
+        "create_entry": {
+            "default": "Etkinlikleri Home Assistant'a g\u00f6ndermek i\u00e7in Geofency'de webhook \u00f6zelli\u011fini ayarlaman\u0131z gerekir. \n\n A\u015fa\u011f\u0131daki bilgileri doldurun: \n\n - URL: ` {webhook_url} `\n - Y\u00f6ntem: POST \n\n Daha fazla ayr\u0131nt\u0131 i\u00e7in [belgelere]( {docs_url}"
+        },
+        "step": {
+            "user": {
+                "description": "Geofency Webhook'u kurmak istedi\u011finizden emin misiniz?",
+                "title": "Geofency Webhook'u kurun"
+            }
         }
     }
 }

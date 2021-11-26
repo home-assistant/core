@@ -9,12 +9,12 @@ from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_ZONE_RUN_TIME, DEFAULT_PORT, DEFAULT_ZONE_RUN, DOMAIN
 
@@ -42,7 +42,7 @@ async def async_get_controller(
 class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a RainMachine config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     discovered_ip_address: str | None = None
 
@@ -54,15 +54,23 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return RainMachineOptionsFlowHandler(config_entry)
 
-    async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle a flow initialized by homekit discovery."""
-        return await self.async_step_zeroconf(discovery_info)
+        return await self.async_step_homekit_zeroconf(discovery_info)
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle discovery via zeroconf."""
-        ip_address = discovery_info["host"]
+        return await self.async_step_homekit_zeroconf(discovery_info)
+
+    async def async_step_homekit_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle discovery via zeroconf."""
+        ip_address = discovery_info[zeroconf.ATTR_HOST]
 
         self._async_abort_entries_match({CONF_IP_ADDRESS: ip_address})
         # Handle IP change

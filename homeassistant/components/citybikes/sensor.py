@@ -135,7 +135,7 @@ async def async_citybikes_request(hass, uri, schema):
     try:
         session = async_get_clientsession(hass)
 
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await session.get(DEFAULT_ENDPOINT.format(uri=uri))
 
         json_response = await req.json()
@@ -265,7 +265,7 @@ class CityBikesNetwork:
 class CityBikesStation(SensorEntity):
     """CityBikes API Sensor."""
 
-    _attr_unit_of_measurement = "bikes"
+    _attr_native_unit_of_measurement = "bikes"
     _attr_icon = "mdi:bike"
 
     def __init__(self, network, station_id, entity_id):
@@ -281,7 +281,7 @@ class CityBikesStation(SensorEntity):
                 station_data = station
                 break
         self._attr_name = station_data.get(ATTR_NAME)
-        self._attr_state = station_data.get(ATTR_FREE_BIKES)
+        self._attr_native_value = station_data.get(ATTR_FREE_BIKES)
         self._attr_extra_state_attributes = (
             {
                 ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION,

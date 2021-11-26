@@ -1,8 +1,9 @@
 """Support for Tasmota binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any
 
 from hatasmota import switch as tasmota_switch
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity

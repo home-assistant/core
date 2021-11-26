@@ -97,6 +97,11 @@ class Integration:
         return self.manifest.get("quality_scale")
 
     @property
+    def config_flow(self) -> str:
+        """Return if the integration has a config flow."""
+        return self.manifest.get("config_flow")
+
+    @property
     def requirements(self) -> list[str]:
         """List of requirements."""
         return self.manifest.get("requirements", [])

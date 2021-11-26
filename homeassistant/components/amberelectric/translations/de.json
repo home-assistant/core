@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "site": {
+                "data": {
+                    "site_name": "Name des Standorts",
+                    "site_nmi": "Standort NMI"
+                },
+                "description": "W\u00e4hle die NMI des Standorts, den du hinzuf\u00fcgen m\u00f6chtest",
+                "title": "Amber Electric"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API-Token",
+                    "site_id": "Site-ID"
+                },
+                "description": "Gehe zu {api_url}, um einen API-Schl\u00fcssel zu generieren",
+                "title": "Amber Electric"
+            }
+        }
+    }
+}

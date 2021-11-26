@@ -4,6 +4,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     BinarySensorEntity,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import DOMAIN
 
@@ -38,15 +39,15 @@ class DemoBinarySensor(BinarySensorEntity):
         self._sensor_type = device_class
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            "name": self.name,
-        }
+            name=self.name,
+        )
 
     @property
     def unique_id(self):

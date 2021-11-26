@@ -92,11 +92,11 @@ class SolarEdgeSensorFactory:
             self.services[key] = (SolarEdgeStorageLevelSensor, flow)
 
         for key in (
-            "purchased_power",
-            "production_power",
-            "feedin_power",
-            "consumption_power",
-            "selfconsumption_power",
+            "purchased_energy",
+            "production_energy",
+            "feedin_energy",
+            "consumption_energy",
+            "selfconsumption_energy",
         ):
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
@@ -128,12 +128,19 @@ class SolarEdgeSensorEntity(CoordinatorEntity, SensorEntity):
 
         self._attr_name = f"{platform_name} ({description.name})"
 
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        if not self.data_service.site_id:
+            return None
+        return f"{self.data_service.site_id}_{self.entity_description.key}"
+
 
 class SolarEdgeOverviewSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API overview sensor."""
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
 
@@ -147,9 +154,16 @@ class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
         return self.data_service.attributes
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        if not self.data_service.site_id:
+            return None
+        return f"{self.data_service.site_id}"
 
 
 class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
@@ -161,7 +175,7 @@ class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
         return self.data_service.attributes.get(self.entity_description.json_key)
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
 
@@ -173,7 +187,7 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
         """Initialize the power flow sensor."""
         super().__init__(platform_name, sensor_type, data_service)
 
-        self._attr_unit_of_measurement = data_service.unit
+        self._attr_native_unit_of_measurement = data_service.unit
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -181,7 +195,7 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
         return self.data_service.attributes.get(self.entity_description.json_key)
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
 
@@ -200,7 +214,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
         """Initialize the power flow sensor."""
         super().__init__(platform_name, description, data_service)
 
-        self._attr_unit_of_measurement = data_service.unit
+        self._attr_native_unit_of_measurement = data_service.unit
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -208,7 +222,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
         return self.data_service.attributes.get(self.entity_description.json_key)
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self.entity_description.json_key)
 
@@ -219,7 +233,7 @@ class SolarEdgeStorageLevelSensor(SolarEdgeSensorEntity):
     _attr_device_class = DEVICE_CLASS_BATTERY
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         attr = self.data_service.attributes.get(self.entity_description.json_key)
         if attr and "soc" in attr:

@@ -1,0 +1,87 @@
+{
+  "data": {
+    "type": "Car",
+    "id": "VF1AAAAA555777999",
+    "attributes": {
+      "mode": "scheduled",
+      "schedules": [
+        {
+          "id": 1,
+          "activated": true,
+          "monday": {
+            "startTime": "T00:00Z",
+            "duration": 450
+          },
+          "tuesday": {
+            "startTime": "T00:00Z",
+            "duration": 450
+          },
+          "wednesday": {
+            "startTime": "T00:00Z",
+            "duration": 450
+          },
+          "thursday": {
+            "startTime": "T00:00Z",
+            "duration": 450
+          },
+          "friday": {
+            "startTime": "T00:00Z",
+            "duration": 450
+          },
+          "saturday": {
+            "startTime": "T00:00Z",
+            "duration": 450
+          },
+          "sunday": {
+            "startTime": "T00:00Z",
+            "duration": 450
+          }
+        },
+        {
+          "id": 2,
+          "activated": true,
+          "monday": {
+            "startTime": "T23:30Z",
+            "duration": 15
+          },
+          "tuesday": {
+            "startTime": "T23:30Z",
+            "duration": 15
+          },
+          "wednesday": {
+            "startTime": "T23:30Z",
+            "duration": 15
+          },
+          "thursday": {
+            "startTime": "T23:30Z",
+            "duration": 15
+          },
+          "friday": {
+            "startTime": "T23:30Z",
+            "duration": 15
+          },
+          "saturday": {
+            "startTime": "T23:30Z",
+            "duration": 15
+          },
+          "sunday": {
+            "startTime": "T23:30Z",
+            "duration": 15
+          }
+        },
+        {
+          "id": 3,
+          "activated": false
+        },
+        {
+          "id": 4,
+          "activated": false
+        },
+        {
+          "id": 5,
+          "activated": false
+        }
+      ]
+    }
+  }
+}

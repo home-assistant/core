@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from datetime import datetime
+from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 from socket import gethostbyaddr, herror
@@ -15,7 +16,6 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -89,9 +89,9 @@ def log_invalid_auth(
     async def handle_req(
         view: HomeAssistantView, request: Request, *args: Any, **kwargs: Any
     ) -> StreamResponse:
-        """Try to log failed login attempts if response status >= 400."""
+        """Try to log failed login attempts if response status >= BAD_REQUEST."""
         resp = await func(view, request, *args, **kwargs)
-        if resp.status >= HTTP_BAD_REQUEST:
+        if resp.status >= HTTPStatus.BAD_REQUEST:
             await process_wrong_login(request)
         return resp
 

@@ -10,12 +10,11 @@ from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv, template
 
 from .. import mqtt
+from .const import CONF_QOS, CONF_TOPIC
 
 # mypy: allow-untyped-defs
 
 CONF_ENCODING = "encoding"
-CONF_QOS = "qos"
-CONF_TOPIC = "topic"
 DEFAULT_ENCODING = "utf-8"
 DEFAULT_QOS = 0
 
@@ -37,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
+    trigger_data = automation_info["trigger_data"]
     topic = config[CONF_TOPIC]
     wanted_payload = config.get(CONF_PAYLOAD)
     value_template = config.get(CONF_VALUE_TEMPLATE)

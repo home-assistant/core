@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "reauth_failed_existing": "Seadekirjet ei \u00f5nnestunud uuendada, eemalda sidumine ja seadista see uuesti.",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "invalid_auth": "Tuvastamine nurjus",

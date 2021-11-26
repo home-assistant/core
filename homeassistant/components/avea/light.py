@@ -59,7 +59,6 @@ class AveaLight(LightEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        brightness = self._light.get_brightness()
-        if brightness is not None:
+        if (brightness := self._light.get_brightness()) is not None:
             self._attr_is_on = brightness != 0
             self._attr_brightness = round(255 * (brightness / 4095))

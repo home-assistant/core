@@ -55,8 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Sighthound error %s setup aborted", exc)
         return
 
-    save_file_folder = config.get(CONF_SAVE_FILE_FOLDER)
-    if save_file_folder:
+    if save_file_folder := config.get(CONF_SAVE_FILE_FOLDER):
         save_file_folder = Path(save_file_folder)
 
     entities = []

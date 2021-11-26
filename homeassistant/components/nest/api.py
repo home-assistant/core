@@ -6,10 +6,22 @@ from typing import cast
 from aiohttp import ClientSession
 from google.oauth2.credentials import Credentials
 from google_nest_sdm.auth import AbstractAuth
+from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
-from .const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
+from .const import (
+    API_URL,
+    CONF_PROJECT_ID,
+    CONF_SUBSCRIBER_ID,
+    DATA_NEST_CONFIG,
+    DOMAIN,
+    OAUTH2_TOKEN,
+    SDM_SCOPES,
+)
 
 # See https://developers.google.com/nest/device-access/registration
 
@@ -55,3 +67,26 @@ class AsyncConfigEntryAuth(AbstractAuth):
         )
         creds.expiry = datetime.datetime.fromtimestamp(token["expires_at"])
         return creds
+
+
+async def new_subscriber(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> GoogleNestSubscriber:
+    """Create a GoogleNestSubscriber."""
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
+    )
+
+    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    auth = AsyncConfigEntryAuth(
+        aiohttp_client.async_get_clientsession(hass),
+        session,
+        config[CONF_CLIENT_ID],
+        config[CONF_CLIENT_SECRET],
+    )
+    return GoogleNestSubscriber(
+        auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
+    )

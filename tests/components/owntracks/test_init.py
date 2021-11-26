@@ -39,7 +39,7 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture
-def mock_client(hass, aiohttp_client):
+def mock_client(hass, hass_client_no_auth):
     """Start the Home Assistant HTTP component."""
     mock_component(hass, "group")
     mock_component(hass, "zone")
@@ -50,7 +50,7 @@ def mock_client(hass, aiohttp_client):
     ).add_to_hass(hass)
     hass.loop.run_until_complete(async_setup_component(hass, "owntracks", {}))
 
-    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+    return hass.loop.run_until_complete(hass_client_no_auth())
 
 
 async def test_handle_valid_message(mock_client):

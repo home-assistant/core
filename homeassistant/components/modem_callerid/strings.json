@@ -1,0 +1,26 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "title": "Phone Modem",
+          "description": "This is an integration for landline calls using a CX93001 voice modem. This can retrieve caller ID information with an option to reject an incoming call.",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "port": "[%key:common::config_flow::data::port%]"
+          }
+        },
+        "usb_confirm": {
+          "title": "Phone Modem",
+          "description": "This is an integration for landline calls using a CX93001 voice modem. This can retrieve caller ID information with an option to reject an incoming call."
+        }
+      },
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      },
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+        "no_devices_found": "No remaining devices found"
+      }
+    }
+  }

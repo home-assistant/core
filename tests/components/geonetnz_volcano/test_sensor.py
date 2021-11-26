@@ -57,9 +57,12 @@ async def test_setup(hass, legacy_patchable_time):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
         # 3 sensor entities
-        assert len(all_states) == 3
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 3
+        )
 
         state = hass.states.get("sensor.volcano_title_1")
         assert state is not None
@@ -101,8 +104,11 @@ async def test_setup(hass, legacy_patchable_time):
         async_fire_time_changed(hass, utcnow + DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 4
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
 
         # Simulate an update - empty data, but successful update,
         # so no changes to entities.
@@ -110,24 +116,33 @@ async def test_setup(hass, legacy_patchable_time):
         async_fire_time_changed(hass, utcnow + 2 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 4
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
 
         # Simulate an update - empty data, keep all entities
         mock_feed_update.return_value = "ERROR", None
         async_fire_time_changed(hass, utcnow + 3 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 4
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
 
         # Simulate an update - regular data for 3 entries
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         async_fire_time_changed(hass, utcnow + 4 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 4
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 4
+        )
 
 
 async def test_setup_imperial(hass):
@@ -149,8 +164,11 @@ async def test_setup_imperial(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        all_states = hass.states.async_all()
-        assert len(all_states) == 1
+        assert (
+            len(hass.states.async_entity_ids("geo_location"))
+            + len(hass.states.async_entity_ids("sensor"))
+            == 1
+        )
 
         # Test conversion of 200 miles to kilometers.
         assert mock_feed_init.call_args[1].get("filter_radius") == 321.8688

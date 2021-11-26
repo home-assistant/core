@@ -223,7 +223,6 @@ SENSOR_TYPES = {
             None,
             4,
             DEVICE_CLASS_TEMPERATURE,
-            None,
         ],
         "Flame": ["Flame", None, "mdi:toggle-switch", 2, None],
         "PowerEnergyConsumptionHeatingCircuit": [

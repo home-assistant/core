@@ -1,5 +1,6 @@
 """Support for an exposed aREST RESTful API of a device."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
@@ -12,7 +13,6 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
-    HTTP_OK,
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -141,12 +141,12 @@ class ArestSensor(SensorEntity):
         self.arest = arest
         self._attr_name = f"{location.title()} {name.title()}"
         self._variable = variable
-        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._renderer = renderer
 
         if pin is not None:
             request = requests.get(f"{resource}/mode/{pin}/i", timeout=10)
-            if request.status_code != HTTP_OK:
+            if request.status_code != HTTPStatus.OK:
                 _LOGGER.error("Can't set mode of %s", resource)
 
     def update(self):
@@ -155,9 +155,9 @@ class ArestSensor(SensorEntity):
         self._attr_available = self.arest.available
         values = self.arest.data
         if "error" in values:
-            self._attr_state = values["error"]
+            self._attr_native_value = values["error"]
         else:
-            self._attr_state = self._renderer(
+            self._attr_native_value = self._renderer(
                 values.get("value", values.get(self._variable, None))
             )
 

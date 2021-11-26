@@ -23,6 +23,8 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
 
+# mypy: disallow-any-generics
+
 CONDITION_TYPES = {
     "is_locked",
     "is_unlocked",
@@ -39,7 +41,9 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_conditions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device conditions for Lock devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []

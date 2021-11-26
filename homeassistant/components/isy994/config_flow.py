@@ -10,8 +10,7 @@ from pyisy.connection import Connection
 import voluptuous as vol
 
 from homeassistant import config_entries, core, data_entry_flow, exceptions
-from homeassistant.components import ssdp
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp, ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -89,7 +88,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     )
 
     try:
-        with async_timeout.timeout(30):
+        async with async_timeout.timeout(30):
             isy_conf_xml = await isy_conn.test_connection()
     except ISYInvalidAuthError as error:
         raise InvalidAuth from error
@@ -182,21 +181,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 },
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
-            )
         raise data_entry_flow.AbortFlow("already_configured")
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle a discovered isy994 via dhcp."""
-        friendly_name = discovery_info[HOSTNAME]
-        url = f"http://{discovery_info[IP_ADDRESS]}"
-        mac = discovery_info[MAC_ADDRESS]
+        friendly_name = discovery_info[dhcp.HOSTNAME]
+        url = f"http://{discovery_info[dhcp.IP_ADDRESS]}"
+        mac = discovery_info[dhcp.MAC_ADDRESS]
         isy_mac = (
             f"{mac[0:2]}:{mac[2:4]}:{mac[4:6]}:{mac[6:8]}:{mac[8:10]}:{mac[10:12]}"
         )
         await self._async_set_unique_id_or_update(
-            isy_mac, discovery_info[IP_ADDRESS], None
+            isy_mac, discovery_info[dhcp.IP_ADDRESS], None
         )
 
         self.discovered_conf = {

@@ -1,7 +1,8 @@
 """The test for the Template sensor platform."""
 from datetime import timedelta
-from os import path
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant import config
 from homeassistant.components.template import DOMAIN
@@ -9,16 +10,13 @@ from homeassistant.helpers.reload import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, get_fixture_path
 
 
-async def test_reloadable(hass):
-    """Test that we can reload."""
-    hass.states.async_set("sensor.test_sensor", "mytest")
-
-    await async_setup_component(
-        hass,
-        "sensor",
+@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": DOMAIN,
@@ -48,17 +46,17 @@ async def test_reloadable(hass):
                 },
             ],
         },
-    )
-    await hass.async_block_till_done()
-
-    await hass.async_start()
+    ],
+)
+async def test_reloadable(hass, start_ha):
+    """Test that we can reload."""
+    hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
     assert hass.states.get("sensor.top_level_state").state == "unknown + 2"
     assert hass.states.get("binary_sensor.top_level_state").state == "off"
 
     hass.bus.async_fire("event_1", {"source": "init"})
     await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 5
     assert hass.states.get("sensor.state").state == "mytest"
     assert hass.states.get("sensor.top_level").state == "init"
@@ -66,25 +64,11 @@ async def test_reloadable(hass):
     assert hass.states.get("sensor.top_level_state").state == "init + 2"
     assert hass.states.get("binary_sensor.top_level_state").state == "on"
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "template/sensor_configuration.yaml",
-    )
-    with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
+    await async_yaml_patch_helper(hass, "sensor_configuration.yaml")
     assert len(hass.states.async_all()) == 4
 
     hass.bus.async_fire("event_2", {"source": "reload"})
     await hass.async_block_till_done()
-
     assert hass.states.get("sensor.state") is None
     assert hass.states.get("sensor.top_level") is None
     assert hass.states.get("sensor.watching_tv_in_master_bedroom").state == "off"
@@ -92,13 +76,10 @@ async def test_reloadable(hass):
     assert hass.states.get("sensor.top_level_2").state == "reload"
 
 
-async def test_reloadable_can_remove(hass):
-    """Test that we can reload and remove all template sensors."""
-    hass.states.async_set("sensor.test_sensor", "mytest")
-
-    await async_setup_component(
-        hass,
-        "sensor",
+@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": DOMAIN,
@@ -116,43 +97,54 @@ async def test_reloadable_can_remove(hass):
                 },
             },
         },
-    )
+    ],
+)
+async def test_reloadable_can_remove(hass, start_ha):
+    """Test that we can reload and remove all template sensors."""
+    hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
-
-    await hass.async_start()
-    await hass.async_block_till_done()
-
     hass.bus.async_fire("event_1", {"source": "init"})
     await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 3
     assert hass.states.get("sensor.state").state == "mytest"
     assert hass.states.get("sensor.top_level").state == "init"
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "template/empty_configuration.yaml",
-    )
-    with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
+    await async_yaml_patch_helper(hass, "empty_configuration.yaml")
     assert len(hass.states.async_all()) == 1
 
 
-async def test_reloadable_stops_on_invalid_config(hass):
+@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": DOMAIN,
+                "sensors": {
+                    "state": {
+                        "value_template": "{{ states.sensor.test_sensor.state }}"
+                    },
+                },
+            }
+        },
+    ],
+)
+async def test_reloadable_stops_on_invalid_config(hass, start_ha):
     """Test we stop the reload if configuration.yaml is completely broken."""
     hass.states.async_set("sensor.test_sensor", "mytest")
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.state").state == "mytest"
+    assert len(hass.states.async_all()) == 2
 
-    await async_setup_component(
-        hass,
-        "sensor",
+    await async_yaml_patch_helper(hass, "configuration.yaml.corrupt")
+    assert hass.states.get("sensor.state").state == "mytest"
+    assert len(hass.states.async_all()) == 2
+
+
+@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": DOMAIN,
@@ -163,89 +155,27 @@ async def test_reloadable_stops_on_invalid_config(hass):
                 },
             }
         },
-    )
-
-    await hass.async_block_till_done()
-
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.state").state == "mytest"
-    assert len(hass.states.async_all()) == 2
-
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "template/configuration.yaml.corrupt",
-    )
-    with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.state").state == "mytest"
-    assert len(hass.states.async_all()) == 2
-
-
-async def test_reloadable_handles_partial_valid_config(hass):
+    ],
+)
+async def test_reloadable_handles_partial_valid_config(hass, start_ha):
     """Test we can still setup valid sensors when configuration.yaml has a broken entry."""
     hass.states.async_set("sensor.test_sensor", "mytest")
-
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": {
-                "platform": DOMAIN,
-                "sensors": {
-                    "state": {
-                        "value_template": "{{ states.sensor.test_sensor.state }}"
-                    },
-                },
-            }
-        },
-    )
-
     await hass.async_block_till_done()
-
-    await hass.async_start()
-    await hass.async_block_till_done()
-
     assert hass.states.get("sensor.state").state == "mytest"
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all("sensor")) == 2
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "template/broken_configuration.yaml",
-    )
-    with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 3
+    await async_yaml_patch_helper(hass, "broken_configuration.yaml")
+    assert len(hass.states.async_all("sensor")) == 3
 
     assert hass.states.get("sensor.state") is None
     assert hass.states.get("sensor.watching_tv_in_master_bedroom").state == "off"
     assert float(hass.states.get("sensor.combined_sensor_energy_usage").state) == 0
 
 
-async def test_reloadable_multiple_platforms(hass):
-    """Test that we can reload."""
-    hass.states.async_set("sensor.test_sensor", "mytest")
-
-    await async_setup_component(
-        hass,
-        "sensor",
+@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": DOMAIN,
@@ -256,7 +186,11 @@ async def test_reloadable_multiple_platforms(hass):
                 },
             }
         },
-    )
+    ],
+)
+async def test_reloadable_multiple_platforms(hass, start_ha):
+    """Test that we can reload."""
+    hass.states.async_set("sensor.test_sensor", "mytest")
     await async_setup_component(
         hass,
         "binary_sensor",
@@ -272,43 +206,22 @@ async def test_reloadable_multiple_platforms(hass):
         },
     )
     await hass.async_block_till_done()
-
-    await hass.async_start()
-    await hass.async_block_till_done()
-
     assert hass.states.get("sensor.state").state == "mytest"
     assert hass.states.get("binary_sensor.state").state == "off"
-
     assert len(hass.states.async_all()) == 3
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "template/sensor_configuration.yaml",
-    )
-    with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
+    await async_yaml_patch_helper(hass, "sensor_configuration.yaml")
     assert len(hass.states.async_all()) == 4
-
     assert hass.states.get("sensor.state") is None
     assert hass.states.get("sensor.watching_tv_in_master_bedroom").state == "off"
     assert float(hass.states.get("sensor.combined_sensor_energy_usage").state) == 0
     assert hass.states.get("sensor.top_level_2") is not None
 
 
-async def test_reload_sensors_that_reference_other_template_sensors(hass):
-    """Test that we can reload sensor that reference other template sensors."""
-
-    await async_setup_component(
-        hass,
-        "sensor",
+@pytest.mark.parametrize("count,domain", [(1, "sensor")])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "sensor": {
                 "platform": DOMAIN,
@@ -317,22 +230,11 @@ async def test_reload_sensors_that_reference_other_template_sensors(hass):
                 },
             }
         },
-    )
-    await hass.async_block_till_done()
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "template/ref_configuration.yaml",
-    )
-    with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
+    ],
+)
+async def test_reload_sensors_that_reference_other_template_sensors(hass, start_ha):
+    """Test that we can reload sensor that reference other template sensors."""
+    await async_yaml_patch_helper(hass, "ref_configuration.yaml")
     assert len(hass.states.async_all()) == 3
     await hass.async_block_till_done()
 
@@ -342,11 +244,19 @@ async def test_reload_sensors_that_reference_other_template_sensors(hass):
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
-
     assert hass.states.get("sensor.test1").state == "3"
     assert hass.states.get("sensor.test2").state == "1"
     assert hass.states.get("sensor.test3").state == "2"
 
 
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))
+async def async_yaml_patch_helper(hass, filename):
+    """Help update configuration.yaml."""
+    yaml_path = get_fixture_path(filename, "template")
+    with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()

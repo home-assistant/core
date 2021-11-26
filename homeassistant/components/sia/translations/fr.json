@@ -12,7 +12,7 @@
         "step": {
             "additional_account": {
                 "data": {
-                    "account": "Identifiant du compte",
+                    "account": "Identifiant de compte",
                     "additional_account": "Comptes suppl\u00e9mentaires",
                     "encryption_key": "Cl\u00e9 de cryptage",
                     "ping_interval": "Intervalle de ping (min)",

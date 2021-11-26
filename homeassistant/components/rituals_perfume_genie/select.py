@@ -5,7 +5,7 @@ from pyrituals import Diffuser
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import AREA_SQUARE_METERS
+from homeassistant.const import AREA_SQUARE_METERS, ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -36,6 +36,7 @@ class DiffuserRoomSize(DiffuserEntity, SelectEntity):
     _attr_icon = "mdi:ruler-square"
     _attr_unit_of_measurement = AREA_SQUARE_METERS
     _attr_options = ["15", "30", "60", "100"]
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
@@ -51,9 +52,4 @@ class DiffuserRoomSize(DiffuserEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the diffuser room size."""
-        if option in self.options:
-            await self._diffuser.set_room_size_square_meter(int(option))
-        else:
-            raise ValueError(
-                f"Can't set the room size to {option}. Allowed room sizes are: {self.options}"
-            )
+        await self._diffuser.set_room_size_square_meter(int(option))

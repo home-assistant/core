@@ -4,6 +4,13 @@
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
+      "auth": {
+        "title": "Link Google Account",
+        "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below.",
+        "data": {
+          "code": "[%key:common::config_flow::data::access_token%]"
+        }
+      },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Nest integration needs to re-authenticate your account"

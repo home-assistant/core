@@ -26,7 +26,7 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 DEFAULT_SCAN_INTERVAL = 5
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 
-DEVICE_STATE_ATTRIBUTES = {
+EXTRA_STATE_ATTRIBUTES = {
     "beer_name": "beer_name",
     "keg_date": "keg_date",
     "mode": "mode",

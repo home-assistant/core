@@ -42,7 +42,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     config_port = config[CONF_PORT]
     config_name = config[CONF_NAME]
     try:
-        with async_timeout.timeout(PLATFORM_TIMEOUT):
+        async with async_timeout.timeout(PLATFORM_TIMEOUT):
             api = await real_time_api(config_host, config_port)
     except (IamMeterError, asyncio.TimeoutError) as err:
         _LOGGER.error("Device is not ready")
@@ -50,7 +50,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_update_data():
         try:
-            with async_timeout.timeout(PLATFORM_TIMEOUT):
+            async with async_timeout.timeout(PLATFORM_TIMEOUT):
                 return await api.get_data()
         except (IamMeterError, asyncio.TimeoutError) as err:
             raise UpdateFailed from err
@@ -86,7 +86,7 @@ class IamMeter(CoordinatorEntity, SensorEntity):
         self.dev_name = dev_name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data.data[self.sensor_name]
 
@@ -106,6 +106,6 @@ class IamMeter(CoordinatorEntity, SensorEntity):
         return "mdi:flash"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self.unit

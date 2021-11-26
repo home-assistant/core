@@ -10,10 +10,11 @@
         "error": {
             "cannot_connect": "\u00dchendus nurjus",
             "cloud_credentials_incomplete": "Pilve mandaat on poolik, palun t\u00e4ida kasutajanimi, salas\u00f5na ja riik",
-            "cloud_login_error": "Xioami Miio Cloudi ei saanud sisse logida, kontrolli mandaati.",
+            "cloud_login_error": "Xiaomi Miio Cloudi ei saanud sisse logida, kontrolli mandaati.",
             "cloud_no_devices": "Xiaomi Miio pilvekontolt ei leitud \u00fchtegi seadet.",
             "no_device_selected": "Seadmeid pole valitud, vali \u00fcks seade.",
-            "unknown_device": "Seadme mudel pole teada, seadet ei saa seadistamisvoo abil seadistada."
+            "unknown_device": "Seadme mudel pole teada, seadet ei saa seadistamisvoo abil seadistada.",
+            "wrong_token": "Kontrollsumma t\u00f5rge, vigane r\u00e4si"
         },
         "flow_title": "{name}",
         "step": {

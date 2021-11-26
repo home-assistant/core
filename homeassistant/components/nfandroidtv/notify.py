@@ -1,5 +1,8 @@
 """Notifications for Android TV notification service."""
+from __future__ import annotations
+
 import logging
+from typing import Any, BinaryIO
 
 from notifications_android_tv import Notifications
 import requests
@@ -13,21 +16,29 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import ATTR_ICON, CONF_HOST, CONF_TIMEOUT
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_COLOR,
     ATTR_DURATION,
-    ATTR_FILE,
-    ATTR_FILE_AUTH,
-    ATTR_FILE_AUTH_DIGEST,
-    ATTR_FILE_PASSWORD,
-    ATTR_FILE_PATH,
-    ATTR_FILE_URL,
-    ATTR_FILE_USERNAME,
     ATTR_FONTSIZE,
+    ATTR_ICON,
+    ATTR_ICON_AUTH,
+    ATTR_ICON_AUTH_DIGEST,
+    ATTR_ICON_PASSWORD,
+    ATTR_ICON_PATH,
+    ATTR_ICON_URL,
+    ATTR_ICON_USERNAME,
+    ATTR_IMAGE,
+    ATTR_IMAGE_AUTH,
+    ATTR_IMAGE_AUTH_DIGEST,
+    ATTR_IMAGE_PASSWORD,
+    ATTR_IMAGE_PATH,
+    ATTR_IMAGE_URL,
+    ATTR_IMAGE_USERNAME,
     ATTR_INTERRUPT,
     ATTR_POSITION,
     ATTR_TRANSPARENCY,
@@ -63,7 +74,11 @@ PLATFORM_SCHEMA = cv.deprecated(
 )
 
 
-async def async_get_service(hass: HomeAssistant, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> NFAndroidTVNotificationService:
     """Get the NFAndroidTV notification service."""
     if discovery_info is not None:
         notify = await hass.async_add_executor_job(
@@ -86,15 +101,15 @@ class NFAndroidTVNotificationService(BaseNotificationService):
     def __init__(
         self,
         notify: Notifications,
-        is_allowed_path,
-    ):
+        is_allowed_path: Any,
+    ) -> None:
         """Initialize the service."""
         self.notify = notify
         self.is_allowed_path = is_allowed_path
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a Android TV device."""
-        data = kwargs.get(ATTR_DATA)
+        data: dict | None = kwargs.get(ATTR_DATA)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         duration = None
         fontsize = None
@@ -107,7 +122,9 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         if data:
             if ATTR_DURATION in data:
                 try:
-                    duration = int(data.get(ATTR_DURATION))
+                    duration = int(
+                        data.get(ATTR_DURATION, Notifications.DEFAULT_DURATION)
+                    )
                 except ValueError:
                     _LOGGER.warning(
                         "Invalid duration-value: %s", str(data.get(ATTR_DURATION))
@@ -148,22 +165,23 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     _LOGGER.warning(
                         "Invalid interrupt-value: %s", str(data.get(ATTR_INTERRUPT))
                     )
-            filedata = data.get(ATTR_FILE) if data else None
-            if filedata is not None:
-                if ATTR_ICON in filedata:
-                    icon = self.load_file(
-                        url=filedata.get(ATTR_ICON),
-                        local_path=filedata.get(ATTR_FILE_PATH),
-                        username=filedata.get(ATTR_FILE_USERNAME),
-                        password=filedata.get(ATTR_FILE_PASSWORD),
-                        auth=filedata.get(ATTR_FILE_AUTH),
-                    )
+            imagedata = data.get(ATTR_IMAGE) if data else None
+            if imagedata is not None:
                 image_file = self.load_file(
-                    url=filedata.get(ATTR_FILE_URL),
-                    local_path=filedata.get(ATTR_FILE_PATH),
-                    username=filedata.get(ATTR_FILE_USERNAME),
-                    password=filedata.get(ATTR_FILE_PASSWORD),
-                    auth=filedata.get(ATTR_FILE_AUTH),
+                    url=imagedata.get(ATTR_IMAGE_URL),
+                    local_path=imagedata.get(ATTR_IMAGE_PATH),
+                    username=imagedata.get(ATTR_IMAGE_USERNAME),
+                    password=imagedata.get(ATTR_IMAGE_PASSWORD),
+                    auth=imagedata.get(ATTR_IMAGE_AUTH),
+                )
+            icondata = data.get(ATTR_ICON) if data else None
+            if icondata is not None:
+                icon = self.load_file(
+                    url=icondata.get(ATTR_ICON_URL),
+                    local_path=icondata.get(ATTR_ICON_PATH),
+                    username=icondata.get(ATTR_ICON_USERNAME),
+                    password=icondata.get(ATTR_ICON_PASSWORD),
+                    auth=icondata.get(ATTR_ICON_AUTH),
                 )
         self.notify.send(
             message,
@@ -179,15 +197,21 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         )
 
     def load_file(
-        self, url=None, local_path=None, username=None, password=None, auth=None
-    ):
+        self,
+        url: str | None = None,
+        local_path: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        auth: str | None = None,
+    ) -> bytes | BinaryIO | None:
         """Load image/document/etc from a local path or URL."""
         try:
             if url is not None:
                 # Check whether authentication parameters are provided
                 if username is not None and password is not None:
                     # Use digest or basic authentication
-                    if ATTR_FILE_AUTH_DIGEST == auth:
+                    auth_: HTTPDigestAuth | HTTPBasicAuth
+                    if auth in (ATTR_IMAGE_AUTH_DIGEST, ATTR_ICON_AUTH_DIGEST):
                         auth_ = HTTPDigestAuth(username, password)
                     else:
                         auth_ = HTTPBasicAuth(username, password)
@@ -201,7 +225,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             if local_path is not None:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
-                    return open(local_path, "rb")  # pylint: disable=consider-using-with
+                    return open(local_path, "rb")
                 _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             else:
                 _LOGGER.warning("Neither URL nor local path found in params!")

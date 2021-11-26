@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
@@ -136,8 +137,7 @@ class RuntimeEntryData:
 
     async def async_load_from_store(self) -> tuple[list[EntityInfo], list[UserService]]:
         """Load the retained data from store and return de-serialized data."""
-        restored = await self.store.async_load()
-        if restored is None:
+        if (restored := await self.store.async_load()) is None:
             return [], []
         restored = cast("dict[str, Any]", restored)
         self._storage_contents = restored.copy()

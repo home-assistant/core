@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 import logging
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from awesomeversion import AwesomeVersion
 from hyperion import client, const as hyperion_const

@@ -51,7 +51,7 @@ def async_load_screenlogic_services(hass: HomeAssistant):
             )
         color_num = SUPPORTED_COLOR_MODES[service_call.data[ATTR_COLOR_MODE]]
         for entry_id in screenlogic_entry_ids:
-            coordinator = hass.data[DOMAIN][entry_id]["coordinator"]
+            coordinator = hass.data[DOMAIN][entry_id]
             _LOGGER.debug(
                 "Service %s called on %s with mode %s",
                 SERVICE_SET_COLOR_MODE,

@@ -70,12 +70,12 @@ class WhoisSensor(SensorEntity):
         return "mdi:calendar-clock"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement to present the value in."""
         return TIME_DAYS
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the expiration days for hostname."""
         return self._state
 

@@ -7,13 +7,19 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
+                    "host": "Ana bilgisayar",
+                    "name": "Ad",
                     "password": "Parola",
                     "port": "Port",
-                    "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                    "ssl": "SSL sertifikas\u0131 kullan\u0131r",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131",
+                    "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
+                },
+                "title": "NZBGet'e ba\u011flan\u0131n"
             }
         }
     },

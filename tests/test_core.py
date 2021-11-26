@@ -1374,6 +1374,33 @@ async def test_additional_data_in_core_config(hass, hass_storage):
     assert config.location_name == "Test Name"
 
 
+async def test_incorrect_internal_external_url(hass, hass_storage, caplog):
+    """Test that we warn when detecting invalid internal/extenral url."""
+    config = ha.Config(hass)
+
+    hass_storage[ha.CORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "internal_url": None,
+            "external_url": None,
+        },
+    }
+    await config.async_load()
+    assert "Invalid external_url set" not in caplog.text
+    assert "Invalid internal_url set" not in caplog.text
+
+    hass_storage[ha.CORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "internal_url": "https://community.home-assistant.io/profile",
+            "external_url": "https://www.home-assistant.io/blue",
+        },
+    }
+    await config.async_load()
+    assert "Invalid external_url set" in caplog.text
+    assert "Invalid internal_url set" in caplog.text
+
+
 async def test_start_events(hass):
     """Test events fired when starting Home Assistant."""
     hass.state = ha.CoreState.not_running

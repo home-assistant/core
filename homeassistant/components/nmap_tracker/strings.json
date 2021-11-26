@@ -7,9 +7,9 @@
             "data": {
                 "hosts": "[%key:component::nmap_tracker::config::step::user::data::hosts%]",
                 "home_interval": "[%key:component::nmap_tracker::config::step::user::data::home_interval%]",
+                "consider_home": "Seconds to wait till marking a device tracker as not home after not being seen.",
                 "exclude": "[%key:component::nmap_tracker::config::step::user::data::exclude%]",
                 "scan_options": "[%key:component::nmap_tracker::config::step::user::data::scan_options%]",
-                "track_new_devices": "Track new devices",
                 "interval_seconds": "Scan interval"
               }
         }

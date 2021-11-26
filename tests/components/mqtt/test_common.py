@@ -22,6 +22,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "model": "Glass",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
+    "configuration_url": "http://example.com",
 }
 
 DEFAULT_CONFIG_DEVICE_INFO_MAC = {
@@ -31,6 +32,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "model": "Glass",
     "sw_version": "0.1-beta",
     "suggested_area": "default_area",
+    "configuration_url": "http://example.com",
 }
 
 
@@ -660,8 +662,8 @@ async def help_test_discovery_update(
     mqtt_mock,
     caplog,
     domain,
-    discovery_data1,
-    discovery_data2,
+    discovery_config1,
+    discovery_config2,
     state_data1=None,
     state_data2=None,
 ):
@@ -669,6 +671,14 @@ async def help_test_discovery_update(
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
     """
+    # Add some future configuration to the configurations
+    config1 = copy.deepcopy(discovery_config1)
+    config1["some_future_option_1"] = "future_option_1"
+    config2 = copy.deepcopy(discovery_config2)
+    config2["some_future_option_2"] = "future_option_2"
+    discovery_data1 = json.dumps(config1)
+    discovery_data2 = json.dumps(config2)
+
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", discovery_data1)
     await hass.async_block_till_done()
 
@@ -771,6 +781,7 @@ async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, 
     assert device.model == "Glass"
     assert device.sw_version == "0.1-beta"
     assert device.suggested_area == "default_area"
+    assert device.configuration_url == "http://example.com"
 
 
 async def help_test_entity_device_info_with_connection(hass, mqtt_mock, domain, config):
@@ -799,6 +810,7 @@ async def help_test_entity_device_info_with_connection(hass, mqtt_mock, domain, 
     assert device.model == "Glass"
     assert device.sw_version == "0.1-beta"
     assert device.suggested_area == "default_area"
+    assert device.configuration_url == "http://example.com"
 
 
 async def help_test_entity_device_info_remove(hass, mqtt_mock, domain, config):
@@ -1213,3 +1225,44 @@ async def help_test_entity_disabled_by_default(hass, mqtt_mock, domain, config):
     assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique1")
     assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique2")
     assert not dev_registry.async_get_device({("mqtt", "helloworld")})
+
+
+async def help_test_entity_category(hass, mqtt_mock, domain, config):
+    """Test device registry remove."""
+    # Add device settings to config
+    config = copy.deepcopy(config[domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+
+    ent_registry = er.async_get(hass)
+
+    # Discover an entity without entity category
+    unique_id = "veryunique1"
+    config["unique_id"] = unique_id
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
+    await hass.async_block_till_done()
+    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+    assert hass.states.get(entity_id)
+    entry = ent_registry.async_get(entity_id)
+    assert entry.entity_category is None
+
+    # Discover an entity with entity category set to "config"
+    unique_id = "veryunique2"
+    config["entity_category"] = "config"
+    config["unique_id"] = unique_id
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
+    await hass.async_block_till_done()
+    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+    assert hass.states.get(entity_id)
+    entry = ent_registry.async_get(entity_id)
+    assert entry.entity_category == "config"
+
+    # Discover an entity with entity category set to "no_such_category"
+    unique_id = "veryunique3"
+    config["entity_category"] = "no_such_category"
+    config["unique_id"] = unique_id
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
+    await hass.async_block_till_done()
+    assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)

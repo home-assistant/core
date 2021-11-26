@@ -87,12 +87,12 @@ class StreamLabsDailyUsage(SensorEntity):
         return WATER_ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current daily usage."""
         return self._streamlabs_usage_data.get_daily_usage()
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return gallons as the unit measurement for water."""
         return VOLUME_GALLONS
 
@@ -110,7 +110,7 @@ class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
         return f"{self._location_name} {NAME_MONTHLY_USAGE}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current monthly usage."""
         return self._streamlabs_usage_data.get_monthly_usage()
 
@@ -124,6 +124,6 @@ class StreamLabsYearlyUsage(StreamLabsDailyUsage):
         return f"{self._location_name} {NAME_YEARLY_USAGE}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current yearly usage."""
         return self._streamlabs_usage_data.get_yearly_usage()

@@ -171,8 +171,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
-        old_state = await self.async_get_last_state()
-        if old_state is not None:
+        if (old_state := await self.async_get_last_state()) is not None:
             if old_state.attributes.get(ATTR_MODE) == MODE_AWAY:
                 self._is_away = True
                 self._saved_target_humidity = self._target_humidity
@@ -204,14 +203,11 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return self._active
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
-        data = super().state_attributes
-
         if self._saved_target_humidity:
-            data[ATTR_SAVED_HUMIDITY] = self._saved_target_humidity
-
-        return data
+            return {ATTR_SAVED_HUMIDITY: self._saved_target_humidity}
+        return None
 
     @property
     def should_poll(self):

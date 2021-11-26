@@ -4,6 +4,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DATA_COORDINATOR, DOMAIN
 from .entity import RiscoEntity, binary_sensor_unique_id
@@ -41,13 +42,13 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
         self._zone = self.coordinator.data.zones[self._zone_id]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Risco",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Risco",
+            name=self.name,
+        )
 
     @property
     def name(self):

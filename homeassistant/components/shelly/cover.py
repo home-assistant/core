@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from aioshelly import Block
+from aioshelly.block_device import Block
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -18,8 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ShellyDeviceWrapper
-from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN
+from . import BlockDeviceWrapper
+from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN
 from .entity import ShellyBlockEntity
 
 
@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up cover for device."""
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][COAP]
+    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
     blocks = [block for block in wrapper.device.blocks if block.type == "roller"]
 
     if not blocks:
@@ -43,7 +43,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
 
     _attr_device_class = DEVICE_CLASS_SHUTTER
 
-    def __init__(self, wrapper: ShellyDeviceWrapper, block: Block) -> None:
+    def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
@@ -57,7 +57,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         if self.control_result:
             return cast(bool, self.control_result["current_pos"] == 0)
 
-        return cast(bool, self.block.rollerPos == 0)
+        return cast(int, self.block.rollerPos) == 0
 
     @property
     def current_cover_position(self) -> int:
@@ -73,7 +73,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         if self.control_result:
             return cast(bool, self.control_result["state"] == "close")
 
-        return cast(bool, self.block.roller == "close")
+        return self.block.roller == "close"
 
     @property
     def is_opening(self) -> bool:
@@ -81,7 +81,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         if self.control_result:
             return cast(bool, self.control_result["state"] == "open")
 
-        return cast(bool, self.block.roller == "open")
+        return self.block.roller == "open"
 
     @property
     def supported_features(self) -> int:

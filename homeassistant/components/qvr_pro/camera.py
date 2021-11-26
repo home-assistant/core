@@ -1,4 +1,5 @@
 """Support for QVR Pro streams."""
+from __future__ import annotations
 
 import logging
 
@@ -88,7 +89,9 @@ class QVRProCamera(Camera):
 
         return attrs
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Get image bytes from camera."""
         try:
             return self._client.get_snapshot(self.guid)

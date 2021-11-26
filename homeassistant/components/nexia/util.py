@@ -1,11 +1,11 @@
 """Utils for Nexia / Trane XL Thermostats."""
 
-from homeassistant.const import HTTP_FORBIDDEN, HTTP_UNAUTHORIZED
+from http import HTTPStatus
 
 
 def is_invalid_auth_code(http_status_code):
     """HTTP status codes that mean invalid auth."""
-    if http_status_code in (HTTP_UNAUTHORIZED, HTTP_FORBIDDEN):
+    if http_status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
         return True
 
     return False

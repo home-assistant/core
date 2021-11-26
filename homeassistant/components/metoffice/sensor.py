@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import get_device_info
 from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
@@ -42,7 +43,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="name",
         name="Station Name",
         device_class=None,
-        unit_of_measurement=None,
+        native_unit_of_measurement=None,
         icon="mdi:label-outline",
         entity_registry_enabled_default=False,
     ),
@@ -50,7 +51,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="weather",
         name="Weather",
         device_class=None,
-        unit_of_measurement=None,
+        native_unit_of_measurement=None,
         icon="mdi:weather-sunny",  # but will adapt to current conditions
         entity_registry_enabled_default=True,
     ),
@@ -58,7 +59,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         icon=None,
         entity_registry_enabled_default=True,
     ),
@@ -66,7 +67,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="feels_like_temperature",
         name="Feels Like Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         icon=None,
         entity_registry_enabled_default=False,
     ),
@@ -74,7 +75,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="wind_speed",
         name="Wind Speed",
         device_class=None,
-        unit_of_measurement=SPEED_MILES_PER_HOUR,
+        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
         icon="mdi:weather-windy",
         entity_registry_enabled_default=True,
     ),
@@ -82,7 +83,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="wind_direction",
         name="Wind Direction",
         device_class=None,
-        unit_of_measurement=None,
+        native_unit_of_measurement=None,
         icon="mdi:compass-outline",
         entity_registry_enabled_default=False,
     ),
@@ -90,7 +91,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="wind_gust",
         name="Wind Gust",
         device_class=None,
-        unit_of_measurement=SPEED_MILES_PER_HOUR,
+        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
         icon="mdi:weather-windy",
         entity_registry_enabled_default=False,
     ),
@@ -98,7 +99,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="visibility",
         name="Visibility",
         device_class=None,
-        unit_of_measurement=None,
+        native_unit_of_measurement=None,
         icon="mdi:eye",
         entity_registry_enabled_default=False,
     ),
@@ -106,7 +107,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="visibility_distance",
         name="Visibility Distance",
         device_class=None,
-        unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=LENGTH_KILOMETERS,
         icon="mdi:eye",
         entity_registry_enabled_default=False,
     ),
@@ -114,7 +115,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="uv",
         name="UV Index",
         device_class=None,
-        unit_of_measurement=UV_INDEX,
+        native_unit_of_measurement=UV_INDEX,
         icon="mdi:weather-sunny-alert",
         entity_registry_enabled_default=True,
     ),
@@ -122,7 +123,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="precipitation",
         name="Probability of Precipitation",
         device_class=None,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-rainy",
         entity_registry_enabled_default=True,
     ),
@@ -130,7 +131,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="humidity",
         name="Humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon=None,
         entity_registry_enabled_default=False,
     ),
@@ -181,6 +182,9 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
 
         self.entity_description = description
         mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
+        self._attr_device_info = get_device_info(
+            coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
+        )
         self._attr_name = f"{hass_data[METOFFICE_NAME]} {description.name} {mode_label}"
         self._attr_unique_id = f"{description.name}_{hass_data[METOFFICE_COORDINATES]}"
         if not use_3hourly:
@@ -189,7 +193,7 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         self.use_3hourly = use_3hourly
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         value = None
 

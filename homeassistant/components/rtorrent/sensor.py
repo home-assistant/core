@@ -1,10 +1,16 @@
 """Support for monitoring the rtorrent BitTorrent client API."""
+from __future__ import annotations
+
 import logging
 import xmlrpc.client
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
@@ -28,24 +34,55 @@ SENSOR_TYPE_DOWNLOADING_TORRENTS = "downloading_torrents"
 SENSOR_TYPE_ACTIVE_TORRENTS = "active_torrents"
 
 DEFAULT_NAME = "rtorrent"
-SENSOR_TYPES = {
-    SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
-    SENSOR_TYPE_DOWNLOAD_SPEED: ["Down Speed", DATA_RATE_KILOBYTES_PER_SECOND],
-    SENSOR_TYPE_UPLOAD_SPEED: ["Up Speed", DATA_RATE_KILOBYTES_PER_SECOND],
-    SENSOR_TYPE_ALL_TORRENTS: ["All Torrents", None],
-    SENSOR_TYPE_STOPPED_TORRENTS: ["Stopped Torrents", None],
-    SENSOR_TYPE_COMPLETE_TORRENTS: ["Complete Torrents", None],
-    SENSOR_TYPE_UPLOADING_TORRENTS: ["Uploading Torrents", None],
-    SENSOR_TYPE_DOWNLOADING_TORRENTS: ["Downloading Torrents", None],
-    SENSOR_TYPE_ACTIVE_TORRENTS: ["Active Torrents", None],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_TYPE_CURRENT_STATUS,
+        name="Status",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_DOWNLOAD_SPEED,
+        name="Down Speed",
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_UPLOAD_SPEED,
+        name="Up Speed",
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_ALL_TORRENTS,
+        name="All Torrents",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_STOPPED_TORRENTS,
+        name="Stopped Torrents",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_COMPLETE_TORRENTS,
+        name="Complete Torrents",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_UPLOADING_TORRENTS,
+        name="Uploading Torrents",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_DOWNLOADING_TORRENTS,
+        name="Downloading Torrents",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_ACTIVE_TORRENTS,
+        name="Active Torrents",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): cv.url,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        vol.Optional(CONF_MONITORED_VARIABLES, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
     }
 )
@@ -61,11 +98,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except (xmlrpc.client.ProtocolError, ConnectionRefusedError) as ex:
         _LOGGER.error("Connection to rtorrent daemon failed")
         raise PlatformNotReady from ex
-    dev = []
-    for variable in config[CONF_MONITORED_VARIABLES]:
-        dev.append(RTorrentSensor(variable, rtorrent, name))
+    monitored_variables = config[CONF_MONITORED_VARIABLES]
+    entities = [
+        RTorrentSensor(rtorrent, name, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_variables
+    ]
 
-    add_entities(dev)
+    add_entities(entities)
 
 
 def format_speed(speed):
@@ -77,36 +117,16 @@ def format_speed(speed):
 class RTorrentSensor(SensorEntity):
     """Representation of an rtorrent sensor."""
 
-    def __init__(self, sensor_type, rtorrent_client, client_name):
+    def __init__(
+        self, rtorrent_client, client_name, description: SensorEntityDescription
+    ):
         """Initialize the sensor."""
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self.entity_description = description
         self.client = rtorrent_client
-        self.type = sensor_type
-        self.client_name = client_name
-        self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self.data = None
-        self._available = False
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return true if device is available."""
-        return self._available
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        self._attr_name = f"{client_name} {description.name}"
+        self._attr_available = False
 
     def update(self):
         """Get the latest data from rtorrent and updates the state."""
@@ -121,10 +141,10 @@ class RTorrentSensor(SensorEntity):
 
         try:
             self.data = multicall()
-            self._available = True
+            self._attr_available = True
         except (xmlrpc.client.ProtocolError, OSError) as ex:
             _LOGGER.error("Connection to rtorrent failed (%s)", ex)
-            self._available = False
+            self._attr_available = False
             return
 
         upload = self.data[0]
@@ -145,33 +165,34 @@ class RTorrentSensor(SensorEntity):
 
         active_torrents = uploading_torrents + downloading_torrents
 
-        if self.type == SENSOR_TYPE_CURRENT_STATUS:
+        sensor_type = self.entity_description.key
+        if sensor_type == SENSOR_TYPE_CURRENT_STATUS:
             if self.data:
                 if upload > 0 and download > 0:
-                    self._state = "up_down"
+                    self._attr_native_value = "up_down"
                 elif upload > 0 and download == 0:
-                    self._state = "seeding"
+                    self._attr_native_value = "seeding"
                 elif upload == 0 and download > 0:
-                    self._state = "downloading"
+                    self._attr_native_value = "downloading"
                 else:
-                    self._state = STATE_IDLE
+                    self._attr_native_value = STATE_IDLE
             else:
-                self._state = None
+                self._attr_native_value = None
 
         if self.data:
-            if self.type == SENSOR_TYPE_DOWNLOAD_SPEED:
-                self._state = format_speed(download)
-            elif self.type == SENSOR_TYPE_UPLOAD_SPEED:
-                self._state = format_speed(upload)
-            elif self.type == SENSOR_TYPE_ALL_TORRENTS:
-                self._state = len(all_torrents)
-            elif self.type == SENSOR_TYPE_STOPPED_TORRENTS:
-                self._state = len(stopped_torrents)
-            elif self.type == SENSOR_TYPE_COMPLETE_TORRENTS:
-                self._state = len(complete_torrents)
-            elif self.type == SENSOR_TYPE_UPLOADING_TORRENTS:
-                self._state = uploading_torrents
-            elif self.type == SENSOR_TYPE_DOWNLOADING_TORRENTS:
-                self._state = downloading_torrents
-            elif self.type == SENSOR_TYPE_ACTIVE_TORRENTS:
-                self._state = active_torrents
+            if sensor_type == SENSOR_TYPE_DOWNLOAD_SPEED:
+                self._attr_native_value = format_speed(download)
+            elif sensor_type == SENSOR_TYPE_UPLOAD_SPEED:
+                self._attr_native_value = format_speed(upload)
+            elif sensor_type == SENSOR_TYPE_ALL_TORRENTS:
+                self._attr_native_value = len(all_torrents)
+            elif sensor_type == SENSOR_TYPE_STOPPED_TORRENTS:
+                self._attr_native_value = len(stopped_torrents)
+            elif sensor_type == SENSOR_TYPE_COMPLETE_TORRENTS:
+                self._attr_native_value = len(complete_torrents)
+            elif sensor_type == SENSOR_TYPE_UPLOADING_TORRENTS:
+                self._attr_native_value = uploading_torrents
+            elif sensor_type == SENSOR_TYPE_DOWNLOADING_TORRENTS:
+                self._attr_native_value = downloading_torrents
+            elif sensor_type == SENSOR_TYPE_ACTIVE_TORRENTS:
+                self._attr_native_value = active_torrents

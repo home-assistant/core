@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "Gagal terhubung"
         },
-        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
                 "description": "Tidak dapat menyiapkan bridge (host: {host} ) yang diimpor dari configuration.yaml.",
@@ -55,6 +55,12 @@
             "open_3": "Buka 3",
             "open_4": "Buka 4",
             "open_all": "Buka semua",
+            "raise": "Angkat",
+            "raise_1": "Angkat 1",
+            "raise_2": "Angkat 2",
+            "raise_3": "Angkat 3",
+            "raise_4": "Angkat 4",
+            "raise_all": "Angkat semua",
             "stop": "Hentikan (favorit)",
             "stop_1": "Hentikan 1",
             "stop_2": "Hentikan 2",

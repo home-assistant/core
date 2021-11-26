@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "ID Area",
+                    "name": "Nama",
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "ID Area",
+                    "name": "Nama",
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    }
+}
