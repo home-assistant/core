@@ -405,18 +405,19 @@ def stream_worker(
     options: dict[str, str],
     segment_buffer: SegmentBuffer,
     quit_event: Event,
+    logger: logging.Logger | logging.LoggerAdapter = _LOGGER,
 ) -> None:
     """Handle consuming streams."""
 
     try:
         container = av.open(source, options=options, timeout=SOURCE_TIMEOUT)
     except av.AVError:
-        _LOGGER.error("Error opening stream %s", redact_credentials(str(source)))
+        logger.error("Error opening stream %s", redact_credentials(str(source)))
         return
     try:
         video_stream = container.streams.video[0]
     except (KeyError, IndexError):
-        _LOGGER.error("Stream has no video")
+        logger.error("Stream has no video")
         container.close()
         return
     try:
@@ -470,7 +471,7 @@ def stream_worker(
         start_dts = next_video_packet.dts - (next_video_packet.duration or 1)
         first_keyframe.dts = first_keyframe.pts = start_dts
     except (av.AVError, StopIteration) as ex:
-        _LOGGER.error("Error demuxing stream while finding first packet: %s", str(ex))
+        logger.error("Error demuxing stream while finding first packet: %s", str(ex))
         container.close()
         return
 
@@ -484,7 +485,7 @@ def stream_worker(
         try:
             packet = next(container_packets)
         except (av.AVError, StopIteration) as ex:
-            _LOGGER.error("Error demuxing stream: %s", str(ex))
+            logger.error("Error demuxing stream: %s", str(ex))
             break
         segment_buffer.mux_packet(packet)
 

@@ -455,7 +455,12 @@ class Camera(Entity):
                 source = await self.stream_source()
             if not source:
                 return None
-            self.stream = create_stream(self.hass, source, options=self.stream_options)
+            self.stream = create_stream(
+                self.hass,
+                source,
+                options=self.stream_options,
+                stream_label=self.entity_id,
+            )
         return self.stream
 
     async def stream_source(self) -> str | None:
