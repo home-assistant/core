@@ -138,6 +138,7 @@ homeassistant/components/eafm/* @Jc2k
 homeassistant/components/ecobee/* @marthoc
 homeassistant/components/econet/* @vangorra @w1ll1am23
 homeassistant/components/ecovacs/* @OverloadUT
+homeassistant/components/ecowitt/* @garbled1
 homeassistant/components/edl21/* @mtdcr
 homeassistant/components/efergy/* @tkdrob
 homeassistant/components/egardia/* @jeroenterheerdt
