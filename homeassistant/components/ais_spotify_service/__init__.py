@@ -554,13 +554,16 @@ class SpotifyData:
         self.hass.states.set("sensor.spotifysearchlist", call_id, attr)
 
         # play via ais android integration
+        ais_track_uri = track["uri"]
+        if not track["uri"].startswith("spotify:track:"):
+            ais_track_uri = track["uri"] + ":play"
         if self.hass.services.has_service("ais_android", "adb_command"):
             _audio_info = json.dumps(
                 {
                     "IMAGE_URL": track["thumbnail"],
                     "NAME": track["title"],
                     "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY,
-                    "media_content_id": track["uri"],
+                    "media_content_id": ais_track_uri,
                 }
             )
             self.hass.services.call(
@@ -574,9 +577,6 @@ class SpotifyData:
             )
         else:
             # to play without integration
-            ais_track_uri = track["uri"]
-            if not track["uri"].startswith("spotify:track:"):
-                ais_track_uri = track["uri"] + ":play"
             self.hass.services.call(
                 "ais_shell_command",
                 "execute_command",
@@ -605,14 +605,17 @@ class SpotifyData:
         # update list
         self.hass.states.set("sensor.spotifylist", call_id, attr)
 
-        # play via ais android integration
+        # play via ais android integration,
+        ais_track_uri = track["uri"]
+        if not track["uri"].startswith("spotify:track:"):
+            ais_track_uri = track["uri"] + ":play"
         if self.hass.services.has_service("ais_android", "adb_command"):
             _audio_info = json.dumps(
                 {
                     "IMAGE_URL": track["thumbnail"],
                     "NAME": track["title"],
                     "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY,
-                    "media_content_id": track["uri"],
+                    "media_content_id": ais_track_uri,
                 }
             )
             self.hass.services.call(
@@ -625,10 +628,7 @@ class SpotifyData:
                 },
             )
         else:
-            # new way to play
-            ais_track_uri = track["uri"]
-            if not track["uri"].startswith("spotify:track:"):
-                ais_track_uri = track["uri"] + ":play"
+            # new way to play but without ais android
             self.hass.services.call(
                 "ais_shell_command",
                 "execute_command",

@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import datetime
 import functools
+from http import HTTPStatus
 import json
 import logging
 
@@ -14,8 +16,10 @@ from adb_shell.exceptions import (
     InvalidResponseError,
     TcpTimeoutException,
 )
+from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -52,6 +56,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -329,6 +334,9 @@ class ADBDevice(MediaPlayerEntity):
 
         # AIS
         self.ais_hdmi_off = False
+        self.ais_stream_image = None
+        self.ais_media_title = None
+        self.ais_media_source = None
 
         # ADB exceptions to catch
         if not aftv.adb_server_ip:
@@ -419,6 +427,11 @@ class ADBDevice(MediaPlayerEntity):
         return
 
     @property
+    def media_title(self):
+        """Return the title of current playing media."""
+        return self.ais_media_title
+
+    @property
     def media_image_hash(self) -> str | None:
         """Hash value for media image."""
         return f"{datetime.now().timestamp()}" if self._screencap else None
@@ -433,6 +446,24 @@ class ADBDevice(MediaPlayerEntity):
         if not self._screencap or self.state in (STATE_OFF, None) or not self.available:
             return None, None
 
+        if self.ais_stream_image is not None:
+            content, content_type = (None, None)
+            web_session = async_get_clientsession(self.hass)
+            with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
+                response = await web_session.get(self.ais_stream_image)
+                if response.status == HTTPStatus.OK:
+                    content = await response.read()
+                    if content_type := response.headers.get(CONTENT_TYPE):
+                        content_type = content_type.split(";")[0]
+                if content is None:
+                    _LOGGER.warning(
+                        "Error retrieving proxied image from %s", self.ais_stream_image
+                    )
+            # fetch only on start then use img from adb
+            self.ais_stream_image = None
+            if content:
+                return content, content_type
+
         media_data = await self._adb_screencap()
         if media_data:
             return media_data, "image/png"
@@ -445,8 +476,21 @@ class ADBDevice(MediaPlayerEntity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        _LOGGER.error("media_type " + media_type + " media_id " + media_id)
-        pass
+        if media_type == "ais_content_info":
+            j_info = json.loads(media_id)
+            # play on Android APP player
+            await self.async_execute_ais_command(
+                "su -c 'am start -W -a android.intent.action.VIEW -d "
+                + j_info["media_content_id"]
+                + "'"
+            )
+            # set metadata
+            self.ais_media_title = j_info["NAME"]
+            self.ais_media_source = j_info["MEDIA_SOURCE"]
+            if "IMAGE_URL" not in j_info:
+                self.ais_stream_image = "/static/icons/tile-win-310x150.png"
+            else:
+                self.ais_stream_image = j_info["IMAGE_URL"]
 
     @adb_decorator()
     async def async_media_play(self):
