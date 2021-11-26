@@ -41,7 +41,10 @@ class TestStatisticsSensor(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.values_binary = ["on", "off", "on", "off", "on", "off", "on"]
+        self.values_binary = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
+        self.mean_binary = (
+            100 / len(self.values_binary) * self.values_binary.count("on")
+        )
         self.values = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
         self.mean = round(sum(self.values) / len(self.values), 2)
         self.addCleanup(self.hass.stop)
@@ -81,15 +84,15 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        assert state.state == str(len(self.values_binary))
-        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+        assert state.state == str(round(self.mean_binary, 2))
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
-        assert state.attributes.get("buffer_usage_ratio") == round(7 / 20, 2)
+        assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
         assert state.attributes.get("source_value_valid") is True
         assert "age_coverage_ratio" not in state.attributes
 
         state = self.hass.states.get("sensor.test_unitless")
-        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
 
     def test_sensor_defaults_numeric(self):
         """Test the general behavior of the sensor, with numeric source sensor."""
@@ -177,6 +180,53 @@ class TestStatisticsSensor(unittest.TestCase):
         assert new_state.state == str(new_mean)
         assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert new_state.attributes.get("source_value_valid") is False
+
+    def test_sensor_source_with_force_update(self):
+        """Test the behavior of the sensor when the source sensor force-updates with same value."""
+        repeating_values = [18, 0, 0, 0, 0, 0, 0, 0, 9]
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test_normal",
+                        "entity_id": "sensor.test_monitored_normal",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_force",
+                        "entity_id": "sensor.test_monitored_force",
+                    },
+                ]
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in repeating_values:
+            self.hass.states.set(
+                "sensor.test_monitored_normal",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.states.set(
+                "sensor.test_monitored_force",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                force_update=True,
+            )
+            self.hass.block_till_done()
+
+        state_normal = self.hass.states.get("sensor.test_normal")
+        state_force = self.hass.states.get("sensor.test_force")
+        assert state_normal.state == str(round(sum(repeating_values) / 3, 2))
+        assert state_force.state == str(round(sum(repeating_values) / 9, 2))
+        assert state_normal.attributes.get("buffer_usage_ratio") == round(3 / 20, 2)
+        assert state_force.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
 
     def test_sampling_size_non_default(self):
         """Test rotation."""
