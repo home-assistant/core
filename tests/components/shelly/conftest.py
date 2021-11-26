@@ -138,6 +138,7 @@ async def coap_wrapper(hass):
         firmware_version="some fw string",
         update=AsyncMock(),
         trigger_ota_update=AsyncMock(),
+        trigger_reboot=AsyncMock(),
         initialized=True,
     )
 
@@ -173,6 +174,7 @@ async def rpc_wrapper(hass):
         firmware_version="some fw string",
         update=AsyncMock(),
         trigger_ota_update=AsyncMock(),
+        trigger_reboot=AsyncMock(),
         initialized=True,
         shutdown=AsyncMock(),
     )
