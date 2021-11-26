@@ -7,14 +7,13 @@ from velbusaio.channels import Channel as VelbusChannel
 from velbusaio.controller import Velbus
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_INTERFACE,
@@ -27,32 +26,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_PORT): cv.string})}, extra=vol.ALLOW_EXTRA
-)
-
 PLATFORMS = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Velbus platform."""
-    # Import from the configuration file if needed
-    if DOMAIN not in config:
-        return True
-
-    _LOGGER.warning("Loading VELBUS via configuration.yaml is deprecated")
-
-    port = config[DOMAIN].get(CONF_PORT)
-    data = {}
-
-    if port:
-        data = {CONF_PORT: port, CONF_NAME: "Velbus import"}
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-    )
-    return True
 
 
 async def velbus_connect_task(
