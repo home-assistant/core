@@ -131,7 +131,13 @@ class MySensorsDevice:
     @property
     def name(self) -> str:
         """Return the name of this entity."""
-        return f"{self.node_name} {self.child_id}"
+        node = self.gateway.sensors[self.node_id]
+        child = node.children[self.child_id]
+
+        if child.description:
+            return f"{child.description}"
+        else:
+            return f"{self.node_name} {self.child_id}"
 
     @property
     def _extra_attributes(self) -> dict[str, Any]:
