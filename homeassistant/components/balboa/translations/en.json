@@ -1,28 +1,28 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "title": "Connect to the Balboa Wi-Fi device",
-        "data": {
-          "host": "Host"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Connect to the Balboa Wi-Fi device"
+            }
         }
-      }
     },
-    "error": {
-      "cannot_connect": "Failed to connect, please try again",
-      "unknown": "Unexpected error"
-    },
-    "abort": {
-      "already_configured": "Device is already configured"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "sync_time": "Keep your Balboa Spa Client's time synchronized with Home Assistant"
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "sync_time": "Keep your Balboa Spa Client's time synchronized with Home Assistant"
+                }
+            }
         }
-      }
     }
-  }
 }

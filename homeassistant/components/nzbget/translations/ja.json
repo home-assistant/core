@@ -22,5 +22,14 @@
                 "title": "NZBGet\u306b\u63a5\u7d9a"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\u66f4\u65b0\u983b\u5ea6(\u79d2)"
+                }
+            }
+        }
     }
 }
