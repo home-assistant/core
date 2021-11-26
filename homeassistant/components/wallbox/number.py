@@ -69,22 +69,21 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._coordinator = coordinator
         self._attr_name = f"{entry.title} {description.name}"
         self._attr_min_value = description.min_value
 
     @property
     def max_value(self) -> float:
         """Return the maximum available current."""
-        return cast(float, self._coordinator.data[CONF_MAX_AVAILABLE_POWER_KEY])
+        return cast(float, self.coordinator.data[CONF_MAX_AVAILABLE_POWER_KEY])
 
     @property
     def value(self) -> float | None:
         """Return the state of the sensor."""
         return cast(
-            Optional[float], self._coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
+            Optional[float], self.coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
         )
 
     async def async_set_value(self, value: float) -> None:
         """Set the value of the entity."""
-        await self._coordinator.async_set_charging_current(value)
+        await self.coordinator.async_set_charging_current(value)

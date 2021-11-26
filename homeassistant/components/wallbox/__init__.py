@@ -89,8 +89,7 @@ class WallboxCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
-        data = await self.hass.async_add_executor_job(self._get_data)
-        return data
+        return await self.hass.async_add_executor_job(self._get_data)
 
     async def async_validate_input(self) -> None:
         """Get new sensor data for Wallbox component."""
