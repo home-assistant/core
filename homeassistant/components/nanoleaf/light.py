@@ -215,5 +215,5 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         self._attr_available = True
 
     async def async_identify(self) -> None:
-        """Identify the light"""
+        """Identify the light."""
         self._nanoleaf.identify()
