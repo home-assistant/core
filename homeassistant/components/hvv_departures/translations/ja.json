@@ -8,12 +8,25 @@
             "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c"
         },
         "step": {
+            "station": {
+                "data": {
+                    "station": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3/\u30a2\u30c9\u30ec\u30b9"
+                },
+                "title": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3/\u30a2\u30c9\u30ec\u30b9\u3092\u5165\u529b"
+            },
+            "station_select": {
+                "data": {
+                    "station": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3/\u30a2\u30c9\u30ec\u30b9"
+                },
+                "title": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3/\u30a2\u30c9\u30ec\u30b9\u306e\u9078\u629e"
+            },
             "user": {
                 "data": {
                     "host": "\u30db\u30b9\u30c8",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
-                }
+                },
+                "title": "HVV API\u306b\u63a5\u7d9a"
             }
         }
     },

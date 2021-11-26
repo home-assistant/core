@@ -23,6 +23,7 @@
     "device_automation": {
         "trigger_subtype": {
             "away": "keluar",
+            "hg": "perlindungan kebekuan",
             "schedule": "jadwal"
         },
         "trigger_type": {

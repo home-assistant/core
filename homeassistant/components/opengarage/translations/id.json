@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "device_key": "Kunci perangkat",
                     "host": "Host",
                     "port": "Port",
                     "verify_ssl": "Verifikasi sertifikat SSL"
