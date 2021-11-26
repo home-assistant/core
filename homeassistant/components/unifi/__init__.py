@@ -1,4 +1,4 @@
-"""Integration to UniFi controllers and its various features."""
+"""Integration to UniFi Network and its various features."""
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -20,7 +20,7 @@ STORAGE_VERSION = 1
 
 
 async def async_setup(hass, config):
-    """Component doesn't support configuration through configuration.yaml."""
+    """Integration doesn't support configuration through configuration.yaml."""
     hass.data[UNIFI_WIRELESS_CLIENTS] = wireless_clients = UnifiWirelessClients(hass)
     await wireless_clients.async_load()
 
@@ -28,7 +28,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up the UniFi component."""
+    """Set up the UniFi Network integration."""
     hass.data.setdefault(UNIFI_DOMAIN, {})
 
     # Flat configuration was introduced with 2021.3
@@ -53,7 +53,7 @@ async def async_setup_entry(hass, config_entry):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
     )
 
-    LOGGER.debug("UniFi config options %s", config_entry.options)
+    LOGGER.debug("UniFi Network config options %s", config_entry.options)
 
     if controller.mac is None:
         return True
@@ -64,8 +64,8 @@ async def async_setup_entry(hass, config_entry):
         configuration_url=controller.api.url,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
         default_manufacturer=ATTR_MANUFACTURER,
-        default_model="UniFi Controller",
-        default_name="UniFi Controller",
+        default_model="UniFi Network",
+        default_name="UniFi Network",
     )
 
     return True

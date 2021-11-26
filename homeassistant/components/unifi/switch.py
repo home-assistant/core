@@ -1,4 +1,4 @@
-"""Switch platform for UniFi integration.
+"""Switch platform for UniFi Network integration.
 
 Support for controlling power supply of clients which are powered over Ethernet (POE).
 Support for controlling network access of clients selected in option flow.
@@ -36,7 +36,7 @@ CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up switches for UniFi component.
+    """Set up switches for UniFi Network integration.
 
     Switches are controlling network access and switch ports with POE.
     """
@@ -374,6 +374,6 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"unifi_controller_{self._item.site_id}")},
             manufacturer=ATTR_MANUFACTURER,
-            model="UniFi Controller",
-            name="UniFi Controller",
+            model="UniFi Network",
+            name="UniFi Network",
         )
