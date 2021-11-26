@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Server port is already configured.",
             "addr_in_use": "Server port already in use.",
+            "already_configured": "Server port is already configured.",
             "start_server_failed": "Start server failed."
         },
         "step": {
