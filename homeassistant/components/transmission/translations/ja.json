@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "\u30ea\u30df\u30c3\u30c8",
                     "order": "\u30aa\u30fc\u30c0\u30fc"
                 }
             }

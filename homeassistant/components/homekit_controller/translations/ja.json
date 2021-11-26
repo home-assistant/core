@@ -33,6 +33,19 @@
         }
     },
     "device_automation": {
+        "trigger_subtype": {
+            "button1": "\u30dc\u30bf\u30f31",
+            "button10": "\u30dc\u30bf\u30f310",
+            "button2": "\u30dc\u30bf\u30f32",
+            "button3": "\u30dc\u30bf\u30f33",
+            "button4": "\u30dc\u30bf\u30f34",
+            "button5": "\u30dc\u30bf\u30f35",
+            "button6": "\u30dc\u30bf\u30f36",
+            "button7": "\u30dc\u30bf\u30f37",
+            "button8": "\u30dc\u30bf\u30f38",
+            "button9": "\u30dc\u30bf\u30f39",
+            "doorbell": "\u30c9\u30a2\u30d9\u30eb"
+        },
         "trigger_type": {
             "double_press": "\"{subtype}\" \u30922\u56de\u62bc\u3059",
             "long_press": "\"{subtype}\" \u304c\u3001\u62bc\u3055\u308c\u305f\u307e\u307e",

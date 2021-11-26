@@ -7,7 +7,8 @@
             "user": {
                 "data": {
                     "vera_controller_url": "\u30b3\u30f3\u30c8\u30ed\u30fc\u30e9\u306eURL"
-                }
+                },
+                "description": "Vera\u306e\u30b3\u30f3\u30c8\u30ed\u30fc\u30e9\u306eURL\u3092\u4ee5\u4e0b\u306b\u793a\u3057\u307e\u3059: http://192.168.1.161:3480 \u306e\u3088\u3046\u306b\u306a\u3063\u3066\u3044\u308b\u306f\u305a\u3067\u3059\u3002"
             }
         }
     },
