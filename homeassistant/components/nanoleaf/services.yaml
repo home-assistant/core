@@ -1,0 +1,7 @@
+identify:
+  name: Identify Nanoleaf
+  description: Identifies the Nanoleaf panels by making them flash.
+  target:
+    entity:
+      integration: nanoleaf
+      domain: light
