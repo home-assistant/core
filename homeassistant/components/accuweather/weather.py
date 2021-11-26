@@ -76,8 +76,8 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
             # You don't need to provide specific details for the URL,
             # so passing in _ characters is fine if the location key
             # is correct
-            configuration_url="http://accuweather.com/en/" \
-            f"_/_/{coordinator.location_key}/" \
+            configuration_url="http://accuweather.com/en/"
+            f"_/_/{coordinator.location_key}/"
             f"weather-forecast/{coordinator.location_key}/",
         )
 
