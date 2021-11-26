@@ -262,11 +262,7 @@ async def async_validate_action_config(
             config = platform.ACTION_SCHEMA(config)  # type: ignore
 
     elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
-        if config[CONF_CONDITION] == "device":
-            platform = await device_automation.async_get_device_automation_platform(
-                hass, config[CONF_DOMAIN], "condition"
-            )
-            config = platform.CONDITION_SCHEMA(config)  # type: ignore
+        config = await condition.async_validate_condition_config(hass, config)  # type: ignore
 
     elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
         config[CONF_WAIT_FOR_TRIGGER] = await async_validate_trigger_config(
