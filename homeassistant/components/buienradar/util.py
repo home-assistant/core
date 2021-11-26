@@ -146,17 +146,17 @@ class BrData:
         self.rain_error_count = 0
 
         # Pre-process data to use decimal point
-        rainContentProcessed = ""
+        raincontent_processed = ""
         lines = raincontent.get(CONTENT).splitlines()
         for line in lines:
             (val, key) = line.split("|")
-            rainContentProcessed += (
+            raincontent_processed += (
                 str(int(float(val.replace(",", ".")))) + "|" + key + os.linesep
             )
 
         result = parse_data(
             content.get(CONTENT),
-            rainContentProcessed,
+            raincontent_processed,
             self.coordinates[CONF_LATITUDE],
             self.coordinates[CONF_LONGITUDE],
             self.timeframe,
