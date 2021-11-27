@@ -346,7 +346,9 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             brightness = kwargs.get(
                 ATTR_BRIGHTNESS, self._device.getWhiteTemperature()[1]
             )
-            cold, warm = color_temp_to_white_levels(color_temp_kelvin, brightness)
+            channels = color_temp_to_white_levels(color_temp_kelvin, brightness)
+            warm = channels.warm_white
+            cold = channels.cool_white
             await self._device.async_set_levels(r=0, b=0, g=0, w=warm, w2=cold)
             return
         # Handle switch to RGB Color Mode
