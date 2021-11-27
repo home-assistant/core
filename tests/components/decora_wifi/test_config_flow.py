@@ -9,7 +9,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.decora_wifi.common import FakeDecoraWiFiSession
+from tests.components.decora_wifi.common import (
+    FakeDecoraWiFiAccount,
+    FakeDecoraWiFiResidence,
+    FakeDecoraWiFiResidentialAccount,
+    FakeDecoraWiFiSession,
+)
 
 # Test inputs
 USERNAME = "username@home-assisant.com"
@@ -33,6 +38,12 @@ async def test_user_flow(hass: HomeAssistant):
     with patch(
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
         side_effect=FakeDecoraWiFiSession,
+    ), patch(
+        "homeassistant.components.decora_wifi.common.Residence",
+        side_effect=FakeDecoraWiFiResidence,
+    ), patch(
+        "homeassistant.components.decora_wifi.common.ResidentialAccount",
+        side_effect=FakeDecoraWiFiResidentialAccount,
     ), patch(
         "homeassistant.components.decora_wifi.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -78,9 +89,19 @@ async def test_reauth_flow(hass: HomeAssistant):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert not result["errors"]
     # Test reauth with valid login info
+    FakeDecoraWiFiSession.clear_accounts()
+    FakeDecoraWiFiSession.add_account(
+        FakeDecoraWiFiAccount(USERNAME, UPDATED_PASSWORD, switch_models=["D26HD"])
+    )
     with patch(
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
         side_effect=FakeDecoraWiFiSession,
+    ), patch(
+        "homeassistant.components.decora_wifi.common.Residence",
+        side_effect=FakeDecoraWiFiResidence,
+    ), patch(
+        "homeassistant.components.decora_wifi.common.ResidentialAccount",
+        side_effect=FakeDecoraWiFiResidentialAccount,
     ), patch(
         "homeassistant.components.decora_wifi.async_setup_entry",
         return_value=True,
