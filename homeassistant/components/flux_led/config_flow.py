@@ -219,7 +219,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
         if device := await async_discover_device(self.hass, host):
-            _LOGGER.warning("Discover device with host %s: %s", host, device)
             return device
         bulb = async_wifi_bulb_for_host(host)
         try:

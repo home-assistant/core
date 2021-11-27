@@ -83,7 +83,6 @@ async def async_discover_devices(
         domain_data[FLUX_LED_DISCOVERY_LOCK] = asyncio.Lock()
     async with domain_data[FLUX_LED_DISCOVERY_LOCK]:
         scanner = AIOBulbScanner()
-        _LOGGER.warning("Calling async_scan for address=%s", address)
         try:
             discovered: list[dict[str, str]] = await scanner.async_scan(
                 timeout=timeout, address=address
