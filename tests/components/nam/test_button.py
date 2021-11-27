@@ -43,12 +43,13 @@ async def test_button_press(hass):
             {ATTR_ENTITY_ID: "button.nettigo_air_monitor_restart"},
             blocking=True,
         )
+        await hass.async_block_till_done()
 
-        mock_restart.assert_called_once()
+    mock_restart.assert_called_once()
 
-        state = hass.states.get("button.nettigo_air_monitor_restart")
-        assert state
-        assert state.state == now.isoformat()
+    state = hass.states.get("button.nettigo_air_monitor_restart")
+    assert state
+    assert state.state == now.isoformat()
 
 
 @pytest.mark.parametrize(
@@ -74,7 +75,8 @@ async def test_button_press_with_error(hass, error, caplog):
             {ATTR_ENTITY_ID: "button.nettigo_air_monitor_restart"},
             blocking=True,
         )
+        await hass.async_block_till_done()
 
-        mock_restart.assert_called_once()
+    mock_restart.assert_called_once()
 
-        assert status in caplog.text
+    assert status in caplog.text
