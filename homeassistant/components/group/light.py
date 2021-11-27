@@ -39,6 +39,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
+    CONF_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_ON,
@@ -59,6 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_ICON, default="mdi:lightbulb-group"): cv.icon,
         vol.Required(CONF_ENTITIES): cv.entities_domain(light.DOMAIN),
     }
 )
@@ -80,7 +82,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             LightGroup(
-                config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES]
+                config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES], config[CONF_ICON]
             )
         ]
     )
@@ -108,13 +110,12 @@ class LightGroup(GroupEntity, light.LightEntity):
     """Representation of a light group."""
 
     _attr_available = False
-    _attr_icon = "mdi:lightbulb-group"
     _attr_is_on = False
     _attr_max_mireds = 500
     _attr_min_mireds = 154
     _attr_should_poll = False
 
-    def __init__(self, unique_id: str | None, name: str, entity_ids: list[str]) -> None:
+    def __init__(self, unique_id: str | None, name: str, entity_ids: list[str], icon: str) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids
         self._white_value: int | None = None
@@ -122,6 +123,7 @@ class LightGroup(GroupEntity, light.LightEntity):
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
+        self._attr_icon = icon
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
