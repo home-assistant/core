@@ -151,7 +151,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed(ex) from ex
 
         except ScreenLogicWarning as warn:
-            raise UpdateFailed("Incomplete update: %s", warn) from warn
+            raise UpdateFailed(f"Incomplete update: {warn}") from warn
 
         return self.gateway.get_data()
 
