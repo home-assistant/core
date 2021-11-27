@@ -228,7 +228,7 @@ aionotify==0.2.0
 aionotion==3.0.2
 
 # homeassistant.components.acmeda
-aiopulse==0.4.2
+aiopulse==0.4.3
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
@@ -505,7 +505,7 @@ croniter==1.0.6
 crownstone-cloud==1.4.9
 
 # homeassistant.components.crownstone
-crownstone-sse==2.0.2
+crownstone-sse==2.0.3
 
 # homeassistant.components.crownstone
 crownstone-uart==2.1.0
@@ -658,7 +658,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.24.38
+flux_led==0.25.0
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -680,7 +680,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.7.0
+fritzconnection==1.7.2
 
 # homeassistant.components.google_translate
 gTTS==2.2.3
