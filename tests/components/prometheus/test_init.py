@@ -18,8 +18,10 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     EVENT_STATE_CHANGED,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
@@ -270,6 +272,13 @@ async def test_sensor_device_class(hass, hass_client):
     await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
     await hass.async_block_till_done()
 
+    sensor1 = DemoSensor(
+        None, "Fahrenheit", 50, DEVICE_CLASS_TEMPERATURE, None, TEMP_FAHRENHEIT, None
+    )
+    sensor1.hass = hass
+    sensor1.entity_id = "sensor.fahrenheit"
+    await sensor1.async_update_ha_state()
+
     sensor2 = DemoSensor(
         None, "Radio Energy", 14, DEVICE_CLASS_POWER, None, ENERGY_KILO_WATT_HOUR, None
     )
@@ -283,6 +292,12 @@ async def test_sensor_device_class(hass, hass_client):
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
+
+    assert (
+        'sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.fahrenheit",'
+        'friendly_name="Fahrenheit"} 10.0' in body
+    )
 
     assert (
         'sensor_temperature_celsius{domain="sensor",'
