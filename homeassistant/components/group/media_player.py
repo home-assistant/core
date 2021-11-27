@@ -77,7 +77,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_ICON, default="mdi:cast"): cv.icon
+        vol.Optional(CONF_ICON, default="mdi:cast"): cv.icon,
     }
 )
 
