@@ -40,7 +40,6 @@ class FilterTest:
 
 async def setup_prometheus_client(hass, hass_client, namespace):
     """Initialize an hass_client with Prometheus component."""
-
     # Reset registry
     prometheus_client.REGISTRY = prometheus_client.CollectorRegistry(auto_describe=True)
     prometheus_client.ProcessCollector(registry=prometheus_client.REGISTRY)
@@ -333,6 +332,7 @@ async def test_input_number(hass, hass_client):
     number2._attr_name = None
     await number2.async_update_ha_state()
 
+    await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     assert (
