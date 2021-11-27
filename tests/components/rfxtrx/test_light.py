@@ -7,6 +7,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import State
+from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.rfxtrx.conftest import create_rfx_test_cfg
@@ -159,18 +160,24 @@ async def test_several_lights(hass, rfxtrx):
     assert state.attributes.get("brightness") == 255
 
 
-async def test_discover_light(hass, rfxtrx_automatic):
-    """Test with discovery of lights."""
+@pytest.mark.parametrize(
+    "signals,entities",
+    [
+        (
+            ["0b11009e00e6116202020070", "0b1100120118cdea02020070"],
+            ["light.ac_0e61162_2", "light.ac_118cdea_2"],
+        ),
+    ],
+)
+async def test_discover(signals, entities, hass, rfxtrx_automatic):
+    """Test with discovery."""
     rfxtrx = rfxtrx_automatic
 
-    await rfxtrx.signal("0b11009e00e6116202020070")
-    state = hass.states.get("light.ac_0e61162_2")
-    assert state
-    assert state.state == "on"
-    assert state.attributes.get("friendly_name") == "AC 0e61162:2"
+    for signal in signals:
+        await rfxtrx.signal(signal)
 
-    await rfxtrx.signal("0b1100120118cdea02020070")
-    state = hass.states.get("light.ac_118cdea_2")
-    assert state
-    assert state.state == "on"
-    assert state.attributes.get("friendly_name") == "AC 118cdea:2"
+    for entity in entities:
+        reg = entity_registry.async_get(hass)
+        reg_entry = reg.async_get(entity)
+        assert reg_entry, f"{entity} missing"
+        assert reg_entry.disabled, f"{entity} not disabled"

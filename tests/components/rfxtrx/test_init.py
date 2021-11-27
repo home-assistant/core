@@ -22,7 +22,6 @@ async def test_fire_event(hass, rfxtrx):
     await setup_rfx_test_cfg(
         hass,
         device="/dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-        automatic_add=True,
         devices={
             "0b1100cd0213c7f210010f51": {},
             "0716000100900970": {},

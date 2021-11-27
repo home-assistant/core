@@ -1,7 +1,10 @@
 """The tests for the Rfxtrx siren platform."""
 from unittest.mock import call
 
+import pytest
+
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.helpers import entity_registry
 
 from .conftest import create_rfx_test_cfg
 
@@ -119,18 +122,24 @@ async def test_one_security1(hass, rfxtrx, timestep):
     ]
 
 
-async def test_discover_siren(hass, rfxtrx_automatic):
+@pytest.mark.parametrize(
+    "signals,entities",
+    [
+        (
+            ["0a16000000000000000000", "0a16010000000000000000"],
+            ["siren.byron_sx_00_00", "siren.byron_mp001_00_00"],
+        ),
+    ],
+)
+async def test_discover(signals, entities, hass, rfxtrx_automatic):
     """Test with discovery."""
     rfxtrx = rfxtrx_automatic
 
-    await rfxtrx.signal("0a16000000000000000000")
-    state = hass.states.get("siren.byron_sx_00_00")
-    assert state
-    assert state.state == "on"
-    assert state.attributes.get("friendly_name") == "Byron SX 00:00"
+    for signal in signals:
+        await rfxtrx.signal(signal)
 
-    await rfxtrx.signal("0a16010000000000000000")
-    state = hass.states.get("siren.byron_mp001_00_00")
-    assert state
-    assert state.state == "on"
-    assert state.attributes.get("friendly_name") == "Byron MP001 00:00"
+    for entity in entities:
+        reg = entity_registry.async_get(hass)
+        reg_entry = reg.async_get(entity)
+        assert reg_entry, f"{entity} missing"
+        assert reg_entry.disabled, f"{entity} not disabled"

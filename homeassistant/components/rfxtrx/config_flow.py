@@ -39,7 +39,6 @@ from . import (
 )
 from .binary_sensor import supported as binary_supported
 from .const import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_OFF_DELAY,
     CONF_PROTOCOLS,
@@ -96,7 +95,6 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             self._global_options = {
-                CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
                 CONF_PROTOCOLS: user_input[CONF_PROTOCOLS] or None,
             }
             if CONF_DEVICE in user_input:
@@ -143,10 +141,6 @@ class OptionsFlow(config_entries.OptionsFlow):
         }
 
         options = {
-            vol.Optional(
-                CONF_AUTOMATIC_ADD,
-                default=self._config_entry.data[CONF_AUTOMATIC_ADD],
-            ): bool,
             vol.Optional(
                 CONF_PROTOCOLS,
                 default=self._config_entry.data.get(CONF_PROTOCOLS) or [],
@@ -526,7 +520,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: host,
             CONF_PORT: port,
             CONF_DEVICE: device,
-            CONF_AUTOMATIC_ADD: False,
             CONF_DEVICES: {},
         }
         return data

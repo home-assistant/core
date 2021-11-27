@@ -6,6 +6,7 @@ import pytest
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.rfxtrx.conftest import create_rfx_test_cfg
@@ -103,19 +104,30 @@ async def test_several_covers(hass, rfxtrx):
     assert state.attributes.get("friendly_name") == "RollerTrol 009ba8:1"
 
 
-async def test_discover_covers(hass, rfxtrx_automatic):
-    """Test with discovery of covers."""
+@pytest.mark.parametrize(
+    "signals,entities",
+    [
+        (
+            ["0a140002f38cae010f0070", "0a1400adf394ab020e0060"],
+            [
+                "cover.lightwaverf_siemens_f38cae_1",
+                "cover.lightwaverf_siemens_f394ab_2",
+            ],
+        ),
+    ],
+)
+async def test_discover(signals, entities, hass, rfxtrx_automatic):
+    """Test with discovery."""
     rfxtrx = rfxtrx_automatic
 
-    await rfxtrx.signal("0a140002f38cae010f0070")
-    state = hass.states.get("cover.lightwaverf_siemens_f38cae_1")
-    assert state
-    assert state.state == "open"
+    for signal in signals:
+        await rfxtrx.signal(signal)
 
-    await rfxtrx.signal("0a1400adf394ab020e0060")
-    state = hass.states.get("cover.lightwaverf_siemens_f394ab_2")
-    assert state
-    assert state.state == "open"
+    for entity in entities:
+        reg = entity_registry.async_get(hass)
+        reg_entry = reg.async_get(entity)
+        assert reg_entry, f"{entity} missing"
+        assert reg_entry.disabled, f"{entity} not disabled"
 
 
 async def test_duplicate_cover(hass, rfxtrx):

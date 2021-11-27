@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import State
+from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.rfxtrx.conftest import create_rfx_test_cfg
@@ -240,34 +241,28 @@ async def test_pt2262_switch_events(hass, rfxtrx):
     assert hass.states.get("switch.pt2262_22670e").state == "off"
 
 
-async def test_discover_switch(hass, rfxtrx_automatic):
-    """Test with discovery of switches."""
+@pytest.mark.parametrize(
+    "signals,entities",
+    [
+        (
+            ["0b1100100118cdea02010f70", "0b1100100118cdeb02010f70"],
+            ["switch.ac_118cdea_2", "switch.ac_118cdeb_2"],
+        ),
+        ([EVENT_RFY_DISABLE_SUN_AUTO], ["switch.rfy_030101_1"]),
+    ],
+)
+async def test_discover(signals, entities, hass, rfxtrx_automatic):
+    """Test with discovery."""
     rfxtrx = rfxtrx_automatic
 
-    await rfxtrx.signal("0b1100100118cdea02010f70")
-    state = hass.states.get("switch.ac_118cdea_2")
-    assert state
-    assert state.state == "on"
+    for signal in signals:
+        await rfxtrx.signal(signal)
 
-    await rfxtrx.signal("0b1100100118cdeb02010f70")
-    state = hass.states.get("switch.ac_118cdeb_2")
-    assert state
-    assert state.state == "on"
-
-
-async def test_discover_rfy_sun_switch(hass, rfxtrx_automatic):
-    """Test with discovery of switches."""
-    rfxtrx = rfxtrx_automatic
-
-    await rfxtrx.signal(EVENT_RFY_DISABLE_SUN_AUTO)
-    state = hass.states.get("switch.rfy_030101_1")
-    assert state
-    assert state.state == "off"
-
-    await rfxtrx.signal(EVENT_RFY_ENABLE_SUN_AUTO)
-    state = hass.states.get("switch.rfy_030101_1")
-    assert state
-    assert state.state == "on"
+    for entity in entities:
+        reg = entity_registry.async_get(hass)
+        reg_entry = reg.async_get(entity)
+        assert reg_entry, f"{entity} missing"
+        assert reg_entry.disabled, f"{entity} not disabled"
 
 
 async def test_unknown_event_code(hass, rfxtrx):

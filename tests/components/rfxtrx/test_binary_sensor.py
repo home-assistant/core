@@ -5,9 +5,10 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import ATTR_EVENT
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import State
+from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.rfxtrx.conftest import create_rfx_test_cfg
+from tests.components.rfxtrx.conftest import create_rfx_test_cfg, rfxtrx_mock_entry
 
 EVENT_SMOKE_DETECTOR_PANIC = "08200300a109000670"
 EVENT_SMOKE_DETECTOR_NO_PANIC = "08200300a109000770"
@@ -158,19 +159,27 @@ async def test_several(hass, rfxtrx):
     assert hass.states.get("binary_sensor.ac_118cdea_3").state == "off"
 
 
-async def test_discover(hass, rfxtrx_automatic):
+@pytest.mark.parametrize(
+    "signals,entities",
+    [
+        (
+            ["0b1100100118cdea02010f70", "0b1100100118cdeb02010f70"],
+            ["binary_sensor.ac_118cdea_2", "binary_sensor.ac_118cdeb_2"],
+        ),
+    ],
+)
+async def test_discover(signals, entities, hass, rfxtrx_automatic):
     """Test with discovery."""
     rfxtrx = rfxtrx_automatic
 
-    await rfxtrx.signal("0b1100100118cdea02010f70")
-    state = hass.states.get("binary_sensor.ac_118cdea_2")
-    assert state
-    assert state.state == "on"
+    for signal in signals:
+        await rfxtrx.signal(signal)
 
-    await rfxtrx.signal("0b1100100118cdeb02010f70")
-    state = hass.states.get("binary_sensor.ac_118cdeb_2")
-    assert state
-    assert state.state == "on"
+    for entity in entities:
+        reg = entity_registry.async_get(hass)
+        reg_entry = reg.async_get(entity)
+        assert reg_entry, f"{entity} missing"
+        assert reg_entry.disabled, f"{entity} not disabled"
 
 
 async def test_off_delay_restore(hass, rfxtrx):
@@ -251,9 +260,14 @@ async def test_off_delay(hass, rfxtrx, timestep):
     assert state.state == "off"
 
 
-async def test_panic(hass, rfxtrx_automatic):
+async def test_panic(hass, rfxtrx):
     """Test panic entities."""
-    rfxtrx = rfxtrx_automatic
+    await rfxtrx_mock_entry(
+        hass,
+        devices={
+            EVENT_SMOKE_DETECTOR_PANIC: {"signal_repetitions": 1},
+        },
+    )
 
     entity_id = "binary_sensor.kd101_smoke_detector_a10900_32"
 
@@ -265,9 +279,14 @@ async def test_panic(hass, rfxtrx_automatic):
     assert hass.states.get(entity_id).state == "off"
 
 
-async def test_motion(hass, rfxtrx_automatic):
+async def test_motion(hass, rfxtrx):
     """Test motion entities."""
-    rfxtrx = rfxtrx_automatic
+    await rfxtrx_mock_entry(
+        hass,
+        devices={
+            EVENT_MOTION_DETECTOR_MOTION: {"signal_repetitions": 1},
+        },
+    )
 
     entity_id = "binary_sensor.x10_security_motion_detector_a10900_32"
 
@@ -279,9 +298,14 @@ async def test_motion(hass, rfxtrx_automatic):
     assert hass.states.get(entity_id).state == "off"
 
 
-async def test_light(hass, rfxtrx_automatic):
+async def test_light(hass, rfxtrx):
     """Test light entities."""
-    rfxtrx = rfxtrx_automatic
+    await rfxtrx_mock_entry(
+        hass,
+        devices={
+            EVENT_LIGHT_DETECTOR_LIGHT: {"signal_repetitions": 1},
+        },
+    )
 
     entity_id = "binary_sensor.x10_security_motion_detector_a10900_32"
 
