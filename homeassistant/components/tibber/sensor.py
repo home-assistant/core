@@ -47,7 +47,6 @@ ICON = "mdi:currency-usd"
 SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
-SIGNAL_UPDATE_ENTITY = "tibber_rt_update_{}"
 
 
 RT_SENSORS: tuple[SensorEntityDescription, ...] = (
@@ -301,7 +300,7 @@ class TibberSensorElPrice(TibberSensor):
         }
         self._attr_icon = ICON
         self._attr_name = f"Electricity price {self._home_name}"
-        self._attr_unique_id = f"{self._tibber_home.home_id}"
+        self._attr_unique_id = self._tibber_home.home_id
         self._model = "Price Sensor"
 
         self._device_name = self._attr_name
