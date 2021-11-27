@@ -1,4 +1,5 @@
 """Provides data updates from the Control4 controller for platforms."""
+import json
 import logging
 
 from pyControl4.account import C4Account
@@ -60,3 +61,23 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     entry_data[CONF_ACCOUNT] = account
     entry_data[CONF_DIRECTOR] = director
     entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_expiry
+
+
+async def director_get_entry_variables(
+    hass: HomeAssistant, entry: ConfigEntry, item_id: int
+) -> dict:
+    """Retrieve variable data for Control4 entity."""
+    try:
+        director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
+        data = await director.getItemVariables(item_id)
+    except BadToken:
+        _LOGGER.info("Updating Control4 director token")
+        await refresh_tokens(hass, entry)
+        director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
+        data = await director.getItemVariables(item_id)
+
+    result = {}
+    for item in json.loads(data):
+        result[item["varName"]] = item["value"]
+
+    return result
