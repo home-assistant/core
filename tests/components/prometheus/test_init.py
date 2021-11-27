@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components import climate, humidifier, sensor
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
+from homeassistant.components.demo.light import DemoLight
 from homeassistant.components.demo.number import DemoNumber
 from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
@@ -540,6 +541,58 @@ async def test_input_boolean(hass, hass_client):
         'input_boolean_state{domain="input_boolean",'
         'entity="input_boolean.helper",'
         'friendly_name="Helper"} 0.0' in body
+    )
+
+
+async def test_light(hass, hass_client):
+    """Test prometheus metrics for lights."""
+    client = await setup_prometheus_client(hass, hass_client, "")
+
+    light1 = DemoSensor(None, "Desk", 1, None, None, None, None)
+    light1.hass = hass
+    light1.entity_id = "light.desk"
+    await light1.async_update_ha_state()
+
+    light2 = DemoSensor(None, "Wall", 0, None, None, None, None)
+    light2.hass = hass
+    light2.entity_id = "light.wall"
+    await light2.async_update_ha_state()
+
+    light3 = DemoLight(None, "TV", True, True, 255, None, None)
+    light3.hass = hass
+    light3.entity_id = "light.tv"
+    await light3.async_update_ha_state()
+
+    light4 = DemoLight(None, "PC", True, True, 180, None, None)
+    light4.hass = hass
+    light4.entity_id = "light.pc"
+    await light4.async_update_ha_state()
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'light_brightness_percent{domain="light",'
+        'entity="light.desk",'
+        'friendly_name="Desk"} 100.0' in body
+    )
+
+    assert (
+        'light_brightness_percent{domain="light",'
+        'entity="light.wall",'
+        'friendly_name="Wall"} 0.0' in body
+    )
+
+    assert (
+        'light_brightness_percent{domain="light",'
+        'entity="light.tv",'
+        'friendly_name="TV"} 100.0' in body
+    )
+
+    assert (
+        'light_brightness_percent{domain="light",'
+        'entity="light.pc",'
+        'friendly_name="PC"} 70.58823529411765' in body
     )
 
 
