@@ -17,7 +17,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_UNIQUE_ID, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -54,6 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): vol.Range(
             min=1, max=100
         ),
@@ -68,6 +69,7 @@ async def async_setup_platform(
     host = config[CONF_HOST]
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
+    unique_id = config.get(CONF_UNIQUE_ID)
     privileged = hass.data[DOMAIN][PING_PRIVS]
     if privileged is None:
         ping_cls = PingDataSubProcess
@@ -75,17 +77,18 @@ async def async_setup_platform(
         ping_cls = PingDataICMPLib
 
     async_add_entities(
-        [PingBinarySensor(name, ping_cls(hass, host, count, privileged))]
+        [PingBinarySensor(name, unique_id, ping_cls(hass, host, count, privileged))]
     )
 
 
 class PingBinarySensor(RestoreEntity, BinarySensorEntity):
     """Representation of a Ping Binary sensor."""
 
-    def __init__(self, name: str, ping) -> None:
+    def __init__(self, name: str, unique_id: str | None, ping) -> None:
         """Initialize the Ping Binary sensor."""
         self._available = False
         self._name = name
+        self._attr_unique_id = unique_id
         self._ping = ping
 
     @property
