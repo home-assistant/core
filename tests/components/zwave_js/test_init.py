@@ -163,7 +163,7 @@ async def test_new_entity_on_value_added(hass, multisensor_6, client, integratio
 
 
 async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):
-    """Test we handle a ready node added event."""
+    """Test we handle a node added event with a ready node."""
     dev_reg = dr.async_get(hass)
     node = Node(client, deepcopy(multisensor_6_state))
     event = {"node": node}
@@ -187,19 +187,14 @@ async def test_on_node_added_ready(hass, multisensor_6_state, client, integratio
 
 
 async def test_on_node_added_not_ready(
-    hass, zp3111_not_ready_state, zp3111_state, client, integration
+    hass, zp3111_not_ready_state, client, integration
 ):
-    """Test we handle a non ready node added event."""
+    """Test we handle a node added event with a non-ready node."""
     dev_reg = dr.async_get(hass)
-
-    device_id = (DOMAIN, f"{client.driver.controller.home_id}-{zp3111_state['nodeId']}")
-    device_id_ext = (
-        DOMAIN,
-        f"{client.driver.controller.home_id}-{zp3111_state['nodeId']}-{zp3111_state['manufacturerId']}:{zp3111_state['productType']}:{zp3111_state['productId']}",
-    )
+    device_id = f"{client.driver.controller.home_id}-{zp3111_not_ready_state['nodeId']}"
 
     assert len(hass.states.async_all()) == 0
-    assert not dev_reg.async_get_device(identifiers={device_id, device_id_ext})
+    assert not dev_reg.devices
 
     event = Event(
         type="node added",
@@ -212,33 +207,13 @@ async def test_on_node_added_not_ready(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    assert (
-        len(hass.states.async_all()) == 1
-    )  # the only entity is the node status sensor
-    assert dev_reg.async_get_device(identifiers={device_id})
-    assert not dev_reg.async_get_device(identifiers={device_id_ext})
+    # the only entity is the node status sensor
+    assert len(hass.states.async_all()) == 1
 
-    event = Event(
-        type="ready",
-        data={
-            "source": "node",
-            "event": "ready",
-            "nodeId": zp3111_state["nodeId"],
-            "nodeState": deepcopy(zp3111_state),
-        },
-    )
-    client.driver.receive_event(event)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(
-        "binary_sensor.4_in_1_sensor_home_security_motion_detection"
-    )
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-
-    assert dev_reg.async_get_device(
-        identifiers={device_id}
-    ) == dev_reg.async_get_device(identifiers={device_id_ext})
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    # no extended device identifier yet
+    assert len(device.identifiers) == 1
 
 
 async def test_existing_node_ready(hass, client, multisensor_6, integration):
@@ -260,110 +235,140 @@ async def test_existing_node_ready(hass, client, multisensor_6, integration):
     )
 
 
-async def test_null_name(hass, client, null_name_check, integration):
-    """Test that node without a name gets a generic node name."""
-    node = null_name_check
-    assert hass.states.get(f"switch.node_{node.node_id}")
+async def test_existing_node_not_ready(hass, zp3111_not_ready, client, integration):
+    """Test we handle a non-ready node that exists during integration setup."""
+    dev_reg = dr.async_get(hass)
+    node = zp3111_not_ready
+    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device.name == f"Node {node.node_id}"
+    assert not device.manufacturer
+    assert not device.model
+    assert not device.sw_version
+
+    # the only entity is the node status sensor
+    assert len(hass.states.async_all()) == 1
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    # no extended device identifier yet
+    assert len(device.identifiers) == 1
 
 
-async def test_existing_node_not_ready(
-    hass, zp3111_not_ready_state, zp3111_state, zp3111, client, integration
+async def test_existing_node_not_replaced_when_not_ready(
+    hass, zp3111, zp3111_not_ready_state, zp3111_state, client, integration
 ):
-    """Test we handle a non ready node that exists during integration setup."""
+    """Test that an existing node is not replaced, and no customization lost, when a node added event with a non-ready node is received."""
     dev_reg = dr.async_get(hass)
     er_reg = er.async_get(hass)
-    area_reg = ar.async_get(hass)
+    kitchen_area = ar.async_get(hass).async_create("Kitchen")
 
-    node = zp3111
+    device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
+    device_id_ext = f"{device_id}-{zp3111.manufacturer_id}:{zp3111.product_type}:{zp3111.product_id}"
 
-    motion_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
-    motion_device_id_ext = f"{motion_device_id}-{node.manufacturer_id}:{node.product_type}:{node.product_id}"
-
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id)})
-    device_ext = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id_ext)})
-    assert device and device_ext == device
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
     assert device.name == "4-in-1 Sensor"
-    assert device.name_by_user is None
+    assert not device.name_by_user
     assert device.manufacturer == "Vision Security"
     assert device.model == "ZP3111-5"
+    assert device.sw_version == "5.1"
+    assert not device.area_id
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
 
     motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
     state = hass.states.get(motion_entity)
     assert state
-    assert state.state != STATE_UNAVAILABLE
     assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
 
-    kitchen_area = area_reg.async_create("Kitchen")
-
-    # Customize the device and entity
-    updated_dev_entry = dev_reg.async_update_device(
-        device.id, name_by_user="Custom Device", area_id=kitchen_area.id
+    dev_reg.async_update_device(
+        device.id, name_by_user="Custom Device Name", area_id=kitchen_area.id
     )
-    assert updated_dev_entry != device
-    assert updated_dev_entry.name == "4-in-1 Sensor"
-    assert updated_dev_entry.name_by_user == "Custom Device"
-    assert updated_dev_entry.area_id == kitchen_area.id
-    assert updated_dev_entry.model == "ZP3111-5"
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id)})
-    device_ext = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id_ext)})
-    assert device == updated_dev_entry and device_ext == updated_dev_entry
+    custom_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert custom_device
+    assert custom_device.name == "4-in-1 Sensor"
+    assert custom_device.name_by_user == "Custom Device Name"
+    assert custom_device.manufacturer == "Vision Security"
+    assert custom_device.model == "ZP3111-5"
+    assert device.sw_version == "5.1"
+    assert custom_device.area_id == kitchen_area.id
+    assert custom_device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
 
-    motion_entity_new = "binary_sensor.custom_motion_sensor"
+    custom_entity = "binary_sensor.custom_motion_sensor"
     er_reg.async_update_entity(
-        motion_entity, new_entity_id=motion_entity_new, name="Custom Sensor Name"
+        motion_entity, new_entity_id=custom_entity, name="Custom Entity Name"
     )
     await hass.async_block_till_done()
-    updated_state = hass.states.get(motion_entity_new)
-    assert updated_state
-    assert updated_state != state
-    assert updated_state.state != STATE_UNAVAILABLE
-    assert updated_state.name == "Custom Sensor Name"
-
-    # Send node added event with a not-ready node
-    not_ready_node = Node(client, zp3111_not_ready_state)
-    event = {"node": not_ready_node}
-    client.driver.controller.emit("node added", event)
-    await hass.async_block_till_done()
-
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id)})
-    device_ext = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id_ext)})
-    assert device
-    assert device_ext == device
-    assert device.id == updated_dev_entry.id
-    assert device.identifiers == updated_dev_entry.identifiers
-    assert device.name == "4-in-1 Sensor"
-    assert device.name_by_user == "Custom Device"
-    assert device.area_id == kitchen_area.id
-    assert device.manufacturer is None
-    assert device.model is None
-
-    state = hass.states.get(motion_entity_new)
+    state = hass.states.get(custom_entity)
     assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.name == "Custom Sensor Name"
+    assert state.name == "Custom Entity Name"
+    assert not hass.states.get(motion_entity)
 
-    # Re-send ready event, device should return to normal
-    event = {"node": zp3111}
-    client.driver.controller.emit("node added", event)
+    event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": deepcopy(zp3111_not_ready_state),
+        },
+    )
+    client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id)})
-    device_ext = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id_ext)})
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
-    assert device_ext == device
-    assert device.id == updated_dev_entry.id
-    assert device.identifiers == updated_dev_entry.identifiers
-    assert device.name_by_user == "Custom Device"
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device.id == custom_device.id
+    assert device.identifiers == custom_device.identifiers
+    assert device.name == f"Node {zp3111.node_id}"
+    assert device.name_by_user == "Custom Device Name"
+    assert not device.manufacturer
+    assert not device.model
+    assert not device.sw_version
     assert device.area_id == kitchen_area.id
+
+    state = hass.states.get(custom_entity)
+    assert state
+    assert state.name == "Custom Entity Name"
+
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": zp3111_state["nodeId"],
+            "nodeState": deepcopy(zp3111_state),
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device.id == custom_device.id
+    assert device.identifiers == custom_device.identifiers
+    assert device.name == "4-in-1 Sensor"
+    assert device.name_by_user == "Custom Device Name"
     assert device.manufacturer == "Vision Security"
     assert device.model == "ZP3111-5"
+    assert device.area_id == kitchen_area.id
     assert device.sw_version == "5.1"
 
-    state = hass.states.get(motion_entity_new)
+    state = hass.states.get(custom_entity)
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.name == "Custom Sensor Name"
+    assert state.name == "Custom Entity Name"
+
+
+async def test_null_name(hass, client, null_name_check, integration):
+    """Test that node without a name gets a generic node name."""
+    node = null_name_check
+    assert hass.states.get(f"switch.node_{node.node_id}")
 
 
 async def test_start_addon(
