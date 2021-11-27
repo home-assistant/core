@@ -3,16 +3,29 @@ from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import Credentials
 from homeassistant.components import auth
-from homeassistant.components.auth import RESULT_TYPE_USER
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
+
+
+@pytest.fixture
+def mock_credential():
+    """Return a mock credential."""
+    return Credentials(
+        id="mock-credential-id",
+        auth_provider_type="insecure_example",
+        auth_provider_id=None,
+        data={"username": "test-user"},
+        is_new=False,
+    )
 
 
 async def async_setup_user_refresh_token(hass):
@@ -96,29 +109,38 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert resp.status == HTTPStatus.OK
 
 
-def test_auth_code_store_expiration():
+def test_auth_code_store_expiration(mock_credential):
     """Test that the auth code store will not return expired tokens."""
     store, retrieve = auth._create_auth_code_store()
     client_id = "bla"
-    user = MockUser(id="mock_user")
     now = utcnow()
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
-        code = store(client_id, user)
+        code = store(client_id, mock_credential)
 
     with patch(
         "homeassistant.util.dt.utcnow", return_value=now + timedelta(minutes=10)
     ):
-        assert retrieve(client_id, RESULT_TYPE_USER, code) is None
+        assert retrieve(client_id, code) is None
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
-        code = store(client_id, user)
+        code = store(client_id, mock_credential)
 
     with patch(
         "homeassistant.util.dt.utcnow",
         return_value=now + timedelta(minutes=9, seconds=59),
     ):
-        assert retrieve(client_id, RESULT_TYPE_USER, code) == user
+        assert retrieve(client_id, code) == mock_credential
+
+
+def test_auth_code_store_requires_credentials(mock_credential):
+    """Test we require credentials."""
+    store, _retrieve = auth._create_auth_code_store()
+
+    with pytest.raises(ValueError):
+        store(None, MockUser())
+
+    store(None, mock_credential)
 
 
 async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
