@@ -138,7 +138,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, category: str):
     """Return a list of all Control4 items with the specified category."""
-    _LOGGER.debug(f"Getting items of category: {category}")
+    _LOGGER.debug("Getting items of category: %s", category)
     director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
     return_list = await director.getAllItemsByCategory(category)
     return json.loads(return_list)
@@ -183,7 +183,7 @@ class Control4Entity(Entity):
             self._idx,
             self._update_callback,
         )
-        _LOGGER.debug(f"Registering device {self._device_id} for callback")
+        _LOGGER.debug("Registering device %s for callback", self._device_id)
         return True
 
     async def _update_callback(self, device, message):
@@ -194,11 +194,11 @@ class Control4Entity(Entity):
             if isinstance(data, dict):
                 for key, value in data.items():
                     if isinstance(value, dict):
-                        for k, v in value.items():
+                        for k in value.items():
                             self._extra_state_attributes[k.upper()] = value
                     else:
                         self._extra_state_attributes[key.upper()] = value
-        _LOGGER.debug(f"Message for device {device}")
+        _LOGGER.debug("Message for device %s", device)
         self.schedule_update_ha_state()
 
     @property
