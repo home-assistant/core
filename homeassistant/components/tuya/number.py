@@ -286,7 +286,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         value = self.device.status.get(self.entity_description.key)
 
         # Scale integer/float value
-        if value and isinstance(self._type_data, IntegerTypeData):
+        if value is not None and isinstance(self._type_data, IntegerTypeData):
             return self._type_data.scale_value(value)
 
         return None

@@ -5,7 +5,7 @@
             "existing_instance_updated": "\u65e2\u5b58\u306e\u8a2d\u5b9a\u3092\u66f4\u65b0\u3057\u307e\u3057\u305f\u3002"
         },
         "error": {
-            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
         },
         "step": {
             "hassio_confirm": {

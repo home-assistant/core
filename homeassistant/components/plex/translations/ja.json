@@ -22,7 +22,8 @@
                     "ssl": "SSL\u8a3c\u660e\u66f8\u3092\u4f7f\u7528\u3059\u308b",
                     "token": "\u30c8\u30fc\u30af\u30f3(\u30aa\u30d7\u30b7\u30e7\u30f3)",
                     "verify_ssl": "SSL\u8a3c\u660e\u66f8\u3092\u78ba\u8a8d\u3059\u308b"
-                }
+                },
+                "title": "\u624b\u52d5\u306b\u3088\u308bPlex\u306e\u8a2d\u5b9a"
             },
             "select_server": {
                 "data": {
@@ -37,7 +38,8 @@
             "user_advanced": {
                 "data": {
                     "setup_method": "\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u65b9\u6cd5"
-                }
+                },
+                "title": "Plex Media Server"
             }
         }
     },
@@ -45,6 +47,7 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_plex_web_clients": "Plex Web clients\u3092\u7121\u8996\u3059\u308b",
                     "use_episode_art": "\u30a8\u30d4\u30bd\u30fc\u30c9\u30a2\u30fc\u30c8\u3092\u4f7f\u7528"
                 },
                 "description": "Plex Media Player\u306e\u30aa\u30d7\u30b7\u30e7\u30f3"

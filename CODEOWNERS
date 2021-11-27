@@ -232,7 +232,7 @@ homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/honeywell/* @rdfurman
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
-homeassistant/components/hue/* @balloob @frenck @marcelveldt
+homeassistant/components/hue/* @balloob @marcelveldt
 homeassistant/components/huisbaasje/* @dennisschroer
 homeassistant/components/humidifier/* @home-assistant/core @Shulyaka
 homeassistant/components/hunterdouglas_powerview/* @bdraco

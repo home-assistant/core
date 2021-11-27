@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
-            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "duplicate_persistence_file": "\u6c38\u7d9a(Persistence)\u30d5\u30a1\u30a4\u30eb\u304c\u3059\u3067\u306b\u4f7f\u7528\u3055\u308c\u3066\u3044\u307e\u3059",
             "duplicate_topic": "\u30c8\u30d4\u30c3\u30af\u306f\u65e2\u306b\u4f7f\u7528\u3055\u308c\u3066\u3044\u307e\u3059",
             "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
@@ -21,7 +21,7 @@
         },
         "error": {
             "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
-            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "duplicate_persistence_file": "\u6c38\u7d9a(Persistence)\u30d5\u30a1\u30a4\u30eb\u304c\u3059\u3067\u306b\u4f7f\u7528\u3055\u308c\u3066\u3044\u307e\u3059",
             "duplicate_topic": "\u30c8\u30d4\u30c3\u30af\u306f\u65e2\u306b\u4f7f\u7528\u3055\u308c\u3066\u3044\u307e\u3059",
             "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
