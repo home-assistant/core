@@ -284,12 +284,13 @@ class TomorrowioWeatherEntity(BaseTomorrowioWeatherEntity):
             precipitation_probability = values.get(TMRW_ATTR_PRECIPITATION_PROBABILITY)
 
             temp = values.get(TMRW_ATTR_TEMPERATURE_HIGH)
-            temp_low = values.get(TMRW_ATTR_TEMPERATURE_LOW)
+            temp_low = None
             wind_direction = values.get(TMRW_ATTR_WIND_DIRECTION)
             wind_speed = values.get(TMRW_ATTR_WIND_SPEED)
 
             if self.forecast_type == DAILY:
                 use_datetime = False
+                temp_low = values.get(TMRW_ATTR_TEMPERATURE_LOW)
                 if precipitation:
                     precipitation = precipitation * 24
             elif self.forecast_type == NOWCAST:
