@@ -10,6 +10,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import State
+from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.rfxtrx.conftest import create_rfx_test_cfg
@@ -161,107 +162,44 @@ async def test_several_sensors(hass, rfxtrx):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
 
-async def test_discover_sensor(hass, rfxtrx_automatic):
+@pytest.mark.parametrize(
+    "signal,base,entities",
+    [
+        (
+            "0a520801070100b81b0279",
+            "sensor.wt260_wt260h_wt440h_wt450_wt450h_07_01",
+            [
+                "humidity",
+                "humidity_status",
+                "rssi_numeric",
+                "temperature",
+                "battery_numeric",
+            ],
+        ),
+        (
+            "0a52080405020095240279",
+            "sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02",
+            [
+                "humidity",
+                "humidity_status",
+                "rssi_numeric",
+                "temperature",
+                "battery_numeric",
+            ],
+        ),
+    ],
+)
+async def test_discover_sensor(signal, base, entities, hass, rfxtrx_automatic):
     """Test with discovery of sensor."""
     rfxtrx = rfxtrx_automatic
 
-    # 1
-    await rfxtrx.signal("0a520801070100b81b0279")
-    base_id = "sensor.wt260_wt260h_wt440h_wt450_wt450h_07_01"
+    await rfxtrx.signal(signal)
 
-    state = hass.states.get(f"{base_id}_humidity")
-    assert state
-    assert state.state == "27"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    state = hass.states.get(f"{base_id}_humidity_status")
-    assert state
-    assert state.state == "normal"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-
-    state = hass.states.get(f"{base_id}_rssi_numeric")
-    assert state
-    assert state.state == "-64"
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-    )
-
-    state = hass.states.get(f"{base_id}_temperature")
-    assert state
-    assert state.state == "18.4"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
-
-    state = hass.states.get(f"{base_id}_battery_numeric")
-    assert state
-    assert state.state == "100"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    # 2
-    await rfxtrx.signal("0a52080405020095240279")
-    base_id = "sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02"
-    state = hass.states.get(f"{base_id}_humidity")
-
-    assert state
-    assert state.state == "36"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    state = hass.states.get(f"{base_id}_humidity_status")
-    assert state
-    assert state.state == "normal"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-
-    state = hass.states.get(f"{base_id}_rssi_numeric")
-    assert state
-    assert state.state == "-64"
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-    )
-
-    state = hass.states.get(f"{base_id}_temperature")
-    assert state
-    assert state.state == "14.9"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
-
-    state = hass.states.get(f"{base_id}_battery_numeric")
-    assert state
-    assert state.state == "100"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    # 1 Update
-    await rfxtrx.signal("0a52085e070100b31b0279")
-    base_id = "sensor.wt260_wt260h_wt440h_wt450_wt450h_07_01"
-
-    state = hass.states.get(f"{base_id}_humidity")
-    assert state
-    assert state.state == "27"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    state = hass.states.get(f"{base_id}_humidity_status")
-    assert state
-    assert state.state == "normal"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-
-    state = hass.states.get(f"{base_id}_rssi_numeric")
-    assert state
-    assert state.state == "-64"
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-    )
-
-    state = hass.states.get(f"{base_id}_temperature")
-    assert state
-    assert state.state == "17.9"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
-
-    state = hass.states.get(f"{base_id}_battery_numeric")
-    assert state
-    assert state.state == "100"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-
-    assert len(hass.states.async_all()) == 10
+    reg = entity_registry.async_get(hass)
+    for entity in entities:
+        reg_entry = reg.async_get(f"{base}_{entity}")
+        assert reg_entry, f"{entity} missing"
+        assert reg_entry.disabled, f"{entity} not disabled"
 
 
 async def test_update_of_sensors(hass, rfxtrx):

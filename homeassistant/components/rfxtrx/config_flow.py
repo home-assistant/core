@@ -38,7 +38,6 @@ from homeassistant.helpers.entity_registry import (
 from . import DOMAIN, DeviceTuple, get_device_id, get_rfx_object
 from .binary_sensor import supported as binary_supported
 from .const import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
@@ -96,9 +95,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         errors = {}
 
         if user_input is not None:
-            self._global_options = {
-                CONF_AUTOMATIC_ADD: user_input[CONF_AUTOMATIC_ADD],
-            }
+            self._global_options = {}
             if CONF_DEVICE in user_input:
                 entry_id = user_input[CONF_DEVICE]
                 device_data = self._get_device_data(entry_id)
@@ -168,10 +165,6 @@ class OptionsFlow(config_entries.OptionsFlow):
         }
 
         options = {
-            vol.Optional(
-                CONF_AUTOMATIC_ADD,
-                default=self._config_entry.data[CONF_AUTOMATIC_ADD],
-            ): bool,
             vol.Optional(CONF_EVENT_CODE): str,
             vol.Optional(CONF_DEVICE): vol.In(configure_devices),
             vol.Optional(CONF_REMOVE_DEVICE): cv.multi_select(remove_devices),
@@ -564,7 +557,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: host,
             CONF_PORT: port,
             CONF_DEVICE: device,
-            CONF_AUTOMATIC_ADD: False,
             CONF_DEVICES: {},
         }
         return data

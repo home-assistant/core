@@ -64,7 +64,6 @@ async def test_setup_network(transport_mock, hass):
         "host": "10.10.0.1",
         "port": 1234,
         "device": None,
-        "automatic_add": False,
         "devices": {},
     }
 
@@ -110,7 +109,6 @@ async def test_setup_serial(com_mock, connect_mock, hass):
         "host": None,
         "port": None,
         "device": port.device,
-        "automatic_add": False,
         "devices": {},
     }
 
@@ -162,7 +160,6 @@ async def test_setup_serial_manual(com_mock, connect_mock, hass):
         "host": None,
         "port": None,
         "device": "/dev/ttyUSB0",
-        "automatic_add": False,
         "devices": {},
     }
 
@@ -285,7 +282,6 @@ async def test_options_global(hass):
             "host": None,
             "port": None,
             "device": "/dev/tty123",
-            "automatic_add": False,
             "devices": {},
         },
         unique_id=DOMAIN,
@@ -298,14 +294,12 @@ async def test_options_global(hass):
     assert result["step_id"] == "prompt_options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"automatic_add": True}
+        result["flow_id"], user_input={}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
     await hass.async_block_till_done()
-
-    assert entry.data["automatic_add"]
 
 
 async def test_options_add_device(hass):
@@ -317,7 +311,6 @@ async def test_options_add_device(hass):
             "host": None,
             "port": None,
             "device": "/dev/tty123",
-            "automatic_add": False,
             "devices": {},
         },
         unique_id=DOMAIN,
@@ -332,7 +325,7 @@ async def test_options_add_device(hass):
     # Try with invalid event code
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"automatic_add": True, "event_code": "1234"},
+        user_input={"event_code": "1234"},
     )
 
     assert result["type"] == "form"
@@ -344,7 +337,6 @@ async def test_options_add_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "automatic_add": True,
             "event_code": "0b1100cd0213c7f230010f71",
         },
     )
@@ -359,8 +351,6 @@ async def test_options_add_device(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
     await hass.async_block_till_done()
-
-    assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
@@ -382,7 +372,6 @@ async def test_options_add_duplicate_device(hass):
             "port": None,
             "device": "/dev/tty123",
             "debug": False,
-            "automatic_add": False,
             "devices": {"0b1100cd0213c7f230010f71": {"signal_repetitions": 1}},
         },
         unique_id=DOMAIN,
@@ -397,7 +386,6 @@ async def test_options_add_duplicate_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "automatic_add": True,
             "event_code": "0b1100cd0213c7f230010f71",
         },
     )
@@ -417,7 +405,6 @@ async def test_options_add_remove_device(hass):
             "host": None,
             "port": None,
             "device": "/dev/tty123",
-            "automatic_add": False,
             "devices": {},
         },
         unique_id=DOMAIN,
@@ -432,7 +419,6 @@ async def test_options_add_remove_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "automatic_add": True,
             "event_code": "0b1100cd0213c7f230010f71",
         },
     )
@@ -448,8 +434,6 @@ async def test_options_add_remove_device(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
     await hass.async_block_till_done()
-
-    assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
@@ -473,7 +457,6 @@ async def test_options_add_remove_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "automatic_add": False,
             "remove_device": [device_entries[0].id],
         },
     )
@@ -481,8 +464,6 @@ async def test_options_add_remove_device(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
     await hass.async_block_till_done()
-
-    assert not entry.data["automatic_add"]
 
     assert "0b1100cd0213c7f230010f71" not in entry.data["devices"]
 
@@ -499,7 +480,6 @@ async def test_options_replace_sensor_device(hass):
             "host": None,
             "port": None,
             "device": "/dev/tty123",
-            "automatic_add": False,
             "devices": {
                 "0a520101f00400e22d0189": {"device_id": ["52", "1", "f0:04"]},
                 "0a520105230400c3260279": {"device_id": ["52", "1", "23:04"]},
@@ -581,7 +561,6 @@ async def test_options_replace_sensor_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "automatic_add": False,
             "device": old_device,
         },
     )
@@ -659,7 +638,6 @@ async def test_options_replace_control_device(hass):
             "host": None,
             "port": None,
             "device": "/dev/tty123",
-            "automatic_add": False,
             "devices": {
                 "0b1100100118cdea02010f70": {
                     "device_id": ["11", "0", "118cdea:2"],
@@ -719,7 +697,6 @@ async def test_options_replace_control_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "automatic_add": False,
             "device": old_device,
         },
     )
@@ -767,7 +744,6 @@ async def test_options_remove_multiple_devices(hass):
             "host": None,
             "port": None,
             "device": "/dev/tty123",
-            "automatic_add": False,
             "devices": {
                 "0b1100cd0213c7f230010f71": {"device_id": ["11", "0", "213c7f2:48"]},
                 "0b1100100118cdea02010f70": {"device_id": ["11", "0", "118cdea:2"]},
@@ -811,7 +787,6 @@ async def test_options_remove_multiple_devices(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "automatic_add": False,
             "remove_device": remove_devices,
         },
     )
@@ -837,7 +812,6 @@ async def test_options_add_and_configure_device(hass):
             "host": None,
             "port": None,
             "device": "/dev/tty123",
-            "automatic_add": False,
             "devices": {},
         },
         unique_id=DOMAIN,
@@ -852,7 +826,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "automatic_add": True,
             "event_code": "0913000022670e013970",
         },
     )
@@ -893,8 +866,6 @@ async def test_options_add_and_configure_device(hass):
 
     await hass.async_block_till_done()
 
-    assert entry.data["automatic_add"]
-
     assert entry.data["devices"]["0913000022670e013970"]
     assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
     assert entry.data["devices"]["0913000022670e013970"]["off_delay"] == 9
@@ -917,7 +888,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "automatic_add": False,
             "device": device_entries[0].id,
         },
     )
@@ -953,7 +923,6 @@ async def test_options_configure_rfy_cover_device(hass):
             "host": None,
             "port": None,
             "device": "/dev/tty123",
-            "automatic_add": False,
             "devices": {},
         },
         unique_id=DOMAIN,
@@ -971,7 +940,6 @@ async def test_options_configure_rfy_cover_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "automatic_add": True,
             "event_code": "071a000001020301",
         },
     )
@@ -1003,7 +971,6 @@ async def test_options_configure_rfy_cover_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "automatic_add": False,
             "device": device_entries[0].id,
         },
     )

@@ -4,10 +4,9 @@ from __future__ import annotations
 import asyncio
 import binascii
 from collections.abc import Callable
-import copy
 import functools
 import logging
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import RFXtrx as rfxtrxmod
 import async_timeout
@@ -26,7 +25,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.device_registry import DeviceEntryDisabler, DeviceRegistry
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -34,7 +34,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     ATTR_EVENT,
     COMMAND_GROUP_LIST,
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_REMOVE_DEVICE,
     DATA_RFXOBJECT,
@@ -48,6 +47,7 @@ DOMAIN = "rfxtrx"
 DEFAULT_SIGNAL_REPETITIONS = 1
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
+SIGNAL_ADDED = f"{DOMAIN}_added"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -162,61 +162,60 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     def async_handle_receive(event):
         """Handle received messages from RFXtrx gateway."""
         # Log RFXCOM event
-        if not event.device.id_string:
+        device: rfxtrxmod.RFXtrxDevice = event.device
+        if not device.id_string:
             return
 
+        data_bits = get_device_data_bits(device, devices)
+        device_id = get_device_id(device, data_bits=data_bits)
+        event_code = binascii.hexlify(event.data).decode("ASCII")
+        model = device.type_string
+        name = f"{device.type_string} {device.id_string}"
+
+        if device_id not in devices:
+            devices[device_id] = _add_device(event_code, device_id)
+            async_dispatcher_send(hass, SIGNAL_ADDED, event, devices[device_id])
+
+        device_entry = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, *device_id)},
+            model=model,
+            name=name,
+        )
+
         event_data = {
-            "packet_type": event.device.packettype,
-            "sub_type": event.device.subtype,
-            "type_string": event.device.type_string,
-            "id_string": event.device.id_string,
-            "data": binascii.hexlify(event.data).decode("ASCII"),
+            "packet_type": device.packettype,
+            "sub_type": device.subtype,
+            "type_string": device.type_string,
+            "id_string": device.id_string,
+            "data": event_code,
             "values": getattr(event, "values", None),
+            ATTR_DEVICE_ID: device_entry.id,
         }
 
         _LOGGER.debug("Receive RFXCOM event: %s", event_data)
 
-        data_bits = get_device_data_bits(event.device, devices)
-        device_id = get_device_id(event.device, data_bits=data_bits)
-
-        if device_id not in devices:
-            if config[CONF_AUTOMATIC_ADD]:
-                _add_device(event, device_id)
-            else:
-                return
-
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, *device_id)},
-        )
-        if device_entry:
-            event_data[ATTR_DEVICE_ID] = device_entry.id
-
-        # Callback to HA registered components.
-        hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_EVENT, event, device_id)
-
         # Signal event to any other listeners
-        hass.bus.async_fire(EVENT_RFXTRX_EVENT, event_data)
+        if not device_entry.disabled:
+            async_dispatcher_send(hass, SIGNAL_EVENT, event, device_id)
+            hass.bus.async_fire(EVENT_RFXTRX_EVENT, event_data)
 
-    @callback
-    def _add_device(event, device_id):
+    def _add_device(event_code: str, device_id: DeviceTuple) -> dict[str, Any]:
         """Add a device to config entry."""
-        config = {}
-        config[CONF_DEVICE_ID] = device_id
+        entity_config = {CONF_DEVICE_ID: device_id}
 
-        _LOGGER.info(
-            "Added device (Device ID: %s Class: %s Sub: %s, Event: %s)",
-            event.device.id_string.lower(),
-            event.device.__class__.__name__,
-            event.device.subtype,
-            "".join(f"{x:02x}" for x in event.data),
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, *device_id)},  # type: ignore[arg-type]
+            disabled_by=DeviceEntryDisabler.INTEGRATION,
         )
 
         data = entry.data.copy()
-        data[CONF_DEVICES] = copy.deepcopy(entry.data[CONF_DEVICES])
-        event_code = binascii.hexlify(event.data).decode("ASCII")
-        data[CONF_DEVICES][event_code] = config
+        data[CONF_DEVICES] = data[CONF_DEVICES].copy()
+        data[CONF_DEVICES][event_code] = entity_config
         hass.config_entries.async_update_entry(entry=entry, data=data)
-        devices[device_id] = config
+
+        return entity_config
 
     def _shutdown_rfxtrx(event):
         """Close connection with RFXtrx."""
@@ -248,7 +247,6 @@ async def async_setup_platform_entry(
 ):
     """Set up config entry."""
     entry_data = config_entry.data
-    device_ids: set[DeviceTuple] = set()
 
     # Add entities from config
     entities = []
@@ -262,31 +260,22 @@ async def async_setup_platform_entry(
         device_id = get_device_id(
             event.device, data_bits=entity_info.get(CONF_DATA_BITS)
         )
-        if device_id in device_ids:
-            continue
-        device_ids.add(device_id)
-
         entities.extend(constructor(event, None, device_id, entity_info))
 
     async_add_entities(entities)
 
-    # If automatic add is on, hookup listener
-    if entry_data[CONF_AUTOMATIC_ADD]:
-
-        @callback
-        def _update(event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
-            """Handle light updates from the RFXtrx gateway."""
-            if not supported(event):
-                return
-
-            if device_id in device_ids:
-                return
-            device_ids.add(device_id)
-            async_add_entities(constructor(event, event, device_id, {}))
-
-        config_entry.async_on_unload(
-            hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, _update)
+    @callback
+    def _added(event: rfxtrxmod.RFXtrxEvent, entity_info: dict):
+        """Handle light updates from the RFXtrx gateway."""
+        if not supported(event):
+            return
+        async_add_entities(
+            constructor(event, event, entity_info[CONF_DEVICE_ID], entity_info)
         )
+
+    config_entry.async_on_unload(
+        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_ADDED, _added)
+    )
 
 
 def get_rfx_object(packetid: str) -> rfxtrxmod.RFXtrxEvent | None:
@@ -430,8 +419,6 @@ class RfxtrxEntity(RestoreEntity):
         """Return the device info."""
         return DeviceInfo(
             identifiers={(DOMAIN, *self._device_id)},
-            model=self._device.type_string,
-            name=f"{self._device.type_string} {self._device.id_string}",
         )
 
     def _event_applies(self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
