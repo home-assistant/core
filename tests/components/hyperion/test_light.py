@@ -1345,7 +1345,7 @@ async def test_lights_can_be_enabled(hass: HomeAssistant) -> None:
     entry = entity_registry.async_get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert not entity_state
 
