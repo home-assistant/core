@@ -8,6 +8,7 @@ import prometheus_client
 import pytest
 
 from homeassistant.components import climate, humidifier, sensor
+from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.number import DemoNumber
 from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
@@ -479,6 +480,36 @@ async def test_attributes(hass, hass_client):
         'switch_attr_number{domain="switch",'
         'entity="switch.number",'
         'friendly_name="Number"} 10.2' in body
+    )
+
+
+async def test_binary_sensor(hass, hass_client):
+    """Test prometheus metrics for binary_sensor."""
+    client = await setup_prometheus_client(hass, hass_client, "")
+
+    binary_sensor1 = DemoBinarySensor(None, "Door", True, None)
+    binary_sensor1.hass = hass
+    binary_sensor1.entity_id = "binary_sensor.door"
+    await binary_sensor1.async_update_ha_state()
+
+    binary_sensor1 = DemoBinarySensor(None, "Window", False, None)
+    binary_sensor1.hass = hass
+    binary_sensor1.entity_id = "binary_sensor.window"
+    await binary_sensor1.async_update_ha_state()
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'binary_sensor_state{domain="binary_sensor",'
+        'entity="binary_sensor.door",'
+        'friendly_name="Door"} 1.0' in body
+    )
+
+    assert (
+        'binary_sensor_state{domain="binary_sensor",'
+        'entity="binary_sensor.window",'
+        'friendly_name="Window"} 0.0' in body
     )
 
 
