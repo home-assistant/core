@@ -5,7 +5,7 @@
             "no_server_found": "LMS\u30b5\u30fc\u30d0\u30fc\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3002"
         },
         "error": {
-            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
             "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
         },
