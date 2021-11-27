@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from ta_cmi import CMI, ApiError, Device, InvalidCredentialsError, RateLimitError
+from ta_cmi import CMI, ApiError, InvalidCredentialsError, RateLimitError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -36,15 +36,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_login(hass: HomeAssistant, data: dict[str, Any]) -> list[Device]:
+async def validate_login(hass: HomeAssistant, data: dict[str, Any]) -> Any:
     """Validate the user input allows us to connect."""
     try:
         cmi: CMI = CMI(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
         return await cmi.getDevices()
-    except InvalidCredentialsError:
-        raise InvalidAuth
-    except ApiError:
-        raise CannotConnect
+    except InvalidCredentialsError as err:
+        raise InvalidAuth from err
+    except ApiError as err:
+        raise CannotConnect from err
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -68,6 +68,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
 
+            if not user_input[CONF_HOST].startswith("http://"):
+                user_input[CONF_HOST] = "http://" + user_input[CONF_HOST]
+
             self.data["allDevices"] = {}
 
             try:
@@ -77,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception(f"Unexpected exception: {err}")
+                _LOGGER.exception("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
             else:
                 self.config[CONF_HOST] = user_input[CONF_HOST]
@@ -101,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self.config[CONF_DEVICES] = []
 
-            for devID in self.data[CONF_DEVICES]:
+            for dev_id in self.data[CONF_DEVICES]:
 
                 fetchmode: str
                 if user_input[CONF_DEVICE_FETCH_MODE]:
@@ -110,7 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     fetchmode = "defined"
 
                 device: dict[str, Any] = {
-                    CONF_DEVICE_ID: devID,
+                    CONF_DEVICE_ID: dev_id,
                     CONF_DEVICE_FETCH_MODE: fetchmode,
                     CONF_CHANNELS: [],
                 }
@@ -121,23 +124,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_channel()
 
-        devicesList: dict[int, str] = {}
+        devices_list: dict[int, str] = {}
 
         try:
             for dev in self.data["allDevices"]:
                 if len(self.data["allDevices"]) > 1:
-                    print("WAIT")
                     await asyncio.sleep(61)
                 await dev.update()
                 if dev.getDeviceType() == "Unknown":
                     continue
-                devicesList[
+                devices_list[
                     dev.id
                 ] = f"Node {dev.id}: {dev.getDeviceType()} - Inputs: {len(dev.inputs)} Outputs: {len(dev.outputs)}"
 
         except ApiError as err:
             errors["base"] = "unknown"
-            _LOGGER.exception(f"Unexpected exception: {err}")
+            _LOGGER.exception("Unexpected exception: %s", err)
         except RateLimitError:
             errors["base"] = "rate_limit"
 
@@ -145,7 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="devices",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_DEVICES): cv.multi_select(devicesList),
+                    vol.Required(CONF_DEVICES): cv.multi_select(devices_list),
                     vol.Optional("edit_channels", default=False): cv.boolean,
                     vol.Optional(CONF_DEVICE_FETCH_MODE, default=True): cv.boolean,
                 }
@@ -180,11 +182,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_finish()
             return await self.async_step_channel()
 
-        devicesList: dict[int, str] = {}
+        devices_list: dict[int, str] = {}
         for dev in self.data["allDevices"]:
-            for devID in self.data[CONF_DEVICES]:
-                if devID == dev.id:
-                    devicesList[
+            for dev_id in self.data[CONF_DEVICES]:
+                if dev_id == dev.id:
+                    devices_list[
                         dev.id
                     ] = f"Node {dev.id}: {dev.getDeviceType()} - Inputs: {len(dev.inputs)} Outputs: {len(dev.outputs)}"
                     break
@@ -193,7 +195,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="channel",
             data_schema=vol.Schema(
                 {
-                    vol.Required("node"): vol.In(devicesList),
+                    vol.Required("node"): vol.In(devices_list),
                     vol.Required(CONF_CHANNELS_ID): cv.positive_int,
                     vol.Required(CONF_CHANNELS_TYPE): vol.In(["Input", "Output"]),
                     vol.Required(CONF_CHANNELS_NAME): cv.string,

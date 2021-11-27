@@ -1,41 +1,41 @@
 {
-  "config" : {
-      "error" : {
-        "cannot_connect" : "Cannot connect to C.M.I",
-        "invalid_auth" : "Invalid credentials",
-        "unknown": "Unknown error",
-        "rate_limit" : "C.M.I rate limit reached. Try again in one minute."
-      },
-      "step": {
-        "user" : {
-          "title" : "Set up C.M.I",
-          "data" : {
-            "host": "Base url of the C.M.I (http://IP)",
-            "username": "Username",
-            "password": "Password"
-          }
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "rate_limit": "C.M.I rate limit reached. Try again in one minute.",
+            "unknown": "Unexpected error"
         },
-        "devices": {
-          "title" : "Set up Nodes",
-          "description": "Select devices to monitor",
-          "data" : {
-            "devices": "Connected devices",
-            "edit_channels": "Edit channels?",
-            "fetchmode": "Fetch all channels. (Otherwise only defined channels)"
-          }
-        },
-        "channel":{
-          "title" : "Configure channel",
-          "description": "Configure the channel to your needs",
-          "data": {
-            "node": "Node",
-            "id": "ID of the channel",
-            "type": "Input type",
-            "name": "Name of the sensor",
-            "device_class": "Override the device class (Optional)",
-            "edit_more_channels": "Edit other channels?"
-          }
+        "step": {
+            "channel": {
+                "data": {
+                    "device_class": "Override the device class (Optional)",
+                    "edit_more_channels": "Edit other channels?",
+                    "id": "ID of the channel",
+                    "name": "Name of the sensor",
+                    "node": "Node",
+                    "type": "Input type"
+                },
+                "description": "Configure the channel to your needs",
+                "title": "Configure channel"
+            },
+            "devices": {
+                "data": {
+                    "devices": "Connected devices",
+                    "edit_channels": "Edit channels?",
+                    "fetchmode": "Fetch all channels. (Otherwise only defined channels)"
+                },
+                "description": "Select devices to monitor",
+                "title": "Set up Nodes"
+            },
+            "user": {
+                "data": {
+                    "host": "Base url of the C.M.I (http://IP)",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Set up C.M.I"
+            }
         }
-      }
-  }
+    }
 }

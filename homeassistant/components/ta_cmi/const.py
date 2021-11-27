@@ -1,12 +1,13 @@
 """Constants for the Technische Alternative C.M.I. integration."""
+from __future__ import annotations
 
 from datetime import timedelta
 from logging import Logger, getLogger
-from typing import Dict
 
 _LOGGER: Logger = getLogger(__package__)
 
 SCAN_INTERVAL: timedelta = timedelta(minutes=5)
+DEVICE_DELAY: int = 61
 
 DOMAIN: str = "ta_cmi"
 
@@ -20,7 +21,7 @@ CONF_CHANNELS_ID: str = "id"
 CONF_CHANNELS_NAME: str = "name"
 CONF_CHANNELS_DEVICE_CLASS: str = "device_class"
 
-DEFAULT_DEVICE_CLASS_MAP: Dict[str, str] = {
+DEFAULT_DEVICE_CLASS_MAP: dict[str, str] = {
     "°C": "temperature",
     "K": "temperature",
     "A": "current",

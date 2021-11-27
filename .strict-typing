@@ -212,6 +212,7 @@ homeassistant.components.switch.*
 homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
+homeassistant.components.ta_cmi.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*
 homeassistant.components.tautulli.*

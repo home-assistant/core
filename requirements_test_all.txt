@@ -1461,7 +1461,7 @@ surepy==0.7.2
 systembridge==2.3.1
 
 # homeassistant.components.ta_cmi
-ta-cmi==0.1.1
+ta-cmi==0.1.4
 
 # homeassistant.components.tailscale
 tailscale==0.2.0

@@ -1,0 +1,41 @@
+{
+    "config": {
+        "step":{
+            "user": {
+                "title": "Set up C.M.I",
+                "data" : {
+                    "host": "Base url of the C.M.I (http://IP)",
+                    "username": "Username",
+                    "password": "Password"
+                  }
+            },
+            "devices": {
+                "title" : "Set up Nodes",
+                "description": "Select devices to monitor",
+                "data" : {
+                  "devices": "Connected devices",
+                  "edit_channels": "Edit channels?",
+                  "fetchmode": "Fetch all channels. (Otherwise only defined channels)"
+                }
+              },
+              "channel":{
+                "title" : "Configure channel",
+                "description": "Configure the channel to your needs",
+                "data": {
+                  "node": "Node",
+                  "id": "ID of the channel",
+                  "type": "Input type",
+                  "name": "Name of the sensor",
+                  "device_class": "Override the device class (Optional)",
+                  "edit_more_channels": "Edit other channels?"
+                }
+            }
+        },
+        "error": {
+            "rate_limit": "C.M.I rate limit reached. Try again in one minute.",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]",
+            "invalid_auth" : "[%key:common::config_flow::error::invalid_auth%]"
+        }
+    }
+}

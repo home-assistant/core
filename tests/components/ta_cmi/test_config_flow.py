@@ -26,6 +26,12 @@ DUMMY_CONNECTION_DATA: Dict[str, Any] = {
     CONF_PASSWORD: "password",
 }
 
+DUMMY_CONNECTION_DATA_ONLY_IP: Dict[str, Any] = {
+    CONF_HOST: "1.2.3.4",
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
+}
+
 DUMMY_DEVICE_DATA_NO_CHANNEL_FETCH_ALL = {
     CONF_DEVICES: [2],
     "edit_channels": False,
@@ -155,6 +161,22 @@ async def test_step_user(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=DUMMY_CONNECTION_DATA
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "devices"
+        assert result["errors"] == {}
+
+
+async def test_step_user_only_ip(hass: HomeAssistant) -> None:
+    """Test starting a flow by user with valid values but the host is only an ip."""
+    with patch(
+        "ta_cmi.baseApi.BaseAPI._makeRequestNoJson",
+        return_value="2;",
+    ), patch("ta_cmi.baseApi.BaseAPI._makeRequest", return_value=DUMMY_DEVICE_API_DATA):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=DUMMY_CONNECTION_DATA_ONLY_IP
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
