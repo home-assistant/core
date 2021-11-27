@@ -4,10 +4,7 @@ from unittest.mock import patch
 import pytest
 import tesla_wall_connector
 
-from homeassistant.components.tesla_wall_connector.const import (
-    CONF_SCAN_INTERVAL_CHARGING,
-    DOMAIN,
-)
+from homeassistant.components.tesla_wall_connector.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
@@ -43,7 +40,7 @@ async def create_wall_connector_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4"},
-        options={CONF_SCAN_INTERVAL: 30, CONF_SCAN_INTERVAL_CHARGING: 5},
+        options={CONF_SCAN_INTERVAL: 30},
     )
 
     entry.add_to_hass(hass)

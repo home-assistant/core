@@ -16,9 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    CONF_SCAN_INTERVAL_CHARGING,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL_CHARGING,
     DOMAIN,
     WALLCONNECTOR_DEVICE_NAME,
     WALLCONNECTOR_SERIAL_NUMBER,
@@ -157,13 +155,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=1)),
-                vol.Optional(
-                    CONF_SCAN_INTERVAL_CHARGING,
-                    default=self.config_entry.options.get(
-                        CONF_SCAN_INTERVAL_CHARGING, DEFAULT_SCAN_INTERVAL_CHARGING
-                    ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=1)),
+                ): vol.All(vol.Coerce(int), vol.Clamp(min=1))
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

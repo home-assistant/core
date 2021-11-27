@@ -26,9 +26,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_SCAN_INTERVAL_CHARGING,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL_CHARGING,
     DOMAIN,
     WALLCONNECTOR_DATA_LIFETIME,
     WALLCONNECTOR_DATA_VITALS,
@@ -44,10 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tesla Wall Connector from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hostname = entry.data[CONF_HOST]
-    poll_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    poll_interval_charging = entry.options.get(
-        CONF_SCAN_INTERVAL_CHARGING, DEFAULT_SCAN_INTERVAL_CHARGING
-    )
 
     wall_connector = WallConnector(host=hostname, session=async_get_clientsession(hass))
 
@@ -56,23 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except WallConnectorError as ex:
         raise ConfigEntryNotReady from ex
 
-    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="tesla-wallconnector",
-        update_interval=timedelta(seconds=poll_interval),
-    )
-
     async def async_update_data():
         """Fetch new data from the Wall Connector."""
-
-        previous_contactor_closed = (
-            coordinator.data[WALLCONNECTOR_DATA_VITALS].contactor_closed
-            if coordinator.data is not None
-            and coordinator.data[WALLCONNECTOR_DATA_VITALS] is not None
-            else False
-        )
-
         try:
             vitals = await wall_connector.async_get_vitals()
             lifetime = await wall_connector.async_get_lifetime()
@@ -89,24 +68,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 f"Could not fetch data from Tesla WallConnector at {hostname}: {ex}"
             ) from ex
 
-        if previous_contactor_closed != vitals.contactor_closed:
-            if vitals.contactor_closed:
-                coordinator.update_interval = timedelta(seconds=poll_interval_charging)
-            else:
-                coordinator.update_interval = timedelta(seconds=poll_interval)
-
-            _LOGGER.debug(
-                "Contactor closed: %s. Update interval: %s",
-                vitals.contactor_closed,
-                coordinator.update_interval,
-            )
-
         return {
             WALLCONNECTOR_DATA_VITALS: vitals,
             WALLCONNECTOR_DATA_LIFETIME: lifetime,
         }
 
-    coordinator.update_method = async_update_data
+    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="tesla-wallconnector",
+        update_interval=get_poll_interval(entry),
+        update_method=async_update_data,
+    )
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -121,7 +94,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
+
+
+def get_poll_interval(entry: ConfigEntry) -> timedelta:
+    """Get the poll interval from config."""
+    return timedelta(
+        seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    )
+
+
+async def update_listener(hass, entry):
+    """Handle options update."""
+    wall_connector_data: WallConnectorData = hass.data[DOMAIN][entry.entry_id]
+    wall_connector_data.update_coordinator.update_interval = get_poll_interval(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
