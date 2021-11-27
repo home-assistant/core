@@ -198,8 +198,10 @@ class FroniusSolarNet:
         try:
             await coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:
+            # ConfigEntryNotReady raised form FroniusError / KeyError in
+            # DataUpdateCoordinator if request not supported by the Fronius device
             return None
-        # keep coordinator only if devices are found
-        # else ConfigEntryNotReady raised form KeyError
-        # in FroniusMeterUpdateCoordinator._get_fronius_device_data
+        # if no device for the request is installed an empty dict is returned
+        if not coordinator.data:
+            return None
         return coordinator
