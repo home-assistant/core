@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -42,8 +43,10 @@ from .const import (
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
+    CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
+    DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DOMAIN,
@@ -70,7 +73,9 @@ AVAILABILITY_LATEST = "latest"
 
 AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
 
+CONF_AVAILABILITY_ENCODING = "availability_encoding"
 CONF_AVAILABILITY_MODE = "availability_mode"
+CONF_AVAILABILITY_TEMPLATE = "availability_template"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
 CONF_ENABLED_BY_DEFAULT = "enabled_by_default"
 CONF_PAYLOAD_AVAILABLE = "payload_available"
@@ -112,6 +117,8 @@ MQTT_ATTRIBUTES_BLOCKED = {
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
         vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_AVAILABILITY_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(
             CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
         ): cv.string,
@@ -130,6 +137,7 @@ MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
             cv.ensure_list,
             [
                 {
+                    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
                     vol.Required(CONF_TOPIC): valid_subscribe_topic,
                     vol.Optional(
                         CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
@@ -138,6 +146,7 @@ MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
                         CONF_PAYLOAD_NOT_AVAILABLE,
                         default=DEFAULT_PAYLOAD_NOT_AVAILABLE,
                     ): cv.string,
+                    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
                 }
             ],
         ),
@@ -331,18 +340,34 @@ class MqttAvailability(Entity):
     def _availability_setup_from_config(self, config):
         """(Re)Setup."""
         self._avail_topics = {}
-        if CONF_AVAILABILITY_TOPIC in config:
+        if CONF_AVAILABILITY_TOPIC in config and config[CONF_AVAILABILITY_TOPIC]:
             self._avail_topics[config[CONF_AVAILABILITY_TOPIC]] = {
+                CONF_AVAILABILITY_ENCODING: config[CONF_AVAILABILITY_ENCODING] or None,
                 CONF_PAYLOAD_AVAILABLE: config[CONF_PAYLOAD_AVAILABLE],
                 CONF_PAYLOAD_NOT_AVAILABLE: config[CONF_PAYLOAD_NOT_AVAILABLE],
+                CONF_AVAILABILITY_TEMPLATE: config.get(CONF_AVAILABILITY_TEMPLATE),
             }
 
         if CONF_AVAILABILITY in config:
             for avail in config[CONF_AVAILABILITY]:
                 self._avail_topics[avail[CONF_TOPIC]] = {
+                    CONF_AVAILABILITY_ENCODING: avail[CONF_ENCODING] or None,
                     CONF_PAYLOAD_AVAILABLE: avail[CONF_PAYLOAD_AVAILABLE],
                     CONF_PAYLOAD_NOT_AVAILABLE: avail[CONF_PAYLOAD_NOT_AVAILABLE],
+                    CONF_AVAILABILITY_TEMPLATE: avail.get(CONF_VALUE_TEMPLATE),
                 }
+
+        for key, avail_topic_conf in self._avail_topics.items():
+            tpl = avail_topic_conf[CONF_AVAILABILITY_TEMPLATE]
+            if tpl is None:
+                self._avail_topics[key][
+                    CONF_AVAILABILITY_TEMPLATE
+                ] = lambda value: value
+            else:
+                tpl.hass = self.hass
+                self._avail_topics[key][
+                    CONF_AVAILABILITY_TEMPLATE
+                ] = tpl.async_render_with_possible_json_value
 
         self._avail_config = config
 
@@ -354,10 +379,11 @@ class MqttAvailability(Entity):
         def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
-            if msg.payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
+            payload = self._avail_topics[topic][CONF_AVAILABILITY_TEMPLATE](msg.payload)
+            if payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
                 self._available[topic] = True
                 self._available_latest = True
-            elif msg.payload == self._avail_topics[topic][CONF_PAYLOAD_NOT_AVAILABLE]:
+            elif payload == self._avail_topics[topic][CONF_PAYLOAD_NOT_AVAILABLE]:
                 self._available[topic] = False
                 self._available_latest = False
 
@@ -372,6 +398,7 @@ class MqttAvailability(Entity):
                 "topic": topic,
                 "msg_callback": availability_message_received,
                 "qos": self._avail_config[CONF_QOS],
+                "encoding": self._avail_topics[topic][CONF_AVAILABILITY_ENCODING],
             }
             for topic in self._avail_topics
         }
