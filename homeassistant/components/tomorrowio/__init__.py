@@ -22,7 +22,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -123,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=INTEGRATION_NAME,
         manufacturer=INTEGRATION_NAME,
         sw_version="v4",
-        entry_type="service",
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
 
     # If this is an import and we still have the old config entry ID in the entry data,
@@ -326,7 +325,7 @@ class TomorrowioEntity(CoordinatorEntity):
             name="Tomorrow.io",
             manufacturer="Tomorrow.io",
             sw_version=f"v{self.api_version}",
-            entry_type=DeviceEntryType.SERVICE,
+            entry_type=dr.DeviceEntryType.SERVICE,
         )
 
     def _get_current_property(self, property_name: str) -> int | str | float | None:
