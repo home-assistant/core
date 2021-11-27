@@ -261,6 +261,10 @@ async def test_existing_node_not_ready(
     device = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id)})
     device_ext = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id_ext)})
     assert device and device_ext == device
+    assert device.name == "4-in-1 Sensor"
+    assert device.name_by_user is None
+    assert device.manufacturer == "Vision Security"
+    assert device.model == "ZP3111-5"
 
     motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
     state = hass.states.get(motion_entity)
@@ -272,11 +276,13 @@ async def test_existing_node_not_ready(
 
     # Customize the device and entity
     updated_dev_entry = dev_reg.async_update_device(
-        device.id, name="Custom Device", area_id=kitchen_area.id
+        device.id, name_by_user="Custom Device", area_id=kitchen_area.id
     )
     assert updated_dev_entry != device
-    assert updated_dev_entry.name == "Custom Device"
+    assert updated_dev_entry.name == "4-in-1 Sensor"
+    assert updated_dev_entry.name_by_user == "Custom Device"
     assert updated_dev_entry.area_id == kitchen_area.id
+    assert updated_dev_entry.model == "ZP3111-5"
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id)})
     device_ext = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id_ext)})
@@ -305,11 +311,33 @@ async def test_existing_node_not_ready(
     assert device_ext == device
     assert device.id == updated_dev_entry.id
     assert device.identifiers == updated_dev_entry.identifiers
-    assert device.name == "Custom Device"
+    assert device.name == "4-in-1 Sensor"
+    assert device.name_by_user == "Custom Device"
     assert device.area_id == kitchen_area.id
     assert device.manufacturer is None
     assert device.model is None
-    assert device.sw_version is None
+
+    state = hass.states.get(motion_entity_new)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.name == "Custom Sensor Name"
+
+    # Re-send ready event, device should return to normal
+    event = {"node": zp3111}
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id)})
+    device_ext = dev_reg.async_get_device(identifiers={(DOMAIN, motion_device_id_ext)})
+    assert device
+    assert device_ext == device
+    assert device.id == updated_dev_entry.id
+    assert device.identifiers == updated_dev_entry.identifiers
+    assert device.name_by_user == "Custom Device"
+    assert device.area_id == kitchen_area.id
+    assert device.manufacturer == "Vision Security"
+    assert device.model == "ZP3111-5"
+    assert device.sw_version == "5.1"
 
     state = hass.states.get(motion_entity_new)
     assert state
