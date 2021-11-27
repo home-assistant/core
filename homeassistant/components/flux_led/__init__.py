@@ -77,6 +77,7 @@ async def async_discover_devices(
 ) -> list[dict[str, str]]:
     """Discover flux led devices."""
     scanner = AIOBulbScanner()
+    _LOGGER.warning("Calling async_scan for address=%s", address)
     try:
         discovered: list[dict[str, str]] = await scanner.async_scan(
             timeout=timeout, address=address
