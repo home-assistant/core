@@ -350,7 +350,7 @@ class EzvizCamera(EzvizEntity, Camera):
         except HTTPError as err:
             raise HTTPError("Cannot perform PTZ") from err
 
-    def perform_ptz_absolute(self, x: float, y: float) -> None:
+    def perform_ptz_absolute(self, x_axis: float, y_axis: float) -> None:
         """Perform an absolute PTZ action on the camera."""
         try:
             self.coordinator.ezviz_client.ptz_control_coordinates(self._serial, x, y)
