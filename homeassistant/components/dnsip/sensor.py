@@ -9,7 +9,7 @@ from aiodns.error import DNSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,6 +33,7 @@ SCAN_INTERVAL = timedelta(seconds=120)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
         vol.Optional(CONF_RESOLVER, default=DEFAULT_RESOLVER): cv.string,
         vol.Optional(CONF_RESOLVER_IPV6, default=DEFAULT_RESOLVER_IPV6): cv.string,
@@ -50,21 +51,25 @@ async def async_setup_platform(
     """Set up the DNS IP sensor."""
     hostname = config[CONF_HOSTNAME]
     name = config.get(CONF_NAME)
+    unique_id = config.get(CONF_UNIQUE_ID)
     ipv6 = config[CONF_IPV6]
 
     if not name:
         name = DEFAULT_NAME if hostname == DEFAULT_HOSTNAME else hostname
     resolver = config[CONF_RESOLVER_IPV6] if ipv6 else config[CONF_RESOLVER]
 
-    async_add_devices([WanIpSensor(name, hostname, resolver, ipv6)], True)
+    async_add_devices([WanIpSensor(name, hostname, unique_id, resolver, ipv6)], True)
 
 
 class WanIpSensor(SensorEntity):
     """Implementation of a DNS IP sensor."""
 
-    def __init__(self, name: str, hostname: str, resolver: str, ipv6: bool) -> None:
+    def __init__(
+        self, name: str, hostname: str, unique_id: str | None, resolver: str, ipv6: bool
+    ) -> None:
         """Initialize the DNS IP sensor."""
         self._attr_name = name
+        self._attr_unique_id = unique_id
         self.hostname = hostname
         self.resolver = aiodns.DNSResolver()
         self.resolver.nameservers = [resolver]
