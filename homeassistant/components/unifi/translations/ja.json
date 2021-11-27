@@ -7,7 +7,7 @@
         },
         "error": {
             "faulty_credentials": "\u7121\u52b9\u306a\u8a8d\u8a3c",
-            "service_unavailable": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "service_unavailable": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "unknown_client_mac": "\u305d\u306eMAC\u30a2\u30c9\u30ec\u30b9\u3067\u4f7f\u7528\u53ef\u80fd\u306a\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u304c\u3042\u308a\u307e\u305b\u3093"
         },
         "flow_title": "{site} ({host})",

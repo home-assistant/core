@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
-            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "not_lutron_device": "\u691c\u51fa\u3055\u308c\u305f\u30c7\u30d0\u30a4\u30b9\u306f\u3001Lutron\u30c7\u30d0\u30a4\u30b9\u3067\u306f\u3042\u308a\u307e\u305b\u3093"
         },
         "error": {
-            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -38,6 +38,12 @@
             "group_1_button_2": "\u6700\u521d\u306e\u30b0\u30eb\u30fc\u30d7\u306e2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "group_2_button_1": "2\u756a\u76ee\u306e\u30b0\u30eb\u30fc\u30d7\u306e\u6700\u521d\u306e\u30dc\u30bf\u30f3",
             "group_2_button_2": "2\u756a\u76ee\u306e\u30b0\u30eb\u30fc\u30d7\u306e2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "lower": "\u4e0b\u3052\u308b",
+            "lower_1": "\u4e0b1",
+            "lower_2": "\u4e0b2",
+            "lower_3": "\u4e0b3",
+            "lower_4": "\u4e0b4",
+            "lower_all": "\u3059\u3079\u3066\u4e0b\u3052\u308b",
             "off": "\u30aa\u30d5",
             "on": "\u30aa\u30f3",
             "open_1": "\u30aa\u30fc\u30d7\u30f31",
@@ -45,6 +51,12 @@
             "open_3": "\u30aa\u30fc\u30d7\u30f33",
             "open_4": "\u30aa\u30fc\u30d7\u30f34",
             "open_all": "\u3059\u3079\u3066\u958b\u304f",
+            "raise": "\u4e0a\u3052\u308b",
+            "raise_1": "\u4e0a1",
+            "raise_2": "\u4e0a2",
+            "raise_3": "\u4e0a3",
+            "raise_4": "\u4e0a4",
+            "raise_all": "\u3059\u3079\u3066\u4e0a\u3052\u308b",
             "stop": "\u505c\u6b62(\u304a\u6c17\u306b\u5165\u308a)",
             "stop_1": "\u505c\u6b62 1",
             "stop_2": "\u505c\u6b62 2",

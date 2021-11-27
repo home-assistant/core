@@ -56,6 +56,7 @@
             "warmwasser": "DHW",
             "warmwasser_schnellstart": "DHW\u30af\u30a4\u30c3\u30af\u30b9\u30bf\u30fc\u30c8",
             "warmwasserbetrieb": "DHW\u30e2\u30fc\u30c9",
+            "warmwassernachlauf": "DHW run-on",
             "warmwasservorrang": "DHW\u306e\u512a\u5148\u9806\u4f4d",
             "zunden": "\u30a4\u30b0\u30cb\u30c3\u30b7\u30e7\u30f3"
         }
