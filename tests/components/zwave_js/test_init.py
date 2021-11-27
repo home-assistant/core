@@ -186,38 +186,59 @@ async def test_on_node_added_ready(hass, multisensor_6_state, client, integratio
     assert dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
 
 
-async def test_on_node_added_not_ready(hass, multisensor_6_state, client, integration):
+async def test_on_node_added_not_ready(
+    hass, zp3111_not_ready_state, zp3111_state, client, integration
+):
     """Test we handle a non ready node added event."""
     dev_reg = dr.async_get(hass)
-    node_data = deepcopy(multisensor_6_state)  # Copy to allow modification in tests.
-    node = Node(client, node_data)
-    node.data["ready"] = False
-    event = {"node": node}
-    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
-    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
-
-    assert not state  # entity and device not yet added
-    assert not dev_reg.async_get_device(
-        identifiers={(DOMAIN, air_temperature_device_id)}
+    device_id = (DOMAIN, f"{client.driver.controller.home_id}-{zp3111_state['nodeId']}")
+    device_id_ext = (
+        DOMAIN,
+        f"{client.driver.controller.home_id}-{zp3111_state['nodeId']}-{zp3111_state['manufacturerId']}:{zp3111_state['productType']}:{zp3111_state['productId']}",
     )
 
-    client.driver.controller.emit("node added", event)
+    assert len(hass.states.async_all()) == 0
+    assert not dev_reg.async_get_device(identifiers={device_id, device_id_ext})
+
+    event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": deepcopy(zp3111_not_ready_state),
+        },
+    )
+    client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+    assert (
+        len(hass.states.async_all()) == 1
+    )  # the only entity is the node status sensor
+    assert dev_reg.async_get_device(identifiers={device_id})
+    assert not dev_reg.async_get_device(identifiers={device_id_ext})
 
-    assert not state  # entity not yet added but device added in registry
-    assert dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
-
-    node.data["ready"] = True
-    node.emit("ready", event)
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": zp3111_state["nodeId"],
+            "nodeState": deepcopy(zp3111_state),
+        },
+    )
+    client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
-
-    assert state  # entity added
+    state = hass.states.get(
+        "binary_sensor.4_in_1_sensor_home_security_motion_detection"
+    )
+    assert state
     assert state.state != STATE_UNAVAILABLE
+
+    assert dev_reg.async_get_device(
+        identifiers={device_id}
+    ) == dev_reg.async_get_device(identifiers={device_id_ext})
 
 
 async def test_existing_node_ready(hass, client, multisensor_6, integration):
