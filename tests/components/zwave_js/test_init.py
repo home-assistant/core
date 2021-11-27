@@ -225,12 +225,18 @@ async def test_existing_node_ready(hass, client, multisensor_6, integration):
     dev_reg = dr.async_get(hass)
     node = multisensor_6
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    air_temperature_device_id_ext = f"{air_temperature_device_id}-{node.manufacturer_id}:{node.product_type}:{node.product_id}"
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
-    assert dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id_ext)}
+    )
 
 
 async def test_null_name(hass, client, null_name_check, integration):
