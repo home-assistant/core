@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             return {"new_unique_id": new_unique_id}
 
-        if entry.domain == BINARY_SENSOR_DOMAIN and "_alarm" not in entry.unique_id:
+        if entry.domain == BINARY_SENSOR_DOMAIN and "_" not in entry.unique_id:
             new_unique_id = f"{entry.unique_id}_alarm"
             LOGGER.info(
                 "Migrating unique_id [%s] to [%s]", entry.unique_id, new_unique_id

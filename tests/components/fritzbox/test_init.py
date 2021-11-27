@@ -117,9 +117,17 @@ async def test_update_unique_id(
             },
             f"{CONF_FAKE_AIN}_alarm",
         ),
+        (
+            {
+                "domain": BINARY_SENSOR_DOMAIN,
+                "platform": FB_DOMAIN,
+                "unique_id": f"{CONF_FAKE_AIN}_other",
+            },
+            f"{CONF_FAKE_AIN}_other",
+        ),
     ],
 )
-async def test_update_unique_id_no_change_temperature_sensor(
+async def test_update_unique_id_no_change(
     hass: HomeAssistant,
     fritz: Mock,
     entitydata: dict,
