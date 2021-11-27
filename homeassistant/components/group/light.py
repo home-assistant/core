@@ -115,7 +115,9 @@ class LightGroup(GroupEntity, light.LightEntity):
     _attr_min_mireds = 154
     _attr_should_poll = False
 
-    def __init__(self, unique_id: str | None, name: str, entity_ids: list[str], icon: str) -> None:
+    def __init__(
+        self, unique_id: str | None, name: str, entity_ids: list[str], icon: str
+    ) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids
         self._white_value: int | None = None
