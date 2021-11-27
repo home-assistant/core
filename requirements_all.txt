@@ -1311,7 +1311,7 @@ py17track==3.2.1
 pyCEC==0.5.1
 
 # homeassistant.components.control4
-pyControl4==0.2.0
+pyControl4==1.0.0b1
 
 # homeassistant.components.met_eireann
 pyMetEireann==2021.8.0

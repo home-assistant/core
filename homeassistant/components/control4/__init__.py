@@ -8,6 +8,7 @@ from aiohttp import client_exceptions
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import BadCredentials
+from pyControl4.websocket import C4Websocket
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.entity import Entity, DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     CONF_ACCOUNT,
@@ -31,6 +32,7 @@ from .const import (
     CONF_DIRECTOR_MODEL,
     CONF_DIRECTOR_SW_VERSION,
     CONF_DIRECTOR_TOKEN_EXPIRATION,
+    CONF_WEBSOCKET,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -67,14 +69,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
     director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-    _LOGGER.debug(director_token_dict)
     director = C4Director(
         config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
     )
-
     entry_data[CONF_DIRECTOR] = director
     entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["token_expiration"]
-    await director.sio_connect()
+
+    websocket = C4Websocket(
+        config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
+    )
+    entry_data[CONF_WEBSOCKET] = websocket
+    await websocket.sio_connect()
 
     # Add Control4 controller to device registry
     controller_href = (await account.getAccountControllers())["href"]
@@ -174,7 +179,7 @@ class Control4Entity(Entity):
         """Sync with HASS."""
         await super().async_added_to_hass()
         await self.hass.async_add_executor_job(
-            self.entry_data[CONF_DIRECTOR].add_device_callback,
+            self.entry_data[CONF_WEBSOCKET].add_device_callback,
             self._idx,
             self._update_callback,
         )
