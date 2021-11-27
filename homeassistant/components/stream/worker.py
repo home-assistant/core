@@ -425,8 +425,8 @@ def stream_worker(
         ) from err
     try:
         video_stream = container.streams.video[0]
-    except (KeyError, IndexError):
-        raise StreamWorkerError("Stream has no video")
+    except (KeyError, IndexError) as ex:
+        raise StreamWorkerError("Stream has no video") from ex
     try:
         audio_stream = container.streams.audio[0]
     except (KeyError, IndexError):
