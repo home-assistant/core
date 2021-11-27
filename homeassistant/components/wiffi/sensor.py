@@ -39,13 +39,6 @@ UOM_MAP = {
     WIFFI_UOM_MILLI_BAR: PRESSURE_MBAR,
 }
 
-# map to determine HA entity category from wiffi's entity name
-NAME_TO_ENTITY_CAT = {
-    "rssi": ENTITY_CATEGORY_DIAGNOSTIC,
-    "uptime": ENTITY_CATEGORY_DIAGNOSTIC,
-    "ssid": ENTITY_CATEGORY_DIAGNOSTIC,
-}
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up platform for a new integration.
@@ -74,27 +67,22 @@ class NumberEntity(WiffiEntity, SensorEntity):
 
     def __init__(self, device, metric, options):
         """Initialize the entity."""
-        super().__init__(device, metric, options)
-        self._attr_device_class = UOM_TO_DEVICE_CLASS_MAP.get(
+        super().__init__(device, metric, options, SensorEntityDescription)
+
+        self.entity_description.device_class = UOM_TO_DEVICE_CLASS_MAP.get(
             metric.unit_of_measurement
         )
-        self._attr_entity_category = NAME_TO_ENTITY_CAT.get(self._name)
-        self._unit_of_measurement = UOM_MAP.get(
+        self.entity_description.native_unit_of_measurement = UOM_MAP.get(
             metric.unit_of_measurement, metric.unit_of_measurement
         )
-        self._value = metric.value
-
         if self._is_measurement_entity():
             self._attr_state_class = SensorStateClass.MEASUREMENT
         elif self._is_metered_entity():
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
-        self.reset_expiration_date()
+        self._value = metric.value
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return self._unit_of_measurement
+        self.reset_expiration_date()
 
     @property
     def native_value(self):
@@ -108,7 +96,7 @@ class NumberEntity(WiffiEntity, SensorEntity):
         Called if a new message has been received from the wiffi device.
         """
         self.reset_expiration_date()
-        self._unit_of_measurement = UOM_MAP.get(
+        self.entity_description.unit_of_measurement = UOM_MAP.get(
             metric.unit_of_measurement, metric.unit_of_measurement
         )
 
@@ -122,11 +110,11 @@ class StringEntity(WiffiEntity, SensorEntity):
 
     def __init__(self, device, metric, options):
         """Initialize the entity."""
-        super().__init__(device, metric, options)
-        if self._name.endswith("_ip"):
-            self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
-        else:
-            self._attr_entity_category = NAME_TO_ENTITY_CAT.get(metric.description)
+        super().__init__(device, metric, options, SensorEntityDescription)
+
+        if self.entity_description.key.endswith("_ip"):
+            self.entity_description.entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+
         self._value = metric.value
         self.reset_expiration_date()
 

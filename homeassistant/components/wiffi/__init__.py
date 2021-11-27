@@ -31,6 +31,13 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
+# map to determine HA entity category from wiffi's entity name
+NAME_TO_ENTITY_CAT = {
+    "rssi": ENTITY_CATEGORY_DIAGNOSTIC,
+    "uptime": ENTITY_CATEGORY_DIAGNOSTIC,
+    "ssid": ENTITY_CATEGORY_DIAGNOSTIC,
+}
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up wiffi from a config entry, config_entry contains data from config entry database."""
@@ -138,8 +145,14 @@ class WiffiIntegrationApi:
 class WiffiEntity(Entity):
     """Common functionality for all wiffi entities."""
 
-    def __init__(self, device, metric, options):
+    def __init__(self, device, metric, options, entity_description_type):
         """Initialize the base elements of a wiffi entity."""
+        self.entity_description = entity_description_type(
+            key=metric.description,
+            name=metric.description,
+            entity_category=NAME_TO_ENTITY_CAT.get(metric.description),
+        )
+
         self._id = generate_unique_id(device, metric)
         self._device_info = DeviceInfo(
             connections={(device_registry.CONNECTION_NETWORK_MAC, device.mac_address)},
@@ -150,7 +163,6 @@ class WiffiEntity(Entity):
             sw_version=device.sw_version,
             configuration_url=device.configuration_url,
         )
-        self._name = metric.description
         self._expiration_date = None
         self._value = None
         self._timeout = options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
@@ -186,11 +198,6 @@ class WiffiEntity(Entity):
         return self._id
 
     @property
-    def name(self):
-        """Return entity name."""
-        return self._name
-
-    @property
     def available(self):
         """Return true if value is valid."""
         return self._value is not None
@@ -223,8 +230,13 @@ class WiffiEntity(Entity):
 
     def _is_measurement_entity(self):
         """Measurement entities have a value in present time."""
-        return not self._name.endswith("_gestern") and not self._is_metered_entity()
+        return (
+            not self.entity_description.key.endswith("_gestern")
+            and not self._is_metered_entity()
+        )
 
     def _is_metered_entity(self):
         """Metered entities have a value that keeps increasing until reset."""
-        return self._name.endswith("_pro_h") or self._name.endswith("_heute")
+        return self.entity_description.key.endswith(
+            "_pro_h"
+        ) or self.entity_description.key.endswith("_heute")

@@ -1,6 +1,9 @@
 """Binary sensor platform support for wiffi devices."""
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -33,7 +36,7 @@ class BoolEntity(WiffiEntity, BinarySensorEntity):
 
     def __init__(self, device, metric, options):
         """Initialize the entity."""
-        super().__init__(device, metric, options)
+        super().__init__(device, metric, options, BinarySensorEntityDescription)
         self._value = metric.value
         self.reset_expiration_date()
 
