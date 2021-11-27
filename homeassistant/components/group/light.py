@@ -85,7 +85,7 @@ async def async_setup_platform(
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
                 config[CONF_ENTITIES],
-                config[CONF_ICON],
+                config.get(CONF_ICON),
             )
         ]
     )
@@ -119,7 +119,7 @@ class LightGroup(GroupEntity, light.LightEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, unique_id: str | None, name: str, entity_ids: list[str], icon: str
+        self, unique_id: str | None, name: str, entity_ids: list[str], icon: str | None
     ) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids
