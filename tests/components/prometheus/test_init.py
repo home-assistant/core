@@ -438,6 +438,50 @@ async def test_humidifier(hass, hass_client):
     )
 
 
+async def test_attributes(hass, hass_client):
+    """Test prometheus metrics for entity attributes."""
+    client = await setup_prometheus_client(hass, hass_client, "")
+
+    switch1 = DemoSensor(None, "Boolean", 74, None, None, None, None)
+    switch1.hass = hass
+    switch1.entity_id = "switch.boolean"
+    switch1._attr_extra_state_attributes = {"boolean": True}
+    await switch1.async_update_ha_state()
+
+    switch2 = DemoSensor(None, "Number", 42, None, None, None, None)
+    switch2.hass = hass
+    switch2.entity_id = "switch.number"
+    switch2._attr_extra_state_attributes = {"Number": 10.2}
+    await switch2.async_update_ha_state()
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'switch_state{domain="switch",'
+        'entity="switch.boolean",'
+        'friendly_name="Boolean"} 74.0' in body
+    )
+
+    assert (
+        'switch_attr_boolean{domain="switch",'
+        'entity="switch.boolean",'
+        'friendly_name="Boolean"} 1.0' in body
+    )
+
+    assert (
+        'switch_state{domain="switch",'
+        'entity="switch.number",'
+        'friendly_name="Number"} 42.0' in body
+    )
+
+    assert (
+        'switch_attr_number{domain="switch",'
+        'entity="switch.number",'
+        'friendly_name="Number"} 10.2' in body
+    )
+
+
 @pytest.fixture(name="mock_client")
 def mock_client_fixture():
     """Mock the prometheus client."""
