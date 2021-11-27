@@ -78,7 +78,7 @@ async def async_discover_devices(
     hass: HomeAssistant, timeout: int, address: str | None = None
 ) -> list[dict[str, str]]:
     """Discover flux led devices."""
-    domain_data = hass.data[DOMAIN]
+    domain_data = hass.data.setdefault(DOMAIN, {})
     if FLUX_LED_DISCOVERY_LOCK not in domain_data:
         domain_data[FLUX_LED_DISCOVERY_LOCK] = asyncio.Lock()
     async with domain_data[FLUX_LED_DISCOVERY_LOCK]:
@@ -125,7 +125,7 @@ def async_trigger_discovery(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
-    domain_data = hass.data[DOMAIN] = {}
+    domain_data = hass.data.setdefault(DOMAIN, {})
     domain_data[FLUX_LED_DISCOVERY] = await async_discover_devices(
         hass, STARTUP_SCAN_TIMEOUT
     )
