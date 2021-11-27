@@ -82,7 +82,10 @@ async def async_setup_platform(
     async_add_entities(
         [
             LightGroup(
-                config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES], config[CONF_ICON]
+                config.get(CONF_UNIQUE_ID),
+                config[CONF_NAME],
+                config[CONF_ENTITIES],
+                config[CONF_ICON],
             )
         ]
     )
