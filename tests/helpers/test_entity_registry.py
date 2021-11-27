@@ -919,7 +919,7 @@ async def test_disable_config_entry_disables_entities(hass, registry):
     assert entry3.disabled
 
     await hass.config_entries.async_set_disabled_by(
-        config_entry.entry_id, config_entries.DISABLED_USER
+        config_entry.entry_id, config_entries.ConfigEntryDisabler.USER
     )
     await hass.async_block_till_done()
 

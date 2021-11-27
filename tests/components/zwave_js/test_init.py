@@ -10,7 +10,7 @@ from zwave_js_server.model.node import Node
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.config_entries import DISABLED_USER, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -554,7 +554,9 @@ async def test_stop_addon(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    await hass.config_entries.async_set_disabled_by(entry.entry_id, DISABLED_USER)
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, ConfigEntryDisabler.USER
+    )
     await hass.async_block_till_done()
 
     assert entry.state == entry_state
