@@ -21,11 +21,12 @@ from .services import async_setup_services, async_unload_services
 
 _LOGGER = logging.getLogger(__name__)
 
-if _LOGGER.getEffectiveLevel() > logging.DEBUG:
-    _LOGGER.info(
-        "Disabling logging system for fritzconnection library. To enable it please set this integration to DEBUG level"
-    )
-    fritzlogger.disable()
+level = _LOGGER.getEffectiveLevel()
+_LOGGER.info(
+    "Setting logging level of fritzconnection: %s", logging.getLevelName(level)
+)
+fritzlogger.set_level(level)
+fritzlogger.enable()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
