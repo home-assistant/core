@@ -1275,6 +1275,9 @@ screenlogicpy==0.5.3
 # homeassistant.components.sense
 sense_energy==0.9.3
 
+# homeassistant.components.sensibo
+pysensibo==1.0.3
+
 # homeassistant.components.sentry
 sentry-sdk==1.5.1
 

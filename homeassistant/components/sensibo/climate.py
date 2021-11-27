@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_API_KEY,
     CONF_ID,
+    CONF_NAME,
     STATE_ON,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -36,10 +37,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DOMAIN as SENSIBO_DOMAIN
+from .const import ALL, DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-ALL = ["all"]
 TIMEOUT = 8
 
 SERVICE_ASSUME_STATE = "assume_state"
