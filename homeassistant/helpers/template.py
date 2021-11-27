@@ -1570,6 +1570,13 @@ def forgiving_float_filter(value, default=_SENTINEL):
 def forgiving_int(value, default=_SENTINEL, base=10, little_endian=False):
     """Try to convert value to an int, and warn if it fails."""
     if isinstance(value, bytes) and value:
+        if base != 10:
+            _LOGGER.warning(
+                (
+                    "Template warning: 'int' got 'bytes' type input, ignoring base=%s parameter."
+                ),
+                base,
+            )
         return convert_to_int(value, little_endian=little_endian)
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
@@ -1581,6 +1588,13 @@ def forgiving_int(value, default=_SENTINEL, base=10, little_endian=False):
 def forgiving_int_filter(value, default=_SENTINEL, base=10, little_endian=False):
     """Try to convert value to an int, and warn if it fails."""
     if isinstance(value, bytes) and value:
+        if base != 10:
+            _LOGGER.warning(
+                (
+                    "Template warning: 'int' got 'bytes' type input, ignoring base=%s parameter."
+                ),
+                base,
+            )
         return convert_to_int(value, little_endian=little_endian)
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
