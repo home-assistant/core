@@ -151,7 +151,7 @@ class BrData:
         for line in lines:
             (val, key) = line.split("|")
             raincontent_processed += (
-                str(int(float(val.replace(",", ".")))) + "|" + key + os.linesep
+                f'{str(int(float(val.replace(",", "."))))}|{key}{os.linesep}'
             )
 
         result = parse_data(
