@@ -513,6 +513,36 @@ async def test_binary_sensor(hass, hass_client):
     )
 
 
+async def test_input_boolean(hass, hass_client):
+    """Test prometheus metrics for input_boolean."""
+    client = await setup_prometheus_client(hass, hass_client, "")
+
+    input_boolean1 = DemoSensor(None, "Test", 1, None, None, None, None)
+    input_boolean1.hass = hass
+    input_boolean1.entity_id = "input_boolean.test"
+    await input_boolean1.async_update_ha_state()
+
+    input_boolean2 = DemoSensor(None, "Helper", 0, None, None, None, None)
+    input_boolean2.hass = hass
+    input_boolean2.entity_id = "input_boolean.helper"
+    await input_boolean2.async_update_ha_state()
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'input_boolean_state{domain="input_boolean",'
+        'entity="input_boolean.test",'
+        'friendly_name="Test"} 1.0' in body
+    )
+
+    assert (
+        'input_boolean_state{domain="input_boolean",'
+        'entity="input_boolean.helper",'
+        'friendly_name="Helper"} 0.0' in body
+    )
+
+
 @pytest.fixture(name="mock_client")
 def mock_client_fixture():
     """Mock the prometheus client."""
