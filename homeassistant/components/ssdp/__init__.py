@@ -88,7 +88,7 @@ class _SsdpServiceDescription:
     """SSDP info with optional keys."""
 
     ssdp_usn: str
-    ssdp_st: str | None = None
+    ssdp_st: str
     ssdp_location: str | None = None
     ssdp_nt: str | None = None
     ssdp_udn: str | None = None
@@ -574,28 +574,32 @@ def discovery_info_from_headers_and_description(
     info_desc: Mapping[str, Any],
 ) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
+    ssdp_usn = combined_headers["usn"]
+    ssdp_st = combined_headers.get("st")
     upnp_info = {**info_desc}
-    info = SsdpServiceInfo(
-        ssdp_usn=combined_headers["usn"],
+
+    # Increase compatibility: depending on the message type,
+    # either the ST (Search Target, from M-SEARCH messages)
+    # or NT (Notification Type, from NOTIFY messages) header is mandatory
+    if not ssdp_st:
+        ssdp_st = combined_headers["nt"]
+
+    # Ensure UPnP "udn" is set
+    if ATTR_UPNP_UDN not in upnp_info:
+        if udn := _udn_from_usn(ssdp_usn):
+            upnp_info[ATTR_UPNP_UDN] = udn
+
+    return SsdpServiceInfo(
+        ssdp_usn=ssdp_usn,
+        ssdp_st=ssdp_st,
         ssdp_ext=combined_headers.get("ext"),
         ssdp_server=combined_headers.get("server"),
-        ssdp_st=combined_headers.get("st"),
         ssdp_location=combined_headers.get("location"),
         ssdp_udn=combined_headers.get("_udn"),
         ssdp_nt=combined_headers.get("nt"),
         ssdp_headers=combined_headers,
         upnp=upnp_info,
     )
-
-    # Increase compatibility.
-    if not info.ssdp_st and info.ssdp_nt:
-        info.ssdp_st = info.ssdp_nt
-
-    if ATTR_UPNP_UDN not in info.upnp:
-        if udn := _udn_from_usn(info.ssdp_usn):
-            upnp_info[ATTR_UPNP_UDN] = udn
-
-    return info
 
 
 def _udn_from_usn(usn: str | None) -> str | None:
