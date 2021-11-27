@@ -158,7 +158,7 @@ aionanoleaf==0.0.4
 aionotion==3.0.2
 
 # homeassistant.components.acmeda
-aiopulse==0.4.2
+aiopulse==0.4.3
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
