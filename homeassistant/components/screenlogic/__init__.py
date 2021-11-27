@@ -46,7 +46,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Screenlogic from a config entry."""
-
     connect_info = await async_get_connect_info(hass, entry)
 
     gateway = ScreenLogicGateway(**connect_info)
@@ -148,13 +147,11 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
 
             try:
                 await self.gateway.async_update()
-            except ScreenLogicError as error:
-                raise UpdateFailed(error) from error
-            except ScreenLogicWarning as warn:
-                _LOGGER.warning("Update incomplete: %s", warn)
+            except (ScreenLogicError, ScreenLogicWarning) as ex:
+                raise UpdateFailed(ex) from ex
 
         except ScreenLogicWarning as warn:
-            _LOGGER.warning("Update incomplete: %s", warn)
+            raise UpdateFailed("Incomplete update: %s", warn) from warn
 
         return self.gateway.get_data()
 
