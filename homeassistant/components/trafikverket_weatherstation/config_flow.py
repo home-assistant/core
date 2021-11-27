@@ -39,6 +39,11 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context.update(
             {"title_placeholders": {CONF_NAME: f"YAML import {DOMAIN}"}}
         )
+
+        name = config[CONF_NAME]
+        await self.async_set_unique_id(name)
+        self._abort_if_unique_id_configured()
+
         return await self.async_step_user(user_input=config)
 
     async def async_step_user(self, user_input=None):
@@ -50,9 +55,6 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_key = user_input[CONF_API_KEY]
             station = user_input[CONF_STATION]
             conditions = user_input[CONF_MONITORED_CONDITIONS]
-
-            await self.async_set_unique_id(name)
-            self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
                 title=name,

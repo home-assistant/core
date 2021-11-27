@@ -155,6 +155,7 @@ async def async_setup_platform(
 ) -> None:
     """Import Trafikverket Weather configuration from YAML."""
     _LOGGER.warning(
+        # Config flow added in Home Assistant Core 2021.12, remove import flow in 2022.4
         "Loading Trafikverket Weather via platform setup is deprecated; Please remove it from your configuration"
     )
     hass.async_create_task(
