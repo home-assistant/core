@@ -872,35 +872,107 @@ async def test_replace_same_node(hass, multisensor_6_state, client, integration)
 
 
 async def test_replace_different_node(
-    hass, multisensor_6_state, hank_binary_switch_state, client, integration
+    hass,
+    multisensor_6,
+    multisensor_6_state,
+    hank_binary_switch_state,
+    client,
+    integration,
 ):
     """Test when a node is replaced with a different node."""
+    node_id = multisensor_6.node_id
     hank_binary_switch_state = deepcopy(hank_binary_switch_state)
-    multisensor_6_state = deepcopy(multisensor_6_state)
-    hank_binary_switch_state["nodeId"] = multisensor_6_state["nodeId"]
+    hank_binary_switch_state["nodeId"] = node_id
+
+    device_id = f"{client.driver.controller.home_id}-{node_id}"
+    multisensor_6_device_id = f"{device_id}-{multisensor_6.manufacturer_id}:{multisensor_6.product_type}:{multisensor_6.product_id}"
+    hank_device_id = f"{device_id}-{hank_binary_switch_state['manufacturerId']}:{hank_binary_switch_state['productType']}:{hank_binary_switch_state['productId']}"
+
     dev_reg = dr.async_get(hass)
-    old_node = Node(client, multisensor_6_state)
-    device_id = f"{client.driver.controller.home_id}-{old_node.node_id}"
-    new_node = Node(client, hank_binary_switch_state)
-    event = {"node": old_node}
+    multisensor_6_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert multisensor_6_device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, multisensor_6_device_id)}
+    )
+    assert multisensor_6_device.manufacturer == "AEON Labs"
+    assert multisensor_6_device.model == "ZW100"
 
-    client.driver.controller.emit("node added", event)
-    await hass.async_block_till_done()
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
-    assert device
+    assert hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    event = {"node": old_node, "replaced": True}
+    # A replace node event has the extra field "replaced" set to True to distinguish it from an exclusion
+    event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "replaced": True,
+            "node": multisensor_6_state,
+        },
+    )
 
-    client.driver.controller.emit("node removed", event)
+    client.driver.receive_event(event)
     await hass.async_block_till_done()
     # Device should still be there after the node was removed
+    device = dev_reg.async_get(multisensor_6_device.id)
     assert device
 
-    event = {"node": new_node}
+    # When the node is replaced, a non-ready node added event is emitted
+    event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": {
+                "nodeId": multisensor_6.node_id,
+                "index": 0,
+                "status": 4,
+                "ready": False,
+                "isSecure": "unknown",
+                "interviewAttempts": 1,
+                "endpoints": [
+                    {"nodeId": multisensor_6.node_id, "index": 0, "deviceClass": None}
+                ],
+                "values": [],
+                "deviceClass": None,
+                "commandClasses": [],
+                "interviewStage": "None",
+                "statistics": {
+                    "commandsTX": 0,
+                    "commandsRX": 0,
+                    "commandsDroppedRX": 0,
+                    "commandsDroppedTX": 0,
+                    "timeoutResponse": 0,
+                },
+            },
+        },
+    )
 
-    client.driver.controller.emit("node added", event)
+    # Device is still not removed
+    client.driver.receive_event(event)
     await hass.async_block_till_done()
-    device = dev_reg.async_get(device.id)
-    # assert device is new
+
+    device = dev_reg.async_get(multisensor_6_device.id)
     assert device
+
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": node_id,
+            "nodeState": hank_binary_switch_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Old device and entities were removed, but the ID is re-used
+    device = dev_reg.async_get(multisensor_6_device.id)
+    assert device
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id)})
+    assert not dev_reg.async_get_device(identifiers={(DOMAIN, multisensor_6_device_id)})
     assert device.manufacturer == "HANK Electronics Ltd."
+    assert device.model == "HKZW-SO01"
+
+    assert not hass.states.get(AIR_TEMPERATURE_SENSOR)
+    assert hass.states.get("switch.smart_plug_with_two_usb_ports")
