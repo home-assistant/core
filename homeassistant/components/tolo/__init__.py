@@ -64,7 +64,7 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
             hass=hass,
             logger=_LOGGER,
             name=f"{entry.title} ({entry.data[CONF_HOST]}) Data Update Coordinator",
-            update_interval=timedelta(seconds=3),
+            update_interval=timedelta(seconds=5),
         )
 
     async def _async_update_data(self) -> ToloSaunaData:
