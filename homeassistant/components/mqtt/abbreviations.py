@@ -196,6 +196,7 @@ ABBREVIATIONS = {
     "stat_stopped": "state_stopped",
     "stat_locked": "state_locked",
     "stat_unlocked": "state_unlocked",
+    "stat_e": "state_encoding",
     "stat_t": "state_topic",
     "stat_tpl": "state_template",
     "stat_val_tpl": "state_value_template",
