@@ -265,6 +265,14 @@ def test_int_filter(hass):
     assert render(hass, "{{ 'bad' | int(1) }}") == 1
     assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
 
+    # Test with bytes based integer
+    variables = {"value": b"\xde\xad\xbe\xef"}
+    assert (render(hass, "{{ value | int }}", variables=variables)) == 0xDEADBEEF
+    assert (
+        render(hass, "{{ value | int(little_endian=True) }}", variables=variables)
+        == 0xEFBEADDE
+    )
+
 
 def test_int_function(hass):
     """Test int filter."""
@@ -278,6 +286,14 @@ def test_int_function(hass):
     assert render(hass, "{{ int('bad') }}") == "bad"
     assert render(hass, "{{ int('bad', 1) }}") == 1
     assert render(hass, "{{ int('bad', default=1) }}") == 1
+
+    # Test with bytes based integer
+    variables = {"value": b"\xde\xad\xbe\xef"}
+    assert (render(hass, "{{ int(value) }}", variables=variables)) == 0xDEADBEEF
+    assert (
+        render(hass, "{{ int(value, little_endian=True) }}", variables=variables)
+        == 0xEFBEADDE
+    )
 
 
 @pytest.mark.parametrize(
