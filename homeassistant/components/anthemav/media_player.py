@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -74,7 +74,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     avr = hass.data[DOMAIN][config_entry.entry_id]
 
     if avr is None:
-        raise ConfigEntryNotReady
+        raise PlatformNotReady
 
     device = AnthemAVR(avr, name, macaddress, model)
 

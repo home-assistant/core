@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_callback=async_anthemav_update_callback,
         )
 
-    except Exception as err:
+    except OSError as err:
         raise ConfigEntryNotReady from err
 
     hass.data.setdefault(DOMAIN, {})

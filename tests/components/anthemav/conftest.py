@@ -17,13 +17,13 @@ def mock_anthemav() -> MagicMock:
 
 
 @pytest.fixture
-def mock_connection_create(mock_anthemav: MagicMock) -> AsyncMock:
+def mock_connection_create(mock_avr: MagicMock) -> AsyncMock:
     """Return the default mocked connection.create."""
 
     def connectioncreate(host, port, update_callback, auto_reconnect=True):
         update_callback("IDM")
         update_callback("IDN")
-        return mock_anthemav
+        return mock_avr
 
     with patch(
         "anthemav.Connection.create",

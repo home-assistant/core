@@ -45,7 +45,7 @@ async def test_form_with_valid_connection(
 
 
 async def test_form_timeout_device_info(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle tineout error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -63,6 +63,8 @@ async def test_form_timeout_device_info(hass: HomeAssistant) -> None:
             },
         )
 
+        await hass.async_block_till_done()
+
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_receive_deviceinfo"}
 
@@ -70,7 +72,7 @@ async def test_form_timeout_device_info(hass: HomeAssistant) -> None:
 async def test_form_invalid_macaddress(
     hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: MagicMock
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle when receiving invalid mac address."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -101,7 +103,7 @@ async def test_form_invalid_macaddress(
 async def test_form_invalid_model(
     hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: MagicMock
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle when receiving and invalid AVR model."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -148,12 +150,14 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
+        await hass.async_block_till_done()
+
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unkown_error(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
+    """Test we handle any errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -170,6 +174,8 @@ async def test_form_unkown_error(hass: HomeAssistant) -> None:
                 "name": "Anthem Av",
             },
         )
+
+        await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
