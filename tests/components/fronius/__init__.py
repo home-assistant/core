@@ -13,14 +13,16 @@ MOCK_HOST = "http://fronius"
 MOCK_UID = "123.4567890"  # has to match mocked logger unique_id
 
 
-async def setup_fronius_integration(hass: HomeAssistant) -> ConfigEntry:
+async def setup_fronius_integration(
+    hass: HomeAssistant, is_logger: bool = True
+) -> ConfigEntry:
     """Create the Fronius integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_UID,
         data={
             CONF_HOST: MOCK_HOST,
-            "is_logger": True,
+            "is_logger": is_logger,
         },
     )
     entry.add_to_hass(hass)
@@ -60,14 +62,8 @@ def mock_responses(
         text=load_fixture(f"{fixture_set}/GetLoggerInfo.json", "fronius"),
     )
     aioclient_mock.get(
-        f"{host}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=Device&DeviceId=0",
-        text=load_fixture(
-            f"{fixture_set}/GetMeterRealtimeData_Device_0.json", "fronius"
-        ),
-    )
-    aioclient_mock.get(
         f"{host}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=System",
-        text=load_fixture(f"{fixture_set}/GetMeterRealtimeData_System.json", "fronius"),
+        text=load_fixture(f"{fixture_set}/GetMeterRealtimeData.json", "fronius"),
     )
     aioclient_mock.get(
         f"{host}/solar_api/v1/GetPowerFlowRealtimeData.fcgi",
@@ -77,9 +73,11 @@ def mock_responses(
     )
     aioclient_mock.get(
         f"{host}/solar_api/v1/GetStorageRealtimeData.cgi?Scope=System",
-        text=load_fixture(
-            f"{fixture_set}/GetStorageRealtimeData_System.json", "fronius"
-        ),
+        text=load_fixture(f"{fixture_set}/GetStorageRealtimeData.json", "fronius"),
+    )
+    aioclient_mock.get(
+        f"{host}/solar_api/v1/GetOhmPilotRealtimeData.cgi?Scope=System",
+        text=load_fixture(f"{fixture_set}/GetOhmPilotRealtimeData.json", "fronius"),
     )
 
 
