@@ -21,6 +21,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 # TODO: Remove this function and reimplement token refreshing somewhere else (since this is not used anymore with websockets)
 async def director_update_data(
     hass: HomeAssistant, entry: ConfigEntry, var: str
