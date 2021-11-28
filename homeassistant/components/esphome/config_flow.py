@@ -86,6 +86,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self._async_authenticate_or_add()
             errors["base"] = error
 
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry is not None
+        self._name = entry.title
+
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_NOISE_PSK): str}),
