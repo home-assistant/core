@@ -33,7 +33,7 @@
             "carbon_monoxide": "{entity_name} wykryje zmian\u0119 st\u0119\u017cenia tlenku w\u0119gla",
             "current": "zmieni si\u0119 nat\u0119\u017cenie pr\u0105du w {entity_name}",
             "energy": "zmieni si\u0119 energia {entity_name}",
-            "frequency": "zmiany cz\u0119stotliwo\u015b\u0107 {entity_name}",
+            "frequency": "zmieni si\u0119 cz\u0119stotliwo\u015b\u0107 w {entity_name}",
             "gas": "{entity_name} wykryje zmian\u0119 poziomu gazu",
             "humidity": "zmieni si\u0119 wilgotno\u015b\u0107 {entity_name}",
             "illuminance": "zmieni si\u0119 nat\u0119\u017cenie o\u015bwietlenia {entity_name}",

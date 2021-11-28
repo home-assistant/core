@@ -17,7 +17,7 @@
                 "description": "Elgato Key Light\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u3066\u3001Home Assistant\u3068\u9023\u643a\u3059\u308b\u3088\u3046\u306b\u3057\u307e\u3059\u3002"
             },
             "zeroconf_confirm": {
-                "description": "\u30b7\u30ea\u30a2\u30eb\u756a\u53f7 '{serial_number}' \u306e\u3001Elgato Light\u3092Home Assistant\u306b\u8ffd\u52a0\u3057\u307e\u3059\u304b\uff1f",
+                "description": "\u30b7\u30ea\u30a2\u30eb\u756a\u53f7 `{serial_number}` \u306e\u3001Elgato Light\u3092Home Assistant\u306b\u8ffd\u52a0\u3057\u307e\u3059\u304b\uff1f",
                 "title": "Elgato Light device\u3092\u767a\u898b"
             }
         }

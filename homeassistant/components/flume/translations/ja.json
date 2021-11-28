@@ -24,6 +24,7 @@
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
                 },
+                "description": "Flume Personal API\u306b\u30a2\u30af\u30bb\u30b9\u3059\u308b\u306b\u306f\u3001https://portal.flumetech.com/settings#token \u3067\u3001'Client ID' \u3068 'Client Secret' \u3092\u30ea\u30af\u30a8\u30b9\u30c8\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059\u3002",
                 "title": "Flume\u30a2\u30ab\u30a6\u30f3\u30c8\u306b\u63a5\u7d9a"
             }
         }
