@@ -73,4 +73,4 @@ async def test_device(hass, config_entry, aioclient_mock_fixture, aioclient_mock
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=90))
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == call_count + 4
+    assert aioclient_mock.call_count == call_count + 6
