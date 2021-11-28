@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 REQUEST_REFRESH_DELAY = (
-    5  # It can take up to 5 seconds after a switch is flipped to change state
+    6  # It can take up to 6 seconds after a switch is flipped to change state
 )
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
