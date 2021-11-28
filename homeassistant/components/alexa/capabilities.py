@@ -695,6 +695,7 @@ class AlexaSpeaker(AlexaCapability):
         "en-US",
         "es-ES",
         "es-MX",
+        "fr-FR",
         "it-IT",
         "ja-JP",
     }
@@ -752,6 +753,7 @@ class AlexaStepSpeaker(AlexaCapability):
         "en-IN",
         "en-US",
         "es-ES",
+        "fr-FR",
         "it-IT",
     }
 
