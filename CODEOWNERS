@@ -534,6 +534,7 @@ homeassistant/components/tasmota/* @emontnemery
 homeassistant/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne @home-assistant/core
+homeassistant/components/tesla_wall_connector/* @einarhauks
 homeassistant/components/tfiac/* @fredrike @mellado
 homeassistant/components/thethingsnetwork/* @fabaff
 homeassistant/components/threshold/* @fabaff

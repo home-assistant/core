@@ -297,6 +297,7 @@ FLOWS = [
     "tado",
     "tasmota",
     "tellduslive",
+    "tesla_wall_connector",
     "tibber",
     "tile",
     "tolo",
