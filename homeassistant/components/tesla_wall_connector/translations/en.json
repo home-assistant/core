@@ -21,8 +21,7 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Update frequency",
-                    "scan_interval_charging": "Update frequency while charging"
+                    "scan_interval": "Update frequency"
                 },
                 "title": "Configure options for Tesla Wall Connector"
             }
