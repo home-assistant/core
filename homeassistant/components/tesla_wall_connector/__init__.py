@@ -1,10 +1,11 @@
 """The Tesla Wall Connector integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import (
