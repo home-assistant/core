@@ -4,11 +4,11 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows==0.28.0",
+    "bellows==0.29.0",
     "pyserial==3.5",
     "pyserial-asyncio==0.5",
     "zha-quirks==0.0.63",
-    "zigpy-deconz==0.13.0",
+    "zigpy-deconz==0.14.0",
     "zigpy==0.41.0",
     "zigpy-xbee==0.14.0",
     "zigpy-zigate==0.7.3",
