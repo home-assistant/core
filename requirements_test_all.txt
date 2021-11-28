@@ -254,7 +254,7 @@ azure-eventhub==5.5.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.28.0
+bellows==0.29.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.8.2
@@ -1469,7 +1469,7 @@ zeroconf==0.37.0
 zha-quirks==0.0.63
 
 # homeassistant.components.zha
-zigpy-deconz==0.13.0
+zigpy-deconz==0.14.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.14.0
