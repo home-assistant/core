@@ -56,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info) -> FlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info[IP_ADDRESS]
-        _LOGGER.info("Discovered Tesla Wall Connector at [%s]", self.ip_address)
+        _LOGGER.debug("Discovered Tesla Wall Connector at [%s]", self.ip_address)
 
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
 
@@ -66,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             version = await wall_connector.async_get_version()
         except WallConnectorError as ex:
-            _LOGGER.exception(
+            _LOGGER.debug(
                 "Could not read serial number from Tesla WallConnector at [%s]: [%s]",
                 self.ip_address,
                 ex,
@@ -78,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "No entry found for wall connector with IP %s. Serial nr: %s",
             self.ip_address,
             self.serial_number,
