@@ -1100,6 +1100,7 @@ omit =
     homeassistant/components/tolo/light.py
     homeassistant/components/tolo/select.py
     homeassistant/components/tolo/sensor.py
+    homeassistant/components/tolo/switch.py
     homeassistant/components/tomato/device_tracker.py
     homeassistant/components/toon/__init__.py
     homeassistant/components/toon/binary_sensor.py
