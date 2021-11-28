@@ -27,9 +27,7 @@ def toloclient_fixture() -> Mock:
 
 async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock):
     """Test a user initiated config flow with provided host which times out."""
-    toloclient().get_status_info.side_effect = lambda *args, **kwargs: (
-        _ for _ in ()
-    ).throw(ResponseTimedOutError())
+    toloclient().get_status_info.side_effect = ResponseTimedOutError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
