@@ -291,7 +291,7 @@ jobs:
 
           function validate_image() {
             local image=${1}
-            if ! cas authenticate --signerID notary@home-assistant.io "${image}"; then
+            if ! cas authenticate --signerID notary@home-assistant.io "docker://${image}"; then
               echo "Invalid signature!"
               exit 1
             fi
