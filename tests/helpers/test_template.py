@@ -278,7 +278,7 @@ def test_int_filter(hass, caplog):
         render(hass, "{{ value | int(base=16) }}", variables=variables)
     ) == 0xDEADBEEF
     assert (
-        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter."
+        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter"
         in caplog.text
     )
 
@@ -308,7 +308,7 @@ def test_int_function(hass, caplog):
         render(hass, "{{ int(value, base=16) }}", variables=variables)
     ) == 0xDEADBEEF
     assert (
-        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter."
+        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter"
         in caplog.text
     )
 
