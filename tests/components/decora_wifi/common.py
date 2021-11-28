@@ -215,7 +215,7 @@ class FakeDecoraWiFiIotSwitch(IotSwitch):
 
     def refresh(self):
         """Override of the API's refresh for testing."""
-        pass
+        return
 
     def update_attributes(self, attribs=None):
         """Override of the API's update_attributes for testing."""
