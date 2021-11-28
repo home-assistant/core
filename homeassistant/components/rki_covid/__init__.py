@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, update_coordinator
 
 from .const import DOMAIN
-from .data import DistrictData
+from .data import DistrictData, StateData
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
@@ -102,7 +102,7 @@ async def get_coordinator(hass: HomeAssistant, parser: RkiCovidParser):
                 for s in parser.states:
                     state = parser.states[s]
                     name = "BL " + state.name
-                    items[name] = DistrictData(
+                    items[name] = StateData(
                         name,
                         name,
                         None,
@@ -117,6 +117,18 @@ async def get_coordinator(hass: HomeAssistant, parser: RkiCovidParser):
                         state.newDeaths,
                         state.newRecovered,
                         state.lastUpdate,
+                        state.hospitalizationCasesBaby,
+                        state.hospitalizationIncidenceBaby,
+                        state.hospitalizationCasesChildren,
+                        state.hospitalizationIncidenceChildren,
+                        state.hospitalizationCasesTeen,
+                        state.hospitalizationIncidenceTeen,
+                        state.hospitalizationCasesGrown,
+                        state.hospitalizationIncidenceGrown,
+                        state.hospitalizationCasesSenior,
+                        state.hospitalizationIncidenceSenior,
+                        state.hospitalizationCasesOld,
+                        state.hospitalizationIncidenceOld,
                     )
 
                 # country
