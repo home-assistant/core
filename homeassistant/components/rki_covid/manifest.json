@@ -1,0 +1,11 @@
+{
+  "domain": "rki_covid",
+  "iot_class": "cloud_polling",
+  "name": "Robert-Koch Institut COVID Numbers",
+  "documentation": "https://www.home-assistant.io/integrations/rki_covid",
+  "dependencies": [],
+  "codeowners": ["@thebino"],
+  "requirements": ["rki-covid-parser==1.3.0"],
+  "quality_scale": "gold",
+  "config_flow": true
+}

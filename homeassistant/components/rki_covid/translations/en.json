@@ -1,0 +1,15 @@
+{
+    "title": "RKI Covid numbers",
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "county": "District",
+                    "name": "Name of the sensor"
+                },
+                "title": "District or state",
+                "description": "Pick an item to monitor. States are prefixed with 'BL'. Country is named 'Deutschland'"
+            }
+        }
+    }
+}

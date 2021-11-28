@@ -784,6 +784,7 @@ homeassistant/components/risco/* @OnFreund
 tests/components/risco/* @OnFreund
 homeassistant/components/rituals_perfume_genie/* @milanmeu
 tests/components/rituals_perfume_genie/* @milanmeu
+homeassistant/components/rki_covid/* @thebino
 homeassistant/components/rmvtransport/* @cgtobi
 tests/components/rmvtransport/* @cgtobi
 homeassistant/components/roku/* @ctalkington
