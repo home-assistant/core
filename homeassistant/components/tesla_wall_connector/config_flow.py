@@ -89,7 +89,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             WALLCONNECTOR_SERIAL_NUMBER: self.serial_number,
         }
 
-        self.context["description_placeholders"] = placeholders
         self.context["title_placeholders"] = placeholders
         return await self.async_step_user()
 
