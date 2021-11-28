@@ -9,18 +9,11 @@ from pyControl4.error_handling import NotFound, Unauthorized
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import (
-    CONF_CONTROLLER_UNIQUE_ID,
-    DOMAIN,
-)
+from .const import CONF_CONTROLLER_UNIQUE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

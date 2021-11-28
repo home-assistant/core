@@ -8,11 +8,7 @@ from pyControl4.error_handling import Unauthorized
 
 from homeassistant import config_entries
 from homeassistant.components.control4.const import DOMAIN
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 
 def _get_mock_c4_account(
