@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def mock_wall_connector_version():
-    """Fixture to patch mydevolo into a desired state."""
+    """Fixture to mock get_version calls to the wall connector API."""
 
     with patch(
         "tesla_wall_connector.WallConnector.async_get_version",
