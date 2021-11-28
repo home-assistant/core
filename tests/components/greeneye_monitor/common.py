@@ -28,6 +28,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
+from tests.common import assert_setup_component
+
 SINGLE_MONITOR_SERIAL_NUMBER = 110011
 
 
@@ -161,14 +163,17 @@ async def setup_greeneye_monitor_component_with_config(
     hass: HomeAssistant, config: ConfigType
 ) -> bool:
     """Set up the greeneye_monitor component with the given config. Return True if successful, False otherwise."""
-    result = await async_setup_component(
-        hass,
-        DOMAIN,
-        config,
-    )
-    await hass.async_block_till_done()
+    with assert_setup_component(2, DOMAIN):
+        result = await async_setup_component(
+            hass,
+            DOMAIN,
+            config,
+        )
+        await hass.async_block_till_done()
 
-    return result
+        assert f"sensor.{DOMAIN}" in hass.config.components
+
+        return result
 
 
 def mock_with_listeners() -> MagicMock:
