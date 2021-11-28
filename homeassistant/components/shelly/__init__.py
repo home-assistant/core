@@ -376,11 +376,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                     self.name,
                 )
 
-        if (
-            self._last_cfg_changed is not None 
-            and cfg_changed > self._last_cfg_changed 
-            and self.model not in DUAL_MODE_LIGHT_MODELS
-        ):
+        if self._last_cfg_changed is not None and cfg_changed > self._last_cfg_changed:
             _LOGGER.info(
                 "Config for %s changed, reloading entry in %s seconds",
                 self.name,
