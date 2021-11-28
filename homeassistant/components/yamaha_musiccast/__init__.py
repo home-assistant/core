@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 
 from aiomusiccast import MusicCastConnectionException
+from aiomusiccast.capabilities import Capability
 from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
 
 from homeassistant.components import ssdp
@@ -20,9 +21,16 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import BRAND, CONF_SERIAL, CONF_UPNP_DESC, DEFAULT_ZONE, DOMAIN
+from .const import (
+    BRAND,
+    CONF_SERIAL,
+    CONF_UPNP_DESC,
+    DEFAULT_ZONE,
+    DOMAIN,
+    ENTITY_CATEGORY_MAPPING,
+)
 
-PLATFORMS = ["media_player"]
+PLATFORMS = ["media_player", "number"]
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -66,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     coordinator = MusicCastDataUpdateCoordinator(hass, client=client)
     await coordinator.async_config_entry_first_refresh()
+    coordinator.musiccast.build_capabilities()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -190,3 +199,36 @@ class MusicCastDeviceEntity(MusicCastEntity):
             device_info["via_device"] = (DOMAIN, self.coordinator.data.device_id)
 
         return device_info
+
+
+class MusicCastCapabilityEntity(MusicCastDeviceEntity):
+    """Base Entity type for all capabilities."""
+
+    def __init__(
+        self,
+        coordinator: MusicCastDataUpdateCoordinator,
+        capability: Capability,
+        zone_id: str = None,
+    ) -> None:
+        """Initialize a capability based entity."""
+        if zone_id is not None:
+            self._zone_id = zone_id
+        self.capability = capability
+        super().__init__(name=capability.name, icon="", coordinator=coordinator)
+        self._attr_entity_category = ENTITY_CATEGORY_MAPPING.get(capability.entity_type)
+
+    async def async_added_to_hass(self):
+        """Run when this Entity has been added to HA."""
+        await super().async_added_to_hass()
+        # All capability based entities should register callbacks to update HA when their state changes
+        self.coordinator.musiccast.register_callback(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """Entity being removed from hass."""
+        await super().async_added_to_hass()
+        self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return f"{self.device_id}_{self.capability.id}"
