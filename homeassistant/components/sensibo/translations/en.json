@@ -1,12 +1,14 @@
 {
     "config": {
       "abort": {
-        "already_configured": "Account is already configured"
+        "already_configured": "Account is already configured",
+        "cannot_connect": "Failed to connect"
       },
       "step": {
         "user": {
           "data": {
             "api_key": "API Key",
+            "name": "Name",
             "id": "Id"
             }
           }
