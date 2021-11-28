@@ -1,6 +1,7 @@
 """The Flux LED/MagicLight integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, Final, cast
@@ -26,6 +27,7 @@ from .const import (
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_LED_DISCOVERY,
+    FLUX_LED_DISCOVERY_LOCK,
     FLUX_LED_EXCEPTIONS,
     SIGNAL_STATE_UPDATED,
     STARTUP_SCAN_TIMEOUT,
@@ -76,16 +78,20 @@ async def async_discover_devices(
     hass: HomeAssistant, timeout: int, address: str | None = None
 ) -> list[dict[str, str]]:
     """Discover flux led devices."""
-    scanner = AIOBulbScanner()
-    try:
-        discovered: list[dict[str, str]] = await scanner.async_scan(
-            timeout=timeout, address=address
-        )
-    except OSError as ex:
-        _LOGGER.debug("Scanning failed with error: %s", ex)
-        return []
-    else:
-        return discovered
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    if FLUX_LED_DISCOVERY_LOCK not in domain_data:
+        domain_data[FLUX_LED_DISCOVERY_LOCK] = asyncio.Lock()
+    async with domain_data[FLUX_LED_DISCOVERY_LOCK]:
+        scanner = AIOBulbScanner()
+        try:
+            discovered: list[dict[str, str]] = await scanner.async_scan(
+                timeout=timeout, address=address
+            )
+        except OSError as ex:
+            _LOGGER.debug("Scanning failed with error: %s", ex)
+            return []
+        else:
+            return discovered
 
 
 async def async_discover_device(
@@ -118,7 +124,7 @@ def async_trigger_discovery(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
-    domain_data = hass.data[DOMAIN] = {}
+    domain_data = hass.data.setdefault(DOMAIN, {})
     domain_data[FLUX_LED_DISCOVERY] = await async_discover_devices(
         hass, STARTUP_SCAN_TIMEOUT
     )
