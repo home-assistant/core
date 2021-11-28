@@ -18,6 +18,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
@@ -129,6 +130,11 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=interval,
+            # Debounced option since the device takes
+            # a moment to reflect the knock-on changes
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
         )
 
     async def _async_update_data(self):
@@ -239,6 +245,9 @@ class ScreenLogicCircuitEntity(ScreenlogicEntity):
         if await self.gateway.async_set_circuit(self._data_key, circuit_value):
             _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
             await self.coordinator.async_refresh()
+            # Second debounced refresh to catch any secondary
+            # changes in the device
+            await self.coordinator.async_request_refresh()
         else:
             _LOGGER.warning(
                 "Failed to set_circuit %s %s", self._data_key, circuit_value
