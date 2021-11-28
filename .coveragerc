@@ -1288,6 +1288,7 @@ omit =
     homeassistant/components/yale_smart_alarm/coordinator.py
     homeassistant/components/yamaha_musiccast/__init__.py
     homeassistant/components/yamaha_musiccast/media_player.py
+    homeassistant/components/yamaha_musiccast/number.py
     homeassistant/components/yandex_transport/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py
