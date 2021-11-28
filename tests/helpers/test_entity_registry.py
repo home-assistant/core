@@ -850,7 +850,9 @@ async def test_disable_device_disables_entities(hass, registry):
     assert entry2.disabled
     assert entry3.disabled
 
-    device_registry.async_update_device(device_entry.id, disabled_by=er.DISABLED_USER)
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
     await hass.async_block_till_done()
 
     entry1 = registry.async_get(entry1.entity_id)
