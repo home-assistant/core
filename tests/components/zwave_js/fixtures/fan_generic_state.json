@@ -19,22 +19,22 @@
     "isSecure": false,
     "version": 4,
     "isBeaming": true,
-    "manufacturerId": 99,
-    "productId": 12593,
-    "productType": 18756,
+    "manufacturerId": 4919,
+    "productId": 4919,
+    "productType": 4919,
     "firmwareVersion": "5.22",
     "zwavePlusVersion": 1,
     "nodeType": 0,
     "roleType": 5,
     "deviceConfig": {
-      "manufacturerId": 99,
-      "manufacturer": "GE/Jasco",
+      "manufacturerId": 4919,
+      "manufacturer": "Unknown",
       "label": "ZW4002",
-      "description": "In-Wall Smart Fan Control",
+      "description": "Generic Fan Controller",
       "devices": [
         {
-          "productType": "0x4944",
-          "productId": "0x3131"
+          "productType": "0x1337",
+          "productId": "0x1337"
         }
       ],
       "firmwareVersion": {
