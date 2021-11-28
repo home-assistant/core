@@ -2,9 +2,6 @@
 
 DOMAIN = "control4"
 
-DEFAULT_SCAN_INTERVAL = 5
-MIN_SCAN_INTERVAL = 1
-
 CONF_ACCOUNT = "account"
 CONF_DIRECTOR = "director"
 CONF_WEBSOCKET = "websocket"
