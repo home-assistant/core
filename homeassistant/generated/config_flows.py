@@ -268,6 +268,7 @@ FLOWS = [
     "ring",
     "risco",
     "rituals_perfume_genie",
+    "rki_covid",
     "roku",
     "roomba",
     "roon",
