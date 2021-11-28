@@ -36,8 +36,6 @@ from .common import ControllerData, get_controller_data
 
 # Set up the console logger for debugging
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel("DEBUG")
-_LOGGER.debug("cvera DEBUG logging is ON")
 
 ATTR_LAST_USER_NAME = "changed_by_name"
 ATTR_LOW_BATTERY = "low_battery"
@@ -63,24 +61,22 @@ async def async_setup_entry(
     controller_data = get_controller_data(hass, entry)
     platform = async_get_current_platform()
     platform.async_register_entity_service(
-        name="setpin", schema=SET_PIN_SCHEMA, func=CVeraLock.set_new_pin.__name__
+        name="setpin", schema=SET_PIN_SCHEMA, func=VeraLock.set_new_pin.__name__
     )
     platform.async_register_entity_service(
-        name="clearpin", schema=CLEAR_PIN_SCHEMA, func=CVeraLock.clear_slot_pin.__name__
+        name="clearpin", schema=CLEAR_PIN_SCHEMA, func=VeraLock.clear_slot_pin.__name__
     )
 
     async_add_entities(
         [
-            CVeraLock(device, controller_data)
+            VeraLock(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
         ],
         True,
     )
-    _LOGGER.debug("cvera setup entry")
-    _LOGGER.debug(platform)
 
 
-class CVeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
+class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
     """Representation of a Vera lock."""
 
     def __init__(
