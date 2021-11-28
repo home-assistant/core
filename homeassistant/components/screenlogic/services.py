@@ -63,6 +63,9 @@ def async_load_screenlogic_services(hass: HomeAssistant):
                     raise HomeAssistantError(
                         f"Failed to call service '{SERVICE_SET_COLOR_MODE}'"
                     )
+                # Debounced refresh to catch any secondary
+                # changes in the device
+                await coordinator.async_request_refresh()
             except ScreenLogicError as error:
                 raise HomeAssistantError(error) from error
 
