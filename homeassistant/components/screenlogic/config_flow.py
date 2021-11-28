@@ -58,14 +58,11 @@ def name_for_mac(mac):
 
 async def async_get_mac_address(hass, ip_address, port):
     """Connect to a screenlogic gateway and return the mac address."""
-    connected_socket = await hass.async_add_executor_job(
-        login.create_socket,
-        ip_address,
-        port,
-    )
-    if not connected_socket:
-        raise ScreenLogicError("Unknown socket error")
-    return await hass.async_add_executor_job(login.gateway_connect, connected_socket)
+    transport, protocol = await login.async_create_connection(ip_address, port)
+    mac = await login.async_gateway_connect(transport, protocol)
+    if transport and not transport.is_closing():
+        transport.close()
+    return mac
 
 
 class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
