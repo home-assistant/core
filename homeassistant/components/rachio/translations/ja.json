@@ -13,7 +13,8 @@
                 "data": {
                     "api_key": "API\u30ad\u30fc"
                 },
-                "description": "https://app.rach.io/ \u304b\u3089\u306eAPI Key\u304c\u5fc5\u8981\u3067\u3059\u3002Settings(\u8a2d\u5b9a)\u3092\u958b\u304d\u3001'GET API KEY'\u3092\u30af\u30ea\u30c3\u30af\u3057\u307e\u3059\u3002"
+                "description": "https://app.rach.io/ \u304b\u3089\u306eAPI Key\u304c\u5fc5\u8981\u3067\u3059\u3002Settings(\u8a2d\u5b9a)\u3092\u958b\u304d\u3001'GET API KEY'\u3092\u30af\u30ea\u30c3\u30af\u3057\u307e\u3059\u3002",
+                "title": "Rachio device\u306b\u63a5\u7d9a"
             }
         }
     },

@@ -16,6 +16,7 @@
                 "title": "\u30da\u30a2\u30ea\u30f3\u30b0\u30d7\u30ed\u30bb\u30b9\u306e\u5b8c\u4e86"
             },
             "pairing_complete": {
+                "description": "\u3042\u306a\u305f\u306e\u3001VIZIO SmartCast\u30c7\u30d0\u30a4\u30b9\u304cHome Assistant\u306b\u63a5\u7d9a\u3055\u308c\u307e\u3057\u305f\u3002",
                 "title": "\u30da\u30a2\u30ea\u30f3\u30b0\u5b8c\u4e86"
             },
             "pairing_complete_import": {

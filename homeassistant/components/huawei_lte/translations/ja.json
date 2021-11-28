@@ -31,6 +31,7 @@
         "step": {
             "init": {
                 "data": {
+                    "name": "\u901a\u77e5\u30b5\u30fc\u30d3\u30b9\u540d(\u5909\u66f4\u306b\u306f\u518d\u8d77\u52d5\u304c\u5fc5\u8981)",
                     "recipient": "SMS\u901a\u77e5\u306e\u53d7\u4fe1\u8005",
                     "track_new_devices": "\u65b0\u3057\u3044\u30c7\u30d0\u30a4\u30b9\u306e\u8ffd\u8de1",
                     "track_wired_clients": "\u6709\u7dda\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u3092\u8ffd\u8de1\u3059\u308b",

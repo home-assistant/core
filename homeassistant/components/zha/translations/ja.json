@@ -51,6 +51,9 @@
         }
     },
     "device_automation": {
+        "action_type": {
+            "squawk": "\u30b9\u30b3\u30fc\u30af(Squawk)"
+        },
         "trigger_subtype": {
             "both_buttons": "\u4e21\u65b9\u306e\u30dc\u30bf\u30f3",
             "button_1": "1\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
@@ -69,8 +72,12 @@
             "turn_on": "\u30aa\u30f3\u306b\u3059\u308b"
         },
         "trigger_type": {
+            "device_flipped": "\u30c7\u30d0\u30a4\u30b9\u304c\u53cd\u8ee2\u3057\u307e\u3057\u305f \"{subtype}\"",
+            "device_knocked": "\u30c7\u30d0\u30a4\u30b9\u304c\u30ce\u30c3\u30af\u3055\u308c\u307e\u3057\u305f \"{subtype}\"",
             "device_offline": "\u30c7\u30d0\u30a4\u30b9\u304c\u30aa\u30d5\u30e9\u30a4\u30f3",
+            "device_rotated": "\u30c7\u30d0\u30a4\u30b9\u304c\u56de\u8ee2\u3057\u307e\u3057\u305f \"{subtype}\"",
             "device_shaken": "\u30c7\u30d0\u30a4\u30b9\u304c\u63fa\u308c\u308b",
+            "device_slid": "\u30c7\u30d0\u30a4\u30b9 \u30b9\u30e9\u30a4\u30c9 \"{subtype}\"",
             "device_tilted": "\u30c7\u30d0\u30a4\u30b9\u304c\u50be\u3044\u3066\u3044\u308b",
             "remote_button_alt_long_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u3092\u62bc\u3057\u7d9a\u3051\u308b(\u4ee3\u66ff\u30e2\u30fc\u30c9)",
             "remote_button_alt_short_press": "\"{subtype}\" \u62bc\u3057\u7d9a\u3051\u308b(\u4ee3\u66ff\u30e2\u30fc\u30c9)",

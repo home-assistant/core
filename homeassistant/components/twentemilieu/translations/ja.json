@@ -10,6 +10,7 @@
         "step": {
             "user": {
                 "data": {
+                    "house_letter": "\u30cf\u30a6\u30b9\u30ec\u30bf\u30fc/\u8ffd\u52a0",
                     "house_number": "\u5bb6\u5c4b\u756a\u53f7",
                     "post_code": "\u90f5\u4fbf\u756a\u53f7"
                 },

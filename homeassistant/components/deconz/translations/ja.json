@@ -5,7 +5,8 @@
             "already_in_progress": "\u69cb\u6210\u30d5\u30ed\u30fc\u306f\u3059\u3067\u306b\u9032\u884c\u4e2d\u3067\u3059",
             "no_bridges": "deCONZ\u30d6\u30ea\u30c3\u30b8\u306f\u691c\u51fa\u3055\u308c\u307e\u305b\u3093\u3067\u3057\u305f",
             "no_hardware_available": "deCONZ\u306b\u63a5\u7d9a\u3055\u308c\u3066\u3044\u308b\u7121\u7dda\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\u304c\u3042\u308a\u307e\u305b\u3093",
-            "not_deconz_bridge": "deCONZ bridge\u3067\u306f\u3042\u308a\u307e\u305b\u3093"
+            "not_deconz_bridge": "deCONZ bridge\u3067\u306f\u3042\u308a\u307e\u305b\u3093",
+            "updated_instance": "\u65b0\u3057\u3044\u30db\u30b9\u30c8\u30a2\u30c9\u30ec\u30b9\u3067deCONZ\u30a4\u30f3\u30b9\u30bf\u30f3\u30b9\u3092\u66f4\u65b0\u3057\u307e\u3057\u305f"
         },
         "error": {
             "no_key": "API\u30ad\u30fc\u3092\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f"
@@ -52,6 +53,7 @@
             "side_4": "\u30b5\u30a4\u30c94",
             "side_5": "\u30b5\u30a4\u30c95",
             "side_6": "\u30b5\u30a4\u30c96",
+            "top_buttons": "\u30c8\u30c3\u30d7\u30dc\u30bf\u30f3",
             "turn_off": "\u30aa\u30d5\u306b\u3059\u308b",
             "turn_on": "\u30aa\u30f3\u306b\u3059\u308b"
         },
@@ -60,7 +62,13 @@
             "remote_button_long_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u3092\u62bc\u3057\u7d9a\u3051\u308b",
             "remote_button_rotated_fast": "\u30dc\u30bf\u30f3\u304c\u9ad8\u901f\u56de\u8ee2\u3059\u308b \"{subtype}\"",
             "remote_button_short_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u304c\u62bc\u3055\u308c\u307e\u3057\u305f\u3002",
+            "remote_double_tap": "\u30c7\u30d0\u30a4\u30b9 \"{subtype}\" \u304c\u30c0\u30d6\u30eb\u30bf\u30c3\u30d7\u3055\u308c\u307e\u3057\u305f",
+            "remote_double_tap_any_side": "\u30c7\u30d0\u30a4\u30b9\u306e\u3044\u305a\u308c\u304b\u306e\u9762\u3092\u30c0\u30d6\u30eb\u30bf\u30c3\u30d7\u3057\u305f",
+            "remote_falling": "\u81ea\u7531\u843d\u4e0b\u6642\u306e\u30c7\u30d0\u30a4\u30b9(Device in free fall)",
+            "remote_flip_180_degrees": "\u30c7\u30d0\u30a4\u30b9\u304c180\u5ea6\u53cd\u8ee2",
+            "remote_flip_90_degrees": "\u30c7\u30d0\u30a4\u30b9\u304c90\u5ea6\u53cd\u8ee2",
             "remote_gyro_activated": "\u30c7\u30d0\u30a4\u30b9\u304c\u63fa\u308c\u308b",
+            "remote_moved_any_side": "\u30c7\u30d0\u30a4\u30b9\u304c\u4efb\u610f\u306e\u9762\u3092\u4e0a\u306b\u3057\u3066\u79fb\u52d5\u3057\u305f",
             "remote_turned_clockwise": "\u30c7\u30d0\u30a4\u30b9\u304c\u6642\u8a08\u56de\u308a\u306b",
             "remote_turned_counter_clockwise": "\u30c7\u30d0\u30a4\u30b9\u304c\u53cd\u6642\u8a08\u56de\u308a\u306b"
         }
