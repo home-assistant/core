@@ -36,24 +36,21 @@ async def async_setup_entry(
 
     for item in items_of_category:
         try:
-            if item["type"] == CONTROL4_ENTITY_TYPE:
-                if item["id"]:
-                    item_name = str(item["name"])
-                    item_id = item["id"]
-                    item_area = item["roomName"]
-                    item_parent_id = item["parentId"]
+            if item["type"] == CONTROL4_ENTITY_TYPE and item["id"]:
+                item_name = str(item["name"])
+                item_id = item["id"]
+                item_area = item["roomName"]
+                item_parent_id = item["parentId"]
 
-                    item_manufacturer = None
-                    item_device_name = None
-                    item_model = None
+                item_manufacturer = None
+                item_device_name = None
+                item_model = None
 
-                    for parent_item in items_of_category:
-                        if parent_item["id"] == item_parent_id:
-                            item_manufacturer = parent_item["manufacturer"]
-                            item_device_name = parent_item["name"]
-                            item_model = parent_item["model"]
-                else:
-                    continue
+                for parent_item in items_of_category:
+                    if parent_item["id"] == item_parent_id:
+                        item_manufacturer = parent_item["manufacturer"]
+                        item_device_name = parent_item["name"]
+                        item_model = parent_item["model"]
             else:
                 continue
         except KeyError:
@@ -98,9 +95,9 @@ class Control4Light(Control4Entity, LightEntity):
         """Return whether this light is on or off."""
         if "LIGHT_LEVEL" in self.extra_state_attributes:
             return self.extra_state_attributes["LIGHT_LEVEL"] > 0
-        elif "LIGHT_STATE" in self.extra_state_attributes:
+        if "LIGHT_STATE" in self.extra_state_attributes:
             return self.extra_state_attributes["LIGHT_STATE"] > 0
-        elif "CURRENT_POWER" in self.extra_state_attributes:
+        if "CURRENT_POWER" in self.extra_state_attributes:
             return self.extra_state_attributes["CURRENT_POWER"] > 0
 
     @property
