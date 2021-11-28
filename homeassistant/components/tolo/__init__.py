@@ -78,9 +78,9 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
             settings = self.client.get_settings_info(
                 resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
             )
-            return ToloSaunaData(status, settings)
         except ResponseTimedOutError as error:
             raise UpdateFailed("communication timeout") from error
+        return ToloSaunaData(status, settings)
 
 
 class ToloSaunaCoordinatorEntity(CoordinatorEntity):
