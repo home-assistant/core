@@ -57,9 +57,9 @@ from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
     CONF_QOS,
     CONF_RETAIN,
-    CONF_STATE_ENCODING,
     CONF_STATE_TOPIC,
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
@@ -211,7 +211,7 @@ MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_STATE_ENCODING, default=DEFAULT_ENCODING): cv.string,
+        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
     }
 )
 

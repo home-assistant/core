@@ -902,7 +902,7 @@ async def test_value_template_with_entity_id(hass, mqtt_mock):
             sensor.DOMAIN: {
                 "platform": "mqtt",
                 "name": "test",
-                "state_encoding": "",
+                "encoding": "",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
                 "value_template": "{{ value | bitwise_and(255) }}",
