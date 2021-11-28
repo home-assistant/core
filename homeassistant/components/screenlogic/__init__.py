@@ -34,7 +34,7 @@ from .services import async_load_screenlogic_services, async_unload_screenlogic_
 _LOGGER = logging.getLogger(__name__)
 
 
-REQUEST_REFRESH_DELAY = 2
+REQUEST_REFRESH_DELAY = 3
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
 
