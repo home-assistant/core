@@ -362,6 +362,10 @@ DHCP = [
         "hostname": "tado*"
     },
     {
+        "domain": "tolo",
+        "hostname": "usr-tcp232-ed2"
+    },
+    {
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
@@ -543,6 +547,10 @@ DHCP = [
     {
         "domain": "verisure",
         "macaddress": "0023C1*"
+    },
+    {
+        "domain": "vicare",
+        "macaddress": "B87424*"
     },
     {
         "domain": "yeelight",

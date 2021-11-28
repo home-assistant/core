@@ -11,7 +11,7 @@ from screenlogicpy.const import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.components.screenlogic.config_flow import (
     GATEWAY_MANUAL_ENTRY,
     GATEWAY_SELECT_KEY,
@@ -138,10 +138,11 @@ async def test_dhcp(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data={
-            HOSTNAME: "Pentair: 01-01-01",
-            IP_ADDRESS: "1.1.1.1",
-        },
+        data=dhcp.DhcpServiceInfo(
+            hostname="Pentair: 01-01-01",
+            ip="1.1.1.1",
+            macaddress="AA:BB:CC:DD:EE:FF",
+        ),
     )
 
     assert result["type"] == "form"

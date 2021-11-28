@@ -47,7 +47,8 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-from . import (
+from . import YEELIGHT_FLOW_TRANSITION_SCHEMA
+from .const import (
     ACTION_RECOVER,
     ATTR_ACTION,
     ATTR_COUNT,
@@ -65,9 +66,8 @@ from . import (
     DOMAIN,
     MODELS_WITH_DELAYED_ON_TRANSITION,
     POWER_STATE_CHANGE_TIME,
-    YEELIGHT_FLOW_TRANSITION_SCHEMA,
-    YeelightEntity,
 )
+from .entity import YeelightEntity
 
 _LOGGER = logging.getLogger(__name__)
 

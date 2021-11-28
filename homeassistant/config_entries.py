@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Mapping
 from contextvars import ContextVar
+import dataclasses
 from enum import Enum
 import functools
 import logging
@@ -1360,13 +1361,13 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self, discovery_info: ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Homekit discovery."""
-        return await self.async_step_discovery(cast(dict, discovery_info))
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by MQTT discovery."""
-        return await self.async_step_discovery(cast(dict, discovery_info))
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_ssdp(
         self, discovery_info: DiscoveryInfoType
@@ -1378,19 +1379,19 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self, discovery_info: ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
-        return await self.async_step_discovery(cast(dict, discovery_info))
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by DHCP discovery."""
-        return await self.async_step_discovery(cast(dict, discovery_info))
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_usb(
         self, discovery_info: UsbServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by USB discovery."""
-        return await self.async_step_discovery(cast(dict, discovery_info))
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     @callback
     def async_create_entry(  # pylint: disable=arguments-differ

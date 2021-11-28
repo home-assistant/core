@@ -9,6 +9,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
+PLATFORMS = ["button", "light"]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nanoleaf from a config entry."""
@@ -24,7 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = nanoleaf
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "light")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True

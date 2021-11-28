@@ -1,9 +1,9 @@
 """Constants for the Tuya integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
@@ -100,6 +100,7 @@ SMARTLIFE_APP = "smartlife"
 
 PLATFORMS = [
     "binary_sensor",
+    "button",
     "camera",
     "climate",
     "cover",
@@ -173,8 +174,8 @@ class DPCode(str, Enum):
     CO2_STATE = "co2_state"
     CO2_VALUE = "co2_value"  # CO2 concentration
     COLOR_DATA_V2 = "color_data_v2"
-    COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA = "colour_data"  # Colored light mode
+    COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
     CONTROL = "control"
@@ -235,6 +236,7 @@ class DPCode(str, Enum):
     PM25_STATE = "pm25_state"
     PM25_VALUE = "pm25_value"
     POWDER_SET = "powder_set"  # Powder
+    POWER = "power"
     POWER_GO = "power_go"
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
@@ -243,6 +245,11 @@ class DPCode(str, Enum):
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
+    RESET_DUSTER_CLOTH = "reset_duster_cloth"
+    RESET_EDGE_BRUSH = "reset_edge_brush"
+    RESET_FILTER = "reset_filter"
+    RESET_MAP = "reset_map"
+    RESET_ROLL_BRUSH = "reset_roll_brush"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SENSOR_HUMIDITY = "sensor_humidity"
@@ -271,6 +278,7 @@ class DPCode(str, Enum):
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
     SWITCH_CHARGE = "switch_charge"
     SWITCH_CONTROLLER = "switch_controller"
+    SWITCH_DISTURB = "switch_disturb"
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
     SWITCH_LED = "switch_led"  # Switch
     SWITCH_LED_1 = "switch_led_1"
@@ -304,6 +312,8 @@ class DPCode(str, Enum):
     VA_TEMPERATURE = "va_temperature"
     VOC_STATE = "voc_state"
     VOC_VALUE = "voc_value"
+    VOICE_SWITCH = "voice_switch"
+    VOLUME_SET = "volume_set"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
     WATER_RESET = "water_reset"  # Resetting of water usage days

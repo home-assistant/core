@@ -30,6 +30,7 @@ from homeassistant.const import (
     DEVICE_CLASS_CO2,
     LIGHT_LUX,
     PERCENTAGE,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -270,6 +271,7 @@ def test_type_sensors(type_name, entity_id, state, attrs):
     [
         ("Outlet", "switch.test", "on", {}, {CONF_TYPE: TYPE_OUTLET}),
         ("Switch", "automation.test", "on", {}, {}),
+        ("Switch", "button.test", STATE_UNKNOWN, {}, {}),
         ("Switch", "input_boolean.test", "on", {}, {}),
         ("Switch", "remote.test", "on", {}, {}),
         ("Switch", "scene.test", "on", {}, {}),

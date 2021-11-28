@@ -1,0 +1,120 @@
+# Defines a list of files that are part of main core of Home Assistant.
+# Changes to these files/filters define how our CI test suite is ran.
+core: &core
+  - homeassistant/*.py
+  - homeassistant/auth/**
+  - homeassistant/helpers/*
+  - homeassistant/package_constraints.txt
+  - homeassistant/util/*
+  - pyproject.yaml
+  - requirements.txt
+  - setup.cfg
+
+# Our base platforms, that are used by other integrations
+base_platforms: &base_platforms
+  - homeassistant/components/air_quality/*
+  - homeassistant/components/alarm_control_panel/*
+  - homeassistant/components/binary_sensor/*
+  - homeassistant/components/button/*
+  - homeassistant/components/calendar/*
+  - homeassistant/components/camera/*
+  - homeassistant/components/climate/*
+  - homeassistant/components/cover/*
+  - homeassistant/components/device_tracker/*
+  - homeassistant/components/fan/*
+  - homeassistant/components/geo_location/*
+  - homeassistant/components/humidifier/*
+  - homeassistant/components/image_processing/*
+  - homeassistant/components/light/*
+  - homeassistant/components/lock/*
+  - homeassistant/components/media_player/*
+  - homeassistant/components/notify/*
+  - homeassistant/components/number/*
+  - homeassistant/components/remote/*
+  - homeassistant/components/scene/*
+  - homeassistant/components/select/*
+  - homeassistant/components/sensor/*
+  - homeassistant/components/siren/*
+  - homeassistant/components/stt/*
+  - homeassistant/components/switch/*
+  - homeassistant/components/tts/*
+  - homeassistant/components/vacuum/*
+  - homeassistant/components/water_heater/*
+  - homeassistant/components/weather/*
+
+# Extra components that trigger the full suite
+components: &components
+  - homeassistant/components/alert/*
+  - homeassistant/components/alexa/*
+  - homeassistant/components/auth/*
+  - homeassistant/components/automation/*
+  - homeassistant/components/cloud/*
+  - homeassistant/components/config/*
+  - homeassistant/components/configurator/*
+  - homeassistant/components/conversation/*
+  - homeassistant/components/demo/*
+  - homeassistant/components/device_automation/*
+  - homeassistant/components/dhcp/*
+  - homeassistant/components/discovery/*
+  - homeassistant/components/energy/*
+  - homeassistant/components/ffmpeg/*
+  - homeassistant/components/frontend/*
+  - homeassistant/components/google_assistant/*
+  - homeassistant/components/group/*
+  - homeassistant/components/hassio/*
+  - homeassistant/components/homeassistant/**
+  - homeassistant/components/image/*
+  - homeassistant/components/input_boolean/*
+  - homeassistant/components/input_datetime/*
+  - homeassistant/components/input_number/*
+  - homeassistant/components/input_select/*
+  - homeassistant/components/input_text/*
+  - homeassistant/components/logbook/*
+  - homeassistant/components/logger/*
+  - homeassistant/components/lovelace/*
+  - homeassistant/components/media_source/*
+  - homeassistant/components/mqtt/*
+  - homeassistant/components/network/*
+  - homeassistant/components/onboarding/*
+  - homeassistant/components/otp/*
+  - homeassistant/components/persistent_notification/*
+  - homeassistant/components/person/*
+  - homeassistant/components/recorder/*
+  - homeassistant/components/safe_mode/*
+  - homeassistant/components/script/*
+  - homeassistant/components/shopping_list/*
+  - homeassistant/components/ssdp/*
+  - homeassistant/components/stream/*
+  - homeassistant/components/sun/*
+  - homeassistant/components/system_health/*
+  - homeassistant/components/tag/*
+  - homeassistant/components/template/*
+  - homeassistant/components/timer/*
+  - homeassistant/components/usb/*
+  - homeassistant/components/webhook/*
+  - homeassistant/components/websocket_api/*
+  - homeassistant/components/zeroconf/*
+  - homeassistant/components/zone/*
+
+# Testing related files that affect the whole test/linting suite
+tests: &tests
+  - codecov.yaml
+  - requirements_test_pre_commit.txt
+  - requirements_test.txt
+  - tests/common.py
+  - tests/conftest.py
+  - tests/ignore_uncaught_exceptions.py
+  - tests/mock/*
+  - tests/test_util/*
+  - tests/testing_config/**
+
+other: &other
+  - .github/workflows/*
+  - homeassistant/scripts/**
+
+any:
+  - *base_platforms
+  - *components
+  - *core
+  - *other
+  - *tests

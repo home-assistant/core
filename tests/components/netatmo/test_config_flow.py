@@ -42,7 +42,11 @@ async def test_abort_if_existing_entry(hass):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="0.0.0.0",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
             properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+            type="mock_type",
         ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

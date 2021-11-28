@@ -37,7 +37,10 @@
             "button4": "Tombol keempat"
         },
         "trigger_type": {
+            "btn_down": "Tombol \"{subtype}\" ditekan",
+            "btn_up": "Tombol \"{subtype}\" dilepas",
             "double": "{subtype} diklik dua kali",
+            "double_push": "Push ganda {subtype}",
             "long": "{subtype} diklik lama",
             "long_push": "Push lama {subtype}",
             "long_single": "{subtype} diklik lama kemudian diklik sekali",

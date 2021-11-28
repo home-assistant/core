@@ -135,6 +135,7 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_TRACK,
 ]
 
+SONOS_CHECK_ACTIVITY = "sonos_check_activity"
 SONOS_CREATE_ALARM = "sonos_create_alarm"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
 SONOS_CREATE_SWITCHES = "sonos_create_switches"
@@ -143,18 +144,17 @@ SONOS_ENTITY_CREATED = "sonos_entity_created"
 SONOS_POLL_UPDATE = "sonos_poll_update"
 SONOS_ALARMS_UPDATED = "sonos_alarms_updated"
 SONOS_FAVORITES_UPDATED = "sonos_favorites_updated"
+SONOS_SPEAKER_ACTIVITY = "sonos_speaker_activity"
 SONOS_SPEAKER_ADDED = "sonos_speaker_added"
 SONOS_STATE_UPDATED = "sonos_state_updated"
 SONOS_REBOOTED = "sonos_rebooted"
-SONOS_SEEN = "sonos_seen"
 
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"
 
+AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
+AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5
 BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
-SEEN_EXPIRE_TIME = 3.5 * DISCOVERY_INTERVAL
 SUBSCRIPTION_TIMEOUT = 1200
-
-MDNS_SERVICE = "_sonos._tcp.local."

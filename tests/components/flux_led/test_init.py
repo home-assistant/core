@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,7 +15,9 @@ from homeassistant.util.dt import utcnow
 
 from . import (
     DEFAULT_ENTRY_TITLE,
+    DEFAULT_ENTRY_TITLE_PARTIAL,
     FLUX_DISCOVERY,
+    FLUX_DISCOVERY_PARTIAL,
     IP_ADDRESS,
     MAC_ADDRESS,
     _patch_discovery,
@@ -67,8 +71,15 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
         assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    "discovery,title",
+    [
+        (FLUX_DISCOVERY, DEFAULT_ENTRY_TITLE),
+        (FLUX_DISCOVERY_PARTIAL, DEFAULT_ENTRY_TITLE_PARTIAL),
+    ],
+)
 async def test_config_entry_fills_unique_id_with_directed_discovery(
-    hass: HomeAssistant,
+    hass: HomeAssistant, discovery: dict[str, str], title: str
 ) -> None:
     """Test that the unique id is added if its missing via directed (not broadcast) discovery."""
     config_entry = MockConfigEntry(
@@ -78,7 +89,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
 
     async def _discovery(self, *args, address=None, **kwargs):
         # Only return discovery results when doing directed discovery
-        return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
+        return [discovery] if address == IP_ADDRESS else []
 
     with patch(
         "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
@@ -88,5 +99,5 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
         assert config_entry.state == ConfigEntryState.LOADED
 
     assert config_entry.unique_id == MAC_ADDRESS
-    assert config_entry.data[CONF_NAME] == DEFAULT_ENTRY_TITLE
-    assert config_entry.title == DEFAULT_ENTRY_TITLE
+    assert config_entry.data[CONF_NAME] == title
+    assert config_entry.title == title

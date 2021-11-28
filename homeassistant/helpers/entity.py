@@ -37,6 +37,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import StateType
@@ -127,7 +128,7 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
     if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
-    return entry.device_class
+    return entry.device_class or entry.original_device_class
 
 
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
@@ -168,7 +169,7 @@ class DeviceInfo(TypedDict, total=False):
     default_manufacturer: str
     default_model: str
     default_name: str
-    entry_type: str | None
+    entry_type: DeviceEntryType | None
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
     model: str | None
@@ -533,14 +534,16 @@ class Entity(ABC):
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
         entry = self.registry_entry
-        # pylint: disable=consider-using-ternary
+
         if assumed_state := self.assumed_state:
             attr[ATTR_ASSUMED_STATE] = assumed_state
 
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
 
-        if (device_class := self.device_class) is not None:
+        if (
+            device_class := (entry and entry.device_class) or self.device_class
+        ) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:

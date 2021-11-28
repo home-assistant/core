@@ -19,7 +19,8 @@
                 "data": {
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
-                }
+                },
+                "description": "Masukkan nama pengguna dan kata sandi Anda:"
             }
         }
     }

@@ -1,7 +1,7 @@
 """Config flow to configure the WLED integration."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 from wled import WLED, WLEDConnectionError
@@ -44,20 +44,20 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
 
         # Hostname is format: wled-livingroom.local.
-        host = discovery_info["hostname"].rstrip(".")
+        host = discovery_info[zeroconf.ATTR_HOSTNAME].rstrip(".")
         name, _ = host.rsplit(".")
 
         self.context.update(
             {
-                CONF_HOST: discovery_info["host"],
+                CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
                 CONF_NAME: name,
-                CONF_MAC: discovery_info["properties"].get(CONF_MAC),
+                CONF_MAC: discovery_info[zeroconf.ATTR_PROPERTIES].get(CONF_MAC),
                 "title_placeholders": {"name": name},
             }
         )
 
         # Prepare configuration flow
-        return await self._handle_config_flow(cast(dict, discovery_info), True)
+        return await self._handle_config_flow({}, True)
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None

@@ -5,10 +5,13 @@ from unittest.mock import patch
 
 from homeassistant.components.metoffice.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.util import utcnow
 
 from . import NewDateTime
 from .const import (
+    DEVICE_KEY_KINGSLYNN,
+    DEVICE_KEY_WAVERTREE,
     METOFFICE_CONFIG_KINGSLYNN,
     METOFFICE_CONFIG_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
@@ -35,6 +38,9 @@ async def test_site_cannot_connect(hass, requests_mock, legacy_patchable_time):
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    dev_reg = get_dev_reg(hass)
+    assert len(dev_reg.devices) == 0
 
     assert hass.states.get("weather.met_office_wavertree_3hourly") is None
     assert hass.states.get("weather.met_office_wavertree_daily") is None
@@ -124,6 +130,11 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    dev_reg = get_dev_reg(hass)
+    assert len(dev_reg.devices) == 1
+    device_wavertree = dev_reg.async_get_device(identifiers=DEVICE_KEY_WAVERTREE)
+    assert device_wavertree.name == "Met Office Wavertree"
+
     # Wavertree 3-hourly weather platform expected results
     weather = hass.states.get("weather.met_office_wavertree_3_hourly")
     assert weather
@@ -212,6 +223,13 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
     entry2.add_to_hass(hass)
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
+
+    dev_reg = get_dev_reg(hass)
+    assert len(dev_reg.devices) == 2
+    device_kingslynn = dev_reg.async_get_device(identifiers=DEVICE_KEY_KINGSLYNN)
+    assert device_kingslynn.name == "Met Office King's Lynn"
+    device_wavertree = dev_reg.async_get_device(identifiers=DEVICE_KEY_WAVERTREE)
+    assert device_wavertree.name == "Met Office Wavertree"
 
     # Wavertree 3-hourly weather platform expected results
     weather = hass.states.get("weather.met_office_wavertree_3_hourly")

@@ -90,6 +90,8 @@ ATTR_CHANNEL: Final = "channel"
 ATTR_DEVICE: Final = "device"
 ATTR_GENERATION: Final = "generation"
 CONF_SUBTYPE: Final = "subtype"
+ATTR_BETA: Final = "beta"
+CONF_OTA_BETA_CHANNEL: Final = "ota_beta_channel"
 
 BASIC_INPUTS_EVENTS_TYPES: Final = {"single", "long"}
 
@@ -139,6 +141,12 @@ SHBLB_1_RGB_EFFECTS: Final = {
     4: "Breath",
     5: "On/Off Gradual",
     6: "Red/Green Change",
+}
+
+SHTRV_01_TEMPERATURE_SETTINGS: Final = {
+    "min": 4,
+    "max": 31,
+    "step": 1,
 }
 
 # Kelvin value for colorTemp
