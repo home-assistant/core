@@ -36,8 +36,7 @@ async def test_logger_error(hass, aioclient_mock):
 
 
 async def test_inverter_error(hass, aioclient_mock):
-    """Test setup when logger reports an error."""
-    # gen24 dataset will raise FroniusError when logger is called
+    """Test setup when inverter_info reports an error."""
     mock_responses(aioclient_mock)
     with patch(
         "pyfronius.Fronius.inverter_info",
