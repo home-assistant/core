@@ -39,3 +39,6 @@ MAP_PRIV_PROTOCOLS = {
     "aes-cfb-192": "usmAesCfb192Protocol",
     "aes-cfb-256": "usmAesCfb256Protocol",
 }
+
+DOMAIN = "snmp"
+PLATFORMS = ["sensor"]

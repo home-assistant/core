@@ -1,0 +1,16 @@
+sensor:
+  - platform: snmp
+    broken:
+  - platform: snmp
+    name: Test OID
+    unit_of_measurement: kW
+    baseoid: 1.3.6.1.4.1.3808.1.1.1.4.2.5.0
+    host: 192.168.210.25
+    community: public
+
+  - platform: snmp
+    name: Other OID
+    unit_of_measurement: W
+    baseoid: 1.3.6.1.4.1.3808.1.1.1.4.2.5.1
+    host: 192.168.210.25
+    community: public
