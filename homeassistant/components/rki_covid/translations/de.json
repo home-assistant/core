@@ -1,0 +1,15 @@
+{
+    "title": "RKI Covid Zahlen",
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "county": "Bezirk",
+                    "name": "Name des Sensors."
+                },
+                "title": "Land-/Stadtkreis oder Bundesland",
+                "description": "Wähle einen Eintrag zum überwachen. Bundesländer haben ein 'BL' vor dem Namen. Deutschland ist separat aufgeführt."
+            }
+        }
+    }
+}
