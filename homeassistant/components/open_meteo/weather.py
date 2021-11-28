@@ -31,6 +31,7 @@ async def async_setup_entry(
 class OpenMeteoWeatherEntity(CoordinatorEntity, WeatherEntity):
     """Defines an Open-Meteo weather entity."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
     coordinator: DataUpdateCoordinator[OpenMeteoForecast]
 
     def __init__(
@@ -63,11 +64,6 @@ class OpenMeteoWeatherEntity(CoordinatorEntity, WeatherEntity):
         if not self.coordinator.data.current_weather:
             return None
         return self.coordinator.data.current_weather.temperature
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def wind_speed(self) -> float | None:
