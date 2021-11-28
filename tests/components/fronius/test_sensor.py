@@ -57,6 +57,17 @@ async def test_symo_inverter(hass, aioclient_mock):
     assert_state("sensor.power_ac_fronius_inverter_1_http_fronius", 1190)
     assert_state("sensor.voltage_ac_fronius_inverter_1_http_fronius", 227.90)
 
+    # Third test at nighttime - additional AC entities aren't changed
+    mock_responses(aioclient_mock, night=True)
+    async_fire_time_changed(
+        hass, dt.utcnow() + FroniusInverterUpdateCoordinator.default_interval
+    )
+    await hass.async_block_till_done()
+    assert_state("sensor.current_ac_fronius_inverter_1_http_fronius", 5.19)
+    assert_state("sensor.frequency_ac_fronius_inverter_1_http_fronius", 49.94)
+    assert_state("sensor.power_ac_fronius_inverter_1_http_fronius", 1190)
+    assert_state("sensor.voltage_ac_fronius_inverter_1_http_fronius", 227.90)
+
 
 async def test_symo_logger(hass, aioclient_mock):
     """Test Fronius Symo logger entities."""
