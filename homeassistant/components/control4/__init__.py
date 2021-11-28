@@ -194,8 +194,8 @@ class Control4Entity(Entity):
             if isinstance(data, dict):
                 for key, value in data.items():
                     if isinstance(value, dict):
-                        for k, v in value.items():
-                            self._extra_state_attributes[k] = v
+                        for k, val in value.items():
+                            self._extra_state_attributes[k] = val
                     else:
                         self._extra_state_attributes[key.upper()] = value
         _LOGGER.debug("Message for device %s", device)

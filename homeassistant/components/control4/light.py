@@ -114,10 +114,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     @property
     def _is_dimmer(self):
-        if "LIGHT_LEVEL" in self.extra_state_attributes:
-            return True
-        else:
-            return False
+        return bool("LIGHT_LEVEL" in self.extra_state_attributes)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
