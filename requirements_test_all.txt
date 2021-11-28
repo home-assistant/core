@@ -149,7 +149,7 @@ aiolyric==1.0.8
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.13.1
+aiomusiccast==0.14.2
 
 # homeassistant.components.nanoleaf
 aionanoleaf==0.0.4
