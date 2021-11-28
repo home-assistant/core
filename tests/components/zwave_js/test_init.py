@@ -1051,3 +1051,72 @@ async def test_replace_different_node(
 
     assert not hass.states.get(AIR_TEMPERATURE_SENSOR)
     assert hass.states.get("switch.smart_plug_with_two_usb_ports")
+
+
+async def test_node_model_change(hass, zp3111, zp3111_state, client, integration):
+    """Test that when a node's model is changed due to an updated device config file, the device and entities are not removed."""
+    # This is not 100% realistic test, since the model change would be seen when the integration is loaded, not via a runtime event. The same registration code path is used though, so it practically similar
+    dev_reg = dr.async_get(hass)
+    er_reg = er.async_get(hass)
+    zp3111_state = deepcopy(zp3111_state)
+
+    device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
+    device_id_ext = f"{device_id}-{zp3111.manufacturer_id}:{zp3111.product_type}:{zp3111.product_id}"
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    dev_id = device.id
+
+    motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
+    state = hass.states.get(motion_entity)
+    assert state
+    assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
+
+    dev_reg.async_update_device(device.id, name_by_user="Custom Device Name")
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    assert device.id == dev_id
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device.name == "4-in-1 Sensor"
+    assert device.name_by_user == "Custom Device Name"
+
+    custom_entity = "binary_sensor.custom_motion_sensor"
+    er_reg.async_update_entity(
+        motion_entity, new_entity_id=custom_entity, name="Custom Entity Name"
+    )
+    await hass.async_block_till_done()
+    assert not hass.states.get(motion_entity)
+    state = hass.states.get(custom_entity)
+    assert state
+    assert state.name == "Custom Entity Name"
+
+    # simulate device config file changes
+    zp3111_state["deviceConfig"]["label"] = "New Device Model"
+    zp3111_state["deviceConfig"]["description"] = "New Device Description"
+
+    # Trigger a node add event which will call async_on_node_ready. We can't use
+    # a node ready event directly because it's only listened to once. Neither of
+    # these events would occur in real life in this sequence.
+    event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": zp3111_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Device name changes, but the cusomization is the same
+    device = dev_reg.async_get(dev_id)
+    assert device
+    assert device.name == "New Device Description"
+    assert device.name_by_user == "Custom Device Name"
+    assert device.model == "New Device Model"
+
+    assert not hass.states.get(motion_entity)
+    state = hass.states.get(custom_entity)
+    assert state
+    assert state.name == "Custom Entity Name"
