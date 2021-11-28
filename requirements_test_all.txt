@@ -1394,7 +1394,7 @@ rflink==0.0.62
 ring_doorbell==0.7.2
 
 # homeassistant.components.rki_covid
-rki-covid-parser==1.3.0
+rki-covid-parser==1.3.1
 
 # homeassistant.components.roku
 rokuecp==0.16.0

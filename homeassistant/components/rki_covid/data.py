@@ -22,3 +22,21 @@ class DistrictData:
     newDeaths: int
     newRecovered: int
     lastUpdate: datetime
+
+
+@dataclass
+class StateData(DistrictData):
+    """State representation class."""
+
+    hospitalizationCasesBaby: Optional[int]
+    hospitalizationIncidenceBaby: Optional[float]
+    hospitalizationCasesChildren: Optional[int]
+    hospitalizationIncidenceChildren: Optional[float]
+    hospitalizationCasesTeen: Optional[int]
+    hospitalizationIncidenceTeen: Optional[float]
+    hospitalizationCasesGrown: Optional[int]
+    hospitalizationIncidenceGrown: Optional[float]
+    hospitalizationCasesSenior: Optional[int]
+    hospitalizationIncidenceSenior: Optional[float]
+    hospitalizationCasesOld: Optional[int]
+    hospitalizationIncidenceOld: Optional[float]

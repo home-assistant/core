@@ -55,6 +55,18 @@ SENSORS = {
     "newCases": "mdi:shield-bug",
     "newDeaths": "mdi:shield-cross",
     "newRecovered": "mdi:shield-sync",
+    "hospitalizationCasesBaby": "mdi:baby-face-outline",
+    "hospitalizationIncidenceBaby": "mdi:baby-face",
+    "hospitalizationCasesChildren": "mdi:account-child-outline",
+    "hospitalizationIncidenceChildren": "mdi:account-child",
+    "hospitalizationCasesTeen": "mdi:face-woman",
+    "hospitalizationIncidenceTeen": "mdi:face-woman-outline",
+    "hospitalizationCasesGrown": "mdi:face-man",
+    "hospitalizationIncidenceGrown": "mdi:face-man-outline",
+    "hospitalizationCasesSenior": "mdi:account-cowboy-hat-outline",
+    "hospitalizationIncidenceSenior": "mdi:account-cowboy-hat",
+    "hospitalizationCasesOld": "mdi:human-white-cane",
+    "hospitalizationIncidenceOld": "mdi:human-cane",
 }
 
 
@@ -150,7 +162,10 @@ class RKICovidNumbersSensor(CoordinatorEntity):
     @property
     def state(self) -> Optional[str]:
         """Return current state."""
-        return getattr(self.coordinator.data[self.district], self.info_type)
+        try:
+            return getattr(self.coordinator.data[self.district], self.info_type)
+        except AttributeError:
+            return None
 
     @property
     def icon(self):
@@ -171,13 +186,21 @@ class RKICovidNumbersSensor(CoordinatorEntity):
             or self.info_type == "recovered"
         ):
             return "people"
-        elif self.info_type == "weekIncidence":
+        elif (
+            self.info_type == "weekIncidence"
+            or self.info_type == "hospitalizationIncidenceBaby"
+            or self.info_type == "hospitalizationIncidenceChildren"
+            or self.info_type == "hospitalizationIncidenceTeen"
+            or self.info_type == "hospitalizationIncidenceGrown"
+            or self.info_type == "hospitalizationIncidenceSenior"
+            or self.info_type == "hospitalizationIncidenceOld"
+        ):
             return "nb"
         else:
             return "cases"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device attributes."""
         return {
             ATTR_ATTRIBUTION: f"last updated {self.updated.strftime('%d %b, %Y  %H:%M:%S')} \n{ATTRIBUTION}"
