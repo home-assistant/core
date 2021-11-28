@@ -33,7 +33,6 @@ from .const import (
     CONF_DIRECTOR_SW_VERSION,
     CONF_DIRECTOR_TOKEN_EXPIRATION,
     CONF_WEBSOCKET,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 
@@ -105,11 +104,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     director_all_items = await director.getAllItemInfo()
     director_all_items = json.loads(director_all_items)
     entry_data[CONF_DIRECTOR_ALL_ITEMS] = director_all_items
-
-    # Load options from config entry
-    entry_data[CONF_SCAN_INTERVAL] = entry.options.get(
-        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-    )
 
     entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)
 
