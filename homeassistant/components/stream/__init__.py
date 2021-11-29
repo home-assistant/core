@@ -55,12 +55,17 @@ from .hls import HlsStreamOutput, async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
 
-STREAM_SOURCE_RE = re.compile("//.*:.*@")
+STREAM_SOURCE_REDACT_PATTERN = [
+    (re.compile(r"//.*:.*@"), "//****:****@"),
+    (re.compile(r"\?auth=.*"), "?auth=****"),
+]
 
 
 def redact_credentials(data: str) -> str:
     """Redact credentials from string data."""
-    return STREAM_SOURCE_RE.sub("//****:****@", data)
+    for (pattern, repl) in STREAM_SOURCE_REDACT_PATTERN:
+        data = pattern.sub(repl, data)
+    return data
 
 
 def create_stream(
