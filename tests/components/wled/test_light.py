@@ -55,11 +55,6 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_EFFECT) == "Solid"
     assert state.attributes.get(ATTR_HS_COLOR) == (37.412, 100.0)
     assert state.attributes.get(ATTR_ICON) == "mdi:led-strip-variant"
-    assert state.attributes.get(ATTR_INTENSITY) == 128
-    assert state.attributes.get(ATTR_PALETTE) == "Default"
-    assert state.attributes.get(ATTR_PRESET) is None
-    assert state.attributes.get(ATTR_REVERSE) is False
-    assert state.attributes.get(ATTR_SPEED) == 32
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get("light.wled_rgb_light")
@@ -73,11 +68,6 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_EFFECT) == "Blink"
     assert state.attributes.get(ATTR_HS_COLOR) == (148.941, 100.0)
     assert state.attributes.get(ATTR_ICON) == "mdi:led-strip-variant"
-    assert state.attributes.get(ATTR_INTENSITY) == 64
-    assert state.attributes.get(ATTR_PALETTE) == "Random Cycle"
-    assert state.attributes.get(ATTR_PRESET) is None
-    assert state.attributes.get(ATTR_REVERSE) is True
-    assert state.attributes.get(ATTR_SPEED) == 16
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get("light.wled_rgb_light_segment_1")
