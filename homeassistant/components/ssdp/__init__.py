@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Iterator, Mapping
+from collections.abc import Awaitable, Mapping
 from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
@@ -115,7 +115,7 @@ class SsdpServiceInfo(
         if not self._warning_logged:
             report(
                 f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={"ssdp"},
+                exclude_integrations={DOMAIN},
                 error_if_core=False,
                 level=logging.DEBUG,
             )
@@ -129,37 +129,40 @@ class SsdpServiceInfo(
 
     def get(self, name: str, default: Any = None) -> Any:
         """
-        Allow property access by name for compatibility reason.
+        Enable method for compatibility reason.
 
         Deprecated, and will be removed in version 2022.6.
         """
         if not self._warning_logged:
             report(
                 f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={"ssdp"},
+                exclude_integrations={DOMAIN},
                 error_if_core=False,
                 level=logging.DEBUG,
             )
             self._warning_logged = True
         if hasattr(self, name):
             return getattr(self, name)
-        return self.upnp.get(name, default)
+        return self.upnp.get(name, self.ssdp_headers.get(name, default))
 
-    def __iter__(self) -> Iterator[str]:
+    def __contains__(self, name: str) -> bool:
         """
-        Implement iter(self) on upnp data.
+        Enable method for compatibility reason.
 
         Deprecated, and will be removed in version 2022.6.
         """
         if not self._warning_logged:
             report(
-                "accessed discovery_info.__iter__() instead of discovery_info.upnp.__iter__(); this will fail in version 2022.6",
-                exclude_integrations={"ssdp"},
+                "accessed discovery_info.__contains__() instead of discovery_info.upnp.__contains__() "
+                "or discovery_info.ssdp_headers.__contains__(); this will fail in version 2022.6",
+                exclude_integrations={DOMAIN},
                 error_if_core=False,
                 level=logging.DEBUG,
             )
             self._warning_logged = True
-        return self.upnp.__iter__()
+        if hasattr(self, name):
+            return getattr(self, name) is not None
+        return name in self.upnp or name in self.ssdp_headers
 
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
