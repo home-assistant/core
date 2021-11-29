@@ -25,5 +25,14 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "default_speed": "Default speed"
+        }
+      }
+    }
   }
 }
