@@ -22,7 +22,15 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, DOMAIN
 
-PLATFORMS = ["binary_sensor", "button", "climate", "light", "select", "sensor"]
+PLATFORMS = [
+    "binary_sensor",
+    "button",
+    "climate",
+    "fan",
+    "light",
+    "select",
+    "sensor",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
