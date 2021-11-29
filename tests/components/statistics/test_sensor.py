@@ -60,11 +60,13 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "binary_sensor.test_monitored",
+                        "state_characteristic": "mean",
                     },
                     {
                         "platform": "statistics",
                         "name": "test_unitless",
                         "entity_id": "binary_sensor.test_monitored_unitless",
+                        "state_characteristic": "mean",
                     },
                 ]
             },
@@ -73,13 +75,13 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
-
         for value in self.values_binary:
             self.hass.states.set(
                 "binary_sensor.test_monitored",
                 value,
                 {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
+
             self.hass.states.set("binary_sensor.test_monitored_unitless", value)
             self.hass.block_till_done()
 
@@ -105,6 +107,7 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
                     },
                 ]
             },
@@ -193,11 +196,13 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test_normal",
                         "entity_id": "sensor.test_monitored_normal",
+                        "state_characteristic": "mean",
                     },
                     {
                         "platform": "statistics",
                         "name": "test_force",
                         "entity_id": "sensor.test_monitored_force",
+                        "state_characteristic": "mean",
                     },
                 ]
             },
@@ -239,6 +244,7 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
                         "sampling_size": 5,
                     },
                 ]
@@ -273,6 +279,7 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
                         "sampling_size": 1,
                     },
                 ]
@@ -318,6 +325,7 @@ class TestStatisticsSensor(unittest.TestCase):
                             "platform": "statistics",
                             "name": "test",
                             "entity_id": "sensor.test_monitored",
+                            "state_characteristic": "mean",
                             "max_age": {"minutes": 4},
                         },
                     ]
@@ -391,6 +399,7 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
                         "precision": 0,
                     },
                 ]
@@ -423,6 +432,7 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
                         "precision": 1,
                     },
                 ]
@@ -834,6 +844,7 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
                         "sampling_size": 100,
                     },
                 ]
@@ -936,6 +947,7 @@ async def test_reload(hass):
                     "platform": "statistics",
                     "name": "test",
                     "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
                     "sampling_size": 100,
                 },
             ]

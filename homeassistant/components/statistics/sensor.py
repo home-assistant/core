@@ -91,7 +91,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_STATE_CHARACTERISTIC, default=STAT_MEAN): vol.In(
+        vol.Required(CONF_STATE_CHARACTERISTIC): vol.In(
             [
                 STAT_AVERAGE_LINEAR,
                 STAT_AVERAGE_STEP,
@@ -190,8 +190,9 @@ class StatisticsSensor(SensorEntity):
         }
         if self.is_binary and self._state_characteristic not in STATS_BINARY_SUPPORT:
             raise vol.error.ValueInvalid(
-                f"The configured characteristic '{self._state_characteristic}' "
-                "is not supported for a binary source sensor."
+                "The configured characteristic '"
+                + self._state_characteristic
+                + "' is not supported for a binary source sensor."
             )
 
         if self.is_binary:
