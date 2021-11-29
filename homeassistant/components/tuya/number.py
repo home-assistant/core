@@ -209,6 +209,27 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Fingerbot
+    "szjqr": (
+        NumberEntityDescription(
+            key=DPCode.ARM_DOWN_PERCENT,
+            name="Move Down %",
+            icon="mdi:arrow-down-bold",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ARM_UP_PERCENT,
+            name="Move Up %",
+            icon="mdi:arrow-up-bold",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CLICK_SUSTAIN_TIME,
+            name="Down Delay",
+            icon="mdi:timer",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
 }
 
 

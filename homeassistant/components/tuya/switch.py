@@ -449,6 +449,14 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Fingerbot
+    "szjqr": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+            icon="mdi:cursor-pointer",
+        ),
+    ),
 }
 
 # Socket (duplicate of `pc`)
