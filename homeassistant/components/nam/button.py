@@ -3,9 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from aiohttp.client_exceptions import ClientError
-from nettigo_air_monitor import ApiError, AuthFailed
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_CONFIG
@@ -58,11 +55,4 @@ class NAMButton(CoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Triggers the restart."""
-        try:
-            await self.coordinator.nam.async_restart()
-        except (
-            AuthFailed,
-            ApiError,
-            ClientError,
-        ) as err:
-            _LOGGER.error("Failed to restart the device: %s", err)
+        await self.coordinator.nam.async_restart()
