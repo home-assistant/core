@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         timeout=ClientTimeout(total=_API_TIMEOUT),
         session=async_get_clientsession(hass),
     )
-    hub = BondHub(bond)
+    hub = BondHub(bond, host)
     try:
         await hub.setup()
     except ClientResponseError as ex:
@@ -78,6 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=hub.target,
         sw_version=hub.fw_ver,
         suggested_area=hub.location,
+        configuration_url=f"http://{host}",
     )
 
     _async_remove_old_device_identifiers(config_entry_id, device_registry, hub)

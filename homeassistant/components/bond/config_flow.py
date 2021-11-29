@@ -47,7 +47,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[st
         data[CONF_HOST], data[CONF_ACCESS_TOKEN], session=async_get_clientsession(hass)
     )
     try:
-        hub = BondHub(bond)
+        hub = BondHub(bond, data[CONF_HOST])
         await hub.setup(max_devices=1)
     except ClientConnectionError as error:
         raise InputValidationError("cannot_connect") from error
