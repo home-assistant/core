@@ -48,7 +48,7 @@
                     "topic_out_prefix": "\u30a2\u30a6\u30c8\u30d7\u30c3\u30c8 \u30c8\u30d4\u30c3\u30af\u306e\u30d7\u30ec\u30d5\u30a3\u30c3\u30af\u30b9(topic_out_prefix)",
                     "version": "MySensors\u306e\u30d0\u30fc\u30b8\u30e7\u30f3"
                 },
-                "description": "MQTT\u30b2\u30fc\u30c8\u30a6\u30a7\u30a4\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+                "description": "MQTT gateway\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
             },
             "gw_serial": {
                 "data": {
