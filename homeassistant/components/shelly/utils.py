@@ -57,9 +57,7 @@ def get_block_device_name(device: BlockDevice) -> str:
 
 def get_rpc_device_name(device: RpcDevice) -> str:
     """Naming for device."""
-    # Gen2 does not support setting device name
-    # AP SSID name is used as a nicely formatted device name
-    return cast(str, device.config["wifi"]["ap"]["ssid"] or device.hostname)
+    return cast(str, device.config["sys"]["device"]["name"] or device.hostname)
 
 
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
