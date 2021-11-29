@@ -1,5 +1,7 @@
 """Config flow for Mikrotik."""
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from bleak.exc import BleakError
 from miio.exceptions import DeviceException
@@ -41,7 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler(config_entry)
 
     async def async_step_user(
-        self, user_input: Optional[dict[str, Any]] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if user_input:
