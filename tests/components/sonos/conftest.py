@@ -70,6 +70,8 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
         mock_soco.night_mode = True
         mock_soco.dialog_mode = True
         mock_soco.volume = 19
+        mock_soco.bass = 1
+        mock_soco.treble = -1
         mock_soco.get_battery_info.return_value = battery_info
         mock_soco.all_zones = [mock_soco]
         yield mock_soco
