@@ -149,7 +149,7 @@ aiolyric==1.0.8
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.13.1
+aiomusiccast==0.14.2
 
 # homeassistant.components.nanoleaf
 aionanoleaf==0.0.4
@@ -254,7 +254,7 @@ azure-eventhub==5.5.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.28.0
+bellows==0.29.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.8.2
@@ -287,7 +287,7 @@ brunt==1.0.0
 bsblan==0.4.0
 
 # homeassistant.components.buienradar
-buienradar==1.0.4
+buienradar==1.0.5
 
 # homeassistant.components.caldav
 caldav==0.7.1
@@ -399,7 +399,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.25.1
+flux_led==0.25.2
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -995,7 +995,7 @@ pymata-express==1.19
 pymazda==0.2.2
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.4
+pymelcloud==2.5.5
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.0.6
@@ -1220,7 +1220,7 @@ regenmaschine==2021.10.0
 renault-api==0.1.4
 
 # homeassistant.components.python_script
-restrictedpython==5.2a1.dev0
+restrictedpython==5.2
 
 # homeassistant.components.rflink
 rflink==0.0.58
@@ -1356,6 +1356,9 @@ tellduslive==0.10.11
 # homeassistant.components.powerwall
 tesla-powerwall==0.3.12
 
+# homeassistant.components.tesla_wall_connector
+tesla-wall-connector==0.2.0
+
 # homeassistant.components.tolo
 tololib==0.1.0b3
 
@@ -1472,7 +1475,7 @@ zeroconf==0.37.0
 zha-quirks==0.0.63
 
 # homeassistant.components.zha
-zigpy-deconz==0.13.0
+zigpy-deconz==0.14.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.14.0

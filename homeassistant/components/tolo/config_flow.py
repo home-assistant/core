@@ -35,9 +35,9 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
             result = client.get_status_info(
                 resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
             )
-            return result is not None
         except ResponseTimedOutError:
             return False
+        return result is not None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

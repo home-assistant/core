@@ -1275,7 +1275,7 @@ class Script:
         else:
             config_cache_key = frozenset((k, str(v)) for k, v in config.items())
         if not (cond := self._config_cache.get(config_cache_key)):
-            cond = await condition.async_from_config(self._hass, config, False)
+            cond = await condition.async_from_config(self._hass, config)
             self._config_cache[config_cache_key] = cond
         return cond
 

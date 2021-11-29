@@ -186,12 +186,8 @@ async def async_get_conditions(
 
 
 @callback
-def async_condition_from_config(
-    config: ConfigType, config_validation: bool
-) -> condition.ConditionCheckerType:
+def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
     numeric_state_config = {
         condition.CONF_CONDITION: "numeric_state",
         condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
@@ -201,6 +197,7 @@ def async_condition_from_config(
     if CONF_BELOW in config:
         numeric_state_config[condition.CONF_BELOW] = config[CONF_BELOW]
 
+    numeric_state_config = cv.NUMERIC_STATE_CONDITION_SCHEMA(numeric_state_config)
     return condition.async_numeric_state_from_config(numeric_state_config)
 
 
