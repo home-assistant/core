@@ -26,10 +26,10 @@ PLATFORMS = [
     "binary_sensor",
     "button",
     "climate",
+    "fan",
     "light",
     "select",
     "sensor",
-    "switch",
 ]
 
 _LOGGER = logging.getLogger(__name__)
