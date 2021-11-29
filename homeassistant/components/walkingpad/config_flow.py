@@ -1,4 +1,4 @@
-"""Config flow for Mikrotik."""
+"""Config flow for WalkingPad."""
 from __future__ import annotations
 
 from typing import Any
