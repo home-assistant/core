@@ -69,7 +69,7 @@ class WalkingPadBaseDevice:
         """Initialize device."""
         self._hass = hass
         self._config = config
-        self._name = None
+        self._name = "WalkingPad"
         self._default_speed = config.options.get(CONF_DEFAULT_SPEED, DEFAULT_SPEED)
         self._speed_user = self._default_speed
 
