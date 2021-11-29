@@ -78,6 +78,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Maja",  # Polish
     "Ricardo",
     "Vitoria",  # Portuguese, Brazilian
+    "Camila",  # Portuguese, Brazilian
     "Cristiano",
     "Ines",  # Portuguese, European
     "Carmen",  # Romanian

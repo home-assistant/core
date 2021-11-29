@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "no_locations": "Nessuna posizione disponibile per questo utente, controlla le impostazioni di TotalConnect",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {

@@ -37,6 +37,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import StateType
@@ -127,7 +128,7 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
     if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
-    return entry.device_class
+    return entry.device_class or entry.original_device_class
 
 
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
@@ -168,7 +169,7 @@ class DeviceInfo(TypedDict, total=False):
     default_manufacturer: str
     default_model: str
     default_name: str
-    entry_type: str | None
+    entry_type: DeviceEntryType | None
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
     model: str | None
@@ -515,7 +516,15 @@ class Entity(ABC):
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
-            # Add warning in 2021.6, remove in 2021.10
+            # Warning added in 2021.12, will be removed in 2022.4
+            if self.device_state_attributes is not None:
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Entity %s (%s) implements device_state_attributes. Please %s",
+                    self.entity_id,
+                    type(self),
+                    report_issue,
+                )
             if extra_state_attributes is None:
                 extra_state_attributes = self.device_state_attributes
             attr.update(extra_state_attributes or {})
@@ -525,27 +534,29 @@ class Entity(ABC):
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
         entry = self.registry_entry
-        # pylint: disable=consider-using-ternary
-        if (name := (entry and entry.name) or self.name) is not None:
-            attr[ATTR_FRIENDLY_NAME] = name
-
-        if (icon := (entry and entry.icon) or self.icon) is not None:
-            attr[ATTR_ICON] = icon
-
-        if (entity_picture := self.entity_picture) is not None:
-            attr[ATTR_ENTITY_PICTURE] = entity_picture
 
         if assumed_state := self.assumed_state:
             attr[ATTR_ASSUMED_STATE] = assumed_state
 
-        if (supported_features := self.supported_features) is not None:
-            attr[ATTR_SUPPORTED_FEATURES] = supported_features
-
-        if (device_class := self.device_class) is not None:
-            attr[ATTR_DEVICE_CLASS] = str(device_class)
-
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
+
+        if (
+            device_class := (entry and entry.device_class) or self.device_class
+        ) is not None:
+            attr[ATTR_DEVICE_CLASS] = str(device_class)
+
+        if (entity_picture := self.entity_picture) is not None:
+            attr[ATTR_ENTITY_PICTURE] = entity_picture
+
+        if (icon := (entry and entry.icon) or self.icon) is not None:
+            attr[ATTR_ICON] = icon
+
+        if (name := (entry and entry.name) or self.name) is not None:
+            attr[ATTR_FRIENDLY_NAME] = name
+
+        if (supported_features := self.supported_features) is not None:
+            attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
         end = timer()
 

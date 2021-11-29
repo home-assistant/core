@@ -14,11 +14,11 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, DOMAIN
 from .utils import (
@@ -186,23 +186,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
+        host = discovery_info[zeroconf.ATTR_HOST]
         try:
-            self.info = await self._async_get_info(discovery_info["host"])
+            self.info = await self._async_get_info(host)
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
         except aioshelly.exceptions.FirmwareUnsupported:
             return self.async_abort(reason="unsupported_firmware")
 
         await self.async_set_unique_id(self.info["mac"])
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
-        self.host = discovery_info["host"]
+        self._abort_if_unique_id_configured({CONF_HOST: host})
+        self.host = host
 
-        self.context["title_placeholders"] = {
-            "name": discovery_info.get("name", "").split(".")[0]
-        }
+        self.context["title_placeholders"] = {"name": discovery_info.name.split(".")[0]}
 
         if get_info_auth(self.info):
             return await self.async_step_credentials()

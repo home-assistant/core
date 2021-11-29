@@ -240,6 +240,7 @@ DEVICE_CLASS_CO2: Final = "carbon_dioxide"
 DEVICE_CLASS_CURRENT: Final = "current"
 DEVICE_CLASS_DATE: Final = "date"
 DEVICE_CLASS_ENERGY: Final = "energy"
+DEVICE_CLASS_FREQUENCY: Final = "frequency"
 DEVICE_CLASS_HUMIDITY: Final = "humidity"
 DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
 DEVICE_CLASS_MONETARY: Final = "monetary"
@@ -420,6 +421,7 @@ ATTR_TEMPERATURE: Final = "temperature"
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
 POWER_VOLT_AMPERE: Final = "VA"
+POWER_BTU_PER_HOUR: Final = "BTU/h"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
@@ -471,6 +473,7 @@ LENGTH_MILES: Final = "mi"
 
 # Frequency units
 FREQUENCY_HERTZ: Final = "Hz"
+FREQUENCY_KILOHERTZ: Final = "kHz"
 FREQUENCY_MEGAHERTZ: Final = "MHz"
 FREQUENCY_GIGAHERTZ: Final = "GHz"
 
@@ -481,6 +484,7 @@ PRESSURE_KPA: Final = "kPa"
 PRESSURE_BAR: Final = "bar"
 PRESSURE_CBAR: Final = "cbar"
 PRESSURE_MBAR: Final = "mbar"
+PRESSURE_MMHG: Final = "mmHg"
 PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
 
@@ -682,7 +686,9 @@ PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"
 TEMPERATURE: Final = "temperature"
 SPEED: Final = "speed"
+WIND_SPEED: Final = "wind_speed"
 ILLUMINANCE: Final = "illuminance"
+ACCUMULATED_PRECIPITATION: Final = "accumulated_precipitation"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
@@ -695,8 +701,11 @@ PRECISION_TENTHS: Final = 0.1
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
+# Config: An entity which allows changing the configuration of a device
 ENTITY_CATEGORY_CONFIG: Final = "config"
+# Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
 ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
+# System: An entity which is not useful for the user to interact with
 ENTITY_CATEGORY_SYSTEM: Final = "system"
 
 # Entity categories which will:

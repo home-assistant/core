@@ -5,9 +5,11 @@ from dataclasses import dataclass, field
 import ipaddress
 import logging
 from typing import Any, NamedTuple
+from uuid import UUID
 
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
 from vallox_websocket_api.exceptions import ValloxApiException
+from vallox_websocket_api.vallox import get_uuid as calculate_uuid
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STARTED
@@ -113,6 +115,13 @@ class ValloxState:
             return None
 
         return value
+
+    def get_uuid(self) -> UUID | None:
+        """Return cached UUID value."""
+        uuid = calculate_uuid(self.metric_cache)
+        if not isinstance(uuid, UUID):
+            raise ValueError
+        return uuid
 
 
 class ValloxDataUpdateCoordinator(DataUpdateCoordinator):

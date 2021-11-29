@@ -1021,7 +1021,10 @@ async def test_pattern_entity_state(hass, requests_mock_truck_response, caplog):
     await hass.async_block_till_done()
 
     assert len(caplog.records) == 1
-    assert "is not a valid set of coordinates" in caplog.text
+    assert (
+        "Entity sensor.origin does not contain a location and does not point at an entity that does: invalid"
+        in caplog.text
+    )
 
 
 async def test_pattern_entity_state_with_space(hass, requests_mock_truck_response):

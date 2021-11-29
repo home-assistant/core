@@ -6,11 +6,11 @@ from typing import Any
 from aiomodernforms import ModernFormsConnectionError, ModernFormsDevice
 import voluptuous as vol
 
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -27,23 +27,23 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._handle_config_flow(user_input)
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        host = discovery_info["hostname"].rstrip(".")
+        host = discovery_info[zeroconf.ATTR_HOSTNAME].rstrip(".")
         name, _ = host.rsplit(".")
 
         self.context.update(
             {
-                CONF_HOST: discovery_info["host"],
+                CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
                 CONF_NAME: name,
-                CONF_MAC: discovery_info["properties"].get(CONF_MAC),
+                CONF_MAC: discovery_info[zeroconf.ATTR_PROPERTIES].get(CONF_MAC),
                 "title_placeholders": {"name": name},
             }
         )
 
         # Prepare configuration flow
-        return await self._handle_config_flow(discovery_info, True)
+        return await self._handle_config_flow({}, True)
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None

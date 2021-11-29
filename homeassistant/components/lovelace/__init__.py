@@ -140,6 +140,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = {
         # We store a dictionary mapping url_path: config. None is the default.
+        "mode": mode,
         "dashboards": {None: default_config},
         "resources": resource_collection,
         "yaml_dashboards": config[DOMAIN].get(CONF_DASHBOARDS, {}),

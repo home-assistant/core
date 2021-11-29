@@ -201,7 +201,11 @@ sync_state_validator = vol.Any(
 
 
 class ConnectionSchema:
-    """Voluptuous schema for KNX connection."""
+    """
+    Voluptuous schema for KNX connection.
+
+    DEPRECATED: Migrated to config and options flow. Will be removed in a future version of Home Assistant.
+    """
 
     CONF_KNX_LOCAL_IP = "local_ip"
     CONF_KNX_MCAST_GRP = "multicast_group"
@@ -209,6 +213,9 @@ class ConnectionSchema:
     CONF_KNX_RATE_LIMIT = "rate_limit"
     CONF_KNX_ROUTE_BACK = "route_back"
     CONF_KNX_STATE_UPDATER = "state_updater"
+
+    CONF_KNX_DEFAULT_STATE_UPDATER = True
+    CONF_KNX_DEFAULT_RATE_LIMIT = 20
 
     TUNNELING_SCHEMA = vol.Schema(
         {
@@ -229,8 +236,10 @@ class ConnectionSchema:
         ): ia_validator,
         vol.Optional(CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): cv.string,
         vol.Optional(CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT): cv.port,
-        vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
-        vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
+        vol.Optional(
+            CONF_KNX_STATE_UPDATER, default=CONF_KNX_DEFAULT_STATE_UPDATER
+        ): cv.boolean,
+        vol.Optional(CONF_KNX_RATE_LIMIT, default=CONF_KNX_DEFAULT_RATE_LIMIT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
     }

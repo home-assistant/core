@@ -1022,6 +1022,73 @@ async def test_track_template_result(hass):
     assert len(wildercard_runs) == 4
 
 
+async def test_track_template_result_none(hass):
+    """Test tracking template."""
+    specific_runs = []
+    wildcard_runs = []
+    wildercard_runs = []
+
+    template_condition = Template("{{state_attr('sensor.test', 'battery')}}", hass)
+    template_condition_var = Template(
+        "{{(state_attr('sensor.test', 'battery')|int) + test }}", hass
+    )
+
+    def specific_run_callback(event, updates):
+        track_result = updates.pop()
+        result = int(track_result.result) if track_result.result is not None else None
+        specific_runs.append(result)
+
+    async_track_template_result(
+        hass, [TrackTemplate(template_condition, None)], specific_run_callback
+    )
+
+    @ha.callback
+    def wildcard_run_callback(event, updates):
+        track_result = updates.pop()
+        last_result = (
+            int(track_result.last_result)
+            if track_result.last_result is not None
+            else None
+        )
+        result = int(track_result.result) if track_result.result is not None else None
+        wildcard_runs.append((last_result, result))
+
+    async_track_template_result(
+        hass, [TrackTemplate(template_condition, None)], wildcard_run_callback
+    )
+
+    async def wildercard_run_callback(event, updates):
+        track_result = updates.pop()
+        last_result = (
+            int(track_result.last_result)
+            if track_result.last_result is not None
+            else None
+        )
+        result = int(track_result.result) if track_result.result is not None else None
+        wildercard_runs.append((last_result, result))
+
+    async_track_template_result(
+        hass,
+        [TrackTemplate(template_condition_var, {"test": 5})],
+        wildercard_run_callback,
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test", "-")
+    await hass.async_block_till_done()
+
+    assert specific_runs == [None]
+    assert wildcard_runs == [(None, None)]
+    assert wildercard_runs == [(None, 5)]
+
+    hass.states.async_set("sensor.test", "-", {"battery": 5})
+    await hass.async_block_till_done()
+
+    assert specific_runs == [None, 5]
+    assert wildcard_runs == [(None, None), (None, 5)]
+    assert wildercard_runs == [(None, 5), (5, 10)]
+
+
 async def test_track_template_result_super_template(hass):
     """Test tracking template with super template listening to same entity."""
     specific_runs = []
@@ -1166,6 +1233,151 @@ async def test_track_template_result_super_template(hass):
     assert len(wildercard_runs_availability) == 6
 
 
+async def test_track_template_result_super_template_initially_false(hass):
+    """Test tracking template with super template listening to same entity."""
+    specific_runs = []
+    specific_runs_availability = []
+    wildcard_runs = []
+    wildcard_runs_availability = []
+    wildercard_runs = []
+    wildercard_runs_availability = []
+
+    template_availability = Template("{{ is_number(states('sensor.test')) }}", hass)
+    template_condition = Template("{{states.sensor.test.state}}", hass)
+    template_condition_var = Template(
+        "{{(states.sensor.test.state|int) + test }}", hass
+    )
+
+    # Make the super template initially false
+    hass.states.async_set("sensor.test", "unavailable")
+    await hass.async_block_till_done()
+
+    def specific_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                specific_runs.append(int(track_result.result))
+            elif track_result.template is template_availability:
+                specific_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        specific_run_callback,
+        has_super_template=True,
+    )
+
+    @ha.callback
+    def wildcard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                wildcard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildcard_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        wildcard_run_callback,
+        has_super_template=True,
+    )
+
+    async def wildercard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition_var:
+                wildercard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildercard_runs_availability.append(track_result.result)
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition_var, {"test": 5}),
+        ],
+        wildercard_run_callback,
+        has_super_template=True,
+    )
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == []
+    assert wildcard_runs_availability == []
+    assert wildercard_runs_availability == []
+    assert specific_runs == []
+    assert wildcard_runs == []
+    assert wildercard_runs == []
+
+    hass.states.async_set("sensor.test", 5)
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True]
+    assert wildcard_runs_availability == [True]
+    assert wildercard_runs_availability == [True]
+    assert specific_runs == [5]
+    assert wildcard_runs == [(0, 5)]
+    assert wildercard_runs == [(0, 10)]
+
+    hass.states.async_set("sensor.test", "unknown")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True, False]
+    assert wildcard_runs_availability == [True, False]
+    assert wildercard_runs_availability == [True, False]
+
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True, False, True]
+    assert wildcard_runs_availability == [True, False, True]
+    assert wildercard_runs_availability == [True, False, True]
+
+    assert specific_runs == [5, 30]
+    assert wildcard_runs == [(0, 5), (5, 30)]
+    assert wildercard_runs == [(0, 10), (10, 35)]
+
+    hass.states.async_set("sensor.test", "other")
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 2
+    assert len(wildcard_runs) == 2
+    assert len(wildercard_runs) == 2
+    assert len(specific_runs_availability) == 5
+    assert len(wildcard_runs_availability) == 5
+    assert len(wildercard_runs_availability) == 5
+
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 2
+    assert len(wildcard_runs) == 2
+    assert len(wildercard_runs) == 2
+    assert len(specific_runs_availability) == 5
+    assert len(wildcard_runs_availability) == 5
+    assert len(wildercard_runs_availability) == 5
+
+    hass.states.async_set("sensor.test", 31)
+    await hass.async_block_till_done()
+
+    assert len(specific_runs) == 3
+    assert len(wildcard_runs) == 3
+    assert len(wildercard_runs) == 3
+    assert len(specific_runs_availability) == 5
+    assert len(wildcard_runs_availability) == 5
+    assert len(wildercard_runs_availability) == 5
+
+
 @pytest.mark.parametrize(
     "availability_template",
     [
@@ -1298,6 +1510,145 @@ async def test_track_template_result_super_template_2(hass, availability_templat
     assert specific_runs_availability == [False, True]
     assert wildcard_runs_availability == [False, True]
     assert wildercard_runs_availability == [False, True]
+    assert specific_runs == [5, 30]
+    assert wildcard_runs == [(0, 5), (5, 30)]
+    assert wildercard_runs == [(0, 10), (10, 35)]
+
+
+@pytest.mark.parametrize(
+    "availability_template",
+    [
+        "{{ states('sensor.test2') != 'unavailable' }}",
+        "{% if states('sensor.test2') != 'unavailable' -%} true {%- else -%} false {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} 1 {%- else -%} 0 {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} yes {%- else -%} no {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} on {%- else -%} off {%- endif %}",
+        "{% if states('sensor.test2') != 'unavailable' -%} enable {%- else -%} disable {%- endif %}",
+        # This will throw when sensor.test2 is not "unavailable"
+        "{% if states('sensor.test2') != 'unavailable' -%} {{'a' + 5}} {%- else -%} false {%- endif %}",
+    ],
+)
+async def test_track_template_result_super_template_2_initially_false(
+    hass, availability_template
+):
+    """Test tracking template with super template listening to different entities."""
+    specific_runs = []
+    specific_runs_availability = []
+    wildcard_runs = []
+    wildcard_runs_availability = []
+    wildercard_runs = []
+    wildercard_runs_availability = []
+
+    template_availability = Template(availability_template)
+    template_condition = Template("{{states.sensor.test.state}}", hass)
+    template_condition_var = Template(
+        "{{(states.sensor.test.state|int) + test }}", hass
+    )
+
+    hass.states.async_set("sensor.test2", "unavailable")
+    await hass.async_block_till_done()
+
+    def _super_template_as_boolean(result):
+        if isinstance(result, TemplateError):
+            return True
+
+        return result_as_boolean(result)
+
+    def specific_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                specific_runs.append(int(track_result.result))
+            elif track_result.template is template_availability:
+                specific_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        specific_run_callback,
+        has_super_template=True,
+    )
+
+    @ha.callback
+    def wildcard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition:
+                wildcard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildcard_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition, None),
+        ],
+        wildcard_run_callback,
+        has_super_template=True,
+    )
+
+    async def wildercard_run_callback(event, updates):
+        for track_result in updates:
+            if track_result.template is template_condition_var:
+                wildercard_runs.append(
+                    (int(track_result.last_result or 0), int(track_result.result))
+                )
+            elif track_result.template is template_availability:
+                wildercard_runs_availability.append(
+                    _super_template_as_boolean(track_result.result)
+                )
+
+    async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_availability, None),
+            TrackTemplate(template_condition_var, {"test": 5}),
+        ],
+        wildercard_run_callback,
+        has_super_template=True,
+    )
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == []
+    assert wildcard_runs_availability == []
+    assert wildercard_runs_availability == []
+    assert specific_runs == []
+    assert wildcard_runs == []
+    assert wildercard_runs == []
+
+    hass.states.async_set("sensor.test", 5)
+    hass.states.async_set("sensor.test2", "available")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True]
+    assert wildcard_runs_availability == [True]
+    assert wildercard_runs_availability == [True]
+    assert specific_runs == [5]
+    assert wildcard_runs == [(0, 5)]
+    assert wildercard_runs == [(0, 10)]
+
+    hass.states.async_set("sensor.test2", "unknown")
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True]
+    assert wildcard_runs_availability == [True]
+    assert wildercard_runs_availability == [True]
+
+    hass.states.async_set("sensor.test2", "available")
+    hass.states.async_set("sensor.test", 30)
+    await hass.async_block_till_done()
+
+    assert specific_runs_availability == [True]
+    assert wildcard_runs_availability == [True]
+    assert wildercard_runs_availability == [True]
     assert specific_runs == [5, 30]
     assert wildcard_runs == [(0, 5), (5, 30)]
     assert wildercard_runs == [(0, 10), (10, 35)]

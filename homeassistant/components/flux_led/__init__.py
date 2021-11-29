@@ -1,13 +1,15 @@
 """The Flux LED/MagicLight integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.aioscanner import AIOBulbScanner
+from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -24,18 +26,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
-    FLUX_HOST,
     FLUX_LED_DISCOVERY,
+    FLUX_LED_DISCOVERY_LOCK,
     FLUX_LED_EXCEPTIONS,
-    FLUX_MAC,
-    FLUX_MODEL,
     SIGNAL_STATE_UPDATED,
     STARTUP_SCAN_TIMEOUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS_BY_TYPE: Final = {DeviceType.Bulb: ["light"], DeviceType.Switch: ["switch"]}
+PLATFORMS_BY_TYPE: Final = {
+    DeviceType.Bulb: ["light", "number"],
+    DeviceType.Switch: ["switch"],
+}
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5
 
@@ -47,16 +50,27 @@ def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
 
 
 @callback
+def async_name_from_discovery(device: dict[str, Any]) -> str:
+    """Convert a flux_led discovery to a human readable name."""
+    if (mac := device.get(ATTR_ID)) is None:
+        return cast(str, device[ATTR_IPADDR])
+    short_mac = mac[-6:]
+    if device.get(ATTR_MODEL_DESCRIPTION):
+        return f"{device[ATTR_MODEL_DESCRIPTION]} {short_mac}"
+    return f"{device[ATTR_MODEL]} {short_mac}"
+
+
+@callback
 def async_update_entry_from_discovery(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device: dict[str, Any]
 ) -> None:
     """Update a config entry from a flux_led discovery."""
-    name = f"{device[FLUX_MODEL]} {device[FLUX_MAC]}"
+    name = async_name_from_discovery(device)
     hass.config_entries.async_update_entry(
         entry,
         data={**entry.data, CONF_NAME: name},
         title=name,
-        unique_id=dr.format_mac(device[FLUX_MAC]),
+        unique_id=dr.format_mac(device[ATTR_ID]),
     )
 
 
@@ -64,16 +78,20 @@ async def async_discover_devices(
     hass: HomeAssistant, timeout: int, address: str | None = None
 ) -> list[dict[str, str]]:
     """Discover flux led devices."""
-    scanner = AIOBulbScanner()
-    try:
-        discovered: list[dict[str, str]] = await scanner.async_scan(
-            timeout=timeout, address=address
-        )
-    except OSError as ex:
-        _LOGGER.debug("Scanning failed with error: %s", ex)
-        return []
-    else:
-        return discovered
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    if FLUX_LED_DISCOVERY_LOCK not in domain_data:
+        domain_data[FLUX_LED_DISCOVERY_LOCK] = asyncio.Lock()
+    async with domain_data[FLUX_LED_DISCOVERY_LOCK]:
+        scanner = AIOBulbScanner()
+        try:
+            discovered: list[dict[str, str]] = await scanner.async_scan(
+                timeout=timeout, address=address
+            )
+        except OSError as ex:
+            _LOGGER.debug("Scanning failed with error: %s", ex)
+            return []
+        else:
+            return discovered
 
 
 async def async_discover_device(
@@ -83,7 +101,7 @@ async def async_discover_device(
     # If we are missing the unique_id we should be able to fetch it
     # from the device by doing a directed discovery at the host only
     for device in await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT, host):
-        if device[FLUX_HOST] == host:
+        if device[ATTR_IPADDR] == host:
             return device
     return None
 
@@ -106,7 +124,7 @@ def async_trigger_discovery(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
-    domain_data = hass.data[DOMAIN] = {}
+    domain_data = hass.data.setdefault(DOMAIN, {})
     domain_data[FLUX_LED_DISCOVERY] = await async_discover_devices(
         hass, STARTUP_SCAN_TIMEOUT
     )

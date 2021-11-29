@@ -50,33 +50,32 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         """Initialize a sensor Velbus entity."""
         super().__init__(channel)
         self._is_counter: bool = counter
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID for counter sensors."""
-        unique_id = super().unique_id
+        # define the unique id
         if self._is_counter:
-            unique_id = f"{unique_id}-counter"
-        return unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name for the sensor."""
-        name = super().name
+            self._attr_unique_id = f"{self._attr_unique_id}-counter"
+        # define the name
         if self._is_counter:
-            name = f"{name}-counter"
-        return name
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
+            self._attr_name = f"{self._attr_name}-counter"
+        # define the device class
         if self._is_counter:
-            return DEVICE_CLASS_ENERGY
-        if self._channel.is_counter_channel():
-            return DEVICE_CLASS_POWER
-        if self._channel.is_temperature():
-            return DEVICE_CLASS_TEMPERATURE
-        return None
+            self._attr_device_class = DEVICE_CLASS_ENERGY
+        elif channel.is_counter_channel():
+            self._attr_device_class = DEVICE_CLASS_POWER
+        elif channel.is_temperature():
+            self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+        # define the icon
+        if self._is_counter:
+            self._attr_icon = "mdi:counter"
+        # the state class
+        if self._is_counter:
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        else:
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+        # unit
+        if self._is_counter:
+            self._attr_native_unit_of_measurement = channel.get_counter_unit()
+        else:
+            self._attr_native_unit_of_measurement = channel.get_unit()
 
     @property
     def native_value(self) -> float | int | None:
@@ -84,24 +83,3 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         if self._is_counter:
             return float(self._channel.get_counter_state())
         return float(self._channel.get_state())
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        if self._is_counter:
-            return str(self._channel.get_counter_unit())
-        return str(self._channel.get_unit())
-
-    @property
-    def icon(self) -> str | None:
-        """Icon to use in the frontend."""
-        if self._is_counter:
-            return "mdi:counter"
-        return None
-
-    @property
-    def state_class(self) -> str:
-        """Return the state class of this device."""
-        if self._is_counter:
-            return STATE_CLASS_TOTAL_INCREASING
-        return STATE_CLASS_MEASUREMENT

@@ -78,6 +78,12 @@ def mirobo_is_got_error_fixture():
     mock_vacuum.status().battery = 82
     mock_vacuum.status().clean_area = 123.43218
     mock_vacuum.status().clean_time = timedelta(hours=2, minutes=35, seconds=34)
+    mock_vacuum.last_clean_details().start = datetime(
+        2020, 4, 1, 13, 21, 10, tzinfo=dt_util.UTC
+    )
+    mock_vacuum.last_clean_details().end = datetime(
+        2020, 4, 1, 13, 21, 10, tzinfo=dt_util.UTC
+    )
     mock_vacuum.consumable_status().main_brush_left = timedelta(
         hours=12, minutes=35, seconds=34
     )
@@ -136,6 +142,12 @@ def mirobo_old_speeds_fixture(request):
     mock_vacuum.status().battery = 32
     mock_vacuum.fan_speed_presets.return_value = request.param
     mock_vacuum.status().fanspeed = list(request.param.values())[0]
+    mock_vacuum.last_clean_details().start = datetime(
+        2020, 4, 1, 13, 21, 10, tzinfo=dt_util.UTC
+    )
+    mock_vacuum.last_clean_details().end = datetime(
+        2020, 4, 1, 13, 21, 10, tzinfo=dt_util.UTC
+    )
 
     with patch("homeassistant.components.xiaomi_miio.Vacuum") as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum

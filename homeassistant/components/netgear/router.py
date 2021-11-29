@@ -172,6 +172,8 @@ class NetgearRouter:
                 "link_rate": None,
                 "signal": None,
                 "ip": None,
+                "ssid": None,
+                "conn_ap_mac": None,
             }
 
         await self.async_update_device_trackers()

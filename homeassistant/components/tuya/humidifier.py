@@ -165,7 +165,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
             [
                 {
                     "code": self.entity_description.humidity,
-                    "value": self._set_humidity_type.scale_value(humidity),
+                    "value": self._set_humidity_type.scale_value_back(humidity),
                 }
             ]
         )

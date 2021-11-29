@@ -180,7 +180,9 @@ class SCSGateScenarioSwitch:
         elif isinstance(message, ScenarioTriggeredMessage):
             scenario_id = message.scenario
         else:
-            self._logger.warn("Scenario switch: received unknown message %s", message)
+            self._logger.warning(
+                "Scenario switch: received unknown message %s", message
+            )
             return
 
         self._hass.bus.fire(

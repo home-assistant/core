@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -140,7 +141,7 @@ class AuroraEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Define the device based on name."""
         return DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, str(self.unique_id))},
             manufacturer="NOAA",
             model="Aurora Visibility Sensor",

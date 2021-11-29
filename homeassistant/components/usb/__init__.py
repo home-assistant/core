@@ -6,6 +6,7 @@ import fnmatch
 import logging
 import os
 import sys
+from typing import Any
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
@@ -16,8 +17,10 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
 
@@ -28,6 +31,37 @@ from .utils import usb_device_from_port
 _LOGGER = logging.getLogger(__name__)
 
 REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
+
+
+@dataclasses.dataclass
+class UsbServiceInfo(BaseServiceInfo):
+    """Prepared info from usb entries."""
+
+    device: str
+    vid: str
+    pid: str
+    serial_number: str | None
+    manufacturer: str | None
+    description: str | None
+
+    # Used to prevent log flooding. To be removed in 2022.6
+    _warning_logged: bool = False
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={"usb"},
+                error_if_core=False,
+                level=logging.DEBUG,
+            )
+            self._warning_logged = True
+        return getattr(self, name)
 
 
 def human_readable_device_name(
@@ -193,7 +227,14 @@ class USBDiscovery:
                 self.hass,
                 matcher["domain"],
                 {"source": config_entries.SOURCE_USB},
-                dataclasses.asdict(device),
+                UsbServiceInfo(
+                    device=device.device,
+                    vid=device.vid,
+                    pid=device.pid,
+                    serial_number=device.serial_number,
+                    manufacturer=device.manufacturer,
+                    description=device.description,
+                ),
             )
 
     @callback
