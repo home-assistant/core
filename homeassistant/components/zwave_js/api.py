@@ -208,8 +208,8 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
             vol.Required(PRODUCT_TYPE): int,
             vol.Required(PRODUCT_ID): int,
             vol.Required(APPLICATION_VERSION): str,
-            vol.Optional(MAX_INCLUSION_REQUEST_INTERVAL): int,
-            vol.Optional(UUID): str,
+            vol.Optional(MAX_INCLUSION_REQUEST_INTERVAL): vol.Any(int, None),
+            vol.Optional(UUID): vol.Any(str, None),
             vol.Optional(SUPPORTED_PROTOCOLS): vol.All(
                 cv.ensure_list,
                 [vol.Coerce(Protocols)],
