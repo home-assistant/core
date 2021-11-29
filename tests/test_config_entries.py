@@ -2351,7 +2351,7 @@ async def test_async_setup_update_entry(hass):
     "discovery_source",
     (
         (config_entries.SOURCE_DISCOVERY, {}),
-        (config_entries.SOURCE_SSDP, {}),
+        (config_entries.SOURCE_SSDP, BaseServiceInfo()),
         (config_entries.SOURCE_USB, BaseServiceInfo()),
         (config_entries.SOURCE_HOMEKIT, BaseServiceInfo()),
         (config_entries.SOURCE_DHCP, BaseServiceInfo()),

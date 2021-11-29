@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, zeroconf
+from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
     CONF_HOST,
@@ -163,7 +163,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-    async def async_step_ssdp(self, discovery_info: dict):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo):
         """Prepare configuration for a SSDP discovered Axis device."""
         url = urlsplit(discovery_info["presentationURL"])
         return await self._process_discovered_device(
