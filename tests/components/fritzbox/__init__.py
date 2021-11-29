@@ -68,6 +68,7 @@ class FritzDeviceClimateMock(FritzDeviceBaseMock):
     """Mock of a AVM Fritz!Box climate device."""
 
     actual_temperature = 18.0
+    temperature = 18.0
     alert_state = "fake_state"
     battery_level = 23
     battery_low = True
@@ -79,7 +80,7 @@ class FritzDeviceClimateMock(FritzDeviceBaseMock):
     has_powermeter = False
     has_lightbulb = False
     has_switch = False
-    has_temperature_sensor = False
+    has_temperature_sensor = True
     has_thermostat = True
     holiday_active = "fake_holiday"
     lock = "fake_locked"
