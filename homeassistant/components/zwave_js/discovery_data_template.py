@@ -523,3 +523,48 @@ class ConfigurableFanSpeedDataTemplate(
             return None
 
         return speed_config
+
+
+@dataclass
+class FixedFanSpeedValueMix:
+    """Mixin data class for defining supported fan speeds."""
+
+    speeds: list[int]
+
+    def __post_init__(self) -> None:
+        """
+        Validate inputs.
+
+        These inputs are hardcoded in `discovery.py`, so these checks should
+        only fail due to developer error.
+        """
+        assert len(self.speeds) > 0
+        assert sorted(self.speeds) == self.speeds
+
+
+@dataclass
+class FixedFanSpeedDataTemplate(
+    BaseDiscoverySchemaDataTemplate, FanSpeedDataTemplate, FixedFanSpeedValueMix
+):
+    """
+    Specifies a fixed set of fan speeds.
+
+    Example:
+      ZWaveDiscoverySchema(
+          platform="fan",
+          hint="configured_fan_speed",
+          ...
+          data_template=FixedFanSpeedDataTemplate(
+              speeds=[32,65,99]
+          ),
+      ),
+
+    `speeds` indicates the maximum setting on the underlying fan controller
+    for each actual speed.
+    """
+
+    def get_speed_config(
+        self, resolved_data: dict[str, ZwaveConfigurationValue]
+    ) -> list[int]:
+        """Get the fan speed configuration for this device."""
+        return self.speeds
