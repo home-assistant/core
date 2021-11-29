@@ -30,7 +30,6 @@ from .const import (
     COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_FIRE_EVENT,
     CONF_REMOVE_DEVICE,
     DATA_CLEANUP_CALLBACKS,
     DATA_LISTENER,
@@ -186,9 +185,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_EVENT, event, device_id)
 
         # Signal event to any other listeners
-        fire_event = devices.get(device_id, {}).get(CONF_FIRE_EVENT)
-        if fire_event:
-            hass.bus.async_fire(EVENT_RFXTRX_EVENT, event_data)
+        hass.bus.async_fire(EVENT_RFXTRX_EVENT, event_data)
 
     @callback
     def _add_device(event, device_id):

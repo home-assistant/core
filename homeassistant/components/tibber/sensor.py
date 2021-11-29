@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_VOLTAGE,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
@@ -47,7 +48,6 @@ ICON = "mdi:currency-usd"
 SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
-SIGNAL_UPDATE_ENTITY = "tibber_rt_update_{}"
 
 
 RT_SENSORS: tuple[SensorEntityDescription, ...] = (
@@ -88,7 +88,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         name="accumulated consumption",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     SensorEntityDescription(
         key="accumulatedConsumptionLastHour",
@@ -102,7 +102,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         name="accumulated production",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     SensorEntityDescription(
         key="accumulatedProductionLastHour",
@@ -301,7 +301,7 @@ class TibberSensorElPrice(TibberSensor):
         }
         self._attr_icon = ICON
         self._attr_name = f"Electricity price {self._home_name}"
-        self._attr_unique_id = f"{self._tibber_home.home_id}"
+        self._attr_unique_id = self._tibber_home.home_id
         self._model = "Price Sensor"
 
         self._device_name = self._attr_name

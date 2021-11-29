@@ -147,13 +147,8 @@ async def async_get_conditions(
 
 
 @callback
-def async_condition_from_config(
-    config: ConfigType, config_validation: bool
-) -> condition.ConditionCheckerType:
+def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
-
     condition_type = config[CONF_TYPE]
     device_id = config[CONF_DEVICE_ID]
 

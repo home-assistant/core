@@ -25,6 +25,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -33,7 +34,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import P1MonitorDataUpdateCoordinator
 from .const import (
     DOMAIN,
-    ENTRY_TYPE_SERVICE,
     SERVICE_PHASES,
     SERVICE_SETTINGS,
     SERVICE_SMARTMETER,
@@ -264,7 +264,7 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
         )
 
         self._attr_device_info = DeviceInfo(
-            entry_type=ENTRY_TYPE_SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_{service_key}")
             },

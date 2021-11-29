@@ -26,6 +26,7 @@ class IntegerTypeData:
     scale: float
     step: float
     unit: str | None = None
+    type: str | None = None
 
     @property
     def max_scaled(self) -> float:
@@ -45,6 +46,10 @@ class IntegerTypeData:
     def scale_value(self, value: float | int) -> float:
         """Scale a value."""
         return value * 1.0 / (10 ** self.scale)
+
+    def scale_value_back(self, value: float | int) -> int:
+        """Return raw value for scaled."""
+        return int(value * (10 ** self.scale))
 
     def remap_value_to(
         self,

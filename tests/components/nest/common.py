@@ -107,7 +107,8 @@ async def async_setup_sdm_platform(hass, platform, devices={}, structures={}):
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
     ), patch("homeassistant.components.nest.PLATFORMS", [platform]), patch(
-        "homeassistant.components.nest.GoogleNestSubscriber", return_value=subscriber
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()

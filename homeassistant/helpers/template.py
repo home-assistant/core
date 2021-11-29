@@ -52,7 +52,12 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util import convert, dt as dt_util, location as loc_util
+from homeassistant.util import (
+    convert,
+    convert_to_int,
+    dt as dt_util,
+    location as loc_util,
+)
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
@@ -916,6 +921,38 @@ def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
+def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
+    """
+    Get entity ids for entities tied to an integration/domain.
+
+    Provide entry_name as domain to get all entity id's for a integration/domain
+    or provide a config entry title for filtering between instances of the same integration.
+    """
+    # first try if this is a config entry match
+    conf_entry = next(
+        (
+            entry.entry_id
+            for entry in hass.config_entries.async_entries()
+            if entry.title == entry_name
+        ),
+        None,
+    )
+    if conf_entry is not None:
+        ent_reg = entity_registry.async_get(hass)
+        entries = entity_registry.async_entries_for_config_entry(ent_reg, conf_entry)
+        return [entry.entity_id for entry in entries]
+
+    # fallback to just returning all entities for a domain
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.helpers.entity import entity_sources
+
+    return [
+        entity_id
+        for entity_id, info in entity_sources(hass).items()
+        if info["domain"] == entry_name
+    ]
+
+
 def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     """Get a device ID from an entity ID or device name."""
     entity_reg = entity_registry.async_get(hass)
@@ -1430,9 +1467,7 @@ def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SE
 def timestamp_local(value, default=_SENTINEL):
     """Filter to convert given timestamp to local date/time."""
     try:
-        return dt_util.as_local(dt_util.utc_from_timestamp(value)).strftime(
-            DATE_STR_FORMAT
-        )
+        return dt_util.as_local(dt_util.utc_from_timestamp(value)).isoformat()
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
@@ -1444,7 +1479,7 @@ def timestamp_local(value, default=_SENTINEL):
 def timestamp_utc(value, default=_SENTINEL):
     """Filter to convert given timestamp to UTC date/time."""
     try:
-        return dt_util.utc_from_timestamp(value).strftime(DATE_STR_FORMAT)
+        return dt_util.utc_from_timestamp(value).isoformat()
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
@@ -1462,6 +1497,16 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
             warn_no_default("as_timestamp", value, None)
             return None
         return default
+
+
+def as_datetime(value):
+    """Filter and to convert a time string or UNIX timestamp to datetime object."""
+    try:
+        # Check for a valid UNIX timestamp string, int or float
+        timestamp = float(value)
+        return dt_util.utc_from_timestamp(timestamp)
+    except ValueError:
+        return dt_util.parse_datetime(value)
 
 
 def strptime(string, fmt, default=_SENTINEL):
@@ -1589,14 +1634,18 @@ def regex_findall(value, find="", ignorecase=False):
     return re.findall(find, value, flags)
 
 
-def bitwise_and(first_value, second_value):
+def bitwise_and(first_value, second_value, little_endian=False):
     """Perform a bitwise and operation."""
-    return first_value & second_value
+    return convert_to_int(first_value, little_endian=little_endian) & convert_to_int(
+        second_value, little_endian=little_endian
+    )
 
 
-def bitwise_or(first_value, second_value):
+def bitwise_or(first_value, second_value, little_endian=False):
     """Perform a bitwise or operation."""
-    return first_value | second_value
+    return convert_to_int(first_value, little_endian=little_endian) | convert_to_int(
+        second_value, little_endian=little_endian
+    )
 
 
 def base64_encode(value):
@@ -1640,16 +1689,16 @@ def random_every_time(context, values):
 
 def today_at(time_str: str = "") -> datetime:
     """Record fetching now where the time has been replaced with value."""
-    start = dt_util.start_of_local_day(datetime.now())
+    today = dt_util.start_of_local_day()
+    if not time_str:
+        return today
 
-    dttime = start.time() if time_str == "" else dt_util.parse_time(time_str)
+    if (time_today := dt_util.parse_time(time_str)) is None:
+        raise ValueError(
+            f"could not convert {type(time_str).__name__} to datetime: '{time_str}'"
+        )
 
-    if dttime:
-        return datetime.combine(start.date(), dttime, tzinfo=dt_util.DEFAULT_TIME_ZONE)
-
-    raise ValueError(
-        f"could not convert {type(time_str).__name__} to datetime: '{time_str}'"
-    )
+    return datetime.combine(today, time_today, today.tzinfo)
 
 
 def relative_time(value):
@@ -1759,7 +1808,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan"] = arc_tangent
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
-        self.filters["as_datetime"] = dt_util.parse_datetime
+        self.filters["as_datetime"] = as_datetime
         self.filters["as_timestamp"] = forgiving_as_timestamp
         self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
@@ -1800,7 +1849,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan"] = arc_tangent
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
-        self.globals["as_datetime"] = dt_util.parse_datetime
+        self.globals["as_datetime"] = as_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["today_at"] = today_at
@@ -1852,6 +1901,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = pass_context(self.globals["area_devices"])
+
+        self.globals["integration_entities"] = hassfunction(integration_entities)
+        self.filters["integration_entities"] = pass_context(
+            self.globals["integration_entities"]
+        )
 
         if limited:
             # Only device_entities is available to limited templates, mark other

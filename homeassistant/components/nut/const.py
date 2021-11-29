@@ -17,7 +17,6 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    ENTITY_CATEGORY_SYSTEM,
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
@@ -68,6 +67,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.load": SensorEntityDescription(
         key="ups.load",
@@ -82,12 +82,14 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.id": SensorEntityDescription(
         key="ups.id",
         name="System identifier",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.delay.start": SensorEntityDescription(
         key="ups.delay.start",
@@ -95,6 +97,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.delay.reboot": SensorEntityDescription(
         key="ups.delay.reboot",
@@ -102,6 +105,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.delay.shutdown": SensorEntityDescription(
         key="ups.delay.shutdown",
@@ -109,6 +113,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.timer.start": SensorEntityDescription(
         key="ups.timer.start",
@@ -116,6 +121,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.timer.reboot": SensorEntityDescription(
         key="ups.timer.reboot",
@@ -123,6 +129,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.timer.shutdown": SensorEntityDescription(
         key="ups.timer.shutdown",
@@ -130,6 +137,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.test.interval": SensorEntityDescription(
         key="ups.test.interval",
@@ -137,30 +145,35 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.test.result": SensorEntityDescription(
         key="ups.test.result",
         name="Self-Test Result",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.test.date": SensorEntityDescription(
         key="ups.test.date",
         name="Self-Test Date",
         icon="mdi:calendar",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.display.language": SensorEntityDescription(
         key="ups.display.language",
         name="Language",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.contacts": SensorEntityDescription(
         key="ups.contacts",
         name="External Contacts",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.efficiency": SensorEntityDescription(
         key="ups.efficiency",
@@ -169,6 +182,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         icon="mdi:gauge",
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.power": SensorEntityDescription(
         key="ups.power",
@@ -177,6 +191,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         icon="mdi:flash",
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.power.nominal": SensorEntityDescription(
         key="ups.power.nominal",
@@ -184,6 +199,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         icon="mdi:flash",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.realpower": SensorEntityDescription(
         key="ups.realpower",
@@ -192,6 +208,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.realpower.nominal": SensorEntityDescription(
         key="ups.realpower.nominal",
@@ -199,48 +216,56 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.beeper.status": SensorEntityDescription(
         key="ups.beeper.status",
         name="Beeper Status",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.type": SensorEntityDescription(
         key="ups.type",
         name="UPS Type",
         icon="mdi:information-outline",
-        entity_category=ENTITY_CATEGORY_SYSTEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.watchdog.status": SensorEntityDescription(
         key="ups.watchdog.status",
         name="Watchdog Status",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.start.auto": SensorEntityDescription(
         key="ups.start.auto",
         name="Start on AC",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.start.battery": SensorEntityDescription(
         key="ups.start.battery",
         name="Start on Battery",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.start.reboot": SensorEntityDescription(
         key="ups.start.reboot",
         name="Reboot on Battery",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ups.shutdown": SensorEntityDescription(
         key="ups.shutdown",
         name="Shutdown Ability",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.charge": SensorEntityDescription(
         key="battery.charge",
@@ -255,6 +280,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.charge.restart": SensorEntityDescription(
         key="battery.charge.restart",
@@ -262,6 +288,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.charge.warning": SensorEntityDescription(
         key="battery.charge.warning",
@@ -269,6 +296,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.charger.status": SensorEntityDescription(
         key="battery.charger.status",
@@ -282,6 +310,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.voltage.nominal": SensorEntityDescription(
         key="battery.voltage.nominal",
@@ -289,6 +318,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.voltage.low": SensorEntityDescription(
         key="battery.voltage.low",
@@ -296,6 +326,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.voltage.high": SensorEntityDescription(
         key="battery.voltage.high",
@@ -303,6 +334,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.capacity": SensorEntityDescription(
         key="battery.capacity",
@@ -310,6 +342,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement="Ah",
         icon="mdi:flash",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.current": SensorEntityDescription(
         key="battery.current",
@@ -318,6 +351,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         icon="mdi:flash",
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.current.total": SensorEntityDescription(
         key="battery.current.total",
@@ -325,6 +359,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         icon="mdi:flash",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.temperature": SensorEntityDescription(
         key="battery.temperature",
@@ -333,6 +368,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.runtime": SensorEntityDescription(
         key="battery.runtime",
@@ -340,6 +376,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.runtime.low": SensorEntityDescription(
         key="battery.runtime.low",
@@ -347,6 +384,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.runtime.restart": SensorEntityDescription(
         key="battery.runtime.restart",
@@ -354,48 +392,56 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.alarm.threshold": SensorEntityDescription(
         key="battery.alarm.threshold",
         name="Battery Alarm Threshold",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.date": SensorEntityDescription(
         key="battery.date",
         name="Battery Date",
         icon="mdi:calendar",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.mfr.date": SensorEntityDescription(
         key="battery.mfr.date",
         name="Battery Manuf. Date",
         icon="mdi:calendar",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.packs": SensorEntityDescription(
         key="battery.packs",
         name="Number of Batteries",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.packs.bad": SensorEntityDescription(
         key="battery.packs.bad",
         name="Number of Bad Batteries",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "battery.type": SensorEntityDescription(
         key="battery.type",
         name="Battery Chemistry",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "input.sensitivity": SensorEntityDescription(
         key="input.sensitivity",
         name="Input Power Sensitivity",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "input.transfer.low": SensorEntityDescription(
         key="input.transfer.low",
@@ -403,6 +449,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "input.transfer.high": SensorEntityDescription(
         key="input.transfer.high",
@@ -410,12 +457,14 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "input.transfer.reason": SensorEntityDescription(
         key="input.transfer.reason",
         name="Voltage Transfer Reason",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "input.voltage": SensorEntityDescription(
         key="input.voltage",
@@ -430,6 +479,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "input.frequency": SensorEntityDescription(
         key="input.frequency",
@@ -438,6 +488,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         icon="mdi:flash",
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "input.frequency.nominal": SensorEntityDescription(
         key="input.frequency.nominal",
@@ -445,12 +496,14 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=FREQUENCY_HERTZ,
         icon="mdi:flash",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "input.frequency.status": SensorEntityDescription(
         key="input.frequency.status",
         name="Input Frequency Status",
         icon="mdi:information-outline",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "output.current": SensorEntityDescription(
         key="output.current",
@@ -459,6 +512,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         icon="mdi:flash",
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "output.current.nominal": SensorEntityDescription(
         key="output.current.nominal",
@@ -466,6 +520,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         icon="mdi:flash",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "output.voltage": SensorEntityDescription(
         key="output.voltage",
@@ -480,6 +535,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "output.frequency": SensorEntityDescription(
         key="output.frequency",
@@ -488,6 +544,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         icon="mdi:flash",
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "output.frequency.nominal": SensorEntityDescription(
         key="output.frequency.nominal",
@@ -495,6 +552,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=FREQUENCY_HERTZ,
         icon="mdi:flash",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ambient.humidity": SensorEntityDescription(
         key="ambient.humidity",
@@ -503,6 +561,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "ambient.temperature": SensorEntityDescription(
         key="ambient.temperature",
@@ -511,6 +570,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "watts": SensorEntityDescription(
         key="watts",

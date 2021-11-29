@@ -14,7 +14,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_token": "API Belirteci",
+                    "api_token": "API Anahtar\u0131",
                     "description": "Cloudflare hesab\u0131n\u0131zla yeniden kimlik do\u011frulamas\u0131 yap\u0131n."
                 }
             },
@@ -26,7 +26,7 @@
             },
             "user": {
                 "data": {
-                    "api_token": "API Belirteci"
+                    "api_token": "API Anahtar\u0131"
                 },
                 "description": "Bu entegrasyon, hesab\u0131n\u0131zdaki t\u00fcm b\u00f6lgeler i\u00e7in Zone:Zone:Read ve Zone:DNS:Edit izinleriyle olu\u015fturulmu\u015f bir API Simgesi gerektirir.",
                 "title": "Cloudflare'ye ba\u011flan\u0131n"

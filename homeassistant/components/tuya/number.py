@@ -103,6 +103,16 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Robot Vacuum
+    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
+    "sd": (
+        NumberEntityDescription(
+            key=DPCode.VOLUME_SET,
+            name="Volume",
+            icon="mdi:volume-high",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
@@ -199,6 +209,27 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Fingerbot
+    "szjqr": (
+        NumberEntityDescription(
+            key=DPCode.ARM_DOWN_PERCENT,
+            name="Move Down %",
+            icon="mdi:arrow-down-bold",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ARM_UP_PERCENT,
+            name="Move Up %",
+            icon="mdi:arrow-up-bold",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CLICK_SUSTAIN_TIME,
+            name="Down Delay",
+            icon="mdi:timer",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
 }
 
 
@@ -259,9 +290,9 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             # and determine unit of measurement
             if self._status_range.type == "Integer":
                 self._type_data = IntegerTypeData.from_json(self._status_range.values)
-                self._attr_max_value = self._type_data.max
-                self._attr_min_value = self._type_data.min
-                self._attr_step = self._type_data.step
+                self._attr_max_value = self._type_data.max_scaled
+                self._attr_min_value = self._type_data.min_scaled
+                self._attr_step = self._type_data.step_scaled
                 if description.unit_of_measurement is None:
                     self._attr_unit_of_measurement = self._type_data.unit
 
@@ -276,7 +307,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         value = self.device.status.get(self.entity_description.key)
 
         # Scale integer/float value
-        if value and isinstance(self._type_data, IntegerTypeData):
+        if value is not None and isinstance(self._type_data, IntegerTypeData):
             return self._type_data.scale_value(value)
 
         return None
@@ -290,7 +321,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             [
                 {
                     "code": self.entity_description.key,
-                    "value": self._type_data.scale_value(value),
+                    "value": self._type_data.scale_value_back(value),
                 }
             ]
         )

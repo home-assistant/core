@@ -12,7 +12,7 @@
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
-            "auth_missing": "[%key::component::samsungtv::config::abort::auth_missing%]"
+            "auth_missing": "Home Assistant nie ma uprawnie\u0144 do po\u0142\u0105czenia si\u0119 z tym telewizorem Samsung. Sprawd\u017a ustawienia \"Mened\u017cera urz\u0105dze\u0144 zewn\u0119trznych\", aby autoryzowa\u0107 Home Assistant."
         },
         "flow_title": "{device}",
         "step": {

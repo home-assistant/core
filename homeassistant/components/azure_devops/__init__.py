@@ -1,43 +1,85 @@
 """Support for Azure DevOps."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import timedelta
 import logging
+from typing import Final
 
+from aioazuredevops.builds import DevOpsBuild
 from aioazuredevops.client import DevOpsClient
+from aioazuredevops.core import DevOpsProject
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
-from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DATA_AZURE_DEVOPS_CLIENT, DOMAIN
+from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
+
+BUILDS_QUERY: Final = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
+
+
+@dataclass
+class AzureDevOpsEntityDescription(EntityDescription):
+    """Class describing Azure DevOps entities."""
+
+    organization: str = ""
+    project: DevOpsProject = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Azure DevOps from a config entry."""
     client = DevOpsClient()
 
-    try:
-        if entry.data[CONF_PAT] is not None:
-            await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
-            if not client.authorized:
-                raise ConfigEntryAuthFailed(
-                    "Could not authorize with Azure DevOps. You may need to update your token"
-                )
-        await client.get_project(entry.data[CONF_ORG], entry.data[CONF_PROJECT])
-    except aiohttp.ClientError as exception:
-        _LOGGER.warning(exception)
-        raise ConfigEntryNotReady from exception
+    if entry.data.get(CONF_PAT) is not None:
+        await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
+        if not client.authorized:
+            raise ConfigEntryAuthFailed(
+                "Could not authorize with Azure DevOps. You will need to update your token"
+            )
 
-    instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
-    hass.data.setdefault(instance_key, {})[DATA_AZURE_DEVOPS_CLIENT] = client
+    project = await client.get_project(
+        entry.data[CONF_ORG],
+        entry.data[CONF_PROJECT],
+    )
 
-    # Setup components
+    async def async_update_data() -> list[DevOpsBuild]:
+        """Fetch data from Azure DevOps."""
+
+        try:
+            return await client.get_builds(
+                entry.data[CONF_ORG],
+                entry.data[CONF_PROJECT],
+                BUILDS_QUERY,
+            )
+        except (aiohttp.ClientError, aiohttp.ClientError) as exception:
+            raise UpdateFailed from exception
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{DOMAIN}_coordinator",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=300),
+    )
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator, project
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -45,36 +87,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Azure DevOps config entry."""
-    del hass.data[f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"]
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        del hass.data[DOMAIN][entry.entry_id]
+    return unload_ok
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-
-class AzureDevOpsEntity(Entity):
+class AzureDevOpsEntity(CoordinatorEntity):
     """Defines a base Azure DevOps entity."""
 
-    def __init__(self, organization: str, project: str, name: str, icon: str) -> None:
+    coordinator: DataUpdateCoordinator[list[DevOpsBuild]]
+    entity_description: AzureDevOpsEntityDescription
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[list[DevOpsBuild]],
+        entity_description: AzureDevOpsEntityDescription,
+    ) -> None:
         """Initialize the Azure DevOps entity."""
-        self._attr_name = name
-        self._attr_icon = icon
-        self.organization = organization
-        self.project = project
-
-    async def async_update(self) -> None:
-        """Update Azure DevOps entity."""
-        if await self._azure_devops_update():
-            self._attr_available = True
-        else:
-            if self._attr_available:
-                _LOGGER.debug(
-                    "An error occurred while updating Azure DevOps sensor",
-                    exc_info=True,
-                )
-            self._attr_available = False
-
-    async def _azure_devops_update(self) -> bool:
-        """Update Azure DevOps entity."""
-        raise NotImplementedError()
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id: str = "_".join(
+            [entity_description.organization, entity_description.key]
+        )
+        self._organization: str = entity_description.organization
+        self._project_name: str = entity_description.project.name
 
 
 class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
@@ -84,8 +121,8 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this Azure DevOps instance."""
         return DeviceInfo(
-            entry_type="service",
-            identifiers={(DOMAIN, self.organization, self.project)},  # type: ignore
-            manufacturer=self.organization,
-            name=self.project,
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._organization, self._project_name)},  # type: ignore
+            manufacturer=self._organization,
+            name=self._project_name,
         )

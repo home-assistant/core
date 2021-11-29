@@ -32,6 +32,7 @@
             "is_not_powered": "{entity_name} is niet van stroom voorzien...",
             "is_not_present": "{entity_name} is niet aanwezig",
             "is_not_running": "{entity_name} is niet langer actief",
+            "is_not_tampered": "{entity_name} detecteert geen sabotage",
             "is_not_unsafe": "{entity_name} is veilig",
             "is_occupied": "{entity_name} bezet is",
             "is_off": "{entity_name} is uitgeschakeld",
@@ -44,6 +45,7 @@
             "is_running": "{entity_name} is actief",
             "is_smoke": "{entity_name} detecteert rook",
             "is_sound": "{entity_name} detecteert geluid",
+            "is_tampered": "{entity_name} detecteert sabotage",
             "is_unsafe": "{entity_name} is onveilig",
             "is_update": "{entity_name} heeft een update beschikbaar",
             "is_vibration": "{entity_name} detecteert trillingen"
@@ -54,6 +56,7 @@
             "connected": "{entity_name} verbonden",
             "gas": "{entity_name} begon gas te detecteren",
             "hot": "{entity_name} werd heet",
+            "is_not_tampered": "{entity_name} gestopt met het detecteren van sabotage",
             "is_tampered": "{entity_name} begonnen met het detecteren van sabotage",
             "light": "{entity_name} begon licht te detecteren",
             "locked": "{entity_name} vergrendeld",

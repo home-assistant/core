@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 from .router import get_api
@@ -109,9 +108,10 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input)
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Initialize flow from zeroconf."""
-        host = discovery_info[zeroconf.ATTR_PROPERTIES]["api_domain"]
-        port = discovery_info[zeroconf.ATTR_PROPERTIES]["https_port"]
+        zeroconf_properties = discovery_info[zeroconf.ATTR_PROPERTIES]
+        host = zeroconf_properties["api_domain"]
+        port = zeroconf_properties["https_port"]
         return await self.async_step_user({CONF_HOST: host, CONF_PORT: port})

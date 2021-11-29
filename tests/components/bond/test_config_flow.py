@@ -194,15 +194,21 @@ async def test_user_form_one_entry_per_device_allowed(hass: core.HomeAssistant):
 async def test_zeroconf_form(hass: core.HomeAssistant):
     """Test we get the discovery form."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.HaServiceInfo(
-            name="test-bond-id.some-other-tail-info", host="test-host"
-        ),
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
+    with patch_bond_version(), patch_bond_token():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf.ZeroconfServiceInfo(
+                host="test-host",
+                hostname="mock_hostname",
+                name="test-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
+        )
+        assert result["type"] == "form"
+        assert result["errors"] == {}
 
     with patch_bond_version(
         return_value={"bondid": "test-bond-id"}
@@ -229,8 +235,13 @@ async def test_zeroconf_form_token_unavailable(hass: core.HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
-                name="test-bond-id.some-other-tail-info", host="test-host"
+            data=zeroconf.ZeroconfServiceInfo(
+                host="test-host",
+                hostname="mock_hostname",
+                name="test-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()
@@ -264,8 +275,13 @@ async def test_zeroconf_form_with_token_available(hass: core.HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
-                name="test-bond-id.some-other-tail-info", host="test-host"
+            data=zeroconf.ZeroconfServiceInfo(
+                host="test-host",
+                hostname="mock_hostname",
+                name="test-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()
@@ -302,18 +318,21 @@ async def test_zeroconf_already_configured(hass: core.HomeAssistant):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
-                name="already-registered-bond-id.some-other-tail-info",
+            data=zeroconf.ZeroconfServiceInfo(
                 host="updated-host",
+                hostname="mock_hostname",
+                name="already-registered-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "updated-host"
-
-    await hass.async_block_till_done()
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_zeroconf_already_configured_refresh_token(hass: core.HomeAssistant):
@@ -343,9 +362,13 @@ async def test_zeroconf_already_configured_refresh_token(hass: core.HomeAssistan
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
-                name="already-registered-bond-id.some-other-tail-info",
+            data=zeroconf.ZeroconfServiceInfo(
                 host="updated-host",
+                hostname="mock_hostname",
+                name="already-registered-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()
@@ -376,9 +399,13 @@ async def test_zeroconf_already_configured_no_reload_same_host(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.HaServiceInfo(
-                name="already-registered-bond-id.some-other-tail-info",
+            data=zeroconf.ZeroconfServiceInfo(
                 host="stored-host",
+                hostname="mock_hostname",
+                name="already-registered-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()
@@ -393,9 +420,13 @@ async def test_zeroconf_form_unexpected_error(hass: core.HomeAssistant):
     await _help_test_form_unexpected_error(
         hass,
         source=config_entries.SOURCE_ZEROCONF,
-        initial_input=zeroconf.HaServiceInfo(
-            name="test-bond-id.some-other-tail-info",
+        initial_input=zeroconf.ZeroconfServiceInfo(
             host="test-host",
+            hostname="mock_hostname",
+            name="test-bond-id.some-other-tail-info",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
         user_input={CONF_ACCESS_TOKEN: "test-token"},
         error=Exception(),
@@ -411,9 +442,10 @@ async def _help_test_form_unexpected_error(
     error: Exception,
 ):
     """Test we handle unexpected error gracefully."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": source}, data=initial_input
-    )
+    with patch_bond_token():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=initial_input
+        )
 
     with patch_bond_version(
         return_value={"bond_id": "test-bond-id"}

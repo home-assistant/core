@@ -1,50 +1,66 @@
 """Support for Twente Milieu sensors."""
 from __future__ import annotations
 
-from twentemilieu import (
-    WASTE_TYPE_NON_RECYCLABLE,
-    WASTE_TYPE_ORGANIC,
-    WASTE_TYPE_PAPER,
-    WASTE_TYPE_PLASTIC,
-    TwenteMilieu,
-    TwenteMilieuConnectionError,
-)
+from dataclasses import dataclass
+from datetime import date
+
+from twentemilieu import WasteType
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .const import DATA_UPDATE, DOMAIN
+from .const import DOMAIN
 
-PARALLEL_UPDATES = 1
 
-SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key=WASTE_TYPE_NON_RECYCLABLE,
-        name=f"{WASTE_TYPE_NON_RECYCLABLE} Waste Pickup",
+@dataclass
+class TwenteMilieuSensorDescriptionMixin:
+    """Define an entity description mixin."""
+
+    waste_type: WasteType
+
+
+@dataclass
+class TwenteMilieuSensorDescription(
+    SensorEntityDescription, TwenteMilieuSensorDescriptionMixin
+):
+    """Describe an Ambient PWS binary sensor."""
+
+
+SENSORS: tuple[TwenteMilieuSensorDescription, ...] = (
+    TwenteMilieuSensorDescription(
+        key="Non-recyclable",
+        waste_type=WasteType.NON_RECYCLABLE,
+        name="Non-recyclable Waste Pickup",
         icon="mdi:delete-empty",
         device_class=DEVICE_CLASS_DATE,
     ),
-    SensorEntityDescription(
-        key=WASTE_TYPE_ORGANIC,
-        name=f"{WASTE_TYPE_ORGANIC} Waste Pickup",
+    TwenteMilieuSensorDescription(
+        key="Organic",
+        waste_type=WasteType.ORGANIC,
+        name="Organic Waste Pickup",
         icon="mdi:delete-empty",
         device_class=DEVICE_CLASS_DATE,
     ),
-    SensorEntityDescription(
-        key=WASTE_TYPE_PAPER,
-        name=f"{WASTE_TYPE_PAPER} Waste Pickup",
+    TwenteMilieuSensorDescription(
+        key="Paper",
+        waste_type=WasteType.PAPER,
+        name="Paper Waste Pickup",
         icon="mdi:delete-empty",
         device_class=DEVICE_CLASS_DATE,
     ),
-    SensorEntityDescription(
-        key=WASTE_TYPE_PLASTIC,
-        name=f"{WASTE_TYPE_PLASTIC} Waste Pickup",
+    TwenteMilieuSensorDescription(
+        key="Plastic",
+        waste_type=WasteType.PACKAGES,
+        name="Packages Waste Pickup",
         icon="mdi:delete-empty",
         device_class=DEVICE_CLASS_DATE,
     ),
@@ -57,53 +73,37 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Twente Milieu sensor based on a config entry."""
-    twentemilieu = hass.data[DOMAIN][entry.data[CONF_ID]]
-
-    try:
-        await twentemilieu.update()
-    except TwenteMilieuConnectionError as exception:
-        raise PlatformNotReady from exception
-
+    coordinator = hass.data[DOMAIN][entry.data[CONF_ID]]
     async_add_entities(
-        [
-            TwenteMilieuSensor(twentemilieu, entry.data[CONF_ID], description)
-            for description in SENSORS
-        ],
-        True,
+        TwenteMilieuSensor(coordinator, description, entry) for description in SENSORS
     )
 
 
-class TwenteMilieuSensor(SensorEntity):
+class TwenteMilieuSensor(CoordinatorEntity, SensorEntity):
     """Defines a Twente Milieu sensor."""
 
-    _attr_should_poll = False
+    entity_description: TwenteMilieuSensorDescription
+    coordinator: DataUpdateCoordinator[dict[WasteType, date | None]]
 
     def __init__(
         self,
-        twentemilieu: TwenteMilieu,
-        unique_id: str,
-        description: SensorEntityDescription,
+        coordinator: DataUpdateCoordinator,
+        description: TwenteMilieuSensorDescription,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the Twente Milieu entity."""
+        super().__init__(coordinator=coordinator)
         self.entity_description = description
-        self._twentemilieu = twentemilieu
-        self._attr_unique_id = f"{DOMAIN}_{unique_id}_{description.key}"
+        self._attr_unique_id = f"{DOMAIN}_{entry.data[CONF_ID]}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
+            configuration_url="https://www.twentemilieu.nl",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, str(entry.data[CONF_ID]))},
             manufacturer="Twente Milieu",
             name="Twente Milieu",
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, DATA_UPDATE, self.async_schedule_update_ha_state
-            )
-        )
-
-    async def async_update(self) -> None:
-        """Update Twente Milieu entity."""
-        next_pickup = await self._twentemilieu.next_pickup(self.entity_description.key)
-        if next_pickup is not None:
-            self._attr_native_value = next_pickup.date().isoformat()
+    @property
+    def native_value(self) -> date | None:
+        """Return the state of the sensor."""
+        return self.coordinator.data.get(self.entity_description.waste_type)

@@ -45,7 +45,7 @@
                     "host": "Ana bilgisayar",
                     "password": "Parola"
                 },
-                "description": "\u015eu anda BLID ve parola alma manuel bir i\u015flemdir. L\u00fctfen a\u015fa\u011f\u0131daki belgelerde belirtilen ad\u0131mlar\u0131 izleyin: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "description": "Roomba veya Braava'y\u0131 se\u00e7in.",
                 "title": "Cihaza ba\u011flan\u0131n"
             }
         }

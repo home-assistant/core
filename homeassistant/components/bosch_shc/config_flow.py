@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_HOSTNAME,
@@ -181,9 +182,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=schema, errors=errors
         )
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        if not discovery_info.get(zeroconf.ATTR_NAME, "").startswith("Bosch SHC"):
+        if not discovery_info.name.startswith("Bosch SHC"):
             return self.async_abort(reason="not_bosch_shc")
 
         try:
@@ -197,7 +200,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     continue
                 self.info = await self._get_info(host)
                 self.host = host
-            if self.host is None:
+            if self.info is None or self.host is None:
                 return self.async_abort(reason="cannot_connect")
         except SHCConnectionError:
             return self.async_abort(reason="cannot_connect")

@@ -290,6 +290,22 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # Robot Vacuum
+    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
+    "sd": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_DISTURB,
+            name="Do Not Disturb",
+            icon="mdi:minus-circle",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.VOICE_SWITCH,
+            name="Voice",
+            icon="mdi:account-voice",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
@@ -367,6 +383,14 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:motion-sensor",
             name="Motion Alarm",
             entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Fingerbot
+    "szjqr": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+            icon="mdi:cursor-pointer",
         ),
     ),
     # IoT Switch?

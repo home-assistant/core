@@ -6,6 +6,7 @@ from typing import Any
 from elgato import Elgato, ElgatoError
 import voluptuous as vol
 
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
@@ -41,10 +42,12 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._async_create_entry()
 
-    async def async_step_zeroconf(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        self.host = discovery_info[CONF_HOST]
-        self.port = discovery_info[CONF_PORT]
+        self.host = discovery_info[zeroconf.ATTR_HOST]
+        self.port = discovery_info[zeroconf.ATTR_PORT] or 9123
 
         try:
             await self._get_elgato_serial_number()
