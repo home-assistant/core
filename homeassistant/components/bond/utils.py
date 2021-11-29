@@ -124,9 +124,10 @@ class BondDevice:
 class BondHub:
     """Hub device representing Bond Bridge."""
 
-    def __init__(self, bond: Bond) -> None:
+    def __init__(self, bond: Bond, host: str) -> None:
         """Initialize Bond Hub."""
         self.bond: Bond = bond
+        self.host = host
         self._bridge: dict[str, Any] = {}
         self._version: dict[str, Any] = {}
         self._devices: list[BondDevice] = []
