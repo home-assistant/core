@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, cast
+from typing import Any
 
 from flux_led.aiodevice import AIOWifiLedBulb
 
@@ -72,7 +72,7 @@ class FluxOnOffEntity(FluxEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return cast(bool, self._device.is_on)
+        return self._device.is_on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified device on."""
