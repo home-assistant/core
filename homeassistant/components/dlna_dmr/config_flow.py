@@ -25,7 +25,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import IntegrationError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_CALLBACK_URL_OVERRIDE,
@@ -57,7 +56,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._discoveries: dict[str, Mapping[str, Any]] = {}
+        self._discoveries: dict[str, ssdp.SsdpServiceInfo] = {}
         self._location: str | None = None
         self._udn: str | None = None
         self._device_type: str | None = None
@@ -205,7 +204,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="import_turn_on", errors=errors)
 
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by SSDP discovery."""
         LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
@@ -330,7 +329,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=title, data=data, options=self._options)
 
     async def _async_set_info_from_discovery(
-        self, discovery_info: Mapping[str, Any], abort_if_configured: bool = True
+        self, discovery_info: ssdp.SsdpServiceInfo, abort_if_configured: bool = True
     ) -> None:
         """Set information required for a config entry from the SSDP discovery."""
         LOGGER.debug(
@@ -361,12 +360,12 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             or DEFAULT_NAME
         )
 
-    async def _async_get_discoveries(self) -> list[Mapping[str, Any]]:
+    async def _async_get_discoveries(self) -> list[ssdp.SsdpServiceInfo]:
         """Get list of unconfigured DLNA devices discovered by SSDP."""
         LOGGER.debug("_get_discoveries")
 
         # Get all compatible devices from ssdp's cache
-        discoveries: list[Mapping[str, Any]] = []
+        discoveries: list[ssdp.SsdpServiceInfo] = []
         for udn_st in DmrDevice.DEVICE_TYPES:
             st_discoveries = await ssdp.async_get_discovery_info_by_st(
                 self.hass, udn_st
@@ -454,7 +453,7 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-def _is_ignored_device(discovery_info: Mapping[str, Any]) -> bool:
+def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     """Return True if this device should be ignored for discovery.
 
     These devices are supported better by other integrations, so don't bug

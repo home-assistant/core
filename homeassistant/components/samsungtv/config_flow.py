@@ -11,7 +11,7 @@ import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import dhcp, zeroconf
+from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_MANUFACTURER,
@@ -28,7 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .bridge import (
     SamsungTVBridge,
@@ -266,7 +265,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
 
     async def async_step_ssdp(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: ssdp.SsdpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)

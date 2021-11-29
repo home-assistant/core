@@ -237,7 +237,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_form(step)
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered synology_dsm."""
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         friendly_name = (
