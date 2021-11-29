@@ -31,7 +31,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_TRACK_WIRED_CLIENTS,
@@ -202,7 +201,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=title, data=user_input)
 
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle SSDP initiated config flow."""
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
