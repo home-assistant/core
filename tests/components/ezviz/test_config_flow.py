@@ -231,9 +231,32 @@ async def test_step_discovery_abort_if_cloud_account_missing(hass):
     assert result["reason"] == "ezviz_cloud_account_missing"
 
 
-async def test_async_step_integration_discovery(
-    hass: HomeAssistant, ezviz_config_flow, ezviz_test_rtsp_config_flow
-) -> None:
+async def test_step_reauth_abort_if_cloud_account_missing(hass):
+    """Test reauth and confirm step, abort if cloud account was removed."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=USER_INPUT_VALIDATE
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "ezviz_cloud_account_missing"
+
+
+async def test_async_step_discovery(
+    hass, ezviz_config_flow, ezviz_test_rtsp_config_flow
+):
     """Test discovery and confirm step."""
     with patch("homeassistant.components.ezviz.PLATFORMS_BY_TYPE", []):
         await init_integration(hass)
@@ -362,6 +385,15 @@ async def test_import_exception(hass, ezviz_config_flow):
     assert result["reason"] == "invalid_host"
 
     ezviz_config_flow.side_effect = HTTPError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "invalid_auth"
+
+    ezviz_config_flow.side_effect = AuthTestResultFailed
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG
@@ -567,6 +599,17 @@ async def test_user_custom_url_exception(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user_custom_url"
     assert result["errors"] == {"base": "invalid_auth"}
+
+    ezviz_config_flow.side_effect = EzvizAuthVerificationCode
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "test-user"},
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user_custom_url"
+    assert result["errors"] == {"base": "mfa_required"}
 
     ezviz_config_flow.side_effect = Exception
 
