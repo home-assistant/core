@@ -42,48 +42,12 @@ class TestStatisticsSensor(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.values_binary = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
-        self.mean_binary = (
-            100 / len(self.values_binary) * self.values_binary.count("on")
+        self.mean_binary = round(
+            100 / len(self.values_binary) * self.values_binary.count("on"), 2
         )
         self.values = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
         self.mean = round(sum(self.values) / len(self.values), 2)
         self.addCleanup(self.hass.stop)
-
-    def test_sensor_defaults_binary(self):
-        """Test the general behavior of the sensor, with binary source sensor."""
-        assert setup_component(
-            self.hass,
-            "sensor",
-            {
-                "sensor": [
-                    {
-                        "platform": "statistics",
-                        "name": "test",
-                        "entity_id": "binary_sensor.test_monitored",
-                        "state_characteristic": "mean",
-                    },
-                ]
-            },
-        )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-        for value in self.values_binary:
-            self.hass.states.set(
-                "binary_sensor.test_monitored",
-                value,
-                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
-            )
-            self.hass.block_till_done()
-
-        state = self.hass.states.get("sensor.test")
-        assert state.state == str(round(self.mean_binary, 2))
-        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
-        assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
-        assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
-        assert state.attributes.get("source_value_valid") is True
-        assert "age_coverage_ratio" not in state.attributes
 
     def test_sensor_defaults_numeric(self):
         """Test the general behavior of the sensor, with numeric source sensor."""
@@ -172,6 +136,42 @@ class TestStatisticsSensor(unittest.TestCase):
         assert new_state.state == str(new_mean)
         assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert new_state.attributes.get("source_value_valid") is False
+
+    def test_sensor_defaults_binary(self):
+        """Test the general behavior of the sensor, with binary source sensor."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "binary_sensor.test_monitored",
+                        "state_characteristic": "mean",
+                    },
+                ]
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+        for value in self.values_binary:
+            self.hass.states.set(
+                "binary_sensor.test_monitored",
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test")
+        assert state.state == str(self.mean_binary)
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
+        assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+        assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
+        assert state.attributes.get("source_value_valid") is True
+        assert "age_coverage_ratio" not in state.attributes
 
     def test_sensor_source_with_force_update(self):
         """Test the behavior of the sensor when the source sensor force-updates with same value."""
@@ -558,6 +558,7 @@ class TestStatisticsSensor(unittest.TestCase):
 
         characteristics = (
             {
+                "source_sensor_domain": "sensor",
                 "name": "average_linear",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
@@ -565,6 +566,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "average_step",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
@@ -572,6 +574,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "average_timeless",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(self.values[0]),
@@ -579,6 +582,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "change",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(0),
@@ -586,6 +590,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "change_sample",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
@@ -597,6 +602,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C/sample",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "change_second",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
@@ -610,6 +616,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C/s",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "count",
                 "value_0": 0,
                 "value_1": 1,
@@ -617,6 +624,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": None,
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "datetime_newest",
                 "value_0": STATE_UNKNOWN,
                 "value_1": datetime(
@@ -640,6 +648,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": None,
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "datetime_oldest",
                 "value_0": STATE_UNKNOWN,
                 "value_1": datetime(
@@ -655,6 +664,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": None,
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "distance_95_percent_of_values",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
@@ -662,6 +672,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "distance_99_percent_of_values",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
@@ -669,6 +680,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "distance_absolute",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(0),
@@ -676,6 +688,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "mean",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(self.values[0]),
@@ -683,6 +696,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "median",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(self.values[0]),
@@ -690,6 +704,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "noisiness",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
@@ -699,6 +714,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "quantiles",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
@@ -708,6 +724,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": None,
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "standard_deviation",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
@@ -715,6 +732,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "total",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(self.values[0]),
@@ -722,6 +740,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "value_max",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(self.values[0]),
@@ -729,6 +748,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "value_min",
                 "value_0": STATE_UNKNOWN,
                 "value_1": float(self.values[0]),
@@ -736,11 +756,44 @@ class TestStatisticsSensor(unittest.TestCase):
                 "unit": "°C",
             },
             {
+                "source_sensor_domain": "sensor",
                 "name": "variance",
                 "value_0": STATE_UNKNOWN,
                 "value_1": STATE_UNKNOWN,
                 "value_9": float(round(statistics.variance(self.values), 2)),
                 "unit": "°C²",
+            },
+            {
+                "source_sensor_domain": "binary_sensor",
+                "name": "average_step",
+                "value_0": STATE_UNKNOWN,
+                "value_1": STATE_UNKNOWN,
+                "value_9": 50.0,
+                "unit": "%",
+            },
+            {
+                "source_sensor_domain": "binary_sensor",
+                "name": "average_timeless",
+                "value_0": STATE_UNKNOWN,
+                "value_1": 100.0,
+                "value_9": float(self.mean_binary),
+                "unit": "%",
+            },
+            {
+                "source_sensor_domain": "binary_sensor",
+                "name": "count",
+                "value_0": 0,
+                "value_1": 1,
+                "value_9": len(self.values_binary),
+                "unit": None,
+            },
+            {
+                "source_sensor_domain": "binary_sensor",
+                "name": "mean",
+                "value_0": STATE_UNKNOWN,
+                "value_1": 100.0,
+                "value_9": float(self.mean_binary),
+                "unit": "%",
             },
         )
         sensors_config = []
@@ -748,8 +801,8 @@ class TestStatisticsSensor(unittest.TestCase):
             sensors_config.append(
                 {
                     "platform": "statistics",
-                    "name": "test_" + characteristic["name"],
-                    "entity_id": "sensor.test_monitored",
+                    "name": f"test_{characteristic['source_sensor_domain']}_{characteristic['name']}",
+                    "entity_id": f"{characteristic['source_sensor_domain']}.test_monitored",
                     "state_characteristic": characteristic["name"],
                     "max_age": {"minutes": 10},
                 }
@@ -770,20 +823,29 @@ class TestStatisticsSensor(unittest.TestCase):
 
             # With all values in buffer
 
-            for value in self.values:
+            for i in range(len(self.values)):
                 self.hass.states.set(
                     "sensor.test_monitored",
-                    value,
+                    self.values[i],
+                    {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                )
+                self.hass.states.set(
+                    "binary_sensor.test_monitored",
+                    self.values_binary[i],
                     {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
                 )
                 self.hass.block_till_done()
                 mock_data["return_time"] += timedelta(minutes=value_spacing_minutes)
 
             for characteristic in characteristics:
-                state = self.hass.states.get("sensor.test_" + characteristic["name"])
+                state = self.hass.states.get(
+                    f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
+                )
                 assert state.state == str(characteristic["value_9"]), (
-                    f"value mismatch for characteristic '{characteristic['name']}' (buffer filled) "
-                    f"- assert {state.state} == {str(characteristic['value_9'])}"
+                    f"value mismatch for characteristic "
+                    f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
+                    f"(buffer filled) - "
+                    f"assert {state.state} == {str(characteristic['value_9'])}"
                 )
                 assert (
                     state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -797,10 +859,14 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
             for characteristic in characteristics:
-                state = self.hass.states.get("sensor.test_" + characteristic["name"])
+                state = self.hass.states.get(
+                    f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
+                )
                 assert state.state == str(characteristic["value_0"]), (
-                    f"value mismatch for characteristic '{characteristic['name']}' (buffer empty) "
-                    f"- assert {state.state} == {str(characteristic['value_0'])}"
+                    f"value mismatch for characteristic "
+                    f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
+                    f"(buffer empty) - "
+                    f"assert {state.state} == {str(characteristic['value_0'])}"
                 )
 
             # With single value in buffer
@@ -810,14 +876,25 @@ class TestStatisticsSensor(unittest.TestCase):
                 self.values[0],
                 {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
-            self.hass.block_till_done()
+            self.hass.states.set(
+                "binary_sensor.test_monitored",
+                self.values_binary[0],
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                force_update=True,
+            )
             mock_data["return_time"] += timedelta(minutes=1)
+            fire_time_changed(self.hass, mock_data["return_time"])
+            self.hass.block_till_done()
 
             for characteristic in characteristics:
-                state = self.hass.states.get("sensor.test_" + characteristic["name"])
+                state = self.hass.states.get(
+                    f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
+                )
                 assert state.state == str(characteristic["value_1"]), (
-                    f"value mismatch for characteristic '{characteristic['name']}' (one stored value) "
-                    f"- assert {state.state} == {str(characteristic['value_1'])}"
+                    f"value mismatch for characteristic "
+                    f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
+                    f"(one stored value) - "
+                    f"assert {state.state} == {str(characteristic['value_1'])}"
                 )
 
     def test_initialize_from_database(self):
