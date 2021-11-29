@@ -21,6 +21,7 @@ from unittest.mock import patch
 from aiohttp import web
 import async_timeout
 import pytest
+import pytest_socket
 
 from homeassistant.components.stream.core import Segment, StreamOutput
 from homeassistant.components.stream.worker import SegmentBuffer
@@ -214,3 +215,9 @@ def hls_sync():
         side_effect=sync.response,
     ):
         yield sync
+
+
+@pytest.fixture(autouse=True)
+async def allow_external_url(hass, socket_enabled):
+    """Allow access to external url."""
+    pytest_socket.socket_allow_hosts(["127.0.0.1", hass.config.external_url])

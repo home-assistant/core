@@ -25,12 +25,14 @@ import time
 from types import MappingProxyType
 from typing import cast
 
+import httpx
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -139,10 +141,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # pylint: disable=import-outside-toplevel
     from .recorder import async_setup_recorder
 
+    # Make a connection to the external url to see if we have an HTTP/2 proxy
+    http2_proxy_found = False
+    async with httpx.AsyncClient(http2=True) as client:
+        try:
+            response = await client.get(get_url(hass, allow_internal=False))
+            http2_proxy_found = response.http_version == "HTTP/2"
+        except (httpx.HTTPError, NoURLAvailableError):
+            _LOGGER.warning("Unable to determine HTTP version")
+    if http2_proxy_found:
+        _LOGGER.info("HTTP/2 proxy found. Automatically enabling LL-HLS")
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = []
-    if (conf := config.get(DOMAIN)) and conf[CONF_LL_HLS]:
+    conf = config[DOMAIN]
+    if conf[CONF_LL_HLS] or http2_proxy_found:
         assert isinstance(conf[CONF_SEGMENT_DURATION], float)
         assert isinstance(conf[CONF_PART_DURATION], float)
         hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(
