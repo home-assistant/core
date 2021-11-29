@@ -109,6 +109,48 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert resp.status == HTTPStatus.OK
 
 
+async def test_auth_code_checks_local_only_user(hass, aiohttp_client):
+    """Test local only user cannot exchange auth code for refresh tokens when external."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+    code = step["result"]
+
+    # Exchange code for tokens
+    with patch(
+        "homeassistant.components.auth.async_user_not_allowed_do_auth",
+        return_value="User is local only",
+    ):
+        resp = await client.post(
+            "/auth/token",
+            data={
+                "client_id": CLIENT_ID,
+                "grant_type": "authorization_code",
+                "code": code,
+            },
+        )
+
+    assert resp.status == HTTPStatus.FORBIDDEN
+    error = await resp.json()
+    assert error["error"] == "access_denied"
+
+
 def test_auth_code_store_expiration(mock_credential):
     """Test that the auth code store will not return expired tokens."""
     store, retrieve = auth._create_auth_code_store()
@@ -262,6 +304,30 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
     )
+
+
+async def test_refresh_token_checks_local_only_user(hass, aiohttp_client):
+    """Test that we can't refresh token for a local only user when external."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    refresh_token = await async_setup_user_refresh_token(hass)
+    refresh_token.user.local_only = True
+
+    with patch(
+        "homeassistant.components.auth.async_user_not_allowed_do_auth",
+        return_value="User is local only",
+    ):
+        resp = await client.post(
+            "/auth/token",
+            data={
+                "client_id": CLIENT_ID,
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token.token,
+            },
+        )
+
+    assert resp.status == HTTPStatus.FORBIDDEN
+    result = await resp.json()
+    assert result["error"] == "access_denied"
 
 
 async def test_refresh_token_provider_rejected(
