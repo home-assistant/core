@@ -217,17 +217,6 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return super().available
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        segment = self.coordinator.data.state.segments[self._segment]
-        return {
-            ATTR_INTENSITY: segment.intensity,
-            ATTR_PALETTE: segment.palette.name,
-            ATTR_REVERSE: segment.reverse,
-            ATTR_SPEED: segment.speed,
-        }
-
-    @property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the color value."""
         return self.coordinator.data.state.segments[self._segment].color_primary[:3]
