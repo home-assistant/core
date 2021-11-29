@@ -62,12 +62,6 @@ class TestStatisticsSensor(unittest.TestCase):
                         "entity_id": "binary_sensor.test_monitored",
                         "state_characteristic": "mean",
                     },
-                    {
-                        "platform": "statistics",
-                        "name": "test_unitless",
-                        "entity_id": "binary_sensor.test_monitored_unitless",
-                        "state_characteristic": "mean",
-                    },
                 ]
             },
         )
@@ -81,8 +75,6 @@ class TestStatisticsSensor(unittest.TestCase):
                 value,
                 {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
-
-            self.hass.states.set("binary_sensor.test_monitored_unitless", value)
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
@@ -92,9 +84,6 @@ class TestStatisticsSensor(unittest.TestCase):
         assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
         assert state.attributes.get("source_value_valid") is True
         assert "age_coverage_ratio" not in state.attributes
-
-        state = self.hass.states.get("sensor.test_unitless")
-        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
 
     def test_sensor_defaults_numeric(self):
         """Test the general behavior of the sensor, with numeric source sensor."""
@@ -519,6 +508,12 @@ class TestStatisticsSensor(unittest.TestCase):
                         "entity_id": "sensor.test_monitored_unitless",
                         "state_characteristic": "change_second",
                     },
+                    {
+                        "platform": "statistics",
+                        "name": "test_unitless_4",
+                        "entity_id": "binary_sensor.test_monitored_unitless",
+                        "state_characteristic": "mean",
+                    },
                 ]
             },
         )
@@ -533,6 +528,12 @@ class TestStatisticsSensor(unittest.TestCase):
                 value,
             )
             self.hass.block_till_done()
+        for value in self.values_binary:
+            self.hass.states.set(
+                "binary_sensor.test_monitored_unitless",
+                value,
+            )
+            self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test_unitless_1")
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -540,6 +541,8 @@ class TestStatisticsSensor(unittest.TestCase):
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
         state = self.hass.states.get("sensor.test_unitless_3")
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+        state = self.hass.states.get("sensor.test_unitless_4")
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
 
     def test_state_characteristics(self):
         """Test configured state characteristic for value and unit."""
