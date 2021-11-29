@@ -191,9 +191,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             hosts = (
-                discovery_info[zeroconf.ATTR_HOST]
-                if isinstance(discovery_info[zeroconf.ATTR_HOST], list)
-                else [discovery_info[zeroconf.ATTR_HOST]]
+                discovery_info.host
+                if isinstance(discovery_info.host, list)
+                else [discovery_info.host]
             )
             for host in hosts:
                 if host.startswith("169."):  # skip link local address
@@ -205,7 +205,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except SHCConnectionError:
             return self.async_abort(reason="cannot_connect")
 
-        local_name = discovery_info[zeroconf.ATTR_HOSTNAME][:-1]
+        local_name = discovery_info.hostname[:-1]
         node_name = local_name[: -len(".local")]
 
         await self.async_set_unique_id(self.info["unique_id"])
