@@ -66,6 +66,7 @@ def async_update_entry_from_discovery(
 ) -> None:
     """Update a config entry from a flux_led discovery."""
     name = async_name_from_discovery(device)
+    assert device["id"] is not None
     hass.config_entries.async_update_entry(
         entry,
         data={**entry.data, CONF_NAME: name},
