@@ -115,7 +115,7 @@ def async_trigger_discovery(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_DISCOVERY},
-                data=device,
+                data={**device},
             )
         )
 
