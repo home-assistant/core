@@ -8,7 +8,6 @@ import pytest
 ezviz_login_token_return = {
     "session_id": "fake_token",
     "rf_session_id": "fake_rf_token",
-    "username": "ezviz_username",
     "api_url": "apiieu.ezvizlife.com",
 }
 
@@ -47,6 +46,7 @@ def ezviz_config_flow(hass):
             "test-password",
             "local.host",
             "1",
+            ezviz_login_token_return,
         )
 
         instance.login = MagicMock(return_value=ezviz_login_token_return)

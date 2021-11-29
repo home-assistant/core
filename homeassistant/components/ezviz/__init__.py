@@ -6,6 +6,7 @@ import logging
 from pyezviz.client import EzvizClient
 from pyezviz.exceptions import (
     EzvizAuthTokenExpired,
+    EzvizAuthVerificationCode,
     HTTPError,
     InvalidURL,
     PyEzvizError,
@@ -20,13 +21,12 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
-    CONF_EZVIZ_ACCOUNT,
     CONF_FFMPEG_ARGUMENTS,
     CONF_RFSESSION_ID,
     CONF_SESSION_ID,
@@ -48,27 +48,6 @@ PLATFORMS_BY_TYPE: dict[str, list] = {
         Platform.SWITCH,
     ],
 }
-
-
-@callback
-async def _async_save_tokens(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    access_token: str,
-    refresh_token: str,
-    ezviz_account_name: str,
-) -> None:
-    """Update config entry stored tokens."""
-    _LOGGER.info("Updating Ezviz Login token")
-    hass.config_entries.async_update_entry(
-        entry,
-        data={
-            **entry.data,
-            CONF_SESSION_ID: access_token,
-            CONF_RFSESSION_ID: refresh_token,
-            CONF_EZVIZ_ACCOUNT: ezviz_account_name,
-        },
-    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -104,28 +83,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 token={
                     CONF_SESSION_ID: entry.data.get(CONF_SESSION_ID),
                     CONF_RFSESSION_ID: entry.data.get(CONF_RFSESSION_ID),
-                    CONF_EZVIZ_ACCOUNT: entry.data.get(CONF_EZVIZ_ACCOUNT),
                     "api_url": entry.data.get(CONF_URL),
-                }
+                },
+                timeout=entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             )
 
             try:
                 await hass.async_add_executor_job(ezviz_client.login)
 
-            except EzvizAuthTokenExpired:
-                # Token expired, login with username and password, update token.
-                _LOGGER.debug(
-                    "Ezviz token expired or invalid. Retrying with login details"
-                )
-                try:
-                    ezviz_client = await _get_ezviz_client_instance(hass, entry)
-
-                except (InvalidURL, HTTPError, PyEzvizError) as error:
-                    _LOGGER.error(
-                        "After trying to update token, connection to Ezviz failed: %s",
-                        str(error),
-                    )
-                    raise ConfigEntryNotReady from error
+            except (EzvizAuthTokenExpired, EzvizAuthVerificationCode) as error:
+                raise ConfigEntryAuthFailed from error
 
             except (InvalidURL, HTTPError, PyEzvizError) as error:
                 _LOGGER.error("Unable to connect to Ezviz service: %s", str(error))
@@ -134,18 +101,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator = EzvizDataUpdateCoordinator(
             hass, api=ezviz_client, api_timeout=entry.options[CONF_TIMEOUT]
         )
-        await coordinator.async_refresh()
-
-        if not coordinator.last_update_success:
-            raise ConfigEntryNotReady
 
         hass.data[DOMAIN][entry.entry_id] = {DATA_COORDINATOR: coordinator}
+
+        await coordinator.async_config_entry_first_refresh()
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     if sensor_type == ATTR_TYPE_CAMERA:
         if hass.data.get(DOMAIN):
-            await _async_update_listener(hass, entry)
+            for item in hass.config_entries.async_entries(domain=DOMAIN):
+                if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
+                    _LOGGER.info("Reload Ezviz main account with camera entry")
+                    await hass.config_entries.async_reload(item.entry_id)
+                    return True
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS_BY_TYPE[sensor_type])
 
@@ -154,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    sensor_type: str = entry.data[CONF_TYPE]
+    sensor_type = entry.data[CONF_TYPE]
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_BY_TYPE[sensor_type]
@@ -167,12 +136,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-
-    # Fetch Entry id of main account and reload it.
-    for item in hass.config_entries.async_entries():
-        if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-            _LOGGER.info("Reload Ezviz main account with camera entry")
-            await hass.config_entries.async_reload(item.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def _get_ezviz_client_instance(
@@ -189,12 +153,16 @@ async def _get_ezviz_client_instance(
     _token = await hass.async_add_executor_job(ezviz_client.login)
 
     if _token:
-        await _async_save_tokens(
-            hass,
+        _LOGGER.info("Updating Ezviz Login token")
+
+        hass.config_entries.async_update_entry(
             entry,
-            _token[CONF_SESSION_ID],
-            _token[CONF_RFSESSION_ID],
-            _token[CONF_USERNAME],
+            data={
+                CONF_URL: entry.data[CONF_URL],
+                CONF_SESSION_ID: _token[CONF_SESSION_ID],
+                CONF_RFSESSION_ID: _token[CONF_RFSESSION_ID],
+                CONF_TYPE: ATTR_TYPE_CLOUD,
+            },
         )
 
     return ezviz_client
