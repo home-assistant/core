@@ -31,7 +31,6 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
     """Representation of a Sonos level entity."""
 
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
-    _attr_entity_registry_enabled_default = False
     _attr_min_value = -10
     _attr_max_value = 10
 

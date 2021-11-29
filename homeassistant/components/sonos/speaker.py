@@ -22,7 +22,6 @@ from soco.snapshot import Snapshot
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -237,7 +236,6 @@ class SonosSpeaker:
         future.result(timeout=10)
 
         dispatcher_send(self.hass, SONOS_CREATE_LEVELS, self)
-        self._platforms_ready.add(NUMBER_DOMAIN)
 
         if battery_info := fetch_battery_info_or_none(self.soco):
             self.battery_info = battery_info
