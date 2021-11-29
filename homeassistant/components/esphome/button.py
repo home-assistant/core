@@ -29,7 +29,7 @@ async def async_setup_entry(
     )
 
 
-class EsphomeButton(EsphomeEntity[ButtonInfo, None], ButtonEntity):
+class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
     """A button implementation for ESPHome."""
 
     @callback
