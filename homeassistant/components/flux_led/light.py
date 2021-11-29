@@ -347,8 +347,8 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             return
         # Handle switch to RGB Color Mode
         if rgb := kwargs.get(ATTR_RGB_COLOR):
-            r, g, b = rgb
-            await self._device.async_set_levels(r, g, b, brightness=brightness)
+            red, green, blue = rgb
+            await self._device.async_set_levels(red, green, blue, brightness=brightness)
             return
         # Handle switch to RGBW Color Mode
         if rgbw := kwargs.get(ATTR_RGBW_COLOR):
