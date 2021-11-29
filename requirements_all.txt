@@ -2424,7 +2424,7 @@ webexteamssdk==1.1.1
 whirlpool-sixth-sense==0.15.1
 
 # homeassistant.components.wiffi
-wiffi==1.0.1
+wiffi==1.1.0
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
