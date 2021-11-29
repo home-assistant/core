@@ -58,9 +58,9 @@ MOCK_BLOCKS = [
 MOCK_CONFIG = {
     "input:0": {"id": 0, "type": "button"},
     "switch:0": {"name": "test switch_0"},
-    "sys": {"ui_data": {}},
-    "wifi": {
-        "ap": {"ssid": "Test name"},
+    "sys": {
+        "ui_data": {},
+        "device": {"name": "Test name"},
     },
 }
 
