@@ -120,13 +120,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
-        if not device.get("model_description"):
+        if not device["model_description"]:
             try:
                 device = await self._async_try_connect(host)
             except FLUX_LED_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
             else:
-                if device.get("model_description"):
+                if device["model_description"]:
                     self._discovered_device = device
         return await self.async_step_discovery_confirm()
 
