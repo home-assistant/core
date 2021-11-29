@@ -3,6 +3,11 @@
         "action_type": {
             "set_hvac_mode": "{entity_name} \u306eHVAC\u30e2\u30fc\u30c9\u3092\u5909\u66f4",
             "set_preset_mode": "{entity_name} \u306e\u30d7\u30ea\u30bb\u30c3\u30c8\u3092\u5909\u66f4"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} \u6e2c\u5b9a\u6e7f\u5ea6\u304c\u5909\u5316\u3057\u307e\u3057\u305f",
+            "current_temperature_changed": "{entity_name} \u6e2c\u5b9a\u6e29\u5ea6\u304c\u5909\u5316\u3057\u307e\u3057\u305f",
+            "hvac_mode_changed": "{entity_name} HVAC\u30e2\u30fc\u30c9\u304c\u5909\u5316\u3057\u307e\u3057\u305f"
         }
     },
     "state": {

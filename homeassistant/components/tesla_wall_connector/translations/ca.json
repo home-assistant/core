@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Freq\u00fc\u00e8ncia d'actualitzaci\u00f3"
+                }
+            }
+        }
+    }
+}
