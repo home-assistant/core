@@ -1,68 +1,80 @@
 """Support for Ecowitt Weather Stations."""
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
-import homeassistant.util.dt as dt_util
+import logging
 
 from pyecowitt import EcoWittSensor
 
-from . import EcowittEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
-
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
-    SensorEntity,
-    SensorEntityDescription,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
 )
-
-from .const import (
-    CONF_UNIT_BARO,
-    CONF_UNIT_WIND,
-    CONF_UNIT_RAIN,
-    CONF_UNIT_LIGHTNING,
-    CONF_UNIT_SYSTEM_METRIC_MS,
-    DOMAIN,
-    SIGNAL_ADD_ENTITIES,
-)
-
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    STATE_UNKNOWN,
-    DEVICE_CLASS_TIMESTAMP,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_PRESSURE,
-    PERCENTAGE,
-    CONF_UNIT_SYSTEM_METRIC,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    DEGREE,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
+    DEGREE,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO2,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_POTENTIAL_VOLT,
+    IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_MILES_PER_HOUR,
-    SPEED_METERS_PER_SECOND,
-    UV_INDEX,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
-    ELECTRIC_POTENTIAL_VOLT,
     LENGTH_MILLIMETERS,
-    TIME_HOURS,
+    PERCENTAGE,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
     TIME_DAYS,
-    TIME_WEEKS,
+    TIME_HOURS,
     TIME_MONTHS,
+    TIME_WEEKS,
     TIME_YEARS,
+    UV_INDEX,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_registry import (
+    async_get_registry as async_get_entity_registry,
+)
+import homeassistant.util.dt as dt_util
+
+from . import EcowittEntity
+from .const import (
+    CONF_UNIT_BARO,
+    CONF_UNIT_LIGHTNING,
+    CONF_UNIT_RAIN,
+    CONF_UNIT_SYSTEM_METRIC_MS,
+    CONF_UNIT_WIND,
+    DATA_PASSKEY,
+    DOMAIN,
+    SIGNAL_ADD_ENTITIES,
+    SIGNAL_NEW_SENSOR,
+    SIGNAL_REMOVE_ENTITIES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +105,7 @@ UOM_MAP = {
     "battery_percentage": PERCENTAGE,
     "length_inches": LENGTH_INCHES,
     "length_mm": LENGTH_MILLIMETERS,
-    "ppm": CONCENTRATION_PARTS_PER_MILLION,
+    "co2_ppm": CONCENTRATION_PARTS_PER_MILLION,
     "internal": None,
 }
 
@@ -114,7 +126,7 @@ SENSOR_TYPE_MAP = {
     CONF_UNIT_RAIN: {
         CONF_UNIT_SYSTEM_IMPERIAL: "rate_inches",
         CONF_UNIT_SYSTEM_METRIC: "rate_mm",
-    }
+    },
 }
 
 UNIT_LIST = [CONF_UNIT_BARO, CONF_UNIT_WIND, CONF_UNIT_LIGHTNING, CONF_UNIT_RAIN]
@@ -130,12 +142,24 @@ RAIN_MAP = {
     "yearlyrainin": [STATE_CLASS_TOTAL_INCREASING, f"{LENGTH_INCHES}/{TIME_YEARS}"],
     "rainratemm": [STATE_CLASS_MEASUREMENT, f"{LENGTH_MILLIMETERS}/{TIME_HOURS}"],
     "eventrainmm": [STATE_CLASS_MEASUREMENT, f"{LENGTH_MILLIMETERS}/{TIME_HOURS}"],
-    "hourlyrainmm": [STATE_CLASS_TOTAL_INCREASING, f"{LENGTH_MILLIMETERS}/{TIME_HOURS}"],
+    "hourlyrainmm": [
+        STATE_CLASS_TOTAL_INCREASING,
+        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+    ],
     "totalrainmm": [STATE_CLASS_TOTAL_INCREASING, LENGTH_MILLIMETERS],
     "dailyrainmm": [STATE_CLASS_TOTAL_INCREASING, f"{LENGTH_MILLIMETERS}/{TIME_DAYS}"],
-    "weeklyrainmm": [STATE_CLASS_TOTAL_INCREASING, f"{LENGTH_MILLIMETERS}/{TIME_WEEKS}"],
-    "monthlyrainmm": [STATE_CLASS_TOTAL_INCREASING, f"{LENGTH_MILLIMETERS}/{TIME_MONTHS}"],
-    "yearlyrainmm": [STATE_CLASS_TOTAL_INCREASING, f"{LENGTH_MILLIMETERS}/{TIME_YEARS}"],
+    "weeklyrainmm": [
+        STATE_CLASS_TOTAL_INCREASING,
+        f"{LENGTH_MILLIMETERS}/{TIME_WEEKS}",
+    ],
+    "monthlyrainmm": [
+        STATE_CLASS_TOTAL_INCREASING,
+        f"{LENGTH_MILLIMETERS}/{TIME_MONTHS}",
+    ],
+    "yearlyrainmm": [
+        STATE_CLASS_TOTAL_INCREASING,
+        f"{LENGTH_MILLIMETERS}/{TIME_YEARS}",
+    ],
 }
 
 
@@ -153,40 +177,105 @@ class EcowittSensorEntityDescription(SensorEntityDescription, EcowittSensorTypeM
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up sensors from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[Entity] = []
+    async def _async_remove_old_entities(discovery_info=None):
+        """Remove old entities from HomeAssistant.
 
-    sensor_types = []
-    for unit in UNIT_LIST:
-        sensor_types.append(SENSOR_TYPE_MAP[unit][entry.options[unit]])
+        When the user changes a config option, it will orphan entities of the
+        wrong imperial/metric type, this deletes them.
+        """
+        data = hass.data[DOMAIN][entry.entry_id]
+        old_sensor_types = []
+        entities_to_kill = []
 
-    sensors = data.client.list_sensor_keys()
+        # generate a reverse list
+        for unit in UNIT_LIST:
+            for configured_unit in SENSOR_TYPE_MAP[unit].keys():
+                if entry.options[unit] != configured_unit:
+                    old_sensor_types.append(SENSOR_TYPE_MAP[unit][configured_unit])
 
-    for sensor_key in sensors:
-        for description in SENSOR_ENTITIES:
+        for sensor_key in data.registered_devices:
             device = data.client.find_sensor(sensor_key)
-            if device is None or device.get_key() != sensor_key or device.get_stype() != description.key:
+            if device is None:
                 continue
-            if (device.get_system() is None or device.get_stype() == "temperature_c"):
-                data.registered_devices.append(sensor_key)
-                entities.append(description.cls(hass, entry, device, description))
+            if device.get_stype() in old_sensor_types:
+                entities_to_kill.append(sensor_key)
+
+        for key in entities_to_kill:
+            registry = await async_get_entity_registry(hass)
+            unique_id = f"{data.client.get_sensor_value_by_key(DATA_PASSKEY)}-{key}"
+            entity_id = registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
+
+            if entity_id:
+                _LOGGER.debug(
+                    "Found entity %s for key %s -> unique_id %s",
+                    entity_id,
+                    key,
+                    unique_id,
+                )
+                registry.async_remove(entity_id)
+                data.registered_devices.remove(key)
+
+    async def _async_add_ecowitt_entities(discovery_info: list[str]):
+        """Add sensor entities to HomeAssistant."""
+        _LOGGER.debug("Called async_add_ecowitt_entities")
+        data = hass.data[DOMAIN][entry.entry_id]
+        entities: list[Entity] = []
+
+        sensor_types = []
+        for unit in UNIT_LIST:
+            sensor_types.append(SENSOR_TYPE_MAP[unit][entry.options[unit]])
+
+        for sensor_key in discovery_info:
+            if sensor_key in data.registered_devices:
                 continue
-            for unit in sensor_types:
-                if device.get_stype() == unit:
+            for description in SENSOR_ENTITIES:
+                device = data.client.find_sensor(sensor_key)
+                if (
+                    device is None
+                    or device.get_key() != sensor_key
+                    or device.get_stype() != description.key
+                ):
+                    continue
+                if device.get_system() is None or device.get_stype() == "temperature_c":
                     data.registered_devices.append(sensor_key)
                     entities.append(description.cls(hass, entry, device, description))
+                    continue
+                for unit in sensor_types:
+                    if device.get_stype() == unit:
+                        data.registered_devices.append(sensor_key)
+                        entities.append(
+                            description.cls(hass, entry, device, description)
+                        )
 
-    async_add_entities(entities)
+        async_add_entities(entities)
 
-    # def add_entities(discovery_info=None):
-    #     async_add_ecowitt_entities(hass, entry, EcowittSensor,
-    #                                SENSOR_DOMAIN, async_add_entities,
-    #                                discovery_info)
+    def _new_sensor():
+        """Create callback for new sensors discovered."""
+        _LOGGER.debug("_new_sensor called")
+        data = hass.data[DOMAIN][entry.entry_id]
+        sensors = data.client.list_sensor_keys()
+        async_dispatcher_send(
+            hass, SIGNAL_ADD_ENTITIES.format(SENSOR_DOMAIN, entry.entry_id), sensors
+        )
 
-    # signal = f"{SIGNAL_ADD_ENTITIES}_{SENSOR_DOMAIN}"
-    # async_dispatcher_connect(hass, signal, add_entities)
-    # add_entities(hass.data[DOMAIN][entry.entry_id][REG_ENTITIES][TYPE_SENSOR])
+    data = hass.data[DOMAIN][entry.entry_id]
+    sensors = data.client.list_sensor_keys()
+    async_dispatcher_connect(
+        hass,
+        SIGNAL_ADD_ENTITIES.format(SENSOR_DOMAIN, entry.entry_id),
+        _async_add_ecowitt_entities,
+    )
+    async_dispatcher_connect(
+        hass, SIGNAL_NEW_SENSOR.format(SENSOR_DOMAIN, entry.entry_id), _new_sensor
+    )
+    async_dispatcher_connect(
+        hass,
+        SIGNAL_REMOVE_ENTITIES.format(SENSOR_DOMAIN, entry.entry_id),
+        _async_remove_old_entities,
+    )
+
+    await _async_add_ecowitt_entities(sensors)
 
 
 class EcowittSensor(EcowittEntity, SensorEntity):
@@ -197,7 +286,7 @@ class EcowittSensor(EcowittEntity, SensorEntity):
         hass: HomeAssistant,
         entry: ConfigEntry,
         device: EcoWittSensor,
-        entity_description: EcowittSensorEntityDescription
+        entity_description: EcowittSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(hass, entry, device)
@@ -209,23 +298,12 @@ class EcowittSensor(EcowittEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         if self._key not in self.data.client.last_values:
-            _LOGGER.warning("Sensor %s not in last update, check range or battery",
-                            self._key)
+            _LOGGER.warning(
+                "Sensor %s not in last update, check range or battery", self._key
+            )
             return STATE_UNKNOWN
 
         return self.device.get_value()
-
-
-class EcowittHumiditySensor(EcowittSensor):
-    """Represent an Ecowitt humidity sensor."""
-
-
-class EcowittTemperatureSensor(EcowittSensor):
-    """Represent an Ecowitt temperature sensor."""
-
-
-class EcowittPressureSensor(EcowittSensor):
-    """Represent an Ecowitt temperature sensor."""
 
 
 class EcowittRainRateSensor(EcowittSensor):
@@ -236,11 +314,52 @@ class EcowittRainRateSensor(EcowittSensor):
         hass: HomeAssistant,
         entry: ConfigEntry,
         device: EcoWittSensor,
-        entity_description: EcowittSensorEntityDescription
+        entity_description: EcowittSensorEntityDescription,
     ) -> None:
+        """Initialize ecowitt rain sensor."""
         super().__init__(hass, entry, device, entity_description)
         self._attr_state_class = RAIN_MAP[self.device.get_key()][0]
         self._attr_native_unit_of_measurement = RAIN_MAP[self.device.get_key()][1]
+
+
+class EcowittLightningTimeSensor(EcowittSensor):
+    """Represent an Ecowitt lightning last strike time sensor."""
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self._key not in self.data.client.last_values:
+            _LOGGER.warning(
+                "Sensor %s not in last update, check range or battery", self._key
+            )
+            return STATE_UNKNOWN
+
+        # strikes are reported in UTC
+        return dt_util.as_local(
+            dt_util.utc_from_timestamp(self.device.get_value())
+        ).isoformat()
+
+
+class EcowittLightningCountSensor(EcowittSensor):
+    """Represent an Ecowitt lightning strike count sensor."""
+
+    _attr_native_unit_of_measurement = f"strikes/{TIME_DAYS}"
+
+
+class EcowittBatteryPercentSensor(EcowittSensor):
+    """Represent an Ecowitt battery percentage Sensor."""
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self._key not in self.data.client.last_values:
+            _LOGGER.warning(
+                "Sensor %s not in last update, check range or battery", self._key
+            )
+            return STATE_UNKNOWN
+
+        # battery value is 0-5
+        return self.device.get_value() * 20.0
 
 
 SENSOR_ENTITIES: tuple[EcowittSensorEntityDescription, ...] = (
@@ -249,28 +368,28 @@ SENSOR_ENTITIES: tuple[EcowittSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:gauge",
-        cls=EcowittPressureSensor,
+        cls=EcowittSensor,
     ),
     EcowittSensorEntityDescription(
         key="pressure_inhg",
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:gauge",
-        cls=EcowittPressureSensor,
+        cls=EcowittSensor,
     ),
     EcowittSensorEntityDescription(
         key="temperature_c",
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:thermometer",
-        cls=EcowittTemperatureSensor,
+        cls=EcowittSensor,
     ),
     EcowittSensorEntityDescription(
         key="humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:water-percent",
-        cls=EcowittHumiditySensor,
+        cls=EcowittSensor,
     ),
     EcowittSensorEntityDescription(
         key="rate_mm",
@@ -281,5 +400,112 @@ SENSOR_ENTITIES: tuple[EcowittSensorEntityDescription, ...] = (
         key="rate_inches",
         icon="mdi:water",
         cls=EcowittRainRateSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="length_inches",
+        icon="mdi:water",
+        cls=EcowittRainRateSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="length_mm",
+        icon="mdi:water",
+        cls=EcowittRainRateSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="degree",
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:compass",
+        cls=EcowittSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="speed_kph",
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:weather-windy",
+        cls=EcowittSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="speed_mph",
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:weather-windy",
+        cls=EcowittSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="speed_mps",
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:weather-windy",
+        cls=EcowittSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="watt_meters_squared",
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:weather-sunny",
+        cls=EcowittSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="uv_index",
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:sunglasses",
+        cls=EcowittSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="pm25",
+        device_class=DEVICE_CLASS_PM25,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:eye",
+        cls=EcowittSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="timestamp",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:clock",
+        cls=EcowittLightningTimeSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="count",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        icon="mdi:weather-lightning",
+        cls=EcowittLightningCountSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="distance_km",
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:ruler",
+        cls=EcowittSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="distance_miles",
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:ruler",
+        cls=EcowittSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="pm10",
+        device_class=DEVICE_CLASS_PM10,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:eye",
+        cls=EcowittSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="voltage",
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:battery",
+        cls=EcowittSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="battery_percentage",
+        device_class=DEVICE_CLASS_BATTERY,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:battery",
+        cls=EcowittBatteryPercentSensor,
+    ),
+    EcowittSensorEntityDescription(
+        key="co2_ppm",
+        device_class=DEVICE_CLASS_CO2,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:molecule-co2",
+        cls=EcowittSensor,
     ),
 )

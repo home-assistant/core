@@ -1,9 +1,6 @@
 """Constants used by ecowitt component."""
 
-from homeassistant.const import (
-    CONF_UNIT_SYSTEM_METRIC,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-)
+from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
 
 ECOWITT_PLATFORMS = ["sensor"]
 
@@ -22,8 +19,9 @@ DATA_MODEL = "model"
 DEFAULT_PORT = 4199
 
 SIGNAL_UPDATE = "ecowitt_update_{}"
-SIGNAL_ADD_ENTITIES = "ecowitt_add_entities"
-SIGNAL_REMOVE_ENTITIES = "ecowitt_remove_entities"
+SIGNAL_ADD_ENTITIES = "ecowitt_add_entities_{}_{}"
+SIGNAL_REMOVE_ENTITIES = "ecowitt_remove_entities_{}_{}"
+SIGNAL_NEW_SENSOR = "ecowitt_new_sensor_{}_{}"
 
 CONF_NAME = "component_name"
 CONF_UNIT_BARO = "barounit"
@@ -47,6 +45,6 @@ UNIT_OPTS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 WIND_OPTS = [
     CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC_MS
+    CONF_UNIT_SYSTEM_METRIC_MS,
 ]
 WINDCHILL_OPTS = [W_TYPE_HYBRID, W_TYPE_NEW, W_TYPE_OLD]

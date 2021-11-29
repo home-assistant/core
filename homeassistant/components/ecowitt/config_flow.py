@@ -2,42 +2,30 @@
 import logging
 
 import voluptuous as vol
-from homeassistant import config_entries, core, exceptions
-from homeassistant.core import callback
 
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_PORT,
-    CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
 )
+from homeassistant.core import callback
 
 from .const import (
     CONF_UNIT_BARO,
-    CONF_UNIT_WIND,
-    CONF_UNIT_RAIN,
-    CONF_UNIT_WINDCHILL,
     CONF_UNIT_LIGHTNING,
+    CONF_UNIT_RAIN,
+    CONF_UNIT_WIND,
+    CONF_UNIT_WINDCHILL,
     DOMAIN,
-    W_TYPE_HYBRID,
     UNIT_OPTS,
+    W_TYPE_HYBRID,
     WIND_OPTS,
-    WINDCHILL_OPTS
+    WINDCHILL_OPTS,
 )
-
-from .schemas import (
-    DATA_SCHEMA,
-)
-
+from .schemas import DATA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def validate_input(hass: core.HomeAssistant, data):
-    """Validate user input."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_PORT] == data[CONF_PORT]:
-            raise AlreadyConfigured
-    return {"title": f"Ecowitt on port {data[CONF_PORT]}"}
 
 
 class EcowittConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -57,7 +45,9 @@ class EcowittConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_PORT: user_input[CONF_PORT]})
-            return self.async_create_entry(title=f"Ecowitt on port {user_input[CONF_PORT]}", data=user_input)
+            return self.async_create_entry(
+                title=f"Ecowitt on port {user_input[CONF_PORT]}", data=user_input
+            )
 
         return self.async_show_form(
             step_id="initial_options", data_schema=DATA_SCHEMA, errors=errors
@@ -68,10 +58,6 @@ class EcowittConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         """Call the options flow handler."""
         return EcowittOptionsFlowHandler(config_entry)
-
-
-class AlreadyConfigured(exceptions.HomeAssistantError):
-    """Error to indicate this device is already configured."""
 
 
 class EcowittOptionsFlowHandler(config_entries.OptionsFlow):
@@ -91,31 +77,36 @@ class EcowittOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_UNIT_BARO,
                     default=self.config_entry.options.get(
-                        CONF_UNIT_BARO, CONF_UNIT_SYSTEM_METRIC,
+                        CONF_UNIT_BARO,
+                        CONF_UNIT_SYSTEM_METRIC,
                     ),
                 ): vol.In(UNIT_OPTS),
                 vol.Optional(
                     CONF_UNIT_WIND,
                     default=self.config_entry.options.get(
-                        CONF_UNIT_WIND, CONF_UNIT_SYSTEM_IMPERIAL,
+                        CONF_UNIT_WIND,
+                        CONF_UNIT_SYSTEM_IMPERIAL,
                     ),
                 ): vol.In(WIND_OPTS),
                 vol.Optional(
                     CONF_UNIT_RAIN,
                     default=self.config_entry.options.get(
-                        CONF_UNIT_RAIN, CONF_UNIT_SYSTEM_IMPERIAL,
+                        CONF_UNIT_RAIN,
+                        CONF_UNIT_SYSTEM_IMPERIAL,
                     ),
                 ): vol.In(UNIT_OPTS),
                 vol.Optional(
                     CONF_UNIT_LIGHTNING,
                     default=self.config_entry.options.get(
-                        CONF_UNIT_LIGHTNING, CONF_UNIT_SYSTEM_IMPERIAL,
+                        CONF_UNIT_LIGHTNING,
+                        CONF_UNIT_SYSTEM_IMPERIAL,
                     ),
                 ): vol.In(UNIT_OPTS),
                 vol.Optional(
                     CONF_UNIT_WINDCHILL,
                     default=self.config_entry.options.get(
-                        CONF_UNIT_WINDCHILL, W_TYPE_HYBRID,
+                        CONF_UNIT_WINDCHILL,
+                        W_TYPE_HYBRID,
                     ),
                 ): vol.In(WINDCHILL_OPTS),
             }

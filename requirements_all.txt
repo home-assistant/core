@@ -1449,6 +1449,9 @@ pyebox==1.1.4
 # homeassistant.components.econet
 pyeconet==0.1.14
 
+# homeassistant.components.ecowitt
+pyecowitt==0.21
+
 # homeassistant.components.edimax
 pyedimax==0.2.1
 
