@@ -165,6 +165,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     _set_position_type: IntegerTypeData | None = None
     _tilt_dpcode: DPCode | None = None
     _tilt_type: IntegerTypeData | None = None
+    _position_dpcode: DPCode | None = None
     entity_description: TuyaCoverEntityDescription
 
     def __init__(
@@ -229,20 +230,14 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 device.status_range[tilt_dpcode].values
             )
 
-    @property
-    def current_cover_position(self) -> int | None:
-        """Return cover current position."""
-        if self._current_position_type is None:
-            return None
-
         # Determine current_position DPCodes
         if isinstance(self.entity_description.current_position, DPCode):
-            dpcode = (
+            self._position_dpcode = (
                 self.entity_description.current_position
                 or self.entity_description.set_position
             )
         elif isinstance(self.entity_description.current_position, tuple):
-            dpcode = next(
+            self._position_dpcode = next(
                 (
                     dpcode
                     for dpcode in self.entity_description.current_position
@@ -251,10 +246,16 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 None,
             )
 
-        if not (dpcode):
+    @property
+    def current_cover_position(self) -> int | None:
+        """Return cover current position."""
+        if self._current_position_type is None:
             return None
 
-        if (position := self.device.status.get(dpcode)) is None:
+        if not (self._position_dpcode):
+            return None
+
+        if (position := self.device.status.get(self._position_dpcode)) is None:
             return None
 
         return round(
