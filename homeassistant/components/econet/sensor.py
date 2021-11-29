@@ -113,7 +113,7 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        for prefix, unit in SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT:
+        for prefix, unit in SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT.items():
             if self._device_name.startswith(prefix):
                 unit_of_measurement = unit
                 break
