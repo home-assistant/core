@@ -57,6 +57,12 @@ class DeviceEntryDisabler(StrEnum):
     USER = "user"
 
 
+# DISABLED_* are deprecated, to be removed in 2022.3
+DISABLED_CONFIG_ENTRY = DeviceEntryDisabler.CONFIG_ENTRY.value
+DISABLED_INTEGRATION = DeviceEntryDisabler.INTEGRATION.value
+DISABLED_USER = DeviceEntryDisabler.USER.value
+
+
 class DeviceEntryType(StrEnum):
     """Device entry type."""
 
@@ -348,8 +354,9 @@ class DeviceRegistry:
 
         if isinstance(entry_type, str) and not isinstance(entry_type, DeviceEntryType):
             report(  # type: ignore[unreachable]
-                "uses str for device registry entry_type. This is deprecated, "
-                "it should be updated to use DeviceEntryType instead",
+                "uses str for device registry entry_type. This is deprecated and will "
+                "stop working in Home Assistant 2022.3, it should be updated to use "
+                "DeviceEntryType instead",
                 error_if_core=False,
             )
             entry_type = DeviceEntryType(entry_type)
@@ -445,8 +452,9 @@ class DeviceRegistry:
             disabled_by, DeviceEntryDisabler
         ):
             report(  # type: ignore[unreachable]
-                "uses str for device registry disabled_by. This is deprecated, "
-                "it should be updated to use DeviceEntryDisabler instead",
+                "uses str for device registry disabled_by. This is deprecated and will "
+                "stop working in Home Assistant 2022.3, it should be updated to use "
+                "DeviceEntryDisabler instead",
                 error_if_core=False,
             )
             disabled_by = DeviceEntryDisabler(disabled_by)
