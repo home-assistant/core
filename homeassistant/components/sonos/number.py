@@ -7,6 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SONOS_CREATE_LEVELS
 from .entity import SonosEntity
+from .helpers import soco_error
 from .speaker import SonosSpeaker
 
 LEVEL_TYPES = ("bass", "treble")
@@ -53,6 +54,7 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         """Poll the value if subscriptions are not working."""
         # Handled by SonosSpeaker
 
+    @soco_error()
     def set_value(self, value: float) -> None:
         """Set a new value."""
         setattr(self.soco, self.level_type, value)
