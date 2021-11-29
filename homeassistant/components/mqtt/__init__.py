@@ -202,7 +202,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SCHEMA_BASE = {vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA}
+SCHEMA_BASE = {
+    vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+}
 
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 
@@ -211,7 +214,6 @@ MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
     }
 )
 
