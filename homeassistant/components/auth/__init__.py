@@ -126,7 +126,10 @@ import voluptuous as vol
 from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN, Credentials
 from homeassistant.components import websocket_api
-from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.http.auth import (
+    async_sign_path,
+    async_user_not_allowed_do_auth,
+)
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
@@ -299,9 +302,12 @@ class TokenView(HomeAssistantView):
 
         user = await hass.auth.async_get_or_create_user(credential)
 
-        if not user.is_active:
+        if user_access_error := async_user_not_allowed_do_auth(hass, user):
             return self.json(
-                {"error": "access_denied", "error_description": "User is not active"},
+                {
+                    "error": "access_denied",
+                    "error_description": user_access_error,
+                },
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
@@ -353,6 +359,17 @@ class TokenView(HomeAssistantView):
         if refresh_token.client_id != client_id:
             return self.json(
                 {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
+            )
+
+        if user_access_error := async_user_not_allowed_do_auth(
+            hass, refresh_token.user
+        ):
+            return self.json(
+                {
+                    "error": "access_denied",
+                    "error_description": user_access_error,
+                },
+                status_code=HTTPStatus.FORBIDDEN,
             )
 
         try:
