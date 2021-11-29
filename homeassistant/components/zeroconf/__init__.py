@@ -120,19 +120,37 @@ class ZeroconfServiceInfo(BaseServiceInfo):
 
     def __getitem__(self, name: str) -> Any:
         """
-        Allow property access by name for compatibility reason.
+        Enable method for compatibility reason.
 
         Deprecated, and will be removed in version 2022.6.
         """
         if not self._warning_logged:
             report(
                 f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={"zeroconf"},
+                exclude_integrations={DOMAIN},
                 error_if_core=False,
                 level=logging.DEBUG,
             )
             self._warning_logged = True
         return getattr(self, name)
+
+    def get(self, name: str, default: Any = None) -> Any:
+        """
+        Enable method for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={DOMAIN},
+                error_if_core=False,
+                level=logging.DEBUG,
+            )
+            self._warning_logged = True
+        if hasattr(self, name):
+            return getattr(self, name)
+        return default
 
 
 @bind_hass
