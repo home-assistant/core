@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyfronius import Fronius, FroniusError
 import voluptuous as vol
@@ -15,6 +15,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, FroniusConfigEntryData
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,6 +106,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, conf: dict) -> FlowResult:
         """Import a configuration from config.yaml."""
         return await self.async_step_user(user_input={CONF_HOST: conf[CONF_RESOURCE]})
+
+    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+        """Handle a flow initiated by the DHCP client."""
+        discovery_input = {CONF_HOST: discovery_info.ip}
+        self._async_abort_entries_match(discovery_input)
+        return await self.async_step_user(user_input=discovery_input)
 
 
 class CannotConnect(HomeAssistantError):

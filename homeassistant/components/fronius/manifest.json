@@ -1,5 +1,10 @@
 {
   "domain": "fronius",
+  "dhcp": [
+    {
+      "macaddress": "0003AC*"
+    }
+  ],
   "name": "Fronius",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fronius",
