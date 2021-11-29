@@ -1,6 +1,8 @@
 """Tests for the Fronius integration."""
 from homeassistant.components.fronius.const import DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
@@ -11,14 +13,16 @@ MOCK_HOST = "http://fronius"
 MOCK_UID = "123.4567890"  # has to match mocked logger unique_id
 
 
-async def setup_fronius_integration(hass):
+async def setup_fronius_integration(
+    hass: HomeAssistant, is_logger: bool = True
+) -> ConfigEntry:
     """Create the Fronius integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_UID,
         data={
             CONF_HOST: MOCK_HOST,
-            "is_logger": True,
+            "is_logger": is_logger,
         },
     )
     entry.add_to_hass(hass)
@@ -30,48 +34,50 @@ async def setup_fronius_integration(hass):
 def mock_responses(
     aioclient_mock: AiohttpClientMocker,
     host: str = MOCK_HOST,
+    fixture_set: str = "symo",
     night: bool = False,
 ) -> None:
     """Mock responses for Fronius Symo inverter with meter."""
     aioclient_mock.clear_requests()
-    _day_or_night = "night" if night else "day"
+    _night = "_night" if night else ""
 
     aioclient_mock.get(
         f"{host}/solar_api/GetAPIVersion.cgi",
-        text=load_fixture("symo/GetAPIVersion.json", "fronius"),
+        text=load_fixture(f"{fixture_set}/GetAPIVersion.json", "fronius"),
     )
     aioclient_mock.get(
         f"{host}/solar_api/v1/GetInverterRealtimeData.cgi?Scope=Device&"
         "DeviceId=1&DataCollection=CommonInverterData",
         text=load_fixture(
-            f"symo/GetInverterRealtimeDate_Device_1_{_day_or_night}.json", "fronius"
+            f"{fixture_set}/GetInverterRealtimeData_Device_1{_night}.json",
+            "fronius",
         ),
     )
     aioclient_mock.get(
         f"{host}/solar_api/v1/GetInverterInfo.cgi",
-        text=load_fixture("symo/GetInverterInfo.json", "fronius"),
+        text=load_fixture(f"{fixture_set}/GetInverterInfo.json", "fronius"),
     )
     aioclient_mock.get(
         f"{host}/solar_api/v1/GetLoggerInfo.cgi",
-        text=load_fixture("symo/GetLoggerInfo.json", "fronius"),
-    )
-    aioclient_mock.get(
-        f"{host}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=Device&DeviceId=0",
-        text=load_fixture("symo/GetMeterRealtimeData_Device_0.json", "fronius"),
+        text=load_fixture(f"{fixture_set}/GetLoggerInfo.json", "fronius"),
     )
     aioclient_mock.get(
         f"{host}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=System",
-        text=load_fixture("symo/GetMeterRealtimeData_System.json", "fronius"),
+        text=load_fixture(f"{fixture_set}/GetMeterRealtimeData.json", "fronius"),
     )
     aioclient_mock.get(
         f"{host}/solar_api/v1/GetPowerFlowRealtimeData.fcgi",
         text=load_fixture(
-            f"symo/GetPowerFlowRealtimeData_{_day_or_night}.json", "fronius"
+            f"{fixture_set}/GetPowerFlowRealtimeData{_night}.json", "fronius"
         ),
     )
     aioclient_mock.get(
         f"{host}/solar_api/v1/GetStorageRealtimeData.cgi?Scope=System",
-        text=load_fixture("symo/GetStorageRealtimeData_System.json", "fronius"),
+        text=load_fixture(f"{fixture_set}/GetStorageRealtimeData.json", "fronius"),
+    )
+    aioclient_mock.get(
+        f"{host}/solar_api/v1/GetOhmPilotRealtimeData.cgi?Scope=System",
+        text=load_fixture(f"{fixture_set}/GetOhmPilotRealtimeData.json", "fronius"),
     )
 
 
