@@ -26,6 +26,7 @@ from aioesphomeapi import (
     TextSensorInfo,
     UserService,
 )
+from aioesphomeapi.model import ButtonInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -37,6 +38,7 @@ SAVE_DELAY = 120
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
     BinarySensorInfo: "binary_sensor",
+    ButtonInfo: "button",
     CameraInfo: "camera",
     ClimateInfo: "climate",
     CoverInfo: "cover",

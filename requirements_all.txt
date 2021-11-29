@@ -161,7 +161,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.2.0
+aioesphomeapi==10.3.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -2427,7 +2427,7 @@ webexteamssdk==1.1.1
 whirlpool-sixth-sense==0.15.1
 
 # homeassistant.components.wiffi
-wiffi==1.0.1
+wiffi==1.1.0
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
@@ -2436,7 +2436,7 @@ wirelesstagpy==0.8.1
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.10.0
+wled==0.10.1
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11

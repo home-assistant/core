@@ -46,6 +46,7 @@ from .const import (
     SONOS_CHECK_ACTIVITY,
     SONOS_CREATE_ALARM,
     SONOS_CREATE_BATTERY,
+    SONOS_CREATE_LEVELS,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_CREATE_SWITCHES,
     SONOS_ENTITY_CREATED,
@@ -192,8 +193,8 @@ class SonosSpeaker:
         self.night_mode: bool | None = None
         self.dialog_mode: bool | None = None
         self.cross_fade: bool | None = None
-        self.bass_level: int | None = None
-        self.treble_level: int | None = None
+        self.bass: int | None = None
+        self.treble: int | None = None
 
         # Misc features
         self.buttons_enabled: bool | None = None
@@ -233,6 +234,8 @@ class SonosSpeaker:
             self.async_setup_dispatchers(entry), self.hass.loop
         )
         future.result(timeout=10)
+
+        dispatcher_send(self.hass, SONOS_CREATE_LEVELS, self)
 
         if battery_info := fetch_battery_info_or_none(self.soco):
             self.battery_info = battery_info
@@ -490,11 +493,11 @@ class SonosSpeaker:
         if "dialog_level" in variables:
             self.dialog_mode = variables["dialog_level"] == "1"
 
-        if "bass_level" in variables:
-            self.bass_level = variables["bass_level"]
+        if "bass" in variables:
+            self.bass = variables["bass"]
 
-        if "treble_level" in variables:
-            self.treble_level = variables["treble_level"]
+        if "treble" in variables:
+            self.treble = variables["treble"]
 
         self.async_write_entity_states()
 
@@ -968,8 +971,8 @@ class SonosSpeaker:
         self.muted = self.soco.mute
         self.night_mode = self.soco.night_mode
         self.dialog_mode = self.soco.dialog_mode
-        self.bass_level = self.soco.bass
-        self.treble_level = self.soco.treble
+        self.bass = self.soco.bass
+        self.treble = self.soco.treble
 
         try:
             self.cross_fade = self.soco.cross_fade

@@ -71,6 +71,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._port = entry.data[CONF_PORT]
         self._password = entry.data[CONF_PASSWORD]
         self._noise_psk = entry.data.get(CONF_NOISE_PSK)
+        self._name = entry.title
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

@@ -8,7 +8,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
-from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -116,11 +116,6 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
             )
             _visibility = f"{visibility_class} - {visibility_distance}"
         return _visibility
-
-    @property
-    def visibility_unit(self):
-        """Return the unit of measurement."""
-        return LENGTH_KILOMETERS
 
     @property
     def pressure(self):

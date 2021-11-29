@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_VOLTAGE,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
@@ -87,7 +88,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         name="accumulated consumption",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     SensorEntityDescription(
         key="accumulatedConsumptionLastHour",
@@ -101,7 +102,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         name="accumulated production",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_TOTAL,
     ),
     SensorEntityDescription(
         key="accumulatedProductionLastHour",
