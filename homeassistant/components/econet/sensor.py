@@ -5,7 +5,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
-    )
+)
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -60,6 +60,7 @@ PREFIX_STATE_CLASS_MAPPING = [
     (ENERGY_USAGE_TODAY, STATE_CLASS_TOTAL_INCREASING),
     (WATER_USAGE_TODAY, STATE_CLASS_TOTAL_INCREASING),
 ]
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up EcoNet sensor based on a config entry."""
