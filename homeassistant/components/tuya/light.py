@@ -660,8 +660,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         # else than "white".
         if (
             self._color_mode_dpcode
-            and self.device.status.get(self._color_mode_dpcode)
-            != WorkMode.WHITE
+            and self.device.status.get(self._color_mode_dpcode) != WorkMode.WHITE
         ):
             return COLOR_MODE_HS
         if self._color_temp_dpcode:
