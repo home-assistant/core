@@ -18,7 +18,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
@@ -186,7 +186,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Hue bridge.
 
         This flow is triggered by the SSDP component. It will check if the
@@ -213,7 +213,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_hue_bridge")
 
         host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        bridge = await self._get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])  # type: ignore[arg-type]
+        bridge = await self._get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
 
         await self.async_set_unique_id(bridge.id)
         self._abort_if_unique_id_configured(

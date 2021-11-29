@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 import contextlib
 from datetime import datetime, timedelta
 import functools
@@ -241,7 +241,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         await self._device_disconnect()
 
     async def async_ssdp_callback(
-        self, info: Mapping[str, Any], change: ssdp.SsdpChange
+        self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
         """Handle notification from SSDP of device state change."""
         _LOGGER.debug(
