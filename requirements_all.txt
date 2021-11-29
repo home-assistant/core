@@ -234,7 +234,7 @@ aiopulse==0.4.3
 aiopvapi==1.6.14
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==2.2.1
+aiopvpc==2.2.4
 
 # homeassistant.components.webostv
 aiopylgtv==0.4.0
@@ -658,7 +658,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.25.2
+flux_led==0.25.3
 
 # homeassistant.components.homekit
 fnvhash==0.1.0

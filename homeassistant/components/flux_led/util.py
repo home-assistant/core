@@ -18,8 +18,12 @@ def _hass_color_modes(device: AIOWifiLedBulb) -> set[str]:
     return {_flux_color_mode_to_hass(mode, color_modes) for mode in color_modes}
 
 
-def _flux_color_mode_to_hass(flux_color_mode: str, flux_color_modes: set[str]) -> str:
+def _flux_color_mode_to_hass(
+    flux_color_mode: str | None, flux_color_modes: set[str]
+) -> str:
     """Map the flux color mode to Home Assistant color mode."""
+    if flux_color_mode is None:
+        return COLOR_MODE_ONOFF
     if flux_color_mode == FLUX_COLOR_MODE_DIM:
         if len(flux_color_modes) > 1:
             return COLOR_MODE_WHITE
