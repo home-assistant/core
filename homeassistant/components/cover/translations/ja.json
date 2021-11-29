@@ -1,6 +1,8 @@
 {
     "device_automation": {
         "action_type": {
+            "set_position": "{entity_name} \u4f4d\u7f6e\u306e\u8a2d\u5b9a",
+            "set_tilt_position": "{entity_name} \u50be\u659c\u4f4d\u7f6e\u306e\u8a2d\u5b9a",
             "stop": "\u505c\u6b62 {entity_name}"
         },
         "condition_type": {
@@ -16,8 +18,8 @@
             "closing": "{entity_name} \u304c\u7d42\u4e86",
             "opened": "{entity_name} \u304c\u958b\u304b\u308c\u307e\u3057\u305f",
             "opening": "{entity_name} \u304c\u958b\u304f",
-            "position": "{entity_name} \u4f4d\u7f6e\u306e\u5909\u66f4",
-            "tilt_position": "{entity_name} \u50be\u659c\u4f4d\u7f6e\u306e\u5909\u66f4"
+            "position": "{entity_name} \u4f4d\u7f6e\u306e\u5909\u5316",
+            "tilt_position": "{entity_name} \u50be\u659c\u4f4d\u7f6e\u306e\u5909\u5316"
         }
     },
     "state": {

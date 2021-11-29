@@ -21,7 +21,8 @@
                 "data": {
                     "access_token": "\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3",
                     "email": "E\u30e1\u30fc\u30eb"
-                }
+                },
+                "description": "Awair developer access token\u306e\u767b\u9332\u306f\u4ee5\u4e0b\u306e\u30b5\u30a4\u30c8\u3067\u884c\u3046\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059: https://developer.getawair.com/onboard/login"
             }
         }
     }
