@@ -63,16 +63,6 @@ ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
 PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
 
-DISCOVERY_MAPPING = {
-    "usn": ATTR_SSDP_USN,
-    "ext": ATTR_SSDP_EXT,
-    "server": ATTR_SSDP_SERVER,
-    "st": ATTR_SSDP_ST,
-    "location": ATTR_SSDP_LOCATION,
-    "_udn": ATTR_SSDP_UDN,
-    "nt": ATTR_SSDP_NT,
-}
-
 _LOGGER = logging.getLogger(__name__)
 
 
