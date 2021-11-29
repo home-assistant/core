@@ -19,13 +19,6 @@ async def test_block_button(hass: HomeAssistant, coap_wrapper):
         suggested_object_id="test_name_ota_update_beta",
         disabled_by=None,
     )
-    entity_registry.async_get_or_create(
-        BUTTON_DOMAIN,
-        DOMAIN,
-        "test_name_reboot",
-        suggested_object_id="test_name_reboot",
-        disabled_by=None,
-    )
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(coap_wrapper.entry, BUTTON_DOMAIN)
     )
@@ -88,13 +81,6 @@ async def test_rpc_button(hass: HomeAssistant, rpc_wrapper):
         DOMAIN,
         "test_name_ota_update_beta",
         suggested_object_id="test_name_ota_update_beta",
-        disabled_by=None,
-    )
-    entity_registry.async_get_or_create(
-        BUTTON_DOMAIN,
-        DOMAIN,
-        "test_name_reboot",
-        suggested_object_id="test_name_reboot",
         disabled_by=None,
     )
 

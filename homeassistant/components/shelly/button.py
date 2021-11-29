@@ -51,7 +51,6 @@ BUTTONS: Final = [
         key="reboot",
         name="Reboot",
         icon="mdi:restart",
-        entity_registry_enabled_default=False,
         entity_category=ENTITY_CATEGORY_CONFIG,
         press_action=lambda wrapper: wrapper.device.trigger_reboot(),
     ),
