@@ -1,0 +1,32 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Устройство уже настроено.",
+      "no_devices_found": "Устройства не обнаружены. Попробуйте перезагрузить WalkingPad.",
+      "ble_not_available": "Bluetooth не доступен."
+    },
+    "error": {
+      "cannot_connect": "Подключение не удалось."
+    },
+    "step": {
+      "user": {
+        "description": "Выберите тип подключения. Китайские версии WalkingPad обычно подключаются с помощью Bluetooth, европейские - с помощью WiFi.",
+        "data": {
+          "conn_type": "Тип подключения."
+        }
+      },
+      "ble_device": {
+        "data": {
+          "device": "Устройство"
+        }
+      },
+      "wifi_device": {
+        "title": "IP адрес и токен.",
+        "data": {
+          "ip_address": "IP адрес",
+          "token": "Токен"
+        }
+      }
+    }
+  }
+}
