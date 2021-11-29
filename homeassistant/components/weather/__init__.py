@@ -61,7 +61,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-ROUNDING_PLACES = 2
+ROUNDING_PRECISION = 2
 
 
 class Forecast(TypedDict, total=False):
@@ -147,7 +147,7 @@ class WeatherEntity(Entity):
 
     @property
     def humidity(self) -> float | None:
-        """Return the humidity in."""
+        """Return the humidity in native units."""
         return self._attr_humidity
 
     @property
@@ -182,7 +182,7 @@ class WeatherEntity(Entity):
 
     @property
     def forecast(self) -> list[Forecast] | None:
-        """Return the forecast."""
+        """Return the forecast in native units."""
         return self._attr_forecast
 
     @property
@@ -223,7 +223,7 @@ class WeatherEntity(Entity):
         if (pressure := self.pressure) is not None:
             if (unit := self.pressure_unit) is not None:
                 pressure = round(
-                    self.hass.config.units.pressure(pressure, unit), ROUNDING_PLACES
+                    self.hass.config.units.pressure(pressure, unit), ROUNDING_PRECISION
                 )
             data[ATTR_WEATHER_PRESSURE] = pressure
 
@@ -233,14 +233,15 @@ class WeatherEntity(Entity):
         if (wind_speed := self.wind_speed) is not None:
             if (unit := self.wind_speed_unit) is not None:
                 wind_speed = round(
-                    self.hass.config.units.wind_speed(wind_speed, unit), ROUNDING_PLACES
+                    self.hass.config.units.wind_speed(wind_speed, unit),
+                    ROUNDING_PRECISION,
                 )
             data[ATTR_WEATHER_WIND_SPEED] = wind_speed
 
         if (visibility := self.visibility) is not None:
             if (unit := self.visibility_unit) is not None:
                 visibility = round(
-                    self.hass.config.units.length(visibility, unit), ROUNDING_PLACES
+                    self.hass.config.units.length(visibility, unit), ROUNDING_PRECISION
                 )
             data[ATTR_WEATHER_VISIBILITY] = visibility
 
@@ -267,7 +268,7 @@ class WeatherEntity(Entity):
                             self.hass.config.units.pressure(
                                 forecast_entry[ATTR_FORECAST_PRESSURE], unit
                             ),
-                            ROUNDING_PLACES,
+                            ROUNDING_PRECISION,
                         )
                         forecast_entry[ATTR_FORECAST_PRESSURE] = pressure
                 if ATTR_FORECAST_WIND_SPEED in forecast_entry:
@@ -276,7 +277,7 @@ class WeatherEntity(Entity):
                             self.hass.config.units.wind_speed(
                                 forecast_entry[ATTR_FORECAST_WIND_SPEED], unit
                             ),
-                            ROUNDING_PLACES,
+                            ROUNDING_PRECISION,
                         )
                         forecast_entry[ATTR_FORECAST_WIND_SPEED] = wind_speed
                 if ATTR_FORECAST_PRECIPITATION in forecast_entry:
@@ -285,7 +286,7 @@ class WeatherEntity(Entity):
                             self.hass.config.units.accumulated_precipitation(
                                 forecast_entry[ATTR_FORECAST_PRECIPITATION], unit
                             ),
-                            ROUNDING_PLACES,
+                            ROUNDING_PRECISION,
                         )
                         forecast_entry[ATTR_FORECAST_PRECIPITATION] = precipitation
 
