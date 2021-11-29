@@ -338,7 +338,6 @@ class MqttAvailability(Entity):
         self._avail_topics = {}
         if CONF_AVAILABILITY_TOPIC in config and config[CONF_AVAILABILITY_TOPIC]:
             self._avail_topics[config[CONF_AVAILABILITY_TOPIC]] = {
-                CONF_ENCODING: config[CONF_ENCODING] or None,
                 CONF_PAYLOAD_AVAILABLE: config[CONF_PAYLOAD_AVAILABLE],
                 CONF_PAYLOAD_NOT_AVAILABLE: config[CONF_PAYLOAD_NOT_AVAILABLE],
                 CONF_AVAILABILITY_TEMPLATE: config.get(CONF_AVAILABILITY_TEMPLATE),
@@ -347,21 +346,21 @@ class MqttAvailability(Entity):
         if CONF_AVAILABILITY in config:
             for avail in config[CONF_AVAILABILITY]:
                 self._avail_topics[avail[CONF_TOPIC]] = {
-                    CONF_ENCODING: config[CONF_ENCODING] or None,
                     CONF_PAYLOAD_AVAILABLE: avail[CONF_PAYLOAD_AVAILABLE],
                     CONF_PAYLOAD_NOT_AVAILABLE: avail[CONF_PAYLOAD_NOT_AVAILABLE],
                     CONF_AVAILABILITY_TEMPLATE: avail.get(CONF_VALUE_TEMPLATE),
                 }
 
-        for key, avail_topic_conf in self._avail_topics.items():
+        for (
+            topic,  # pylint: disable=unused-variable
+            avail_topic_conf,
+        ) in self._avail_topics.items():
             tpl = avail_topic_conf[CONF_AVAILABILITY_TEMPLATE]
             if tpl is None:
-                self._avail_topics[key][
-                    CONF_AVAILABILITY_TEMPLATE
-                ] = lambda value: value
+                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = lambda value: value
             else:
                 tpl.hass = self.hass
-                self._avail_topics[key][
+                avail_topic_conf[
                     CONF_AVAILABILITY_TEMPLATE
                 ] = tpl.async_render_with_possible_json_value
 
@@ -394,7 +393,7 @@ class MqttAvailability(Entity):
                 "topic": topic,
                 "msg_callback": availability_message_received,
                 "qos": self._avail_config[CONF_QOS],
-                "encoding": self._avail_topics[topic][CONF_ENCODING],
+                "encoding": self._avail_config[CONF_ENCODING] or None,
             }
             for topic in self._avail_topics
         }
