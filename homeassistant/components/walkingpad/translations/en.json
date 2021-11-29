@@ -1,0 +1,29 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Defice is already configured.",
+      "no_devices_found": "No devices found. Try to restart WalkingPad.",
+      "ble_not_available": "Bluetooth is not available."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect."
+    },
+    "step": {
+      "user": {
+        "description": "Choose connection type. Chinese versions of WalkingPad are usually connected via Bluetooth, European - via WiFi."
+      },
+      "ble_device": {
+        "data": {
+          "device": "Device"
+        }
+      },
+      "wifi_device": {
+        "title": "IP address and token.",
+        "data": {
+          "ip_address": "IP address",
+          "token": "Token"
+        }
+      }
+    }
+  }
+}

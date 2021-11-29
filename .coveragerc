@@ -1227,6 +1227,8 @@ omit =
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*
     homeassistant/components/w800rf32/*
+    homeassistant/components/walkingpad/__init__.py
+    homeassistant/components/walkingpad/remote.py
     homeassistant/components/waqi/sensor.py
     homeassistant/components/waterfurnace/*
     homeassistant/components/watson_iot/*

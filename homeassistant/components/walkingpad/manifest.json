@@ -1,0 +1,9 @@
+{
+  "domain": "walkingpad",
+  "name": "WalkingPad",
+  "documentation": "https://www.home-assistant.io/integrations/walkigpad/",
+  "requirements": ["ph4-walkingpad==0.0.3", "python-miio==0.5.8", "bleak==0.13.0"],
+  "codeowners": ["@evgeniavolkova"],
+  "iot_class": "local_polling",
+  "config_flow": true
+}

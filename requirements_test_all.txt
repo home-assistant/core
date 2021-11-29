@@ -1144,6 +1144,7 @@ python-juicenet==1.0.2
 # homeassistant.components.tplink
 python-kasa==0.4.0
 
+# homeassistant.components.walkingpad
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.8
 
