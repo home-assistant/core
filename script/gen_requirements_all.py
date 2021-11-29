@@ -166,7 +166,7 @@ def explore_module(package, explore_children):
 def core_requirements():
     """Gather core requirements out of setup.py."""
     reqs_raw = re.search(
-        r"REQUIRES = \[(.*?)\]", Path("setup.py").read_text(), re.S
+        r"REQUIRES = \[(.*?)\]\n", Path("setup.py").read_text(), re.S
     ).group(1)
     return [x[1] for x in re.findall(r"(['\"])(.*?)\1", reqs_raw)]
 
@@ -358,7 +358,7 @@ def gather_constraints():
         "\n".join(
             sorted(
                 {
-                    *core_requirements(),
+                    *(re.sub(r"\[.+\]", "", req) for req in core_requirements()),
                     *gather_recursive_requirements("default_config"),
                     *gather_recursive_requirements("mqtt"),
                 }
