@@ -104,7 +104,9 @@ async def async_get_conditions(
     return conditions
 
 
-def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
+def async_condition_from_config(
+    hass: HomeAssistant, config: ConfigType
+) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
     if config[CONF_TYPE] == CONDITION_TRIGGERED:
         state = STATE_ALARM_TRIGGERED
