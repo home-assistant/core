@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+	"title": "Instructions for setting up the Ecowitt.",
+	"description": "The following steps must be performed before setting up this integration.\nIf you have not already done so, please do this now.\n\nUse the WS View app (on your phone) for your Ecowitt device, and connect to it.\nPick menu -> device list -> Pick your station.\nHit next repeatedly to move to the last screen titled 'Customized'\n\nPick the protocol Ecowitt, and put in the ip/hostname of your hass server.\nPath doesn't matter as long as it ends in /, leave the default, or change it to just /.\nPick a port that is not in use on the server (netstat -lt). (4199 is probably a good default)\nPick a reasonable value for updates, like 60 seconds.\nSave configuration.  The Ecowitt should then start attempting to send data to your server.\n\nClick submit when these instructions have been completed."
+      },
+      "initial_options": {
+	"title": "Ecowitt Parameters",
+	"data": {
+	  "port": "[%key:common::config_flow::data::port%]"
+	}
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+	"data": {
+	  "barounit": "Barometer Unit",
+	  "windunit": "Wind Unit",
+	  "rainunit": "Rainfall Unit",
+	  "lightningunit": "Lightning distance unit",
+	  "windchillunit": "Windchill calculation"
+	}
+      }
+    }
+  }
+}
