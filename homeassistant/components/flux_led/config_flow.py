@@ -85,9 +85,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = FluxLEDDiscovery(
-            ipaddr=discovery_info[dhcp.IP_ADDRESS],
-            model=discovery_info[dhcp.HOSTNAME],
-            id=discovery_info[dhcp.MAC_ADDRESS].replace(":", ""),
+            ipaddr=discovery_info.ip,
+            model=discovery_info.hostname,
+            id=discovery_info.macaddress.replace(":", ""),
             model_num=None,
             version_num=None,
             firmware_date=None,
