@@ -40,11 +40,6 @@ logging.getLogger("ph4_walkingpad").setLevel(logging.CRITICAL)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WalkingPad device from a config entry."""
-    # if entry.data[CONF_CONN_TYPE] == "ble":
-    #     device: WalkingPadBLEDevice = WalkingPadBLEDevice(hass, entry)
-    # elif entry.data[CONF_CONN_TYPE] == "wifi":
-    #     device: WalkingPadWiFiDevice = WalkingPadWiFiDevice(hass, entry)
-
     device = (
         WalkingPadBLEDevice(hass, entry)
         if entry.data[CONF_CONN_TYPE] == "ble"
