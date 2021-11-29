@@ -71,6 +71,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._port = entry.data[CONF_PORT]
         self._password = entry.data[CONF_PASSWORD]
         self._noise_psk = entry.data.get(CONF_NOISE_PSK)
+        self._name = entry.title
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -85,10 +86,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             if error is None:
                 return await self._async_authenticate_or_add()
             errors["base"] = error
-
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
-        self._name = entry.title
 
         return self.async_show_form(
             step_id="reauth_confirm",
