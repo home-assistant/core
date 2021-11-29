@@ -46,7 +46,6 @@ from .const import (
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
-    DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DOMAIN,
@@ -73,7 +72,6 @@ AVAILABILITY_LATEST = "latest"
 
 AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
 
-CONF_AVAILABILITY_ENCODING = "availability_encoding"
 CONF_AVAILABILITY_MODE = "availability_mode"
 CONF_AVAILABILITY_TEMPLATE = "availability_template"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
@@ -118,7 +116,6 @@ MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
         vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(
             CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
         ): cv.string,
@@ -137,7 +134,6 @@ MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
             cv.ensure_list,
             [
                 {
-                    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
                     vol.Required(CONF_TOPIC): valid_subscribe_topic,
                     vol.Optional(
                         CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
@@ -342,7 +338,7 @@ class MqttAvailability(Entity):
         self._avail_topics = {}
         if CONF_AVAILABILITY_TOPIC in config and config[CONF_AVAILABILITY_TOPIC]:
             self._avail_topics[config[CONF_AVAILABILITY_TOPIC]] = {
-                CONF_AVAILABILITY_ENCODING: config[CONF_AVAILABILITY_ENCODING] or None,
+                CONF_ENCODING: config[CONF_ENCODING] or None,
                 CONF_PAYLOAD_AVAILABLE: config[CONF_PAYLOAD_AVAILABLE],
                 CONF_PAYLOAD_NOT_AVAILABLE: config[CONF_PAYLOAD_NOT_AVAILABLE],
                 CONF_AVAILABILITY_TEMPLATE: config.get(CONF_AVAILABILITY_TEMPLATE),
@@ -351,7 +347,7 @@ class MqttAvailability(Entity):
         if CONF_AVAILABILITY in config:
             for avail in config[CONF_AVAILABILITY]:
                 self._avail_topics[avail[CONF_TOPIC]] = {
-                    CONF_AVAILABILITY_ENCODING: avail[CONF_ENCODING] or None,
+                    CONF_ENCODING: config[CONF_ENCODING] or None,
                     CONF_PAYLOAD_AVAILABLE: avail[CONF_PAYLOAD_AVAILABLE],
                     CONF_PAYLOAD_NOT_AVAILABLE: avail[CONF_PAYLOAD_NOT_AVAILABLE],
                     CONF_AVAILABILITY_TEMPLATE: avail.get(CONF_VALUE_TEMPLATE),
@@ -398,7 +394,7 @@ class MqttAvailability(Entity):
                 "topic": topic,
                 "msg_callback": availability_message_received,
                 "qos": self._avail_config[CONF_QOS],
-                "encoding": self._avail_topics[topic][CONF_AVAILABILITY_ENCODING],
+                "encoding": self._avail_topics[topic][CONF_ENCODING],
             }
             for topic in self._avail_topics
         }
