@@ -49,7 +49,7 @@ class AzureEventHub:
 
         self._client_config = AzureEventHubClient.from_input(**self._entry.data)
 
-        self._queue: asyncio.PriorityQueue[
+        self._queue: asyncio.PriorityQueue[  # pylint: disable=unsubscriptable-object
             tuple[int, tuple[datetime, Event | None]]
         ] = asyncio.PriorityQueue()
 
