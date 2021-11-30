@@ -4,7 +4,7 @@ from __future__ import annotations
 from functools import partial
 import socket
 from types import MappingProxyType
-from typing import Any, cast
+from typing import Any
 from urllib.parse import urlparse
 
 import getmac
@@ -265,8 +265,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
         model_name: str = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
         self._udn = _strip_uuid(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
-        if hostname := urlparse(discovery_info.ssdp_location).hostname:
-            self._host = cast(str, hostname)
+        if hostname := urlparse(discovery_info.ssdp_location or "").hostname:
+            self._host = hostname
         await self._async_set_unique_id_from_udn()
         self._manufacturer = discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER]
         self._abort_if_manufacturer_is_not_samsung()
