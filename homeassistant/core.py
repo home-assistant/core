@@ -98,7 +98,7 @@ CORE_STORAGE_VERSION = 1
 DOMAIN = "homeassistant"
 
 # How long to wait to log tasks that are blocking
-BLOCK_LOG_TIMEOUT = 60
+BLOCK_LOG_TIMEOUT = 0.5
 
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
@@ -489,7 +489,7 @@ class HomeAssistant:
     async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
         # pylint: disable=no-self-use
-        wait_time = 0
+        wait_time = 0.0
         while pending:
             _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
             if not pending:
