@@ -1,4 +1,6 @@
 """Config flow for Network UPS Tools (NUT) integration."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -23,7 +25,7 @@ from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _base_schema(discovery_info):
+def _base_schema(discovery_info: zeroconf.ZeroconfServiceInfo | None) -> vol.Schema:
     """Generate base schema."""
     base_schema = {}
     if not discovery_info:
@@ -83,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the nut config flow."""
         self.nut_config = {}
-        self.discovery_info = {}
+        self.discovery_info: zeroconf.ZeroconfServiceInfo | None = None
         self.ups_list = None
         self.title = None
 
@@ -94,8 +96,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovery_info = discovery_info
         await self._async_handle_discovery_without_unique_id()
         self.context["title_placeholders"] = {
-            CONF_PORT: discovery_info[zeroconf.ATTR_PORT] or DEFAULT_PORT,
-            CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
+            CONF_PORT: discovery_info.port or DEFAULT_PORT,
+            CONF_HOST: discovery_info.host,
         }
         return await self.async_step_user()
 
@@ -106,7 +108,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self.discovery_info:
                 user_input.update(
                     {
-                        CONF_HOST: self.discovery_info[CONF_HOST],
+                        CONF_HOST: self.discovery_info.host,
                         CONF_PORT: self.discovery_info.port or DEFAULT_PORT,
                     }
                 )
