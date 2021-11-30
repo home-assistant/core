@@ -1,0 +1,17 @@
+{
+    "config": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "name": "[%key:common::config_flow::data::username%]",
+            "api_key": "[%key:common::config_flow::data::api_key%]",
+            "station": "Station",
+            "conditions": "Monitored conditions"
+            }
+          }
+        }
+    }
+  }
