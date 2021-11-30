@@ -34,6 +34,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
+from homeassistant.util.enum import StrEnum
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -44,31 +45,38 @@ SCAN_INTERVAL = timedelta(seconds=15)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-# Refer to the cover dev docs for device class descriptions
-DEVICE_CLASS_AWNING = "awning"
-DEVICE_CLASS_BLIND = "blind"
-DEVICE_CLASS_CURTAIN = "curtain"
-DEVICE_CLASS_DAMPER = "damper"
-DEVICE_CLASS_DOOR = "door"
-DEVICE_CLASS_GARAGE = "garage"
-DEVICE_CLASS_GATE = "gate"
-DEVICE_CLASS_SHADE = "shade"
-DEVICE_CLASS_SHUTTER = "shutter"
-DEVICE_CLASS_WINDOW = "window"
 
-DEVICE_CLASSES = [
-    DEVICE_CLASS_AWNING,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_CURTAIN,
-    DEVICE_CLASS_DAMPER,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_SHADE,
-    DEVICE_CLASS_SHUTTER,
-    DEVICE_CLASS_WINDOW,
-]
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+class CoverDeviceClass(StrEnum):
+    """Device class for cover."""
+
+    # Refer to the cover dev docs for device class descriptions
+    AWNING = "awning"
+    BLIND = "blind"
+    CURTAIN = "curtain"
+    DAMPER = "damper"
+    DOOR = "door"
+    GARAGE = "garage"
+    GATE = "gate"
+    SHADE = "shade"
+    SHUTTER = "shutter"
+    WINDOW = "window"
+
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(CoverDeviceClass))
+
+# DEVICE_CLASS* below are deprecated as of 2021.12
+# use the CoverDeviceClass enum instead.
+DEVICE_CLASSES = [cls.value for cls in CoverDeviceClass]
+DEVICE_CLASS_AWNING = CoverDeviceClass.AWNING.value
+DEVICE_CLASS_BLIND = CoverDeviceClass.BLIND.value
+DEVICE_CLASS_CURTAIN = CoverDeviceClass.CURTAIN.value
+DEVICE_CLASS_DAMPER = CoverDeviceClass.DAMPER.value
+DEVICE_CLASS_DOOR = CoverDeviceClass.DOOR.value
+DEVICE_CLASS_GARAGE = CoverDeviceClass.GARAGE.value
+DEVICE_CLASS_GATE = CoverDeviceClass.GATE.value
+DEVICE_CLASS_SHADE = CoverDeviceClass.SHADE.value
+DEVICE_CLASS_SHUTTER = CoverDeviceClass.SHUTTER.value
+DEVICE_CLASS_WINDOW = CoverDeviceClass.WINDOW.value
 
 SUPPORT_OPEN = 1
 SUPPORT_CLOSE = 2
@@ -175,6 +183,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class CoverEntityDescription(EntityDescription):
     """A class that describes cover entities."""
 
+    device_class: CoverDeviceClass | str | None = None
+
 
 class CoverEntity(Entity):
     """Base class for cover entities."""
@@ -182,6 +192,7 @@ class CoverEntity(Entity):
     entity_description: CoverEntityDescription
     _attr_current_cover_position: int | None = None
     _attr_current_cover_tilt_position: int | None = None
+    _attr_device_class: CoverDeviceClass | str | None
     _attr_is_closed: bool | None
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
@@ -204,6 +215,15 @@ class CoverEntity(Entity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         return self._attr_current_cover_tilt_position
+
+    @property
+    def device_class(self) -> CoverDeviceClass | str | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
 
     @property
     @final
