@@ -51,6 +51,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Handle options update."""
+        device._default_speed = entry.options.get(CONF_DEFAULT_SPEED, DEFAULT_SPEED)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
 
 
