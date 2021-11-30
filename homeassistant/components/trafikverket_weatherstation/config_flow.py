@@ -1,6 +1,8 @@
 """Adds config flow for Trafikverket Weather integration."""
 from __future__ import annotations
 
+import json
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -10,18 +12,13 @@ import homeassistant.helpers.config_validation as cv
 from .const import CONF_STATION, DOMAIN
 from .sensor import SENSOR_TYPES
 
-SENSOR_LIST: dict[str, str | None] = {
-    description.key: description.name for (description) in SENSOR_TYPES
-}
+SENSOR_LIST: set[str] = {description.key for (description) in SENSOR_TYPES}
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_STATION): cv.string,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): cv.multi_select(
-            SENSOR_LIST
-        ),
     }
 )
 
@@ -51,7 +48,7 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             name = user_input[CONF_NAME]
             api_key = user_input[CONF_API_KEY]
             station = user_input[CONF_STATION]
-            conditions = user_input[CONF_MONITORED_CONDITIONS]
+            conditions = json.dumps(list(SENSOR_LIST))
 
             return self.async_create_entry(
                 title=name,
