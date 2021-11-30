@@ -151,7 +151,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        properties = discovery_info[zeroconf.ATTR_PROPERTIES]
+        properties = discovery_info.properties
         host = properties.get("ip")
         uuid = properties.get("uuid")
 
