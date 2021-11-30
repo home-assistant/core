@@ -2,7 +2,7 @@
 
 from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
 
-ECOWITT_PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor"]
 
 TYPE_SENSOR = "sensor"
 TYPE_BINARY_SENSOR = "binary_sensor"

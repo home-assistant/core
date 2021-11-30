@@ -335,9 +335,7 @@ class EcowittLightningTimeSensor(EcowittSensor):
             return STATE_UNKNOWN
 
         # strikes are reported in UTC
-        return dt_util.as_local(
-            dt_util.utc_from_timestamp(self.device.get_value())
-        ).isoformat()
+        return dt_util.as_local(dt_util.utc_from_timestamp(self.device.get_value()))
 
 
 class EcowittLightningCountSensor(EcowittSensor):

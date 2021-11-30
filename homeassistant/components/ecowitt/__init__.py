@@ -30,7 +30,7 @@ from .const import (
     DATA_PASSKEY,
     DATA_STATIONTYPE,
     DOMAIN,
-    ECOWITT_PLATFORMS,
+    PLATFORMS,
     SIGNAL_NEW_SENSOR,
     SIGNAL_REMOVE_ENTITIES,
     SIGNAL_UPDATE,
@@ -80,12 +80,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.loop.create_task(data.client.listen())
     await data.client.wait_for_valid_data()
 
-    hass.config_entries.async_setup_platforms(entry, ECOWITT_PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     def _new_sensor_callback():
         """Prepare callback for a new sensor addition."""
         _LOGGER.debug("New sensor callback triggered")
-        for platform in ECOWITT_PLATFORMS:
+        for platform in PLATFORMS:
             async_dispatcher_send(
                 hass, SIGNAL_NEW_SENSOR.format(platform, entry.entry_id)
             )
@@ -110,9 +110,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     data = hass.data[DOMAIN][entry.entry_id]
     await data.client.stop()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, ECOWITT_PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -123,7 +121,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     _LOGGER.debug("called update listener")
-    for platform in ECOWITT_PLATFORMS:
+    for platform in PLATFORMS:
         async_dispatcher_send(
             hass, SIGNAL_REMOVE_ENTITIES.format(platform, entry.entry_id)
         )
