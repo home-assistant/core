@@ -1,30 +1,8 @@
 # Describes the format for available Nest services
 
-snapshot_event:
-  name: Take event snapshot
-  description: Take a snapshot from a camera for an event.
-  target:
-    entity:
-      integration: nest
-      domain: camera
-  fields:
-    nest_event_id:
-      name: Nest Event Id
-      description: The nest_event_id from the event to snapshot. Can be populated by an automation trigger for a 'nest_event' with 'data_template'.
-      required: true
-      selector:
-        text:
-    filename:
-      name: Filename
-      description: A filename where the snapshot for the event is written.
-      required: true
-      example: "/tmp/snapshot_my_camera.jpg"
-      selector:
-        text:
-
 set_away_mode:
   name: Set away mode
-  description: Set the away mode for a Nest structure. For Legacy API.
+  description: Set the away mode for a Nest structure.
   fields:
     away_mode:
       name: Away mode
@@ -44,7 +22,7 @@ set_away_mode:
 
 set_eta:
   name: Set estimated time of arrival
-  description: Set or update the estimated time of arrival window for a Nest structure. For Legacy API.
+  description: Set or update the estimated time of arrival window for a Nest structure.
   fields:
     eta:
       name: ETA
@@ -73,7 +51,7 @@ set_eta:
 
 cancel_eta:
   name: Cancel ETA
-  description: Cancel an existing estimated time of arrival window for a Nest structure. For Legacy API.
+  description: Cancel an existing estimated time of arrival window for a Nest structure.
   fields:
     trip_id:
       name: Trip ID
