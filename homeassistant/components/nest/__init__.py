@@ -127,10 +127,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if CONF_PROJECT_ID not in config[DOMAIN]:
         return await async_setup_legacy(hass, config)
 
-    if CONF_SUBSCRIBER_ID not in config[DOMAIN]:
-        _LOGGER.error("Configuration option 'subscriber_id' required")
-        return False
-
     # For setup of ConfigEntry below
     hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
     project_id = config[DOMAIN][CONF_PROJECT_ID]
@@ -195,9 +191,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await async_setup_legacy_entry(hass, entry)
 
     subscriber = await api.new_subscriber(hass, entry)
+    if not subscriber:
+        return False
+
     callback = SignalUpdateCallback(hass)
     subscriber.set_update_callback(callback.async_handle_event)
-
     try:
         await subscriber.start_async()
     except AuthException as err:
@@ -245,3 +243,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of pubsub subscriptions created during config flow."""
+    if DATA_SDM not in entry.data or CONF_SUBSCRIBER_ID not in entry.data:
+        return
+
+    subscriber = await api.new_subscriber(hass, entry)
+    if not subscriber:
+        return
+    _LOGGER.debug("Deleting subscriber '%s'", subscriber.subscriber_id)
+    try:
+        await subscriber.delete_subscription()
+    except GoogleNestException as err:
+        _LOGGER.warning(
+            "Unable to delete subscription '%s'; Will be automatically cleaned up by cloud console: %s",
+            subscriber.subscriber_id,
+            err,
+        )
+    finally:
+        subscriber.stop_async()
