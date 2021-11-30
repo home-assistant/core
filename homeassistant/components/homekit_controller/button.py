@@ -10,7 +10,11 @@ from dataclasses import dataclass
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import callback
 
@@ -35,7 +39,7 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
     CharacteristicsTypes.Vendor.HAA_UPDATE: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.Vendor.HAA_UPDATE,
         name="Update",
-        icon="mdi:update",
+        device_class=ButtonDeviceClass.UPDATE,
         entity_category=ENTITY_CATEGORY_CONFIG,
         write_value="#HAA@trcmd",
     ),
@@ -61,7 +65,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomeKitButton(CharacteristicEntity, ButtonEntity):
     """Representation of a Button control on a homekit accessory."""
 
-    entity_description = HomeKitButtonEntityDescription
+    entity_description: HomeKitButtonEntityDescription
 
     def __init__(
         self,
