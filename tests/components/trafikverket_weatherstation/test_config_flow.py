@@ -11,20 +11,6 @@ from homeassistant.core import HomeAssistant
 
 SENSOR_LIST: list[str | None] = {description.key for (description) in SENSOR_TYPES}
 
-"""SENSOR_LIST: dict(str) = {
-    "air_temp",
-    "road_temp",
-    "precipitation",
-    "wind_direction",
-    "wind_direction_text",
-    "wind_speed",
-    "wind_speed_max",
-    "humidity",
-    "precipitation_amount",
-    "precipitation_amountname",
-}"""
-
-
 DOMAIN = "trafikverket_weatherstation"
 CONF_STATION = "station"
 
