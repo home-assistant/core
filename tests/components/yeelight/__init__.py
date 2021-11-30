@@ -8,7 +8,7 @@ from async_upnp_client.search import SsdpSearchListener
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
-from homeassistant.components import zeroconf
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -180,7 +180,14 @@ def _patch_discovery(no_device=False, capabilities=None):
 
     def _generate_fake_ssdp_listener(*args, **kwargs):
         return _patched_ssdp_listener(
-            None if no_device else capabilities or CAPABILITIES,
+            None
+            if no_device
+            else ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={},
+                ssdp_headers=capabilities or CAPABILITIES,
+            ),
             *args,
             **kwargs,
         )
