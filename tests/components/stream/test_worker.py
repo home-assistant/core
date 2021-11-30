@@ -37,7 +37,12 @@ from homeassistant.components.stream.const import (
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
 from homeassistant.components.stream.core import StreamSettings
-from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
+from homeassistant.components.stream.worker import (
+    SegmentBuffer,
+    StreamEndedError,
+    StreamWorkerError,
+    stream_worker,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.components.stream.common import generate_h264_video, generate_h265_video
@@ -264,8 +269,15 @@ async def async_decode_stream(hass, packets, py_av=None):
         side_effect=py_av.capture_buffer.capture_output_segment,
     ):
         segment_buffer = SegmentBuffer(hass, stream.outputs)
-        stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
-        await hass.async_block_till_done()
+        try:
+            stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
+        except StreamEndedError:
+            # Tests only use a limited number of packets, then the worker exits as expected. In
+            # production, stream ending would be unexpected.
+            pass
+        finally:
+            # Wait for all packets to be flushed even when exceptions are thrown
+            await hass.async_block_till_done()
 
     return py_av.capture_buffer
 
@@ -274,7 +286,7 @@ async def test_stream_open_fails(hass):
     """Test failure on stream open."""
     stream = Stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
-    with patch("av.open") as av_open:
+    with patch("av.open") as av_open, pytest.raises(StreamWorkerError):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         segment_buffer = SegmentBuffer(hass, stream.outputs)
         stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
@@ -371,7 +383,10 @@ async def test_packet_overflow(hass):
     # Packet is so far out of order, exceeds max gap and looks like overflow
     packets[OUT_OF_ORDER_PACKET_INDEX].dts = -9000000
 
-    decoded_stream = await async_decode_stream(hass, packets)
+    py_av = MockPyAv()
+    with pytest.raises(StreamWorkerError, match=r"Timestamp overflow detected"):
+        await async_decode_stream(hass, packets, py_av=py_av)
+    decoded_stream = py_av.capture_buffer
     segments = decoded_stream.segments
     complete_segments = decoded_stream.complete_segments
     # Check number of segments
@@ -425,7 +440,10 @@ async def test_too_many_initial_bad_packets_fails(hass):
     for i in range(0, num_bad_packets):
         packets[i].dts = None
 
-    decoded_stream = await async_decode_stream(hass, packets)
+    py_av = MockPyAv()
+    with pytest.raises(StreamWorkerError, match=r"No dts"):
+        await async_decode_stream(hass, packets, py_av=py_av)
+    decoded_stream = py_av.capture_buffer
     segments = decoded_stream.segments
     assert len(segments) == 0
     assert len(decoded_stream.video_packets) == 0
@@ -466,7 +484,10 @@ async def test_too_many_bad_packets(hass):
     for i in range(bad_packet_start, bad_packet_start + num_bad_packets):
         packets[i].dts = None
 
-    decoded_stream = await async_decode_stream(hass, packets)
+    py_av = MockPyAv()
+    with pytest.raises(StreamWorkerError, match=r"No dts"):
+        await async_decode_stream(hass, packets, py_av=py_av)
+    decoded_stream = py_av.capture_buffer
     complete_segments = decoded_stream.complete_segments
     assert len(complete_segments) == int((bad_packet_start - 1) * SEGMENTS_PER_PACKET)
     assert len(decoded_stream.video_packets) == bad_packet_start
@@ -477,9 +498,11 @@ async def test_no_video_stream(hass):
     """Test no video stream in the container means no resulting output."""
     py_av = MockPyAv(video=False)
 
-    decoded_stream = await async_decode_stream(
-        hass, PacketSequence(TEST_SEQUENCE_LENGTH), py_av=py_av
-    )
+    with pytest.raises(StreamWorkerError, match=r"Stream has no video"):
+        await async_decode_stream(
+            hass, PacketSequence(TEST_SEQUENCE_LENGTH), py_av=py_av
+        )
+    decoded_stream = py_av.capture_buffer
     # Note: This failure scenario does not output an end of stream
     segments = decoded_stream.segments
     assert len(segments) == 0
@@ -616,6 +639,9 @@ async def test_stream_stopped_while_decoding(hass):
         worker_wake.set()
         stream.stop()
 
+    # Stream is still considered available when the worker was still active and asked to stop
+    assert stream.available
+
 
 async def test_update_stream_source(hass):
     """Tests that the worker is re-invoked when the stream source is updated."""
@@ -646,6 +672,7 @@ async def test_update_stream_source(hass):
         stream.start()
         assert worker_open.wait(TIMEOUT)
         assert last_stream_source == STREAM_SOURCE
+        assert stream.available
 
         # Update the stream source, then the test wakes up the worker and assert
         # that it re-opens the new stream (the test again waits on thread_started)
@@ -655,6 +682,7 @@ async def test_update_stream_source(hass):
         assert worker_open.wait(TIMEOUT)
         assert last_stream_source == STREAM_SOURCE + "-updated-source"
         worker_wake.set()
+        assert stream.available
 
         # Cleanup
         stream.stop()
@@ -664,15 +692,16 @@ async def test_worker_log(hass, caplog):
     """Test that the worker logs the url without username and password."""
     stream = Stream(hass, "https://abcd:efgh@foo.bar", {})
     stream.add_provider(HLS_PROVIDER)
-    with patch("av.open") as av_open:
+
+    with patch("av.open") as av_open, pytest.raises(StreamWorkerError) as err:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         segment_buffer = SegmentBuffer(hass, stream.outputs)
         stream_worker(
             "https://abcd:efgh@foo.bar", {}, segment_buffer, threading.Event()
         )
         await hass.async_block_till_done()
+    assert str(err.value) == "Error opening stream https://****:****@foo.bar"
     assert "https://abcd:efgh@foo.bar" not in caplog.text
-    assert "https://****:****@foo.bar" in caplog.text
 
 
 async def test_durations(hass, record_worker_sync):

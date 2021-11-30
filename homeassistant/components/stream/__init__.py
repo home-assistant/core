@@ -204,6 +204,7 @@ class Stream:
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
+        self._available = True
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -254,6 +255,11 @@ class Stream:
         if all(p.idle for p in self._outputs.values()):
             self.access_token = None
 
+    @property
+    def available(self) -> bool:
+        """Return False if the stream is started and known to be unavailable."""
+        return self._available
+
     def start(self) -> None:
         """Start a stream."""
         if self._thread is None or not self._thread.is_alive():
@@ -280,18 +286,25 @@ class Stream:
         """Handle consuming streams and restart keepalive streams."""
         # Keep import here so that we can import stream integration without installing reqs
         # pylint: disable=import-outside-toplevel
-        from .worker import SegmentBuffer, stream_worker
+        from .worker import SegmentBuffer, StreamWorkerError, stream_worker
 
         segment_buffer = SegmentBuffer(self.hass, self.outputs)
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-            stream_worker(
-                self.source,
-                self.options,
-                segment_buffer,
-                self._thread_quit,
-            )
+
+            self._available = True
+            try:
+                stream_worker(
+                    self.source,
+                    self.options,
+                    segment_buffer,
+                    self._thread_quit,
+                )
+            except StreamWorkerError as err:
+                _LOGGER.error("Error from stream worker: %s", str(err))
+                self._available = False
+
             segment_buffer.discontinuity()
             if not self.keepalive or self._thread_quit.is_set():
                 if self._fast_restart_once:
@@ -300,6 +313,7 @@ class Stream:
                     self._thread_quit.clear()
                     continue
                 break
+
             # To avoid excessive restarts, wait before restarting
             # As the required recovery time may be different for different setups, start
             # with trying a short wait_timeout and increase it on each reconnection attempt.
