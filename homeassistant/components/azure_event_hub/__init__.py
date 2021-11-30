@@ -55,10 +55,10 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     Tries to get a filter from yaml, if present set to hass data.
     If config is empty after getting the filter, return, otherwise emit deprecated warning and pass the rest to the config flow.
     """
-    hass.data.setdefault(DOMAIN, {DATA_FILTER: {}})
+    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
     if DOMAIN not in yaml_config:
         return True
-    hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN].pop(CONF_FILTER, {})
+    hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN].pop(CONF_FILTER)
 
     if yaml_config[DOMAIN] == {}:
         return True
@@ -75,16 +75,14 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Do the setup based on the config entry and the filter from yaml."""
-    hass.data[DOMAIN][DATA_HUB] = AzureEventHub(
-        hass,
-        entry,
-    )
-    entry.async_on_unload(entry.add_update_listener(async_update_listener))
+    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
+    hub = AzureEventHub(hass, entry)
     try:
-        await hass.data[DOMAIN][DATA_HUB].async_test_connection()
+        await hub.async_test_connection()
     except EventHubError as err:
         raise ConfigEntryNotReady("Could not connect to Azure Event Hub") from err
-
+    hass.data[DOMAIN][DATA_HUB] = hub
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
     return await hass.data[DOMAIN][DATA_HUB].async_start()
 
 

@@ -2,15 +2,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 
 from azure.eventhub.aio import EventHubProducerClient, EventHubSharedKeyCredential
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import ADDITIONAL_ARGS, CONF_EVENT_HUB_CON_STRING
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -19,12 +16,13 @@ class AzureEventHubClient:
 
     event_hub_instance_name: str
 
-    def get_client(self) -> EventHubProducerClient:
+    @property
+    def client(self) -> EventHubProducerClient:
         """Return the client."""
 
     async def test_connection(self) -> None:
         """Test connection, will throw EventHubError when it cannot connect."""
-        async with self.get_client() as client:
+        async with self.client as client:
             await client.get_eventhub_properties()
 
     @classmethod
@@ -34,13 +32,13 @@ class AzureEventHubClient:
             try:
                 return AzureEventHubClientConnectionString(**kwargs)
             except TypeError as exc:
-                raise HomeAssistantError(
+                raise ClientCreationError(
                     "Could not create AEH client from connection string."
                 ) from exc
         try:
             return AzureEventHubClientSAS(**kwargs)
         except TypeError as exc:
-            raise HomeAssistantError(
+            raise ClientCreationError(
                 "Could not create AEH client from SAS credentials"
             ) from exc
 
@@ -51,7 +49,8 @@ class AzureEventHubClientConnectionString(AzureEventHubClient):
 
     event_hub_connection_string: str
 
-    def get_client(self) -> EventHubProducerClient:
+    @property
+    def client(self) -> EventHubProducerClient:
         """Return the client."""
         return EventHubProducerClient.from_connection_string(
             conn_str=self.event_hub_connection_string,
@@ -68,7 +67,8 @@ class AzureEventHubClientSAS(AzureEventHubClient):
     event_hub_sas_policy: str
     event_hub_sas_key: str
 
-    def get_client(self) -> EventHubProducerClient:
+    @property
+    def client(self) -> EventHubProducerClient:
         """Get a Event Producer Client."""
         return EventHubProducerClient(
             fully_qualified_namespace=f"{self.event_hub_namespace}.servicebus.windows.net",
@@ -78,3 +78,7 @@ class AzureEventHubClientSAS(AzureEventHubClient):
             ),
             **ADDITIONAL_ARGS,
         )
+
+
+class ClientCreationError(HomeAssistantError):
+    """Error creating client."""

@@ -1,6 +1,7 @@
 """Config flow for azure_event_hub integration."""
 from __future__ import annotations
 
+from copy import deepcopy
 import logging
 from typing import Any
 
@@ -10,8 +11,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 
+from .client import AzureEventHubClient, ClientCreationError
 from .const import (
     CONF_EVENT_HUB_CON_STRING,
     CONF_EVENT_HUB_INSTANCE_NAME,
@@ -28,7 +29,6 @@ from .const import (
     STEP_SAS,
     STEP_USER,
 )
-from .models import AzureEventHubClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,17 +58,20 @@ async def validate_data(data: dict[str, Any], step_id: str) -> dict[str, str] | 
     """Validate the input."""
     try:
         client = AzureEventHubClient.from_input(**data)
-    except HomeAssistantError:
+        _LOGGER.warning("Client: %s", client)
+    except ClientCreationError:
         return {"base": f"invalid_{step_id}"}
     except Exception:  # pylint: disable=broad-except
         return {"base": "unknown"}
 
     try:
+        _LOGGER.warning("Testing connection with client: %s", client)
         await client.test_connection()
     except EventHubError:
+        _LOGGER.warning("Event hub error")
         return {"base": "cannot_connect"}
     except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Unknown error when trying to connect to Azure: %s", exc)
+        _LOGGER.warning("Unknown error: %s", exc)
         return {"base": "unknown"}
     return None
 
@@ -108,6 +111,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id=STEP_CONN_STRING,
                 data_schema=CONN_STRING_SCHEMA,
                 description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
+                last_step=True,
             )
 
         self._update_data(user_input, STEP_CONN_STRING)
@@ -118,6 +122,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=CONN_STRING_SCHEMA,
                 errors=errors,
                 description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
+                last_step=True,
             )
         return await self.async_route(STEP_CONN_STRING)
 
@@ -128,6 +133,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id=STEP_SAS,
                 data_schema=SAS_SCHEMA,
                 description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
+                last_step=True,
             )
         self._update_data(user_input, STEP_SAS)
         errors = await validate_data(self._data, STEP_SAS)
@@ -137,6 +143,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=SAS_SCHEMA,
                 errors=errors,
                 description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
+                last_step=True,
             )
 
         return await self.async_route(STEP_SAS)
@@ -181,6 +188,11 @@ class AEHOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize AEH options flow."""
         self.config_entry = config_entry
+        self.options = deepcopy(dict(config_entry.options))
+
+    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
+        """Manage the AEH options."""
+        return await self.async_step_options()
 
     async def async_step_options(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Manage the AEH options."""
@@ -193,12 +205,13 @@ class AEHOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_SEND_INTERVAL,
-                        default=self.config_entry.options.get(CONF_SEND_INTERVAL),
+                        default=self.options.get(CONF_SEND_INTERVAL),
                     ): int,
                     vol.Required(
                         CONF_MAX_DELAY,
-                        default=self.config_entry.options.get(CONF_MAX_DELAY),
+                        default=self.options.get(CONF_MAX_DELAY),
                     ): int,
                 }
             ),
+            last_step=True,
         )

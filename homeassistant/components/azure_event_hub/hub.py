@@ -19,6 +19,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.util.dt import utcnow
 
+from .client import AzureEventHubClient
 from .const import (
     CONF_MAX_DELAY,
     CONF_SEND_INTERVAL,
@@ -26,7 +27,6 @@ from .const import (
     DOMAIN,
     NON_SEND_STATES,
 )
-from .models import AzureEventHubClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class AzureEventHub:
         self._client_config = AzureEventHubClient.from_input(**self._entry.data)
 
         self._queue: asyncio.PriorityQueue[
-            tuple[int, Event | None]
+            tuple[int, tuple[datetime, Event | None]]
         ] = asyncio.PriorityQueue()
 
         self._stop = False
@@ -91,17 +91,17 @@ class AzureEventHub:
             self._next_send_remover()
         if self._listener_remover:
             self._listener_remover()
-        await self._queue.put((3, None))
+        await self._queue.put((3, (utcnow(), None)))
         await self._async_send(None)
         return True
 
     async def _async_listen(self, event: Event) -> None:
         """Listen for new messages on the bus and queue them for AEH."""
-        await self._queue.put((2, event))
+        await self._queue.put((2, (event.time_fired, event)))
 
     async def _async_send(self, _) -> None:
         """Send events to eventhub."""
-        async with self._client_config.get_client() as client:
+        async with self._client_config.client as client:
             while not self._queue.empty():
                 event_batch = await self._fill_batch(client)
                 try:
@@ -126,7 +126,7 @@ class AzureEventHub:
         dropped = 0
         while True:
             try:
-                _, event = self._queue.get_nowait()
+                _, (_, event) = self._queue.get_nowait()
             except asyncio.QueueEmpty:
                 break
             dequeue_count += 1
@@ -145,7 +145,7 @@ class AzureEventHub:
                 event_batch.add(event_data)
             except ValueError:
                 # batch is full, put the item back in the queue
-                await self._queue.put((1, event))
+                await self._queue.put((1, (event.time_fired, event)))
                 break
 
         if dropped > 0:
