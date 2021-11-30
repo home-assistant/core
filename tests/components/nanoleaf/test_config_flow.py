@@ -465,10 +465,9 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
             data=ssdp.SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
-                upnp={
-                    "_host": TEST_HOST,
-                },
+                upnp={},
                 ssdp_headers={
+                    "_host": TEST_HOST,
                     "nl-devicename": TEST_NAME,
                     "nl-deviceid": TEST_DEVICE_ID,
                 },

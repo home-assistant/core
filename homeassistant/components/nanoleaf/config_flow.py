@@ -115,7 +115,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle Nanoleaf SSDP discovery."""
         _LOGGER.debug("SSDP discovered: %s", discovery_info)
         return await self._async_discovery_handler(
-            discovery_info["_host"],
+            discovery_info.ssdp_headers["_host"],
             discovery_info.ssdp_headers["nl-devicename"],
             discovery_info.ssdp_headers["nl-deviceid"],
         )
