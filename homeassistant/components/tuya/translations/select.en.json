@@ -14,6 +14,10 @@
             "0": "Low sensitivity",
             "1": "High sensitivity"
         },
+        "tuya__fingerbot_mode": {
+            "click": "Push",
+            "switch": "Switch"
+        },
         "tuya__ipc_work_mode": {
             "0": "Low power mode",
             "1": "Continuous working mode"
@@ -44,10 +48,6 @@
             "on": "On",
             "power_off": "Off",
             "power_on": "On"
-        },
-       "tuya__fingerbot_mode": {
-            "click": "Push",
-            "switch": "Switch"
         }
     }
 }

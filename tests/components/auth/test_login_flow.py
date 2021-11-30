@@ -116,6 +116,44 @@ async def test_login_exist_user(hass, aiohttp_client):
     assert len(step["result"]) > 1
 
 
+async def test_login_local_only_user(hass, aiohttp_client):
+    """Test logging in with local only user."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(
+        {"username": "test-user"}
+    )
+    user = await hass.auth.async_get_or_create_user(cred)
+    await hass.auth.async_update_user(user, local_only=True)
+
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    with patch(
+        "homeassistant.components.auth.login_flow.async_user_not_allowed_do_auth",
+        return_value="User is local only",
+    ) as mock_not_allowed_do_auth:
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "test-pass",
+            },
+        )
+
+    assert len(mock_not_allowed_do_auth.mock_calls) == 1
+    assert resp.status == HTTPStatus.FORBIDDEN
+    assert await resp.json() == {"message": "Login blocked: User is local only"}
+
+
 async def test_login_exist_user_ip_changes(hass, aiohttp_client):
     """Test logging in and the ip address changes results in an rejection."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)

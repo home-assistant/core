@@ -50,4 +50,4 @@ async def test_manual_update_entity(
         {ATTR_ENTITY_ID: ["sensor.current_system_mode"]},
         blocking=True,
     )
-    assert aioclient_mock.call_count == call_count + 2
+    assert aioclient_mock.call_count == call_count + 3

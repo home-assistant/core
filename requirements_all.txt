@@ -164,7 +164,7 @@ aioemonitor==1.0.5
 aioesphomeapi==10.3.0
 
 # homeassistant.components.flo
-aioflo==0.4.1
+aioflo==2021.11.0
 
 # homeassistant.components.yi
 aioftp==0.12.0
@@ -819,7 +819,7 @@ hole==0.6.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211123.0
+home-assistant-frontend==20211130.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
