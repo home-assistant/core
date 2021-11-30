@@ -159,12 +159,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("%s: Device state updated: %s", device.ipaddr, device.raw_state)
         async_dispatcher_send(hass, signal)
 
+    _LOGGER.warning("Setting up flux_led: %s", host)
     try:
         await device.async_setup(_async_state_changed)
     except FLUX_LED_EXCEPTIONS as ex:
         raise ConfigEntryNotReady(
             str(ex) or f"Timed out trying to connect to {device.ipaddr}"
         ) from ex
+    _LOGGER.warning("DONE up flux_led: %s", host)
+
     coordinator = FluxLedUpdateCoordinator(hass, device)
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(
