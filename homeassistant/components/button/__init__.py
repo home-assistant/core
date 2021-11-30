@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import final
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -27,6 +29,13 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
+
+DEVICE_CLASS_RESTART = "restart"
+DEVICE_CLASS_UPDATE = "update"
+
+DEVICE_CLASSES = [DEVICE_CLASS_RESTART, DEVICE_CLASS_UPDATE]
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
