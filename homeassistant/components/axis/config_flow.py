@@ -165,12 +165,12 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Prepare configuration for a SSDP discovered Axis device."""
-        url = urlsplit(discovery_info.upnp["presentationURL"])
+        url = urlsplit(discovery_info.upnp[ssdp.ATTR_UPNP_PRESENTATION_URL])
         return await self._process_discovered_device(
             {
                 CONF_HOST: url.hostname,
-                CONF_MAC: format_mac(discovery_info.upnp["serialNumber"]),
-                CONF_NAME: f"{discovery_info.upnp['friendlyName']}",
+                CONF_MAC: format_mac(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]),
+                CONF_NAME: f"{discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]}",
                 CONF_PORT: url.port,
             }
         )
