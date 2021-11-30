@@ -107,10 +107,7 @@ async def test_flow_discover_error(hass):
         "homeassistant.components.screenlogic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_create_connection",
-        return_value=(None, None),
-    ), patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_gateway_connect",
+        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
         return_value="00-C0-33-01-01-01",
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -154,10 +151,7 @@ async def test_dhcp(hass):
         "homeassistant.components.screenlogic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_create_connection",
-        return_value=(None, None),
-    ), patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_gateway_connect",
+        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
         return_value="00-C0-33-01-01-01",
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -215,10 +209,7 @@ async def test_form_manual_entry(hass):
         "homeassistant.components.screenlogic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_create_connection",
-        return_value=(None, None),
-    ), patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_gateway_connect",
+        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
         return_value="00-C0-33-01-01-01",
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -251,7 +242,7 @@ async def test_form_cannot_connect(hass):
         )
 
     with patch(
-        "homeassistant.components.screenlogic.config_flow.login.async_create_connection",
+        "homeassistant.components.screenlogic.config_flow.login.async_get_mac_address",
         side_effect=ScreenLogicError("Failed to connect to host at 1.1.1.1:80"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
