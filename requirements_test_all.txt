@@ -115,7 +115,7 @@ aioemonitor==1.0.5
 aioesphomeapi==10.3.0
 
 # homeassistant.components.flo
-aioflo==0.4.1
+aioflo==2021.11.0
 
 # homeassistant.components.guardian
 aioguardian==2021.11.0
