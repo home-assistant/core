@@ -1572,9 +1572,7 @@ def forgiving_int(value, default=_SENTINEL, base=10, little_endian=False):
     if isinstance(value, bytes) and value:
         if base != 10:
             _LOGGER.warning(
-                (
-                    "Template warning: 'int' got 'bytes' type input, ignoring base=%s parameter"
-                ),
+                "Template warning: 'int' got 'bytes' type input, ignoring base=%s parameter",
                 base,
             )
         return convert_to_int(value, little_endian=little_endian)
@@ -1590,9 +1588,7 @@ def forgiving_int_filter(value, default=_SENTINEL, base=10, little_endian=False)
     if isinstance(value, bytes) and value:
         if base != 10:
             _LOGGER.warning(
-                (
-                    "Template warning: 'int' got 'bytes' type input, ignoring base=%s parameter"
-                ),
+                "Template warning: 'int' got 'bytes' type input, ignoring base=%s parameter",
                 base,
             )
         return convert_to_int(value, little_endian=little_endian)
