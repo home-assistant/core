@@ -5,8 +5,13 @@ from freezegun import freeze_time
 import pytest
 from wled import WLEDConnectionError, WLEDError
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    SERVICE_PRESS,
+    ButtonDeviceClass,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ENTITY_CATEGORY_CONFIG,
     STATE_UNAVAILABLE,
@@ -27,6 +32,7 @@ async def test_button_restart(
     state = hass.states.get("button.wled_rgb_light_restart")
     assert state
     assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.RESTART
 
     entry = entity_registry.async_get("button.wled_rgb_light_restart")
     assert entry
@@ -110,6 +116,7 @@ async def test_button_update_stay_stable(
     state = hass.states.get("button.wled_rgb_light_update")
     assert state
     assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.UPDATE
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
