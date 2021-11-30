@@ -160,7 +160,6 @@ class SonosSpeaker:
         self.available = True
 
         # Synchronization helpers
-        self._is_ready: bool = False
         self._platforms_ready: set[str] = set()
 
         # Subscriptions and events
@@ -281,7 +280,6 @@ class SonosSpeaker:
         if self._platforms_ready == PLATFORMS:
             self._resubscription_lock = asyncio.Lock()
             await self.async_subscribe()
-            self._is_ready = True
 
     def write_entity_states(self) -> None:
         """Write states for associated SonosEntity instances."""
