@@ -209,12 +209,12 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp:
             return self.async_abort(reason="not_hue_bridge")
 
-        host = str(urlparse(discovery_info.ssdp_location).hostname)
+        host = urlparse(discovery_info.ssdp_location).hostname
         if not host:
             return self.async_abort(reason="not_hue_bridge")
 
         bridge = await self._get_bridge(
-            host, discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+            str(host), discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
         )
 
         await self.async_set_unique_id(bridge.id)
