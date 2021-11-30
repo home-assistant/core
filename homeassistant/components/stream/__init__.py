@@ -155,6 +155,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = []
+    # Use CONFIG_SCHEMA to populate defaults if there is no config[DOMAIN]
+    if DOMAIN not in config:
+        config[DOMAIN] = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
     conf = config[DOMAIN]
     if conf[CONF_LL_HLS] or http2_proxy_found:
         assert isinstance(conf[CONF_SEGMENT_DURATION], float)
