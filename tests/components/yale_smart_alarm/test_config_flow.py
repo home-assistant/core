@@ -1,11 +1,9 @@
 """Test the Yale Smart Living config flow."""
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import patch
 
 import pytest
-import requests
 from yalesmartalarmclient.client import AuthenticationError
 
 from homeassistant import config_entries
@@ -57,16 +55,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    "side_effect, checkrun",
-    [
-        (AuthenticationError, 1),
-        (requests.HTTPError("Error"), 2),
-    ],
-)
-async def test_form_invalid_auth(
-    hass: HomeAssistant, side_effect: Any, checkrun: int
-) -> None:
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -74,7 +63,7 @@ async def test_form_invalid_auth(
 
     with patch(
         "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
-        side_effect=side_effect,
+        side_effect=AuthenticationError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -88,16 +77,11 @@ async def test_form_invalid_auth(
         await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    if checkrun == 1:
-        assert result2["step_id"] == "user"
-        assert result2["errors"] == {"base": "invalid_auth"}
-    else:
-        assert result2["step_id"] == "user"
-        assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 @pytest.mark.parametrize(
-    "input,output",
+    "p_input,p_output",
     [
         (
             {
@@ -127,7 +111,9 @@ async def test_form_invalid_auth(
         ),
     ],
 )
-async def test_import_flow_success(hass, input: dict[str, str], output: dict[str, str]):
+async def test_import_flow_success(
+    hass, p_input: dict[str, str], p_output: dict[str, str]
+):
     """Test a successful import of yaml."""
 
     with patch(
@@ -139,13 +125,13 @@ async def test_import_flow_success(hass, input: dict[str, str], output: dict[str
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=input,
+            data=p_input,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-username"
-    assert result2["data"] == output
+    assert result2["data"] == p_output
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -204,16 +190,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    "side_effect, checkrun",
-    [
-        (AuthenticationError, 1),
-        (requests.HTTPError("Client Error"), 2),
-    ],
-)
-async def test_reauth_flow_invalid_login(
-    hass: HomeAssistant, side_effect: Any, checkrun: int
-) -> None:
+async def test_reauth_flow_invalid_login(hass: HomeAssistant) -> None:
     """Test a reauthentication flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -237,7 +214,7 @@ async def test_reauth_flow_invalid_login(
 
     with patch(
         "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
-        side_effect=side_effect,
+        side_effect=AuthenticationError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -248,13 +225,9 @@ async def test_reauth_flow_invalid_login(
         )
         await hass.async_block_till_done()
 
+    assert result2["step_id"] == "reauth_confirm"
     assert result2["type"] == "form"
-    if checkrun == 1:
-        assert result2["step_id"] == "reauth_confirm"
-        assert result2["errors"] == {"base": "invalid_auth"}
-    else:
-        assert result2["step_id"] == "user"
-        assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
