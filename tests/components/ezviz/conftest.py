@@ -46,7 +46,6 @@ def ezviz_config_flow(hass):
             "test-password",
             "local.host",
             "1",
-            ezviz_login_token_return,
         )
 
         instance.login = MagicMock(return_value=ezviz_login_token_return)

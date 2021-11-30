@@ -8,7 +8,6 @@ from pyezviz.client import EzvizClient
 from pyezviz.exceptions import (
     AuthTestResultFailed,
     EzvizAuthVerificationCode,
-    HTTPError,
     InvalidHost,
     InvalidURL,
     PyEzvizError,
@@ -63,20 +62,7 @@ def _validate_and_create_auth(data: dict) -> dict[str, Any]:
         data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     )
 
-    try:
-        ezviz_token = ezviz_client.login()
-
-    except InvalidURL as err:
-        raise InvalidURL from err
-
-    except HTTPError as err:
-        raise InvalidHost from err
-
-    except EzvizAuthVerificationCode as err:
-        raise EzvizAuthVerificationCode from err
-
-    except PyEzvizError as err:
-        raise PyEzvizError from err
+    ezviz_token = ezviz_client.login()
 
     auth_data = {
         CONF_SESSION_ID: ezviz_token[CONF_SESSION_ID],
@@ -131,39 +117,15 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # We need to wake hibernating cameras.
         # First create EZVIZ API instance.
-        try:
-            await self.hass.async_add_executor_job(ezviz_client.login)
+        await self.hass.async_add_executor_job(ezviz_client.login)
 
-        except InvalidURL as err:
-            raise InvalidURL from err
-
-        except HTTPError as err:
-            raise InvalidHost from err
-
-        except EzvizAuthVerificationCode as err:
-            raise EzvizAuthVerificationCode from err
-
-        except PyEzvizError as err:
-            raise PyEzvizError from err
-
-        # Secondly try to wake hibernating camera.
-        try:
-            await self.hass.async_add_executor_job(
-                ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]
-            )
-
-        except HTTPError as err:
-            raise InvalidHost from err
+        # Secondly try to wake hybernating camera.
+        await self.hass.async_add_executor_job(
+            ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]
+        )
 
         # Thirdly attempts an authenticated RTSP DESCRIBE request.
-        try:
-            await self.hass.async_add_executor_job(_test_camera_rtsp_creds, data)
-
-        except InvalidHost as err:
-            raise InvalidHost from err
-
-        except AuthTestResultFailed as err:
-            raise AuthTestResultFailed from err
+        await self.hass.async_add_executor_job(_test_camera_rtsp_creds, data)
 
         return self.async_create_entry(
             title=data[ATTR_SERIAL],
