@@ -156,7 +156,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         config_entry_unique_id: str,
-        device_info: dict[str, Any],
+        device_info: DeviceInfo,
         pysma_sensor: pysma.sensor.Sensor,
     ) -> None:
         """Initialize the sensor."""
@@ -164,7 +164,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self._sensor = pysma_sensor
         self._enabled_default = self._sensor.enabled
         self._config_entry_unique_id = config_entry_unique_id
-        self._device_info = device_info
+        self._attr_device_info = device_info
 
         if self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
@@ -197,20 +197,6 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         """Return a unique identifier for this sensor."""
         return (
             f"{self._config_entry_unique_id}-{self._sensor.key}_{self._sensor.key_idx}"
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device information."""
-        if not self._device_info:
-            return None
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._config_entry_unique_id)},
-            manufacturer=self._device_info["manufacturer"],
-            model=self._device_info["type"],
-            name=self._device_info["name"],
-            sw_version=self._device_info["sw_version"],
         )
 
     @property

@@ -1,0 +1,13 @@
+{
+    "options": {
+        "step": {
+            "tunnel": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort",
+                    "route_back": "Route Back / NAT Mode"
+                }
+            }
+        }
+    }
+}

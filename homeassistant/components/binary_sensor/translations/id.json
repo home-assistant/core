@@ -17,6 +17,7 @@
             "is_no_problem": "{entity_name} tidak mendeteksi masalah",
             "is_no_smoke": "{entity_name} tidak mendeteksi asap",
             "is_no_sound": "{entity_name} tidak mendeteksi suara",
+            "is_no_update": "{entity_name} sudah yang terbaru",
             "is_no_vibration": "{entity_name} tidak mendeteksi getaran",
             "is_not_bat_low": "Baterai {entity_name} normal",
             "is_not_cold": "{entity_name} tidak dingin",
@@ -30,6 +31,8 @@
             "is_not_plugged_in": "{entity_name} dicabut",
             "is_not_powered": "{entity_name} tidak ditenagai",
             "is_not_present": "{entity_name} tidak ada",
+            "is_not_running": "{entity_name} tidak berjalan",
+            "is_not_tampered": "{entity_name} tidak mendeteksi gangguan",
             "is_not_unsafe": "{entity_name} aman",
             "is_occupied": "{entity_name} ditempati",
             "is_off": "{entity_name} mati",
@@ -39,9 +42,12 @@
             "is_powered": "{entity_name} ditenagai",
             "is_present": "{entity_name} ada",
             "is_problem": "{entity_name} mendeteksi masalah",
+            "is_running": "{entity_name} sedang berjalan",
             "is_smoke": "{entity_name} mendeteksi asap",
             "is_sound": "{entity_name} mendeteksi suara",
+            "is_tampered": "{entity_name} mendeteksi gangguan",
             "is_unsafe": "{entity_name} tidak aman",
+            "is_update": "{entity_name} memiliki pembaruan yang tersedia",
             "is_vibration": "{entity_name} mendeteksi getaran"
         },
         "trigger_type": {
@@ -50,6 +56,8 @@
             "connected": "{entity_name} terhubung",
             "gas": "{entity_name} mulai mendeteksi gas",
             "hot": "{entity_name} menjadi panas",
+            "is_not_tampered": "{entity_name} berhenti mendeteksi gangguan",
+            "is_tampered": "{entity_name} mulai mendeteksi gangguan",
             "light": "{entity_name} mulai mendeteksi cahaya",
             "locked": "{entity_name} terkunci",
             "moist": "{entity_name} menjadi lembab",
@@ -61,6 +69,7 @@
             "no_problem": "{entity_name} berhenti mendeteksi masalah",
             "no_smoke": "{entity_name} berhenti mendeteksi asap",
             "no_sound": "{entity_name} berhenti mendeteksi suara",
+            "no_update": "{entity_name} menjadi yang terbaru",
             "no_vibration": "{entity_name} berhenti mendeteksi getaran",
             "not_bat_low": "Baterai {entity_name} normal",
             "not_cold": "{entity_name} menjadi tidak dingin",
@@ -74,6 +83,7 @@
             "not_plugged_in": "{entity_name} dicabut",
             "not_powered": "{entity_name} tidak ditenagai",
             "not_present": "{entity_name} tidak ada",
+            "not_running": "{entity_name} tidak lagi berjalan",
             "not_unsafe": "{entity_name} menjadi aman",
             "occupied": "{entity_name} menjadi ditempati",
             "opened": "{entity_name} terbuka",
@@ -81,13 +91,28 @@
             "powered": "{entity_name} ditenagai",
             "present": "{entity_name} ada",
             "problem": "{entity_name} mulai mendeteksi masalah",
+            "running": "{entity_name} mulai berjalan",
             "smoke": "{entity_name} mulai mendeteksi asap",
             "sound": "{entity_name} mulai mendeteksi suara",
             "turned_off": "{entity_name} dimatikan",
             "turned_on": "{entity_name} dinyalakan",
             "unsafe": "{entity_name} menjadi tidak aman",
+            "update": "{entity_name} mendapat pembaruan yang tersedia",
             "vibration": "{entity_name} mulai mendeteksi getaran"
         }
+    },
+    "device_class": {
+        "cold": "dingin",
+        "gas": "gas",
+        "heat": "panas",
+        "moisture": "kelembaban",
+        "motion": "gerakan",
+        "occupancy": "okupansi",
+        "power": "daya",
+        "problem": "masalah",
+        "smoke": "asap",
+        "sound": "suara",
+        "vibration": "vibrasi"
     },
     "state": {
         "_": {
@@ -166,6 +191,10 @@
             "off": "Oke",
             "on": "Bermasalah"
         },
+        "running": {
+            "off": "Tidak berjalan",
+            "on": "Berjalan"
+        },
         "safety": {
             "off": "Aman",
             "on": "Tidak aman"
@@ -179,6 +208,7 @@
             "on": "Terdeteksi"
         },
         "update": {
+            "off": "Diperbarui",
             "on": "Pembaruan tersedia"
         },
         "vibration": {

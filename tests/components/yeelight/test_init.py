@@ -7,7 +7,7 @@ import pytest
 from yeelight import BulbException, BulbType
 from yeelight.aio import KEY_CONNECTED
 
-from homeassistant.components.yeelight import (
+from homeassistant.components.yeelight.const import (
     CONF_DETECTED_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -530,12 +531,14 @@ async def test_connection_dropped_resyncs_properties(hass: HomeAssistant):
         assert len(mocked_bulb.async_get_properties.mock_calls) == 1
         mocked_bulb._async_callback({KEY_CONNECTED: False})
         await hass.async_block_till_done()
+        assert hass.states.get("light.test_name").state == STATE_UNAVAILABLE
         assert len(mocked_bulb.async_get_properties.mock_calls) == 1
         mocked_bulb._async_callback({KEY_CONNECTED: True})
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=STATE_CHANGE_TIME)
         )
         await hass.async_block_till_done()
+        assert hass.states.get("light.test_name").state == STATE_ON
         assert len(mocked_bulb.async_get_properties.mock_calls) == 2
 
 

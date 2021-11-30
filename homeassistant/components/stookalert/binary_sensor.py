@@ -15,11 +15,12 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_PROVINCE, DOMAIN, ENTRY_TYPE_SERVICE, LOGGER, PROVINCES
+from .const import CONF_PROVINCE, DOMAIN, LOGGER, PROVINCES
 
 DEFAULT_NAME = "Stookalert"
 ATTRIBUTION = "Data provided by rivm.nl"
@@ -83,7 +84,7 @@ class StookalertBinarySensor(BinarySensorEntity):
             name=entry.data[CONF_PROVINCE],
             manufacturer="RIVM",
             model="Stookalert",
-            entry_type=ENTRY_TYPE_SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://www.rivm.nl/stookalert",
         )
 

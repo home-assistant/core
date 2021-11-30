@@ -38,6 +38,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -67,6 +68,7 @@ ATTR_WIFI_STRENGTH = "wifi_strength"
 
 STATE_MAP_FROM_REST_API = {
     SystemStates.ALARM: STATE_ALARM_TRIGGERED,
+    SystemStates.ALARM_COUNT: STATE_ALARM_PENDING,
     SystemStates.AWAY: STATE_ALARM_ARMED_AWAY,
     SystemStates.AWAY_COUNT: STATE_ALARM_ARMING,
     SystemStates.EXIT_DELAY: STATE_ALARM_ARMING,
@@ -154,11 +156,14 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         """Set the state based on the latest REST API data."""
         if self._system.alarm_going_off:
             self._attr_state = STATE_ALARM_TRIGGERED
+        elif self._system.state == SystemStates.ERROR:
+            self.async_increment_error_count()
         elif state := STATE_MAP_FROM_REST_API.get(self._system.state):
             self._attr_state = state
+            self.async_reset_error_count()
         else:
             LOGGER.error("Unknown system state (REST API): %s", self._system.state)
-            self._attr_state = None
+            self.async_increment_error_count()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -237,4 +242,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self._attr_changed_by = event.changed_by
         if TYPE_CHECKING:
             assert event.event_type
-        self._attr_state = STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type)
+        if state := STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type):
+            self._attr_state = state
+            self.async_reset_error_count()
+        else:
+            LOGGER.error("Unknown alarm websocket event: %s", event.event_type)
+            self.async_increment_error_count()

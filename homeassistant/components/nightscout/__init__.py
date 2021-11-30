@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         manufacturer="Nightscout Foundation",
         name=status.name,
         sw_version=status.version,
-        entry_type="service",
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

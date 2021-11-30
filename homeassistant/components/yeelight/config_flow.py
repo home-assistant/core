@@ -8,13 +8,14 @@ from yeelight.aio import AsyncBulb
 from yeelight.main import get_known_models
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from . import (
+from .const import (
     CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
     CONF_MODEL,
@@ -24,12 +25,14 @@ from . import (
     CONF_TRANSITION,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
-    YeelightScanner,
+)
+from .device import (
     _async_unique_name,
     async_format_id,
     async_format_model,
     async_format_model_id,
 )
+from .scanner import YeelightScanner
 
 MODEL_UNKNOWN = "unknown"
 
@@ -53,21 +56,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_model = None
         self._discovered_ip = None
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle discovery from homekit."""
-        self._discovered_ip = discovery_info["host"]
+        self._discovered_ip = discovery_info[zeroconf.ATTR_HOST]
         return await self._async_handle_discovery()
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery from dhcp."""
-        self._discovered_ip = discovery_info[IP_ADDRESS]
+        self._discovered_ip = discovery_info[dhcp.IP_ADDRESS]
         return await self._async_handle_discovery()
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle discovery from zeroconf."""
-        self._discovered_ip = discovery_info["host"]
+        self._discovered_ip = discovery_info[zeroconf.ATTR_HOST]
         await self.async_set_unique_id(
-            "{0:#0{1}x}".format(int(discovery_info["name"][-26:-18]), 18)
+            "{0:#0{1}x}".format(int(discovery_info[zeroconf.ATTR_NAME][-26:-18]), 18)
         )
         return await self._async_handle_discovery_with_unique_id()
 

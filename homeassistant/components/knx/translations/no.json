@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "host": "Vert",
+                    "individual_address": "Individuell adresse for tilkoblingen",
+                    "port": "Port",
+                    "route_back": "Rute tilbake / NAT-modus"
+                },
+                "description": "Vennligst skriv inn tilkoblingsinformasjonen til tunnelenheten din."
+            },
+            "routing": {
+                "data": {
+                    "individual_address": "Individuell adresse for ruteforbindelsen",
+                    "multicast_group": "Multicast-gruppen som brukes til ruting",
+                    "multicast_port": "Multicast-porten som brukes til ruting"
+                },
+                "description": "Vennligst konfigurer rutealternativene."
+            },
+            "tunnel": {
+                "data": {
+                    "gateway": "KNX Tunneltilkobling"
+                },
+                "description": "Vennligst velg en gateway fra listen."
+            },
+            "type": {
+                "data": {
+                    "connection_type": "KNX tilkoblingstype"
+                },
+                "description": "Vennligst skriv inn tilkoblingstypen vi skal bruke for din KNX-tilkobling.\n AUTOMATISK - Integrasjonen tar seg av tilkoblingen til KNX-bussen ved \u00e5 utf\u00f8re en gateway-skanning.\n TUNNELING - Integrasjonen vil kobles til KNX-bussen din via tunnelering.\n ROUTING - Integrasjonen vil kobles til din KNX-bussen via ruting."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "connection_type": "KNX tilkoblingstype",
+                    "individual_address": "Standard individuell adresse",
+                    "multicast_group": "Multicast-gruppe brukt til ruting og oppdagelse",
+                    "multicast_port": "Multicast-port som brukes til ruting og oppdagelse",
+                    "rate_limit": "Maksimalt utg\u00e5ende telegrammer per sekund",
+                    "state_updater": "Aktiver lesetilstander globalt fra KNX-bussen"
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "host": "Vert",
+                    "port": "Port",
+                    "route_back": "Rute tilbake / NAT-modus"
+                }
+            }
+        }
+    }
+}

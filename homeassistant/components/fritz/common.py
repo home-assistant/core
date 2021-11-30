@@ -442,11 +442,6 @@ class FritzDeviceBase(Entity):
         """No polling needed."""
         return False
 
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return False
-
     async def async_process_update(self) -> None:
         """Update device."""
         raise NotImplementedError()

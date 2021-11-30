@@ -32,7 +32,7 @@ FAKE_TOKEN = "some-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 
 
-def create_config_entry(hass, token_expiration_time=None):
+def create_config_entry(hass, token_expiration_time=None) -> MockConfigEntry:
     """Create a ConfigEntry and add it to Home Assistant."""
     if token_expiration_time is None:
         token_expiration_time = time.time() + 86400
@@ -47,7 +47,9 @@ def create_config_entry(hass, token_expiration_time=None):
             "expires_at": token_expiration_time,
         },
     }
-    MockConfigEntry(domain=DOMAIN, data=config_entry_data).add_to_hass(hass)
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config_entry_data)
+    config_entry.add_to_hass(hass)
+    return config_entry
 
 
 class FakeDeviceManager(DeviceManager):
@@ -80,6 +82,14 @@ class FakeSubscriber(GoogleNestSubscriber):
         """Capture the callback set by Home Assistant."""
         self._callback = callback
 
+    async def create_subscription(self):
+        """Create the subscription."""
+        return
+
+    async def delete_subscription(self):
+        """Delete the subscription."""
+        return
+
     async def start_async(self):
         """Return the fake device manager."""
         return self._device_manager
@@ -99,9 +109,12 @@ class FakeSubscriber(GoogleNestSubscriber):
         await self._callback(event_message)
 
 
-async def async_setup_sdm_platform(hass, platform, devices={}, structures={}):
+async def async_setup_sdm_platform(
+    hass, platform, devices={}, structures={}, with_config=True
+):
     """Set up the platform and prerequisites."""
-    create_config_entry(hass)
+    if with_config:
+        create_config_entry(hass)
     device_manager = FakeDeviceManager(devices=devices, structures=structures)
     subscriber = FakeSubscriber(device_manager)
     with patch(
