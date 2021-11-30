@@ -8,11 +8,15 @@ ENV \
 WORKDIR /usr/src
 
 ## Setup Home Assistant
+COPY requirements.txt requirements_all.txt homeassistant/
+COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
+RUN \
+    pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
+    -r homeassistant/requirements_all.txt
+
 COPY . homeassistant/
 RUN \
     pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
-    -r homeassistant/requirements_all.txt \
-    && pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
     -e ./homeassistant \
     && python3 -m compileall homeassistant/homeassistant
 
