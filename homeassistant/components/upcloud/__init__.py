@@ -47,7 +47,6 @@ CONF_SERVERS = "servers"
 DATA_UPCLOUD = "data_upcloud"
 
 DEFAULT_COMPONENT_NAME = "UpCloud {}"
-DEFAULT_COMPONENT_DEVICE_CLASS = "power"
 
 CONFIG_ENTRY_DOMAINS = {BINARY_SENSOR_DOMAIN, SWITCH_DOMAIN}
 
@@ -176,8 +175,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 class UpCloudServerEntity(CoordinatorEntity):
     """Entity class for UpCloud servers."""
-
-    _attr_device_class = DEFAULT_COMPONENT_DEVICE_CLASS
 
     def __init__(
         self,
