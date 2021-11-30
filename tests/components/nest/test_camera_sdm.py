@@ -7,7 +7,8 @@ pubsub subscriber.
 
 import datetime
 from http import HTTPStatus
-from unittest.mock import patch
+import os
+from unittest.mock import mock_open, patch
 
 import aiohttp
 from google_nest_sdm.device import Device
@@ -21,7 +22,9 @@ from homeassistant.components.camera import (
     STREAM_TYPE_HLS,
     STREAM_TYPE_WEB_RTC,
 )
+from homeassistant.components.nest.const import SERVICE_SNAPSHOT_EVENT
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -148,6 +151,20 @@ async def async_get_image(hass, width=None, height=None):
         return await camera.async_get_image(
             hass, "camera.my_camera", width=width, height=height
         )
+
+
+async def async_call_service_event_snapshot(hass, filename):
+    """Call the event snapshot service."""
+    return await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SNAPSHOT_EVENT,
+        {
+            ATTR_ENTITY_ID: "camera.my_camera",
+            "nest_event_id": "some-event-id",
+            "filename": filename,
+        },
+        blocking=True,
+    )
 
 
 async def test_no_devices(hass):
@@ -519,7 +536,7 @@ async def test_camera_image_from_last_event(hass, auth):
 
 async def test_camera_image_from_event_not_supported(hass, auth):
     """Test fallback to stream image when event images are not supported."""
-    # Create a device that does not support the CameraEventImgae trait
+    # Create a device that does not support the CameraEventImage trait
     traits = DEVICE_TRAITS.copy()
     del traits["sdm.devices.traits.CameraEventImage"]
     subscriber = await async_setup_camera(hass, traits, auth=auth)
@@ -865,3 +882,135 @@ async def test_camera_multiple_streams(hass, auth, hass_ws_client):
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"]["answer"] == "v=0\r\ns=-\r\n"
+
+
+async def test_service_snapshot_event_image(hass, auth, tmpdir):
+    """Test calling the snapshot_event service."""
+    await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("camera.my_camera")
+
+    auth.responses = [
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+    ]
+
+    filename = f"{tmpdir}/snapshot.jpg"
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        assert await async_call_service_event_snapshot(hass, filename)
+
+    assert os.path.exists(filename)
+    with open(filename, "rb") as f:
+        contents = f.read()
+    assert contents == IMAGE_BYTES_FROM_EVENT
+
+
+async def test_service_snapshot_no_access_to_filename(hass, auth, tmpdir):
+    """Test calling the snapshot_event service with a disallowed file path."""
+    await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("camera.my_camera")
+
+    filename = f"{tmpdir}/snapshot.jpg"
+    with patch.object(
+        hass.config, "is_allowed_path", return_value=False
+    ), pytest.raises(HomeAssistantError, match=r"No access.*"):
+        assert await async_call_service_event_snapshot(hass, filename)
+
+    assert not os.path.exists(filename)
+
+
+async def test_camera_snapshot_from_event_not_supported(hass, auth, tmpdir):
+    """Test a camera that does not support snapshots."""
+    # Create a device that does not support the CameraEventImage trait
+    traits = DEVICE_TRAITS.copy()
+    del traits["sdm.devices.traits.CameraEventImage"]
+    await async_setup_camera(hass, traits, auth=auth)
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("camera.my_camera")
+
+    filename = f"{tmpdir}/snapshot.jpg"
+    with patch.object(hass.config, "is_allowed_path", return_value=True), pytest.raises(
+        HomeAssistantError, match=r"Camera does not support.*"
+    ):
+        await async_call_service_event_snapshot(hass, filename)
+    assert not os.path.exists(filename)
+
+
+async def test_service_snapshot_event_generate_url_failure(hass, auth, tmpdir):
+    """Test failure while creating a snapshot url."""
+    await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("camera.my_camera")
+
+    auth.responses = [
+        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
+    ]
+
+    filename = f"{tmpdir}/snapshot.jpg"
+    with patch.object(hass.config, "is_allowed_path", return_value=True), pytest.raises(
+        HomeAssistantError, match=r"Unable to create.*"
+    ):
+        await async_call_service_event_snapshot(hass, filename)
+    assert not os.path.exists(filename)
+
+
+async def test_service_snapshot_event_image_fetch_invalid(hass, auth, tmpdir):
+    """Test failure when fetching an image snapshot."""
+    await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("camera.my_camera")
+
+    auth.responses = [
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
+    ]
+
+    filename = f"{tmpdir}/snapshot.jpg"
+    with patch.object(hass.config, "is_allowed_path", return_value=True), pytest.raises(
+        HomeAssistantError, match=r"Unable to fetch.*"
+    ):
+        await async_call_service_event_snapshot(hass, filename)
+    assert not os.path.exists(filename)
+
+
+async def test_service_snapshot_event_image_create_directory(hass, auth, tmpdir):
+    """Test creating the directory when writing the snapshot."""
+    await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("camera.my_camera")
+
+    auth.responses = [
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+    ]
+
+    filename = f"{tmpdir}/path/does/not/exist/snapshot.jpg"
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        assert await async_call_service_event_snapshot(hass, filename)
+
+    assert os.path.exists(filename)
+    with open(filename, "rb") as f:
+        contents = f.read()
+    assert contents == IMAGE_BYTES_FROM_EVENT
+
+
+async def test_service_snapshot_event_write_failure(hass, auth, tmpdir):
+    """Test a failure when writing the snapshot."""
+    await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("camera.my_camera")
+
+    auth.responses = [
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+    ]
+
+    filename = f"{tmpdir}/snapshot.jpg"
+    with patch.object(hass.config, "is_allowed_path", return_value=True), patch(
+        "homeassistant.components.nest.camera_sdm.open", mock_open(), create=True
+    ) as mocked_open, pytest.raises(HomeAssistantError, match=r"Failed to write.*"):
+        mocked_open.side_effect = IOError()
+        assert await async_call_service_event_snapshot(hass, filename)
+
+    assert not os.path.exists(filename)

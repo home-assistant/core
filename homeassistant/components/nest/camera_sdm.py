@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import datetime
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,7 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.event import ImageEventBase
 from google_nest_sdm.exceptions import GoogleNestException
 from haffmpeg.tools import IMAGE_JPEG
+import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.camera.const import STREAM_TYPE_HLS, STREAM_TYPE_WEB_RTC
@@ -26,12 +28,13 @@ from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_SUBSCRIBER, DOMAIN
+from .const import DATA_SUBSCRIBER, DOMAIN, SERVICE_SNAPSHOT_EVENT
 from .device_info import NestDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,6 +66,17 @@ async def async_setup_sdm_entry(
         ):
             entities.append(NestCamera(device))
     async_add_entities(entities)
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_SNAPSHOT_EVENT,
+        {
+            vol.Required("nest_event_id"): cv.string,
+            vol.Required("filename"): cv.string,
+        },
+        "_async_snapshot_event",
+    )
 
 
 class NestCamera(Camera):
@@ -292,3 +306,33 @@ class NestCamera(Camera):
         except GoogleNestException as err:
             raise HomeAssistantError(f"Nest API error: {err}") from err
         return stream.answer_sdp
+
+    async def _async_snapshot_event(self, nest_event_id: str, filename: str) -> None:
+        """Save media for a Nest event, based on `camera.snapshot`."""
+        _LOGGER.debug("Taking snapshot for event id '%s'", nest_event_id)
+        if not self.hass.config.is_allowed_path(filename):
+            raise HomeAssistantError("No access to write snapshot '%s'" % filename)
+        # Fetch media associated with the event
+        if not (trait := self._device.traits.get(CameraEventImageTrait.NAME)):
+            raise HomeAssistantError("Camera does not support event image snapshots")
+        try:
+            event_image = await trait.generate_image(nest_event_id)
+        except GoogleNestException as err:
+            raise HomeAssistantError("Unable to create event snapshot") from err
+        try:
+            image = await event_image.contents()
+        except GoogleNestException as err:
+            raise HomeAssistantError("Unable to fetch event snapshot") from err
+
+        _LOGGER.debug("Writing event snapshot to '%s'", filename)
+
+        def _write_image() -> None:
+            """Executor helper to write image."""
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            with open(filename, "wb") as img_file:
+                img_file.write(image)
+
+        try:
+            await self.hass.async_add_executor_job(_write_image)
+        except OSError as err:
+            raise HomeAssistantError("Failed to write snapshot image") from err
