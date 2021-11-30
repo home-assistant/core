@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from collections.abc import Callable, Generator, Iterator, Mapping
+import contextlib
 import datetime
 from io import BytesIO
 import logging
@@ -29,6 +30,14 @@ from .core import Part, Segment, StreamOutput, StreamSettings
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class StreamWorkerError(Exception):
+    """An exception thrown while processing a stream."""
+
+
+class StreamEndedError(StreamWorkerError):
+    """Raised when the stream is complete, exposed for facilitating testing."""
 
 
 class SegmentBuffer:
@@ -356,7 +365,7 @@ class TimestampValidator:
         # Discard packets missing DTS. Terminate if too many are missing.
         if packet.dts is None:
             if self._missing_dts >= MAX_MISSING_DTS:
-                raise StopIteration(
+                raise StreamWorkerError(
                     f"No dts in {MAX_MISSING_DTS+1} consecutive packets"
                 )
             self._missing_dts += 1
@@ -367,7 +376,7 @@ class TimestampValidator:
         if packet.dts <= prev_dts:
             gap = packet.time_base * (prev_dts - packet.dts)
             if gap > MAX_TIMESTAMP_GAP:
-                raise StopIteration(
+                raise StreamWorkerError(
                     f"Timestamp overflow detected: last dts = {prev_dts}, dts = {packet.dts}"
                 )
             return False
@@ -410,15 +419,14 @@ def stream_worker(
 
     try:
         container = av.open(source, options=options, timeout=SOURCE_TIMEOUT)
-    except av.AVError:
-        _LOGGER.error("Error opening stream %s", redact_credentials(str(source)))
-        return
+    except av.AVError as err:
+        raise StreamWorkerError(
+            "Error opening stream %s" % redact_credentials(str(source))
+        ) from err
     try:
         video_stream = container.streams.video[0]
-    except (KeyError, IndexError):
-        _LOGGER.error("Stream has no video")
-        container.close()
-        return
+    except (KeyError, IndexError) as ex:
+        raise StreamWorkerError("Stream has no video") from ex
     try:
         audio_stream = container.streams.audio[0]
     except (KeyError, IndexError):
@@ -469,10 +477,17 @@ def stream_worker(
         # dts. Use "or 1" to deal with this.
         start_dts = next_video_packet.dts - (next_video_packet.duration or 1)
         first_keyframe.dts = first_keyframe.pts = start_dts
-    except (av.AVError, StopIteration) as ex:
-        _LOGGER.error("Error demuxing stream while finding first packet: %s", str(ex))
+    except StreamWorkerError as ex:
         container.close()
-        return
+        raise ex
+    except StopIteration as ex:
+        container.close()
+        raise StreamEndedError("Stream ended; no additional packets") from ex
+    except av.AVError as ex:
+        container.close()
+        raise StreamWorkerError(
+            "Error demuxing stream while finding first packet: %s" % str(ex)
+        ) from ex
 
     segment_buffer.set_streams(video_stream, audio_stream)
     segment_buffer.reset(start_dts)
@@ -480,14 +495,15 @@ def stream_worker(
     # Mux the first keyframe, then proceed through the rest of the packets
     segment_buffer.mux_packet(first_keyframe)
 
-    while not quit_event.is_set():
-        try:
-            packet = next(container_packets)
-        except (av.AVError, StopIteration) as ex:
-            _LOGGER.error("Error demuxing stream: %s", str(ex))
-            break
-        segment_buffer.mux_packet(packet)
+    with contextlib.closing(container), contextlib.closing(segment_buffer):
+        while not quit_event.is_set():
+            try:
+                packet = next(container_packets)
+            except StreamWorkerError as ex:
+                raise ex
+            except StopIteration as ex:
+                raise StreamEndedError("Stream ended; no additional packets") from ex
+            except av.AVError as ex:
+                raise StreamWorkerError("Error demuxing stream: %s" % str(ex)) from ex
 
-    # Close stream
-    segment_buffer.close()
-    container.close()
+            segment_buffer.mux_packet(packet)
