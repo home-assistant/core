@@ -5,7 +5,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final, cast
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
@@ -35,14 +39,14 @@ BUTTONS: Final = [
     ShellyButtonDescription(
         key="ota_update",
         name="OTA Update",
-        icon="mdi:package-up",
+        device_class=ButtonDeviceClass.UPDATE,
         entity_category=ENTITY_CATEGORY_CONFIG,
         press_action=lambda wrapper: wrapper.async_trigger_ota_update(),
     ),
     ShellyButtonDescription(
         key="ota_update_beta",
         name="OTA Update Beta",
-        icon="mdi:flask-outline",
+        device_class=ButtonDeviceClass.UPDATE,
         entity_registry_enabled_default=False,
         entity_category=ENTITY_CATEGORY_CONFIG,
         press_action=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
@@ -50,7 +54,7 @@ BUTTONS: Final = [
     ShellyButtonDescription(
         key="reboot",
         name="Reboot",
-        icon="mdi:restart",
+        device_class=ButtonDeviceClass.RESTART,
         entity_category=ENTITY_CATEGORY_CONFIG,
         press_action=lambda wrapper: wrapper.device.trigger_reboot(),
     ),
