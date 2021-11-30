@@ -143,22 +143,20 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Hostname is format: livingroom.local.
-        local_name = discovery_info[zeroconf.ATTR_HOSTNAME][:-1]
+        local_name = discovery_info.hostname[:-1]
         node_name = local_name[: -len(".local")]
-        address = discovery_info[zeroconf.ATTR_PROPERTIES].get("address", local_name)
+        address = discovery_info.properties.get("address", local_name)
 
         # Check if already configured
         await self.async_set_unique_id(node_name)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info[zeroconf.ATTR_HOST]}
-        )
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
         for entry in self._async_current_entries():
             already_configured = False
 
             if CONF_HOST in entry.data and entry.data[CONF_HOST] in (
                 address,
-                discovery_info[zeroconf.ATTR_HOST],
+                discovery_info.host,
             ):
                 # Is this address or IP address already configured?
                 already_configured = True
@@ -177,15 +175,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                         entry,
                         data={
                             **entry.data,
-                            CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
+                            CONF_HOST: discovery_info.host,
                         },
                         unique_id=node_name,
                     )
 
                 return self.async_abort(reason="already_configured")
 
-        self._host = discovery_info[zeroconf.ATTR_HOST]
-        self._port = discovery_info[zeroconf.ATTR_PORT]
+        self._host = discovery_info.host
+        self._port = discovery_info.port
         self._name = node_name
 
         return await self.async_step_discovery_confirm()
