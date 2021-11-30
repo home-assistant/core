@@ -1,11 +1,12 @@
 """Support for ESPHome buttons."""
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import Any
 
 from aioesphomeapi import ButtonInfo, EntityState
 
-from homeassistant.components.button import DEVICE_CLASSES, ButtonEntity
+from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,11 +33,11 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
     """A button implementation for ESPHome."""
 
     @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        if self._static_info.device_class not in DEVICE_CLASSES:
-            return None
-        return self._static_info.device_class
+    def device_class(self) -> ButtonDeviceClass | None:
+        """Return the class of this entity."""
+        with suppress(ValueError):
+            return ButtonDeviceClass(self._static_info.device_class)
+        return None
 
     @callback
     def _on_device_update(self) -> None:
