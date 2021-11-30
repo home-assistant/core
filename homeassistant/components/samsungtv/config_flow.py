@@ -221,7 +221,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] != self._host:
-                continue  # pragma: no cover
+                continue
             entry_kw_args: dict = {}
             if self.unique_id and entry.unique_id is None:
                 entry_kw_args["unique_id"] = self.unique_id
@@ -273,7 +273,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not await self._async_get_and_check_device_info():
             # If we cannot get device info for an SSDP discovery
             # its likely a legacy tv.
-            self._name = self._title = self._model = model_name  # pragma: no cover
+            self._name = self._title = self._model = model_name
         self._async_update_and_abort_for_matching_unique_id()
         self._async_abort_if_host_already_in_progress()
         self.context["title_placeholders"] = {"device": self._title}
