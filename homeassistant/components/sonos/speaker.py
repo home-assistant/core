@@ -64,6 +64,7 @@ from .const import (
 from .favorites import SonosFavorites
 from .helpers import soco_error
 
+NEVER_TIME = -1200.0
 EVENT_CHARGING = {
     "CHARGING": True,
     "NOT_CHARGING": False,
@@ -167,7 +168,7 @@ class SonosSpeaker:
         self._subscriptions: list[SubscriptionBase] = []
         self._resubscription_lock: asyncio.Lock | None = None
         self._event_dispatchers: dict[str, Callable] = {}
-        self._last_activity: datetime.datetime | None = None
+        self._last_activity: float = NEVER_TIME
 
         # Scheduled callback handles
         self._poll_timer: Callable | None = None
@@ -965,6 +966,7 @@ class SonosSpeaker:
     #
     # Media and playback state handlers
     #
+    @soco_error()
     def update_volume(self) -> None:
         """Update information about current volume settings."""
         self.volume = self.soco.volume
@@ -979,6 +981,7 @@ class SonosSpeaker:
         except SoCoSlaveException:
             pass
 
+    @soco_error()
     def update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""
         variables = event and event.variables
