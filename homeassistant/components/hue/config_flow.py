@@ -210,7 +210,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_hue_bridge")
 
         host = urlparse(discovery_info.ssdp_location).hostname
-        if not host:
+        if host is None:
             return self.async_abort(reason="not_hue_bridge")
 
         bridge = await self._get_bridge(
