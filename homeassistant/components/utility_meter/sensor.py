@@ -274,7 +274,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.utcnow()
-        self._last_period = str(self._state)
+        self._last_period = None if not self._state else str(self._state)
         self._state = 0
         self.async_write_ha_state()
 
