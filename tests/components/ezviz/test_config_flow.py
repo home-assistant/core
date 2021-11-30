@@ -316,11 +316,14 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
 async def test_user_form_exception(hass: HomeAssistant, ezviz_config_flow) -> None:
     """Test we handle exception on user form."""
-    ezviz_config_flow.side_effect = PyEzvizError
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    ezviz_config_flow.side_effect = PyEzvizError
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -471,6 +474,20 @@ async def test_discover_exception_step1(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "invalid_auth"}
+
+    ezviz_config_flow.side_effect = EzvizAuthVerificationCode
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-pass",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {"base": "mfa_required"}
 
     ezviz_config_flow.side_effect = Exception
 

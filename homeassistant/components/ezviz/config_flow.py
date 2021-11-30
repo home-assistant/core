@@ -323,6 +323,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except (InvalidHost, InvalidURL):
                 errors["base"] = "invalid_host"
 
+            except EzvizAuthVerificationCode:
+                errors["base"] = "mfa_required"
+
             except (PyEzvizError, AuthTestResultFailed):
                 errors["base"] = "invalid_auth"
 
