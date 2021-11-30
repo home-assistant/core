@@ -150,9 +150,9 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        name = discovery_info[zeroconf.ATTR_NAME]
-        self.host = discovery_info[zeroconf.ATTR_HOST]
-        mac_address = discovery_info[zeroconf.ATTR_PROPERTIES].get("mac")
+        name = discovery_info.name
+        self.host = discovery_info.host
+        mac_address = discovery_info.properties.get("mac")
 
         if not name or not self.host or not mac_address:
             return self.async_abort(reason="not_xiaomi_aqara")
