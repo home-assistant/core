@@ -423,6 +423,26 @@ async def test_bridge_ssdp_missing_serial(hass):
     assert result["reason"] == "not_hue_bridge"
 
 
+async def test_bridge_ssdp_invalid_location(hass):
+    """Test if discovery info is a serial attribute."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http:///",
+            upnp={
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
+                ssdp.ATTR_UPNP_SERIAL: "1234",
+            },
+        ),
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_hue_bridge"
+
+
 async def test_bridge_ssdp_espalexa(hass):
     """Test if discovery info is from an Espalexa based device."""
     result = await hass.config_entries.flow.async_init(
