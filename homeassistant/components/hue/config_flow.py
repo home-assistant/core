@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from aiohue import LinkButtonNotPressed, create_app_key
@@ -194,26 +195,30 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # Filter out non-Hue bridges #1
         if (
-            discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
+            discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
             not in HUE_MANUFACTURERURL
         ):
             return self.async_abort(reason="not_hue_bridge")
 
         # Filter out non-Hue bridges #2
         if any(
-            name in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
+            name in discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
             for name in HUE_IGNORED_BRIDGE_NAMES
         ):
             return self.async_abort(reason="not_hue_bridge")
 
         if (
-            not discovery_info.get(ssdp.ATTR_SSDP_LOCATION)
-            or ssdp.ATTR_UPNP_SERIAL not in discovery_info
+            not discovery_info.ssdp_location
+            or ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp
         ):
             return self.async_abort(reason="not_hue_bridge")
 
-        host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        bridge = await self._get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
+        host = urlparse(discovery_info.ssdp_location).hostname
+        if TYPE_CHECKING:
+            assert host is not None
+        bridge = await self._get_bridge(
+            host, discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        )
 
         await self.async_set_unique_id(bridge.id)
         self._abort_if_unique_id_configured(
@@ -232,8 +237,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         bridge = await self._get_bridge(
-            discovery_info[zeroconf.ATTR_HOST],
-            discovery_info[zeroconf.ATTR_PROPERTIES]["bridgeid"],
+            discovery_info.host,
+            discovery_info.properties["bridgeid"],
         )
 
         await self.async_set_unique_id(bridge.id)
@@ -253,7 +258,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         as the unique identifier. Therefore, this method uses discovery without
         a unique ID.
         """
-        self.bridge = await self._get_bridge(discovery_info[zeroconf.ATTR_HOST])
+        self.bridge = await self._get_bridge(discovery_info.host)
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_link()
 
