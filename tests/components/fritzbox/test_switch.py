@@ -1,6 +1,6 @@
 """Tests for AVM Fritz!Box switch component."""
 from datetime import timedelta
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from requests.exceptions import HTTPError
 
@@ -89,9 +89,10 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock):
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
+    with patch("homeassistant.components.fritzbox.switch.REFERSH_DELAY", 0.1):
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
     assert device.set_switch_state_on.call_count == 1
 
 
@@ -102,9 +103,10 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock):
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
+    with patch("homeassistant.components.fritzbox.switch.REFERSH_DELAY", 0.1):
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
     assert device.set_switch_state_off.call_count == 1
 
 

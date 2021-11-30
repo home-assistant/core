@@ -1,7 +1,8 @@
 """Support for AVM FRITZ!SmartHome switch devices."""
 from __future__ import annotations
 
-from typing import Any
+from asyncio import sleep
+from typing import Any, Final
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -10,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+
+REFERSH_DELAY: Final = 0.2
 
 
 async def async_setup_entry(
@@ -38,9 +41,11 @@ class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.hass.async_add_executor_job(self.device.set_switch_state_on)
+        await sleep(REFERSH_DELAY)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.hass.async_add_executor_job(self.device.set_switch_state_off)
+        await sleep(REFERSH_DELAY)
         await self.coordinator.async_refresh()
