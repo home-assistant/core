@@ -124,14 +124,21 @@ def async_trigger_discovery(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
     domain_data = hass.data.setdefault(DOMAIN, {})
+    _LOGGER.warning("Setting up flux_led - call async_discover_devices")
+
     domain_data[FLUX_LED_DISCOVERY] = await async_discover_devices(
         hass, STARTUP_SCAN_TIMEOUT
     )
+    _LOGGER.warning("Setting up flux_led - call done async_discover_devices")
 
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
+
+    _LOGGER.warning(
+        "Calling async_trigger_discovery: %s", domain_data[FLUX_LED_DISCOVERY]
+    )
 
     async_trigger_discovery(hass, domain_data[FLUX_LED_DISCOVERY])
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
