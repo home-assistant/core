@@ -21,7 +21,7 @@ MOCK_SETTINGS = {
     "device": {"mac": "test-mac", "hostname": "test-host"},
 }
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    host=["169.1.1.1", "1.1.1.1"],
+    host="1.1.1.1",
     hostname="shc012345.local.",
     name="Bosch SHC [test-mac]._http._tcp.local.",
     port=0,
@@ -521,29 +521,6 @@ async def test_zeroconf_cannot_connect(hass, mock_zeroconf):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DISCOVERY_INFO,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-        )
-        assert result["type"] == "abort"
-        assert result["reason"] == "cannot_connect"
-
-
-async def test_zeroconf_link_local(hass, mock_zeroconf):
-    """Test we get the form."""
-    DISCOVERY_INFO_LINK_LOCAL = zeroconf.ZeroconfServiceInfo(
-        host=["169.1.1.1"],
-        hostname="shc012345.local.",
-        name="Bosch SHC [test-mac]._http._tcp.local.",
-        port=0,
-        properties={},
-        type="_http._tcp.local.",
-    )
-
-    with patch(
-        "boschshcpy.session.SHCSession.mdns_info", side_effect=SHCConnectionError
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            data=DISCOVERY_INFO_LINK_LOCAL,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
         assert result["type"] == "abort"
