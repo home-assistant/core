@@ -179,18 +179,15 @@ def _patch_discovery(no_device=False, capabilities=None):
     YeelightScanner._scanner = None  # Clear class scanner to reset hass
 
     def _generate_fake_ssdp_listener(*args, **kwargs):
-        return _patched_ssdp_listener(
-            None
-            if no_device
-            else ssdp.SsdpServiceInfo(
+        info = None
+        if not no_device:
+            info = ssdp.SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={},
                 ssdp_headers=capabilities or CAPABILITIES,
-            ),
-            *args,
-            **kwargs,
-        )
+            )
+        return _patched_ssdp_listener(info, *args, **kwargs)
 
     return patch(
         "homeassistant.components.yeelight.scanner.SsdpSearchListener",
