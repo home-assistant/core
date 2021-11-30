@@ -1,0 +1,52 @@
+{
+    "state": {
+        "DIMMER": {
+            "auto": "Auto"
+        },
+        "zone_SLEEP": {
+            "off": "Aus",
+            "30 min": "30 Minuten",
+            "60 min": "60 Minuten",
+            "90 min": "90 Minuten",
+            "120 min": "120 Minuten"
+        },
+        "zone_TONE_CONTROL_mode": {
+            "manual": "Manuell",
+            "auto": "Auto",
+            "bypass": "Überbrücken"
+        },
+        "zone_SURR_DECODER_TYPE": {
+            "toggle": "Umschalten",
+            "auto": "Auto",
+            "dolby_pl": "Dolby ProLogic",
+            "dolby_pl2x_movie": "Dolby ProLogic 2x Movie",
+            "dolby_pl2x_music": "Dolby ProLogic 2x Music",
+            "dolby_pl2x_game": "Dolby ProLogic 2x Game",
+            "dolby_surround": "Dolby Surround",
+            "dts_neural_x": "DTS Neural:X",
+            "dts_neo6_cinema": "DTS Neo:6 Cinema",
+            "dts_neo6_music": "DTS Neo:6 Music"
+        },
+        "zone_EQUALIZER_mode": {
+            "manual": "Manuell",
+            "auto": "Auto",
+            "bypass": "Überbrücken"
+        },
+        "zone_LINK_AUDIO_QUALITY": {
+            "compressed": "Komprimiert",
+            "uncompressed": "Unkomprimiert"
+        },
+        "zone_LINK_CONTROL": {
+            "standard": "Standard",
+            "speed": "Geschwindigkeit",
+            "stability": "Stabilität"
+        },
+        "zone_LINK_AUDIO_DELAY": {
+            "audio_sync_on": "Ton Synchronisierung An",
+            "audio_sync_off": "Ton Synchronisierung Aus",
+            "balanced": "Ausgewogen",
+            "lip_sync": "Lippen Synchronisierung",
+            "audio_sync": "Ton Synchronisierung"
+        }
+    }
+}
