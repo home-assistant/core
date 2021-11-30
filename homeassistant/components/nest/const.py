@@ -22,3 +22,5 @@ SDM_SCOPES = [
 ]
 API_URL = "https://smartdevicemanagement.googleapis.com/v1"
 OOB_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
+
+SERVICE_SNAPSHOT_EVENT = "snapshot_event"
