@@ -1,7 +1,6 @@
 """The tests for Lutron Caséta device triggers."""
 import pytest
 
-from homeassistant import setup
 from homeassistant.components import automation
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -312,7 +311,6 @@ async def test_validate_trigger_config_unknown_device(hass, calls, device_reg):
 
 async def test_validate_trigger_invalid_triggers(hass, device_reg):
     """Test for click_event with invalid triggers."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
     dr_button_devices = hass.data[DOMAIN][config_entry_id][BUTTON_DEVICES]
     device_id = list(dr_button_devices)[0]
@@ -337,6 +335,7 @@ async def test_validate_trigger_invalid_triggers(hass, device_reg):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     assert (
         len(entity_ids := hass.states.async_entity_ids("persistent_notification")) == 1
