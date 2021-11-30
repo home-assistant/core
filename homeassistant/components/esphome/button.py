@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aioesphomeapi import ButtonInfo
-from aioesphomeapi.model import EntityState
+from aioesphomeapi import ButtonInfo, EntityState
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
