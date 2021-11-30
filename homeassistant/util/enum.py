@@ -8,7 +8,7 @@ from typing import Any
 class StrEnum(str, Enum):
     """Partial backport of Python 3.11's StrEnum for our basic use cases."""
 
-    def __new__(cls, value: str, *args: Any, **kwargs: Any) -> StrEnum:
+    def __new__(cls, value: str, *args: Any, **kwargs: Any):  # type: ignore[no-untyped-def]
         """Create a new StrEnum instance."""
         if not isinstance(value, str):
             raise TypeError(f"{value!r} is not a string")
