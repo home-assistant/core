@@ -52,6 +52,11 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
         """Return the increment/decrement step."""
         return super()._static_info.step
 
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        return super()._static_info.unit_of_measurement
+
     @esphome_state_property
     def value(self) -> float | None:
         """Return the state of the entity."""
