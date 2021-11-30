@@ -82,7 +82,7 @@ class ButtonEntity(RestoreEntity):
 
     entity_description: ButtonEntityDescription
     _attr_should_poll = False
-    _attr_device_class: ButtonDeviceClass | None = None
+    _attr_device_class: ButtonDeviceClass | None
     _attr_state: None = None
     __last_pressed: datetime | None = None
 
