@@ -406,10 +406,12 @@ class SonosSpeaker:
                     self.zone_name,
                 )
             else:
+                exc_info = exception if _LOGGER.isEnabledFor(logging.DEBUG) else None
                 _LOGGER.error(
                     "Subscription renewals for %s failed: %s",
                     self.zone_name,
                     exception,
+                    exc_info=exc_info,
                 )
             await self.async_offline()
 
