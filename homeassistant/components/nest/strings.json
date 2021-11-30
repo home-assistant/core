@@ -12,8 +12,8 @@
         }
       },
       "pubsub": {
-        "title": "Create Pub/Sub Subscription",
-        "description": "Visit the [Cloud Console]({url}) and make note of the Cloud Project ID. A Pub/Sub subscription will automatically be created for you.",
+        "title": "Configure Google Cloud",
+        "description": "Visit the [Cloud Console]({url}) to find your Google Cloud Project ID.",
         "data": {
           "cloud_project_id": "Google Cloud Project ID"
         }
