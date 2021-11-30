@@ -214,7 +214,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_hue_bridge")
 
         bridge = await self._get_bridge(
-            str(host), discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+            host, discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
         )
 
         await self.async_set_unique_id(bridge.id)
