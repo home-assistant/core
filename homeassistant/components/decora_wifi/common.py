@@ -71,7 +71,6 @@ class DecoraWifiPlatform:
             # If the call to the decora_wifi API's session.login returns None, there was a problem with the credentials.
             if user is None:
                 raise LoginFailed
-            self._logged_in = True
         except ValueError as exc:
             self._logged_in = False
             raise CommFailed from exc

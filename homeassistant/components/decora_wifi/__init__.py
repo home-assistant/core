@@ -54,11 +54,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryAuthFailed from exc
     except CommFailed as exc:
         raise ConfigEntryNotReady from exc
-    hass.data[DOMAIN][entry.entry_id] = session
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = session
 
     # Forward the config entry to each platform which has devices to set up.
-    active_platforms = hass.data[DOMAIN][entry.entry_id].active_platforms
-    hass.config_entries.async_setup_platforms(entry, active_platforms)
+    hass.config_entries.async_setup_platforms(entry, session.active_platforms)
     return True
 
 
