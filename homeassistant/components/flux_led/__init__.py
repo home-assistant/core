@@ -146,10 +146,15 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
+
     host = entry.data[CONF_HOST]
+    _LOGGER.warning("Setting up flux_led - async_setup_entry: %s", host)
+
     if not entry.unique_id:
         if discovery := await async_discover_device(hass, host):
             async_update_entry_from_discovery(hass, entry, discovery)
+
+    _LOGGER.warning("Setting up flux_led - async_wifi_bulb_for_host: %s", host)
 
     device: AIOWifiLedBulb = async_wifi_bulb_for_host(host)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
