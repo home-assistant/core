@@ -80,8 +80,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle discovery from ssdp."""
-        self._discovered_ip = urlparse(discovery_info["location"]).hostname
-        await self.async_set_unique_id(discovery_info["id"])
+        self._discovered_ip = urlparse(discovery_info.ssdp_headers["location"]).hostname
+        await self.async_set_unique_id(discovery_info.ssdp_headers["id"])
         return await self._async_handle_discovery_with_unique_id()
 
     async def _async_handle_discovery_with_unique_id(self):
