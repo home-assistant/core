@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+from typing import Any, TypeVar
+
+T = TypeVar("T", bound="StrEnum")
 
 
 class StrEnum(str, Enum):
     """Partial backport of Python 3.11's StrEnum for our basic use cases."""
 
-    def __new__(cls, value: str, *args: Any, **kwargs: Any):  # type: ignore[no-untyped-def]
+    def __new__(cls: type[T], value: str, *args: Any, **kwargs: Any) -> T:
         """Create a new StrEnum instance."""
         if not isinstance(value, str):
             raise TypeError(f"{value!r} is not a string")
