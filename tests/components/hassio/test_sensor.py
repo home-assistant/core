@@ -128,6 +128,8 @@ def mock_all(aioclient_mock, request):
 )
 async def test_sensor(hass, entity_id, expected, aioclient_mock):
     """Test hassio OS and addons sensor."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
@@ -136,22 +138,17 @@ async def test_sensor(hass, entity_id, expected, aioclient_mock):
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
-    config_entry.add_to_hass(hass)
-
     await hass.async_block_till_done()
 
-    """Check that entities are disabled by default."""
+    # Verify that the entity is disabled by default.
     assert hass.states.get(entity_id) is None
 
-    """Enable sensors."""
+    # Enable the entity.
     ent_reg = entity_registry.async_get(hass)
     ent_reg.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(config_entry.entry_id)
-
     await hass.async_block_till_done()
 
-    """Check sensor values."""
+    # Verify that the entity have the expected state.
     state = hass.states.get(entity_id)
     assert state.state == expected
