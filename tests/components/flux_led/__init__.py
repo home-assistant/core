@@ -2,20 +2,18 @@
 from __future__ import annotations
 
 import asyncio
+import datetime
 from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import (
-    ATTR_ID,
-    ATTR_IPADDR,
-    ATTR_MODEL,
-    ATTR_MODEL_DESCRIPTION,
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
 )
 from flux_led.protocol import LEDENETRawState
+from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.components import dhcp
 from homeassistant.core import HomeAssistant
@@ -38,17 +36,26 @@ DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
     ip=IP_ADDRESS,
     macaddress=MAC_ADDRESS,
 )
-FLUX_DISCOVERY_PARTIAL = {
-    ATTR_IPADDR: IP_ADDRESS,
-    ATTR_MODEL: MODEL,
-    ATTR_ID: FLUX_MAC_ADDRESS,
-}
-FLUX_DISCOVERY = {
-    ATTR_IPADDR: IP_ADDRESS,
-    ATTR_MODEL: MODEL,
-    ATTR_ID: FLUX_MAC_ADDRESS,
-    ATTR_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
-}
+FLUX_DISCOVERY_PARTIAL = FluxLEDDiscovery(
+    ipaddr=IP_ADDRESS,
+    model=MODEL,
+    id=FLUX_MAC_ADDRESS,
+    model_num=None,
+    version_num=None,
+    firmware_date=None,
+    model_info=None,
+    model_description=None,
+)
+FLUX_DISCOVERY = FluxLEDDiscovery(
+    ipaddr=IP_ADDRESS,
+    model=MODEL,
+    id=FLUX_MAC_ADDRESS,
+    model_num=0x25,
+    version_num=0x04,
+    firmware_date=datetime.date(2021, 5, 5),
+    model_info=MODEL,
+    model_description=MODEL_DESCRIPTION,
+)
 
 
 def _mocked_bulb() -> AIOWifiLedBulb:

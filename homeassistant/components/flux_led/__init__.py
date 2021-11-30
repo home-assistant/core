@@ -52,10 +52,10 @@ def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
 @callback
 def async_name_from_discovery(device: FluxLEDDiscovery) -> str:
     """Convert a flux_led discovery to a human readable name."""
-    if (mac := device.get("id")) is None:
+    if device["id"] is None:
         return device["ipaddr"]
-    short_mac = mac[-6:]
-    if device.get("model_description"):
+    short_mac = device["id"][-6:]
+    if device["model_description"]:
         return f"{device['model_description']} {short_mac}"
     return f"{device['model']} {short_mac}"
 
