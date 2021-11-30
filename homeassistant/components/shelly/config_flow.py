@@ -189,7 +189,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        host = discovery_info[zeroconf.ATTR_HOST]
+        host = discovery_info.host
         try:
             self.info = await self._async_get_info(host)
         except HTTP_CONNECT_ERRORS:
