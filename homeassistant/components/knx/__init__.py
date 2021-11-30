@@ -1,13 +1,11 @@
 """Support KNX devices."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Final
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.core import XknxConnectionState
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import ConversionError, XKNXException
@@ -343,9 +341,6 @@ class KNXModule:
         self.entry = entry
 
         self.init_xknx()
-        self.xknx.connection_manager.register_connection_state_changed_cb(
-            self.connection_state_changed_cb
-        )
 
         self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
         self._group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
@@ -367,7 +362,6 @@ class KNXModule:
             multicast_group=self.config[ConnectionSchema.CONF_KNX_MCAST_GRP],
             multicast_port=self.config[ConnectionSchema.CONF_KNX_MCAST_PORT],
             connection_config=self.connection_config(),
-            state_updater=self.config[ConnectionSchema.CONF_KNX_STATE_UPDATER],
         )
 
     async def start(self) -> None:
@@ -396,12 +390,6 @@ class KNXModule:
             )
 
         return ConnectionConfig(auto_reconnect=True)
-
-    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
-        """Call invoked after a KNX connection state change was received."""
-        self.connected = state == XknxConnectionState.CONNECTED
-        if tasks := [device.after_update() for device in self.xknx.devices]:
-            await asyncio.gather(*tasks)
 
     async def telegram_received_cb(self, telegram: Telegram) -> None:
         """Call invoked after a KNX telegram was received."""

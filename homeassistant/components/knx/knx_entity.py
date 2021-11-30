@@ -1,14 +1,9 @@
 """Base class for KNX devices."""
 from __future__ import annotations
 
-from typing import cast
-
 from xknx.devices import Device as XknxDevice
 
 from homeassistant.helpers.entity import Entity
-
-from . import KNXModule
-from .const import DOMAIN
 
 
 class KnxEntity(Entity):
@@ -28,8 +23,7 @@ class KnxEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        knx_module = cast(KNXModule, self.hass.data[DOMAIN])
-        return knx_module.connected
+        return self._device.available
 
     async def async_update(self) -> None:
         """Request a state update from KNX bus."""
