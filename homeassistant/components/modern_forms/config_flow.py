@@ -30,14 +30,14 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        host = discovery_info[zeroconf.ATTR_HOSTNAME].rstrip(".")
+        host = discovery_info.hostname.rstrip(".")
         name, _ = host.rsplit(".")
 
         self.context.update(
             {
-                CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
+                CONF_HOST: discovery_info.host,
                 CONF_NAME: name,
-                CONF_MAC: discovery_info[zeroconf.ATTR_PROPERTIES].get(CONF_MAC),
+                CONF_MAC: discovery_info.properties.get(CONF_MAC),
                 "title_placeholders": {"name": name},
             }
         )
