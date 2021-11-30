@@ -37,7 +37,6 @@ from google_nest_sdm.exceptions import (
     ConfigurationException,
     GoogleNestException,
 )
-from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -249,15 +248,12 @@ class NestFlowHandler(
         """Configure and create Pub/Sub subscriber."""
         # Populate data from the previous config entry during reauth, then
         # overwrite with the user entered values.
-        cloud_project_id = ""
-        subscriber_id = ""
-        for data in (self._reauth_data, user_input):
-            if not data:
-                continue
-            if CONF_CLOUD_PROJECT_ID in data:
-                cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "")
-            if CONF_SUBSCRIBER_ID in data:
-                subscriber_id = data.get(CONF_SUBSCRIBER_ID, "")
+        data = {}
+        if self._reauth_data:
+            data.update(self._reauth_data)
+        if user_input:
+            data.update(user_input)
+        cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "")
 
         errors = {}
         config = self.hass.data[DOMAIN][DATA_NEST_CONFIG]
@@ -270,6 +266,7 @@ class NestFlowHandler(
         if user_input is not None and not errors:
             # Create the subscriber id and/or verify it already exists. Note that
             # the existing id is used, and create call below is idempotent
+            subscriber_id = data.get(CONF_SUBSCRIBER_ID, "")
             if not subscriber_id:
                 subscriber_id = _generate_subscription_id(cloud_project_id)
             _LOGGER.debug("Creating subscriber id '%s'", subscriber_id)
@@ -311,9 +308,6 @@ class NestFlowHandler(
             description_placeholders={"url": CLOUD_CONSOLE_URL},
             errors=errors,
         )
-
-    def _create_subscriber(self, subscriber_id: str) -> GoogleNestSubscriber:
-        """Create the GoogleNestSubscriber."""
 
     async def async_step_finish(self, data: dict[str, Any] | None = None) -> FlowResult:
         """Create an entry for the SDM flow."""
