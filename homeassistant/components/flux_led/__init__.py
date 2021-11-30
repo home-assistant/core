@@ -143,6 +143,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_trigger_discovery(hass, domain_data[FLUX_LED_DISCOVERY])
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+
+    _LOGGER.warning("Calling done async_setup")
     return True
 
 
