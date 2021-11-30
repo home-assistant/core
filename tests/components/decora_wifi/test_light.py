@@ -108,8 +108,6 @@ async def test_light_platform_setup(hass: HomeAssistant):
 
         # Assert ConfigEntry State
         assert config_entry.state is ConfigEntryState.LOADED
-        session = hass.data[DOMAIN][config_entry.entry_id]
-        assert session is not None
 
 
 async def test_light_state_changes(hass: HomeAssistant):
@@ -190,10 +188,11 @@ async def test_comm_failure(hass: HomeAssistant):
         side_effect=FakeDecoraWiFiResidentialAccount,
     ):
         # Set up the integration
-        config_entry = await setup_platform(hass)
-        session = hass.data[DOMAIN][config_entry.entry_id]._session
+        await setup_platform(hass)
 
-        session.comms_good = False
+        # Simulate loss of connection to API
+        acct = FakeDecoraWiFiSession.get_account(TEST_USERNAME)
+        acct.session.comms_good = False
 
         # Send a turn off command
         await hass.services.async_call(

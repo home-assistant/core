@@ -50,7 +50,6 @@ async def test_user_flow(hass: HomeAssistant):
         "homeassistant.components.decora_wifi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        hass.data[DOMAIN] = {}
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
@@ -105,10 +104,7 @@ async def test_reauth_flow(hass: HomeAssistant):
     ), patch(
         "homeassistant.components.decora_wifi.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch.dict(
-        hass.data
-    ):
-        hass.data[DOMAIN] = {}
+    ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -204,7 +200,6 @@ async def test_reauth_validate_invalid_login(hass: HomeAssistant):
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
         side_effect=FakeDecoraWiFiSession,
     ):
-        hass.data[DOMAIN] = {}
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

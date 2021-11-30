@@ -34,6 +34,7 @@ class FakeDecoraWiFiAccount:
         """Initialize the stub account."""
         self.email = email
         self.password = password
+        self.session = None
         self.bare_res_perm = bare_res_perm
         if switch_models:
             self.switch_models = switch_models
@@ -65,6 +66,7 @@ class FakeDecoraWiFiSession(DecoraWiFiSession):
             self.email = email
             self.password = password
             self.user = FakeDecoraWiFiPerson(self)
+            self.acct.session = self
             return self.user
 
         # Process simulated login with default account info
