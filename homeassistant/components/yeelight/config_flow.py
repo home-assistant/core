@@ -80,7 +80,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle discovery from ssdp."""
-        _LOGGER.warning("dinfo: %s", discovery_info)
         self._discovered_ip = urlparse(discovery_info["location"]).hostname
         await self.async_set_unique_id(discovery_info["id"])
         return await self._async_handle_discovery_with_unique_id()
