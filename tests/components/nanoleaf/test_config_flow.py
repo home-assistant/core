@@ -467,6 +467,8 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
                 ssdp_st="mock_st",
                 upnp={
                     "_host": TEST_HOST,
+                },
+                ssdp_headers={
                     "nl-devicename": TEST_NAME,
                     "nl-deviceid": TEST_DEVICE_ID,
                 },

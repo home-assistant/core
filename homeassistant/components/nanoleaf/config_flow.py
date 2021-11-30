@@ -116,8 +116,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("SSDP discovered: %s", discovery_info)
         return await self._async_discovery_handler(
             discovery_info["_host"],
-            discovery_info["nl-devicename"],
-            discovery_info["nl-deviceid"],
+            discovery_info.ssdp_headers["nl-devicename"],
+            discovery_info.ssdp_headers["nl-deviceid"],
         )
 
     async def _async_discovery_handler(
