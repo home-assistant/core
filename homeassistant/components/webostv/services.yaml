@@ -52,23 +52,3 @@ command:
       advanced: true
       selector:
         object:
-
-select_sound_output:
-  name: Select Sound Output
-  description: "Send the TV the command to change sound output."
-  fields:
-    entity_id:
-      name: Entity
-      description: Name(s) of the webostv entities to change sound output on.
-      required: true
-      selector:
-        entity:
-          integration: webostv
-          domain: media_player
-    sound_output:
-      name: Sound Output
-      description: Name of the sound output to switch to.
-      required: true
-      example: "external_speaker"
-      selector:
-        text:

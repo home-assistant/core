@@ -17,3 +17,6 @@ SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
 LIVE_TV_APP_ID = "com.webos.app.livetv"
 
 WEBOSTV_CONFIG_FILE = "webostv.conf"
+
+CONF_PLEX_ENTITY = "plex_entity"
+PLEX_SOURCE = "Plex"

@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
+    CONF_ENTITY_ID,
     CONF_HOST,
     CONF_ICON,
     CONF_NAME,
@@ -27,6 +28,7 @@ from .const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_ON_ACTION,
+    CONF_PLEX_ENTITY,
     CONF_SOURCES,
     DEFAULT_NAME,
     DOMAIN,
@@ -52,6 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                         vol.Optional(CONF_ICON): cv.string,
+                        vol.Optional(CONF_PLEX_ENTITY): cv.string,
                     }
                 )
             ],
@@ -73,10 +76,6 @@ SOUND_OUTPUT_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_SOUND_OUTPUT): cv.st
 SERVICE_TO_METHOD = {
     SERVICE_BUTTON: {"method": "async_button", "schema": BUTTON_SCHEMA},
     SERVICE_COMMAND: {"method": "async_command", "schema": COMMAND_SCHEMA},
-    SERVICE_SELECT_SOUND_OUTPUT: {
-        "method": "async_select_sound_output",
-        "schema": SOUND_OUTPUT_SCHEMA,
-    },
 }
 
 _LOGGER = logging.getLogger(__name__)
