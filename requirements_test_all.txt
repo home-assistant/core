@@ -1180,6 +1180,10 @@ pytraccar==0.10.0
 # homeassistant.components.tradfri
 pytradfri[async]==7.2.0
 
+# homeassistant.components.trafikverket_train
+# homeassistant.components.trafikverket_weatherstation
+pytrafikverket==0.1.6.2
+
 # homeassistant.components.usb
 pyudev==0.22.0
 
