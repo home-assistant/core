@@ -83,7 +83,7 @@ class HueBaseEntity(Entity):
             self.bridge.api.devices.subscribe(
                 self._handle_event,
                 self.device.id,
-                (EventType.RESOURCE_UPDATED),
+                EventType.RESOURCE_UPDATED,
             )
         )
         # subscribe to zigbee_connectivity to catch availability changes
@@ -91,7 +91,7 @@ class HueBaseEntity(Entity):
             self.bridge.api.sensors.zigbee_connectivity.subscribe(
                 self._handle_event,
                 zigbee.id,
-                (EventType.RESOURCE_UPDATED),
+                EventType.RESOURCE_UPDATED,
             )
 
     @property
