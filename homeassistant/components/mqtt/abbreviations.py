@@ -46,6 +46,7 @@ ABBREVIATIONS = {
     "dev_cla": "device_class",
     "dock_t": "docked_topic",
     "dock_tpl": "docked_template",
+    "e": "encoding",
     "en": "enabled_by_default",
     "err_t": "error_topic",
     "err_tpl": "error_template",
