@@ -5,7 +5,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
-    )
+)
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -61,6 +61,7 @@ PREFIX_STATE_CLASS_MAPPING = [
     (WATER_USAGE_TODAY, STATE_CLASS_TOTAL_INCREASING),
 ]
 
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up EcoNet sensor based on a config entry."""
 
@@ -112,7 +113,7 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        for prefix, unit in SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT:
+        for prefix, unit in SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT.items():
             if self._device_name.startswith(prefix):
                 unit_of_measurement = unit
                 break
