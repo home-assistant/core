@@ -3,16 +3,10 @@ from __future__ import annotations
 
 from typing import Any
 
-import requests
 import voluptuous as vol
 from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClient
 
-from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_POLL,
-    ConfigEntry,
-    ConfigFlow,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -49,7 +43,6 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     entry: ConfigEntry
 
@@ -91,13 +84,6 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_schema=DATA_SCHEMA,
                     errors={"base": "invalid_auth"},
                 )
-            except requests.HTTPError as error:
-                LOGGER.error("Cannot connect %s", error)
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=DATA_SCHEMA,
-                    errors={"base": "cannot_connect"},
-                )
 
             existing_entry = await self.async_set_unique_id(username)
             if existing_entry:
@@ -138,13 +124,6 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_id="user",
                     data_schema=DATA_SCHEMA,
                     errors={"base": "invalid_auth"},
-                )
-            except requests.HTTPError as error:
-                LOGGER.error("Cannot connect %s", error)
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=DATA_SCHEMA,
-                    errors={"base": "cannot_connect"},
                 )
 
             await self.async_set_unique_id(username)
