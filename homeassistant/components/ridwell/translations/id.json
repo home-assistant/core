@@ -13,6 +13,7 @@
                 "data": {
                     "password": "Kata Sandi"
                 },
+                "description": "Masukkan kembali kata sandi untuk {username} :",
                 "title": "Autentikasi Ulang Integrasi"
             },
             "user": {
