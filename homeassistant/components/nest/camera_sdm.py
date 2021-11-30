@@ -328,8 +328,7 @@ class NestCamera(Camera):
 
         def _write_image() -> None:
             """Executor helper to write image."""
-            if not os.path.exists(os.path.dirname(filename)):
-                os.makedirs(os.path.dirname(filename), exist_ok=True)
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
             with open(filename, "wb") as img_file:
                 img_file.write(image)
 
