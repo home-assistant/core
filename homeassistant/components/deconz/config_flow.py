@@ -285,7 +285,9 @@ class DeconzOptionsFlowHandler(OptionsFlow):
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input: Any = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the deCONZ options."""
         self.gateway = get_gateway_from_config_entry(self.hass, self.config_entry)
         return await self.async_step_deconz_devices()
