@@ -21,12 +21,3 @@ def valid_response_fixture():
         return_value=RESPONSE,
     ):
         yield
-
-
-@pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture():
-    """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
-    ):
-        yield
