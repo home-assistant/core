@@ -143,15 +143,15 @@ async def test_client_creation_error(
     )
     assert result["type"] == "form"
     assert result["errors"] is None
-    with patch(
-        f"{CONFIG_FLOW_PATH}.AzureEventHubClient.from_input", side_effect=side_effect
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            step2_config.copy(),
-        )
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result2["errors"] == {"base": error_message}
+
+    mock_aeh.side_effect = side_effect
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        step2_config.copy(),
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": error_message}
 
 
 @pytest.mark.parametrize(
@@ -171,6 +171,7 @@ async def test_connection_error(
     )
     assert result["type"] == "form"
     assert result["errors"] is None
+
     mock_aeh.test_connection.side_effect = side_effect
     with patch(
         f"{CONFIG_FLOW_PATH}.AzureEventHubClient.from_input",
