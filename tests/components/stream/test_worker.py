@@ -38,8 +38,8 @@ from homeassistant.components.stream.const import (
 )
 from homeassistant.components.stream.core import StreamSettings
 from homeassistant.components.stream.worker import (
-    SegmentBuffer,
     StreamEndedError,
+    StreamState,
     StreamWorkerError,
     stream_worker,
 )
@@ -255,6 +255,12 @@ class MockPyAv:
         return self.container
 
 
+def run_worker(hass, stream, stream_source):
+    """Run the stream worker under test."""
+    stream_state = StreamState(hass, stream.outputs)
+    stream_worker(stream_source, {}, stream_state, threading.Event())
+
+
 async def async_decode_stream(hass, packets, py_av=None):
     """Start a stream worker that decodes incoming stream packets into output segments."""
     stream = Stream(hass, STREAM_SOURCE, {})
@@ -268,9 +274,8 @@ async def async_decode_stream(hass, packets, py_av=None):
         "homeassistant.components.stream.core.StreamOutput.put",
         side_effect=py_av.capture_buffer.capture_output_segment,
     ):
-        segment_buffer = SegmentBuffer(hass, stream.outputs)
         try:
-            stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
+            run_worker(hass, stream, STREAM_SOURCE)
         except StreamEndedError:
             # Tests only use a limited number of packets, then the worker exits as expected. In
             # production, stream ending would be unexpected.
@@ -288,8 +293,7 @@ async def test_stream_open_fails(hass):
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open, pytest.raises(StreamWorkerError):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        segment_buffer = SegmentBuffer(hass, stream.outputs)
-        stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
+        run_worker(hass, stream, STREAM_SOURCE)
         await hass.async_block_till_done()
         av_open.assert_called_once()
 
@@ -695,10 +699,7 @@ async def test_worker_log(hass, caplog):
 
     with patch("av.open") as av_open, pytest.raises(StreamWorkerError) as err:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        segment_buffer = SegmentBuffer(hass, stream.outputs)
-        stream_worker(
-            "https://abcd:efgh@foo.bar", {}, segment_buffer, threading.Event()
-        )
+        run_worker(hass, stream, "https://abcd:efgh@foo.bar")
         await hass.async_block_till_done()
     assert str(err.value) == "Error opening stream https://****:****@foo.bar"
     assert "https://abcd:efgh@foo.bar" not in caplog.text
