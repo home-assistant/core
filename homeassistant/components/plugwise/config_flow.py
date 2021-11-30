@@ -109,14 +109,12 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Prepare configuration for a discovered Plugwise Smile."""
         self.discovery_info = discovery_info
-        _properties = discovery_info[zeroconf.ATTR_PROPERTIES]
+        _properties = discovery_info.properties
 
         # unique_id is needed here, to be able to determine whether the discovered device is known, or not.
-        unique_id = discovery_info[zeroconf.ATTR_HOSTNAME].split(".")[0]
+        unique_id = discovery_info.hostname.split(".")[0]
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(
-            {CONF_HOST: discovery_info[zeroconf.ATTR_HOST]}
-        )
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info.host})
 
         if DEFAULT_USERNAME not in unique_id:
             self._username = STRETCH_USERNAME
@@ -125,9 +123,9 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
         self.context["title_placeholders"] = {
-            CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
+            CONF_HOST: discovery_info.host,
             CONF_NAME: _name,
-            CONF_PORT: discovery_info[zeroconf.ATTR_PORT],
+            CONF_PORT: discovery_info.port,
             CONF_USERNAME: self._username,
         }
         return await self.async_step_user_gateway()
@@ -143,8 +141,8 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input.pop(FLOW_TYPE, None)
 
             if self.discovery_info:
-                user_input[CONF_HOST] = self.discovery_info[zeroconf.ATTR_HOST]
-                user_input[CONF_PORT] = self.discovery_info[zeroconf.ATTR_PORT]
+                user_input[CONF_HOST] = self.discovery_info.host
+                user_input[CONF_PORT] = self.discovery_info.port
                 user_input[CONF_USERNAME] = self._username
 
             try:
