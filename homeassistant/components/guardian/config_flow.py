@@ -110,12 +110,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the configuration via zeroconf."""
         self.discovery_info = {
-            CONF_IP_ADDRESS: discovery_info[zeroconf.ATTR_HOST],
-            CONF_PORT: discovery_info[zeroconf.ATTR_PORT],
+            CONF_IP_ADDRESS: discovery_info.host,
+            CONF_PORT: discovery_info.port,
         }
-        pin = async_get_pin_from_discovery_hostname(
-            discovery_info[zeroconf.ATTR_HOSTNAME]
-        )
+        pin = async_get_pin_from_discovery_hostname(discovery_info.hostname)
         await self._async_set_unique_id(pin)
         return await self._async_handle_discovery()
 
