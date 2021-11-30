@@ -94,8 +94,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        name: str = discovery_info[zeroconf.ATTR_NAME]
-        host: str = discovery_info[zeroconf.ATTR_HOST]
+        name: str = discovery_info.name
+        host: str = discovery_info.host
         bond_id = name.partition(".")[0]
         await self.async_set_unique_id(bond_id)
         for entry in self._async_current_entries():
