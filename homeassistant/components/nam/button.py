@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
@@ -20,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 RESTART_BUTTON: ButtonEntityDescription = ButtonEntityDescription(
     key="restart",
     name=f"{DEFAULT_NAME} Restart",
-    icon="mdi:restart",
+    device_class=ButtonDeviceClass.RESTART,
     entity_category=ENTITY_CATEGORY_CONFIG,
 )
 
