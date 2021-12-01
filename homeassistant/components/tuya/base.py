@@ -89,6 +89,20 @@ class EnumTypeData:
         return cls(**json.loads(data))
 
 
+@dataclass
+class ElectricityTypeData:
+    """Electricity Type Data."""
+
+    electriccurrent: str | None = None
+    power: str | None = None
+    voltage: str | None = None
+
+    @classmethod
+    def from_json(cls, data: str) -> ElectricityTypeData:
+        """Load JSON string and return a ElectricityTypeData object."""
+        return cls(**json.loads(data.lower()))
+
+
 class TuyaEntity(Entity):
     """Tuya base device."""
 
