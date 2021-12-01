@@ -28,13 +28,15 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.enum import StrEnum
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
+    DEVICE_CLASS_DEHUMIDIFIER,
+    DEVICE_CLASS_HUMIDIFIER,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,

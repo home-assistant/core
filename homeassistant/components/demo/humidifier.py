@@ -2,11 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.humidifier import HumidifierDeviceClass, HumidifierEntity
-from homeassistant.components.humidifier.const import (  # noqa: F401
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
-    SUPPORT_MODES,
-)
+from homeassistant.components.humidifier.const import SUPPORT_MODES
 
 SUPPORT_FLAGS = 0
 
