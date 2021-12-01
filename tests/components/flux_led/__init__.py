@@ -12,6 +12,7 @@ from flux_led.const import (
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
 )
+from flux_led.models_db import MODEL_MAP
 from flux_led.protocol import LEDENETRawState
 from flux_led.scanner import FluxLEDDiscovery
 
@@ -29,9 +30,6 @@ FLUX_MAC_ADDRESS = "aabbccddeeff"
 SHORT_MAC_ADDRESS = "ddeeff"
 
 DEFAULT_ENTRY_TITLE = f"{MODEL_DESCRIPTION} {SHORT_MAC_ADDRESS}"
-DEFAULT_ENTRY_TITLE_PARTIAL = (
-    f"{MODEL_DESCRIPTION} ({MODEL_NUM_HEX}) {SHORT_MAC_ADDRESS}"
-)
 
 
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
@@ -95,6 +93,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.getWhiteTemperature = MagicMock(return_value=(2700, 128))
     bulb.brightness = 128
     bulb.model_num = 0x35
+    bulb.model_data = MODEL_MAP[0x35]
     bulb.effect = None
     bulb.speed = 50
     bulb.model = "Bulb RGBCW (0x35)"
@@ -122,6 +121,7 @@ def _mocked_switch() -> AIOWifiLedBulb:
     switch.async_turn_off = AsyncMock()
     switch.async_turn_on = AsyncMock()
     switch.model_num = 0x97
+    switch.model_data = MODEL_MAP[0x97]
     switch.model = "Switch (0x97)"
     switch.version_num = 0x97
     switch.raw_state = LEDENETRawState(

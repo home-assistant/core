@@ -246,7 +246,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             version_num=bulb.version_num,
             firmware_date=None,
             model_info=None,
-            model_description=bulb.model,
+            model_description=bulb.model_data.description,
         )
 
 
