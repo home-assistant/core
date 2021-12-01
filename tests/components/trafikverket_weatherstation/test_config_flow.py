@@ -26,8 +26,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.trafikverket_weatherstation.config_flow.TVWeatherConfigFlow.validate_input",
-        return_value="connected",
+        "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
     ), patch(
         "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
         return_value=True,
@@ -54,8 +53,7 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     """Test a successful import of yaml."""
 
     with patch(
-        "homeassistant.components.trafikverket_weatherstation.config_flow.TVWeatherConfigFlow.validate_input",
-        return_value="connected",
+        "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
     ), patch(
         "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
         return_value=True,
@@ -96,8 +94,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
         "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
         return_value=True,
     ), patch(
-        "homeassistant.components.trafikverket_weatherstation.config_flow.TVWeatherConfigFlow.validate_input",
-        return_value="connected",
+        "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
     ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -115,7 +112,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "errormessage,base_error",
+    "error_message,base_error",
     [
         (
             "Source: Security, message: Invalid authentication",
@@ -135,7 +132,9 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test_flow_fails(hass: HomeAssistant, errormessage: str, base_error: str):
+async def test_flow_fails(
+    hass: HomeAssistant, error_message: str, base_error: str
+) -> None:
     """Test config flow errors."""
     result4 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -146,7 +145,7 @@ async def test_flow_fails(hass: HomeAssistant, errormessage: str, base_error: st
 
     with patch(
         "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
-        return_value=ValueError(errormessage),
+        side_effect=ValueError(error_message),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result4["flow_id"],

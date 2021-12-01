@@ -26,7 +26,7 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     entry: config_entries.ConfigEntry
 
-    async def validate_input(self, sensor_api: str, station: str):
+    async def validate_input(self, sensor_api: str, station: str) -> str:
         """Validate input from user input."""
         web_session = async_get_clientsession(self.hass)
         weather_api = TrafikverketWeather(web_session, sensor_api)
