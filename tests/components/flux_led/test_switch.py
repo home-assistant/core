@@ -39,7 +39,7 @@ async def test_switch_on_off(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "switch.rgbw_controller_ddeeff"
+    entity_id = "switch.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
