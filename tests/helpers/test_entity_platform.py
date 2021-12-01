@@ -1103,7 +1103,7 @@ async def test_entity_disabled_by_device(hass: HomeAssistant):
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections=connections,
-        disabled_by=dr.DISABLED_USER,
+        disabled_by=dr.DeviceEntryDisabler.USER,
     )
 
     assert await entity_platform.async_setup_entry(config_entry)
