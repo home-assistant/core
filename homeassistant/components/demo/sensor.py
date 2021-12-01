@@ -4,9 +4,9 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -39,7 +39,7 @@ async def async_setup_platform(
                 "Outside Temperature",
                 15.6,
                 SensorDeviceClass.TEMPERATURE,
-                STATE_CLASS_MEASUREMENT,
+                SensorStateClass.MEASUREMENT,
                 TEMP_CELSIUS,
                 12,
             ),
@@ -48,7 +48,7 @@ async def async_setup_platform(
                 "Outside Humidity",
                 54,
                 SensorDeviceClass.HUMIDITY,
-                STATE_CLASS_MEASUREMENT,
+                SensorStateClass.MEASUREMENT,
                 PERCENTAGE,
                 None,
             ),
@@ -57,7 +57,7 @@ async def async_setup_platform(
                 "Carbon monoxide",
                 54,
                 SensorDeviceClass.CO,
-                STATE_CLASS_MEASUREMENT,
+                SensorStateClass.MEASUREMENT,
                 CONCENTRATION_PARTS_PER_MILLION,
                 None,
             ),
@@ -66,7 +66,7 @@ async def async_setup_platform(
                 "Carbon dioxide",
                 54,
                 SensorDeviceClass.CO2,
-                STATE_CLASS_MEASUREMENT,
+                SensorStateClass.MEASUREMENT,
                 CONCENTRATION_PARTS_PER_MILLION,
                 14,
             ),
@@ -75,7 +75,7 @@ async def async_setup_platform(
                 "Power consumption",
                 100,
                 SensorDeviceClass.POWER,
-                STATE_CLASS_MEASUREMENT,
+                SensorStateClass.MEASUREMENT,
                 POWER_WATT,
                 None,
             ),
@@ -84,7 +84,7 @@ async def async_setup_platform(
                 "Today energy",
                 15,
                 SensorDeviceClass.ENERGY,
-                STATE_CLASS_MEASUREMENT,
+                SensorStateClass.MEASUREMENT,
                 ENERGY_KILO_WATT_HOUR,
                 None,
             ),
@@ -112,7 +112,7 @@ class DemoSensor(SensorEntity):
         name: str,
         state: StateType,
         device_class: SensorDeviceClass,
-        state_class: str | None,
+        state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
         battery: StateType,
     ) -> None:
