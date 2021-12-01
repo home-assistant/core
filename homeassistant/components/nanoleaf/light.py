@@ -5,7 +5,6 @@ import logging
 import math
 from typing import Any
 
-from aionanoleaf import Nanoleaf, Unavailable
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -35,6 +34,7 @@ from homeassistant.util.color import (
 
 from .const import DOMAIN
 from .entity import NanoleafEntity
+from .hub import NanoleafHub
 
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
 DEFAULT_NAME = "Nanoleaf"
@@ -70,20 +70,20 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nanoleaf light."""
-    nanoleaf: Nanoleaf = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NanoleafLight(nanoleaf)])
+    hub: NanoleafHub = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([NanoleafLight(hub)])
 
 
 class NanoleafLight(NanoleafEntity, LightEntity):
     """Representation of a Nanoleaf Light."""
 
-    def __init__(self, nanoleaf: Nanoleaf) -> None:
+    def __init__(self, hub: NanoleafHub) -> None:
         """Initialize the Nanoleaf light."""
-        super().__init__(nanoleaf)
-        self._attr_unique_id = nanoleaf.serial_no
-        self._attr_name = nanoleaf.name
-        self._attr_min_mireds = math.ceil(1000000 / nanoleaf.color_temperature_max)
-        self._attr_max_mireds = kelvin_to_mired(nanoleaf.color_temperature_min)
+        super().__init__(hub)
+        self._attr_unique_id = hub.nanoleaf.serial_no
+        self._attr_name = hub.nanoleaf.name
+        self._attr_min_mireds = math.ceil(1000000 / hub.nanoleaf.color_temperature_max)
+        self._attr_max_mireds = kelvin_to_mired(hub.nanoleaf.color_temperature_min)
 
     @property
     def brightness(self) -> int:
@@ -176,15 +176,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         transition: float | None = kwargs.get(ATTR_TRANSITION)
         await self._nanoleaf.turn_off(None if transition is None else int(transition))
 
-    async def async_update(self) -> None:
-        """Fetch new state data for this light."""
-        try:
-            await self._nanoleaf.get_info()
-        except Unavailable:
-            if self.available:
-                _LOGGER.warning("Could not connect to %s", self.name)
-            self._attr_available = False
-            return
-        if not self.available:
-            _LOGGER.info("Fetching %s data recovered", self.name)
-        self._attr_available = True
+    async def async_added_to_hass(self) -> None:
+        """Handle entity being added to Home Assistant."""
+        await super().async_added_to_hass()
+        await self._hub.set_light_entity(self)
