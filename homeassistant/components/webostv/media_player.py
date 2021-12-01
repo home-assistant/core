@@ -32,7 +32,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.webostv.const import (
+from .const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_ON_ACTION,
@@ -80,10 +80,11 @@ SUPPORT_WEBOSTV = (
 )
 
 SUPPORT_WEBOSTV_VOLUME = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
+# support browse media when plex is the active source
 SUPPORT_PLEX = SUPPORT_BROWSE_MEDIA
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=0)
+MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
@@ -103,6 +104,7 @@ async def async_setup_platform(
     client = hass.data[DOMAIN][host]["client"]
     on_script = Script(hass, turn_on_action, name, DOMAIN) if turn_on_action else None
 
+    # Get the plex entity id from the discovery config
     plex_entity_id = discovery_info.get(CONF_PLEX_ENTITY)
 
     entity = LgWebOSMediaPlayerEntity(
@@ -249,7 +251,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         if not self._source_list and source_list:
             self._source_list = source_list
 
-    # @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self):
         """Connect."""
         if not self._client.is_connected():
@@ -265,6 +267,10 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
                 await self._client.connect()
 
     def plex_entity(self) -> PlexMediaPlayer:
+        """Gets the plex entity object"""
+
+        if not self._plex_entity_id:
+            return None
 
         platforms: list[EntityPlatform] = async_get_platforms(self.hass, "plex")
 
@@ -284,6 +290,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         return None
 
     def can_proxy_to_plex(self) -> bool:
+        """Gets whether methods and attributes can currently be proxied to the specified plex entity"""
+
         if not self._client.is_on:
             return False
 
@@ -388,6 +396,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_album_artist(self):
+        """Gets the currently playing album's artist"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -395,6 +405,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_album_name(self):
+        """Gets the currently playing album's name"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -402,6 +414,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_artist(self):
+        """Gets the currently playing music's artist"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -409,6 +423,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_duration(self):
+        """Gets the currently playing media's duration"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -416,6 +432,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_episode(self):
+        """Gets the currently playing tv episode's number"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -423,6 +441,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_image_hash(self):
+        """Gets the currently playing media's image hash"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -430,6 +450,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_position(self):
+        """Gets the currently playing media's position"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -437,6 +459,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_season(self):
+        """Gets the currently playing tv episode's season number"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -444,6 +468,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_position_updated_at(self):
+        """Gets the currently playing media's last position update time"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -451,6 +477,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_track(self):
+        """Gets the currently playing music's track number"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -458,6 +486,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_series_title(self):
+        """Gets the currently playing tv series title"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -465,6 +495,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def media_playlist(self):
+        """Gets the currently playing media playlist name"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -472,6 +504,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def entity_picture(self):
+        """Gets the currently playing media's picture"""
+
         if self.can_proxy_to_plex():
             return self.plex_entity().entity_picture
 
@@ -510,13 +544,25 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     @property
     def sound_mode(self):
+        """Gets the currently selected sound output"""
         if self._client.sound_output is None and self.state == STATE_OFF:
             return None
         return self._client.sound_output
 
     @property
     def sound_mode_list(self):
-        return ["tv_speaker", "external_arc"]
+        """Gets the list of supported sound outputs"""
+        return [
+            "tv_speaker",
+            "external_arc",
+            "external_optical",
+            "bt_soundbar",
+            "external_speaker",
+            "lineout",
+            "headphone",
+            "tv_external_speaker",
+            "tv_speaker_headphone",
+        ]
 
     @cmd
     async def async_turn_off(self):
@@ -732,6 +778,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         self.async_schedule_update_ha_state()
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Returns the browse media object"""
+
         if not self.can_proxy_to_plex():
             return None
 
@@ -740,6 +788,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         )
 
     async def async_media_seek(self, position):
+        """Seeks the currently playing media to the provided position"""
+
         if not self.can_proxy_to_plex():
             return
 
