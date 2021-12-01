@@ -129,7 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             unique_id, self.info = await validate_host(self.hass, discovery_info.ip)
         except Exception:  # pylint: disable=broad-except
-            return self.async_abort(reason="no_devices_found")
+            return self.async_abort(reason="invalid_host")
 
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured(

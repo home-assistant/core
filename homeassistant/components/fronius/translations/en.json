@@ -1,13 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "invalid_host": "Invalid hostname or IP address"
         },
         "error": {
             "cannot_connect": "Failed to connect",
             "unknown": "Unexpected error"
         },
         "step": {
+            "confirm_discovery": {
+                "description": "Do you want to setup {device}?"
+            },
             "user": {
                 "data": {
                     "host": "Host"
