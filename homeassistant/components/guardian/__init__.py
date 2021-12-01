@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from typing import cast
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_FILENAME,
@@ -87,9 +87,7 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
     raise ValueError(f"No client for device ID: {device_id}")
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
     client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
 
@@ -146,96 +144,71 @@ async def async_setup_entry(  # noqa: C901
     # Set up all of the Guardian entity platforms:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def async_disable_ap(call: ServiceCall) -> None:
+    @callback
+    def extract_client(func: Callable) -> Callable:
+        """Define a decorator to get the correct client for a service call."""
+
+        async def wrapper(call: ServiceCall) -> None:
+            """Wrap the service function."""
+            entry_id = async_get_entry_id_for_service_call(hass, call)
+            client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+
+            try:
+                async with client:
+                    await func(call, client)
+            except GuardianError as err:
+                LOGGER.error("Error while executing %s: %s", func.__name__, err)
+
+        return wrapper
+
+    @extract_client
+    async def async_disable_ap(call: ServiceCall, client: Client) -> None:
         """Disable the onboard AP."""
-        entry_id = async_get_entry_id_for_service_call(hass, call)
-        client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+        await client.wifi.disable_ap()
 
-        try:
-            async with client:
-                await client.wifi.disable_ap()
-        except GuardianError as err:
-            LOGGER.error("Error while disabling valve controller AP: %s", err)
-
-    async def async_enable_ap(call: ServiceCall) -> None:
+    @extract_client
+    async def async_enable_ap(call: ServiceCall, client: Client) -> None:
         """Enable the onboard AP."""
-        entry_id = async_get_entry_id_for_service_call(hass, call)
-        client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+        await client.wifi.enable_ap()
 
-        try:
-            async with client:
-                await client.wifi.enable_ap()
-        except GuardianError as err:
-            LOGGER.error("Error while enabling valve controller AP: %s", err)
-
-    async def async_pair_sensor(call: ServiceCall) -> None:
+    @extract_client
+    async def async_pair_sensor(call: ServiceCall, client: Client) -> None:
         """Add a new paired sensor."""
         entry_id = async_get_entry_id_for_service_call(hass, call)
-        client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
         paired_sensor_manager = hass.data[DOMAIN][entry_id][DATA_PAIRED_SENSOR_MANAGER]
         uid = call.data[CONF_UID]
 
-        try:
-            async with client:
-                await client.sensor.pair_sensor(uid)
-        except GuardianError as err:
-            LOGGER.error("Error while adding paired sensor: %s", err)
-            return
-
+        await client.sensor.pair_sensor(uid)
         await paired_sensor_manager.async_pair_sensor(uid)
 
-    async def async_reboot(call: ServiceCall) -> None:
+    @extract_client
+    async def async_reboot(call: ServiceCall, client: Client) -> None:
         """Reboot the valve controller."""
-        entry_id = async_get_entry_id_for_service_call(hass, call)
-        client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+        await client.system.reboot()
 
-        try:
-            async with client:
-                await client.system.reboot()
-        except GuardianError as err:
-            LOGGER.error("Error while rebooting valve controller: %s", err)
-
-    async def async_reset_valve_diagnostics(call: ServiceCall) -> None:
+    @extract_client
+    async def async_reset_valve_diagnostics(call: ServiceCall, client: Client) -> None:
         """Fully reset system motor diagnostics."""
-        entry_id = async_get_entry_id_for_service_call(hass, call)
-        client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+        await client.valve.reset()
 
-        try:
-            async with client:
-                await client.valve.reset()
-        except GuardianError as err:
-            LOGGER.error("Error while resetting valve diagnostics: %s", err)
-
-    async def async_unpair_sensor(call: ServiceCall) -> None:
+    @extract_client
+    async def async_unpair_sensor(call: ServiceCall, client: Client) -> None:
         """Remove a paired sensor."""
         entry_id = async_get_entry_id_for_service_call(hass, call)
-        client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
         paired_sensor_manager = hass.data[DOMAIN][entry_id][DATA_PAIRED_SENSOR_MANAGER]
         uid = call.data[CONF_UID]
 
-        try:
-            async with client:
-                await client.sensor.unpair_sensor(uid)
-        except GuardianError as err:
-            LOGGER.error("Error while removing paired sensor: %s", err)
-            return
-
+        await client.sensor.unpair_sensor(uid)
         await paired_sensor_manager.async_unpair_sensor(uid)
 
-    async def async_upgrade_firmware(call: ServiceCall) -> None:
+    @extract_client
+    async def async_upgrade_firmware(call: ServiceCall, client: Client) -> None:
         """Upgrade the device firmware."""
-        entry_id = async_get_entry_id_for_service_call(hass, call)
-        client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-
-        try:
-            async with client:
-                await client.system.upgrade_firmware(
-                    url=call.data[CONF_URL],
-                    port=call.data[CONF_PORT],
-                    filename=call.data[CONF_FILENAME],
-                )
-        except GuardianError as err:
-            LOGGER.error("Error while upgrading firmware: %s", err)
+        await client.system.upgrade_firmware(
+            url=call.data[CONF_URL],
+            port=call.data[CONF_PORT],
+            filename=call.data[CONF_FILENAME],
+        )
 
     for service_name, schema, method in (
         (SERVICE_NAME_DISABLE_AP, None, async_disable_ap),
@@ -271,9 +244,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    if len(hass.config_entries.async_entries(DOMAIN)) == 1:
-        # If this is the last instance of Guardian, deregister any services defined
-        # during integration setup:
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if len(entries) == 1 and entries[0].state == ConfigEntryState.LOADED:
+        # If this is the last loaded instance of Guardian, deregister any services
+        # defined during integration setup:
         for service_name in (
             SERVICE_NAME_DISABLE_AP,
             SERVICE_NAME_ENABLE_AP,
