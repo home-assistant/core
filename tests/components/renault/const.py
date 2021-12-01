@@ -1,8 +1,7 @@
 """Constants for the Renault integration tests."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
-    DEVICE_CLASS_PLUG,
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
@@ -21,6 +20,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -35,12 +35,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PASSWORD,
     CONF_USERNAME,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
     ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
@@ -106,13 +100,13 @@ MOCK_VEHICLES = {
         },
         BINARY_SENSOR_DOMAIN: [
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG,
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PLUG,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_plugged_in",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_plugged_in",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING,
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.BATTERY_CHARGING,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_charging",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charging",
@@ -153,7 +147,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_available_energy",
                 ATTR_STATE: "31",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -161,7 +155,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_level",
                 ATTR_STATE: "60",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -170,13 +164,13 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_last_activity",
                 ATTR_STATE: "2020-01-12T21:40:16+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_battery_last_activity",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_temperature",
                 ATTR_STATE: "20",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -191,7 +185,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charge_state",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_power",
                 ATTR_STATE: "0.027",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -215,7 +209,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.reg_number_outside_temperature",
                 ATTR_STATE: "8.0",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -254,13 +248,13 @@ MOCK_VEHICLES = {
         },
         BINARY_SENSOR_DOMAIN: [
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG,
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PLUG,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_plugged_in",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_plugged_in",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING,
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.BATTERY_CHARGING,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_charging",
                 ATTR_STATE: STATE_OFF,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charging",
@@ -308,7 +302,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_available_energy",
                 ATTR_STATE: "0",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -316,7 +310,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_level",
                 ATTR_STATE: "50",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -325,13 +319,13 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_last_activity",
                 ATTR_STATE: "2020-11-17T08:06:48+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_battery_last_activity",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_temperature",
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -346,7 +340,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charge_state",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_power",
                 ATTR_STATE: STATE_UNKNOWN,
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -378,7 +372,7 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
                 ATTR_ENTITY_ID: "sensor.reg_number_location_last_activity",
                 ATTR_STATE: "2020-02-18T16:58:38+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_location_last_activity",
@@ -408,13 +402,13 @@ MOCK_VEHICLES = {
         },
         BINARY_SENSOR_DOMAIN: [
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_PLUG,
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.PLUG,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_plugged_in",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_plugged_in",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING,
+                ATTR_DEVICE_CLASS: BinarySensorDeviceClass.BATTERY_CHARGING,
                 ATTR_ENTITY_ID: "binary_sensor.reg_number_charging",
                 ATTR_STATE: STATE_ON,
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charging",
@@ -462,7 +456,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_available_energy",
                 ATTR_STATE: "31",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -470,7 +464,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_level",
                 ATTR_STATE: "60",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -479,13 +473,13 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_last_activity",
                 ATTR_STATE: "2020-01-12T21:40:16+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_battery_last_activity",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.reg_number_battery_temperature",
                 ATTR_STATE: "20",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -500,7 +494,7 @@ MOCK_VEHICLES = {
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charge_state",
             },
             {
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
                 ATTR_ENTITY_ID: "sensor.reg_number_charging_power",
                 ATTR_STATE: "27.0",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -548,7 +542,7 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
                 ATTR_ENTITY_ID: "sensor.reg_number_location_last_activity",
                 ATTR_STATE: "2020-02-18T16:58:38+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_location_last_activity",
@@ -619,7 +613,7 @@ MOCK_VEHICLES = {
             },
             {
                 ATTR_DEFAULT_DISABLED: True,
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+                ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
                 ATTR_ENTITY_ID: "sensor.reg_number_location_last_activity",
                 ATTR_STATE: "2020-02-18T16:58:38+00:00",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_location_last_activity",
