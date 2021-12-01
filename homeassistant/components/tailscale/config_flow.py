@@ -71,7 +71,7 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_TAILNET, default=user_input.get(CONF_TAILNET, "")
                     ): str,
                     vol.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY)
+                        CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
                     ): str,
                 }
             ),
