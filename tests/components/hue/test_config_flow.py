@@ -723,7 +723,7 @@ async def test_bridge_zeroconf(hass, aioclient_mock):
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.217",
             port=443,
-            hostname="Philips-hue.local.",
+            hostname="Philips-hue.local",
             type="_hue._tcp.local.",
             name="Philips Hue - ABCABC._hue._tcp.local.",
             properties={
@@ -740,7 +740,9 @@ async def test_bridge_zeroconf(hass, aioclient_mock):
 
 async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
     """Test a bridge being discovered by zeroconf already exists."""
-    create_mock_api_discovery(aioclient_mock, [("192.168.1.217", "ecb5faabcabc")])
+    create_mock_api_discovery(
+        aioclient_mock, [("0.0.0.0", "ecb5faabcabc"), ("192.168.1.217", "ecb5faabcabc")]
+    )
     entry = MockConfigEntry(
         domain="hue",
         source=config_entries.SOURCE_SSDP,
@@ -754,7 +756,7 @@ async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.217",
             port=443,
-            hostname="Philips-hue.local.",
+            hostname="Philips-hue.local",
             type="_hue._tcp.local.",
             name="Philips Hue - ABCABC._hue._tcp.local.",
             properties={
