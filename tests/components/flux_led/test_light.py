@@ -84,7 +84,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
     state = hass.states.get(entity_id)
@@ -104,7 +104,7 @@ async def test_light_goes_unavailable_and_recovers(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
     state = hass.states.get(entity_id)
@@ -136,7 +136,7 @@ async def test_light_no_unique_id(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id) is None
     state = hass.states.get(entity_id)
@@ -194,7 +194,7 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -300,7 +300,7 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -419,7 +419,7 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -521,7 +521,7 @@ async def test_rgb_or_w_light(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -632,7 +632,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -772,7 +772,7 @@ async def test_white_light(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -823,7 +823,7 @@ async def test_no_color_modes(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -867,7 +867,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -949,7 +949,7 @@ async def test_rgb_light_custom_effects_invalid_colors(
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -978,7 +978,7 @@ async def test_rgb_light_custom_effect_via_service(
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -1123,7 +1123,7 @@ async def test_addressable_light(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.rgbw_controller_ddeeff"
+    entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON

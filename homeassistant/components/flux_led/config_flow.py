@@ -122,7 +122,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_in_progress")
         if not device["model_description"]:
             try:
-                device = await self._async_try_connect(host)
+                device = await self._async_try_connect(
+                    host, device["id"], device["model"]
+                )
             except FLUX_LED_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
             else:
@@ -173,7 +175,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
             try:
-                device = await self._async_try_connect(host)
+                device = await self._async_try_connect(host, None, None)
             except FLUX_LED_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
@@ -224,7 +226,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
-    async def _async_try_connect(self, host: str) -> FluxLEDDiscovery:
+    async def _async_try_connect(
+        self, host: str, mac_address: str | None, model: str | None
+    ) -> FluxLEDDiscovery:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
         if device := await async_discover_device(self.hass, host):
@@ -236,8 +240,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await bulb.async_stop()
         return FluxLEDDiscovery(
             ipaddr=host,
-            model=None,
-            id=None,
+            model=model,
+            id=mac_address,
             model_num=bulb.model_num,
             version_num=bulb.version_num,
             firmware_date=None,
