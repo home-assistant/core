@@ -102,7 +102,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
         parsed_url = urlparse(discovery_info.ssdp_location)
-        scalarweb_info = discovery_info["X_ScalarWebAPI_DeviceInfo"]
+        scalarweb_info = discovery_info.upnp["X_ScalarWebAPI_DeviceInfo"]
         endpoint = scalarweb_info["X_ScalarWebAPI_BaseURL"]
         service_types = scalarweb_info["X_ScalarWebAPI_ServiceList"][
             "X_ScalarWebAPI_ServiceType"
