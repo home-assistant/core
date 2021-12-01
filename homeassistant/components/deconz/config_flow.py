@@ -203,7 +203,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_link()
 
-    async def async_step_ssdp(self, discovery_info: dict[str, str]) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered deCONZ bridge."""
         if (
             discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
@@ -213,8 +213,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         LOGGER.debug("deCONZ SSDP discovery %s", pformat(discovery_info))
 
-        self.bridge_id = normalize_bridge_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
-        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
+        self.bridge_id = normalize_bridge_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
+        parsed_url = urlparse(discovery_info.ssdp_location)
 
         entry = await self.async_set_unique_id(self.bridge_id)
         if entry and entry.source == config_entries.SOURCE_HASSIO:
