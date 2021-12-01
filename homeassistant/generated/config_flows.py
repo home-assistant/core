@@ -295,6 +295,7 @@ FLOWS = [
     "synology_dsm",
     "system_bridge",
     "tado",
+    "tailscale",
     "tasmota",
     "tellduslive",
     "tesla_wall_connector",
