@@ -68,7 +68,7 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_TAILNET, default=user_input.get(CONF_TAILNET)
+                        CONF_TAILNET, default=user_input.get(CONF_TAILNET, "")
                     ): str,
                     vol.Required(
                         CONF_API_KEY, default=user_input.get(CONF_API_KEY)
