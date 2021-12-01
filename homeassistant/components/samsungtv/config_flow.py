@@ -302,8 +302,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
-        self._mac = format_mac(discovery_info[zeroconf.ATTR_PROPERTIES]["deviceid"])
-        self._host = discovery_info[zeroconf.ATTR_HOST]
+        self._mac = format_mac(discovery_info.properties["deviceid"])
+        self._host = discovery_info.host
         await self._async_start_discovery_with_mac_address()
         await self._async_set_device_unique_id()
         self.context["title_placeholders"] = {"device": self._title}
