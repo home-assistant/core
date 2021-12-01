@@ -336,7 +336,7 @@ class MqttAvailability(Entity):
     def _availability_setup_from_config(self, config):
         """(Re)Setup."""
         self._avail_topics = {}
-        if CONF_AVAILABILITY_TOPIC in config and config[CONF_AVAILABILITY_TOPIC]:
+        if CONF_AVAILABILITY_TOPIC in config:
             self._avail_topics[config[CONF_AVAILABILITY_TOPIC]] = {
                 CONF_PAYLOAD_AVAILABLE: config[CONF_PAYLOAD_AVAILABLE],
                 CONF_PAYLOAD_NOT_AVAILABLE: config[CONF_PAYLOAD_NOT_AVAILABLE],
