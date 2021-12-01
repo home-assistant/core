@@ -1,4 +1,4 @@
-"""The tests for the hassio sensors."""
+"""The tests for the hassio binary sensors."""
 
 import os
 from unittest.mock import patch
@@ -54,7 +54,14 @@ def mock_all(aioclient_mock, request):
     )
     aioclient_mock.get(
         "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
+        json={
+            "result": "ok",
+            "data": {
+                "version_latest": "1.0.0",
+                "version": "1.0.0",
+                "update_available": False,
+            },
+        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
@@ -69,7 +76,7 @@ def mock_all(aioclient_mock, request):
                         "state": "started",
                         "slug": "test",
                         "installed": True,
-                        "update_available": False,
+                        "update_available": True,
                         "version": "2.0.0",
                         "version_latest": "2.0.1",
                         "repository": "core",
@@ -82,7 +89,7 @@ def mock_all(aioclient_mock, request):
                         "installed": True,
                         "update_available": False,
                         "version": "3.1.0",
-                        "version_latest": "3.2.0",
+                        "version_latest": "3.1.0",
                         "repository": "core",
                         "url": "https://github.com",
                     },
@@ -114,20 +121,15 @@ def mock_all(aioclient_mock, request):
 @pytest.mark.parametrize(
     "entity_id,expected",
     [
-        ("sensor.home_assistant_operating_system_version", "1.0.0"),
-        ("sensor.home_assistant_operating_system_newest_version", "1.0.0"),
-        ("sensor.test_version", "2.0.0"),
-        ("sensor.test_newest_version", "2.0.1"),
-        ("sensor.test2_version", "3.1.0"),
-        ("sensor.test2_newest_version", "3.2.0"),
-        ("sensor.test_cpu_percent", "0.99"),
-        ("sensor.test2_cpu_percent", "unavailable"),
-        ("sensor.test_memory_percent", "4.59"),
-        ("sensor.test2_memory_percent", "unavailable"),
+        ("binary_sensor.home_assistant_operating_system_update_available", "off"),
+        ("binary_sensor.test_update_available", "on"),
+        ("binary_sensor.test2_update_available", "off"),
+        ("binary_sensor.test_running", "on"),
+        ("binary_sensor.test2_running", "off"),
     ],
 )
-async def test_sensor(hass, entity_id, expected, aioclient_mock):
-    """Test hassio OS and addons sensor."""
+async def test_binary_sensor(hass, entity_id, expected, aioclient_mock):
+    """Test hassio OS and addons binary sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 

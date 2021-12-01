@@ -59,7 +59,7 @@ def mock_all(aioclient_mock, request):
     )
     aioclient_mock.get(
         "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
     )
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
