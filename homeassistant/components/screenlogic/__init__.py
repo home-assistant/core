@@ -148,23 +148,25 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             await self.gateway.async_update()
         except ScreenLogicError as error:
             _LOGGER.warning("Update error - attempting reconnect: %s", error)
-
-            # Clean up the previous connection as we're about to create a new one
-            await self.gateway.async_disconnect()
-
-            connect_info = await async_get_connect_info(self.hass, self.config_entry)
-
-            self.gateway = ScreenLogicGateway(**connect_info)
-
-            try:
-                await self.gateway.async_update()
-            except (ScreenLogicError, ScreenLogicWarning) as ex:
-                raise UpdateFailed(ex) from ex
-
+            await self._async_reconnect_update_data()
         except ScreenLogicWarning as warn:
             raise UpdateFailed(f"Incomplete update: {warn}") from warn
 
         return self.gateway.get_data()
+
+    async def _async_reconnect_update_data(self):
+        """Attempt to reconnect to the gateway and fetch data."""
+        try:
+            # Clean up the previous connection as we're about to create a new one
+            await self.gateway.async_disconnect()
+
+            connect_info = await async_get_connect_info(self.hass, self.config_entry)
+            self.gateway = ScreenLogicGateway(**connect_info)
+
+            await self.gateway.async_update()
+
+        except (ScreenLogicError, ScreenLogicWarning) as ex:
+            raise UpdateFailed(ex) from ex
 
 
 class ScreenlogicEntity(CoordinatorEntity):
@@ -224,6 +226,13 @@ class ScreenlogicEntity(CoordinatorEntity):
             name=self.gateway_name,
         )
 
+    async def _async_refresh(self):
+        """Refresh the data from the gateway."""
+        await self.coordinator.async_refresh()
+        # Second debounced refresh to catch any secondary
+        # changes in the device
+        await self.coordinator.async_request_refresh()
+
     async def _async_refresh_timed(self, now):
         """Refresh from a timed called."""
         await self.coordinator.async_request_refresh()
@@ -261,10 +270,7 @@ class ScreenLogicCircuitEntity(ScreenlogicEntity):
     async def _async_set_circuit(self, circuit_value) -> None:
         if await self.gateway.async_set_circuit(self._data_key, circuit_value):
             _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
-            await self.coordinator.async_refresh()
-            # Second debounced refresh to catch any secondary
-            # changes in the device
-            await self.coordinator.async_request_refresh()
+            await self._async_refresh()
         else:
             _LOGGER.warning(
                 "Failed to set_circuit %s %s", self._data_key, circuit_value
