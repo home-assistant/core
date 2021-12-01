@@ -263,7 +263,7 @@ async def test_existing_node_not_replaced_when_not_ready(
     hass, zp3111, zp3111_not_ready_state, zp3111_state, client, integration
 ):
     """Test when a node added event with a non-ready node is received.
-    
+
     The existing node should not be replaced, and no customization should be lost.
     """
     dev_reg = dr.async_get(hass)
@@ -1076,7 +1076,7 @@ async def test_replace_different_node(
 
 async def test_node_model_change(hass, zp3111, zp3111_state, client, integration):
     """Test when a node's model is changed due to an updated device config file.
-    
+
     The device and entities should not be removed.
     """
     # This is not 100% realistic test,
