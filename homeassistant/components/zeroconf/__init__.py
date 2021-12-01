@@ -75,14 +75,6 @@ MAX_PROPERTY_VALUE_LEN = 230
 # Dns label max length
 MAX_NAME_LEN = 63
 
-# Attributes for ZeroconfServiceInfo
-ATTR_HOST: Final = "host"
-ATTR_HOSTNAME: Final = "hostname"
-ATTR_NAME: Final = "name"
-ATTR_PORT: Final = "port"
-ATTR_PROPERTIES: Final = "properties"
-ATTR_TYPE: Final = "type"
-
 # Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
 ATTR_PROPERTIES_ID: Final = "id"
 
