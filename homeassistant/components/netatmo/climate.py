@@ -173,7 +173,9 @@ async def async_setup_entry(
 class NetatmoThermostat(NetatmoBase, ClimateEntity):
     """Representation a Netatmo thermostat."""
 
+    _attr_hvac_mode = HVAC_MODE_AUTO
     _attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+    _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_preset_modes = SUPPORT_PRESET
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = TEMP_CELSIUS
@@ -218,10 +220,8 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         self._device_name = self._data.rooms[home_id][room_id]["name"]
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
-        self._attr_preset_mode = None
         self._away: bool | None = None
         self._support_flags = SUPPORT_FLAGS
-        self._attr_hvac_mode = HVAC_MODE_AUTO
         self._battery_level = None
         self._connected: bool | None = None
 
@@ -234,7 +234,6 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         if self._model == NA_THERM:
             self._attr_hvac_modes.append(HVAC_MODE_OFF)
 
-        self._attr_max_temp = DEFAULT_MAX_TEMP
         self._attr_unique_id = f"{self._id}-{self._model}"
 
     async def async_added_to_hass(self) -> None:
