@@ -1,8 +1,9 @@
 """Class to hold all sensor accessories."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Callable, NamedTuple
+from typing import NamedTuple
 
 from pyhap.const import CATEGORY_SENSOR
 

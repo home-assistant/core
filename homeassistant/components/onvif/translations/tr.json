@@ -43,7 +43,7 @@
             },
             "manual_input": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "name": "Ad",
                     "port": "Port"
                 },

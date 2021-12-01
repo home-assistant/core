@@ -81,6 +81,8 @@ from .const import (
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
     MODELS_VACUUM,
+    ROBOROCK_GENERIC,
+    ROCKROBO_GENERIC,
 )
 from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
@@ -592,7 +594,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     elif config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
-        model = config_entry.data[CONF_MODEL]
+        model: str = config_entry.data[CONF_MODEL]
 
         if model in (MODEL_FAN_ZA1, MODEL_FAN_ZA3, MODEL_FAN_ZA4, MODEL_FAN_P5):
             return
@@ -624,7 +626,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 sensors = PURIFIER_MIIO_SENSORS
             elif model in MODELS_PURIFIER_MIOT:
                 sensors = PURIFIER_MIOT_SENSORS
-            elif model in MODELS_VACUUM:
+            elif (
+                model in MODELS_VACUUM
+                or model.startswith(ROBOROCK_GENERIC)
+                or model.startswith(ROCKROBO_GENERIC)
+            ):
                 return _setup_vacuum_sensors(hass, config_entry, async_add_entities)
 
             for sensor, description in SENSOR_TYPES.items():

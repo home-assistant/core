@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u4e0a\u306b\u30c7\u30d0\u30a4\u30b9\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "\u30db\u30b9\u30c8ID"
+                },
+                "title": "\u8ffd\u52a0\u3059\u308b\u30cf\u30d6\u306e\u9078\u629e"
+            }
+        }
+    }
+}

@@ -13,14 +13,14 @@
         "step": {
             "confirm": {
                 "data": {
-                    "access_token": "Eri\u015fim Belirteci"
+                    "access_token": "Eri\u015fim Anahtar\u0131"
                 },
                 "description": "{name} kurmak istiyor musunuz?"
             },
             "user": {
                 "data": {
-                    "access_token": "Eri\u015fim Belirteci",
-                    "host": "Ana Bilgisayar"
+                    "access_token": "Eri\u015fim Anahtar\u0131",
+                    "host": "Ana bilgisayar"
                 }
             }
         }

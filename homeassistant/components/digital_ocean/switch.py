@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DigitalOceanSwitch(SwitchEntity):
     """Representation of a Digital Ocean droplet switch."""
 
-    def __init__(self, do, droplet_id):
+    def __init__(self, do, droplet_id):  # pylint: disable=invalid-name
         """Initialize a new Digital Ocean sensor."""
         self._digital_ocean = do
         self._droplet_id = droplet_id

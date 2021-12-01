@@ -126,6 +126,7 @@ REST_SENSORS: Final = {
         extra_state_attributes=lambda status: {
             "latest_stable_version": status["update"]["new_version"],
             "installed_version": status["update"]["old_version"],
+            "beta_version": status["update"].get("beta_version", ""),
         },
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),

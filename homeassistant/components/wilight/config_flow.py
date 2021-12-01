@@ -53,7 +53,7 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a discovered WiLight."""
         # Filter out basic information
         if (
-            ssdp.ATTR_SSDP_LOCATION not in discovery_info
+            not discovery_info.get(ssdp.ATTR_SSDP_LOCATION)
             or ssdp.ATTR_UPNP_MANUFACTURER not in discovery_info
             or ssdp.ATTR_UPNP_SERIAL not in discovery_info
             or ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info

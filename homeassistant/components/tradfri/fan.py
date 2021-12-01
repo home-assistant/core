@@ -31,11 +31,11 @@ async def async_setup_entry(
     api = tradfri_data[KEY_API]
     devices = tradfri_data[DEVICES]
 
-    purifiers = [dev for dev in devices if dev.has_air_purifier_control]
-    if purifiers:
-        async_add_entities(
-            TradfriAirPurifierFan(purifier, api, gateway_id) for purifier in purifiers
-        )
+    async_add_entities(
+        TradfriAirPurifierFan(dev, api, gateway_id)
+        for dev in devices
+        if dev.has_air_purifier_control
+    )
 
 
 def _from_percentage(percentage: int) -> int:

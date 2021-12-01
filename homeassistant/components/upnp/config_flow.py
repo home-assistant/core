@@ -41,9 +41,9 @@ def _is_complete_discovery(discovery_info: Mapping[str, Any]) -> bool:
     """Test if discovery is complete and usable."""
     return (
         ssdp.ATTR_UPNP_UDN in discovery_info
-        and ssdp.ATTR_SSDP_ST in discovery_info
-        and ssdp.ATTR_SSDP_LOCATION in discovery_info
-        and ssdp.ATTR_SSDP_USN in discovery_info
+        and discovery_info.get(ssdp.ATTR_SSDP_ST)
+        and discovery_info.get(ssdp.ATTR_SSDP_LOCATION)
+        and discovery_info.get(ssdp.ATTR_SSDP_USN)
     )
 
 

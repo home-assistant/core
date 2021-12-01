@@ -8,7 +8,6 @@ from google_nest_sdm.exceptions import (
     ConfigurationException,
     GoogleNestException,
 )
-from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,15 +21,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_entry_oauth2_flow,
-    config_validation as cv,
-)
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
 from .const import (
+    CONF_PROJECT_ID,
+    CONF_SUBSCRIBER_ID,
+    DATA_NEST_CONFIG,
     DATA_SDM,
     DATA_SUBSCRIBER,
     DOMAIN,
@@ -43,9 +41,6 @@ from .legacy import async_setup_legacy, async_setup_legacy_entry
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PROJECT_ID = "project_id"
-CONF_SUBSCRIBER_ID = "subscriber_id"
-DATA_NEST_CONFIG = "nest_config"
 DATA_NEST_UNAVAILABLE = "nest_unavailable"
 
 NEST_SETUP_NOTIFICATION = "nest_setup"
@@ -132,10 +127,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if CONF_PROJECT_ID not in config[DOMAIN]:
         return await async_setup_legacy(hass, config)
 
-    if CONF_SUBSCRIBER_ID not in config[DOMAIN]:
-        _LOGGER.error("Configuration option 'subscriber_id' required")
-        return False
-
     # For setup of ConfigEntry below
     hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
     project_id = config[DOMAIN][CONF_PROJECT_ID]
@@ -199,27 +190,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
+    subscriber = await api.new_subscriber(hass, entry)
+    if not subscriber:
+        return False
 
-    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
-
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    auth = api.AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass),
-        session,
-        config[CONF_CLIENT_ID],
-        config[CONF_CLIENT_SECRET],
-    )
-    subscriber = GoogleNestSubscriber(
-        auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
-    )
     callback = SignalUpdateCallback(hass)
     subscriber.set_update_callback(callback.async_handle_event)
-
     try:
         await subscriber.start_async()
     except AuthException as err:
@@ -267,3 +243,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of pubsub subscriptions created during config flow."""
+    if DATA_SDM not in entry.data or CONF_SUBSCRIBER_ID not in entry.data:
+        return
+
+    subscriber = await api.new_subscriber(hass, entry)
+    if not subscriber:
+        return
+    _LOGGER.debug("Deleting subscriber '%s'", subscriber.subscriber_id)
+    try:
+        await subscriber.delete_subscription()
+    except GoogleNestException as err:
+        _LOGGER.warning(
+            "Unable to delete subscription '%s'; Will be automatically cleaned up by cloud console: %s",
+            subscriber.subscriber_id,
+            err,
+        )
+    finally:
+        subscriber.stop_async()

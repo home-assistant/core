@@ -20,6 +20,7 @@
         },
         "tuya__led_type": {
             "halogen": "Halogeen",
+            "incandescent": "Witgloeiend",
             "led": "LED"
         },
         "tuya__light_mode": {

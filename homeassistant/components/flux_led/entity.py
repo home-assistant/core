@@ -43,30 +43,9 @@ class FluxEntity(CoordinatorEntity):
             )
 
     @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return cast(bool, self._device.is_on)
-
-    @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         return {"ip_address": self._device.ipaddr}
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the specified device on."""
-        await self._async_turn_on(**kwargs)
-        self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
-
-    @abstractmethod
-    async def _async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the specified device on."""
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the specified device off."""
-        await self._device.async_turn_off()
-        self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -85,3 +64,28 @@ class FluxEntity(CoordinatorEntity):
             )
         )
         await super().async_added_to_hass()
+
+
+class FluxOnOffEntity(FluxEntity):
+    """Representation of a Flux entity that supports on/off."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if device is on."""
+        return cast(bool, self._device.is_on)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the specified device on."""
+        await self._async_turn_on(**kwargs)
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
+
+    @abstractmethod
+    async def _async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the specified device on."""
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the specified device off."""
+        await self._device.async_turn_off()
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()

@@ -152,11 +152,11 @@ class DeconzGateway:
         # Gateway service
         configuration_url = f"http://{self.host}:{self.config_entry.data[CONF_PORT]}"
         if self.config_entry.source == SOURCE_HASSIO:
-            configuration_url = None
+            configuration_url = "homeassistant://hassio/ingress/core_deconz"
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             configuration_url=configuration_url,
-            entry_type="service",
+            entry_type=dr.DeviceEntryType.SERVICE,
             identifiers={(DECONZ_DOMAIN, self.api.config.bridge_id)},
             manufacturer="Dresden Elektronik",
             model=self.api.config.model_id,

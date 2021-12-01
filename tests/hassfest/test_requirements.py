@@ -45,7 +45,14 @@ def test_validate_requirements_format_wrongly_pinned(integration: Integration):
 
 def test_validate_requirements_format_ignore_pin_for_custom(integration: Integration):
     """Test requirement ignore pinning for custom."""
-    integration.manifest["requirements"] = ["test_package>=1", "test_package"]
+    integration.manifest["requirements"] = [
+        "test_package>=1",
+        "test_package",
+        "test_package>=1.2.3,<3.2.1",
+        "test_package~=0.5.0",
+        "test_package>=1.4.2,<1.4.99,>=1.7,<1.8.99",
+        "test_package>=1.4.2,<1.9,!=1.5",
+    ]
     integration.path = Path("")
     assert validate_requirements_format(integration)
     assert len(integration.errors) == 0

@@ -1,6 +1,8 @@
 """Tests for the IPP config flow."""
+import dataclasses
 from unittest.mock import patch
 
+from homeassistant.components import zeroconf
 from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL
@@ -39,7 +41,7 @@ async def test_show_zeroconf_form(
     """Test that the zeroconf confirmation form is served."""
     mock_connection(aioclient_mock)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -75,7 +77,7 @@ async def test_zeroconf_connection_error(
     """Test we abort zeroconf flow on IPP connection error."""
     mock_connection(aioclient_mock, conn_error=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -92,7 +94,7 @@ async def test_zeroconf_confirm_connection_error(
     """Test we abort zeroconf flow on IPP connection error."""
     mock_connection(aioclient_mock, conn_error=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
@@ -125,7 +127,7 @@ async def test_zeroconf_connection_upgrade_required(
     """Test we abort zeroconf flow on IPP connection error."""
     mock_connection(aioclient_mock, conn_upgrade_error=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -159,7 +161,7 @@ async def test_zeroconf_parse_error(
     """Test we abort zeroconf flow on IPP parse error."""
     mock_connection(aioclient_mock, parse_error=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -193,7 +195,7 @@ async def test_zeroconf_ipp_error(
     """Test we abort zeroconf flow on IPP error."""
     mock_connection(aioclient_mock, ipp_error=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -227,7 +229,7 @@ async def test_zeroconf_ipp_version_error(
     """Test we abort zeroconf flow on IPP version not supported error."""
     mock_connection(aioclient_mock, version_not_supported=True)
 
-    discovery_info = {**MOCK_ZEROCONF_IPP_SERVICE_INFO}
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -261,7 +263,7 @@ async def test_zeroconf_device_exists_abort(
     """Test we abort zeroconf flow if printer already configured."""
     await init_integration(hass, aioclient_mock, skip_setup=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -278,13 +280,12 @@ async def test_zeroconf_with_uuid_device_exists_abort(
     """Test we abort zeroconf flow if printer already configured."""
     await init_integration(hass, aioclient_mock, skip_setup=True)
 
-    discovery_info = {
-        **MOCK_ZEROCONF_IPP_SERVICE_INFO,
-        "properties": {
-            **MOCK_ZEROCONF_IPP_SERVICE_INFO["properties"],
-            "UUID": "cfe92100-67c4-11d4-a45f-f8d027761251",
-        },
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
+    discovery_info.properties = {
+        **MOCK_ZEROCONF_IPP_SERVICE_INFO[zeroconf.ATTR_PROPERTIES],
+        "UUID": "cfe92100-67c4-11d4-a45f-f8d027761251",
     }
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -301,9 +302,10 @@ async def test_zeroconf_empty_unique_id(
     """Test zeroconf flow if printer lacks (empty) unique identification."""
     mock_connection(aioclient_mock, no_unique_id=True)
 
-    discovery_info = {
-        **MOCK_ZEROCONF_IPP_SERVICE_INFO,
-        "properties": {**MOCK_ZEROCONF_IPP_SERVICE_INFO["properties"], "UUID": ""},
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
+    discovery_info.properties = {
+        **MOCK_ZEROCONF_IPP_SERVICE_INFO[zeroconf.ATTR_PROPERTIES],
+        "UUID": "",
     }
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -320,7 +322,7 @@ async def test_zeroconf_no_unique_id(
     """Test zeroconf flow if printer lacks unique identification."""
     mock_connection(aioclient_mock, no_unique_id=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -367,7 +369,7 @@ async def test_full_zeroconf_flow_implementation(
     """Test the full manual user flow from start to finish."""
     mock_connection(aioclient_mock)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -401,7 +403,7 @@ async def test_full_zeroconf_tls_flow_implementation(
     """Test the full manual user flow from start to finish."""
     mock_connection(aioclient_mock, ssl=True)
 
-    discovery_info = MOCK_ZEROCONF_IPPS_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPPS_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},

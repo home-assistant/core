@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El compte ja est\u00e0 configurat",
+            "no_locations": "No hi ha ubicacions disponibles per a aquest usuari, comprova la configuraci\u00f3 de TotalConnect",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {

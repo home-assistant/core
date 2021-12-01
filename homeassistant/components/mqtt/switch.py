@@ -84,6 +84,7 @@ async def _async_setup_entity(
 class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     """Representation of a switch that can be toggled using MQTT."""
 
+    _entity_id_format = switch.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SWITCH_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):

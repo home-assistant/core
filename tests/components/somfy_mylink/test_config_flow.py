@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.components.somfy_mylink.const import (
     CONF_REVERSED_TARGET_IDS,
     CONF_SYSTEM_ID,
@@ -252,11 +252,11 @@ async def test_form_user_already_configured_from_dhcp(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                IP_ADDRESS: "1.1.1.1",
-                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "somfy_eeff",
-            },
+            data=dhcp.DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname="somfy_eeff",
+            ),
         )
 
         await hass.async_block_till_done()
@@ -276,11 +276,11 @@ async def test_already_configured_with_ignored(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data={
-            IP_ADDRESS: "1.1.1.1",
-            MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-            HOSTNAME: "somfy_eeff",
-        },
+        data=dhcp.DhcpServiceInfo(
+            ip="1.1.1.1",
+            macaddress="AA:BB:CC:DD:EE:FF",
+            hostname="somfy_eeff",
+        ),
     )
     assert result["type"] == "form"
 
@@ -291,11 +291,11 @@ async def test_dhcp_discovery(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data={
-            IP_ADDRESS: "1.1.1.1",
-            MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-            HOSTNAME: "somfy_eeff",
-        },
+        data=dhcp.DhcpServiceInfo(
+            ip="1.1.1.1",
+            macaddress="AA:BB:CC:DD:EE:FF",
+            hostname="somfy_eeff",
+        ),
     )
     assert result["type"] == "form"
     assert result["errors"] == {}

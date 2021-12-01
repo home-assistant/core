@@ -3,7 +3,7 @@
   "name": "Netatmo",
   "documentation": "https://www.home-assistant.io/integrations/netatmo",
   "requirements": [
-    "pyatmo==6.1.0"
+    "pyatmo==6.2.0"
   ],
   "after_dependencies": [
     "cloud",

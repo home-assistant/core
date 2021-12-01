@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
 
-PLATFORMS = ["binary_sensor", "climate"]
+PLATFORMS = ["binary_sensor", "climate", "sensor"]
 
 
 async def async_setup_entry(hass, config):
@@ -88,7 +88,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             ) from ex
 
         # older venstars sometimes cannot handle rapid sequential connections
-        await asyncio.sleep(3)
+        await asyncio.sleep(1)
 
         try:
             await self.hass.async_add_executor_job(self.client.update_sensors)
@@ -98,7 +98,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             ) from ex
 
         # older venstars sometimes cannot handle rapid sequential connections
-        await asyncio.sleep(3)
+        await asyncio.sleep(1)
 
         try:
             await self.hass.async_add_executor_job(self.client.update_alerts)
@@ -128,16 +128,6 @@ class VenstarEntity(CoordinatorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return the name of the thermostat."""
-        return self._client.name
-
-    @property
-    def unique_id(self):
-        """Set unique_id for this entity."""
-        return f"{self._config.entry_id}"
 
     @property
     def device_info(self):
