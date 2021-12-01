@@ -14,7 +14,6 @@ from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
-    CONF_ENTITY_ID,
     CONF_HOST,
     CONF_ICON,
     CONF_NAME,
@@ -34,7 +33,6 @@ from .const import (
     DOMAIN,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
-    SERVICE_SELECT_SOUND_OUTPUT,
     WEBOSTV_CONFIG_FILE,
 )
 
