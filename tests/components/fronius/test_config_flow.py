@@ -271,13 +271,19 @@ async def test_import(hass, aioclient_mock):
 
 async def test_dhcp(hass, aioclient_mock):
     """Test starting a flow from discovery."""
-    with patch(
+    with patch("asyncio.sleep"), patch(
         "pyfronius.Fronius.current_logger_info",
         return_value=LOGGER_INFO_RETURN_VALUE,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=MOCK_DHCP_DATA
         )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm_discovery"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"SolarNet Datalogger at {MOCK_DHCP_DATA.ip}"
     assert result["data"] == {
@@ -292,7 +298,7 @@ async def test_dhcp_already_configured(hass, aioclient_mock):
         domain=DOMAIN,
         unique_id="123.4567890",
         data={
-            CONF_HOST: MOCK_DHCP_DATA.ip,
+            CONF_HOST: f"http://{MOCK_DHCP_DATA.ip}/",
             "is_logger": True,
         },
     )
