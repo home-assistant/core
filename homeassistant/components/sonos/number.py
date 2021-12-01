@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import ENTITY_CATEGORY_CONFIG
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SONOS_CREATE_LEVELS
@@ -16,7 +17,8 @@ LEVEL_TYPES = ("bass", "treble")
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Sonos number platform from a config entry."""
 
-    async def _async_create_entities(speaker: SonosSpeaker) -> None:
+    @callback
+    def _async_create_entities(speaker: SonosSpeaker) -> None:
         entities = []
         for level_type in LEVEL_TYPES:
             entities.append(SonosLevelEntity(speaker, level_type))

@@ -31,13 +31,16 @@ class HassioBinarySensorEntityDescription(BinarySensorEntityDescription):
     target: str | None = None
 
 
-ENTITY_DESCRIPTIONS = (
+COMMON_ENTITY_DESCRIPTIONS = (
     HassioBinarySensorEntityDescription(
         device_class=DEVICE_CLASS_UPDATE,
         entity_registry_enabled_default=False,
         key=ATTR_UPDATE_AVAILABLE,
         name="Update Available",
     ),
+)
+
+ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
     HassioBinarySensorEntityDescription(
         device_class=DEVICE_CLASS_RUNNING,
         entity_registry_enabled_default=False,
@@ -58,7 +61,7 @@ async def async_setup_entry(
 
     entities = []
 
-    for entity_description in ENTITY_DESCRIPTIONS:
+    for entity_description in ADDON_ENTITY_DESCRIPTIONS:
         for addon in coordinator.data[DATA_KEY_ADDONS].values():
             entities.append(
                 HassioAddonBinarySensor(
@@ -68,7 +71,8 @@ async def async_setup_entry(
                 )
             )
 
-        if coordinator.is_hass_os:
+    if coordinator.is_hass_os:
+        for entity_description in COMMON_ENTITY_DESCRIPTIONS:
             entities.append(
                 HassioOSBinarySensor(
                     coordinator=coordinator,

@@ -161,7 +161,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.4.0
+aioesphomeapi==10.6.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -219,7 +219,7 @@ aiomodernforms==0.1.8
 aiomusiccast==0.14.2
 
 # homeassistant.components.nanoleaf
-aionanoleaf==0.0.4
+aionanoleaf==0.1.1
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
@@ -1892,7 +1892,7 @@ python-gitlab==1.6.0
 python-hpilo==4.3
 
 # homeassistant.components.izone
-python-izone==1.1.6
+python-izone==1.1.8
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.6

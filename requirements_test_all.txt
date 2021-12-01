@@ -112,7 +112,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.4.0
+aioesphomeapi==10.6.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -152,7 +152,7 @@ aiomodernforms==0.1.8
 aiomusiccast==0.14.2
 
 # homeassistant.components.nanoleaf
-aionanoleaf==0.0.4
+aionanoleaf==0.1.1
 
 # homeassistant.components.notion
 aionotion==3.0.2
@@ -1136,7 +1136,7 @@ python-ecobee-api==0.2.14
 python-forecastio==1.4.0
 
 # homeassistant.components.izone
-python-izone==1.1.6
+python-izone==1.1.8
 
 # homeassistant.components.juicenet
 python-juicenet==1.0.2
@@ -1179,6 +1179,10 @@ pytraccar==0.10.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==7.2.0
+
+# homeassistant.components.trafikverket_train
+# homeassistant.components.trafikverket_weatherstation
+pytrafikverket==0.1.6.2
 
 # homeassistant.components.usb
 pyudev==0.22.0

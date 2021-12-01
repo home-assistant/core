@@ -252,7 +252,7 @@ def test_float_filter(hass):
     assert render(hass, "{{ 'bad' | float(default=1) }}") == 1
 
 
-def test_int_filter(hass):
+def test_int_filter(hass, caplog):
     """Test int filter."""
     hass.states.async_set("sensor.temperature", "12.2")
     assert render(hass, "{{ states.sensor.temperature.state | int }}") == 12
@@ -265,8 +265,25 @@ def test_int_filter(hass):
     assert render(hass, "{{ 'bad' | int(1) }}") == 1
     assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
 
+    # Test with bytes based integer
+    variables = {"value": b"\xde\xad\xbe\xef"}
+    assert (render(hass, "{{ value | int }}", variables=variables)) == 0xDEADBEEF
+    assert (
+        render(hass, "{{ value | int(little_endian=True) }}", variables=variables)
+        == 0xEFBEADDE
+    )
 
-def test_int_function(hass):
+    # Test with base and base parameter set
+    assert (
+        render(hass, "{{ value | int(base=16) }}", variables=variables)
+    ) == 0xDEADBEEF
+    assert (
+        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter"
+        in caplog.text
+    )
+
+
+def test_int_function(hass, caplog):
     """Test int filter."""
     hass.states.async_set("sensor.temperature", "12.2")
     assert render(hass, "{{ int(states.sensor.temperature.state) }}") == 12
@@ -278,6 +295,22 @@ def test_int_function(hass):
     assert render(hass, "{{ int('bad') }}") == "bad"
     assert render(hass, "{{ int('bad', 1) }}") == 1
     assert render(hass, "{{ int('bad', default=1) }}") == 1
+
+    # Test with base and base parameter set
+    variables = {"value": b"\xde\xad\xbe\xef"}
+    assert (render(hass, "{{ int(value) }}", variables=variables)) == 0xDEADBEEF
+    assert (
+        render(hass, "{{ int(value, little_endian=True) }}", variables=variables)
+        == 0xEFBEADDE
+    )
+
+    assert (
+        render(hass, "{{ int(value, base=16) }}", variables=variables)
+    ) == 0xDEADBEEF
+    assert (
+        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
