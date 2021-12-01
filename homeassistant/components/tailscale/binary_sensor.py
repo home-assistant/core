@@ -14,7 +14,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import TailscaleEntity
 from .const import DOMAIN
@@ -66,20 +65,6 @@ class TailscaleBinarySensorEntity(TailscaleEntity, BinarySensorEntity):
     """Defines a Tailscale binary sensor."""
 
     entity_description: TailscaleBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        *,
-        coordinator: DataUpdateCoordinator,
-        device: TailscaleDevice,
-        description: TailscaleBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize a Tailscale binary sensor."""
-        super().__init__(coordinator=coordinator)
-        self.entity_description = description
-        self.device_id = device.device_id
-        self._attr_name = f"{device.hostname} {description.name}"
-        self._attr_unique_id = f"{device.device_id}_{description.key}"
 
     @property
     def is_on(self) -> bool:

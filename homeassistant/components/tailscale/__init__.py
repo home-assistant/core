@@ -8,8 +8,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 from .coordinator import TailscaleDataUpdateCoordinator
@@ -39,7 +42,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TailscaleEntity(CoordinatorEntity):
     """Defines a Tailscale base entity."""
 
-    device_id: str
+    def __init__(
+        self,
+        *,
+        coordinator: DataUpdateCoordinator,
+        device: TailscaleDevice,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize a Tailscale sensor."""
+        super().__init__(coordinator=coordinator)
+        self.entity_description = description
+        self.device_id = device.device_id
+        self._attr_name = f"{device.hostname} {description.name}"
+        self._attr_unique_id = f"{device.device_id}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
