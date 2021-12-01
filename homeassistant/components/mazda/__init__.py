@@ -23,12 +23,12 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import aiohttp_client, device_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN, SERVICES
 
@@ -50,7 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     region = entry.data[CONF_REGION]
 
     websession = aiohttp_client.async_get_clientsession(hass)
-    mazda_client = MazdaAPI(email, password, region, websession)
+    mazda_client = MazdaAPI(
+        email, password, region, websession=websession, use_cached_vehicle_list=True
+    )
 
     try:
         await mazda_client.validate_credentials()
@@ -109,9 +111,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def validate_mazda_device_id(device_id):
         """Check that a device ID exists in the registry and has at least one 'mazda' identifier."""
         dev_reg = device_registry.async_get(hass)
-        device_entry = dev_reg.async_get(device_id)
 
-        if device_entry is None:
+        if (device_entry := dev_reg.async_get(device_id)) is None:
             raise vol.Invalid("Invalid device ID")
 
         mazda_identifiers = [
@@ -141,14 +142,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             vehicles = await with_timeout(mazda_client.get_vehicles())
 
-            vehicle_status_tasks = [
-                with_timeout(mazda_client.get_vehicle_status(vehicle["id"]))
-                for vehicle in vehicles
-            ]
-            statuses = await gather_with_concurrency(5, *vehicle_status_tasks)
-
-            for vehicle, status in zip(vehicles, statuses):
-                vehicle["status"] = status
+            # The Mazda API can throw an error when multiple simultaneous requests are
+            # made for the same account, so we can only make one request at a time here
+            for vehicle in vehicles:
+                vehicle["status"] = await with_timeout(
+                    mazda_client.get_vehicle_status(vehicle["id"])
+                )
 
             hass.data[DOMAIN][entry.entry_id][DATA_VEHICLES] = vehicles
 
@@ -166,7 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=DOMAIN,
         update_method=async_update_data,
-        update_interval=timedelta(seconds=60),
+        update_interval=timedelta(seconds=180),
     )
 
     hass.data.setdefault(DOMAIN, {})
@@ -199,7 +198,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -231,14 +230,14 @@ class MazdaEntity(CoordinatorEntity):
         return self.coordinator.data[self.index]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for the Mazda entity."""
-        return {
-            "identifiers": {(DOMAIN, self.vin)},
-            "name": self.get_vehicle_name(),
-            "manufacturer": "Mazda",
-            "model": f"{self.data['modelYear']} {self.data['carlineName']}",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.vin)},
+            manufacturer="Mazda",
+            model=f"{self.data['modelYear']} {self.data['carlineName']}",
+            name=self.get_vehicle_name(),
+        )
 
     def get_vehicle_name(self):
         """Return the vehicle name, to be used as a prefix for names of other entities."""

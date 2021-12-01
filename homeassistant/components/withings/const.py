@@ -1,7 +1,7 @@
 """Constants used by the Withings component."""
 from enum import Enum
 
-import homeassistant.const as const
+from homeassistant import const
 
 CONF_PROFILES = "profiles"
 CONF_USE_WEBHOOK = "use_webhook"

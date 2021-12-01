@@ -1,4 +1,6 @@
 """This component provides basic support for Foscam IP cameras."""
+from __future__ import annotations
+
 import asyncio
 
 from libpyfoscam import FoscamCamera
@@ -172,7 +174,9 @@ class HassFoscamCamera(Camera):
         """Return the entity unique ID."""
         return self._unique_id
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         # Send the request to snap a picture and return raw jpg data
         # Handle exception if host is not reachable or url failed

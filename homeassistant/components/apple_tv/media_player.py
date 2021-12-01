@@ -6,6 +6,7 @@ from pyatv.const import (
     FeatureName,
     FeatureState,
     MediaType,
+    PowerState,
     RepeatState,
     ShuffleState,
 )
@@ -75,6 +76,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     """Representation of an Apple TV media player."""
 
+    _attr_supported_features = SUPPORT_APPLE_TV
+
     def __init__(self, name, identifier, manager, **kwargs):
         """Initialize the Apple TV media player."""
         super().__init__(name, identifier, manager, **kwargs)
@@ -85,12 +88,14 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Handle when connection is made to device."""
         self.atv.push_updater.listener = self
         self.atv.push_updater.start()
+        self.atv.power.listener = self
 
     @callback
     def async_device_disconnected(self):
         """Handle when connection was lost to device."""
         self.atv.push_updater.stop()
         self.atv.push_updater.listener = None
+        self.atv.power.listener = None
 
     @property
     def state(self):
@@ -99,6 +104,11 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             return None
         if self.atv is None:
             return STATE_OFF
+        if (
+            self._is_feature_available(FeatureName.PowerState)
+            and self.atv.power.power_state == PowerState.Off
+        ):
+            return STATE_STANDBY
         if self._playing:
             state = self._playing.device_state
             if state in (DeviceState.Idle, DeviceState.Loading):
@@ -121,6 +131,11 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Inform about an error and restart push updates."""
         _LOGGER.warning("A %s error occurred: %s", exception.__class__, exception)
         self._playing = None
+        self.async_write_ha_state()
+
+    @callback
+    def powerstate_update(self, old_state: PowerState, new_state: PowerState):
+        """Update power state when it changes."""
         self.async_write_ha_state()
 
     @property
@@ -229,11 +244,6 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             return self._playing.shuffle != ShuffleState.Off
         return None
 
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_APPLE_TV
-
     def _is_feature_available(self, feature):
         """Return if a feature is available."""
         if self.atv and self._playing:
@@ -242,12 +252,16 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
 
     async def async_turn_on(self):
         """Turn the media player on."""
-        await self.manager.connect()
+        if self._is_feature_available(FeatureName.TurnOn):
+            await self.atv.power.turn_on()
 
     async def async_turn_off(self):
         """Turn the media player off."""
-        self._playing = None
-        await self.manager.disconnect()
+        if (self._is_feature_available(FeatureName.TurnOff)) and (
+            not self._is_feature_available(FeatureName.PowerState)
+            or self.atv.power.power_state == PowerState.On
+        ):
+            await self.atv.power.turn_off()
 
     async def async_media_play_pause(self):
         """Pause media on media player."""

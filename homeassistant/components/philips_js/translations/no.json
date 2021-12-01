@@ -29,5 +29,14 @@
         "trigger_type": {
             "turn_on": "Enheten blir bedt om \u00e5 sl\u00e5 p\u00e5"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Tillat bruk av datavarslingstjeneste."
+                }
+            }
+        }
     }
 }

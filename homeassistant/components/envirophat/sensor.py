@@ -1,17 +1,24 @@
 """Support for Enviro pHAT sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import importlib
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_DISPLAY_OPTIONS,
     CONF_NAME,
+    DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_POTENTIAL_VOLT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
-    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -23,30 +30,103 @@ CONF_USE_LEDS = "use_leds"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-SENSOR_TYPES = {
-    "light": ["light", " ", "mdi:weather-sunny"],
-    "light_red": ["light_red", " ", "mdi:invert-colors"],
-    "light_green": ["light_green", " ", "mdi:invert-colors"],
-    "light_blue": ["light_blue", " ", "mdi:invert-colors"],
-    "accelerometer_x": ["accelerometer_x", "G", "mdi:earth"],
-    "accelerometer_y": ["accelerometer_y", "G", "mdi:earth"],
-    "accelerometer_z": ["accelerometer_z", "G", "mdi:earth"],
-    "magnetometer_x": ["magnetometer_x", " ", "mdi:magnet"],
-    "magnetometer_y": ["magnetometer_y", " ", "mdi:magnet"],
-    "magnetometer_z": ["magnetometer_z", " ", "mdi:magnet"],
-    "temperature": ["temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "pressure": ["pressure", PRESSURE_HPA, "mdi:gauge"],
-    "voltage_0": ["voltage_0", VOLT, "mdi:flash"],
-    "voltage_1": ["voltage_1", VOLT, "mdi:flash"],
-    "voltage_2": ["voltage_2", VOLT, "mdi:flash"],
-    "voltage_3": ["voltage_3", VOLT, "mdi:flash"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="light",
+        name="light",
+        icon="mdi:weather-sunny",
+    ),
+    SensorEntityDescription(
+        key="light_red",
+        name="light_red",
+        icon="mdi:invert-colors",
+    ),
+    SensorEntityDescription(
+        key="light_green",
+        name="light_green",
+        icon="mdi:invert-colors",
+    ),
+    SensorEntityDescription(
+        key="light_blue",
+        name="light_blue",
+        icon="mdi:invert-colors",
+    ),
+    SensorEntityDescription(
+        key="accelerometer_x",
+        name="accelerometer_x",
+        native_unit_of_measurement="G",
+        icon="mdi:earth",
+    ),
+    SensorEntityDescription(
+        key="accelerometer_y",
+        name="accelerometer_y",
+        native_unit_of_measurement="G",
+        icon="mdi:earth",
+    ),
+    SensorEntityDescription(
+        key="accelerometer_z",
+        name="accelerometer_z",
+        native_unit_of_measurement="G",
+        icon="mdi:earth",
+    ),
+    SensorEntityDescription(
+        key="magnetometer_x",
+        name="magnetometer_x",
+        icon="mdi:magnet",
+    ),
+    SensorEntityDescription(
+        key="magnetometer_y",
+        name="magnetometer_y",
+        icon="mdi:magnet",
+    ),
+    SensorEntityDescription(
+        key="magnetometer_z",
+        name="magnetometer_z",
+        icon="mdi:magnet",
+    ),
+    SensorEntityDescription(
+        key="temperature",
+        name="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="pressure",
+        name="pressure",
+        native_unit_of_measurement=PRESSURE_HPA,
+        icon="mdi:gauge",
+    ),
+    SensorEntityDescription(
+        key="voltage_0",
+        name="voltage_0",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+    ),
+    SensorEntityDescription(
+        key="voltage_1",
+        name="voltage_1",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+    ),
+    SensorEntityDescription(
+        key="voltage_2",
+        name="voltage_2",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+    ),
+    SensorEntityDescription(
+        key="voltage_3",
+        name="voltage_3",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_DISPLAY_OPTIONS, default=list(SENSOR_TYPES)): [
-            vol.In(SENSOR_TYPES)
-        ],
+        vol.Required(CONF_DISPLAY_OPTIONS, default=SENSOR_KEYS): [vol.In(SENSOR_KEYS)],
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_USE_LEDS, default=False): cv.boolean,
     }
@@ -63,80 +143,60 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     data = EnvirophatData(envirophat, config.get(CONF_USE_LEDS))
 
-    dev = []
-    for variable in config[CONF_DISPLAY_OPTIONS]:
-        dev.append(EnvirophatSensor(data, variable))
-
-    add_entities(dev, True)
+    display_options = config[CONF_DISPLAY_OPTIONS]
+    entities = [
+        EnvirophatSensor(data, description)
+        for description in SENSOR_TYPES
+        if description.key in display_options
+    ]
+    add_entities(entities, True)
 
 
 class EnvirophatSensor(SensorEntity):
     """Representation of an Enviro pHAT sensor."""
 
-    def __init__(self, data, sensor_types):
+    def __init__(self, data, description: SensorEntityDescription):
         """Initialize the sensor."""
+        self.entity_description = description
         self.data = data
-        self._name = SENSOR_TYPES[sensor_types][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_types][1]
-        self.type = sensor_types
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
 
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()
 
-        if self.type == "light":
-            self._state = self.data.light
-        if self.type == "light_red":
-            self._state = self.data.light_red
-        if self.type == "light_green":
-            self._state = self.data.light_green
-        if self.type == "light_blue":
-            self._state = self.data.light_blue
-        if self.type == "accelerometer_x":
-            self._state = self.data.accelerometer_x
-        if self.type == "accelerometer_y":
-            self._state = self.data.accelerometer_y
-        if self.type == "accelerometer_z":
-            self._state = self.data.accelerometer_z
-        if self.type == "magnetometer_x":
-            self._state = self.data.magnetometer_x
-        if self.type == "magnetometer_y":
-            self._state = self.data.magnetometer_y
-        if self.type == "magnetometer_z":
-            self._state = self.data.magnetometer_z
-        if self.type == "temperature":
-            self._state = self.data.temperature
-        if self.type == "pressure":
-            self._state = self.data.pressure
-        if self.type == "voltage_0":
-            self._state = self.data.voltage_0
-        if self.type == "voltage_1":
-            self._state = self.data.voltage_1
-        if self.type == "voltage_2":
-            self._state = self.data.voltage_2
-        if self.type == "voltage_3":
-            self._state = self.data.voltage_3
+        sensor_type = self.entity_description.key
+        if sensor_type == "light":
+            self._attr_native_value = self.data.light
+        elif sensor_type == "light_red":
+            self._attr_native_value = self.data.light_red
+        elif sensor_type == "light_green":
+            self._attr_native_value = self.data.light_green
+        elif sensor_type == "light_blue":
+            self._attr_native_value = self.data.light_blue
+        elif sensor_type == "accelerometer_x":
+            self._attr_native_value = self.data.accelerometer_x
+        elif sensor_type == "accelerometer_y":
+            self._attr_native_value = self.data.accelerometer_y
+        elif sensor_type == "accelerometer_z":
+            self._attr_native_value = self.data.accelerometer_z
+        elif sensor_type == "magnetometer_x":
+            self._attr_native_value = self.data.magnetometer_x
+        elif sensor_type == "magnetometer_y":
+            self._attr_native_value = self.data.magnetometer_y
+        elif sensor_type == "magnetometer_z":
+            self._attr_native_value = self.data.magnetometer_z
+        elif sensor_type == "temperature":
+            self._attr_native_value = self.data.temperature
+        elif sensor_type == "pressure":
+            self._attr_native_value = self.data.pressure
+        elif sensor_type == "voltage_0":
+            self._attr_native_value = self.data.voltage_0
+        elif sensor_type == "voltage_1":
+            self._attr_native_value = self.data.voltage_1
+        elif sensor_type == "voltage_2":
+            self._attr_native_value = self.data.voltage_2
+        elif sensor_type == "voltage_3":
+            self._attr_native_value = self.data.voltage_3
 
 
 class EnvirophatData:

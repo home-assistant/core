@@ -31,6 +31,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
+from .const import DOMAIN
+
 DEFAULT_NAME = "LG TV Remote"
 
 CONF_ON_ACTION = "turn_on_action"
@@ -69,8 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     on_action = config.get(CONF_ON_ACTION)
 
     client = LgNetCastClient(host, access_token)
-    domain = __name__.split(".")[-2]
-    on_action_script = Script(hass, on_action, name, domain) if on_action else None
+    on_action_script = Script(hass, on_action, name, DOMAIN) if on_action else None
 
     add_entities([LgTVDevice(client, name, on_action_script)], True)
 
@@ -139,7 +140,8 @@ class LgTVDevice(MediaPlayerEntity):
                     self._sources = dict(zip(channel_names, channel_list))
                     # sort source names by the major channel number
                     source_tuples = [
-                        (k, self._sources[k].find("major").text) for k in self._sources
+                        (k, source.find("major").text)
+                        for k, source in self._sources.items()
                     ]
                     sorted_sources = sorted(
                         source_tuples, key=lambda channel: int(channel[1])

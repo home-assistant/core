@@ -1,9 +1,9 @@
 """Support for the myStrom buttons."""
+from http import HTTPStatus
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +42,10 @@ class MyStromView(HomeAssistantView):
 
         if button_action is None:
             _LOGGER.error("Received unidentified message from myStrom button: %s", data)
-            return (f"Received unidentified message: {data}", HTTP_UNPROCESSABLE_ENTITY)
+            return (
+                f"Received unidentified message: {data}",
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+            )
 
         button_id = data[button_action]
         entity_id = f"{DOMAIN}.{button_id}_{button_action}"

@@ -50,6 +50,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -137,14 +138,14 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         return self._mac
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self._mac)},
-            "manufacturer": "Gree",
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            identifiers={(DOMAIN, self._mac)},
+            manufacturer="Gree",
+            name=self._name,
+        )
 
     @property
     def temperature_unit(self) -> str:
@@ -159,8 +160,8 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
 
     @property
     def current_temperature(self) -> float:
-        """Return the target temperature, gree devices don't provide internal temp."""
-        return self.target_temperature
+        """Return the reported current temperature for the device."""
+        return self.coordinator.device.current_temperature
 
     @property
     def target_temperature(self) -> float:

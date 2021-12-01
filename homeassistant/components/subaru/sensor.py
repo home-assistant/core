@@ -8,13 +8,13 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_POTENTIAL_VOLT,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
     TIME_MINUTES,
-    VOLT,
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
@@ -111,7 +111,7 @@ API_GEN_2_SENSORS = [
         SENSOR_TYPE: "12V Battery Voltage",
         SENSOR_CLASS: DEVICE_CLASS_VOLTAGE,
         SENSOR_FIELD: sc.BATTERY_VOLTAGE,
-        SENSOR_UNITS: VOLT,
+        SENSOR_UNITS: ELECTRIC_POTENTIAL_VOLT,
     },
 ]
 
@@ -203,7 +203,7 @@ class SubaruSensor(SubaruEntity, SensorEntity):
         return None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         self.current_value = self.get_current_value()
 
@@ -238,7 +238,7 @@ class SubaruSensor(SubaruEntity, SensorEntity):
         return self.current_value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
         if self.api_unit in TEMPERATURE_UNITS:
             return self.hass.config.units.temperature_unit

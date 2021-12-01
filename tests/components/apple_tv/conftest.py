@@ -2,7 +2,8 @@
 
 from unittest.mock import patch
 
-from pyatv import conf, net
+from pyatv import conf
+from pyatv.support.http import create_session
 import pytest
 
 from .common import MockPairingHandler, create_conf
@@ -39,7 +40,7 @@ def pairing():
 
         async def _pair(config, protocol, loop, session=None, **kwargs):
             handler = MockPairingHandler(
-                await net.create_session(session), config.get_service(protocol)
+                await create_session(session), config.get_service(protocol)
             )
             handler.always_fail = mock_pair.always_fail
             return handler
@@ -121,11 +122,7 @@ def dmap_device_with_credentials(mock_scan):
 
 
 @pytest.fixture
-def airplay_device(mock_scan):
+def device_with_no_services(mock_scan):
     """Mock pyatv.scan."""
-    mock_scan.result.append(
-        create_conf(
-            "127.0.0.1", "AirPlay Device", conf.AirPlayService("airplayid", port=7777)
-        )
-    )
+    mock_scan.result.append(create_conf("127.0.0.1", "Invalid Device"))
     yield mock_scan

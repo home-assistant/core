@@ -22,9 +22,10 @@ def get_devices_response():
 @pytest.fixture
 def mock_aioambient(get_devices_response):
     """Mock the aioambient library."""
-    with patch("homeassistant.components.ambient_station.config_flow.Client") as Client:
-        Client().api.get_devices.return_value = get_devices_response
-        yield Client
+    with patch("homeassistant.components.ambient_station.config_flow.API") as API:
+        api = API()
+        api.get_devices.return_value = get_devices_response
+        yield api
 
 
 async def test_duplicate_error(hass):
@@ -81,27 +82,6 @@ async def test_show_form(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-
-
-@pytest.mark.parametrize(
-    "get_devices_response",
-    [mock_coro(return_value=json.loads(load_fixture("ambient_devices.json")))],
-)
-async def test_step_import(hass, mock_aioambient):
-    """Test that the import step works."""
-    conf = {CONF_API_KEY: "12345abcde12345abcde", CONF_APP_KEY: "67890fghij67890fghij"}
-
-    flow = config_flow.AmbientStationFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-
-    result = await flow.async_step_import(import_config=conf)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "67890fghij67"
-    assert result["data"] == {
-        CONF_API_KEY: "12345abcde12345abcde",
-        CONF_APP_KEY: "67890fghij67890fghij",
-    }
 
 
 @pytest.mark.parametrize(

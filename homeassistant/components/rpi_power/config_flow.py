@@ -35,7 +35,7 @@ class RPiPowerFlow(DiscoveryFlowHandler, domain=DOMAIN):
         self, data: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by onboarding."""
-        has_devices = await self._discovery_function(self.hass)
+        has_devices = await self._discovery_function(self.hass)  # type: ignore
 
         if not has_devices:
             return self.async_abort(reason="no_devices_found")

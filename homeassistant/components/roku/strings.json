@@ -10,8 +10,7 @@
       },
       "discovery_confirm": {
         "title": "Roku",
-        "description": "Do you want to set up {name}?",
-        "data": {}
+        "description": "Do you want to set up {name}?"
       }
     },
     "error": {

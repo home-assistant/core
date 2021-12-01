@@ -49,6 +49,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
@@ -73,6 +74,7 @@ async def test_default_state(hass):
                 "platform": DOMAIN,
                 "entities": ["media_player.player_1", "media_player.player_2"],
                 "name": "Media group",
+                "unique_id": "unique_identifier",
             }
         },
     )
@@ -88,6 +90,11 @@ async def test_default_state(hass):
         "media_player.player_1",
         "media_player.player_2",
     ]
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("media_player.media_group")
+    assert entry
+    assert entry.unique_id == "unique_identifier"
 
 
 async def test_state_reporting(hass):

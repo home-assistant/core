@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert. Nur eine Konfiguration m\u00f6glich.",
+            "already_configured": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "error": {
@@ -33,6 +33,16 @@
                 },
                 "title": "Verbindungstyp ausw\u00e4hlen"
             }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Befehl senden: {subtype}",
+            "send_status": "Statusaktualisierung senden: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Empfangener Befehl: {subtype}",
+            "status": "Erhaltener Status: {subtype}"
         }
     },
     "options": {

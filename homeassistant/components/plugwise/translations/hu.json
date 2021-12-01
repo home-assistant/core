@@ -8,7 +8,7 @@
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
-        "flow_title": "Smile: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -26,6 +26,16 @@
                 },
                 "description": "K\u00e9rj\u00fck, adja meg",
                 "title": "Csatlakoz\u00e1s a Smile-hoz"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Szkennel\u00e9si intervallum (m\u00e1sodperc)"
+                },
+                "description": "\u00c1ll\u00edtsa be a Plugwise lehet\u0151s\u00e9get"
             }
         }
     }

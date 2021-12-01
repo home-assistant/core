@@ -121,7 +121,7 @@ async def test_several(hass, rfxtrx):
         devices={
             "0b1100cd0213c7f230010f71": {},
             "0b1100100118cdea02010f70": {},
-            "0b1100101118cdea02010f70": {},
+            "0b1100100118cdea03010f70": {},
         }
     )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -141,10 +141,20 @@ async def test_several(hass, rfxtrx):
     assert state.state == "off"
     assert state.attributes.get("friendly_name") == "AC 118cdea:2"
 
-    state = hass.states.get("binary_sensor.ac_1118cdea_2")
+    state = hass.states.get("binary_sensor.ac_118cdea_3")
     assert state
     assert state.state == "off"
-    assert state.attributes.get("friendly_name") == "AC 1118cdea:2"
+    assert state.attributes.get("friendly_name") == "AC 118cdea:3"
+
+    # "2: Group on"
+    await rfxtrx.signal("0b1100100118cdea03040f70")
+    assert hass.states.get("binary_sensor.ac_118cdea_2").state == "on"
+    assert hass.states.get("binary_sensor.ac_118cdea_3").state == "on"
+
+    # "2: Group off"
+    await rfxtrx.signal("0b1100100118cdea03030f70")
+    assert hass.states.get("binary_sensor.ac_118cdea_2").state == "off"
+    assert hass.states.get("binary_sensor.ac_118cdea_3").state == "off"
 
 
 async def test_discover(hass, rfxtrx_automatic):

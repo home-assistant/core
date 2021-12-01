@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "api_ratelimit": "API Ratelimit exceeded",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "api_ratelimit": "API Ratelimit exceeded",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                }
+            },
+            "country": {
+                "data": {
+                    "country_code": "Country code"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Access Token",
+                    "location": "Get data for"
+                },
+                "description": "Visit https://co2signal.com/ to request a token."
+            }
+        }
+    }
+}

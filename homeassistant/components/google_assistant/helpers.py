@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Mapping
+from http import HTTPStatus
 import logging
 import pprint
 
@@ -15,10 +16,10 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
+from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.helpers import start
 from homeassistant.helpers.area_registry import AreaEntry
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -53,8 +54,7 @@ async def _get_entity_and_device(
         hass.helpers.entity_registry.async_get_registry(),
     )
 
-    entity_entry = ent_reg.async_get(entity_id)
-    if not entity_entry:
+    if not (entity_entry := ent_reg.async_get(entity_id)):
         return None, None
     device_entry = dev_reg.devices.get(entity_entry.device_id)
     return entity_entry, device_entry
@@ -105,15 +105,14 @@ class AbstractConfig(ABC):
         self._store = GoogleConfigStore(self.hass)
         await self._store.async_load()
 
-        if self.hass.state == CoreState.running:
-            await self.async_sync_entities_all()
+        if not self.enabled:
             return
 
         async def sync_google(_):
             """Sync entities to Google."""
             await self.async_sync_entities_all()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, sync_google)
+        start.async_at_start(self.hass, sync_google)
 
     @property
     def enabled(self):
@@ -205,17 +204,17 @@ class AbstractConfig(ABC):
         # Remove any pending sync
         self._google_sync_unsub.pop(agent_user_id, lambda: None)()
         status = await self._async_request_sync_devices(agent_user_id)
-        if status == 404:
+        if status == HTTPStatus.NOT_FOUND:
             await self.async_disconnect_agent_user(agent_user_id)
         return status
 
     async def async_sync_entities_all(self):
         """Sync all entities to Google for all registered agents."""
         res = await gather(
-            *[
+            *(
                 self.async_sync_entities(agent_user_id)
                 for agent_user_id in self._store.agent_user_ids
-            ]
+            )
         )
         return max(res, default=204)
 
@@ -264,9 +263,7 @@ class AbstractConfig(ABC):
     @callback
     def async_enable_local_sdk(self):
         """Enable the local SDK."""
-        webhook_id = self.local_sdk_webhook_id
-
-        if webhook_id is None:
+        if (webhook_id := self.local_sdk_webhook_id) is None:
             return
 
         try:
@@ -349,8 +346,7 @@ class GoogleConfigStore:
 
     async def async_load(self):
         """Store current configuration to disk."""
-        data = await self._store.async_load()
-        if data:
+        if data := await self._store.async_load():
             self._data = data
 
 
@@ -501,8 +497,7 @@ class GoogleEntity:
         }
 
         # use aliases
-        aliases = entity_config.get(CONF_ALIASES)
-        if aliases:
+        if aliases := entity_config.get(CONF_ALIASES):
             device["name"]["nicknames"] = [name] + aliases
 
         if self.config.is_local_sdk_active and self.should_expose_local():
@@ -519,16 +514,14 @@ class GoogleEntity:
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
 
-        room = entity_config.get(CONF_ROOM_HINT)
-        if room:
+        if room := entity_config.get(CONF_ROOM_HINT):
             device["roomHint"] = room
         else:
             area = await _get_area(self.hass, entity_entry, device_entry)
             if area and area.name:
                 device["roomHint"] = area.name
 
-        device_info = await _get_device_info(device_entry)
-        if device_info:
+        if device_info := await _get_device_info(device_entry):
             device["deviceInfo"] = device_info
 
         return device

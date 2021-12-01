@@ -12,12 +12,14 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
@@ -32,6 +34,7 @@ VALID_STATES: Final[set[str]] = {
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 }
@@ -45,9 +48,7 @@ async def _async_reproduce_state(
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
-    cur_state = hass.states.get(state.entity_id)
-
-    if cur_state is None:
+    if (cur_state := hass.states.get(state.entity_id)) is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
@@ -71,6 +72,8 @@ async def _async_reproduce_state(
         service = SERVICE_ALARM_ARM_HOME
     elif state.state == STATE_ALARM_ARMED_NIGHT:
         service = SERVICE_ALARM_ARM_NIGHT
+    elif state.state == STATE_ALARM_ARMED_VACATION:
+        service = SERVICE_ALARM_ARM_VACATION
     elif state.state == STATE_ALARM_DISARMED:
         service = SERVICE_ALARM_DISARM
     elif state.state == STATE_ALARM_TRIGGERED:

@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: dict) -> bool:
     """Set up Mullvad VPN integration."""
 
     async def async_get_mullvad_api_data():
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             api = await hass.async_add_executor_job(MullvadAPI)
             return api.data
 
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: dict) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

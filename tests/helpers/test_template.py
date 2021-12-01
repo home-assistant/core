@@ -1,9 +1,11 @@
 """Test Home Assistant template helper methods."""
-from datetime import datetime
+from datetime import datetime, timedelta
+import logging
 import math
 import random
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -12,25 +14,46 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
+    LENGTH_MILLIMETERS,
     MASS_GRAMS,
     PRESSURE_PA,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import device_registry as dr, template
+from homeassistant.helpers import device_registry as dr, entity, template
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import (
+    MockConfigEntry,
+    mock_area_registry,
+    mock_device_registry,
+    mock_registry,
+)
 
 
 def _set_up_units(hass):
     """Set up the tests."""
     hass.config.units = UnitSystem(
-        "custom", TEMP_CELSIUS, LENGTH_METERS, VOLUME_LITERS, MASS_GRAMS, PRESSURE_PA
+        "custom",
+        TEMP_CELSIUS,
+        LENGTH_METERS,
+        SPEED_KILOMETERS_PER_HOUR,
+        VOLUME_LITERS,
+        MASS_GRAMS,
+        PRESSURE_PA,
+        LENGTH_MILLIMETERS,
     )
+
+
+def render(hass, template_str, variables=None):
+    """Create render info from template."""
+    tmp = template.Template(template_str, hass)
+    return tmp.async_render(variables)
 
 
 def render_to_info(hass, template_str, variables=None):
@@ -191,8 +214,8 @@ def test_iterating_domain_states(hass):
     )
 
 
-def test_float(hass):
-    """Test float."""
+def test_float_function(hass):
+    """Test float function."""
     hass.states.async_set("sensor.temperature", "12")
 
     assert (
@@ -212,6 +235,116 @@ def test_float(hass):
     assert (
         template.Template("{{ float('forgiving') }}", hass).async_render()
         == "forgiving"
+    )
+
+    assert render(hass, "{{ float('bad', 1) }}") == 1
+    assert render(hass, "{{ float('bad', default=1) }}") == 1
+
+
+def test_float_filter(hass):
+    """Test float filter."""
+    hass.states.async_set("sensor.temperature", "12")
+
+    assert render(hass, "{{ states.sensor.temperature.state | float }}") == 12.0
+    assert render(hass, "{{ states.sensor.temperature.state | float > 11 }}") is True
+    assert render(hass, "{{ 'bad' | float }}") == 0
+    assert render(hass, "{{ 'bad' | float(1) }}") == 1
+    assert render(hass, "{{ 'bad' | float(default=1) }}") == 1
+
+
+def test_int_filter(hass, caplog):
+    """Test int filter."""
+    hass.states.async_set("sensor.temperature", "12.2")
+    assert render(hass, "{{ states.sensor.temperature.state | int }}") == 12
+    assert render(hass, "{{ states.sensor.temperature.state | int > 11 }}") is True
+
+    hass.states.async_set("sensor.temperature", "0x10")
+    assert render(hass, "{{ states.sensor.temperature.state | int(base=16) }}") == 16
+
+    assert render(hass, "{{ 'bad' | int }}") == 0
+    assert render(hass, "{{ 'bad' | int(1) }}") == 1
+    assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
+
+    # Test with bytes based integer
+    variables = {"value": b"\xde\xad\xbe\xef"}
+    assert (render(hass, "{{ value | int }}", variables=variables)) == 0xDEADBEEF
+    assert (
+        render(hass, "{{ value | int(little_endian=True) }}", variables=variables)
+        == 0xEFBEADDE
+    )
+
+    # Test with base and base parameter set
+    assert (
+        render(hass, "{{ value | int(base=16) }}", variables=variables)
+    ) == 0xDEADBEEF
+    assert (
+        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter"
+        in caplog.text
+    )
+
+
+def test_int_function(hass, caplog):
+    """Test int filter."""
+    hass.states.async_set("sensor.temperature", "12.2")
+    assert render(hass, "{{ int(states.sensor.temperature.state) }}") == 12
+    assert render(hass, "{{ int(states.sensor.temperature.state) > 11 }}") is True
+
+    hass.states.async_set("sensor.temperature", "0x10")
+    assert render(hass, "{{ int(states.sensor.temperature.state, base=16) }}") == 16
+
+    assert render(hass, "{{ int('bad') }}") == "bad"
+    assert render(hass, "{{ int('bad', 1) }}") == 1
+    assert render(hass, "{{ int('bad', default=1) }}") == 1
+
+    # Test with base and base parameter set
+    variables = {"value": b"\xde\xad\xbe\xef"}
+    assert (render(hass, "{{ int(value) }}", variables=variables)) == 0xDEADBEEF
+    assert (
+        render(hass, "{{ int(value, little_endian=True) }}", variables=variables)
+        == 0xEFBEADDE
+    )
+
+    assert (
+        render(hass, "{{ int(value, base=16) }}", variables=variables)
+    ) == 0xDEADBEEF
+    assert (
+        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (0, True),
+        (0.0, True),
+        ("0", True),
+        ("0.0", True),
+        (True, True),
+        (False, True),
+        ("True", False),
+        ("False", False),
+        (None, False),
+        ("None", False),
+        ("horse", False),
+        (math.pi, True),
+        (math.nan, False),
+        (math.inf, False),
+        ("nan", False),
+        ("inf", False),
+    ],
+)
+def test_isnumber(hass, value, expected):
+    """Test is_number."""
+    assert (
+        template.Template("{{ is_number(value) }}", hass).async_render({"value": value})
+        == expected
+    )
+    assert (
+        template.Template("{{ value | is_number }}", hass).async_render(
+            {"value": value}
+        )
+        == expected
     )
 
 
@@ -255,14 +388,17 @@ def test_rounding_value(hass):
     )
 
 
-def test_rounding_value_get_original_value_on_error(hass):
-    """Test rounding value get original value on error."""
+def test_rounding_value_on_error(hass):
+    """Test rounding value handling of error."""
     assert template.Template("{{ None | round }}", hass).async_render() is None
 
     assert (
         template.Template('{{ "no_number" | round }}', hass).async_render()
         == "no_number"
     )
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | round(default=1) }}") == 1
 
 
 def test_multiply(hass):
@@ -276,6 +412,10 @@ def test_multiply(hass):
             ).async_render()
             == out
         )
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | multiply(10, 1) }}") == 1
+    assert render(hass, "{{ 'no_number' | multiply(10, default=1) }}") == 1
 
 
 def test_logarithm(hass):
@@ -303,6 +443,12 @@ def test_logarithm(hass):
             == expected
         )
 
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | log(10, 1) }}") == 1
+    assert render(hass, "{{ 'no_number' | log(10, default=1) }}") == 1
+    assert render(hass, "{{ log('no_number', 10, 1) }}") == 1
+    assert render(hass, "{{ log('no_number', 10, default=1) }}") == 1
+
 
 def test_sine(hass):
     """Test sine."""
@@ -320,6 +466,13 @@ def test_sine(hass):
             template.Template("{{ %s | sin | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ sin({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | sin(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | sin(default=1) }}") == 1
+    assert render(hass, "{{ sin('no_number', 1) }}") == 1
+    assert render(hass, "{{ sin('no_number', default=1) }}") == 1
 
 
 def test_cos(hass):
@@ -338,6 +491,13 @@ def test_cos(hass):
             template.Template("{{ %s | cos | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ cos({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | sin(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | sin(default=1) }}") == 1
+    assert render(hass, "{{ sin('no_number', 1) }}") == 1
+    assert render(hass, "{{ sin('no_number', default=1) }}") == 1
 
 
 def test_tan(hass):
@@ -356,6 +516,13 @@ def test_tan(hass):
             template.Template("{{ %s | tan | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ tan({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | tan(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | tan(default=1) }}") == 1
+    assert render(hass, "{{ tan('no_number', 1) }}") == 1
+    assert render(hass, "{{ tan('no_number', default=1) }}") == 1
 
 
 def test_sqrt(hass):
@@ -374,6 +541,13 @@ def test_sqrt(hass):
             template.Template("{{ %s | sqrt | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ sqrt({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | sqrt(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | sqrt(default=1) }}") == 1
+    assert render(hass, "{{ sqrt('no_number', 1) }}") == 1
+    assert render(hass, "{{ sqrt('no_number', default=1) }}") == 1
 
 
 def test_arc_sine(hass):
@@ -394,6 +568,13 @@ def test_arc_sine(hass):
             template.Template("{{ %s | asin | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ asin({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | asin(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | asin(default=1) }}") == 1
+    assert render(hass, "{{ asin('no_number', 1) }}") == 1
+    assert render(hass, "{{ asin('no_number', default=1) }}") == 1
 
 
 def test_arc_cos(hass):
@@ -414,6 +595,13 @@ def test_arc_cos(hass):
             template.Template("{{ %s | acos | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ acos({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | acos(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | acos(default=1) }}") == 1
+    assert render(hass, "{{ acos('no_number', 1) }}") == 1
+    assert render(hass, "{{ acos('no_number', default=1) }}") == 1
 
 
 def test_arc_tan(hass):
@@ -436,6 +624,13 @@ def test_arc_tan(hass):
             template.Template("{{ %s | atan | round(3) }}" % value, hass).async_render()
             == expected
         )
+        assert render(hass, f"{{{{ atan({value}) | round(3) }}}}") == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | atan(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | atan(default=1) }}") == 1
+    assert render(hass, "{{ atan('no_number', 1) }}") == 1
+    assert render(hass, "{{ atan('no_number', default=1) }}") == 1
 
 
 def test_arc_tan2(hass):
@@ -470,6 +665,12 @@ def test_arc_tan2(hass):
             == expected
         )
 
+    # Test handling of default return value
+    assert render(hass, "{{ ('duck', 'goose') | atan2(1) }}") == 1
+    assert render(hass, "{{ ('duck', 'goose') | atan2(default=1) }}") == 1
+    assert render(hass, "{{ atan2('duck', 'goose', 1) }}") == 1
+    assert render(hass, "{{ atan2('duck', 'goose', default=1) }}") == 1
+
 
 def test_strptime(hass):
     """Test the parse timestamp method."""
@@ -491,6 +692,10 @@ def test_strptime(hass):
         temp = f"{{{{ strptime('{inp}', '{fmt}') }}}}"
 
         assert template.Template(temp, hass).async_render() == expected
+
+    # Test handling of default return value
+    assert render(hass, "{{ strptime('invalid', '%Y', 1) }}") == 1
+    assert render(hass, "{{ strptime('invalid', '%Y', default=1) }}") == 1
 
 
 def test_timestamp_custom(hass):
@@ -514,16 +719,24 @@ def test_timestamp_custom(hass):
 
         assert template.Template(f"{{{{ {inp} | {fil} }}}}", hass).async_render() == out
 
+    # Test handling of default return value
+    assert render(hass, "{{ None | timestamp_custom('invalid', True, 1) }}") == 1
+    assert render(hass, "{{ None | timestamp_custom(default=1) }}") == 1
+
 
 def test_timestamp_local(hass):
     """Test the timestamps to local filter."""
-    tests = {None: None, 1469119144: "2016-07-21 16:39:04"}
+    tests = {None: None, 1469119144: "2016-07-21T16:39:04+00:00"}
 
     for inp, out in tests.items():
         assert (
             template.Template("{{ %s | timestamp_local }}" % inp, hass).async_render()
             == out
         )
+
+    # Test handling of default return value
+    assert render(hass, "{{ None | timestamp_local(1) }}") == 1
+    assert render(hass, "{{ None | timestamp_local(default=1) }}") == 1
 
 
 @pytest.mark.parametrize(
@@ -553,6 +766,36 @@ def test_as_datetime(hass, input):
     )
 
 
+def test_as_datetime_from_timestamp(hass):
+    """Test converting a UNIX timestamp to a date object."""
+    tests = [
+        (1469119144, "2016-07-21 16:39:04+00:00"),
+        (1469119144.0, "2016-07-21 16:39:04+00:00"),
+        (-1, "1969-12-31 23:59:59+00:00"),
+    ]
+    for input, output in tests:
+        # expected = dt_util.parse_datetime(input)
+        if output is not None:
+            output = str(output)
+
+        assert (
+            template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
+            == output
+        )
+        assert (
+            template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
+            == output
+        )
+        assert (
+            template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
+            == output
+        )
+        assert (
+            template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
+            == output
+        )
+
+
 def test_as_local(hass):
     """Test converting time to local."""
 
@@ -578,6 +821,21 @@ def test_to_json(hass):
     assert actual_result == expected_result
 
 
+def test_to_json_string(hass):
+    """Test the object to JSON string filter."""
+
+    # Note that we're not testing the actual json.loads and json.dumps methods,
+    # only the filters, so we don't need to be exhaustive with our sample JSON.
+    actual_value_ascii = template.Template(
+        "{{ 'Bar ҝ éèà' | to_json }}", hass
+    ).async_render()
+    assert actual_value_ascii == '"Bar \\u049d \\u00e9\\u00e8\\u00e0"'
+    actual_value = template.Template(
+        "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=False) }}", hass
+    ).async_render()
+    assert actual_value == '"Bar ҝ éèà"'
+
+
 def test_from_json(hass):
     """Test the JSON string to object filter."""
 
@@ -588,6 +846,19 @@ def test_from_json(hass):
         '{{ (\'{"Foo": "Bar"}\' | from_json).Foo }}', hass
     ).async_render()
     assert actual_result == expected_result
+
+
+def test_average(hass):
+    """Test the average filter."""
+    assert template.Template("{{ [1, 2, 3] | average }}", hass).async_render() == 2
+    assert template.Template("{{ average([1, 2, 3]) }}", hass).async_render() == 2
+    assert template.Template("{{ average(1, 2, 3) }}", hass).async_render() == 2
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | average }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ average() }}", hass).async_render()
 
 
 def test_min(hass):
@@ -652,8 +923,8 @@ def test_timestamp_utc(hass):
     now = dt_util.utcnow()
     tests = {
         None: None,
-        1469119144: "2016-07-21 16:39:04",
-        dt_util.as_timestamp(now): now.strftime("%Y-%m-%d %H:%M:%S"),
+        1469119144: "2016-07-21T16:39:04+00:00",
+        dt_util.as_timestamp(now): now.isoformat(),
     }
 
     for inp, out in tests.items():
@@ -661,6 +932,10 @@ def test_timestamp_utc(hass):
             template.Template("{{ %s | timestamp_utc }}" % inp, hass).async_render()
             == out
         )
+
+    # Test handling of default return value
+    assert render(hass, "{{ None | timestamp_utc(1) }}") == 1
+    assert render(hass, "{{ None | timestamp_utc(default=1) }}") == 1
 
 
 def test_as_timestamp(hass):
@@ -679,6 +954,12 @@ def test_as_timestamp(hass):
         '"%Y-%m-%dT%H:%M:%S%z")) }}'
     )
     assert template.Template(tpl, hass).async_render() == 1706951424.0
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'invalid' | as_timestamp(1) }}") == 1
+    assert render(hass, "{{ 'invalid' | as_timestamp(default=1) }}") == 1
+    assert render(hass, "{{ as_timestamp('invalid', 1) }}") == 1
+    assert render(hass, "{{ as_timestamp('invalid', default=1) }}") == 1
 
 
 @patch.object(random, "choice")
@@ -902,6 +1183,70 @@ def test_utcnow(mock_is_safe, hass):
     assert info.has_time is True
 
 
+@pytest.mark.parametrize(
+    "now, expected, expected_midnight, timezone_str",
+    [
+        # Host clock in UTC
+        (
+            "2021-11-24 03:00:00+00:00",
+            "2021-11-23T10:00:00-08:00",
+            "2021-11-23T00:00:00-08:00",
+            "America/Los_Angeles",
+        ),
+        # Host clock in local time
+        (
+            "2021-11-23 19:00:00-08:00",
+            "2021-11-23T10:00:00-08:00",
+            "2021-11-23T00:00:00-08:00",
+            "America/Los_Angeles",
+        ),
+    ],
+)
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
+def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone_str):
+    """Test today_at method."""
+    freezer = freeze_time(now)
+    freezer.start()
+
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
+    timezone = dt_util.get_time_zone(timezone_str)
+    dt_util.set_default_time_zone(timezone)
+
+    result = template.Template(
+        "{{ today_at('10:00').isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
+
+    result = template.Template(
+        "{{ today_at('10:00:00').isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
+
+    result = template.Template(
+        "{{ ('10:00:00' | today_at).isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
+
+    result = template.Template(
+        "{{ today_at().isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected_midnight
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ today_at('bad') }}", hass).async_render()
+
+    freezer.stop()
+    dt_util.set_default_time_zone(original_tz)
+
+
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
@@ -1105,6 +1450,17 @@ def test_regex_replace(hass):
     assert tpl.async_render() == ["Home Assistant test"]
 
 
+def test_regex_findall(hass):
+    """Test regex_findall method."""
+    tpl = template.Template(
+        """
+{{ 'Flight from JFK to LHR' | regex_findall('([A-Z]{3})') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == ["JFK", "LHR"]
+
+
 def test_regex_findall_index(hass):
     """Test regex_findall_index method."""
     tpl = template.Template(
@@ -1156,6 +1512,24 @@ def test_bitwise_and(hass):
     )
     assert tpl.async_render() == 8 & 2
 
+    tpl = template.Template(
+        """
+{{ ( value_a ) | bitwise_and(value_b) }}
+            """,
+        hass,
+    )
+    variables = {"value_a": b"\x9b\xc2", "value_b": 0xFF00}
+    assert tpl.async_render(variables=variables) == 0x9B00
+
+    tpl = template.Template(
+        """
+{{ ( value_a ) | bitwise_and(value_b, little_endian=True) }}
+            """,
+        hass,
+    )
+    variables = {"value_a": b"\xc2\x9b", "value_b": 0xFFFF}
+    assert tpl.async_render(variables=variables) == 0x9BC2
+
 
 def test_bitwise_or(hass):
     """Test bitwise_or method."""
@@ -1180,6 +1554,54 @@ def test_bitwise_or(hass):
         hass,
     )
     assert tpl.async_render() == 8 | 2
+
+    tpl = template.Template(
+        """
+{{ value_a | bitwise_or(value_b) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value_a": b"\xc2\x9b",
+        "value_b": 0xFFFF,
+    }
+    assert tpl.async_render(variables=variables) == 65535  # 39874
+
+    tpl = template.Template(
+        """
+{{ ( value_a ) | bitwise_or(value_b) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value_a": 0xFF00,
+        "value_b": b"\xc2\x9b",
+    }
+    assert tpl.async_render(variables=variables) == 0xFF9B
+
+    tpl = template.Template(
+        """
+{{ ( value_a ) | bitwise_or(value_b) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value_a": b"\xc2\x9b",
+        "value_b": 0x0000,
+    }
+    assert tpl.async_render(variables=variables) == 0xC29B
+
+    tpl = template.Template(
+        """
+{{ ( value_a ) | bitwise_or(value_b, little_endian=True) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value_a": b"\xc2\x9b",
+        "value_b": 0,
+    }
+    assert tpl.async_render(variables=variables) == 0x9BC2
 
 
 def test_distance_function_with_1_state(hass):
@@ -1513,7 +1935,7 @@ async def test_expand(hass):
 
 
 async def test_device_entities(hass):
-    """Test expand function."""
+    """Test device_entities function."""
     config_entry = MockConfigEntry(domain="light")
     device_registry = mock_device_registry(hass)
     entity_registry = mock_registry(hass)
@@ -1582,6 +2004,460 @@ async def test_device_entities(hass):
     assert_result_info(
         info, "light.hue_5678, light.hue_abcd", ["light.hue_5678", "light.hue_abcd"]
     )
+    assert info.rate_limit is None
+
+
+async def test_integration_entities(hass):
+    """Test integration_entities function."""
+    entity_registry = mock_registry(hass)
+
+    # test entities for given config entry title
+    config_entry = MockConfigEntry(domain="mock", title="Mock bridge 2")
+    config_entry.add_to_hass(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "mock", "test", config_entry=config_entry
+    )
+    info = render_to_info(hass, "{{ integration_entities('Mock bridge 2') }}")
+    assert_result_info(info, [entity_entry.entity_id])
+    assert info.rate_limit is None
+
+    # test integration entities not in entity registry
+    mock_entity = entity.Entity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = "light.test_entity"
+    mock_entity.platform = EntityPlatform(
+        hass=hass,
+        logger=logging.getLogger(__name__),
+        domain="light",
+        platform_name="entryless_integration",
+        platform=None,
+        scan_interval=timedelta(seconds=30),
+        entity_namespace=None,
+    )
+    await mock_entity.async_internal_added_to_hass()
+    info = render_to_info(hass, "{{ integration_entities('entryless_integration') }}")
+    assert_result_info(info, ["light.test_entity"])
+    assert info.rate_limit is None
+
+    # Test non existing integration/entry title
+    info = render_to_info(hass, "{{ integration_entities('abc123') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+
+async def test_device_id(hass):
+    """Test device_id function."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        model="test",
+        name="test",
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "test", suggested_object_id="test", device_id=device_entry.id
+    )
+    entity_entry_no_device = entity_registry.async_get_or_create(
+        "sensor", "test", "test_no_device", suggested_object_id="test"
+    )
+
+    info = render_to_info(hass, "{{ 'sensor.fail' | device_id }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 56 | device_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | device_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(
+        hass, f"{{{{ device_id('{entity_entry_no_device.entity_id}') }}}}"
+    )
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ device_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, device_entry.id)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ device_id('test') }}")
+    assert_result_info(info, device_entry.id)
+    assert info.rate_limit is None
+
+
+async def test_device_attr(hass):
+    """Test device_attr and is_device_attr functions."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+
+    # Test non existing device ids (device_attr)
+    info = render_to_info(hass, "{{ device_attr('abc123', 'id') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    with pytest.raises(TemplateError):
+        info = render_to_info(hass, "{{ device_attr(56, 'id') }}")
+        assert_result_info(info, None)
+
+    # Test non existing device ids (is_device_attr)
+    info = render_to_info(hass, "{{ is_device_attr('abc123', 'id', 'test') }}")
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    with pytest.raises(TemplateError):
+        info = render_to_info(hass, "{{ is_device_attr(56, 'id', 'test') }}")
+        assert_result_info(info, False)
+
+    # Test non existing entity id (device_attr)
+    info = render_to_info(hass, "{{ device_attr('entity.test', 'id') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test non existing entity id (is_device_attr)
+    info = render_to_info(hass, "{{ is_device_attr('entity.test', 'id', 'test') }}")
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        model="test",
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "test", suggested_object_id="test", device_id=device_entry.id
+    )
+
+    # Test non existent device attribute (device_attr)
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{device_entry.id}', 'invalid_attr') }}}}"
+    )
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test non existent device attribute (is_device_attr)
+    info = render_to_info(
+        hass, f"{{{{ is_device_attr('{device_entry.id}', 'invalid_attr', 'test') }}}}"
+    )
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    # Test None device attribute (device_attr)
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{device_entry.id}', 'manufacturer') }}}}"
+    )
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test None device attribute mismatch (is_device_attr)
+    info = render_to_info(
+        hass, f"{{{{ is_device_attr('{device_entry.id}', 'manufacturer', 'test') }}}}"
+    )
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    # Test None device attribute match (is_device_attr)
+    info = render_to_info(
+        hass, f"{{{{ is_device_attr('{device_entry.id}', 'manufacturer', None) }}}}"
+    )
+    assert_result_info(info, True)
+    assert info.rate_limit is None
+
+    # Test valid device attribute match (device_attr)
+    info = render_to_info(hass, f"{{{{ device_attr('{device_entry.id}', 'model') }}}}")
+    assert_result_info(info, "test")
+    assert info.rate_limit is None
+
+    # Test valid device attribute match (device_attr)
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{entity_entry.entity_id}', 'model') }}}}"
+    )
+    assert_result_info(info, "test")
+    assert info.rate_limit is None
+
+    # Test valid device attribute mismatch (is_device_attr)
+    info = render_to_info(
+        hass, f"{{{{ is_device_attr('{device_entry.id}', 'model', 'fail') }}}}"
+    )
+    assert_result_info(info, False)
+    assert info.rate_limit is None
+
+    # Test valid device attribute match (is_device_attr)
+    info = render_to_info(
+        hass, f"{{{{ is_device_attr('{device_entry.id}', 'model', 'test') }}}}"
+    )
+    assert_result_info(info, True)
+    assert info.rate_limit is None
+
+
+async def test_area_id(hass):
+    """Test area_id function."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test non existing entity id
+    info = render_to_info(hass, "{{ area_id('sensor.fake') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test non existing device id (hex value)
+    info = render_to_info(hass, "{{ area_id('123abc') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test non existing area name
+    info = render_to_info(hass, "{{ area_id('fake area name') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_id(56) }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    area_entry_entity_id = area_registry.async_get_or_create("sensor.fake")
+
+    # Test device with single entity, which has no area
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    info = render_to_info(hass, f"{{{{ area_id('{device_entry.id}') }}}}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test device ID, entity ID and area name as input with area name that looks like
+    # a device ID. Try a filter too
+    area_entry_hex = area_registry.async_get_or_create("123abc")
+    device_entry = device_registry.async_update_device(
+        device_entry.id, area_id=area_entry_hex.id
+    )
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry_hex.id
+    )
+
+    info = render_to_info(hass, f"{{{{ '{device_entry.id}' | area_id }}}}")
+    assert_result_info(info, area_entry_hex.id)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, area_entry_hex.id)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ area_id('{area_entry_hex.name}') }}}}")
+    assert_result_info(info, area_entry_hex.id)
+    assert info.rate_limit is None
+
+    # Test device ID, entity ID and area name as input with area name that looks like an
+    # entity ID
+    area_entry_entity_id = area_registry.async_get_or_create("sensor.fake")
+    device_entry = device_registry.async_update_device(
+        device_entry.id, area_id=area_entry_entity_id.id
+    )
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry_entity_id.id
+    )
+
+    info = render_to_info(hass, f"{{{{ area_id('{device_entry.id}') }}}}")
+    assert_result_info(info, area_entry_entity_id.id)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, area_entry_entity_id.id)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ area_id('{area_entry_entity_id.name}') }}}}")
+    assert_result_info(info, area_entry_entity_id.id)
+    assert info.rate_limit is None
+
+    # Make sure that when entity doesn't have an area but its device does, that's what
+    # gets returned
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry_entity_id.id
+    )
+
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, area_entry_entity_id.id)
+    assert info.rate_limit is None
+
+
+async def test_area_name(hass):
+    """Test area_name function."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test non existing entity id
+    info = render_to_info(hass, "{{ area_name('sensor.fake') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test non existing device id (hex value)
+    info = render_to_info(hass, "{{ area_name('123abc') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test non existing area id
+    info = render_to_info(hass, "{{ area_name('1234567890') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_name(56) }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test device with single entity, which has no area
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    info = render_to_info(hass, f"{{{{ area_name('{device_entry.id}') }}}}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ area_name('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test device ID, entity ID and area id as input. Try a filter too
+    area_entry = area_registry.async_get_or_create("123abc")
+    device_entry = device_registry.async_update_device(
+        device_entry.id, area_id=area_entry.id
+    )
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry.id
+    )
+
+    info = render_to_info(hass, f"{{{{ '{device_entry.id}' | area_name }}}}")
+    assert_result_info(info, area_entry.name)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ area_name('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, area_entry.name)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ area_name('{area_entry.id}') }}}}")
+    assert_result_info(info, area_entry.name)
+    assert info.rate_limit is None
+
+    # Make sure that when entity doesn't have an area but its device does, that's what
+    # gets returned
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=None
+    )
+
+    info = render_to_info(hass, f"{{{{ area_name('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, area_entry.name)
+    assert info.rate_limit is None
+
+
+async def test_area_entities(hass):
+    """Test area_entities function."""
+    config_entry = MockConfigEntry(domain="light")
+    entity_registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ area_entities('deadbeef') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_entities(56) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("sensor.fake")
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        area_id=area_entry.id,
+    )
+
+    info = render_to_info(hass, f"{{{{ area_entities('{area_entry.id}') }}}}")
+    assert_result_info(info, ["light.hue_5678"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
+    assert_result_info(info, ["light.hue_5678"])
+    assert info.rate_limit is None
+
+    # Test for entities that inherit area from device
+    device_entry = device_registry.async_get_or_create(
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        config_entry_id=config_entry.entry_id,
+        suggested_area="sensor.fake",
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        "hue_light",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
+    assert_result_info(info, ["light.hue_5678", "light.hue_light_5678"])
+    assert info.rate_limit is None
+
+
+async def test_area_devices(hass):
+    """Test area_devices function."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ area_devices('deadbeef') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_devices(56) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("sensor.fake")
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        suggested_area=area_entry.name,
+    )
+
+    info = render_to_info(hass, f"{{{{ area_devices('{area_entry.id}') }}}}")
+    assert_result_info(info, [device_entry.id])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_devices }}}}")
+    assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
 
 

@@ -1,10 +1,13 @@
 """Config flow to configure the Ambient PWS component."""
-from aioambient import Client
+from __future__ import annotations
+
+from aioambient import API
 from aioambient.errors import AmbientError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_APP_KEY, DOMAIN
@@ -15,13 +18,13 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self.data_schema = vol.Schema(
             {vol.Required(CONF_API_KEY): str, vol.Required(CONF_APP_KEY): str}
         )
 
-    async def _show_form(self, errors=None):
+    async def _show_form(self, errors: dict | None = None) -> FlowResult:
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -29,11 +32,7 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors if errors else {},
         )
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return await self._show_form()
@@ -42,12 +41,10 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         session = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(
-            user_input[CONF_API_KEY], user_input[CONF_APP_KEY], session=session
-        )
+        api = API(user_input[CONF_APP_KEY], user_input[CONF_API_KEY], session=session)
 
         try:
-            devices = await client.api.get_devices()
+            devices = await api.get_devices()
         except AmbientError:
             return await self._show_form({"base": "invalid_key"})
 

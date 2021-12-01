@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 DEV_TYPE_TO_HA = {
     "LV-PUR131S": "fan",
     "Core200S": "fan",
+    "Core400S": "fan",
 }
 
 FAN_MODE_AUTO = "auto"
@@ -27,6 +28,7 @@ FAN_MODE_SLEEP = "sleep"
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core200S": [FAN_MODE_SLEEP],
+    "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
 }
 SPEED_RANGE = (1, 3)  # off is not included
 
@@ -76,10 +78,11 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     @property
     def percentage(self):
         """Return the current speed."""
-        if self.smartfan.mode == "manual":
-            current_level = self.smartfan.fan_level
-            if current_level is not None:
-                return ranged_value_to_percentage(SPEED_RANGE, current_level)
+        if (
+            self.smartfan.mode == "manual"
+            and (current_level := self.smartfan.fan_level) is not None
+        ):
+            return ranged_value_to_percentage(SPEED_RANGE, current_level)
         return None
 
     @property

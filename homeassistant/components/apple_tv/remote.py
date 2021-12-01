@@ -34,11 +34,6 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
         """Return true if device is on."""
         return self.atv is not None
 
-    @property
-    def should_poll(self):
-        """No polling needed for Apple TV."""
-        return False
-
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         await self.manager.connect()
@@ -53,7 +48,7 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
         delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
         if not self.is_on:
-            _LOGGER.error("Unable to send commands, not connected to %s", self._name)
+            _LOGGER.error("Unable to send commands, not connected to %s", self.name)
             return
 
         for _ in range(num_repeats):

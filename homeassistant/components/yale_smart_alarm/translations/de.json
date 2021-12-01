@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert"
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "Bereichs-ID",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "Bereichs-ID",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    }
+}

@@ -2,6 +2,7 @@
 import asyncio
 from collections import namedtuple
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -13,7 +14,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_OK
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -105,7 +106,7 @@ class TadoDeviceScanner(DeviceScanner):
         last_results = []
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 # Format the URL here, so we can log the template URL if
                 # anything goes wrong without exposing username and password.
                 url = self.tadoapiurl.format(
@@ -114,7 +115,7 @@ class TadoDeviceScanner(DeviceScanner):
 
                 response = await self.websession.get(url)
 
-                if response.status != HTTP_OK:
+                if response.status != HTTPStatus.OK:
                     _LOGGER.warning("Error %d on %s", response.status, self.tadoapiurl)
                     return False
 

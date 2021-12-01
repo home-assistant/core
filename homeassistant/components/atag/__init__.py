@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _async_update_data():
         """Update data via library."""
-        with async_timeout.timeout(20):
+        async with async_timeout.timeout(20):
             try:
                 await atag.update()
             except AtagException as err:
@@ -75,27 +75,16 @@ class AtagEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self._id = atag_id
-        self._name = DOMAIN.title()
+        self._attr_name = DOMAIN.title()
+        self._attr_unique_id = f"{coordinator.data.id}-{atag_id}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return info for device registry."""
-        device = self.coordinator.data.id
-        version = self.coordinator.data.apiversion
-        return {
-            "identifiers": {(DOMAIN, device)},
-            "name": "Atag Thermostat",
-            "model": "Atag One",
-            "sw_version": version,
-            "manufacturer": "Atag",
-        }
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this entity."""
-        return f"{self.coordinator.data.id}-{self._id}"
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.data.id)},
+            manufacturer="Atag",
+            model="Atag One",
+            name="Atag Thermostat",
+            sw_version=self.coordinator.data.apiversion,
+        )

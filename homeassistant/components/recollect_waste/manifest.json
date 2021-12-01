@@ -3,7 +3,7 @@
   "name": "ReCollect Waste",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/recollect_waste",
-  "requirements": ["aiorecollect==1.0.5"],
+  "requirements": ["aiorecollect==1.0.8"],
   "codeowners": ["@bachya"],
   "iot_class": "cloud_polling"
 }

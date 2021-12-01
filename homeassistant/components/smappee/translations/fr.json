@@ -24,7 +24,7 @@
                 "description": "Entrez l'h\u00f4te pour lancer l'int\u00e9gration locale Smappee"
             },
             "pick_implementation": {
-                "title": "Choisissez la m\u00e9thode d'authentification"
+                "title": "S\u00e9lectionner une m\u00e9thode d'authentification"
             },
             "zeroconf_confirm": {
                 "description": "Voulez-vous ajouter l'appareil Smappee avec le num\u00e9ro de s\u00e9rie \u00ab {serialnumber} \u00bb \u00e0 Home Assistant?",

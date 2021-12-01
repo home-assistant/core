@@ -39,6 +39,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Invia comando: {subtype}",
+            "send_status": "Invia aggiornamento di stato: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Comando ricevuto: {subtype}",
+            "status": "Stato ricevuto: {subtype}"
+        }
+    },
     "one": "Pi\u00f9",
     "options": {
         "error": {

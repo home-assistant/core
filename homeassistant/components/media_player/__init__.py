@@ -5,9 +5,11 @@ import asyncio
 import base64
 import collections
 from contextlib import suppress
+from dataclasses import dataclass
 import datetime as dt
 import functools as ft
 import hashlib
+from http import HTTPStatus
 import logging
 import secrets
 from typing import final
@@ -27,11 +29,8 @@ from homeassistant.components.websocket_api.const import (
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_NOT_FOUND,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -52,6 +51,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -59,10 +59,11 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     datetime,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
+from homeassistant.util.enum import StrEnum
 
 from .const import (
     ATTR_APP_ID,
@@ -140,13 +141,24 @@ ENTITY_IMAGE_CACHE = {CACHE_IMAGES: collections.OrderedDict(), CACHE_MAXSIZE: 16
 
 SCAN_INTERVAL = dt.timedelta(seconds=10)
 
-DEVICE_CLASS_TV = "tv"
-DEVICE_CLASS_SPEAKER = "speaker"
-DEVICE_CLASS_RECEIVER = "receiver"
 
-DEVICE_CLASSES = [DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER, DEVICE_CLASS_RECEIVER]
+class MediaPlayerDeviceClass(StrEnum):
+    """Device class for media players."""
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+    TV = "tv"
+    SPEAKER = "speaker"
+    RECEIVER = "receiver"
+
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(MediaPlayerDeviceClass))
+
+
+# DEVICE_CLASS* below are deprecated as of 2021.12
+# use the MediaPlayerDeviceClass enum instead.
+DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]
+DEVICE_CLASS_TV = MediaPlayerDeviceClass.TV.value
+DEVICE_CLASS_SPEAKER = MediaPlayerDeviceClass.SPEAKER.value
+DEVICE_CLASS_RECEIVER = MediaPlayerDeviceClass.RECEIVER.value
 
 
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
@@ -357,23 +369,34 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
+
+
+@dataclass
+class MediaPlayerEntityDescription(EntityDescription):
+    """A class that describes media player entities."""
+
+    device_class: MediaPlayerDeviceClass | str | None = None
 
 
 class MediaPlayerEntity(Entity):
     """ABC for media player entities."""
 
+    entity_description: MediaPlayerEntityDescription
     _access_token: str | None = None
 
     _attr_app_id: str | None = None
     _attr_app_name: str | None = None
+    _attr_device_class: MediaPlayerDeviceClass | str | None
     _attr_group_members: list[str] | None = None
     _attr_is_volume_muted: bool | None = None
     _attr_media_album_artist: str | None = None
@@ -405,6 +428,15 @@ class MediaPlayerEntity(Entity):
     _attr_volume_level: float | None = None
 
     # Implement these for your media player
+    @property
+    def device_class(self) -> MediaPlayerDeviceClass | str | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
+
     @property
     def state(self) -> str | None:
         """State of the player."""
@@ -471,16 +503,14 @@ class MediaPlayerEntity(Entity):
         if hasattr(self, "_attr_media_image_hash"):
             return self._attr_media_image_hash
 
-        url = self.media_image_url
-        if url is not None:
+        if (url := self.media_image_url) is not None:
             return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
 
         return None
 
     async def async_get_media_image(self):
         """Fetch media image of current playing image."""
-        url = self.media_image_url
-        if url is None:
+        if (url := self.media_image_url) is None:
             return None, None
 
         return await self._async_fetch_image_from_cache(url)
@@ -496,6 +526,7 @@ class MediaPlayerEntity(Entity):
 
         Must be implemented by integration.
         """
+        # pylint: disable=no-self-use
         return None, None
 
     @property
@@ -802,11 +833,10 @@ class MediaPlayerEntity(Entity):
     async def async_toggle(self):
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.toggle)
             return
 
-        if self.state in [STATE_OFF, STATE_IDLE]:
+        if self.state in (STATE_OFF, STATE_IDLE):
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -817,7 +847,6 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_up"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.volume_up)
             return
 
@@ -830,7 +859,6 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_down"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.volume_down)
             return
 
@@ -840,7 +868,6 @@ class MediaPlayerEntity(Entity):
     async def async_media_play_pause(self):
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.media_play_pause)
             return
 
@@ -863,9 +890,7 @@ class MediaPlayerEntity(Entity):
     @property
     def media_image_local(self):
         """Return local url to media image."""
-        image_hash = self.media_image_hash
-
-        if image_hash is None:
+        if (image_hash := self.media_image_hash) is None:
             return None
 
         return (
@@ -879,15 +904,15 @@ class MediaPlayerEntity(Entity):
         supported_features = self.supported_features or 0
         data = {}
 
-        if supported_features & SUPPORT_SELECT_SOURCE:
-            source_list = self.source_list
-            if source_list:
-                data[ATTR_INPUT_SOURCE_LIST] = source_list
+        if supported_features & SUPPORT_SELECT_SOURCE and (
+            source_list := self.source_list
+        ):
+            data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if supported_features & SUPPORT_SELECT_SOUND_MODE:
-            sound_mode_list = self.sound_mode_list
-            if sound_mode_list:
-                data[ATTR_SOUND_MODE_LIST] = sound_mode_list
+        if supported_features & SUPPORT_SELECT_SOUND_MODE and (
+            sound_mode_list := self.sound_mode_list
+        ):
+            data[ATTR_SOUND_MODE_LIST] = sound_mode_list
 
         return data
 
@@ -895,21 +920,20 @@ class MediaPlayerEntity(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        if self.state == STATE_OFF:
-            return None
-
         state_attr = {}
 
+        if self.support_grouping:
+            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
+
+        if self.state == STATE_OFF:
+            return state_attr
+
         for attr in ATTR_TO_PROPERTY:
-            value = getattr(self, attr)
-            if value is not None:
+            if (value := getattr(self, attr)) is not None:
                 state_attr[attr] = value
 
         if self.media_image_remotely_accessible:
             state_attr["entity_picture_local"] = self.media_image_local
-
-        if self.support_grouping:
-            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
 
         return state_attr
 
@@ -974,10 +998,9 @@ class MediaPlayerEntity(Entity):
         websession = async_get_clientsession(self.hass)
         with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
             response = await websession.get(url)
-            if response.status == HTTP_OK:
+            if response.status == HTTPStatus.OK:
                 content = await response.read()
-                content_type = response.headers.get(CONTENT_TYPE)
-                if content_type:
+                if content_type := response.headers.get(CONTENT_TYPE):
                     content_type = content_type.split(";")[0]
 
         if content is None:
@@ -1026,9 +1049,12 @@ class MediaPlayerImageView(HomeAssistantView):
         media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
-        player = self.component.get_entity(entity_id)
-        if player is None:
-            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else HTTP_UNAUTHORIZED
+        if (player := self.component.get_entity(entity_id)) is None:
+            status = (
+                HTTPStatus.NOT_FOUND
+                if request[KEY_AUTHENTICATED]
+                else HTTPStatus.UNAUTHORIZED
+            )
             return web.Response(status=status)
 
         authenticated = (
@@ -1037,7 +1063,7 @@ class MediaPlayerImageView(HomeAssistantView):
         )
 
         if not authenticated:
-            return web.Response(status=HTTP_UNAUTHORIZED)
+            return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
         if media_content_type and media_content_id:
             media_image_id = request.query.get("media_image_id")
@@ -1048,7 +1074,7 @@ class MediaPlayerImageView(HomeAssistantView):
             data, content_type = await player.async_get_media_image()
 
         if data is None:
-            return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
+            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)
@@ -1067,9 +1093,8 @@ async def websocket_handle_thumbnail(hass, connection, msg):
     Async friendly.
     """
     component = hass.data[DOMAIN]
-    player = component.get_entity(msg["entity_id"])
 
-    if player is None:
+    if (player := component.get_entity(msg["entity_id"])) is None:
         connection.send_message(
             websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
         )

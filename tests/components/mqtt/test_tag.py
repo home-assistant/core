@@ -144,7 +144,9 @@ async def test_if_fires_on_mqtt_message_after_update_with_device(
 ):
     """Test tag scanning after update."""
     config1 = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+    config1["some_future_option_1"] = "future_option_1"
     config2 = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+    config2["some_future_option_2"] = "future_option_2"
     config2["topic"] = "foobar/tag_scanned2"
 
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config1))

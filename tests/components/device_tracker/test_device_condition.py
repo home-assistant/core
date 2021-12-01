@@ -3,7 +3,7 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import STATE_HOME
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
@@ -119,7 +119,7 @@ async def test_if_state(hass, calls):
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_home - event - test_event1"
 
-    hass.states.async_set("device_tracker.entity", STATE_NOT_HOME)
+    hass.states.async_set("device_tracker.entity", "school")
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()

@@ -7,7 +7,7 @@ import requests
 
 import homeassistant.components.mfi.sensor as mfi
 import homeassistant.components.sensor as sensor_component
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
 PLATFORM = mfi
@@ -121,7 +121,9 @@ def port_fixture():
 @pytest.fixture(name="sensor")
 def sensor_fixture(hass, port):
     """Sensor fixture."""
-    return mfi.MfiSensor(port, hass)
+    sensor = mfi.MfiSensor(port, hass)
+    sensor.hass = hass
+    return sensor
 
 
 async def test_name(port, sensor):
@@ -133,30 +135,35 @@ async def test_uom_temp(port, sensor):
     """Test the UOM temperature."""
     port.tag = "temperature"
     assert sensor.unit_of_measurement == TEMP_CELSIUS
+    assert sensor.device_class == DEVICE_CLASS_TEMPERATURE
 
 
 async def test_uom_power(port, sensor):
     """Test the UOEM power."""
     port.tag = "active_pwr"
     assert sensor.unit_of_measurement == "Watts"
+    assert sensor.device_class is None
 
 
 async def test_uom_digital(port, sensor):
     """Test the UOM digital input."""
     port.model = "Input Digital"
     assert sensor.unit_of_measurement == "State"
+    assert sensor.device_class is None
 
 
 async def test_uom_unknown(port, sensor):
     """Test the UOM."""
     port.tag = "balloons"
     assert sensor.unit_of_measurement == "balloons"
+    assert sensor.device_class is None
 
 
 async def test_uom_uninitialized(port, sensor):
     """Test that the UOM defaults if not initialized."""
     type(port).tag = mock.PropertyMock(side_effect=ValueError)
     assert sensor.unit_of_measurement == "State"
+    assert sensor.device_class is None
 
 
 async def test_state_digital(port, sensor):

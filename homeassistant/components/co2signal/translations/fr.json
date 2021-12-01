@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "api_ratelimit": "Limite de d\u00e9bit de l\u2019API d\u00e9pass\u00e9e",
+            "unknown": "Erreur inattendue"
+        },
+        "error": {
+            "api_ratelimit": "Limite de d\u00e9bit API d\u00e9pass\u00e9e",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                }
+            },
+            "country": {
+                "data": {
+                    "country_code": "Code pays"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Jeton d'acc\u00e8s",
+                    "location": "Obtenir des donn\u00e9es pour"
+                },
+                "description": "Visitez https://co2signal.com/ pour demander un jeton."
+            }
+        }
+    }
+}

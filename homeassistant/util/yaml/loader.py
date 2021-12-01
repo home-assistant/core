@@ -60,9 +60,7 @@ class Secrets:
 
     def _load_secret_yaml(self, secret_dir: Path) -> dict[str, str]:
         """Load the secrets yaml from path."""
-        secret_path = secret_dir / SECRET_YAML
-
-        if secret_path in self._cache:
+        if (secret_path := secret_dir / SECRET_YAML) in self._cache:
             return self._cache[secret_path]
 
         _LOGGER.debug("Loading %s", secret_path)
@@ -98,10 +96,10 @@ class SafeLineLoader(yaml.SafeLoader):
         super().__init__(stream)
         self.secrets = secrets
 
-    def compose_node(self, parent: yaml.nodes.Node, index: int) -> yaml.nodes.Node:
+    def compose_node(self, parent: yaml.nodes.Node, index: int) -> yaml.nodes.Node:  # type: ignore[override]
         """Annotate a node with the first line it was seen."""
         last_line: int = self.line
-        node: yaml.nodes.Node = super().compose_node(parent, index)
+        node: yaml.nodes.Node = super().compose_node(parent, index)  # type: ignore[assignment]
         node.__line__ = last_line + 1  # type: ignore
         return node
 
@@ -264,7 +262,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
             fname = getattr(loader.stream, "name", "")
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
-                context_mark=yaml.Mark(fname, 0, line, -1, None, None),
+                context_mark=yaml.Mark(fname, 0, line, -1, None, None),  # type: ignore[arg-type]
             ) from exc
 
         if key in seen:

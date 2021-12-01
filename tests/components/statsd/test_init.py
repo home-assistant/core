@@ -110,10 +110,8 @@ async def test_event_listener_attr_details(hass, mock_client):
         handler_method(MagicMock(data={"new_state": state}))
         mock_client.gauge.assert_has_calls(
             [
-                mock.call("%s.state" % state.entity_id, out, statsd.DEFAULT_RATE),
-                mock.call(
-                    "%s.attribute_key" % state.entity_id, 3.2, statsd.DEFAULT_RATE
-                ),
+                mock.call(f"{state.entity_id}.state", out, statsd.DEFAULT_RATE),
+                mock.call(f"{state.entity_id}.attribute_key", 3.2, statsd.DEFAULT_RATE),
             ]
         )
 

@@ -18,6 +18,11 @@
             "unknown": "Error desconocido validando el c\u00f3digo"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Token de acceso"
+                }
+            },
             "init": {
                 "data": {
                     "flow_impl": "Proveedor"

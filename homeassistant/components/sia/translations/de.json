@@ -1,9 +1,9 @@
 {
     "config": {
         "error": {
-            "invalid_account_format": "Das Konto ist kein Hex-Wert. Bitte verwenden Sie nur 0-9 und A-F.",
+            "invalid_account_format": "Das Konto ist kein Hex-Wert. Bitte verwende nur 0-9 und A-F.",
             "invalid_account_length": "Das Konto hat nicht die richtige L\u00e4nge. Es muss zwischen 3 und 16 Zeichen lang sein.",
-            "invalid_key_format": "Der Schl\u00fcssel ist kein Hex-Wert, bitte verwenden Sie nur 0-9 und A-F.",
+            "invalid_key_format": "Der Schl\u00fcssel ist kein Hex-Wert, bitte verwende nur 0-9 und A-F.",
             "invalid_key_length": "Der Schl\u00fcssel hat nicht die richtige L\u00e4nge. Er muss 16, 24 oder 32 Hex-Zeichen lang sein.",
             "invalid_ping": "Das Ping-Intervall muss zwischen 1 und 1440 Minuten liegen.",
             "invalid_zones": "Es muss mindestens eine Zone vorhanden sein.",
@@ -41,7 +41,7 @@
                     "ignore_timestamps": "Ignorieren der Zeitstempelpr\u00fcfung der SIA-Ereignisse",
                     "zones": "Anzahl an Zonen f\u00fcr das Konto"
                 },
-                "description": "Stellen Sie die Optionen f\u00fcr das Konto {account} ein:",
+                "description": "Stelle die Optionen f\u00fcr das Konto {account} ein:",
                 "title": "Optionen f\u00fcr das SIA-Setup."
             }
         }

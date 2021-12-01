@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto ist bereits konfiguriert",
+            "already_configured": "Konto wurde bereits konfiguriert",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {

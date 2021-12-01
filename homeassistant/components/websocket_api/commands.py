@@ -268,7 +268,7 @@ async def handle_manifest_list(
     """Handle integrations command."""
     loaded_integrations = async_get_loaded_integrations(hass)
     integrations = await asyncio.gather(
-        *[async_get_integration(hass, domain) for domain in loaded_integrations]
+        *(async_get_integration(hass, domain) for domain in loaded_integrations)
     )
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]
@@ -420,9 +420,7 @@ def handle_entity_source(
                 perm_category=CAT_ENTITIES,
             )
 
-        source = raw_sources.get(entity_id)
-
-        if source is None:
+        if (source := raw_sources.get(entity_id)) is None:
             connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
             return
 
@@ -497,7 +495,11 @@ async def handle_test_condition(
     # pylint: disable=import-outside-toplevel
     from homeassistant.helpers import condition
 
-    check_condition = await condition.async_from_config(hass, msg["condition"])
+    # Do static + dynamic validation of the condition
+    config = cv.CONDITION_SCHEMA(msg["condition"])
+    config = await condition.async_validate_condition_config(hass, config)
+    # Test the condition
+    check_condition = await condition.async_from_config(hass, config)
     connection.send_result(
         msg["id"], {"result": check_condition(hass, msg.get("variables"))}
     )

@@ -29,5 +29,14 @@
         "trigger_type": {
             "turn_on": "Apparaat wordt gevraagd om in te schakelen"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Sta het gebruik van de gegevensnotificatieservice toe."
+                }
+            }
+        }
     }
 }

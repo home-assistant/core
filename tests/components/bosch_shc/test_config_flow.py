@@ -9,7 +9,8 @@ from boschshcpy.exceptions import (
 )
 from boschshcpy.information import SHCInformation
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.bosch_shc.config_flow import write_tls_asset
 from homeassistant.components.bosch_shc.const import CONF_SHC_CERT, CONF_SHC_KEY, DOMAIN
 
@@ -19,18 +20,19 @@ MOCK_SETTINGS = {
     "name": "Test name",
     "device": {"mac": "test-mac", "hostname": "test-host"},
 }
-DISCOVERY_INFO = {
-    "host": "1.1.1.1",
-    "port": 0,
-    "hostname": "shc012345.local.",
-    "type": "_http._tcp.local.",
-    "name": "Bosch SHC [test-mac]._http._tcp.local.",
-}
+DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    hostname="shc012345.local.",
+    name="Bosch SHC [test-mac]._http._tcp.local.",
+    port=0,
+    properties={},
+    type="_http._tcp.local.",
+)
 
 
-async def test_form_user(hass):
+async def test_form_user(hass, mock_zeroconf):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -92,7 +94,7 @@ async def test_form_user(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_get_info_connection_error(hass):
+async def test_form_get_info_connection_error(hass, mock_zeroconf):
     """Test we handle connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -136,7 +138,7 @@ async def test_form_get_info_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_pairing_error(hass):
+async def test_form_pairing_error(hass, mock_zeroconf):
     """Test we handle pairing error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -178,7 +180,7 @@ async def test_form_pairing_error(hass):
     assert result3["errors"] == {"base": "pairing_failed"}
 
 
-async def test_form_user_invalid_auth(hass):
+async def test_form_user_invalid_auth(hass, mock_zeroconf):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -227,7 +229,7 @@ async def test_form_user_invalid_auth(hass):
     assert result3["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_validate_connection_error(hass):
+async def test_form_validate_connection_error(hass, mock_zeroconf):
     """Test we handle connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -276,7 +278,7 @@ async def test_form_validate_connection_error(hass):
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_validate_session_error(hass):
+async def test_form_validate_session_error(hass, mock_zeroconf):
     """Test we handle session error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -325,7 +327,7 @@ async def test_form_validate_session_error(hass):
     assert result3["errors"] == {"base": "session_error"}
 
 
-async def test_form_validate_exception(hass):
+async def test_form_validate_exception(hass, mock_zeroconf):
     """Test we handle exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -374,9 +376,9 @@ async def test_form_validate_exception(hass):
     assert result3["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_configured(hass):
+async def test_form_already_configured(hass, mock_zeroconf):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain="bosch_shc", unique_id="test-mac", data={"host": "0.0.0.0"}
     )
@@ -410,9 +412,8 @@ async def test_form_already_configured(hass):
     assert entry.data["host"] == "1.1.1.1"
 
 
-async def test_zeroconf(hass):
+async def test_zeroconf(hass, mock_zeroconf):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "boschshcpy.session.SHCSession.mdns_info",
@@ -479,9 +480,9 @@ async def test_zeroconf(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_already_configured(hass):
+async def test_zeroconf_already_configured(hass, mock_zeroconf):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain="bosch_shc", unique_id="test-mac", data={"host": "0.0.0.0"}
     )
@@ -512,7 +513,7 @@ async def test_zeroconf_already_configured(hass):
     assert entry.data["host"] == "1.1.1.1"
 
 
-async def test_zeroconf_cannot_connect(hass):
+async def test_zeroconf_cannot_connect(hass, mock_zeroconf):
     """Test we get the form."""
     with patch(
         "boschshcpy.session.SHCSession.mdns_info", side_effect=SHCConnectionError
@@ -526,20 +527,27 @@ async def test_zeroconf_cannot_connect(hass):
         assert result["reason"] == "cannot_connect"
 
 
-async def test_zeroconf_not_bosch_shc(hass):
+async def test_zeroconf_not_bosch_shc(hass, mock_zeroconf):
     """Test we filter out non-bosch_shc devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"host": "1.1.1.1", "name": "notboschshc"},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="1.1.1.1",
+            hostname="mock_hostname",
+            name="notboschshc",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
         context={"source": config_entries.SOURCE_ZEROCONF},
     )
     assert result["type"] == "abort"
     assert result["reason"] == "not_bosch_shc"
 
 
-async def test_reauth(hass):
+async def test_reauth(hass, mock_zeroconf):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test-mac",
@@ -617,9 +625,13 @@ async def test_tls_assets_writer(hass):
     }
     with patch("os.mkdir"), patch("builtins.open", mock_open()) as mocked_file:
         write_tls_asset(hass, CONF_SHC_CERT, assets["cert"])
-        mocked_file.assert_called_with(hass.config.path(DOMAIN, CONF_SHC_CERT), "w")
+        mocked_file.assert_called_with(
+            hass.config.path(DOMAIN, CONF_SHC_CERT), "w", encoding="utf8"
+        )
         mocked_file().write.assert_called_with("content_cert")
 
         write_tls_asset(hass, CONF_SHC_KEY, assets["key"])
-        mocked_file.assert_called_with(hass.config.path(DOMAIN, CONF_SHC_KEY), "w")
+        mocked_file.assert_called_with(
+            hass.config.path(DOMAIN, CONF_SHC_KEY), "w", encoding="utf8"
+        )
         mocked_file().write.assert_called_with("content_key")

@@ -6,11 +6,12 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers import config_validation as cv, integration_platform, intent
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Intent component."""
     hass.http.register_view(IntentHandleView())
 

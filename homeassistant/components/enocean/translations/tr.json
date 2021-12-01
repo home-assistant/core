@@ -11,12 +11,14 @@
             "detect": {
                 "data": {
                     "path": "USB dongle yolu"
-                }
+                },
+                "title": "ENOcean dongle yolunu se\u00e7in"
             },
             "manual": {
                 "data": {
                     "path": "USB dongle yolu"
-                }
+                },
+                "title": "Enocean dongle yolunu girin"
             }
         }
     }

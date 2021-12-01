@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Naam"
+                },
+                "description": "Voor deze integratie is de app Notifications for Android TV vereist.\n\nVoor Android TV: https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\nVoor Fire TV: https://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK\n\nU moet een DHCP-reservering op uw router instellen (raadpleeg de gebruikershandleiding van uw router) of een statisch IP-adres op het apparaat instellen. Zo niet, dan zal het apparaat uiteindelijk onbeschikbaar worden.",
+                "title": "Meldingen voor Android TV / Fire TV"
+            }
+        }
+    }
+}

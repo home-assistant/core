@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout generating authorise URL.",
+            "unknown_authorize_url_generation": "Unknown error generating an authorise URL."
+        }
+    }
+}

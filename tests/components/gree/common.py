@@ -62,6 +62,7 @@ def build_device_mock(name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc1122
         horizontal_swing=0,
         vertical_swing=0,
         target_temperature=25,
+        current_temperature=25,
         power=False,
         sleep=False,
         quiet=False,

@@ -9,7 +9,7 @@
             "invalid_host": "La entrada del host no estaba en formato URL completo, por ejemplo, http://192.168.10.100:80",
             "unknown": "Error inesperado"
         },
-        "flow_title": "Dispositivos Universales ISY994 {nombre} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -35,6 +35,14 @@
                 "description": "Configura las opciones para la integraci\u00f3n de ISY: \n \u2022 Cadena Nodo Sensor: Cualquier dispositivo o carpeta que contenga 'Cadena Nodo Sensor' en el nombre ser\u00e1 tratada como un sensor o un sensor binario. \n \u2022 Ignorar Cadena: Cualquier dispositivo con 'Ignorar Cadena' en el nombre ser\u00e1 ignorado. \n \u2022 Restaurar Intensidad de la Luz: Si se habilita, la intensidad anterior ser\u00e1 restaurada al encender una luz en lugar de usar el nivel predeterminado del dispositivo.",
                 "title": "Opciones ISY994"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "ISY conectado",
+            "host_reachable": "Anfitri\u00f3n accesible",
+            "last_heartbeat": "Hora del \u00faltimo latido",
+            "websocket_status": "Estado del conector de eventos"
         }
     }
 }

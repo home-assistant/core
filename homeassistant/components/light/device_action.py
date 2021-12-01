@@ -32,6 +32,8 @@ from . import (
     get_supported_color_modes,
 )
 
+# mypy: disallow-any-generics
+
 TYPE_BRIGHTNESS_INCREASE = "brightness_increase"
 TYPE_BRIGHTNESS_DECREASE = "brightness_decrease"
 TYPE_FLASH = "flash"
@@ -86,7 +88,9 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions."""
     actions = await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
 
@@ -119,7 +123,9 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     return actions
 
 
-async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_action_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List action capabilities."""
     if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
         return {}

@@ -1,11 +1,16 @@
 """Support for monitoring energy usage using the DTE energy bridge."""
+from http import HTTPStatus
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, HTTP_OK
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,6 +46,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DteEnergyBridgeSensor(SensorEntity):
     """Implementation of the DTE Energy Bridge sensors."""
 
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
     def __init__(self, ip_address, name, version):
         """Initialize the sensor."""
         self._version = version
@@ -60,12 +67,12 @@ class DteEnergyBridgeSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
@@ -84,7 +91,7 @@ class DteEnergyBridgeSensor(SensorEntity):
             )
             return
 
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.warning(
                 "Invalid status_code from DTE Energy Bridge: %s (%s)",
                 response.status_code,

@@ -81,7 +81,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 sensors.append(WirelessTagBinarySensor(platform, tag, sensor_type))
 
     add_entities(sensors, True)
-    hass.add_job(platform.install_push_notifications, sensors)
 
 
 class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
@@ -134,8 +133,8 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
         return self.principal_value
 
     @callback
-    def _on_binary_event_callback(self, event):
+    def _on_binary_event_callback(self, new_tag):
         """Update state from arrived push notification."""
-        # state should be 'on' or 'off'
-        self._state = event.data.get("state")
+        self._tag = new_tag
+        self._state = self.updated_state_value()
         self.async_write_ha_state()

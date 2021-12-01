@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from serial import SerialException
 
-from homeassistant import config_entries
-from homeassistant.components.litejet.const import DOMAIN
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.litejet.const import CONF_DEFAULT_TRANSITION, DOMAIN
 from homeassistant.const import CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -76,3 +76,22 @@ async def test_import_step(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == test_data[CONF_PORT]
     assert result["data"] == test_data
+
+
+async def test_options(hass):
+    """Test updating options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_PORT: "/dev/test"})
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_DEFAULT_TRANSITION: 12},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {CONF_DEFAULT_TRANSITION: 12}

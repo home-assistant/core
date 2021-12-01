@@ -1,8 +1,6 @@
 """The NEW_NAME integration."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +11,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
 from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
@@ -34,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["light"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NEW_NAME component."""
     hass.data[DOMAIN] = {}
 

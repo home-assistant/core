@@ -20,5 +20,14 @@
                 "title": "Wykryto urz\u0105dzenie WLED"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Utw\u00f3rz encj\u0119 \"master light\", nawet z 1 segmentem LED."
+                }
+            }
+        }
     }
 }

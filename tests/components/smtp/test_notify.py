@@ -1,5 +1,4 @@
 """The tests for the notify smtp platform."""
-from os import path
 import re
 from unittest.mock import patch
 
@@ -12,13 +11,15 @@ from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 
+from tests.common import get_fixture_path
+
 
 class MockSMTP(MailNotificationService):
     """Test SMTP object that doesn't need a working server."""
 
-    def _send_email(self, msg):
-        """Just return string for testing."""
-        return msg.as_string()
+    def _send_email(self, msg, recipients):
+        """Just return msg string and recipients for testing."""
+        return msg.as_string(), recipients
 
 
 async def test_reload_notify(hass):
@@ -45,11 +46,7 @@ async def test_reload_notify(hass):
 
     assert hass.services.has_service(notify.DOMAIN, DOMAIN)
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "smtp/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "smtp")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
         "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
     ):
@@ -63,10 +60,6 @@ async def test_reload_notify(hass):
 
     assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
     assert hass.services.has_service(notify.DOMAIN, "smtp_reloaded")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))
 
 
 @pytest.fixture
@@ -140,7 +133,7 @@ def test_send_message(message_data, data, content_type, hass, message):
     """Verify if we can send messages of all types correctly."""
     sample_email = "<mock@mock>"
     with patch("email.utils.make_msgid", return_value=sample_email):
-        result = message.send_message(message_data, data=data)
+        result, _ = message.send_message(message_data, data=data)
         assert content_type in result
 
 
@@ -162,5 +155,30 @@ def test_send_text_message(hass, message):
     sample_email = "<mock@mock>"
     message_data = "Test msg"
     with patch("email.utils.make_msgid", return_value=sample_email):
-        result = message.send_message(message_data)
+        result, _ = message.send_message(message_data)
         assert re.search(expected, result)
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        None,
+        "target@example.com",
+    ],
+    ids=[
+        "Verify we can send email to default recipient.",
+        "Verify email recipient can be overwritten by target arg.",
+    ],
+)
+def test_send_target_message(target, hass, message):
+    """Verify if we can send email to correct recipient."""
+    sample_email = "<mock@mock>"
+    message_data = "Test msg"
+    with patch("email.utils.make_msgid", return_value=sample_email):
+        if not target:
+            expected_recipient = ["recip1@example.com", "testrecip@test.com"]
+        else:
+            expected_recipient = target
+
+        _, recipient = message.send_message(message_data, target=target)
+        assert recipient == expected_recipient

@@ -3,11 +3,11 @@ from itertools import product
 
 from homeassistant.const import (
     DEGREE,
+    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
-    VOLT,
 )
 
 PLATFORMS = ["binary_sensor", "climate", "cover", "light", "scene", "sensor", "switch"]
@@ -171,7 +171,7 @@ VAR_UNITS = [
     "PERCENT",
     "PPM",
     "VOLT",
-    VOLT,
+    ELECTRIC_POTENTIAL_VOLT,
     "AMPERE",
     "AMP",
     "A",

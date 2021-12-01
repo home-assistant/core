@@ -18,10 +18,10 @@
             "user": {
                 "data": {
                     "base_path": "Chemin d'acc\u00e8s relatif \u00e0 l'imprimante",
-                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "host": "H\u00f4te",
                     "port": "Port",
-                    "ssl": "L'imprimante prend en charge la communication via SSL/TLS",
-                    "verify_ssl": "L'imprimante utilise un certificat SSL appropri\u00e9"
+                    "ssl": "Utilise un certificat SSL",
+                    "verify_ssl": "V\u00e9rifier le certificat SSL"
                 },
                 "description": "Configurez votre imprimante via IPP (Internet Printing Protocol) pour l'int\u00e9grer \u00e0 Home Assistant",
                 "title": "Reliez votre imprimante"

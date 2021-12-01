@@ -1,8 +1,7 @@
 """Auth provider that validates credentials via an external command."""
 from __future__ import annotations
 
-import asyncio.subprocess
-import collections
+import asyncio
 from collections.abc import Mapping
 import logging
 import os
@@ -16,6 +15,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
+
+# mypy: disallow-any-generics
 
 CONF_ARGS = "args"
 CONF_META = "meta"
@@ -56,7 +57,7 @@ class CommandLineAuthProvider(AuthProvider):
         super().__init__(*args, **kwargs)
         self._user_meta: dict[str, dict[str, Any]] = {}
 
-    async def async_login_flow(self, context: dict | None) -> LoginFlow:
+    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
         return CommandLineLoginFlow(self)
 
@@ -64,7 +65,7 @@ class CommandLineAuthProvider(AuthProvider):
         """Validate a username and password."""
         env = {"username": username, "password": password}
         try:
-            process = await asyncio.subprocess.create_subprocess_exec(  # pylint: disable=no-member
+            process = await asyncio.create_subprocess_exec(
                 self.config[CONF_COMMAND],
                 *self.config[CONF_ARGS],
                 env=env,
@@ -146,10 +147,13 @@ class CommandLineLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema: dict[str, type] = collections.OrderedDict()
-        schema["username"] = str
-        schema["password"] = str
-
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(schema), errors=errors
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("username"): str,
+                    vol.Required("password"): str,
+                }
+            ),
+            errors=errors,
         )

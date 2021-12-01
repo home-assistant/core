@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "azimuth": "Acimut (360 grados, 0 = Norte, 90 = Este, 180 = Sur, 270 = Oeste)",
+                    "declination": "Declinaci\u00f3n (0 = Horizontal, 90 = Vertical)",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "modules power": "Potencia total en vatios pico de sus m\u00f3dulos solares",
+                    "name": "Nombre"
+                },
+                "description": "Rellene los datos de sus paneles solares. Consulte la documentaci\u00f3n si alg\u00fan campo no est\u00e1 claro."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "api_key": "Clave API de Forecast.Solar (opcional)",
+                    "azimuth": "Azimut (360 grados, 0 = Norte, 90 = Este, 180 = Sur, 270 = Oeste)",
+                    "damping": "Factor de amortiguaci\u00f3n: ajusta los resultados por la ma\u00f1ana y por la noche",
+                    "declination": "Declinaci\u00f3n (0 = Horizontal, 90 = Vertical)",
+                    "modules power": "Potencia pico total en vatios de tus m\u00f3dulos solares"
+                },
+                "description": "Estos valores permiten ajustar el resultado de Solar.Forecast. Consulte la documentaci\u00f3n si un campo no est\u00e1 claro."
+            }
+        }
+    }
+}

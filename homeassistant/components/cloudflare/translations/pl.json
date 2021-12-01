@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
@@ -11,6 +12,12 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "Token API",
+                    "description": "Ponownie uwierzytelnij za pomoc\u0105 konta Cloudflare."
+                }
+            },
             "records": {
                 "data": {
                     "records": "Rekordy"

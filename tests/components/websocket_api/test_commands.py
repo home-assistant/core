@@ -369,7 +369,7 @@ async def test_subscribe_unsubscribe_events(hass, websocket_client):
     hass.bus.async_fire("test_event", {"hello": "world"})
     hass.bus.async_fire("ignore_event")
 
-    with timeout(3):
+    async with timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 5
@@ -459,12 +459,14 @@ async def test_ping(websocket_client):
     assert msg["type"] == "pong"
 
 
-async def test_call_service_context_with_user(hass, aiohttp_client, hass_access_token):
+async def test_call_service_context_with_user(
+    hass, hass_client_no_auth, hass_access_token
+):
     """Test that the user is set in the service call context."""
     assert await async_setup_component(hass, "websocket_api", {})
 
     calls = async_mock_service(hass, "domain_test", "test_service")
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()
@@ -564,7 +566,7 @@ async def test_subscribe_unsubscribe_events_whitelist(
 
     hass.bus.async_fire("themes_updated")
 
-    with timeout(3):
+    async with timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 6
@@ -920,12 +922,14 @@ async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
     assert msg["success"]
     assert msg["result"] == {
         "test_domain.entity_1": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
         "test_domain.entity_2": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
     }
 
@@ -940,8 +944,9 @@ async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
     assert msg["success"]
     assert msg["result"] == {
         "test_domain.entity_2": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
     }
 
@@ -960,12 +965,14 @@ async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
     assert msg["success"]
     assert msg["result"] == {
         "test_domain.entity_1": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
         "test_domain.entity_2": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
     }
 
@@ -999,8 +1006,9 @@ async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
     assert msg["success"]
     assert msg["result"] == {
         "test_domain.entity_2": {
-            "source": entity.SOURCE_PLATFORM_CONFIG,
+            "custom_component": False,
             "domain": "test_platform",
+            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
     }
 
@@ -1043,7 +1051,7 @@ async def test_subscribe_trigger(hass, websocket_client):
     hass.bus.async_fire("test_event", {"hello": "world"}, context=context)
     hass.bus.async_fire("ignore_event")
 
-    with timeout(3):
+    async with timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 5

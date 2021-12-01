@@ -25,13 +25,13 @@ def melissa_mock():
     """Use this to mock the melissa api."""
     api = Mock()
     api.async_fetch_devices = AsyncMock(
-        return_value=json.loads(load_fixture("melissa_fetch_devices.json"))
+        return_value=json.loads(load_fixture("fetch_devices.json", "melissa"))
     )
     api.async_status = AsyncMock(
-        return_value=json.loads(load_fixture("melissa_status.json"))
+        return_value=json.loads(load_fixture("status.json", "melissa"))
     )
     api.async_cur_settings = AsyncMock(
-        return_value=json.loads(load_fixture("melissa_cur_settings.json"))
+        return_value=json.loads(load_fixture("cur_settings.json", "melissa"))
     )
 
     api.async_send = AsyncMock(return_value=True)

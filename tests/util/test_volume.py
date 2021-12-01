@@ -3,6 +3,8 @@
 import pytest
 
 from homeassistant.const import (
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
     VOLUME_FLUID_OUNCE,
     VOLUME_GALLONS,
     VOLUME_LITERS,
@@ -47,3 +49,21 @@ def test_convert_from_gallons():
     """Test conversion from gallons to other units."""
     gallons = 5
     assert volume_util.convert(gallons, VOLUME_GALLONS, VOLUME_LITERS) == 18.925
+
+
+def test_convert_from_cubic_meters():
+    """Test conversion from cubic meter to other units."""
+    cubic_meters = 5
+    assert (
+        volume_util.convert(cubic_meters, VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET)
+        == 176.5733335
+    )
+
+
+def test_convert_from_cubic_feet():
+    """Test conversion from cubic feet to cubic meters to other units."""
+    cubic_feets = 500
+    assert (
+        volume_util.convert(cubic_feets, VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS)
+        == 14.1584233
+    )

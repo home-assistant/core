@@ -13,6 +13,15 @@
                 "description": "Utilice la API en la nube de AirVisual para monitorear una latitud / longitud.",
                 "title": "Configurar una geograf\u00eda"
             },
+            "geography_by_name": {
+                "data": {
+                    "city": "Ciudad",
+                    "country": "Pa\u00eds",
+                    "state": "estado"
+                },
+                "description": "Utilice la API en la nube de AirVisual para monitorear una ciudad/estado/pa\u00eds.",
+                "title": "Configurar una geograf\u00eda"
+            },
             "node_pro": {
                 "data": {
                     "ip_address": "Direcci\u00f3n IP/nombre de host de la unidad",
@@ -20,6 +29,9 @@
                 },
                 "description": "Monitoree una unidad AirVisual personal. La contrase\u00f1a se puede recuperar de la interfaz de usuario de la unidad.",
                 "title": "Configurar un AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "title": "Vuelva a autenticar AirVisual"
             },
             "user": {
                 "description": "Monitoree la calidad del aire en una ubicaci\u00f3n geogr\u00e1fica.",

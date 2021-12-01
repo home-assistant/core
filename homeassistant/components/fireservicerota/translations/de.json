@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account wurde schon konfiguriert",
-            "reauth_successful": "Neuauthentifizierung erfolgreich"
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "create_entry": {
-            "default": "Authentifizierung erfolgreich"
+            "default": "Erfolgreich authentifiziert"
         },
         "error": {
-            "invalid_auth": "Authentifizienung ung\u00fcltig"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
             "reauth": {
@@ -21,7 +21,7 @@
                 "data": {
                     "password": "Passwort",
                     "url": "Webseite",
-                    "username": "Nutzername"
+                    "username": "Benutzername"
                 }
             }
         }

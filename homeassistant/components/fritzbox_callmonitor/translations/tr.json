@@ -17,8 +17,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
-                    "password": "\u015eifre",
+                    "host": "Ana bilgisayar",
+                    "password": "Parola",
                     "port": "Port",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 }

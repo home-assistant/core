@@ -4,24 +4,30 @@ from __future__ import annotations
 import logging
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import NodeStatus
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .helpers import get_device_id, get_unique_id
+from .migrate import async_add_migration_entity_value
 
 LOGGER = logging.getLogger(__name__)
 
 EVENT_VALUE_UPDATED = "value updated"
+EVENT_DEAD = "dead"
+EVENT_ALIVE = "alive"
 
 
 class ZWaveBaseEntity(Entity):
     """Generic Entity Class for a Z-Wave Device."""
+
+    _attr_should_poll = False
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
@@ -43,11 +49,14 @@ class ZWaveBaseEntity(Entity):
         self._attr_unique_id = get_unique_id(
             self.client.driver.controller.home_id, self.info.primary_value.value_id
         )
+        self._attr_entity_registry_enabled_default = (
+            self.info.entity_registry_enabled_default
+        )
         self._attr_assumed_state = self.info.assumed_state
         # device is precreated in main handler
-        self._attr_device_info = {
-            "identifiers": {get_device_id(self.client, self.info.node)},
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={get_device_id(self.client, self.info.node)},
+        )
 
     @callback
     def on_value_update(self) -> None:
@@ -90,12 +99,22 @@ class ZWaveBaseEntity(Entity):
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
         )
+        for status_event in (EVENT_ALIVE, EVENT_DEAD):
+            self.async_on_remove(
+                self.info.node.on(status_event, self._node_status_alive_or_dead)
+            )
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{DOMAIN}_{self.unique_id}_poll_value",
                 self.async_poll_value,
             )
+        )
+
+        # Add legacy Z-Wave migration data.
+        await async_add_migration_entity_value(
+            self.hass, self.config_entry, self.entity_id, self.info
         )
 
     def generate_name(
@@ -135,7 +154,20 @@ class ZWaveBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.client.connected and bool(self.info.node.ready)
+        return (
+            self.client.connected
+            and bool(self.info.node.ready)
+            and self.info.node.status != NodeStatus.DEAD
+        )
+
+    @callback
+    def _node_status_alive_or_dead(self, event_data: dict) -> None:
+        """
+        Call when node status changes to alive or dead.
+
+        Should not be overridden by subclasses.
+        """
+        self.async_write_ha_state()
 
     @callback
     def _value_changed(self, event_data: dict) -> None:
@@ -192,13 +224,13 @@ class ZWaveBaseEntity(Entity):
         # If we haven't found a value and check_all_endpoints is True, we should
         # return the first value we can find on any other endpoint
         if return_value is None and check_all_endpoints:
-            for endpoint_ in self.info.node.endpoints:
-                if endpoint_.index != self.info.primary_value.endpoint:
+            for endpoint_idx in self.info.node.endpoints:
+                if endpoint_idx != self.info.primary_value.endpoint:
                     value_id = get_value_id(
                         self.info.node,
                         command_class,
                         value_property,
-                        endpoint=endpoint_.index,
+                        endpoint=endpoint_idx,
                         property_key=value_property_key,
                     )
                     return_value = self.info.node.values.get(value_id)
@@ -213,8 +245,3 @@ class ZWaveBaseEntity(Entity):
         ):
             self.watched_value_ids.add(return_value.value_id)
         return return_value
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False

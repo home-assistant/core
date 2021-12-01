@@ -22,6 +22,7 @@
     },
     "system_health": {
         "info": {
+            "can_reach_server": "\u00c9rje el az Airly szervert",
             "requests_per_day": "Enged\u00e9lyezett k\u00e9r\u00e9sek naponta",
             "requests_remaining": "Fennmarad\u00f3 enged\u00e9lyezett k\u00e9r\u00e9sek"
         }

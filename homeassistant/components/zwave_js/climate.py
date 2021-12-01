@@ -4,14 +4,15 @@ from __future__ import annotations
 from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import (
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
+    THERMOSTAT_HUMIDITY_PROPERTY,
     THERMOSTAT_MODE_PROPERTY,
     THERMOSTAT_MODE_SETPOINT_MAP,
     THERMOSTAT_MODES,
     THERMOSTAT_OPERATING_STATE_PROPERTY,
     THERMOSTAT_SETPOINT_PROPERTY,
-    CommandClass,
     ThermostatMode,
     ThermostatOperatingState,
     ThermostatSetpointType,
@@ -59,7 +60,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.temperature import convert_temperature
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
@@ -121,7 +122,7 @@ async def async_setup_entry(
 
         async_add_entities(entities)
 
-    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{CLIMATE_DOMAIN}",
@@ -176,7 +177,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if not self._unit_value:
             self._unit_value = self._current_temp
         self._current_humidity = self.get_zwave_value(
-            "Humidity",
+            THERMOSTAT_HUMIDITY_PROPERTY,
             command_class=CommandClass.SENSOR_MULTILEVEL,
             add_to_watched_value_ids=True,
             check_all_endpoints=True,
@@ -208,8 +209,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     def _setpoint_value(self, setpoint_type: ThermostatSetpointType) -> ZwaveValue:
         """Optionally return a ZwaveValue for a setpoint."""
-        val = self._setpoint_values[setpoint_type]
-        if val is None:
+        if (val := self._setpoint_values[setpoint_type]) is None:
             raise ValueError("Value requested is not available")
 
         return val
@@ -230,8 +230,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             mode_id = int(mode_id)
             if mode_id in THERMOSTAT_MODES:
                 # treat value as hvac mode
-                hass_mode = ZW_HVAC_MODE_MAP.get(mode_id)
-                if hass_mode:
+                if hass_mode := ZW_HVAC_MODE_MAP.get(mode_id):
                     all_modes[hass_mode] = mode_id
             else:
                 # treat value as hvac preset
@@ -469,15 +468,14 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        if not self._current_mode:
-            # Thermostat(valve) with no support for setting a mode
-            raise ValueError(
-                f"Thermostat {self.entity_id} does not support setting a mode"
-            )
-        hvac_mode_value = self._hvac_modes.get(hvac_mode)
-        if hvac_mode_value is None:
+        if (hvac_mode_id := self._hvac_modes.get(hvac_mode)) is None:
             raise ValueError(f"Received an invalid hvac mode: {hvac_mode}")
-        await self.info.node.async_set_value(self._current_mode, hvac_mode_value)
+
+        if not self._current_mode:
+            # Thermostat(valve) has no support for setting a mode, so we make it a no-op
+            return
+
+        await self.info.node.async_set_value(self._current_mode, hvac_mode_id)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""

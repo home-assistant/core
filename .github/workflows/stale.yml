@@ -16,7 +16,7 @@ jobs:
       # - No PRs marked as no-stale
       # - No issues marked as no-stale or help-wanted
       - name: 90 days stale issues & PRs policy
-        uses: actions/stale@v3.0.19
+        uses: actions/stale@v4
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 90
@@ -53,7 +53,7 @@ jobs:
       # - No PRs marked as no-stale or new-integrations
       # - No issues (-1)
       - name: 30 days stale PRs policy
-        uses: actions/stale@v3.0.19
+        uses: actions/stale@v4
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 30
@@ -78,7 +78,7 @@ jobs:
       # - No Issues marked as no-stale or help-wanted
       # - No PRs (-1)
       - name: Needs more information stale issues policy
-        uses: actions/stale@v3.0.19
+        uses: actions/stale@v4
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           only-labels: "needs-more-information"

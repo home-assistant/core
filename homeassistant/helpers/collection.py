@@ -139,15 +139,15 @@ class ObservableCollection(ABC):
     async def notify_changes(self, change_sets: Iterable[CollectionChangeSet]) -> None:
         """Notify listeners of a change."""
         await asyncio.gather(
-            *[
+            *(
                 listener(change_set.change_type, change_set.item_id, change_set.item)
                 for listener in self.listeners
                 for change_set in change_sets
-            ],
-            *[
+            ),
+            *(
                 change_set_listener(change_sets)
                 for change_set_listener in self.change_set_listeners
-            ],
+            ),
         )
 
 
@@ -368,10 +368,10 @@ def sync_entity_lifecycle(
             new_entities = [
                 entity
                 for entity in await asyncio.gather(
-                    *[
+                    *(
                         _func_map[change_set.change_type](change_set)
                         for change_set in grouped
-                    ]
+                    )
                 )
                 if entity is not None
             ]

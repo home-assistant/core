@@ -99,7 +99,7 @@ class StationPriceSensor(CoordinatorEntity, SensorEntity):
         return f"{station_name} {self._fuel_type}"
 
     @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             return None
@@ -117,7 +117,7 @@ class StationPriceSensor(CoordinatorEntity, SensorEntity):
         }
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the units of measurement."""
         return f"{CURRENCY_CENT}/{VOLUME_LITERS}"
 

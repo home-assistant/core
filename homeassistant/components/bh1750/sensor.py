@@ -96,42 +96,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BH1750Sensor(SensorEntity):
     """Implementation of the BH1750 sensor."""
 
+    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+
     def __init__(self, bh1750_sensor, name, unit, multiplier=1.0):
         """Initialize the sensor."""
-        self._name = name
-        self._unit_of_measurement = unit
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit
         self._multiplier = multiplier
         self.bh1750_sensor = bh1750_sensor
-        if self.bh1750_sensor.light_level >= 0:
-            self._state = int(round(self.bh1750_sensor.light_level))
-        else:
-            self._state = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self) -> int:
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of the sensor."""
-        return self._unit_of_measurement
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_ILLUMINANCE
 
     async def async_update(self):
         """Get the latest data from the BH1750 and update the states."""
         await self.hass.async_add_executor_job(self.bh1750_sensor.update)
         if self.bh1750_sensor.sample_ok and self.bh1750_sensor.light_level >= 0:
-            self._state = int(round(self.bh1750_sensor.light_level * self._multiplier))
+            self._attr_native_value = int(
+                round(self.bh1750_sensor.light_level * self._multiplier)
+            )
         else:
             _LOGGER.warning(
                 "Bad Update of sensor.%s: %s", self.name, self.bh1750_sensor.light_level

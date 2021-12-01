@@ -139,7 +139,7 @@ def execute_script(hass, name, data=None):
     """Execute a script."""
     filename = f"{name}.py"
     raise_if_invalid_filename(filename)
-    with open(hass.config.path(FOLDER, filename)) as fil:
+    with open(hass.config.path(FOLDER, filename), encoding="utf8") as fil:
         source = fil.read()
     execute(hass, filename, source, data)
 
@@ -195,6 +195,7 @@ def execute(hass, filename, source, data=None):
         "sum": sum,
         "any": any,
         "all": all,
+        "enumerate": enumerate,
     }
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)

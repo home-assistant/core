@@ -1,11 +1,11 @@
 """Native Home Assistant iOS app component."""
 import datetime
+from http import HTTPStatus
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
@@ -333,7 +333,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
 
@@ -348,6 +348,8 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         try:
             save_json(self._config_path, hass.data[DOMAIN])
         except HomeAssistantError:
-            return self.json_message("Error saving device.", HTTP_INTERNAL_SERVER_ERROR)
+            return self.json_message(
+                "Error saving device.", HTTPStatus.INTERNAL_SERVER_ERROR
+            )
 
         return self.json({"status": "registered"})

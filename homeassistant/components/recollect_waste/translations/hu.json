@@ -18,6 +18,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "friendly_name": "Bar\u00e1ts\u00e1gos nevek haszn\u00e1lata a felv\u00e9teli t\u00edpusok eset\u00e9ben (ha lehets\u00e9ges)"
+                },
                 "title": "Recollect Waste konfigur\u00e1l\u00e1sa"
             }
         }

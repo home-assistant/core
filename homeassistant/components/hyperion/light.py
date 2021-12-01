@@ -1,11 +1,11 @@
 """Support for Hyperion-NG remotes."""
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable
+from typing import Any
 
 from hyperion import client, const
 
@@ -240,12 +240,12 @@ class HyperionBaseLight(LightEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._instance_name,
-            "manufacturer": HYPERION_MANUFACTURER_NAME,
-            "model": HYPERION_MODEL_NAME,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=HYPERION_MANUFACTURER_NAME,
+            model=HYPERION_MODEL_NAME,
+            name=self._instance_name,
+        )
 
     def _get_option(self, key: str) -> Any:
         """Get a value from the provided options."""
@@ -527,10 +527,10 @@ class HyperionLight(HyperionBaseLight):
         # color, effect), but this is not possible due to:
         # https://github.com/hyperion-project/hyperion.ng/issues/967
         if not bool(self._client.is_on()):
-            for component in [
+            for component in (
                 const.KEY_COMPONENTID_ALL,
                 const.KEY_COMPONENTID_LEDDEVICE,
-            ]:
+            ):
                 if not await self._client.async_send_set_component(
                     **{
                         const.KEY_COMPONENTSTATE: {

@@ -6,8 +6,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RokuDataUpdateCoordinator, roku_exception_handler
+from . import roku_exception_handler
 from .const import DOMAIN
+from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 
 
@@ -15,7 +16,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-) -> bool:
+) -> None:
     """Load Roku remote based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = coordinator.data.info.serial_number

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfiugrert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_token": "Ugyldig tilgangstoken",
+            "reauth_successful": "Re-autentisering var vellykket",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "not_allowing_new_tokens": "Nanoleaf tillater ikke nye tokens, f\u00f8lg instruksjonene ovenfor.",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "link": {
+                "description": "Trykk og hold inne str\u00f8mknappen p\u00e5 Nanoleaf i 5 sekunder til knappene begynner \u00e5 blinke, og klikk deretter ** SEND ** innen 30 sekunder.",
+                "title": "Lenke Nanoleaf"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                }
+            }
+        }
+    }
+}

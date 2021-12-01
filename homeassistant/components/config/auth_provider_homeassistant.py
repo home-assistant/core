@@ -31,9 +31,8 @@ async def async_setup(hass):
 async def websocket_create(hass, connection, msg):
     """Create credentials and attach to a user."""
     provider = auth_ha.async_get_provider(hass)
-    user = await hass.auth.async_get_user(msg["user_id"])
 
-    if user is None:
+    if (user := await hass.auth.async_get_user(msg["user_id"])) is None:
         connection.send_error(msg["id"], "not_found", "User not found")
         return
 
@@ -103,8 +102,7 @@ async def websocket_delete(hass, connection, msg):
 @websocket_api.async_response
 async def websocket_change_password(hass, connection, msg):
     """Change current user password."""
-    user = connection.user
-    if user is None:
+    if (user := connection.user) is None:
         connection.send_error(msg["id"], "user_not_found", "User not found")
         return
 
@@ -150,9 +148,7 @@ async def websocket_admin_change_password(hass, connection, msg):
     if not connection.user.is_owner:
         raise Unauthorized(context=connection.context(msg))
 
-    user = await hass.auth.async_get_user(msg["user_id"])
-
-    if user is None:
+    if (user := await hass.auth.async_get_user(msg["user_id"])) is None:
         connection.send_error(msg["id"], "user_not_found", "User not found")
         return
 

@@ -2,7 +2,9 @@
 from unittest.mock import patch
 
 import pytest
+from synology_dsm.exceptions import SynologyDSMLoginInvalidException
 
+from homeassistant import data_entry_flow
 from homeassistant.components.synology_dsm.const import DOMAIN, SERVICES
 from homeassistant.const import (
     CONF_HOST,
@@ -40,3 +42,29 @@ async def test_services_registered(hass: HomeAssistant):
         assert await hass.config_entries.async_setup(entry.entry_id)
         for service in SERVICES:
             assert hass.services.has_service(DOMAIN, service)
+
+
+@pytest.mark.no_bypass_setup
+async def test_reauth_triggered(hass: HomeAssistant):
+    """Test if reauthentication flow is triggered."""
+    with patch(
+        "homeassistant.components.synology_dsm.SynoApi.async_setup",
+        side_effect=SynologyDSMLoginInvalidException(USERNAME),
+    ), patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSMFlowHandler.async_step_reauth",
+        return_value={"type": data_entry_flow.RESULT_TYPE_FORM},
+    ) as mock_async_step_reauth:
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+                CONF_MAC: MACS[0],
+            },
+        )
+        entry.add_to_hass(hass)
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        mock_async_step_reauth.assert_called_once()

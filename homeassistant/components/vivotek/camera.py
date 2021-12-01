@@ -1,4 +1,6 @@
 """Support for Vivotek IP Cameras."""
+from __future__ import annotations
+
 from libpyvivotek import VivotekCamera
 import voluptuous as vol
 
@@ -87,7 +89,9 @@ class VivotekCam(Camera):
         """Return the interval between frames of the mjpeg stream."""
         return self._frame_interval
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         return self._cam.snapshot()
 

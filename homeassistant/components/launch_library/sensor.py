@@ -42,48 +42,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class LaunchLibrarySensor(SensorEntity):
     """Representation of a launch_library Sensor."""
 
-    def __init__(self, launches: PyLaunches, name: str) -> None:
+    _attr_icon = "mdi:rocket"
+
+    def __init__(self, api: PyLaunches, name: str) -> None:
         """Initialize the sensor."""
-        self.launches = launches
-        self.next_launch = None
-        self._name = name
+        self.api = api
+        self._attr_name = name
 
     async def async_update(self) -> None:
         """Get the latest data."""
         try:
-            launches = await self.launches.upcoming_launches()
+            launches = await self.api.upcoming_launches()
         except PyLaunchesException as exception:
             _LOGGER.error("Error getting data, %s", exception)
+            self._attr_available = False
         else:
-            if launches:
-                self.next_launch = launches[0]
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the sensor."""
-        if self.next_launch:
-            return self.next_launch.name
-        return None
-
-    @property
-    def icon(self) -> str:
-        """Return the icon of the sensor."""
-        return "mdi:rocket"
-
-    @property
-    def extra_state_attributes(self) -> dict | None:
-        """Return attributes for the sensor."""
-        if self.next_launch:
-            return {
-                ATTR_LAUNCH_TIME: self.next_launch.net,
-                ATTR_AGENCY: self.next_launch.launch_service_provider.name,
-                ATTR_AGENCY_COUNTRY_CODE: self.next_launch.pad.location.country_code,
-                ATTR_STREAM: self.next_launch.webcast_live,
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-            }
-        return None
+            if next_launch := next((launch for launch in launches), None):
+                self._attr_available = True
+                self._attr_native_value = next_launch.name
+                self._attr_extra_state_attributes = {
+                    ATTR_LAUNCH_TIME: next_launch.net,
+                    ATTR_AGENCY: next_launch.launch_service_provider.name,
+                    ATTR_AGENCY_COUNTRY_CODE: next_launch.pad.location.country_code,
+                    ATTR_STREAM: next_launch.webcast_live,
+                    ATTR_ATTRIBUTION: ATTRIBUTION,
+                }

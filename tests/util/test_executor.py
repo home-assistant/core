@@ -24,7 +24,7 @@ async def test_executor_shutdown_can_interrupt_threads(caplog):
     for _ in range(100):
         sleep_futures.append(iexecutor.submit(_loop_sleep_in_executor))
 
-    iexecutor.logged_shutdown()
+    iexecutor.shutdown()
 
     for future in sleep_futures:
         with pytest.raises((concurrent.futures.CancelledError, SystemExit)):
@@ -45,13 +45,13 @@ async def test_executor_shutdown_only_logs_max_attempts(caplog):
     iexecutor.submit(_loop_sleep_in_executor)
 
     with patch.object(executor, "EXECUTOR_SHUTDOWN_TIMEOUT", 0.3):
-        iexecutor.logged_shutdown()
+        iexecutor.shutdown()
 
     assert "time.sleep(0.2)" in caplog.text
     assert (
         caplog.text.count("is still running at shutdown") == executor.MAX_LOG_ATTEMPTS
     )
-    iexecutor.logged_shutdown()
+    iexecutor.shutdown()
 
 
 async def test_executor_shutdown_does_not_log_shutdown_on_first_attempt(caplog):
@@ -65,7 +65,7 @@ async def test_executor_shutdown_does_not_log_shutdown_on_first_attempt(caplog):
     for _ in range(5):
         iexecutor.submit(_do_nothing)
 
-    iexecutor.logged_shutdown()
+    iexecutor.shutdown()
 
     assert "is still running at shutdown" not in caplog.text
 
@@ -83,9 +83,9 @@ async def test_overall_timeout_reached(caplog):
 
     start = time.monotonic()
     with patch.object(executor, "EXECUTOR_SHUTDOWN_TIMEOUT", 0.5):
-        iexecutor.logged_shutdown()
+        iexecutor.shutdown()
     finish = time.monotonic()
 
     assert finish - start < 1
 
-    iexecutor.logged_shutdown()
+    iexecutor.shutdown()

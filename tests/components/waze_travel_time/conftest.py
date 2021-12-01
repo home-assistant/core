@@ -5,12 +5,10 @@ from WazeRouteCalculator import WRCError
 import pytest
 
 
-@pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture():
-    """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
-    ):
+@pytest.fixture(autouse=True)
+def mock_wrc():
+    """Mock out WazeRouteCalculator."""
+    with patch("homeassistant.components.waze_travel_time.sensor.WazeRouteCalculator"):
         yield
 
 

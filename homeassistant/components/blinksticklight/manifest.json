@@ -2,7 +2,7 @@
   "domain": "blinksticklight",
   "name": "BlinkStick",
   "documentation": "https://www.home-assistant.io/integrations/blinksticklight",
-  "requirements": ["blinkstick==1.1.8"],
+  "requirements": ["blinkstick==1.2.0"],
   "codeowners": [],
   "iot_class": "local_polling"
 }

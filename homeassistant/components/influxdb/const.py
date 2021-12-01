@@ -84,7 +84,7 @@ TEST_QUERY_V1 = "SHOW DATABASES;"
 TEST_QUERY_V2 = "buckets()"
 CODE_INVALID_INPUTS = 400
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 RE_DIGIT_TAIL = re.compile(r"^[^\.]*\d+\.?\d+[^\.]*$")
 RE_DECIMAL = re.compile(r"[^\d.]+")

@@ -155,21 +155,20 @@ class SnmpSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     async def async_update(self):
         """Get the latest data and updates the states."""
         await self.data.async_update()
-        value = self.data.value
 
-        if value is None:
+        if (value := self.data.value) is None:
             value = STATE_UNKNOWN
         elif self._value_template is not None:
             value = self._value_template.async_render_with_possible_json_value(

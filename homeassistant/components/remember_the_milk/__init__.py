@@ -163,7 +163,7 @@ class RememberTheMilkConfiguration:
             return
         try:
             _LOGGER.debug("Loading configuration from file: %s", self._config_file_path)
-            with open(self._config_file_path) as config_file:
+            with open(self._config_file_path, encoding="utf8") as config_file:
                 self._config = json.load(config_file)
         except ValueError:
             _LOGGER.error(
@@ -174,7 +174,7 @@ class RememberTheMilkConfiguration:
 
     def save_config(self):
         """Write the configuration to a file."""
-        with open(self._config_file_path, "w") as config_file:
+        with open(self._config_file_path, "w", encoding="utf8") as config_file:
             json.dump(self._config, config_file)
 
     def get_token(self, profile_name):

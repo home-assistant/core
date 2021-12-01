@@ -1,7 +1,6 @@
 """Config flow for buienradar integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -23,8 +22,6 @@ from .const import (
     DOMAIN,
     SUPPORTED_COUNTRY_CODES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -68,18 +65,6 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors={},
-        )
-
-    async def async_step_import(self, import_input: dict[str, Any]) -> FlowResult:
-        """Import a config entry."""
-        latitude = import_input[CONF_LATITUDE]
-        longitude = import_input[CONF_LONGITUDE]
-
-        await self.async_set_unique_id(f"{latitude}-{longitude}")
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=f"{latitude},{longitude}", data=import_input
         )
 
 

@@ -1,7 +1,9 @@
 """InfluxDB component which allows you to get data from an Influx database."""
 from __future__ import annotations
 
+import datetime
 import logging
+from typing import Final
 
 import voluptuous as vol
 
@@ -61,6 +63,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL: Final = datetime.timedelta(seconds=60)
 
 
 def _merge_connection_config_into_query(conf, query):
@@ -218,20 +222,19 @@ class InfluxSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def update(self):
         """Get the latest data from Influxdb and updates the states."""
         self.data.update()
-        value = self.data.value
-        if value is None:
+        if (value := self.data.value) is None:
             value = STATE_UNKNOWN
         if self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(

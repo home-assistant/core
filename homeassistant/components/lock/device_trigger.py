@@ -1,9 +1,14 @@
 """Provides device automations for Lock."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
@@ -13,8 +18,11 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
+    STATE_JAMMED,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
@@ -22,7 +30,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-TRIGGER_TYPES = {"locked", "unlocked"}
+TRIGGER_TYPES = {"locked", "unlocked", "locking", "unlocking", "jammed"}
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
@@ -33,7 +41,9 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for Lock devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -58,7 +68,9 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     return triggers
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(
@@ -71,10 +83,16 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    if config[CONF_TYPE] == "locked":
+    if config[CONF_TYPE] == "jammed":
+        to_state = STATE_JAMMED
+    elif config[CONF_TYPE] == "locking":
+        to_state = STATE_LOCKING
+    elif config[CONF_TYPE] == "unlocking":
+        to_state = STATE_UNLOCKING
+    elif config[CONF_TYPE] == "locked":
         to_state = STATE_LOCKED
     else:
         to_state = STATE_UNLOCKED

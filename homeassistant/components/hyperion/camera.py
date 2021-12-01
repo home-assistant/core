@@ -8,7 +8,6 @@ import binascii
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import functools
-import logging
 from typing import Any
 
 from aiohttp import web
@@ -27,14 +26,13 @@ from homeassistant.components.camera import (
     async_get_still_stream,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
     get_hyperion_device_id,
@@ -51,13 +49,11 @@ from .const import (
     TYPE_HYPERION_CAMERA,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 IMAGE_STREAM_JPG_SENTINEL = "data:image/jpg;base64,"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
@@ -190,7 +186,7 @@ class HyperionCamera(Camera):
             return False
 
         self._image_stream_clients += 1
-        self.is_streaming = True
+        self._attr_is_streaming = True
         self.async_write_ha_state()
         return True
 
@@ -200,7 +196,7 @@ class HyperionCamera(Camera):
 
         if not self._image_stream_clients:
             await self._client.async_send_image_stream_stop()
-            self.is_streaming = False
+            self._attr_is_streaming = False
             self.async_write_ha_state()
 
     @asynccontextmanager
@@ -211,7 +207,9 @@ class HyperionCamera(Camera):
         finally:
             await self._stop_image_streaming_for_client()
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return single camera image bytes."""
         async with self._image_streaming() as is_streaming:
             if is_streaming:
@@ -251,12 +249,12 @@ class HyperionCamera(Camera):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._instance_name,
-            "manufacturer": HYPERION_MANUFACTURER_NAME,
-            "model": HYPERION_MODEL_NAME,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=HYPERION_MANUFACTURER_NAME,
+            model=HYPERION_MODEL_NAME,
+            name=self._instance_name,
+        )
 
 
 CAMERA_TYPES = {

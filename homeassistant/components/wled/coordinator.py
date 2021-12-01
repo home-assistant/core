@@ -2,29 +2,42 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable
+from collections.abc import Callable
 
 from wled import WLED, Device as WLEDDevice, WLEDConnectionClosed, WLEDError
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import (
+    CONF_KEEP_MASTER_LIGHT,
+    DEFAULT_KEEP_MASTER_LIGHT,
+    DOMAIN,
+    LOGGER,
+    SCAN_INTERVAL,
+)
 
 
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
+    keep_master_light: bool
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
         *,
-        host: str,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize global WLED data updater."""
-        self.wled = WLED(host, session=async_get_clientsession(hass))
+        self.keep_master_light = entry.options.get(
+            CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT
+        )
+        self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
         self.unsub: Callable | None = None
 
         super().__init__(
@@ -32,6 +45,13 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+        )
+
+    @property
+    def has_master_light(self) -> bool:
+        """Return if the coordinated device has an master light."""
+        return self.keep_master_light or (
+            self.data is not None and len(self.data.state.segments) > 1
         )
 
     def update_listeners(self) -> None:
@@ -72,6 +92,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
         async def close_websocket(_) -> None:
             """Close WebSocket connection."""
+            self.unsub = None
             await self.wled.disconnect()
 
         # Clean disconnect WebSocket on Home Assistant shutdown

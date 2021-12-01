@@ -2,6 +2,7 @@
 from homeassistant.components import (
     alarm_control_panel,
     binary_sensor,
+    button,
     camera,
     climate,
     cover,
@@ -15,6 +16,7 @@ from homeassistant.components import (
     media_player,
     scene,
     script,
+    select,
     sensor,
     switch,
     vacuum,
@@ -39,6 +41,8 @@ CONF_PRIVATE_KEY = "private_key"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
+    "alarm_control_panel",
+    "binary_sensor",
     "climate",
     "cover",
     "fan",
@@ -47,15 +51,14 @@ DEFAULT_EXPOSED_DOMAINS = [
     "input_boolean",
     "input_select",
     "light",
+    "lock",
     "media_player",
     "scene",
     "script",
+    "select",
+    "sensor",
     "switch",
     "vacuum",
-    "lock",
-    "binary_sensor",
-    "sensor",
-    "alarm_control_panel",
 ]
 
 PREFIX_TYPES = "action.devices.types."
@@ -117,6 +120,8 @@ EVENT_QUERY_RECEIVED = "google_assistant_query"
 EVENT_SYNC_RECEIVED = "google_assistant_sync"
 
 DOMAIN_TO_GOOGLE_TYPES = {
+    alarm_control_panel.DOMAIN: TYPE_ALARM,
+    button.DOMAIN: TYPE_SCENE,
     camera.DOMAIN: TYPE_CAMERA,
     climate.DOMAIN: TYPE_THERMOSTAT,
     cover.DOMAIN: TYPE_BLINDS,
@@ -130,9 +135,10 @@ DOMAIN_TO_GOOGLE_TYPES = {
     media_player.DOMAIN: TYPE_SETTOP,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
+    sensor.DOMAIN: TYPE_SENSOR,
+    select.DOMAIN: TYPE_SENSOR,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,
-    alarm_control_panel.DOMAIN: TYPE_ALARM,
 }
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {

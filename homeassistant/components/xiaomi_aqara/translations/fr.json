@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9.",
-            "already_in_progress": "Le flux de configuration pour cette passerelle est d\u00e9j\u00e0 en cours",
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "not_xiaomi_aqara": "Ce n'est pas une passerelle Xiaomi Aqara, l'appareil d\u00e9couvert ne correspond pas aux passerelles connues"
         },
         "error": {
@@ -16,7 +16,7 @@
         "step": {
             "select": {
                 "data": {
-                    "select_ip": "IP de la passerelle"
+                    "select_ip": "Adresse IP"
                 },
                 "description": "Ex\u00e9cutez \u00e0 nouveau la configuration si vous souhaitez connecter des passerelles suppl\u00e9mentaires",
                 "title": "S\u00e9lectionnez la passerelle Xiaomi Aqara que vous souhaitez connecter"

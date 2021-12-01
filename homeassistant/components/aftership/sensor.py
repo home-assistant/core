@@ -1,6 +1,7 @@
 """Support for non-delivered packages recorded in AfterShip."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 from typing import Any, Final
 
@@ -11,7 +12,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, HTTP_OK
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -64,7 +65,7 @@ async def async_setup_platform(
 
     await aftership.get_trackings()
 
-    if not aftership.meta or aftership.meta["code"] != HTTP_OK:
+    if not aftership.meta or aftership.meta["code"] != HTTPStatus.OK:
         _LOGGER.error(
             "No tracking data found. Check API key is correct: %s", aftership.meta
         )
@@ -109,37 +110,26 @@ async def async_setup_platform(
 class AfterShipSensor(SensorEntity):
     """Representation of a AfterShip sensor."""
 
+    _attr_attribution = ATTRIBUTION
+    _attr_native_unit_of_measurement: str = "packages"
+    _attr_icon: str = ICON
+
     def __init__(self, aftership: Tracking, name: str) -> None:
         """Initialize the sensor."""
         self._attributes: dict[str, Any] = {}
-        self._name: str = name
         self._state: int | None = None
         self.aftership = aftership
+        self._attr_name = name
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return "packages"
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return attributes for the sensor."""
         return self._attributes
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend."""
-        return ICON
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -162,7 +152,7 @@ class AfterShipSensor(SensorEntity):
         if not self.aftership.meta:
             _LOGGER.error("Unknown errors when querying")
             return
-        if self.aftership.meta["code"] != HTTP_OK:
+        if self.aftership.meta["code"] != HTTPStatus.OK:
             _LOGGER.error(
                 "Errors when querying AfterShip. %s", str(self.aftership.meta)
             )
@@ -203,7 +193,6 @@ class AfterShipSensor(SensorEntity):
                 _LOGGER.debug("Ignoring %s as it has status: %s", name, status)
 
         self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             **status_counts,
             ATTR_TRACKINGS: trackings,
         }

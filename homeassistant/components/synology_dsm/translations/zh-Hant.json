@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
+            "reconfigure_successful": "\u91cd\u65b0\u8a2d\u5b9a\u6210\u529f"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -28,6 +30,21 @@
                 },
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({host})\uff1f",
                 "title": "\u7fa4\u6689 DSM"
+            },
+            "reauth": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8a73\u7d30\u8cc7\u8a0a\uff1a{details}",
+                "title": "Synology DSM \u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "Synology DSM \u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             },
             "user": {
                 "data": {

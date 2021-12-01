@@ -65,9 +65,7 @@ class CiscoDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        string_result = self._get_arp_data()
-
-        if string_result:
+        if string_result := self._get_arp_data():
             self.last_results = []
             last_results = []
 
@@ -118,7 +116,7 @@ class CiscoDeviceScanner(DeviceScanner):
             router_hostname = initial_line[len(initial_line) - 1]
             router_hostname += "#"
             # Set the discovered hostname as prompt
-            regex_expression = ("(?i)^%s" % router_hostname).encode()
+            regex_expression = f"(?i)^{router_hostname}".encode()
             cisco_ssh.PROMPT = re.compile(regex_expression, re.MULTILINE)
             # Allow full arp table to print at once
             cisco_ssh.sendline("terminal length 0")

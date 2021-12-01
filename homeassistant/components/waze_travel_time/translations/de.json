@@ -14,7 +14,7 @@
                     "origin": "Startort",
                     "region": "Region"
                 },
-                "description": "Geben Sie f\u00fcr Ursprung und Ziel die Adresse oder die GPS-Koordinaten des Standorts ein (GPS-Koordinaten m\u00fcssen durch ein Komma getrennt werden). Sie k\u00f6nnen auch eine Entity-ID eingeben, die diese Informationen in ihrem Zustand bereitstellt, eine Entity-ID mit den Attributen Breitengrad und L\u00e4ngengrad oder einen Zonen-Namen."
+                "description": "Gib f\u00fcr Ursprung und Ziel die Adresse oder die GPS-Koordinaten des Standorts ein (GPS-Koordinaten m\u00fcssen durch ein Komma getrennt werden). Du kannst auch eine Entity-ID eingeben, die diese Informationen in ihrem Zustand bereitstellt, eine Entity-ID mit den Attributen Breitengrad und L\u00e4ngengrad oder einen Zonen-Namen."
             }
         }
     },
@@ -31,7 +31,7 @@
                     "units": "Einheiten",
                     "vehicle_type": "Fahrzeugtyp"
                 },
-                "description": "Mit den \"Substring\"-Eintr\u00e4gen k\u00f6nnen Sie die Integration zwingen, eine bestimmte Route zu verwenden oder eine bestimmte Route bei der Zeitreiseberechnung zu vermeiden."
+                "description": "Mit den \"Substring\"-Eintr\u00e4gen kannst du die Integration zwingen, eine bestimmte Route zu verwenden oder eine bestimmte Route bei der Zeitreiseberechnung zu vermeiden."
             }
         }
     },

@@ -8,7 +8,7 @@
             "turn_on": "{entity_name} bekapcsol\u00e1sa"
         },
         "condition_type": {
-            "is_mode": "A(z) {entity_name} egy adott m\u00f3dra van \u00e1ll\u00edtva",
+            "is_mode": "{entity_name} egy adott m\u00f3dra van \u00e1ll\u00edtva",
             "is_off": "{entity_name} ki van kapcsolva",
             "is_on": "{entity_name} be van kapcsolva"
         },

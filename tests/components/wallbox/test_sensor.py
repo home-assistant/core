@@ -1,81 +1,29 @@
 """Test Wallbox Switch component."""
+from homeassistant.const import CONF_ICON, CONF_UNIT_OF_MEASUREMENT, POWER_KILO_WATT
 
-import json
-from unittest.mock import MagicMock
-
-from homeassistant.components.wallbox import sensor
-from homeassistant.components.wallbox.const import CONF_STATION, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
-
-entry = MockConfigEntry(
-    domain=DOMAIN,
-    data={
-        CONF_USERNAME: "test_username",
-        CONF_PASSWORD: "test_password",
-        CONF_STATION: "12345",
-    },
-    entry_id="testEntry",
+from tests.components.wallbox import entry, setup_integration
+from tests.components.wallbox.const import (
+    CONF_MOCK_SENSOR_CHARGING_POWER_ID,
+    CONF_MOCK_SENSOR_CHARGING_SPEED_ID,
+    CONF_MOCK_SENSOR_MAX_AVAILABLE_POWER,
 )
 
-test_response = json.loads(
-    '{"charging_power": 0,"max_available_power": 25,"charging_speed": 0,"added_range": 372,"added_energy": 44.697}'
-)
 
-test_response_rounding_error = json.loads(
-    '{"charging_power": "XX","max_available_power": "xx","charging_speed": 0,"added_range": "xx","added_energy": "XX"}'
-)
-
-CONF_STATION = ("12345",)
-CONF_USERNAME = ("test-username",)
-CONF_PASSWORD = "test-password"
-
-# wallbox = WallboxHub(CONF_STATION, CONF_USERNAME, CONF_PASSWORD, hass)
-
-
-async def test_wallbox_sensor_class():
+async def test_wallbox_sensor_class(hass):
     """Test wallbox sensor class."""
 
-    coordinator = MagicMock(return_value="connected")
-    idx = 1
-    ent = "charging_power"
+    await setup_integration(hass)
 
-    wallboxSensor = sensor.WallboxSensor(coordinator, idx, ent, entry)
+    state = hass.states.get(CONF_MOCK_SENSOR_CHARGING_POWER_ID)
+    assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == POWER_KILO_WATT
+    assert state.name == "Mock Title Charging Power"
 
-    assert wallboxSensor.icon == "mdi:ev-station"
-    assert wallboxSensor.unit_of_measurement == "kW"
-    assert wallboxSensor.name == "Mock Title Charging Power"
-    assert wallboxSensor.state
+    state = hass.states.get(CONF_MOCK_SENSOR_CHARGING_SPEED_ID)
+    assert state.attributes[CONF_ICON] == "mdi:speedometer"
+    assert state.name == "Mock Title Charging Speed"
 
+    # Test round with precision '0' works
+    state = hass.states.get(CONF_MOCK_SENSOR_MAX_AVAILABLE_POWER)
+    assert state.state == "25.0"
 
-# async def test_wallbox_updater(hass: HomeAssistantType):
-#     """Test wallbox updater."""
-#     with requests_mock.Mocker() as m:
-#         m.get(
-#             "https://api.wall-box.com/auth/token/user",
-#             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-#             status_code=200,
-#         )
-#         m.get(
-#             "https://api.wall-box.com/chargers/status/('12345',)",
-#             json=test_response,
-#             status_code=200,
-#         )
-#         await sensor.wallbox_updater(wallbox, hass)
-
-
-# async def test_wallbox_updater_rounding_error(hass: HomeAssistantType):
-#     """Test wallbox updater rounding error."""
-#     with requests_mock.Mocker() as m:
-#         m.get(
-#             "https://api.wall-box.com/auth/token/user",
-#             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-#             status_code=200,
-#         )
-#         m.get(
-#             "https://api.wall-box.com/chargers/status/('12345',)",
-#             json=test_response_rounding_error,
-#             status_code=200,
-#         )
-#         await sensor.wallbox_updater(wallbox, hass)
+    await hass.config_entries.async_unload(entry.entry_id)

@@ -11,11 +11,14 @@ from aiomodernforms import (
 )
 from aiomodernforms.models import Device as ModernFormsDeviceState
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODEL, ATTR_NAME, ATTR_SW_VERSION, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -24,11 +27,15 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, DOMAIN
+from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = [
+    BINARY_SENSOR_DOMAIN,
+    LIGHT_DOMAIN,
     FAN_DOMAIN,
+    SENSOR_DOMAIN,
+    SWITCH_DOMAIN,
 ]
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,24 +45,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create Modern Forms instance for this entry
     coordinator = ModernFormsDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    if entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=coordinator.data.info.mac_address
-        )
-
     # Set up all platforms for this device/entry.
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -106,7 +102,7 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceSt
         host: str,
     ) -> None:
         """Initialize global Modern Forms data updater."""
-        self.modernforms = ModernFormsDevice(
+        self.modern_forms = ModernFormsDevice(
             host, session=async_get_clientsession(hass)
         )
 
@@ -125,7 +121,7 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceSt
     async def _async_update_data(self) -> ModernFormsDevice:
         """Fetch data from Modern Forms."""
         try:
-            return await self.modernforms.update(
+            return await self.modern_forms.update(
                 full_update=not self.last_update_success
             )
         except ModernFormsError as error:
@@ -152,15 +148,14 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
         self._entry_id = entry_id
         self._attr_icon = icon
         self._attr_name = name
-        self._unsub_dispatcher = None
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Modern Forms device."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.mac_address)},  # type: ignore
-            ATTR_NAME: self.coordinator.data.info.device_name,
-            ATTR_MANUFACTURER: "Modern Forms",
-            ATTR_MODEL: self.coordinator.data.info.fan_type,
-            ATTR_SW_VERSION: f"{self.coordinator.data.info.firmware_version} / {self.coordinator.data.info.main_mcu_firmware_version}",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.data.info.mac_address)},
+            name=self.coordinator.data.info.device_name,
+            manufacturer="Modern Forms",
+            model=self.coordinator.data.info.fan_type,
+            sw_version=f"{self.coordinator.data.info.firmware_version} / {self.coordinator.data.info.main_mcu_firmware_version}",
+        )

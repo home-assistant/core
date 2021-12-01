@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieses Ger\u00e4t wurde bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -13,7 +13,7 @@
                     "host": "Host",
                     "port": "Port"
                 },
-                "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
+                "title": "Verbinden mit dem Ger\u00e4t"
             }
         }
     }

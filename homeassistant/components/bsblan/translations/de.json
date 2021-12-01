@@ -13,7 +13,7 @@
                     "host": "Host",
                     "passkey": "Passkey String",
                     "password": "Passwort",
-                    "port": "Port Nummer",
+                    "port": "Port",
                     "username": "Benutzername"
                 },
                 "description": "Richte dein BSB-Lan Ger\u00e4t f\u00fcr die Integration mit dem Home Assistant ein.",

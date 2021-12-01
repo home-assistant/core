@@ -1,5 +1,6 @@
 """Platform for sensor integration."""
 from boschshcpy import SHCSession
+from boschshcpy.device import SHCDevice
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
@@ -143,107 +144,70 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class TemperatureSensor(SHCEntity, SensorEntity):
-    """Representation of a SHC temperature reporting sensor."""
+    """Representation of an SHC temperature reporting sensor."""
+
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC temperature reporting sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{device.name} Temperature"
+        self._attr_unique_id = f"{device.serial}_temperature"
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_temperature"
-
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Temperature"
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.temperature
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return TEMP_CELSIUS
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return DEVICE_CLASS_TEMPERATURE
-
 
 class HumiditySensor(SHCEntity, SensorEntity):
-    """Representation of a SHC humidity reporting sensor."""
+    """Representation of an SHC humidity reporting sensor."""
+
+    _attr_device_class = DEVICE_CLASS_HUMIDITY
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC humidity reporting sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{device.name} Humidity"
+        self._attr_unique_id = f"{device.serial}_humidity"
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_humidity"
-
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Humidity"
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.humidity
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return PERCENTAGE
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return DEVICE_CLASS_HUMIDITY
-
 
 class PuritySensor(SHCEntity, SensorEntity):
-    """Representation of a SHC purity reporting sensor."""
+    """Representation of an SHC purity reporting sensor."""
+
+    _attr_icon = "mdi:molecule-co2"
+    _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC purity reporting sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{device.name} Purity"
+        self._attr_unique_id = f"{device.serial}_purity"
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_purity"
-
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Purity"
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.purity
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return CONCENTRATION_PARTS_PER_MILLION
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return "mdi:molecule-co2"
-
 
 class AirQualitySensor(SHCEntity, SensorEntity):
-    """Representation of a SHC airquality reporting sensor."""
+    """Representation of an SHC airquality reporting sensor."""
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC airquality reporting sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{device.name} Air Quality"
+        self._attr_unique_id = f"{device.serial}_airquality"
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_airquality"
-
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Air Quality"
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.combined_rating.name
 
@@ -256,147 +220,102 @@ class AirQualitySensor(SHCEntity, SensorEntity):
 
 
 class TemperatureRatingSensor(SHCEntity, SensorEntity):
-    """Representation of a SHC temperature rating sensor."""
+    """Representation of an SHC temperature rating sensor."""
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC temperature rating sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{device.name} Temperature Rating"
+        self._attr_unique_id = f"{device.serial}_temperature_rating"
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_temperature_rating"
-
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Temperature Rating"
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.temperature_rating.name
 
 
 class HumidityRatingSensor(SHCEntity, SensorEntity):
-    """Representation of a SHC humidity rating sensor."""
+    """Representation of an SHC humidity rating sensor."""
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC humidity rating sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{device.name} Humidity Rating"
+        self._attr_unique_id = f"{device.serial}_humidity_rating"
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_humidity_rating"
-
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Humidity Rating"
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.humidity_rating.name
 
 
 class PurityRatingSensor(SHCEntity, SensorEntity):
-    """Representation of a SHC purity rating sensor."""
+    """Representation of an SHC purity rating sensor."""
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC purity rating sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{device.name} Purity Rating"
+        self._attr_unique_id = f"{device.serial}_purity_rating"
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_purity_rating"
-
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Purity Rating"
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.purity_rating.name
 
 
 class PowerSensor(SHCEntity, SensorEntity):
-    """Representation of a SHC power reporting sensor."""
+    """Representation of an SHC power reporting sensor."""
+
+    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_native_unit_of_measurement = POWER_WATT
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC power reporting sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{device.name} Power"
+        self._attr_unique_id = f"{device.serial}_power"
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_power"
-
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Power"
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.powerconsumption
 
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return DEVICE_CLASS_POWER
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return POWER_WATT
-
 
 class EnergySensor(SHCEntity, SensorEntity):
-    """Representation of a SHC energy reporting sensor."""
+    """Representation of an SHC energy reporting sensor."""
+
+    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC energy reporting sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{self._device.name} Energy"
+        self._attr_unique_id = f"{self._device.serial}_energy"
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_energy"
-
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Energy"
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.energyconsumption / 1000.0
 
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return DEVICE_CLASS_ENERGY
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return ENERGY_KILO_WATT_HOUR
-
 
 class ValveTappetSensor(SHCEntity, SensorEntity):
-    """Representation of a SHC valve tappet reporting sensor."""
+    """Representation of an SHC valve tappet reporting sensor."""
+
+    _attr_icon = "mdi:gauge"
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC valve tappet reporting sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{device.name} Valvetappet"
+        self._attr_unique_id = f"{device.serial}_valvetappet"
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_valvetappet"
-
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Valvetappet"
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.position
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return "mdi:gauge"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return PERCENTAGE
 
     @property
     def extra_state_attributes(self):

@@ -786,7 +786,6 @@ async def test_location_device_tracker_added_after_update(
         await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.test")
-        assert len(caplog.records) == 2
         assert "Unable to find entity" in caplog.text
         caplog.clear()
 
@@ -908,7 +907,6 @@ async def test_pattern_origin(hass, caplog):
     }
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
-    assert len(caplog.records) == 2
     assert "invalid latitude" in caplog.text
 
 
@@ -928,7 +926,6 @@ async def test_pattern_destination(hass, caplog):
     }
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
-    assert len(caplog.records) == 2
     assert "invalid latitude" in caplog.text
 
 
@@ -1024,7 +1021,10 @@ async def test_pattern_entity_state(hass, requests_mock_truck_response, caplog):
     await hass.async_block_till_done()
 
     assert len(caplog.records) == 1
-    assert "is not a valid set of coordinates" in caplog.text
+    assert (
+        "Entity sensor.origin does not contain a location and does not point at an entity that does: invalid"
+        in caplog.text
+    )
 
 
 async def test_pattern_entity_state_with_space(hass, requests_mock_truck_response):
@@ -1179,7 +1179,6 @@ async def test_arrival_only_allowed_for_timetable(hass, caplog):
     }
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
-    assert len(caplog.records) == 2
     assert "[arrival] is an invalid option" in caplog.text
 
 
@@ -1204,5 +1203,4 @@ async def test_exclusive_arrival_and_departure(hass, caplog):
     }
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
-    assert len(caplog.records) == 2
     assert "two or more values in the same group of exclusion" in caplog.text

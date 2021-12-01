@@ -43,10 +43,11 @@ async def test_setup_connected(hass):
     ):
         read_mh_z19_with_temperature.return_value = None
         mock_add = Mock()
-        assert mhz19.setup_platform(
+        mhz19.setup_platform(
             hass,
             {
                 "platform": "mhz19",
+                "name": "name",
                 "monitored_conditions": ["co2", "temperature"],
                 mhz19.CONF_SERIAL_DEVICE: "test.serial",
             },
@@ -83,40 +84,42 @@ async def aiohttp_client_update_good_read(mock_function):
 
 
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
-async def test_co2_sensor(mock_function):
+async def test_co2_sensor(mock_function, hass):
     """Test CO2 sensor."""
     client = mhz19.MHZClient(co2sensor, "test.serial")
-    sensor = mhz19.MHZ19Sensor(client, mhz19.SENSOR_CO2, None, "name")
+    sensor = mhz19.MHZ19Sensor(client, "name", mhz19.SENSOR_TYPES[1])
+    sensor.hass = hass
     sensor.update()
 
     assert sensor.name == "name: CO2"
     assert sensor.state == 1000
-    assert sensor.unit_of_measurement == CONCENTRATION_PARTS_PER_MILLION
+    assert sensor.native_unit_of_measurement == CONCENTRATION_PARTS_PER_MILLION
     assert sensor.should_poll
     assert sensor.extra_state_attributes == {"temperature": 24}
 
 
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
-async def test_temperature_sensor(mock_function):
+async def test_temperature_sensor(mock_function, hass):
     """Test temperature sensor."""
     client = mhz19.MHZClient(co2sensor, "test.serial")
-    sensor = mhz19.MHZ19Sensor(client, mhz19.SENSOR_TEMPERATURE, None, "name")
+    sensor = mhz19.MHZ19Sensor(client, "name", mhz19.SENSOR_TYPES[0])
+    sensor.hass = hass
     sensor.update()
 
     assert sensor.name == "name: Temperature"
     assert sensor.state == 24
-    assert sensor.unit_of_measurement == TEMP_CELSIUS
+    assert sensor.native_unit_of_measurement == TEMP_CELSIUS
     assert sensor.should_poll
     assert sensor.extra_state_attributes == {"co2_concentration": 1000}
 
 
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
-async def test_temperature_sensor_f(mock_function):
+async def test_temperature_sensor_f(mock_function, hass):
     """Test temperature sensor."""
-    client = mhz19.MHZClient(co2sensor, "test.serial")
-    sensor = mhz19.MHZ19Sensor(
-        client, mhz19.SENSOR_TEMPERATURE, TEMP_FAHRENHEIT, "name"
-    )
-    sensor.update()
+    with patch.object(hass.config.units, "temperature_unit", TEMP_FAHRENHEIT):
+        client = mhz19.MHZClient(co2sensor, "test.serial")
+        sensor = mhz19.MHZ19Sensor(client, "name", mhz19.SENSOR_TYPES[0])
+        sensor.hass = hass
+        sensor.update()
 
-    assert sensor.state == 75.2
+        assert sensor.state == 75

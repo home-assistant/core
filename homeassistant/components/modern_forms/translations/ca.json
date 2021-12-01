@@ -16,7 +16,7 @@
                 "data": {
                     "host": "Amfitri\u00f3"
                 },
-                "description": "Configura el teu ventilador Modern Forms per integrar-lo a Home Assistant."
+                "description": "Configura la integraci\u00f3 d'un ventilador Modern Forms amb Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Vols afegir el ventilador de Modern Forms anomenat `{name}` a Home Assistant?",

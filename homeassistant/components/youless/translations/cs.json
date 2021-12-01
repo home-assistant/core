@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "name": "Jm\u00e9no"
+                }
+            }
+        }
+    }
+}

@@ -7,6 +7,7 @@
             "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid"
         },
+        "flow_title": "{device} ({ip_address})",
         "step": {
             "user": {
                 "data": {
@@ -15,7 +16,7 @@
                     "username": "Nama Pengguna"
                 },
                 "description": "Berikan informasi yang diperlukan di bawah ini.",
-                "title": "Siapkan GogoGate2 atau iSmartGate"
+                "title": "Siapkan GogoGate2 atau ismartgate"
             }
         }
     }

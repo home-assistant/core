@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "board": "Alaplap",
             "disk_total": "\u00d6sszes hely",
             "disk_used": "Felhaszn\u00e1lt hely",
             "docker_version": "Docker verzi\u00f3",

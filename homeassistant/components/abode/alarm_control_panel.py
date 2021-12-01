@@ -28,10 +28,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Abode."""
 
-    @property
-    def icon(self):
-        """Return the icon."""
-        return ICON
+    _attr_icon = ICON
+    _attr_code_arm_required = False
+    _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     @property
     def state(self):
@@ -45,16 +44,6 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
         else:
             state = None
         return state
-
-    @property
-    def code_arm_required(self):
-        """Whether the code is required for arm actions."""
-        return False
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

@@ -153,8 +153,8 @@ class OmniLogicPumpControl(OmniLogicSwitch):
             state_key=state_key,
         )
 
-        self._max_speed = int(coordinator.data[item_id]["Max-Pump-Speed"])
-        self._min_speed = int(coordinator.data[item_id]["Min-Pump-Speed"])
+        self._max_speed = int(coordinator.data[item_id].get("Max-Pump-Speed", 100))
+        self._min_speed = int(coordinator.data[item_id].get("Min-Pump-Speed", 0))
 
         if "Filter-Type" in coordinator.data[item_id]:
             self._pump_type = PUMP_TYPES[coordinator.data[item_id]["Filter-Type"]]

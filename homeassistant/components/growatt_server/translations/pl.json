@@ -17,6 +17,7 @@
                 "data": {
                     "name": "Nazwa",
                     "password": "Has\u0142o",
+                    "url": "URL",
                     "username": "Nazwa u\u017cytkownika"
                 },
                 "title": "Wprowad\u017a dane Growatt."

@@ -145,16 +145,22 @@ def determine_zones(receiver):
     out = {"zone2": False, "zone3": False}
     try:
         _LOGGER.debug("Checking for zone 2 capability")
-        receiver.raw("ZPWQSTN")
-        out["zone2"] = True
+        response = receiver.raw("ZPWQSTN")
+        if response != "ZPWN/A":  # Zone 2 Available
+            out["zone2"] = True
+        else:
+            _LOGGER.debug("Zone 2 not available")
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
             raise error
         _LOGGER.debug("Zone 2 timed out, assuming no functionality")
     try:
         _LOGGER.debug("Checking for zone 3 capability")
-        receiver.raw("PW3QSTN")
-        out["zone3"] = True
+        response = receiver.raw("PW3QSTN")
+        if response != "PW3N/A":
+            out["zone3"] = True
+        else:
+            _LOGGER.debug("Zone 3 not available")
     except ValueError as error:
         if str(error) != TIMEOUT_MESSAGE:
             raise error
@@ -319,8 +325,10 @@ class OnkyoDevice(MediaPlayerEntity):
         preset_raw = self.command("preset query")
         if self._audio_info_supported:
             audio_information_raw = self.command("audio-information query")
+            self._parse_audio_information(audio_information_raw)
         if self._video_info_supported:
             video_information_raw = self.command("video-information query")
+            self._parse_video_information(video_information_raw)
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
@@ -342,9 +350,6 @@ class OnkyoDevice(MediaPlayerEntity):
         self._volume = volume_raw[1] / (
             self._receiver_max_volume * self._max_volume / 100
         )
-
-        self._parse_audio_information(audio_information_raw)
-        self._parse_video_information(video_information_raw)
 
         if not hdmi_out_raw:
             return

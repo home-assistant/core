@@ -224,13 +224,13 @@ class MinecraftServerEntity(Entity):
         self._name = f"{server.name} {type_name}"
         self._icon = icon
         self._unique_id = f"{self._server.unique_id}-{type_name}"
-        self._device_info = {
-            "identifiers": {(DOMAIN, self._server.unique_id)},
-            "name": self._server.name,
-            "manufacturer": MANUFACTURER,
-            "model": f"Minecraft Server ({self._server.version})",
-            "sw_version": self._server.protocol_version,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._server.unique_id)},
+            manufacturer=MANUFACTURER,
+            model=f"Minecraft Server ({self._server.version})",
+            name=self._server.name,
+            sw_version=self._server.protocol_version,
+        )
         self._device_class = device_class
         self._extra_state_attributes = None
         self._disconnect_dispatcher = None
@@ -244,11 +244,6 @@ class MinecraftServerEntity(Entity):
     def unique_id(self) -> str:
         """Return unique ID."""
         return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return self._device_info
 
     @property
     def device_class(self) -> str:

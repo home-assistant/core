@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "config": "Errore di connessione o di login: controlla la tua configurazione"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (Facoltativo)",
+                    "password": "Password",
+                    "port": "Porta (Facoltativo)",
+                    "ssl": "Utilizza un certificato SSL",
+                    "username": "Nome utente (Facoltativo)"
+                },
+                "description": "Host predefinito: {host}\nPorta predefinita: {port}\nNome utente predefinito: {username}",
+                "title": "Netgear"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Considera il tempo in casa (secondi)"
+                },
+                "description": "Specificare le impostazioni opzionali",
+                "title": "Netgear"
+            }
+        }
+    }
+}

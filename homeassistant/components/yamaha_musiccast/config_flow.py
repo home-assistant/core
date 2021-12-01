@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from aiohttp import ClientConnectorError
@@ -13,9 +14,9 @@ from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from . import get_upnp_desc
+from .const import CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,9 +28,10 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
     serial_number: str | None = None
     host: str
+    upnp_description: str | None = None
 
     async def async_step_user(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initiated by the user."""
         # Request user input, unless we are preparing discovery flow
@@ -52,8 +54,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            serial_number = info.get("system_id")
-            if serial_number is None:
+            if (serial_number := info.get("system_id")) is None:
                 errors["base"] = "no_musiccast_device"
 
         if not errors:
@@ -64,7 +65,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=host,
                 data={
                     CONF_HOST: host,
-                    "serial": serial_number,
+                    CONF_SERIAL: serial_number,
+                    CONF_UPNP_DESC: await get_upnp_desc(self.hass, host),
                 },
             )
 
@@ -80,21 +82,31 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_ssdp(self, discovery_info) -> data_entry_flow.FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> data_entry_flow.FlowResult:
         """Handle ssdp discoveries."""
         if not await MusicCastDevice.check_yamaha_ssdp(
-            discovery_info[ssdp.ATTR_SSDP_LOCATION], async_get_clientsession(self.hass)
+            discovery_info.ssdp_location, async_get_clientsession(self.hass)
         ):
             return self.async_abort(reason="yxc_control_url_missing")
 
-        self.serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
-        self.host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
+        self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        self.host = urlparse(discovery_info.ssdp_location or "").hostname or ""
+        self.upnp_description = discovery_info.ssdp_location
         await self.async_set_unique_id(self.serial_number)
-        self._abort_if_unique_id_configured({CONF_HOST: self.host})
+        self._abort_if_unique_id_configured(
+            {
+                CONF_HOST: self.host,
+                CONF_UPNP_DESC: self.upnp_description,
+            }
+        )
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, self.host)
+                    "name": discovery_info.upnp.get(
+                        ssdp.ATTR_UPNP_FRIENDLY_NAME, self.host
+                    )
                 }
             }
         )
@@ -108,7 +120,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=self.host,
                 data={
                     CONF_HOST: self.host,
-                    "serial": self.serial_number,
+                    CONF_SERIAL: self.serial_number,
+                    CONF_UPNP_DESC: self.upnp_description,
                 },
             )
 

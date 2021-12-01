@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "kamereon_no_account": "\u627e\u4e0d\u5230 Kamereon \u5e33\u865f",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "invalid_credentials": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "Kamereon \u5e33\u865f ID"
+                },
+                "title": "\u9078\u64c7 Kamereon \u5e33\u865f ID"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "\u8acb\u66f4\u65b0 {username} \u5bc6\u78bc",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
+            "user": {
+                "data": {
+                    "locale": "\u4f4d\u7f6e",
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u96fb\u5b50\u90f5\u4ef6"
+                },
+                "title": "\u8a2d\u5b9a Renault \u6191\u8b49"
+            }
+        }
+    }
+}

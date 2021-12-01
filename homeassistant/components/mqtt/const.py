@@ -9,11 +9,15 @@ ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
 ATTR_TOPIC = "topic"
 
+CONF_AVAILABILITY = "availability"
 CONF_BROKER = "broker"
 CONF_BIRTH_MESSAGE = "birth_message"
+CONF_COMMAND_TOPIC = "command_topic"
+CONF_ENCODING = "encoding"
 CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
 CONF_STATE_TOPIC = "state_topic"
+CONF_TOPIC = "topic"
 CONF_WILL_MESSAGE = "will_message"
 
 DATA_MQTT_CONFIG = "mqtt_config"
@@ -21,6 +25,7 @@ DATA_MQTT_CONFIG = "mqtt_config"
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
 DEFAULT_DISCOVERY = True
+DEFAULT_ENCODING = "utf-8"
 DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_AVAILABLE = "online"
 DEFAULT_PAYLOAD_NOT_AVAILABLE = "offline"

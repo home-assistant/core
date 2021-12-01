@@ -1,13 +1,17 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
+    STATE_CLASSES_SCHEMA,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -39,7 +43,7 @@ from .const import (
     CONF_PICTURE,
     CONF_TRIGGER,
 )
-from .template_entity import TemplateEntity
+from .template_entity import TEMPLATE_ENTITY_COMMON_SCHEMA, TemplateEntity
 from .trigger_entity import TriggerEntity
 
 LEGACY_FIELDS = {
@@ -55,17 +59,14 @@ LEGACY_FIELDS = {
 
 SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): cv.template,
-        vol.Required(CONF_STATE): cv.template,
-        vol.Optional(CONF_ICON): cv.template,
-        vol.Optional(CONF_PICTURE): cv.template,
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_NAME): cv.template,
+        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        vol.Required(CONF_STATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
-)
+).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
 
 
 LEGACY_SENSOR_SCHEMA = vol.All(
@@ -147,17 +148,6 @@ def _async_create_template_tracking_entities(
     sensors = []
 
     for entity_conf in definitions:
-        # Still available on legacy
-        object_id = entity_conf.get(CONF_OBJECT_ID)
-
-        state_template = entity_conf[CONF_STATE]
-        icon_template = entity_conf.get(CONF_ICON)
-        entity_picture_template = entity_conf.get(CONF_PICTURE)
-        availability_template = entity_conf.get(CONF_AVAILABILITY)
-        friendly_name_template = entity_conf.get(CONF_NAME)
-        unit_of_measurement = entity_conf.get(CONF_UNIT_OF_MEASUREMENT)
-        device_class = entity_conf.get(CONF_DEVICE_CLASS)
-        attribute_templates = entity_conf.get(CONF_ATTRIBUTES, {})
         unique_id = entity_conf.get(CONF_UNIQUE_ID)
 
         if unique_id and unique_id_prefix:
@@ -166,15 +156,7 @@ def _async_create_template_tracking_entities(
         sensors.append(
             SensorTemplate(
                 hass,
-                object_id,
-                friendly_name_template,
-                unit_of_measurement,
-                state_template,
-                icon_template,
-                entity_picture_template,
-                availability_template,
-                device_class,
-                attribute_templates,
+                entity_conf,
                 unique_id,
             )
         )
@@ -214,84 +196,49 @@ class SensorTemplate(TemplateEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        object_id: str | None,
-        friendly_name_template: template.Template | None,
-        unit_of_measurement: str | None,
-        state_template: template.Template,
-        icon_template: template.Template | None,
-        entity_picture_template: template.Template | None,
-        availability_template: template.Template | None,
-        device_class: str | None,
-        attribute_templates: dict[str, template.Template],
+        config: dict[str, Any],
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(
-            attribute_templates=attribute_templates,
-            availability_template=availability_template,
-            icon_template=icon_template,
-            entity_picture_template=entity_picture_template,
-        )
-        if object_id is not None:
+        super().__init__(config=config)
+        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
-        self._name: str | None = None
-        self._friendly_name_template = friendly_name_template
+        self._friendly_name_template = config.get(CONF_NAME)
 
+        self._attr_name = None
         # Try to render the name as it can influence the entity ID
-        if friendly_name_template:
-            friendly_name_template.hass = hass
+        if self._friendly_name_template:
+            self._friendly_name_template.hass = hass
             try:
-                self._name = friendly_name_template.async_render(parse_result=False)
+                self._attr_name = self._friendly_name_template.async_render(
+                    parse_result=False
+                )
             except template.TemplateError:
                 pass
 
-        self._unit_of_measurement = unit_of_measurement
-        self._template = state_template
-        self._state = None
-        self._device_class = device_class
-
-        self._unique_id = unique_id
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._template = config.get(CONF_STATE)
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_state_class = config.get(CONF_STATE_CLASS)
+        self._attr_unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.add_template_attribute("_state", self._template, None, self._update_state)
+        self.add_template_attribute(
+            "_attr_native_value", self._template, None, self._update_state
+        )
         if self._friendly_name_template and not self._friendly_name_template.is_static:
-            self.add_template_attribute("_name", self._friendly_name_template)
+            self.add_template_attribute("_attr_name", self._friendly_name_template)
 
         await super().async_added_to_hass()
 
     @callback
     def _update_state(self, result):
         super()._update_state(result)
-        self._state = None if isinstance(result, TemplateError) else result
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this sensor."""
-        return self._unique_id
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit_of_measurement of the device."""
-        return self._unit_of_measurement
+        self._attr_native_value = None if isinstance(result, TemplateError) else result
 
 
 class TriggerSensorEntity(TriggerEntity, SensorEntity):
@@ -301,6 +248,11 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     extra_template_keys = (CONF_STATE,)
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return state of the sensor."""
         return self._rendered.get(CONF_STATE)
+
+    @property
+    def state_class(self) -> str | None:
+        """Sensor state class."""
+        return self._config.get(CONF_STATE_CLASS)

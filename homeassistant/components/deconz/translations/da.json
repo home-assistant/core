@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Bridge er allerede konfigureret",
             "already_in_progress": "Konfigurationsflow for bro er allerede i gang.",
-            "no_bridges": "Ingen deConz-bridge fundet",
+            "no_bridges": "Ingen deConz-bro fundet",
             "not_deconz_bridge": "Ikke en deCONZ-bro",
             "updated_instance": "Opdaterede deCONZ-instans med ny v\u00e6rtadresse"
         },

@@ -254,8 +254,7 @@ class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
 
-        command = event["command"]
-        if command == "on":
+        if event["command"] == "on":
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
             self._state = self._state in [None, False]

@@ -1,11 +1,13 @@
 """The tests for the Prometheus exporter."""
 from dataclasses import dataclass
 import datetime
+from http import HTTPStatus
 import unittest.mock as mock
 
 import pytest
 
 from homeassistant.components import climate, humidifier, sensor
+from homeassistant.components.demo.number import DemoNumber
 from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
 from homeassistant.const import (
@@ -31,9 +33,12 @@ class FilterTest:
     should_pass: bool
 
 
-async def prometheus_client(hass, hass_client):
+async def prometheus_client(hass, hass_client, namespace):
     """Initialize an hass_client with Prometheus component."""
-    await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: {}})
+    config = {}
+    if namespace is not None:
+        config[prometheus.CONF_PROM_NAMESPACE] = namespace
+    await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: config})
 
     await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
 
@@ -95,15 +100,41 @@ async def prometheus_client(hass, hass_client):
     sensor5.entity_id = "sensor.sps30_pm_1um_weight_concentration"
     await sensor5.async_update_ha_state()
 
+    sensor6 = DemoSensor(None, "Trend Gradient", 0.002, None, None, None, None)
+    sensor6.hass = hass
+    sensor6.entity_id = "sensor.trend_gradient"
+    await sensor6.async_update_ha_state()
+
+    sensor7 = DemoSensor(None, "Text", "should_not_work", None, None, None, None)
+    sensor7.hass = hass
+    sensor7.entity_id = "sensor.text"
+    await sensor7.async_update_ha_state()
+
+    sensor8 = DemoSensor(None, "Text Unit", "should_not_work", None, None, "Text", None)
+    sensor8.hass = hass
+    sensor8.entity_id = "sensor.text_unit"
+    await sensor8.async_update_ha_state()
+
+    number1 = DemoNumber(None, "Threshold", 5.2, None, False, 0, 10, 0.1)
+    number1.hass = hass
+    number1.entity_id = "input_number.threshold"
+    await number1.async_update_ha_state()
+
+    number2 = DemoNumber(None, None, 60, None, False, 0, 100)
+    number2.hass = hass
+    number2.entity_id = "input_number.brightness"
+    number2._attr_name = None
+    await number2.async_update_ha_state()
+
     return await hass_client()
 
 
-async def test_view(hass, hass_client):
+async def test_view_empty_namespace(hass, hass_client):
     """Test prometheus metrics view."""
-    client = await prometheus_client(hass, hass_client)
+    client = await prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
     body = body.split("\n")
@@ -117,7 +148,7 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'temperature_c{domain="sensor",'
+        'sensor_temperature_celsius{domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 15.6' in body
     )
@@ -129,9 +160,27 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'current_temperature_c{domain="climate",'
+        'climate_current_temperature_celsius{domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 25.0' in body
+    )
+
+    assert (
+        'climate_target_temperature_celsius{domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 20.0' in body
+    )
+
+    assert (
+        'climate_target_temperature_low_celsius{domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee"} 21.0' in body
+    )
+
+    assert (
+        'climate_target_temperature_high_celsius{domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee"} 24.0' in body
     )
 
     assert (
@@ -160,7 +209,7 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'humidity_percent{domain="sensor",'
+        'sensor_humidity_percent{domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
@@ -172,7 +221,7 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'power_kwh{domain="sensor",'
+        'sensor_power_kwh{domain="sensor",'
         'entity="sensor.radio_energy",'
         'friendly_name="Radio Energy"} 14.0' in body
     )
@@ -205,6 +254,61 @@ async def test_view(hass, hass_client):
         'sensor_unit_u0xb5g_per_mu0xb3{domain="sensor",'
         'entity="sensor.sps30_pm_1um_weight_concentration",'
         'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
+    )
+
+    assert (
+        'sensor_state{domain="sensor",'
+        'entity="sensor.trend_gradient",'
+        'friendly_name="Trend Gradient"} 0.002' in body
+    )
+
+    assert (
+        'sensor_state{domain="sensor",'
+        'entity="sensor.text",'
+        'friendly_name="Text"} 0' not in body
+    )
+
+    assert (
+        'sensor_unit_text{domain="sensor",'
+        'entity="sensor.text_unit",'
+        'friendly_name="Text Unit"} 0' not in body
+    )
+
+    assert (
+        'input_number_state{domain="input_number",'
+        'entity="input_number.threshold",'
+        'friendly_name="Threshold"} 5.2' in body
+    )
+
+    assert (
+        'input_number_state{domain="input_number",'
+        'entity="input_number.brightness",'
+        'friendly_name="None"} 60.0' in body
+    )
+
+
+async def test_view_default_namespace(hass, hass_client):
+    """Test prometheus metrics view."""
+    client = await prometheus_client(hass, hass_client, None)
+    resp = await client.get(prometheus.API_ENDPOINT)
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert len(body) > 3
+
+    assert "# HELP python_info Python platform information" in body
+    assert (
+        "# HELP python_gc_objects_collected_total "
+        "Objects collected during gc" in body
+    )
+
+    assert (
+        'homeassistant_sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 15.6' in body
     )
 
 

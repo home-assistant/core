@@ -16,13 +16,24 @@ from homeassistant.const import (
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_FREQUENCY,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_NITROGEN_DIOXIDE,
+    DEVICE_CLASS_NITROGEN_MONOXIDE,
+    DEVICE_CLASS_NITROUS_OXIDE,
+    DEVICE_CLASS_OZONE,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_SULPHUR_DIOXIDE,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
 )
 from homeassistant.core import HomeAssistant, HomeAssistantError, callback
@@ -45,13 +56,24 @@ CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
 CONF_IS_CURRENT = "is_current"
 CONF_IS_ENERGY = "is_energy"
+CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
+CONF_IS_GAS = "is_gas"
 CONF_IS_ILLUMINANCE = "is_illuminance"
+CONF_IS_NITROGEN_DIOXIDE = "is_nitrogen_dioxide"
+CONF_IS_NITROGEN_MONOXIDE = "is_nitrogen_monoxide"
+CONF_IS_NITROUS_OXIDE = "is_nitrous_oxide"
+CONF_IS_OZONE = "is_ozone"
+CONF_IS_PM1 = "is_pm1"
+CONF_IS_PM10 = "is_pm10"
+CONF_IS_PM25 = "is_pm25"
 CONF_IS_POWER = "is_power"
 CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRESSURE = "is_pressure"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
+CONF_IS_SULPHUR_DIOXIDE = "is_sulphur_dioxide"
 CONF_IS_TEMPERATURE = "is_temperature"
+CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
 CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VALUE = "is_value"
 
@@ -61,13 +83,26 @@ ENTITY_CONDITIONS = {
     DEVICE_CLASS_CO2: [{CONF_TYPE: CONF_IS_CO2}],
     DEVICE_CLASS_CURRENT: [{CONF_TYPE: CONF_IS_CURRENT}],
     DEVICE_CLASS_ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
+    DEVICE_CLASS_FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
+    DEVICE_CLASS_GAS: [{CONF_TYPE: CONF_IS_GAS}],
     DEVICE_CLASS_HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
     DEVICE_CLASS_ILLUMINANCE: [{CONF_TYPE: CONF_IS_ILLUMINANCE}],
+    DEVICE_CLASS_NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_DIOXIDE}],
+    DEVICE_CLASS_NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_MONOXIDE}],
+    DEVICE_CLASS_NITROUS_OXIDE: [{CONF_TYPE: CONF_IS_NITROUS_OXIDE}],
+    DEVICE_CLASS_OZONE: [{CONF_TYPE: CONF_IS_OZONE}],
     DEVICE_CLASS_POWER: [{CONF_TYPE: CONF_IS_POWER}],
     DEVICE_CLASS_POWER_FACTOR: [{CONF_TYPE: CONF_IS_POWER_FACTOR}],
+    DEVICE_CLASS_PM1: [{CONF_TYPE: CONF_IS_PM1}],
+    DEVICE_CLASS_PM10: [{CONF_TYPE: CONF_IS_PM10}],
+    DEVICE_CLASS_PM25: [{CONF_TYPE: CONF_IS_PM25}],
     DEVICE_CLASS_PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
     DEVICE_CLASS_SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
+    DEVICE_CLASS_SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_IS_SULPHUR_DIOXIDE}],
     DEVICE_CLASS_TEMPERATURE: [{CONF_TYPE: CONF_IS_TEMPERATURE}],
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: [
+        {CONF_TYPE: CONF_IS_VOLATILE_ORGANIC_COMPOUNDS}
+    ],
     DEVICE_CLASS_VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }
@@ -83,13 +118,24 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_CO2,
                     CONF_IS_CURRENT,
                     CONF_IS_ENERGY,
+                    CONF_IS_FREQUENCY,
+                    CONF_IS_GAS,
                     CONF_IS_HUMIDITY,
                     CONF_IS_ILLUMINANCE,
+                    CONF_IS_OZONE,
+                    CONF_IS_NITROGEN_DIOXIDE,
+                    CONF_IS_NITROGEN_MONOXIDE,
+                    CONF_IS_NITROUS_OXIDE,
                     CONF_IS_POWER,
                     CONF_IS_POWER_FACTOR,
+                    CONF_IS_PM1,
+                    CONF_IS_PM10,
+                    CONF_IS_PM25,
                     CONF_IS_PRESSURE,
                     CONF_IS_SIGNAL_STRENGTH,
+                    CONF_IS_SULPHUR_DIOXIDE,
                     CONF_IS_TEMPERATURE,
+                    CONF_IS_VOLATILE_ORGANIC_COMPOUNDS,
                     CONF_IS_VOLTAGE,
                     CONF_IS_VALUE,
                 ]
@@ -140,12 +186,8 @@ async def async_get_conditions(
 
 
 @callback
-def async_condition_from_config(
-    config: ConfigType, config_validation: bool
-) -> condition.ConditionCheckerType:
+def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
     numeric_state_config = {
         condition.CONF_CONDITION: "numeric_state",
         condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
@@ -155,6 +197,7 @@ def async_condition_from_config(
     if CONF_BELOW in config:
         numeric_state_config[condition.CONF_BELOW] = config[CONF_BELOW]
 
+    numeric_state_config = cv.NUMERIC_STATE_CONDITION_SCHEMA(numeric_state_config)
     return condition.async_numeric_state_from_config(numeric_state_config)
 
 

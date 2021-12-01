@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieses Konto ist bereits konfiguriert"
+            "already_configured": "Konto wurde bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",

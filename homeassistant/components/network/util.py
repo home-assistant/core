@@ -57,15 +57,6 @@ def enable_auto_detected_adapters(adapters: list[Adapter]) -> None:
     )
 
 
-def adapters_with_exernal_addresses(adapters: list[Adapter]) -> list[str]:
-    """Enable all interfaces with an external address."""
-    return [
-        adapter["name"]
-        for adapter in adapters
-        if _adapter_has_external_address(adapter)
-    ]
-
-
 def _adapter_has_external_address(adapter: Adapter) -> bool:
     """Adapter has a non-loopback and non-link-local address."""
     return any(
@@ -116,6 +107,7 @@ def _ifaddr_adapter_to_ha(
 
     return {
         "name": adapter.nice_name,
+        "index": adapter.index,
         "enabled": False,
         "auto": auto,
         "default": default,

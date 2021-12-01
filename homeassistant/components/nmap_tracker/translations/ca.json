@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
+        },
+        "error": {
+            "invalid_hosts": "Amfitrions no v\u00e0lids"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Adreces de xarxa a excloure de l'escaneig (separades per comes)",
+                    "home_interval": "Nombre m\u00ednim de minuts entre escanejos de dispositius actius (conserva la bateria)",
+                    "hosts": "Adreces de xarxa a escanejar (separades per comes)",
+                    "scan_options": "Opcions de configuraci\u00f3 d'escaneig d'Nmap en brut"
+                },
+                "description": "Configura els amfitrions a explorar per Nmap. L'adre\u00e7a de xarxa i les exclusions poden ser adreces IP (192.168.1.1), xarxes IP (192.168.0.0/24) o intervals IP (192.168.1.0-32)."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_hosts": "Amfitrions no v\u00e0lids"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Segons d'espera abans de considerar un dispositiu de seguiment com 'a fora' despr\u00e9s de no ser vist.",
+                    "exclude": "Adreces de xarxa a excloure de l'escaneig (separades per comes)",
+                    "home_interval": "Nombre m\u00ednim de minuts entre escanejos de dispositius actius (conserva la bateria)",
+                    "hosts": "Adreces de xarxa a escanejar (separades per comes)",
+                    "interval_seconds": "Interval d'escaneig",
+                    "scan_options": "Opcions de configuraci\u00f3 d'escaneig d'Nmap en brut",
+                    "track_new_devices": "Segueix dispositius nous"
+                },
+                "description": "Configura els amfitrions a explorar per Nmap. L'adre\u00e7a de xarxa i les exclusions poden ser adreces IP (192.168.1.1), xarxes IP (192.168.0.0/24) o intervals IP (192.168.1.0-32)."
+            }
+        }
+    },
+    "title": "Seguidor Nmap"
+}

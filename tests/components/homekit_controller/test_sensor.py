@@ -1,6 +1,7 @@
 """Basic checks for HomeKit sensor."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from aiohomekit.protocol.statuscodes import HapStatusCode
 
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -84,6 +85,16 @@ async def test_temperature_sensor_read_state(hass, utcnow):
     assert state.state == "20"
 
     assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
+
+
+async def test_temperature_sensor_not_added_twice(hass, utcnow):
+    """A standalone temperature sensor should not get a characteristic AND a service entity."""
+    helper = await setup_test_component(
+        hass, create_temperature_sensor_service, suffix="temperature"
+    )
+
+    for state in hass.states.async_all():
+        assert state.entity_id == helper.entity_id
 
 
 async def test_humidity_sensor_read_state(hass, utcnow):
@@ -226,3 +237,30 @@ async def test_switch_with_sensor(hass, utcnow):
     realtime_energy.value = 50
     state = await energy_helper.poll_and_get_state()
     assert state.state == "50"
+
+
+async def test_sensor_unavailable(hass, utcnow):
+    """Test a sensor becoming unavailable."""
+    helper = await setup_test_component(hass, create_switch_with_sensor)
+
+    # Find the energy sensor and mark it as offline
+    outlet = helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
+    realtime_energy = outlet[CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY]
+    realtime_energy.status = HapStatusCode.UNABLE_TO_COMMUNICATE
+
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
+    energy_helper = Helper(
+        hass,
+        "sensor.testdevice_real_time_energy",
+        helper.pairing,
+        helper.accessory,
+        helper.config_entry,
+    )
+
+    # Outlet has non-responsive characteristics so should be unavailable
+    state = await helper.poll_and_get_state()
+    assert state.state == "unavailable"
+
+    # Energy sensor has non-responsive characteristics so should be unavailable
+    state = await energy_helper.poll_and_get_state()
+    assert state.state == "unavailable"

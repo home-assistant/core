@@ -15,14 +15,14 @@
             "internal_error": "Erreur interne lors de la validation du code",
             "invalid_pin": "Code PIN invalide",
             "timeout": "D\u00e9lai de la validation du code expir\u00e9",
-            "unknown": "Erreur inconnue lors de la validation du code"
+            "unknown": "Erreur inattendue"
         },
         "step": {
             "init": {
                 "data": {
                     "flow_impl": "Fournisseur"
                 },
-                "description": "S\u00e9lectionnez via quel fournisseur d'authentification vous souhaitez vous authentifier avec Nest.",
+                "description": "S\u00e9lectionner une m\u00e9thode d'authentification",
                 "title": "Fournisseur d'authentification"
             },
             "link": {

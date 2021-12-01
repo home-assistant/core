@@ -31,7 +31,7 @@ async def async_attach_trigger(
     hass, config, action, automation_info, *, platform_type="template"
 ):
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
+    trigger_data = automation_info["trigger_data"]
     value_template = config.get(CONF_VALUE_TEMPLATE)
     value_template.hass = hass
     time_delta = config.get(CONF_FOR)

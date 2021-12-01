@@ -1,4 +1,6 @@
 """Support for monitoring a Neurio energy sensor."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,8 +8,19 @@ import neurio
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_API_KEY, ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
+from homeassistant.const import (
+    CONF_API_KEY,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -135,8 +148,12 @@ class NeurioEnergy(SensorEntity):
 
         if sensor_type == ACTIVE_TYPE:
             self._unit_of_measurement = POWER_WATT
+            self._attr_device_class = DEVICE_CLASS_POWER
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
         elif sensor_type == DAILY_TYPE:
             self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_device_class = DEVICE_CLASS_ENERGY
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     @property
     def name(self):
@@ -144,12 +161,12 @@ class NeurioEnergy(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

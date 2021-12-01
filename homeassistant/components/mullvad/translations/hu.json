@@ -6,6 +6,11 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "description": "Be\u00e1ll\u00edtja a Mullvad VPN integr\u00e1ci\u00f3t?"
+            }
         }
     }
 }

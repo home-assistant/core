@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "one": "\u00dcres",
+            "other": "\u00dcres"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "one": "\u00dcres",
+                    "other": "\u00dcres"
+                },
+                "description": "El szeretn\u00e9 kezdeni a be\u00e1ll\u00edt\u00e1st?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Friss\u00edt\u00e9si intervallum",
+                    "tracked_asset_pairs": "Nyomon k\u00f6vetett eszk\u00f6zp\u00e1rok"
+                }
+            }
+        }
+    }
+}

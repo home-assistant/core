@@ -187,6 +187,7 @@ def _create_mocked_owm(is_api_online: bool):
     weather.snow.return_value = []
     weather.detailed_status.return_value = "status"
     weather.weather_code = 803
+    weather.dewpoint = 10
 
     mocked_owm.weather_at_coords.return_value.weather = weather
 

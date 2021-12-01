@@ -1,5 +1,8 @@
 """Helper to handle a set of topics to subscribe to."""
+from __future__ import annotations
+
 from collections import deque
+from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
@@ -12,7 +15,9 @@ DATA_MQTT_DEBUG_INFO = "mqtt_debug_info"
 STORED_MESSAGES = 10
 
 
-def log_messages(hass: HomeAssistant, entity_id: str) -> MessageCallbackType:
+def log_messages(
+    hass: HomeAssistant, entity_id: str
+) -> Callable[[MessageCallbackType], MessageCallbackType]:
     """Wrap an MQTT message callback to support message logging."""
 
     def _log_message(msg):
@@ -24,7 +29,7 @@ def log_messages(hass: HomeAssistant, entity_id: str) -> MessageCallbackType:
         if msg not in messages:
             messages.append(msg)
 
-    def _decorator(msg_callback: MessageCallbackType):
+    def _decorator(msg_callback: MessageCallbackType) -> MessageCallbackType:
         @wraps(msg_callback)
         def wrapper(msg: Any) -> None:
             """Log message."""
@@ -39,8 +44,7 @@ def log_messages(hass: HomeAssistant, entity_id: str) -> MessageCallbackType:
 
 def add_subscription(hass, message_callback, subscription):
     """Prepare debug data for subscription."""
-    entity_id = getattr(message_callback, "__entity_id", None)
-    if entity_id:
+    if entity_id := getattr(message_callback, "__entity_id", None):
         debug_info = hass.data.setdefault(
             DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}
         )

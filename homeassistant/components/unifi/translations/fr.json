@@ -14,12 +14,12 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "host": "H\u00f4te",
                     "password": "Mot de passe",
                     "port": "Port",
                     "site": "ID du site",
                     "username": "Nom d'utilisateur",
-                    "verify_ssl": "Contr\u00f4leur utilisant un certificat appropri\u00e9"
+                    "verify_ssl": "V\u00e9rifier le certificat SSL"
                 },
                 "title": "Configurer le contr\u00f4leur UniFi"
             }
