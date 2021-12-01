@@ -30,6 +30,7 @@
             "is_not_plugged_in": "{entity_name} je odklopljen",
             "is_not_powered": "{entity_name} ni napajan",
             "is_not_present": "{entity_name} ni prisoten",
+            "is_not_tampered": "{entity_name} ne zaznava nedovoljenih posegov",
             "is_not_unsafe": "{entity_name} je varen",
             "is_occupied": "{entity_name} je zaseden",
             "is_off": "{entity_name} je izklopljen",
@@ -41,6 +42,7 @@
             "is_problem": "{entity_name} zaznava te\u017eavo",
             "is_smoke": "{entity_name} zaznava dim",
             "is_sound": "{entity_name} zaznava zvok",
+            "is_tampered": "{entity_name} zaznava nedovoljeno poseganje",
             "is_unsafe": "{entity_name} ni varen",
             "is_vibration": "{entity_name} zaznava vibracije"
         },
@@ -50,6 +52,8 @@
             "connected": "{entity_name} povezan",
             "gas": "{entity_name} za\u010del zaznavati plin",
             "hot": "{entity_name} je postal vro\u010d",
+            "is_not_tampered": "{entity_name} je prenehal zaznavati nedovoljena dejanja",
+            "is_tampered": "{entity_name} je za\u010del zaznavati nedovoljeno poseganje",
             "light": "{entity_name} za\u010del zaznavati svetlobo",
             "locked": "{entity_name} zaklenjen",
             "moist": "{entity_name} postal vla\u017een",
@@ -88,6 +92,19 @@
             "unsafe": "{entity_name} je postal nevaren",
             "vibration": "{entity_name} je za\u010del odkrivat vibracije"
         }
+    },
+    "device_class": {
+        "cold": "hladno",
+        "gas": "plin",
+        "heat": "toplota",
+        "moisture": "vlaga",
+        "motion": "gibanje",
+        "occupancy": "zasedenost",
+        "power": "mo\u010d",
+        "problem": "te\u017eava",
+        "smoke": "dim",
+        "sound": "zvok",
+        "vibration": "vibracija"
     },
     "state": {
         "_": {
@@ -163,6 +180,10 @@
         "problem": {
             "off": "OK",
             "on": "Te\u017eava"
+        },
+        "running": {
+            "off": "Ni v teku",
+            "on": "V teku"
         },
         "safety": {
             "off": "Varno",

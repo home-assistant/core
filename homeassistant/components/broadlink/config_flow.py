@@ -57,8 +57,8 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: dhcp.DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle dhcp discovery."""
-        host = discovery_info[dhcp.IP_ADDRESS]
-        unique_id = discovery_info[dhcp.MAC_ADDRESS].lower().replace(":", "")
+        host = discovery_info.ip
+        unique_id = discovery_info.macaddress.lower().replace(":", "")
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 

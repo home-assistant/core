@@ -96,8 +96,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Prepare configuration for a discovered doorbird device."""
-        macaddress = discovery_info[zeroconf.ATTR_PROPERTIES]["macaddress"]
-        host = discovery_info[zeroconf.ATTR_HOST]
+        macaddress = discovery_info.properties["macaddress"]
+        host = discovery_info.host
 
         if macaddress[:6] != DOORBIRD_OUI:
             return self.async_abort(reason="not_doorbird_device")
@@ -113,7 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_doorbird_device")
 
         chop_ending = "._axis-video._tcp.local."
-        friendly_hostname = discovery_info[zeroconf.ATTR_NAME]
+        friendly_hostname = discovery_info.name
         if friendly_hostname.endswith(chop_ending):
             friendly_hostname = friendly_hostname[: -len(chop_ending)]
 

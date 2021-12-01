@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DATA_DISCOVERED_HOSTS, DOMAIN
 
@@ -21,11 +22,13 @@ class HeosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Heos device."""
         # Store discovered host
-        hostname = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        friendly_name = f"{discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
+        hostname = urlparse(discovery_info.ssdp_location or "").hostname
+        friendly_name = (
+            f"{discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
+        )
         self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
         self.hass.data[DATA_DISCOVERED_HOSTS][friendly_name] = hostname
         # Abort if other flows in progress or an entry already exists

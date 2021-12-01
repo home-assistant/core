@@ -1,6 +1,7 @@
 """Support for WLED."""
 from __future__ import annotations
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -14,6 +15,7 @@ from .const import DOMAIN
 from .coordinator import WLEDDataUpdateCoordinator
 
 PLATFORMS = (
+    BINARY_SENSOR_DOMAIN,
     BUTTON_DOMAIN,
     LIGHT_DOMAIN,
     SELECT_DOMAIN,

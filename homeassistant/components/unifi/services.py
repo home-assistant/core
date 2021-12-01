@@ -1,4 +1,4 @@
-"""UniFi services."""
+"""UniFi Network services."""
 
 import voluptuous as vol
 
@@ -47,7 +47,7 @@ def async_setup_services(hass) -> None:
 
 @callback
 def async_unload_services(hass) -> None:
-    """Unload UniFi services."""
+    """Unload UniFi Network services."""
     for service in SUPPORTED_SERVICES:
         hass.services.async_remove(UNIFI_DOMAIN, service)
 

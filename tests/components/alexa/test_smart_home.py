@@ -25,7 +25,7 @@ from homeassistant.components.media_player.const import (
 )
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
@@ -3936,4 +3936,24 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     assert (
         "https://mycamerastream.test/api/camera_proxy/camera.demo_camera?token="
         in response["payload"]["imageUri"]
+    )
+
+
+async def test_button(hass):
+    """Test button discovery."""
+    device = ("button.ring_doorbell", STATE_UNKNOWN, {"friendly_name": "Ring Doorbell"})
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "button#ring_doorbell"
+    assert appliance["displayCategories"][0] == "ACTIVITY_TRIGGER"
+    assert appliance["friendlyName"] == "Ring Doorbell"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.SceneController", "Alexa"
+    )
+    scene_capability = get_capability(capabilities, "Alexa.SceneController")
+    assert scene_capability["supportsDeactivation"] is False
+
+    await assert_scene_controller_works(
+        "button#ring_doorbell", "button.press", False, hass
     )

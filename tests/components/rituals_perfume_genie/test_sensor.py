@@ -4,13 +4,12 @@ from homeassistant.components.rituals_perfume_genie.sensor import (
     FILL_SUFFIX,
     PERFUME_SUFFIX,
     WIFI_SUFFIX,
+    SensorDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
 )
@@ -54,7 +53,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(hass: HomeAssistant) -> Non
     state = hass.states.get("sensor.genie_battery")
     assert state
     assert state.state == str(diffuser.battery_percentage)
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_BATTERY
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.BATTERY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.genie_battery")
@@ -65,7 +64,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(hass: HomeAssistant) -> Non
     state = hass.states.get("sensor.genie_wifi")
     assert state
     assert state.state == str(diffuser.wifi_percentage)
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SIGNAL_STRENGTH
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SIGNAL_STRENGTH
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.genie_wifi")

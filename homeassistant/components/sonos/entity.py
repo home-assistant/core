@@ -39,8 +39,6 @@ class SonosEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
-        await self.speaker.async_seen()
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
