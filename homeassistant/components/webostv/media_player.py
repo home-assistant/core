@@ -325,12 +325,14 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
         if not self._client.is_on:
             return STATE_OFF
-        elif self._stopped:
+
+        if self._stopped:
             return STATE_ON
-        elif self._paused:
+
+        if self._paused:
             return STATE_PAUSED
-        else:
-            return STATE_PLAYING
+
+        return STATE_PLAYING
 
     @property
     def is_volume_muted(self):
