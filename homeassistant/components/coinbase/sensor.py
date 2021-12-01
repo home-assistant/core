@@ -1,11 +1,7 @@
 """Support for Coinbase sensors."""
 import logging
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -110,7 +106,7 @@ class AccountSensor(SensorEntity):
                     API_ACCOUNT_CURRENCY
                 ]
                 break
-        self._attr_state_class = STATE_CLASS_TOTAL
+        self._attr_state_class = SensorStateClass.TOTAL
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.coinbase.com/settings/api",
             entry_type=DeviceEntryType.SERVICE,
@@ -183,7 +179,7 @@ class ExchangeRateSensor(SensorEntity):
             1 / float(self._coinbase_data.exchange_rates[API_RATES][self.currency]), 2
         )
         self._unit_of_measurement = exchange_base
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.coinbase.com/settings/api",
             entry_type=DeviceEntryType.SERVICE,

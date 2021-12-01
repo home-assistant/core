@@ -13,14 +13,9 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
+from . import TailscaleEntity
 from .const import DOMAIN
 
 
@@ -66,43 +61,10 @@ async def async_setup_entry(
     )
 
 
-class TailscaleBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
+class TailscaleBinarySensorEntity(TailscaleEntity, BinarySensorEntity):
     """Defines a Tailscale binary sensor."""
 
     entity_description: TailscaleBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        *,
-        coordinator: DataUpdateCoordinator,
-        device: TailscaleDevice,
-        description: TailscaleBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize a Tailscale binary sensor."""
-        super().__init__(coordinator=coordinator)
-        self.entity_description = description
-        self.device_id = device.device_id
-        self._attr_name = f"{device.hostname} {description.name}"
-        self._attr_unique_id = f"{device.device_id}_{description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        device: TailscaleDevice = self.coordinator.data[self.device_id]
-
-        configuration_url = "https://login.tailscale.com/admin/machines/"
-        if device.addresses:
-            configuration_url += device.addresses[0]
-
-        return DeviceInfo(
-            configuration_url=configuration_url,
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, device.device_id)},
-            manufacturer="Tailscale Inc.",
-            model=device.os,
-            name=device.hostname,
-            sw_version=device.client_version,
-        )
 
     @property
     def is_on(self) -> bool:
