@@ -314,8 +314,6 @@ async def test_validate_trigger_invalid_triggers(hass, device_reg):
     config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
     dr_button_devices = hass.data[DOMAIN][config_entry_id][BUTTON_DEVICES]
     device_id = list(dr_button_devices)[0]
-    assert await async_setup_component(hass, "persistent_notification", {})
-    await hass.async_block_till_done()
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -337,7 +335,6 @@ async def test_validate_trigger_invalid_triggers(hass, device_reg):
             ]
         },
     )
-    await hass.async_block_till_done()
 
     assert (
         len(entity_ids := hass.states.async_entity_ids("persistent_notification")) == 1
