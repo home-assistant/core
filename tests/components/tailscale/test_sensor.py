@@ -4,6 +4,7 @@ from homeassistant.components.tailscale.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import MockConfigEntry
 
@@ -21,10 +22,33 @@ async def test_tailscale_sensors(
     assert entry
     assert state
     assert entry.unique_id == "123457_expires"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "2022-02-25T09:49:06+00:00"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "router Expires"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert ATTR_ICON not in state.attributes
+
+    state = hass.states.get("sensor.router_last_seen")
+    entry = entity_registry.async_get("sensor.router_last_seen")
+    assert entry
+    assert state
+    assert entry.unique_id == "123457_last_seen"
+    assert entry.entity_category is None
+    assert state.state == "2021-11-15T20:37:03+00:00"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "router Last Seen"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
+    assert ATTR_ICON not in state.attributes
+
+    state = hass.states.get("sensor.router_ip_address")
+    entry = entity_registry.async_get("sensor.router_ip_address")
+    assert entry
+    assert state
+    assert entry.unique_id == "123457_ip"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert state.state == "100.11.11.112"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "router IP Address"
+    assert state.attributes.get(ATTR_ICON) == "mdi:ip-network"
+    assert ATTR_DEVICE_CLASS not in state.attributes
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
