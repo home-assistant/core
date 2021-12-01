@@ -1,15 +1,16 @@
-"""Support for Tailscale binary sensors."""
+"""Support for Tailscale sensors."""
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
 from tailscale import Device as TailscaleDevice
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-    BinarySensorEntityDescription,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,25 +22,25 @@ from .const import DOMAIN
 
 
 @dataclass
-class TailscaleBinarySensorEntityDescriptionMixin:
+class TailscaleSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    is_on_fn: Callable[[TailscaleDevice], bool | None]
+    value_fn: Callable[[TailscaleDevice], datetime | None]
 
 
 @dataclass
-class TailscaleBinarySensorEntityDescription(
-    BinarySensorEntityDescription, TailscaleBinarySensorEntityDescriptionMixin
+class TailscaleSensorEntityDescription(
+    SensorEntityDescription, TailscaleSensorEntityDescriptionMixin
 ):
     """Describes a Tailscale binary sensor entity."""
 
 
-BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
-    TailscaleBinarySensorEntityDescription(
-        key="update_available",
-        name="Client",
-        device_class=BinarySensorDeviceClass.UPDATE,
-        is_on_fn=lambda device: device.update_available,
+SENSORS: tuple[TailscaleSensorEntityDescription, ...] = (
+    TailscaleSensorEntityDescription(
+        key="expires",
+        name="Expires",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda device: device.expires,
     ),
 )
 
@@ -49,30 +50,30 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up a Tailscale binary sensors based on a config entry."""
+    """Set up a Tailscale sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        TailscaleBinarySensorEntity(
+        TailscaleSensorEntity(
             coordinator=coordinator,
             device=device,
             description=description,
         )
         for device in coordinator.data.values()
-        for description in BINARY_SENSORS
+        for description in SENSORS
     )
 
 
-class TailscaleBinarySensorEntity(TailscaleEntity, BinarySensorEntity):
-    """Defines a Tailscale binary sensor."""
+class TailscaleSensorEntity(TailscaleEntity, SensorEntity):
+    """Defines a Tailscale sensor."""
 
-    entity_description: TailscaleBinarySensorEntityDescription
+    entity_description: TailscaleSensorEntityDescription
 
     def __init__(
         self,
         *,
         coordinator: DataUpdateCoordinator,
         device: TailscaleDevice,
-        description: TailscaleBinarySensorEntityDescription,
+        description: TailscaleSensorEntityDescription,
     ) -> None:
         """Initialize a Tailscale binary sensor."""
         super().__init__(coordinator=coordinator)
@@ -82,8 +83,6 @@ class TailscaleBinarySensorEntity(TailscaleEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
     @property
-    def is_on(self) -> bool:
+    def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
-        return bool(
-            self.entity_description.is_on_fn(self.coordinator.data[self.device_id])
-        )
+        return self.entity_description.value_fn(self.coordinator.data[self.device_id])
