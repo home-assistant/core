@@ -172,7 +172,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Trafikverket sensor entry."""
 
-    sensor_name = entry.data[CONF_NAME]
+    sensor_name = entry.data[CONF_STATION]
     sensor_api = entry.data[CONF_API_KEY]
     sensor_station = entry.data[CONF_STATION]
 
@@ -180,13 +180,11 @@ async def async_setup_entry(
 
     weather_api = TrafikverketWeather(web_session, sensor_api)
 
-    monitored_conditions = entry.data[CONF_MONITORED_CONDITIONS]
     entities = [
         TrafikverketWeatherStation(
             weather_api, sensor_name, sensor_station, description
         )
         for description in SENSOR_TYPES
-        if description.key in monitored_conditions
     ]
 
     async_add_entities(entities, True)
