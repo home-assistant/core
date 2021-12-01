@@ -26,6 +26,7 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.enum import StrEnum
 
 from .const import (
     ATTR_AVAILABLE_MODES,
@@ -34,8 +35,6 @@ from .const import (
     ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
@@ -49,9 +48,19 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-DEVICE_CLASSES = [DEVICE_CLASS_HUMIDIFIER, DEVICE_CLASS_DEHUMIDIFIER]
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+class HumidifierDeviceClass(StrEnum):
+    """Device class for humidifiers."""
+
+    HUMIDIFIER = "humidifier"
+    DEHUMIDIFIER = "dehumidifier"
+
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(HumidifierDeviceClass))
+
+# DEVICE_CLASSES below is deprecated as of 2021.12
+# use the HumidifierDeviceClass enum instead.
+DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
 
 
 @bind_hass
@@ -108,12 +117,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class HumidifierEntityDescription(ToggleEntityDescription):
     """A class that describes humidifier entities."""
 
+    device_class: HumidifierDeviceClass | str | None = None
+
 
 class HumidifierEntity(ToggleEntity):
     """Base class for humidifier entities."""
 
     entity_description: HumidifierEntityDescription
     _attr_available_modes: list[str] | None
+    _attr_device_class: HumidifierDeviceClass | str | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
     _attr_mode: str | None
