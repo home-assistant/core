@@ -16,11 +16,10 @@ from homeassistant.components.onewire.model import (
     OWServerDeviceDescription,
 )
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -64,7 +63,7 @@ SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION = OneWireSensorEntityDescription(
     name="Temperature",
     native_unit_of_measurement=TEMP_CELSIUS,
     read_mode=READ_MODE_FLOAT,
-    state_class=STATE_CLASS_MEASUREMENT,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +79,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Temperature",
             native_unit_of_measurement=TEMP_CELSIUS,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="TAI8570/pressure",
@@ -89,7 +88,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Pressure",
             native_unit_of_measurement=PRESSURE_MBAR,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
     "22": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
@@ -102,7 +101,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Humidity",
             native_unit_of_measurement=PERCENTAGE,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="HIH3600/humidity",
@@ -111,7 +110,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Humidity HIH3600",
             native_unit_of_measurement=PERCENTAGE,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="HIH4000/humidity",
@@ -120,7 +119,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Humidity HIH4000",
             native_unit_of_measurement=PERCENTAGE,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="HIH5030/humidity",
@@ -129,7 +128,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Humidity HIH5030",
             native_unit_of_measurement=PERCENTAGE,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="HTM1735/humidity",
@@ -138,7 +137,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Humidity HTM1735",
             native_unit_of_measurement=PERCENTAGE,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="B1-R1-A/pressure",
@@ -147,7 +146,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Pressure",
             native_unit_of_measurement=PRESSURE_MBAR,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="S3-R1-A/illuminance",
@@ -156,7 +155,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Illuminance",
             native_unit_of_measurement=LIGHT_LUX,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="VAD",
@@ -165,7 +164,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Voltage VAD",
             native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="VDD",
@@ -174,7 +173,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Voltage VDD",
             native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="vis",
@@ -183,7 +182,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="vis",
             native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
     "28": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
@@ -195,14 +194,14 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Counter A",
             native_unit_of_measurement="count",
             read_mode=READ_MODE_INT,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         OneWireSensorEntityDescription(
             key="counter.B",
             name="Counter B",
             native_unit_of_measurement="count",
             read_mode=READ_MODE_INT,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     ),
 }
@@ -219,7 +218,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Humidity",
             native_unit_of_measurement=PERCENTAGE,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="humidity/humidity_raw",
@@ -227,7 +226,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Humidity Raw",
             native_unit_of_measurement=PERCENTAGE,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="humidity/temperature",
@@ -235,7 +234,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Temperature",
             native_unit_of_measurement=TEMP_CELSIUS,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
     "HB_MOISTURE_METER": (
@@ -245,7 +244,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Moisture 0",
             native_unit_of_measurement=PRESSURE_CBAR,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="moisture/sensor.1",
@@ -253,7 +252,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Moisture 1",
             native_unit_of_measurement=PRESSURE_CBAR,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="moisture/sensor.2",
@@ -261,7 +260,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Moisture 2",
             native_unit_of_measurement=PRESSURE_CBAR,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="moisture/sensor.3",
@@ -269,7 +268,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Moisture 3",
             native_unit_of_measurement=PRESSURE_CBAR,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
 }
@@ -284,7 +283,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Temperature",
             native_unit_of_measurement=TEMP_CELSIUS,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="EDS0066/pressure",
@@ -292,7 +291,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Pressure",
             native_unit_of_measurement=PRESSURE_MBAR,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
     "EDS0068": (
@@ -302,7 +301,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Temperature",
             native_unit_of_measurement=TEMP_CELSIUS,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="EDS0068/pressure",
@@ -310,7 +309,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Pressure",
             native_unit_of_measurement=PRESSURE_MBAR,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="EDS0068/light",
@@ -318,7 +317,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Illuminance",
             native_unit_of_measurement=LIGHT_LUX,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="EDS0068/humidity",
@@ -326,7 +325,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             name="Humidity",
             native_unit_of_measurement=PERCENTAGE,
             read_mode=READ_MODE_FLOAT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
 }
