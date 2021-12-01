@@ -4,10 +4,10 @@ from __future__ import annotations
 from airthings import AirthingsDevice
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
     StateType,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -133,7 +133,7 @@ async def async_setup_entry(
 class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
     """Representation of a Airthings Sensor device."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
