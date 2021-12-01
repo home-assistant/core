@@ -8,6 +8,7 @@ from typing import NamedTuple, cast
 import pyatmo
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -18,12 +19,6 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
@@ -92,8 +87,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="Temperature",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     NetatmoSensorEntityDescription(
         key="temp_trend",
@@ -108,8 +103,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="CO2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         entity_registry_enabled_default=True,
-        device_class=DEVICE_CLASS_CO2,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CO2,
     ),
     NetatmoSensorEntityDescription(
         key="pressure",
@@ -117,8 +112,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="Pressure",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=PRESSURE_MBAR,
-        device_class=DEVICE_CLASS_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRESSURE,
     ),
     NetatmoSensorEntityDescription(
         key="pressure_trend",
@@ -142,8 +137,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="Humidity",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
     ),
     NetatmoSensorEntityDescription(
         key="rain",
@@ -179,8 +174,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=True,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
     ),
     NetatmoSensorEntityDescription(
         key="windangle",
@@ -255,8 +250,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     ),
     NetatmoSensorEntityDescription(
         key="wifi_status",
@@ -273,8 +268,8 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     ),
     NetatmoSensorEntityDescription(
         key="health_idx",

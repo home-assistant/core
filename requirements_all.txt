@@ -1507,7 +1507,7 @@ pyfreedompro==1.1.0
 pyfritzhome==0.6.2
 
 # homeassistant.components.fronius
-pyfronius==0.7.0
+pyfronius==0.7.1
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -2273,6 +2273,9 @@ systembridge==2.2.3
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.16
+
+# homeassistant.components.tailscale
+tailscale==0.1.2
 
 # homeassistant.components.tank_utility
 tank_utility==1.4.0
