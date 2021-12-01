@@ -1,15 +1,17 @@
 """Config flow for ecowitt."""
+import asyncio
 import logging
 
+from pyecowitt import EcoWittListener
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_PORT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     CONF_UNIT_BARO,
@@ -17,6 +19,8 @@ from .const import (
     CONF_UNIT_RAIN,
     CONF_UNIT_WIND,
     CONF_UNIT_WINDCHILL,
+    DATA_MODEL,
+    DATA_PASSKEY,
     DOMAIN,
     UNIT_OPTS,
     W_TYPE_HYBRID,
@@ -26,6 +30,20 @@ from .const import (
 from .schemas import DATA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def validate_input(hass: HomeAssistant, data):
+    """Validate the user input allows us to connect."""
+    ecowitt = EcoWittListener(port=data[CONF_PORT])
+    asyncio.create_task(ecowitt.listen())
+    try:
+        await asyncio.wait_for(ecowitt.wait_for_valid_data(), timeout=90.0)
+    except asyncio.TimeoutError as error:
+        raise CannotConnect from error
+    passkey = ecowitt.get_sensor_value_by_key(DATA_PASSKEY)
+    model = ecowitt.get_sensor_value_by_key(DATA_MODEL)
+    await ecowitt.stop()
+    return {"title": model, "passkey": passkey}
 
 
 class EcowittConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -45,9 +63,20 @@ class EcowittConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_PORT: user_input[CONF_PORT]})
-            return self.async_create_entry(
-                title=f"Ecowitt on port {user_input[CONF_PORT]}", data=user_input
-            )
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(info["passkey"])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=f"{info['title']} on port {user_input[CONF_PORT]}",
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="initial_options", data_schema=DATA_SCHEMA, errors=errors
@@ -58,6 +87,10 @@ class EcowittConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         """Call the options flow handler."""
         return EcowittOptionsFlowHandler(config_entry)
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
 
 
 class EcowittOptionsFlowHandler(config_entries.OptionsFlow):

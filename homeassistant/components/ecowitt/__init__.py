@@ -1,6 +1,7 @@
 """The Ecowitt Weather Station Component."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import logging
 import time
@@ -77,8 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if entry.options[CONF_UNIT_WINDCHILL] == W_TYPE_HYBRID:
         data.client.set_windchill(WINDCHILL_HYBRID)
 
-    hass.loop.create_task(data.client.listen())
-    await data.client.wait_for_valid_data()
+    asyncio.create_task(data.client.listen())
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
