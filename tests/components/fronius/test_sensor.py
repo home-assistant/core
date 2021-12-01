@@ -373,11 +373,11 @@ async def test_gen24_storage(hass, aioclient_mock):
     mock_responses(aioclient_mock, fixture_set="gen24_storage")
     config_entry = await setup_fronius_integration(hass, is_logger=False)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 31
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 36
     await enable_all_entities(
         hass, config_entry.entry_id, FroniusMeterUpdateCoordinator.default_interval
     )
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 63
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 68
     # inverter 1
     assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 0.3952)
     assert_state("sensor.voltage_dc_2_fronius_inverter_1_http_fronius", 318.8103)
@@ -437,6 +437,16 @@ async def test_gen24_storage(hass, aioclient_mock):
     assert_state("sensor.voltage_ac_phase_3_fronius_meter_0_http_fronius", 228.3)
     assert_state("sensor.power_apparent_fronius_meter_0_http_fronius", 821.9)
     assert_state("sensor.power_apparent_phase_3_fronius_meter_0_http_fronius", 118.4)
+    # ohmpilot
+    assert_state(
+        "sensor.energy_real_ac_consumed_fronius_ohmpilot_0_http_fronius", 1233295.0
+    )
+    assert_state("sensor.power_real_ac_fronius_ohmpilot_0_http_fronius", 0.0)
+    assert_state("sensor.temperature_channel_1_fronius_ohmpilot_0_http_fronius", 38.9)
+    assert_state("sensor.state_code_fronius_ohmpilot_0_http_fronius", 0.0)
+    assert_state(
+        "sensor.state_message_fronius_ohmpilot_0_http_fronius", "Up and running"
+    )
     # power_flow
     assert_state("sensor.power_grid_fronius_power_flow_0_http_fronius", 2274.9)
     assert_state("sensor.power_battery_fronius_power_flow_0_http_fronius", 0.1591)

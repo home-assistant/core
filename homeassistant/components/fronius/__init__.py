@@ -22,6 +22,7 @@ from .coordinator import (
     FroniusInverterUpdateCoordinator,
     FroniusLoggerUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
+    FroniusOhmpilotUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
 )
@@ -83,6 +84,7 @@ class FroniusSolarNet:
         self.inverter_coordinators: list[FroniusInverterUpdateCoordinator] = []
         self.logger_coordinator: FroniusLoggerUpdateCoordinator | None = None
         self.meter_coordinator: FroniusMeterUpdateCoordinator | None = None
+        self.ohmpilot_coordinator: FroniusOhmpilotUpdateCoordinator | None = None
         self.power_flow_coordinator: FroniusPowerFlowUpdateCoordinator | None = None
         self.storage_coordinator: FroniusStorageUpdateCoordinator | None = None
 
@@ -118,6 +120,15 @@ class FroniusSolarNet:
                 solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_meters_{self.host}",
+            )
+        )
+
+        self.ohmpilot_coordinator = await self._init_optional_coordinator(
+            FroniusOhmpilotUpdateCoordinator(
+                hass=self.hass,
+                solar_net=self,
+                logger=_LOGGER,
+                name=f"{DOMAIN}_ohmpilot_{self.host}",
             )
         )
 
@@ -195,9 +206,12 @@ class FroniusSolarNet:
         coordinator: FroniusCoordinatorType,
     ) -> FroniusCoordinatorType | None:
         """Initialize an update coordinator and return it if devices are found."""
+        print(f"coordinator {coordinator}")
         try:
             await coordinator.async_config_entry_first_refresh()
-        except ConfigEntryNotReady:
+            print(f"co data {coordinator.data}")
+        except ConfigEntryNotReady as err:
+            print(f"co error {err}")
             # ConfigEntryNotReady raised form FroniusError / KeyError in
             # DataUpdateCoordinator if request not supported by the Fronius device
             return None

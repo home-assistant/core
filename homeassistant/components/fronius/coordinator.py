@@ -22,6 +22,7 @@ from .sensor import (
     INVERTER_ENTITY_DESCRIPTIONS,
     LOGGER_ENTITY_DESCRIPTIONS,
     METER_ENTITY_DESCRIPTIONS,
+    OHMPILOT_ENTITY_DESCRIPTIONS,
     POWER_FLOW_ENTITY_DESCRIPTIONS,
     STORAGE_ENTITY_DESCRIPTIONS,
 )
@@ -156,6 +157,19 @@ class FroniusMeterUpdateCoordinator(FroniusCoordinatorBase):
         """Return data per solar net id from pyfronius."""
         data = await self.solar_net.fronius.current_system_meter_data()
         return data["meters"]  # type: ignore[no-any-return]
+
+
+class FroniusOhmpilotUpdateCoordinator(FroniusCoordinatorBase):
+    """Query Fronius Ohmpilots and keep track of seen conditions."""
+
+    default_interval = timedelta(minutes=1)
+    error_interval = timedelta(minutes=10)
+    valid_descriptions = OHMPILOT_ENTITY_DESCRIPTIONS
+
+    async def _update_method(self) -> dict[SolarNetId, Any]:
+        """Return data per solar net id from pyfronius."""
+        data = await self.solar_net.fronius.current_system_ohmpilot_data()
+        return data["ohmpilots"]  # type: ignore[no-any-return]
 
 
 class FroniusPowerFlowUpdateCoordinator(FroniusCoordinatorBase):
