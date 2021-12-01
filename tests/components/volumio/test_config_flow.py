@@ -27,10 +27,10 @@ TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
 )
 
 TEST_DISCOVERY_RESULT = {
-    "host": TEST_DISCOVERY[zeroconf.ATTR_HOST],
-    "port": TEST_DISCOVERY[zeroconf.ATTR_PORT],
-    "id": TEST_DISCOVERY[zeroconf.ATTR_PROPERTIES]["UUID"],
-    "name": TEST_DISCOVERY[zeroconf.ATTR_PROPERTIES]["volumioName"],
+    "host": TEST_DISCOVERY.host,
+    "port": TEST_DISCOVERY.port,
+    "id": TEST_DISCOVERY.properties["UUID"],
+    "name": TEST_DISCOVERY.properties["volumioName"],
 }
 
 
