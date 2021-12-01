@@ -13,7 +13,6 @@ class NanoleafEntity(Entity):
     def __init__(self, nanoleaf: Nanoleaf) -> None:
         """Initialize an Nanoleaf entity."""
         self._nanoleaf = nanoleaf
-        self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, nanoleaf.serial_no)},
             manufacturer=nanoleaf.manufacturer,

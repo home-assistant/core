@@ -1,11 +1,12 @@
 """Support for Nanoleaf Lights."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 import math
 from typing import Any
 
-from aionanoleaf import Nanoleaf
+from aionanoleaf import Nanoleaf, Unavailable
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -50,6 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup_platform(
@@ -178,6 +181,26 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         transition: float | None = kwargs.get(ATTR_TRANSITION)
         await self._nanoleaf.turn_off(None if transition is None else int(transition))
 
+    async def async_update(self) -> None:
+        """Fetch new state data for this light."""
+        try:
+            await self._nanoleaf.get_info()
+        except Unavailable:
+            if self.available:
+                _LOGGER.warning("Could not connect to %s", self.name)
+            self._attr_available = False
+            return
+        if not self.available:
+            _LOGGER.info("Fetching %s data recovered", self.name)
+        self._attr_available = True
+
+    async def async_handle_update(self) -> None:
+        """Handle state update."""
+        self.async_write_ha_state()
+        if not self.available:
+            _LOGGER.info("Connection to %s recovered", self.name)
+        self._attr_available = True
+
     async def async_added_to_hass(self) -> None:
         """Handle entity being added to Home Assistant."""
         await super().async_added_to_hass()
@@ -185,6 +208,6 @@ class NanoleafLight(NanoleafEntity, LightEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{DOMAIN}_update_light_{self._nanoleaf.serial_no}",
-                self.async_write_ha_state,
+                self.async_handle_update,
             )
         )
