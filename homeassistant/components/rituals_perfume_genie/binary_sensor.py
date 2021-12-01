@@ -4,7 +4,7 @@ from __future__ import annotations
 from pyrituals import Diffuser
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -38,7 +38,7 @@ async def async_setup_entry(
 class DiffuserBatteryChargingBinarySensor(DiffuserEntity, BinarySensorEntity):
     """Representation of a diffuser battery charging binary sensor."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY_CHARGING
+    _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(
