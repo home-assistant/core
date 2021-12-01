@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from tailscale import Device as TailscaleDevice
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_UPDATE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -42,7 +42,7 @@ BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
     TailscaleBinarySensorEntityDescription(
         key="update_available",
         name="Client",
-        device_class=DEVICE_CLASS_UPDATE,
+        device_class=BinarySensorDeviceClass.UPDATE,
         is_on_fn=lambda device: device.update_available,
     ),
 )

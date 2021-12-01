@@ -1,5 +1,5 @@
 """Tests for the sensors provided by the Tailscale integration."""
-from homeassistant.components.binary_sensor import DEVICE_CLASS_UPDATE, STATE_ON
+from homeassistant.components.binary_sensor import STATE_ON, BinarySensorDeviceClass
 from homeassistant.components.tailscale.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant
@@ -23,7 +23,7 @@ async def test_tailscale_binary_sensors(
     assert entry.unique_id == "123456_update_available"
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frencks-iPhone Client"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_UPDATE
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.UPDATE
     assert ATTR_ICON not in state.attributes
 
     assert entry.device_id
