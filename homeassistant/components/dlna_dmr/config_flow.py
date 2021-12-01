@@ -93,8 +93,9 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         self._discoveries = {
-            discovery.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-            or urlparse(discovery[ssdp.ATTR_SSDP_LOCATION]).hostname: discovery
+            discovery.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            or urlparse(discovery.ssdp_location or "").hostname
+            or "": discovery
             for discovery in discoveries
         }
 
@@ -158,7 +159,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Find the device in the list of unconfigured devices
         for discovery in discoveries:
-            if discovery[ssdp.ATTR_SSDP_LOCATION] == self._location:
+            if discovery.ssdp_location == self._location:
                 # Device found via SSDP, it shouldn't need polling
                 self._options[CONF_POLL_AVAILABILITY] = False
                 # Discovery info has everything required to create config entry
@@ -376,9 +377,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries(include_ignore=False)
         }
         discoveries = [
-            disc
-            for disc in discoveries
-            if disc[ssdp.ATTR_SSDP_UDN] not in current_unique_ids
+            disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids
         ]
 
         return discoveries
