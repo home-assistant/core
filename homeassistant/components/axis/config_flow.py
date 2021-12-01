@@ -156,21 +156,21 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         """Prepare configuration for a DHCP discovered Axis device."""
         return await self._process_discovered_device(
             {
-                CONF_HOST: discovery_info[dhcp.IP_ADDRESS],
-                CONF_MAC: format_mac(discovery_info[dhcp.MAC_ADDRESS]),
-                CONF_NAME: discovery_info[dhcp.HOSTNAME],
+                CONF_HOST: discovery_info.ip,
+                CONF_MAC: format_mac(discovery_info.macaddress),
+                CONF_NAME: discovery_info.hostname,
                 CONF_PORT: DEFAULT_PORT,
             }
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Prepare configuration for a SSDP discovered Axis device."""
-        url = urlsplit(discovery_info["presentationURL"])
+        url = urlsplit(discovery_info.upnp[ssdp.ATTR_UPNP_PRESENTATION_URL])
         return await self._process_discovered_device(
             {
                 CONF_HOST: url.hostname,
-                CONF_MAC: format_mac(discovery_info["serialNumber"]),
-                CONF_NAME: f"{discovery_info['friendlyName']}",
+                CONF_MAC: format_mac(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]),
+                CONF_NAME: f"{discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]}",
                 CONF_PORT: url.port,
             }
         )
@@ -181,12 +181,10 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         """Prepare configuration for a Zeroconf discovered Axis device."""
         return await self._process_discovered_device(
             {
-                CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
-                CONF_MAC: format_mac(
-                    discovery_info[zeroconf.ATTR_PROPERTIES]["macaddress"]
-                ),
-                CONF_NAME: discovery_info[zeroconf.ATTR_NAME].split(".", 1)[0],
-                CONF_PORT: discovery_info[zeroconf.ATTR_PORT],
+                CONF_HOST: discovery_info.host,
+                CONF_MAC: format_mac(discovery_info.properties["macaddress"]),
+                CONF_NAME: discovery_info.name.split(".", 1)[0],
+                CONF_PORT: discovery_info.port,
             }
         )
 

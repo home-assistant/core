@@ -31,6 +31,7 @@ BASE_PLATFORMS = {
     "alarm_control_panel",
     "binary_sensor",
     "camera",
+    "calendar",
     "climate",
     "cover",
     "device_tracker",
