@@ -219,7 +219,7 @@ aiomodernforms==0.1.8
 aiomusiccast==0.14.2
 
 # homeassistant.components.nanoleaf
-aionanoleaf==0.0.4
+aionanoleaf==0.1.1
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
