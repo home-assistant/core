@@ -233,6 +233,8 @@ EVENT_TIME_CHANGED: Final = "time_changed"
 
 
 # #### DEVICE CLASSES ####
+# DEVICE_CLASS_* below are deprecated as of 2021.12
+# use the SensorDeviceClass enum instead.
 DEVICE_CLASS_AQI: Final = "aqi"
 DEVICE_CLASS_BATTERY: Final = "battery"
 DEVICE_CLASS_CO: Final = "carbon_monoxide"
@@ -241,6 +243,7 @@ DEVICE_CLASS_CURRENT: Final = "current"
 DEVICE_CLASS_DATE: Final = "date"
 DEVICE_CLASS_ENERGY: Final = "energy"
 DEVICE_CLASS_FREQUENCY: Final = "frequency"
+DEVICE_CLASS_GAS: Final = "gas"
 DEVICE_CLASS_HUMIDITY: Final = "humidity"
 DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
 DEVICE_CLASS_MONETARY: Final = "monetary"
@@ -248,19 +251,18 @@ DEVICE_CLASS_NITROGEN_DIOXIDE = "nitrogen_dioxide"
 DEVICE_CLASS_NITROGEN_MONOXIDE = "nitrogen_monoxide"
 DEVICE_CLASS_NITROUS_OXIDE = "nitrous_oxide"
 DEVICE_CLASS_OZONE: Final = "ozone"
-DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
-DEVICE_CLASS_POWER: Final = "power"
-DEVICE_CLASS_PM25: Final = "pm25"
 DEVICE_CLASS_PM1: Final = "pm1"
 DEVICE_CLASS_PM10: Final = "pm10"
+DEVICE_CLASS_PM25: Final = "pm25"
+DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
+DEVICE_CLASS_POWER: Final = "power"
 DEVICE_CLASS_PRESSURE: Final = "pressure"
 DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
 DEVICE_CLASS_SULPHUR_DIOXIDE = "sulphur_dioxide"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
 DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
-DEVICE_CLASS_VOLTAGE: Final = "voltage"
 DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
-DEVICE_CLASS_GAS: Final = "gas"
+DEVICE_CLASS_VOLTAGE: Final = "voltage"
 
 # #### STATES ####
 STATE_ON: Final = "on"
@@ -701,16 +703,11 @@ PRECISION_TENTHS: Final = 0.1
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
-# Config: An entity which allows changing the configuration of a device
+# ENTITY_CATEGOR* below are deprecated as of 2021.12
+# use the EntityCategory enum instead.
 ENTITY_CATEGORY_CONFIG: Final = "config"
-# Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
 ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
-# System: An entity which is not useful for the user to interact with
 ENTITY_CATEGORY_SYSTEM: Final = "system"
-
-# Entity categories which will:
-# - Not be exposed to cloud, alexa, or google_home components
-# - Not be included in indirect service calls to devices or areas
 ENTITY_CATEGORIES: Final[list[str]] = [
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,

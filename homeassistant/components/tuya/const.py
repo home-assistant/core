@@ -205,6 +205,7 @@ class DPCode(str, Enum):
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
+    FORWARD_ENERGY_TOTAL = "forward_energy_total"
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
@@ -234,6 +235,9 @@ class DPCode(str, Enum):
     PERCENT_STATE = "percent_state"
     PERCENT_STATE_2 = "percent_state_2"
     PERCENT_STATE_3 = "percent_state_3"
+    PHASE_A = "phase_a"
+    PHASE_B = "phase_b"
+    PHASE_C = "phase_c"
     PIR = "pir"  # Motion sensor
     PM1 = "pm1"
     PM10 = "pm10"
@@ -401,7 +405,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=ENERGY_KILO_WATT_HOUR,
-        aliases={"kwh", "kilowatt-hour"},
+        aliases={"kwh", "kilowatt-hour", "kW·h"},
         device_classes={DEVICE_CLASS_ENERGY},
     ),
     UnitOfMeasurement(

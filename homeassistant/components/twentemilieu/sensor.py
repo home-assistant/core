@@ -6,9 +6,13 @@ from datetime import date
 
 from twentemilieu import WasteType
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, DEVICE_CLASS_DATE
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -41,28 +45,28 @@ SENSORS: tuple[TwenteMilieuSensorDescription, ...] = (
         waste_type=WasteType.NON_RECYCLABLE,
         name="Non-recyclable Waste Pickup",
         icon="mdi:delete-empty",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Organic",
         waste_type=WasteType.ORGANIC,
         name="Organic Waste Pickup",
         icon="mdi:delete-empty",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Paper",
         waste_type=WasteType.PAPER,
         name="Paper Waste Pickup",
         icon="mdi:delete-empty",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Plastic",
         waste_type=WasteType.PACKAGES,
         name="Packages Waste Pickup",
         icon="mdi:delete-empty",
-        device_class=DEVICE_CLASS_DATE,
+        device_class=SensorDeviceClass.DATE,
     ),
 )
 

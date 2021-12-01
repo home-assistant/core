@@ -219,7 +219,7 @@ aiomodernforms==0.1.8
 aiomusiccast==0.14.2
 
 # homeassistant.components.nanoleaf
-aionanoleaf==0.0.4
+aionanoleaf==0.1.1
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
@@ -1507,7 +1507,7 @@ pyfreedompro==1.1.0
 pyfritzhome==0.6.2
 
 # homeassistant.components.fronius
-pyfronius==0.7.0
+pyfronius==0.7.1
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -1892,7 +1892,7 @@ python-gitlab==1.6.0
 python-hpilo==4.3
 
 # homeassistant.components.izone
-python-izone==1.1.6
+python-izone==1.1.8
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.6
@@ -1907,7 +1907,7 @@ python-kasa==0.4.0
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.8
+python-miio==0.5.9
 
 # homeassistant.components.mpd
 python-mpd2==3.0.4
@@ -2276,6 +2276,9 @@ systembridge==2.2.3
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.16
+
+# homeassistant.components.tailscale
+tailscale==0.1.2
 
 # homeassistant.components.tank_utility
 tank_utility==1.4.0
