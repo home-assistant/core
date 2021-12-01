@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from tesla_wall_connector.exceptions import WallConnectorConnectionError
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.tesla_wall_connector.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -15,7 +15,6 @@ from tests.common import MockConfigEntry
 
 async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
