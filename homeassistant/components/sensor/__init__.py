@@ -160,7 +160,7 @@ class SensorDeviceClass(StrEnum):
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
 
 # DEVICE_CLASSES is deprecated as of 2021.12
-# use the BinarySensorDeviceClass enum instead.
+# use the SensorDeviceClass enum instead.
 DEVICE_CLASSES: Final[list[str]] = [cls.value for cls in SensorDeviceClass]
 
 # The state represents a measurement in present time
