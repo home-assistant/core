@@ -216,7 +216,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Abort if the device doesn't support all services required for a DmrDevice.
         # Use the discovery_info instead of DmrDevice.is_profile_device to avoid
         # contacting the device again.
-        discovery_service_list = discovery_info.get(ssdp.ATTR_UPNP_SERVICE_LIST)
+        discovery_service_list = discovery_info.upnp.get(ssdp.ATTR_UPNP_SERVICE_LIST)
         if not discovery_service_list:
             return self.async_abort(reason="not_dmr")
         discovery_service_ids = {
@@ -334,15 +334,15 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Set information required for a config entry from the SSDP discovery."""
         LOGGER.debug(
             "_async_set_info_from_discovery: location: %s, UDN: %s",
-            discovery_info[ssdp.ATTR_SSDP_LOCATION],
-            discovery_info[ssdp.ATTR_SSDP_UDN],
+            discovery_info.ssdp_location,
+            discovery_info.ssdp_udn,
         )
 
         if not self._location:
-            self._location = discovery_info[ssdp.ATTR_SSDP_LOCATION]
+            self._location = discovery_info.ssdp_location
             assert isinstance(self._location, str)
 
-        self._udn = discovery_info[ssdp.ATTR_SSDP_UDN]
+        self._udn = discovery_info.ssdp_udn
         await self.async_set_unique_id(self._udn)
 
         if abort_if_configured:
@@ -351,11 +351,9 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 updates={CONF_URL: self._location}, reload_on_update=False
             )
 
-        self._device_type = (
-            discovery_info.get(ssdp.ATTR_SSDP_NT) or discovery_info[ssdp.ATTR_SSDP_ST]
-        )
+        self._device_type = discovery_info.ssdp_nt or discovery_info.ssdp_st
         self._name = (
-            discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
             or urlparse(self._location).hostname
             or DEFAULT_NAME
         )
@@ -461,22 +459,25 @@ def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     flow, which will list all discovered but unconfigured devices.
     """
     # Did the discovery trigger more than just this flow?
-    if len(discovery_info.get(ssdp.ATTR_HA_MATCHING_DOMAINS, set())) > 1:
+    if len(discovery_info.x_homeassistant_matching_domains) > 1:
         LOGGER.debug(
             "Ignoring device supported by multiple integrations: %s",
-            discovery_info[ssdp.ATTR_HA_MATCHING_DOMAINS],
+            discovery_info.x_homeassistant_matching_domains,
         )
         return True
 
     # Is the root device not a DMR?
-    if discovery_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) not in DmrDevice.DEVICE_TYPES:
+    if (
+        discovery_info.upnp.get(ssdp.ATTR_UPNP_DEVICE_TYPE)
+        not in DmrDevice.DEVICE_TYPES
+    ):
         return True
 
     # Special cases for devices with other discovery methods (e.g. mDNS), or
     # that advertise multiple unrelated (sent in separate discovery packets)
     # UPnP devices.
-    manufacturer = discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER, "").lower()
-    model = discovery_info.get(ssdp.ATTR_UPNP_MODEL_NAME, "").lower()
+    manufacturer = discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER, "").lower()
+    model = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").lower()
 
     if manufacturer.startswith("xbmc") or model == "kodi":
         # kodi
