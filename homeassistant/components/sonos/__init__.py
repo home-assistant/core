@@ -279,7 +279,13 @@ class SonosDiscoveryManager:
         discovered_ip = urlparse(info.ssdp_location).hostname
         boot_seqnum = info.ssdp_headers.get("X-RINCON-BOOTSEQ")
         self.async_discovered_player(
-            "SSDP", info, discovered_ip, uid, boot_seqnum, info.get("modelName"), None
+            "SSDP",
+            info,
+            discovered_ip,
+            uid,
+            boot_seqnum,
+            info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME),
+            None,
         )
 
     @callback
