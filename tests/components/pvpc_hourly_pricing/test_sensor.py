@@ -64,9 +64,9 @@ async def test_sensor_availability(
 
         await _process_time_step(hass, mock_data, "price_21h", 0.13896)
         await _process_time_step(hass, mock_data, "price_22h", 0.06893)
-        assert pvpc_aioclient_mock.call_count == 4
+        assert pvpc_aioclient_mock.call_count == 3
         await _process_time_step(hass, mock_data, "price_23h", 0.06935)
-        assert pvpc_aioclient_mock.call_count == 5
+        assert pvpc_aioclient_mock.call_count == 4
 
         # sensor has no more prices, state is "unavailable" from now on
         await _process_time_step(hass, mock_data, value="unavailable")
@@ -79,7 +79,7 @@ async def test_sensor_availability(
         num_warnings = sum(1 for x in caplog.records if x.levelno == logging.WARNING)
         assert num_warnings == 1
         assert num_errors == 0
-        assert pvpc_aioclient_mock.call_count == 9
+        assert pvpc_aioclient_mock.call_count == 8
 
         # check that it is silent until it becomes available again
         caplog.clear()
@@ -87,20 +87,20 @@ async def test_sensor_availability(
             # silent mode
             for _ in range(21):
                 await _process_time_step(hass, mock_data, value="unavailable")
-            assert pvpc_aioclient_mock.call_count == 30
+            assert pvpc_aioclient_mock.call_count == 29
             assert len(caplog.messages) == 0
 
             # warning about data access recovered
             await _process_time_step(hass, mock_data, value="unavailable")
-            assert pvpc_aioclient_mock.call_count == 31
+            assert pvpc_aioclient_mock.call_count == 30
             assert len(caplog.messages) == 1
             assert caplog.records[0].levelno == logging.WARNING
 
             # working ok again
             await _process_time_step(hass, mock_data, "price_00h", value=0.06821)
-            assert pvpc_aioclient_mock.call_count == 32
+            assert pvpc_aioclient_mock.call_count == 30
             await _process_time_step(hass, mock_data, "price_01h", value=0.06627)
-            assert pvpc_aioclient_mock.call_count == 33
+            assert pvpc_aioclient_mock.call_count == 30
             assert len(caplog.messages) == 1
             assert caplog.records[0].levelno == logging.WARNING
 
