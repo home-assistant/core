@@ -22,13 +22,18 @@ from tests.common import (
     mock_device_registry,
 )
 
-# from tests.components.light.conftest import mock_light_profiles  # noqa: F401
-
 
 @pytest.fixture(autouse=True)
 def no_request_delay():
     """Make the request refresh delay 0 for instant tests."""
     with patch("homeassistant.components.hue.const.REQUEST_REFRESH_DELAY", 0):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def no_check_migration():
+    """Make sure the check_migration code is not called in regular tests."""
+    with patch("homeassistant.components.hue.check_migration"):
         yield
 
 
