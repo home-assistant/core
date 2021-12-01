@@ -9,7 +9,7 @@ from tesla_wall_connector.exceptions import WallConnectorError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
@@ -45,12 +45,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize config flow."""
         super().__init__()
-        self.ip_address = None
+        self.ip_address: str | None = None
         self.serial_number = None
 
-    async def async_step_dhcp(self, discovery_info) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self.ip_address = discovery_info[IP_ADDRESS]
+        self.ip_address = discovery_info.ip
         _LOGGER.debug("Discovered Tesla Wall Connector at [%s]", self.ip_address)
 
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
