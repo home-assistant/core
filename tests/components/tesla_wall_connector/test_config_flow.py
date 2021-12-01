@@ -4,7 +4,7 @@ from unittest.mock import patch
 from tesla_wall_connector.exceptions import WallConnectorConnectionError
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.components.tesla_wall_connector.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -112,11 +112,11 @@ async def test_dhcp_can_finish(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data={
-            HOSTNAME: "teslawallconnector_abc",
-            IP_ADDRESS: "1.2.3.4",
-            MAC_ADDRESS: "DC:44:27:12:12",
-        },
+        data=dhcp.DhcpServiceInfo(
+            hostname="teslawallconnector_abc",
+            ip="1.2.3.4",
+            macaddress="DC:44:27:12:12",
+        ),
     )
     await hass.async_block_till_done()
     assert result["type"] == "form"
@@ -143,11 +143,11 @@ async def test_dhcp_already_exists(mock_wall_connector_version, hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data={
-            HOSTNAME: "teslawallconnector_aabbcc",
-            IP_ADDRESS: "1.2.3.4",
-            MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
-        },
+        data=dhcp.DhcpServiceInfo(
+            hostname="teslawallconnector_aabbcc",
+            ip="1.2.3.4",
+            macaddress="aa:bb:cc:dd:ee:ff",
+        ),
     )
     await hass.async_block_till_done()
 
@@ -165,11 +165,11 @@ async def test_dhcp_error_from_wall_connector(mock_wall_connector_version, hass)
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                HOSTNAME: "teslawallconnector_aabbcc",
-                IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="teslawallconnector_aabbcc",
+                ip="1.2.3.4",
+                macaddress="aa:bb:cc:dd:ee:ff",
+            ),
         )
         await hass.async_block_till_done()
 
