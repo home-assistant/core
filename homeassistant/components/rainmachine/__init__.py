@@ -11,7 +11,7 @@ from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
@@ -313,9 +313,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    if len(hass.config_entries.async_entries(DOMAIN)) == 1:
-        # If this is the last instance of RainMachine, deregister any services defined
-        # during integration setup:
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if len(entries) == 1 and entries[0].state == ConfigEntryState.LOADED:
+        # If this is the last loaded instance of RainMachine, deregister any services
+        # defined during integration setup:
         for service_name in (
             SERVICE_NAME_PAUSE_WATERING,
             SERVICE_NAME_PUSH_WEATHER_DATA,
