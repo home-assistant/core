@@ -4,6 +4,7 @@ from contextlib import suppress
 from datetime import timedelta
 from functools import wraps
 import logging
+from typing import List, Optional
 
 from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 from websockets.exceptions import ConnectionClosed
@@ -155,7 +156,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         self._unique_id = client.client_key
         self._customize = customize
         self._on_script = on_script
-        self._plex_entity_id: str = plex_entity_id
+        self._plex_entity_id: Optional[str] = plex_entity_id
 
         # Assume that the TV is not paused
         self._paused = False
@@ -261,13 +262,13 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
             ):
                 await self._client.connect()
 
-    def plex_entity(self) -> PlexMediaPlayer:
+    def plex_entity(self) -> Optional[Entity]:
         """Return the plex entity object."""
 
         if not self._plex_entity_id:
             return None
 
-        platforms: list[EntityPlatform] = async_get_platforms(self.hass, "plex")
+        platforms: List[EntityPlatform] = async_get_platforms(self.hass, "plex")
 
         platform: EntityPlatform
         for platform in platforms:
