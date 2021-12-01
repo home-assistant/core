@@ -11,19 +11,13 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_LIGHTS
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_LIGHTS
 
 _LOGGER = logging.getLogger(__name__)
-
-DEV_TYPE_TO_HA = {
-    "ESD16": "walldimmer",
-    "ESWD16": "walldimmer",
-    "ESL100": "bulb-dimmable",
-    "ESL100CW": "bulb-tunable-white",
-}
 
 
 async def async_setup_entry(
@@ -54,6 +48,8 @@ def _async_setup_entities(devices, async_add_entities):
             entities.append(VeSyncDimmableLightHA(dev))
         elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
             entities.append(VeSyncTunableWhiteLightHA(dev))
+        elif DEV_TYPE_TO_HA.get(dev.device_type) == "humidifier":
+            entities.append(VeSyncHumidifierNightLightHA(dev))
         else:
             _LOGGER.debug(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
@@ -63,6 +59,34 @@ def _async_setup_entities(devices, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
+def _vesync_brightness_to_ha(vesync_brightness):
+    try:
+        # check for validity of brightness value received
+        brightness_value = int(vesync_brightness)
+    except ValueError:
+        # deal if any unexpected/non numeric value
+        _LOGGER.debug(
+            "VeSync - received unexpected 'brightness' value from pyvesync api: %s",
+            vesync_brightness,
+        )
+        return 0
+    # convert percent brightness to ha expected range
+    return round((max(1, brightness_value) / 100) * 255)
+
+
+def _ha_brightness_to_vesync(ha_brightness):
+    # get brightness from HA data
+    brightness = int(ha_brightness)
+    # ensure value between 1-255
+    brightness = max(1, min(brightness, 255))
+    # convert to percent that vesync api expects
+    brightness = round((brightness / 255) * 100)
+    # ensure value between 1-100
+    brightness = max(1, min(brightness, 100))
+
+    return brightness
+
+
 class VeSyncBaseLight(VeSyncDevice, LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
@@ -70,19 +94,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
     def brightness(self):
         """Get light brightness."""
         # get value from pyvesync library api,
-        result = self.device.brightness
-        try:
-            # check for validity of brightness value received
-            brightness_value = int(result)
-        except ValueError:
-            # deal if any unexpected/non numeric value
-            _LOGGER.debug(
-                "VeSync - received unexpected 'brightness' value from pyvesync api: %s",
-                result,
-            )
-            return 0
-        # convert percent brightness to ha expected range
-        return round((max(1, brightness_value) / 100) * 255)
+        return _vesync_brightness_to_ha(self.device.brightness)
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -112,14 +124,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
             and ATTR_BRIGHTNESS in kwargs
         ):
             # get brightness from HA data
-            brightness = int(kwargs[ATTR_BRIGHTNESS])
-            # ensure value between 1-255
-            brightness = max(1, min(brightness, 255))
-            # convert to percent that vesync api expects
-            brightness = round((brightness / 255) * 100)
-            # ensure value between 1-100
-            brightness = max(1, min(brightness, 100))
-            # call pyvesync library api method to set brightness
+            brightness = _ha_brightness_to_vesync(kwargs[ATTR_BRIGHTNESS])
             self.device.set_brightness(brightness)
             # flag attribute_adjustment_only, so it doesn't turn_on the device redundantly
             attribute_adjustment_only = True
@@ -193,3 +198,52 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
     def supported_color_modes(self):
         """Flag supported color_modes (in an array format)."""
         return [COLOR_MODE_COLOR_TEMP]
+
+
+class VeSyncHumidifierNightLightHA(VeSyncDimmableLightHA):
+    """Representation of the night light on a VeSync humidifier."""
+
+    def __init__(self, humidifier):
+        """Initialize the VeSync humidifier device."""
+        super().__init__(humidifier)
+        self.smarthumidifier = humidifier
+
+    @property
+    def unique_id(self):
+        """Return the ID of this device."""
+        return f"{super().unique_id}-night-light"
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return f"{super().name} night light"
+
+    @property
+    def brightness(self):
+        """Get night light brightness."""
+        # get value from pyvesync library api,
+        return _vesync_brightness_to_ha(
+            self.smarthumidifier.details["night_light_brightness"]
+        )
+
+    @property
+    def is_on(self):
+        """Return True if night light is on."""
+        return self.smarthumidifier.details["night_light_brightness"] > 0
+
+    @property
+    def entity_category(self):
+        """Return the configuration entity category."""
+        return EntityCategory.CONFIG
+
+    def turn_on(self, **kwargs):
+        """Turn the night light on."""
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = _ha_brightness_to_vesync(kwargs[ATTR_BRIGHTNESS])
+            self.smarthumidifier.set_night_light_brightness(brightness)
+        else:
+            self.smarthumidifier.set_night_light_brightness(100)
+
+    def turn_off(self, **kwargs):
+        """Turn the night light off."""
+        self.smarthumidifier.set_night_light_brightness(0)

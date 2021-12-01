@@ -5,22 +5,13 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_SWITCHES
+from .common import VeSyncBaseEntity, VeSyncDevice
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
-
-DEV_TYPE_TO_HA = {
-    "wifi-switch-1.3": "outlet",
-    "ESW03-USA": "outlet",
-    "ESW01-EU": "outlet",
-    "ESW15-USA": "outlet",
-    "ESWL01": "switch",
-    "ESWL03": "switch",
-    "ESO15-TB": "outlet",
-}
 
 
 async def async_setup_entry(
@@ -51,6 +42,9 @@ def _async_setup_entities(devices, async_add_entities):
             dev_list.append(VeSyncSwitchHA(dev))
         elif DEV_TYPE_TO_HA.get(dev.device_type) == "switch":
             dev_list.append(VeSyncLightSwitch(dev))
+        elif DEV_TYPE_TO_HA.get(dev.device_type) == "humidifier":
+            dev_list.append(VeSyncHumidifierDisplayHA(dev))
+            dev_list.append(VeSyncHumidifierAutomaticStopHA(dev))
         else:
             _LOGGER.warning(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
@@ -101,3 +95,71 @@ class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
         """Initialize Light Switch device class."""
         super().__init__(switch)
         self.switch = switch
+
+
+class VeSyncHumidifierSwitchEntity(VeSyncBaseEntity, SwitchEntity):
+    """Representation of a switch for configuring a VeSync humidifier."""
+
+    def __init__(self, humidifier):
+        """Initialize the VeSync humidifier device."""
+        super().__init__(humidifier)
+        self.smarthumidifier = humidifier
+
+    @property
+    def entity_category(self):
+        """Return the configuration entity category."""
+        return EntityCategory.CONFIG
+
+
+class VeSyncHumidifierDisplayHA(VeSyncHumidifierSwitchEntity):
+    """Representation of the display on a VeSync humidifier."""
+
+    @property
+    def unique_id(self):
+        """Return the ID of this display."""
+        return f"{super().unique_id}-display"
+
+    @property
+    def name(self):
+        """Return the name of the display."""
+        return f"{super().name} display"
+
+    @property
+    def is_on(self):
+        """Return True if display is on."""
+        return self.device.details["display"]
+
+    def turn_on(self, **kwargs):
+        """Turn the display on."""
+        self.device.turn_on_display()
+
+    def turn_off(self, **kwargs):
+        """Turn the display off."""
+        self.device.turn_off_display()
+
+
+class VeSyncHumidifierAutomaticStopHA(VeSyncHumidifierSwitchEntity):
+    """Representation of the automatic stop toggle on a VeSync humidifier."""
+
+    @property
+    def unique_id(self):
+        """Return the ID of this device."""
+        return f"{super().unique_id}-automatic-stop"
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return f"{super().name} automatic stop"
+
+    @property
+    def is_on(self):
+        """Return True if automatic stop is on."""
+        return self.device.config["automatic_stop"]
+
+    def turn_on(self, **kwargs):
+        """Turn the automatic stop on."""
+        self.device.automatic_stop_on()
+
+    def turn_off(self, **kwargs):
+        """Turn the automatic stop off."""
+        self.device.automatic_stop_off()

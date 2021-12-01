@@ -14,16 +14,9 @@ from homeassistant.util.percentage import (
 )
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_FANS
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_FANS
 
 _LOGGER = logging.getLogger(__name__)
-
-DEV_TYPE_TO_HA = {
-    "LV-PUR131S": "fan",
-    "Core200S": "fan",
-    "Core300S": "fan",
-    "Core400S": "fan",
-}
 
 FAN_MODE_AUTO = "auto"
 FAN_MODE_SLEEP = "sleep"
