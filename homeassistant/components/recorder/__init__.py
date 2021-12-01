@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 import concurrent.futures
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import queue
@@ -76,6 +77,7 @@ from .util import (
     session_scope,
     setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
+    write_lock_db,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -370,6 +372,15 @@ class WaitTask:
     """An object to insert into the recorder queue to tell it set the _queue_watch event."""
 
 
+@dataclass
+class DatabaseLockTask:
+    """An object to insert into the recorder queue to prevent writes to the database."""
+
+    database_locked: threading.Event
+    database_unlock: threading.Event
+    queue_overflow: bool
+
+
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
@@ -419,6 +430,7 @@ class Recorder(threading.Thread):
         self.migration_in_progress = False
         self._queue_watcher = None
         self._db_supports_row_number = True
+        self._database_lock_task: DatabaseLockTask | None = None
 
         self.enabled = True
 
@@ -687,6 +699,8 @@ class Recorder(threading.Thread):
     def _process_one_event_or_recover(self, event):
         """Process an event, reconnect, or recover a malformed database."""
         try:
+            if self._process_one_task(event):
+                return
             self._process_one_event(event)
             return
         except exc.DatabaseError as err:
@@ -788,34 +802,56 @@ class Recorder(threading.Thread):
         # Schedule a new statistics task if this one didn't finish
         self.queue.put(ExternalStatisticsTask(metadata, stats))
 
-    def _process_one_event(self, event):
+    def _lock_database(self, task: DatabaseLockTask):
+        with write_lock_db(self):
+            # Notify that lock is being held, wait until database can be used again.
+            task.database_locked.set()
+            while not task.database_unlock.wait(timeout=1):
+                if self.queue.qsize() > MAX_QUEUE_BACKLOG * 0.9:
+                    _LOGGER.warning(
+                        "Database queue backlog reached more than 90% of maximum queue length. Continue writing. Your Backup might be corrupted."
+                    )
+                    task.queue_overflow = True
+                    break
+        _LOGGER.info(
+            "Database queue backlog reached %d entries during backup.",
+            self.queue.qsize(),
+        )
+
+    def _process_one_task(self, event) -> bool:
         """Process one event."""
         if isinstance(event, PurgeTask):
             self._run_purge(event.purge_before, event.repack, event.apply_filter)
-            return
+            return True
         if isinstance(event, PurgeEntitiesTask):
             self._run_purge_entities(event.entity_filter)
-            return
+            return True
         if isinstance(event, PerodicCleanupTask):
             perodic_db_cleanups(self)
-            return
+            return True
         if isinstance(event, StatisticsTask):
             self._run_statistics(event.start)
-            return
+            return True
         if isinstance(event, ClearStatisticsTask):
             statistics.clear_statistics(self, event.statistic_ids)
-            return
+            return True
         if isinstance(event, UpdateStatisticsMetadataTask):
             statistics.update_statistics_metadata(
                 self, event.statistic_id, event.unit_of_measurement
             )
-            return
+            return True
         if isinstance(event, ExternalStatisticsTask):
             self._run_external_statistics(event.metadata, event.statistics)
-            return
+            return True
         if isinstance(event, WaitTask):
             self._queue_watch.set()
-            return
+            return True
+        if isinstance(event, DatabaseLockTask):
+            self._lock_database(event)
+            return True
+        return False
+
+    def _process_one_event(self, event):
         if event.event_type == EVENT_TIME_CHANGED:
             self._keepalive_count += 1
             if self._keepalive_count >= KEEPALIVE_TIME:
@@ -981,6 +1017,41 @@ class Recorder(threading.Thread):
         self._queue_watch.clear()
         self.queue.put(WaitTask())
         self._queue_watch.wait()
+
+    async def lock_database(self) -> bool:
+        """Lock database so it can be backed up safely."""
+        if self._database_lock_task:
+            _LOGGER.warning("Database already locked.")
+            return False
+
+        task = DatabaseLockTask(threading.Event(), threading.Event(), False)
+        self.queue.put(task)
+        lock_timeout = 30
+        if not await self.hass.async_add_executor_job(
+            task.database_locked.wait, lock_timeout
+        ):
+            raise TimeoutError(
+                f"Could not lock database within {lock_timeout} seconds."
+            )
+        self._database_lock_task = task
+        return True
+
+    @callback
+    def unlock_database(self) -> bool:
+        """Unlock database.
+
+        Returns true if database lock has been held throughout the process.
+        """
+        if not self._database_lock_task:
+            _LOGGER.warning("Database currently not locked.")
+            return False
+
+        self._database_lock_task.database_unlock.set()
+        success = not self._database_lock_task.queue_overflow
+
+        self._database_lock_task = None
+
+        return success
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
