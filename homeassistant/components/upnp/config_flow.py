@@ -220,7 +220,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="incomplete_discovery")
 
         # Ensure not already configuring/configured.
-        unique_id = discovery_info[ssdp.ATTR_SSDP_USN]
+        unique_id = discovery_info.ssdp_usn
         await self.async_set_unique_id(unique_id)
         hostname = discovery_info["_host"]
         self._abort_if_unique_id_configured(updates={CONFIG_ENTRY_HOSTNAME: hostname})
