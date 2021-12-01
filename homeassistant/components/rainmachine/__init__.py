@@ -313,8 +313,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if len(entries) == 1 and entries[0].state == ConfigEntryState.LOADED:
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
         # If this is the last loaded instance of RainMachine, deregister any services
         # defined during integration setup:
         for service_name in (
