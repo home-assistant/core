@@ -8,7 +8,7 @@ from aiohttp import ClientError
 from aussiebb.asyncio import AussieBB, AuthenticationException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -22,9 +22,7 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aussie Broadband from a config entry."""
-    update_interval = timedelta(
-        minutes=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_UPDATE_INTERVAL)
-    )
+    update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
 
     # Login to the Aussie Broadband API and retrieve the current service list
     client = AussieBB(

@@ -6,7 +6,7 @@ from aussiebb.asyncio import AuthenticationException
 
 from homeassistant import config_entries, setup
 from homeassistant.components.aussie_broadband.const import CONF_SERVICES, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -274,10 +274,10 @@ async def test_options_flow(hass):
 
         result2 = await hass.config_entries.options.async_configure(
             result1["flow_id"],
-            user_input={CONF_SERVICES: [], CONF_SCAN_INTERVAL: 61},
+            user_input={CONF_SERVICES: []},
         )
         assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert entry.options == {CONF_SERVICES: [], CONF_SCAN_INTERVAL: 61}
+        assert entry.options == {CONF_SERVICES: []}
 
 
 async def test_options_flow_auth_failure(hass):

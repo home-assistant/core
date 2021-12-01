@@ -8,13 +8,13 @@ from aussiebb.asyncio import AussieBB, AuthenticationException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_SERVICES, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_ID
+from .const import CONF_SERVICES, DOMAIN, SERVICE_ID
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -181,12 +181,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_SERVICES,
                         default=self.config_entry.options.get(CONF_SERVICES),
                     ): cv.multi_select(service_options),
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=self.config_entry.options.get(
-                            CONF_SCAN_INTERVAL, DEFAULT_UPDATE_INTERVAL
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1)),
                 }
             ),
         )
