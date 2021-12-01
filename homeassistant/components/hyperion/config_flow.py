@@ -198,14 +198,14 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             self._data[CONF_PORT] = int(
-                discovery_info.get("ports", {}).get(
+                discovery_info.upnp.get("ports", {}).get(
                     "jsonServer", const.DEFAULT_PORT_JSON
                 )
             )
         except ValueError:
             self._data[CONF_PORT] = const.DEFAULT_PORT_JSON
 
-        if not (hyperion_id := discovery_info.get(ssdp.ATTR_UPNP_SERIAL)):
+        if not (hyperion_id := discovery_info.upnp.get(ssdp.ATTR_UPNP_SERIAL)):
             return self.async_abort(reason="no_id")
 
         # For discovery mechanisms, we set the unique_id as early as possible to
