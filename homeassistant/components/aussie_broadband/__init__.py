@@ -22,8 +22,6 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aussie Broadband from a config entry."""
-    update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
-
     # Login to the Aussie Broadband API and retrieve the current service list
     client = AussieBB(
         entry.data[CONF_USERNAME],
@@ -56,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             _LOGGER,
             name=service["service_id"],
-            update_interval=update_interval,
+            update_interval=timedelta(minutes=DEFAULT_UPDATE_INTERVAL),
             update_method=update_data_factory(service[SERVICE_ID]),
         )
         await service["coordinator"].async_config_entry_first_refresh()

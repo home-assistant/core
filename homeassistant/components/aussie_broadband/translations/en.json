@@ -39,7 +39,6 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Update Interval (minutes)",
                     "services": "Services"
                 },
                 "title": "Select Services"

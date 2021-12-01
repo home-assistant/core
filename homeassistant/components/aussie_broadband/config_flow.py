@@ -30,7 +30,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.services: list[dict[str]] = []
         self.client: AussieBB | None = None
 
-    async def auth(self, user_input: dict[str, str]) -> dict[str, str]:
+    async def auth(self, user_input: dict[str, str]) -> dict[str, str] | None:
         """Reusable Auth Helper."""
         self.client = AussieBB(
             user_input[CONF_USERNAME],
@@ -39,7 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         try:
             await self.client.login()
-            return {}
+            return None
         except AuthenticationException:
             return {"base": "invalid_auth"}
         except ClientError:
@@ -49,10 +49,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
+        errors: dict[str, str] | None = None
         if user_input is not None:
-            errors = await self.auth(user_input)
-            if errors == {}:
+            if not (errors := await self.auth(user_input)):
                 await self.async_set_unique_id(user_input[CONF_USERNAME])
                 self._abort_if_unique_id_configured()
 
@@ -102,14 +101,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): cv.multi_select(service_options)
                 }
             ),
-            errors={},
+            errors=None,
         )
 
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle reauth."""
-        errors: dict[str, str] = {}
+        errors: dict[str, str] | None = None
         if user_input and user_input.get(CONF_USERNAME):
             self._reauth_username = user_input[CONF_USERNAME]
 
@@ -119,8 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             }
 
-            errors = await self.auth(data)
-            if errors == {}:
+            if not (errors := await self.auth(data)):
                 entry = await self.async_set_unique_id(self._reauth_username)
                 if entry:
                     self.hass.config_entries.async_update_entry(
