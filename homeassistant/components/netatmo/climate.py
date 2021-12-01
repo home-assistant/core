@@ -218,12 +218,10 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         self._device_name = self._data.rooms[home_id][room_id]["name"]
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
-        self._attr_current_temperature: float | None = None
-        self._attr_target_temperature: float | None = None
-        self._attr_preset_mode: str | None = None
+        self._attr_preset_mode = None
         self._away: bool | None = None
         self._support_flags = SUPPORT_FLAGS
-        self._attr_hvac_mode: str = HVAC_MODE_AUTO
+        self._attr_hvac_mode = HVAC_MODE_AUTO
         self._battery_level = None
         self._connected: bool | None = None
 
