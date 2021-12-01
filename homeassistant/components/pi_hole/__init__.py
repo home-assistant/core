@@ -102,7 +102,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session = async_get_clientsession(hass, verify_tls)
         api = Hole(
             host,
-            hass.loop,
             session,
             location=location,
             tls=use_tls,
