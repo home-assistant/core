@@ -21,14 +21,17 @@ from homeassistant.core import HomeAssistant
 MODULE = "homeassistant.components.flux_led"
 MODULE_CONFIG_FLOW = "homeassistant.components.flux_led.config_flow"
 IP_ADDRESS = "127.0.0.1"
+MODEL_NUM_HEX = "0x35"
 MODEL = "AZ120444"
-MODEL_DESCRIPTION = "RGBW Controller"
+MODEL_DESCRIPTION = "Bulb RGBCW"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 FLUX_MAC_ADDRESS = "aabbccddeeff"
 SHORT_MAC_ADDRESS = "ddeeff"
 
 DEFAULT_ENTRY_TITLE = f"{MODEL_DESCRIPTION} {SHORT_MAC_ADDRESS}"
-DEFAULT_ENTRY_TITLE_PARTIAL = f"{MODEL} {SHORT_MAC_ADDRESS}"
+DEFAULT_ENTRY_TITLE_PARTIAL = (
+    f"{MODEL_DESCRIPTION} ({MODEL_NUM_HEX}) {SHORT_MAC_ADDRESS}"
+)
 
 
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
@@ -94,7 +97,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.model_num = 0x35
     bulb.effect = None
     bulb.speed = 50
-    bulb.model = "Smart Bulb (0x35)"
+    bulb.model = "Bulb RGBCW (0x35)"
     bulb.version_num = 8
     bulb.speed_adjust_off = True
     bulb.rgbwcapable = True
@@ -119,7 +122,7 @@ def _mocked_switch() -> AIOWifiLedBulb:
     switch.async_turn_off = AsyncMock()
     switch.async_turn_on = AsyncMock()
     switch.model_num = 0x97
-    switch.model = "Smart Switch (0x97)"
+    switch.model = "Switch (0x97)"
     switch.version_num = 0x97
     switch.raw_state = LEDENETRawState(
         0, 0x97, 0, 0x61, 0x97, 50, 255, 0, 0, 50, 8, 0, 0, 0
