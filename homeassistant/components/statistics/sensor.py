@@ -81,6 +81,7 @@ STATS_BINARY_SUPPORT = (
     STAT_AVERAGE_TIMELESS,
     STAT_COUNT,
     STAT_MEAN,
+    STAT_DEFAULT,
 )
 
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
@@ -97,7 +98,20 @@ DEFAULT_QUANTILE_INTERVALS = 4
 DEFAULT_QUANTILE_METHOD = "exclusive"
 ICON = "mdi:calculator"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+
+def valid_binary_characteristic_configuration(config):
+    """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
+    if config.get(CONF_ENTITY_ID).split(".")[0] == "binary_sensor":
+        if config.get(CONF_STATE_CHARACTERISTIC) not in STATS_BINARY_SUPPORT:
+            raise ValueError(
+                "The configured characteristic '"
+                + config.get(CONF_STATE_CHARACTERISTIC)
+                + "' is not supported for a binary source sensor."
+            )
+    return config
+
+
+_PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -139,6 +153,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             ["exclusive", "inclusive"]
         ),
     }
+)
+PLATFORM_SCHEMA = vol.All(
+    _PLATFORM_SCHEMA_BASE,
+    valid_binary_characteristic_configuration,
 )
 
 
@@ -202,12 +220,6 @@ class StatisticsSensor(SensorEntity):
             STAT_BUFFER_USAGE_RATIO: None,
             STAT_SOURCE_VALUE_VALID: None,
         }
-        if self.is_binary and self._state_characteristic not in STATS_BINARY_SUPPORT:
-            raise vol.error.ValueInvalid(
-                "The configured characteristic '"
-                + self._state_characteristic
-                + "' is not supported for a binary source sensor."
-            )
 
         if self.is_binary:
             self._state_characteristic_fn = getattr(

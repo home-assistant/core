@@ -902,6 +902,45 @@ class TestStatisticsSensor(unittest.TestCase):
                     f"assert {state.state} == {str(characteristic['value_1'])}"
                 )
 
+    def test_invalid_state_characteristic(self):
+        """Test the detection of wrong state_characteristics selected."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test_numeric",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "invalid",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_binary",
+                        "entity_id": "binary_sensor.test_monitored",
+                        "state_characteristic": "variance",
+                    },
+                ]
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        self.hass.states.set(
+            "sensor.test_monitored",
+            self.values[0],
+            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        )
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test_numeric")
+        assert state is None
+        state = self.hass.states.get("sensor.test_binary")
+        assert state is None
+
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
         # enable the recorder
