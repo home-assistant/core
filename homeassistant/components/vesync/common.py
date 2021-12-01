@@ -6,7 +6,17 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 
-from .const import DOMAIN, VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
+from .const import (
+    DOMAIN,
+    VS_FANS,
+    VS_HUMIDIFIERS,
+    VS_LIGHTS,
+    VS_NUMBERS,
+    VS_SENSORS,
+    VS_SWITCHES,
+)
+
+HUMIDIFIERS = ("Classic300S",)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,13 +28,24 @@ async def async_process_devices(hass, manager):
     devices[VS_FANS] = []
     devices[VS_LIGHTS] = []
     devices[VS_SENSORS] = []
+    devices[VS_HUMIDIFIERS] = []
+    devices[VS_NUMBERS] = []
 
     await hass.async_add_executor_job(manager.update)
 
     if manager.fans:
-        devices[VS_FANS].extend(manager.fans)
-        # Expose fan sensors separately
-        devices[VS_SENSORS].extend(manager.fans)
+        for fan in manager.fans:
+            # VeSync classifies humidifiers as fans
+            if fan.device_type in HUMIDIFIERS:
+                devices[VS_HUMIDIFIERS].append(fan)
+                devices[VS_NUMBERS].append(fan)  # for night light and mist level
+                devices[VS_SWITCHES].append(fan)  # for automatic stop and display
+                devices[VS_SENSORS].append(fan)  # for humidity sensor
+                if fan.night_light:
+                    devices[VS_LIGHTS].append(fan)  # for night light
+            else:
+                devices[VS_FANS].append(fan)
+                devices[VS_SENSORS].append(fan)
         _LOGGER.info("%d VeSync fans found", len(manager.fans))
 
     if manager.bulbs:
