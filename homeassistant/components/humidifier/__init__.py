@@ -147,6 +147,15 @@ class HumidifierEntity(ToggleEntity):
 
         return data
 
+    @property
+    def device_class(self) -> HumidifierDeviceClass | str | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
+
     @final
     @property
     def state_attributes(self) -> dict[str, Any]:
