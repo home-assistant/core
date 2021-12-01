@@ -96,6 +96,8 @@ def discover_fixture(soco):
         await callback(
             ssdp.SsdpServiceInfo(
                 ssdp_location=f"http://{soco.ip_address}/",
+                ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+                ssdp_usn=f"uuid:{soco.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
                 upnp={
                     ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
                 },
