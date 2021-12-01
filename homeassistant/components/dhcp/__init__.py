@@ -82,7 +82,7 @@ class DhcpServiceInfo(BaseServiceInfo):
                 f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
                 exclude_integrations={DOMAIN},
                 error_if_core=False,
-                level=logging.DEBUG,
+                level=logging.WARNING,
             )
             self._warning_logged = True
         return getattr(self, name)
@@ -98,7 +98,7 @@ class DhcpServiceInfo(BaseServiceInfo):
                 f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
                 exclude_integrations={DOMAIN},
                 error_if_core=False,
-                level=logging.DEBUG,
+                level=logging.WARNING,
             )
             self._warning_logged = True
         if hasattr(self, name):
