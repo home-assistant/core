@@ -103,7 +103,7 @@ class ProgettihwswTemperature(CoordinatorEntity, SensorEntity):
         return DEVICE_CLASS_TEMPERATURE
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return TEMP_CELSIUS
 
@@ -113,7 +113,7 @@ class ProgettihwswTemperature(CoordinatorEntity, SensorEntity):
         return self._unique_id
 
     @property
-    def state(self):
+    def native_value(self):
         """Get sensor state."""
         if self.coordinator.data["temps"] is False:
             return False
@@ -142,7 +142,7 @@ class ProgettihwswAnalog(CoordinatorEntity, SensorEntity):
         return self._unique_id
 
     @property
-    def state(self):
+    def native_value(self):
         """Get sensor state."""
         if self.coordinator.data["pots"] is False:
             return False
@@ -170,7 +170,7 @@ class ProgettihwswRFID(CoordinatorEntity, SensorEntity):
         return self._unique_id
 
     @property
-    def state(self):
+    def native_value(self):
         """Get sensor state."""
         if self.coordinator.data["rfid"] is False:
             return False
