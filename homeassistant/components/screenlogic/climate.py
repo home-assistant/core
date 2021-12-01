@@ -141,10 +141,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         if await self.gateway.async_set_heat_temp(
             int(self._data_key), int(temperature)
         ):
-            await self.coordinator.async_refresh()
-            # Second debounced refresh to catch any secondary
-            # changes in the device
-            await self.coordinator.async_request_refresh()
+            await self._async_refresh()
         else:
             raise HomeAssistantError(
                 f"Failed to set_temperature {temperature} on body {self.body['body_type']['value']}"
@@ -158,10 +155,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
             mode = HEAT_MODE.NUM_FOR_NAME[self.preset_mode]
 
         if await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
-            await self.coordinator.async_refresh()
-            # Second debounced refresh to catch any secondary
-            # changes in the device
-            await self.coordinator.async_request_refresh()
+            await self._async_refresh()
         else:
             raise HomeAssistantError(
                 f"Failed to set_hvac_mode {mode} on body {self.body['body_type']['value']}"
@@ -175,10 +169,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
             return
 
         if await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
-            await self.coordinator.async_refresh()
-            # Second debounced refresh to catch any secondary
-            # changes in the device
-            await self.coordinator.async_request_refresh()
+            await self._async_refresh()
         else:
             raise HomeAssistantError(
                 f"Failed to set_preset_mode {mode} on body {self.body['body_type']['value']}"
