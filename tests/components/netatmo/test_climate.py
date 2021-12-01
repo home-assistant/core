@@ -619,6 +619,11 @@ async def test_valves_service_turn_off(hass, config_entry, netatmo_auth):
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_entrada = "climate.entrada"
 
+    assert hass.states.get(climate_entity_entrada).attributes["hvac_modes"] == [
+        "auto",
+        "heat",
+    ]
+
     # Test turning valve off
     await hass.services.async_call(
         CLIMATE_DOMAIN,

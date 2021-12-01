@@ -31,7 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,7 +39,6 @@ from .const import (
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
-    DATA_DEVICE_IDS,
     DATA_HANDLER,
     DATA_HOMES,
     DATA_SCHEDULES,
@@ -242,11 +240,6 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                     self.handle_event,
                 )
             )
-
-        registry = await async_get_registry(self.hass)
-        device = registry.async_get_device({(DOMAIN, self._id)})
-        assert device
-        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._id] = device.id
 
     @callback
     def handle_event(self, event: dict) -> None:
