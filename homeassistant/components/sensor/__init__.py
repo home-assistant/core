@@ -163,20 +163,29 @@ DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
 # use the SensorDeviceClass enum instead.
 DEVICE_CLASSES: Final[list[str]] = [cls.value for cls in SensorDeviceClass]
 
-# The state represents a measurement in present time
+
+class SensorStateClass(StrEnum):
+    """State class for sensors."""
+
+    # The state represents a measurement in present time
+    MEASUREMENT = "measurement"
+
+    # The state represents a total amount, e.g. net energy consumption
+    TOTAL = "total"
+
+    # The state represents a monotonically increasing total, e.g. an amount of consumed gas
+    TOTAL_INCREASING = "total_increasing"
+
+
+STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorStateClass))
+
+
+# STATE_CLASS* is deprecated as of 2021.12
+# use the SensorStateClass enum instead.
 STATE_CLASS_MEASUREMENT: Final = "measurement"
-# The state represents a total amount, e.g. net energy consumption
 STATE_CLASS_TOTAL: Final = "total"
-# The state represents a monotonically increasing total, e.g. an amount of consumed gas
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
-
-STATE_CLASSES: Final[list[str]] = [
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-]
-
-STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(STATE_CLASSES))
+STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -208,7 +217,7 @@ class SensorEntityDescription(EntityDescription):
     device_class: SensorDeviceClass | str | None = None
     last_reset: datetime | None = None  # Deprecated, to be removed in 2021.11
     native_unit_of_measurement: str | None = None
-    state_class: str | None = None
+    state_class: SensorStateClass | str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
     def __post_init__(self) -> None:
@@ -241,7 +250,7 @@ class SensorEntity(Entity):
     _attr_last_reset: datetime | None  # Deprecated, to be removed in 2021.11
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime = None
-    _attr_state_class: str | None
+    _attr_state_class: SensorStateClass | str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _attr_unit_of_measurement: None = (
         None  # Subclasses of SensorEntity should not set this
@@ -262,8 +271,8 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def state_class(self) -> str | None:
-        """Return the state class of this entity, from STATE_CLASSES, if any."""
+    def state_class(self) -> SensorStateClass | str | None:
+        """Return the state class of this entity, if any."""
         if hasattr(self, "_attr_state_class"):
             return self._attr_state_class
         if hasattr(self, "entity_description"):
@@ -293,7 +302,7 @@ class SensorEntity(Entity):
         """Return state attributes."""
         if last_reset := self.last_reset:
             if (
-                self.state_class == STATE_CLASS_MEASUREMENT
+                self.state_class == SensorStateClass.MEASUREMENT
                 and not self._last_reset_reported
             ):
                 self._last_reset_reported = True
