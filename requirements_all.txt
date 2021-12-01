@@ -1305,7 +1305,7 @@ py-synologydsm-api==1.0.4
 py-zabbix==1.1.7
 
 # homeassistant.components.seventeentrack
-py17track==3.2.1
+py17track==2021.12.1
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.1
@@ -2381,7 +2381,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.8.1
 
 # homeassistant.components.rdw
-vehicle==0.2.0
+vehicle==0.2.2
 
 # homeassistant.components.velbus
 velbus-aio==2021.11.7

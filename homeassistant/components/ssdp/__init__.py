@@ -117,7 +117,6 @@ class SsdpServiceInfo(
                 f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
                 exclude_integrations={DOMAIN},
                 error_if_core=False,
-                level=logging.DEBUG,
             )
             self._warning_logged = True
         # Use a property if it is available, fallback to upnp data
@@ -138,7 +137,6 @@ class SsdpServiceInfo(
                 f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
                 exclude_integrations={DOMAIN},
                 error_if_core=False,
-                level=logging.DEBUG,
             )
             self._warning_logged = True
         if hasattr(self, name):
@@ -157,7 +155,6 @@ class SsdpServiceInfo(
                 "or discovery_info.ssdp_headers.__contains__(); this will fail in version 2022.6",
                 exclude_integrations={DOMAIN},
                 error_if_core=False,
-                level=logging.DEBUG,
             )
             self._warning_logged = True
         if hasattr(self, name):
