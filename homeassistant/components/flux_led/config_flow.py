@@ -147,9 +147,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
         placeholders = {
-            ATTR_MODEL: device[ATTR_MODEL_DESCRIPTION] or device[ATTR_MODEL],
-            ATTR_ID: mac_address[-6:],
-            ATTR_IPADDR: device[ATTR_IPADDR],
+            "model": device[ATTR_MODEL_DESCRIPTION] or device[ATTR_MODEL],
+            "id": mac_address[-6:],
+            "ipaddr": device[ATTR_IPADDR],
         }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
