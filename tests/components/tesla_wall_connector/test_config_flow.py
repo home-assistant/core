@@ -6,7 +6,7 @@ from tesla_wall_connector.exceptions import WallConnectorConnectionError
 from homeassistant import config_entries, setup
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.tesla_wall_connector.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
@@ -176,32 +176,3 @@ async def test_dhcp_error_from_wall_connector(mock_wall_connector_version, hass)
 
         assert result["type"] == "abort"
         assert result["reason"] == "cannot_connect"
-
-
-async def test_option_flow(hass):
-    """Test option flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="abc123", data={CONF_HOST: "1.2.3.4"}
-    )
-    entry.add_to_hass(hass)
-
-    assert not entry.options
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(
-        entry.entry_id,
-        data=None,
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 30},
-    )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {CONF_SCAN_INTERVAL: 30}
