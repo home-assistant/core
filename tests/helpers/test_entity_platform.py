@@ -1081,7 +1081,7 @@ async def test_entity_disabled_by_integration(hass):
 
 
 async def test_entity_disabled_by_device(hass: HomeAssistant):
-    """Test entity disabled by integration."""
+    """Test entity disabled by device."""
 
     connections = {(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")}
     entity_disabled = MockEntity(
