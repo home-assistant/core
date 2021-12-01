@@ -74,10 +74,13 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
 
         self._coordinator: NINADataUpdateCoordinator = coordinator
 
+        self._attr_name = f"Warning: {self._region_name} {self._slot_id}"
+        self._attr_unique_id = f"{self._region}-{self._slot_id}"
+
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the sensor."""
-        return f"Warning: {self._region_name} {self._slot_id}"
+        return self._attr_name
 
     @property
     def is_on(self) -> bool:
@@ -108,9 +111,9 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
         }
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self) -> str | None:
         """Return the unique ID of the sensor."""
-        return f"{self._region}-{self._slot_id}"
+        return self._attr_unique_id
 
     @property
     def device_class(self) -> str:
