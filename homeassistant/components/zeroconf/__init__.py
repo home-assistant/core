@@ -115,7 +115,7 @@ class ZeroconfServiceInfo(BaseServiceInfo):
     name: str
     properties: dict[str, Any]
 
-    # Used to prevent log flooding. To be removed in 2022.6
+    # Used to prevent log flooding, to be removed in 2022.6
     _warning_logged: bool = False
 
     def __getitem__(self, name: str) -> Any:
