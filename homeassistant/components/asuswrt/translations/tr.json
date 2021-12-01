@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_host": "Ge\u00e7ersiz ana bilgisayar ad\u0131 veya IP adresi",
+            "pwd_and_ssh": "Yaln\u0131zca parola veya SSH anahtar dosyas\u0131 sa\u011flay\u0131n",
+            "pwd_or_ssh": "L\u00fctfen parola veya SSH anahtar dosyas\u0131 sa\u011flay\u0131n",
+            "ssh_not_file": "SSH anahtar dosyas\u0131 bulunamad\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Ana bilgisayar",
+                    "mode": "Mod",
+                    "name": "Ad",
+                    "password": "Parola",
+                    "port": "Port",
+                    "protocol": "Kullan\u0131lacak ileti\u015fim protokol\u00fc",
+                    "ssh_key": "SSH anahtar dosyan\u0131z\u0131n yolu (\u015fifre yerine)",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "Y\u00f6nlendiricinize ba\u011flanmak i\u00e7in gerekli parametreyi ayarlay\u0131n",
+                "title": "AsusWRT"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Bir cihaz uzakta iken beklenecek saniyeler",
+                    "dnsmasq": "dnsmasq.leases dosyalar\u0131n\u0131n y\u00f6nlendiricisindeki konum",
+                    "interface": "\u0130statistik almak istedi\u011finiz aray\u00fcz (\u00f6rn. eth0,eth1 vb.)",
+                    "require_ip": "Cihazlar\u0131n IP'si olmal\u0131d\u0131r (eri\u015fim noktas\u0131 modu i\u00e7in)",
+                    "track_unknown": "Bilinmeyen / ads\u0131z cihazlar\u0131 takip edin"
+                },
+                "title": "AsusWRT Se\u00e7enekleri"
+            }
+        }
+    }
+}

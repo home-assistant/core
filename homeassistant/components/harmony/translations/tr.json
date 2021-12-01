@@ -7,11 +7,29 @@
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "unknown": "Beklenmeyen hata"
         },
+        "flow_title": "{name}",
         "step": {
+            "link": {
+                "description": "{name} ( {host} ) kurulumu yapmak istiyor musunuz?",
+                "title": "Logitech Harmony Hub'\u0131 Kur"
+            },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar"
-                }
+                    "host": "Ana bilgisayar",
+                    "name": "Hub Ad\u0131"
+                },
+                "title": "Logitech Harmony Hub'\u0131 Kur"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "Hi\u00e7biri belirtilmedi\u011finde y\u00fcr\u00fct\u00fclecek varsay\u0131lan etkinlik.",
+                    "delay_secs": "Komut g\u00f6nderme aras\u0131ndaki gecikme."
+                },
+                "description": "Harmony Hub Se\u00e7eneklerini Ayarlay\u0131n"
             }
         }
     }

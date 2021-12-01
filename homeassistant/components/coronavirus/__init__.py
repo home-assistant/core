@@ -66,7 +66,7 @@ async def get_coordinator(
         return hass.data[DOMAIN]
 
     async def async_get_cases():
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             return {
                 case.country: case
                 for case in await coronavirus.get_cases(

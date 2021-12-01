@@ -62,7 +62,7 @@ class DiscordNotificationService(BaseNotificationService):
         embed = None
         if ATTR_EMBED in data:
             embedding = data[ATTR_EMBED]
-            fields = embedding.get(ATTR_EMBED_FIELDS)
+            fields = embedding.get(ATTR_EMBED_FIELDS) or []
 
             if embedding:
                 embed = discord.Embed(**embedding)
@@ -94,9 +94,9 @@ class DiscordNotificationService(BaseNotificationService):
             for channelid in kwargs[ATTR_TARGET]:
                 channelid = int(channelid)
                 try:
-                    channel = discord_bot.fetch_channel(
+                    channel = await discord_bot.fetch_channel(
                         channelid
-                    ) or discord_bot.fetch_user(channelid)
+                    ) or await discord_bot.fetch_user(channelid)
                 except discord.NotFound:
                     _LOGGER.warning("Channel not found for ID: %s", channelid)
                     continue

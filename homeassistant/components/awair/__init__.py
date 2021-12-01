@@ -58,7 +58,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> Any | None:
         """Update data via Awair client library."""
-        with timeout(API_TIMEOUT):
+        async with timeout(API_TIMEOUT):
             try:
                 LOGGER.debug("Fetching users and devices")
                 user = await self._awair.user()

@@ -7,7 +7,9 @@
             "heating_temp": "Verwarmingstemperatuur",
             "reserve_1": "Reserve 1",
             "reserve_2": "Reserve 2",
-            "reserve_3": "Reserve 3"
+            "reserve_3": "Reserve 3",
+            "standby": "Stand-by",
+            "warm": "Warmtebehoud"
         }
     }
 }

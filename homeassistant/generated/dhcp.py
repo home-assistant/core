@@ -93,6 +93,11 @@ DHCP = [
     },
     {
         "domain": "flux_led",
+        "macaddress": "F0FE6B*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
         "macaddress": "8CCE4E*",
         "hostname": "lwip*"
     },
@@ -357,9 +362,33 @@ DHCP = [
         "hostname": "tado*"
     },
     {
+        "domain": "tesla_wall_connector",
+        "hostname": "teslawallconnector_*",
+        "macaddress": "DC44271*"
+    },
+    {
+        "domain": "tesla_wall_connector",
+        "hostname": "teslawallconnector_*",
+        "macaddress": "98ED5C*"
+    },
+    {
+        "domain": "tesla_wall_connector",
+        "hostname": "teslawallconnector_*",
+        "macaddress": "4CFCAA*"
+    },
+    {
+        "domain": "tolo",
+        "hostname": "usr-tcp232-ed2"
+    },
+    {
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "60A4B7*"
     },
     {
         "domain": "tplink",
@@ -533,6 +562,10 @@ DHCP = [
     {
         "domain": "verisure",
         "macaddress": "0023C1*"
+    },
+    {
+        "domain": "vicare",
+        "macaddress": "B87424*"
     },
     {
         "domain": "yeelight",

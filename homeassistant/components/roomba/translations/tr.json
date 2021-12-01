@@ -3,12 +3,13 @@
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "not_irobot_device": "Bulunan cihaz bir iRobot cihaz\u0131 de\u011fil"
+            "not_irobot_device": "Bulunan cihaz bir iRobot cihaz\u0131 de\u011fil",
+            "short_blid": "BLID kesildi"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
-        "flow_title": "iRobot {name} ( {host} )",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "data": {
@@ -31,18 +32,20 @@
             "manual": {
                 "data": {
                     "blid": "BLID",
-                    "host": "Ana Bilgisayar"
+                    "host": "Ana bilgisayar"
                 },
+                "description": "A\u011f\u0131n\u0131zda Roomba veya Braava bulunamad\u0131.",
                 "title": "Cihaza manuel olarak ba\u011flan\u0131n"
             },
             "user": {
                 "data": {
+                    "blid": "BLID",
                     "continuous": "S\u00fcrekli",
                     "delay": "Gecikme",
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "password": "Parola"
                 },
-                "description": "\u015eu anda BLID ve parola alma manuel bir i\u015flemdir. L\u00fctfen a\u015fa\u011f\u0131daki belgelerde belirtilen ad\u0131mlar\u0131 izleyin: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "description": "Roomba veya Braava'y\u0131 se\u00e7in.",
                 "title": "Cihaza ba\u011flan\u0131n"
             }
         }

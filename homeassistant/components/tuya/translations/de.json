@@ -16,7 +16,7 @@
                     "access_id": "Zugangs-ID",
                     "access_secret": "Zugangsgeheimnis",
                     "country_code": "L\u00e4ndercode",
-                    "endpoint": "Verf\u00fcgbarkeitszone",
+                    "endpoint": "Verf\u00fcgbarkeitsbereich",
                     "password": "Passwort",
                     "tuya_app_type": "Mobile App",
                     "username": "Konto"

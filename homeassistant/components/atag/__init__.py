@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _async_update_data():
         """Update data via library."""
-        with async_timeout.timeout(20):
+        async with async_timeout.timeout(20):
             try:
                 await atag.update()
             except AtagException as err:

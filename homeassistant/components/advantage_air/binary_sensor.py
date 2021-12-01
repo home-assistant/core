@@ -5,7 +5,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
 )
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirEntity
@@ -74,7 +74,7 @@ class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
     """Advantage Air Zone MyZone."""
 
     _attr_entity_registry_enabled_default = False
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone MyZone."""

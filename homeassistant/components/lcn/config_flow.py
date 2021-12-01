@@ -91,8 +91,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_timeout")
 
         # check if we already have a host with the same address configured
-        entry = get_config_entry(self.hass, data)
-        if entry:
+        if entry := get_config_entry(self.hass, data):
             entry.source = config_entries.SOURCE_IMPORT
 
             # Cleanup entity and device registry, if we imported from configuration.yaml to

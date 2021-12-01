@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "conditions": "Monitored conditions",
+                    "name": "Username",
+                    "station": "Station"
+                }
+            }
+        }
+    }
+}

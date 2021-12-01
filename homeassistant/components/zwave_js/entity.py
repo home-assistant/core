@@ -10,7 +10,7 @@ from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -54,9 +54,9 @@ class ZWaveBaseEntity(Entity):
         )
         self._attr_assumed_state = self.info.assumed_state
         # device is precreated in main handler
-        self._attr_device_info = {
-            "identifiers": {get_device_id(self.client, self.info.node)},
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={get_device_id(self.client, self.info.node)},
+        )
 
     @callback
     def on_value_update(self) -> None:

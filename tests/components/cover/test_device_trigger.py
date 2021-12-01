@@ -228,7 +228,7 @@ async def test_get_trigger_capabilities_set_tilt_pos(
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
-    ent = platform.ENTITIES[2]
+    ent = platform.ENTITIES[3]
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)

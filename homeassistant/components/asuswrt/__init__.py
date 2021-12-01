@@ -92,8 +92,7 @@ async def async_setup(hass, config):
         return True
 
     # remove not required config keys
-    pub_key = conf.pop(CONF_PUB_KEY, "")
-    if pub_key:
+    if pub_key := conf.pop(CONF_PUB_KEY, ""):
         conf[CONF_SSH_KEY] = pub_key
 
     conf.pop(CONF_REQUIRE_IP, True)

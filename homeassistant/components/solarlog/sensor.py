@@ -34,6 +34,7 @@ class SolarlogSensor(update_coordinator.CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, coordinator.unique_id)},
             manufacturer="Solar-Log",
             name=coordinator.name,
+            configuration_url=coordinator.host,
         )
 
     @property

@@ -79,10 +79,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ZabbixTriggerCountSensor(SensorEntity):
     """Get the active trigger count for all Zabbix monitored hosts."""
 
-    def __init__(self, zApi, name="Zabbix"):
+    def __init__(self, zapi, name="Zabbix"):
         """Initialize Zabbix sensor."""
         self._name = name
-        self._zapi = zApi
+        self._zapi = zapi
         self._state = None
         self._attributes = {}
 
@@ -121,9 +121,9 @@ class ZabbixTriggerCountSensor(SensorEntity):
 class ZabbixSingleHostTriggerCountSensor(ZabbixTriggerCountSensor):
     """Get the active trigger count for a single Zabbix monitored host."""
 
-    def __init__(self, zApi, hostid, name=None):
+    def __init__(self, zapi, hostid, name=None):
         """Initialize Zabbix sensor."""
-        super().__init__(zApi, name)
+        super().__init__(zapi, name)
         self._hostid = hostid
         if not name:
             self._name = self._zapi.host.get(hostids=self._hostid, output="extend")[0][
@@ -145,9 +145,9 @@ class ZabbixSingleHostTriggerCountSensor(ZabbixTriggerCountSensor):
 class ZabbixMultipleHostTriggerCountSensor(ZabbixTriggerCountSensor):
     """Get the active trigger count for specified Zabbix monitored hosts."""
 
-    def __init__(self, zApi, hostids, name=None):
+    def __init__(self, zapi, hostids, name=None):
         """Initialize Zabbix sensor."""
-        super().__init__(zApi, name)
+        super().__init__(zapi, name)
         self._hostids = hostids
         if not name:
             host_names = self._zapi.host.get(hostids=self._hostids, output="extend")

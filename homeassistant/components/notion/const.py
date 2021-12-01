@@ -4,8 +4,6 @@ import logging
 DOMAIN = "notion"
 LOGGER = logging.getLogger(__package__)
 
-DATA_COORDINATOR = "coordinator"
-
 SENSOR_BATTERY = "low_battery"
 SENSOR_DOOR = "door"
 SENSOR_GARAGE_DOOR = "garage_door"

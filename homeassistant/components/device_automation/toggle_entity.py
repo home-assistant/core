@@ -141,6 +141,7 @@ def async_condition_from_config(config: ConfigType) -> condition.ConditionChecke
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
+    state_config = cv.STATE_CONDITION_SCHEMA(state_config)
     return condition.state_from_config(state_config)
 
 

@@ -102,7 +102,7 @@
         }
     },
     "device_class": {
-        "cold": "hideg",
+        "cold": "h\u0171t\u00e9s",
         "gas": "g\u00e1z",
         "heat": "f\u0171t\u00e9s",
         "moisture": "nedvess\u00e9g",
@@ -132,7 +132,7 @@
             "on": "Hideg"
         },
         "connectivity": {
-            "off": "Lekapcsol\u00f3dva",
+            "off": "Lev\u00e1lasztva",
             "on": "Kapcsol\u00f3dva"
         },
         "door": {

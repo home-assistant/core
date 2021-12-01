@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "conditions": "Condicions monitoritzades",
+                    "name": "Nom d'usuari",
+                    "station": "Estaci\u00f3"
+                }
+            }
+        }
+    }
+}

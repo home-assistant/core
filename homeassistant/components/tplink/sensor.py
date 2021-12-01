@@ -100,8 +100,7 @@ def async_emeter_from_device(
 ) -> float | None:
     """Map a sensor key to the device attribute."""
     if attr := description.emeter_attr:
-        val = getattr(device.emeter_realtime, attr)
-        if val is None:
+        if (val := getattr(device.emeter_realtime, attr)) is None:
             return None
         return round(cast(float, val), description.precision)
 

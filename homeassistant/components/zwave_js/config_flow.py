@@ -336,7 +336,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_manual()
 
-    async def async_step_usb(self, discovery_info: dict[str, str]) -> FlowResult:
+    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
@@ -345,14 +345,14 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_in_progress():
             return self.async_abort(reason="already_in_progress")
 
-        vid = discovery_info["vid"]
-        pid = discovery_info["pid"]
-        serial_number = discovery_info["serial_number"]
-        device = discovery_info["device"]
-        manufacturer = discovery_info["manufacturer"]
-        description = discovery_info["description"]
+        vid = discovery_info.vid
+        pid = discovery_info.pid
+        serial_number = discovery_info.serial_number
+        device = discovery_info.device
+        manufacturer = discovery_info.manufacturer
+        description = discovery_info.description
         # Zooz uses this vid/pid, but so do 2652 sticks
-        if vid == "10C4" and pid == "EA60" and "2652" in description:
+        if vid == "10C4" and pid == "EA60" and description and "2652" in description:
             return self.async_abort(reason="not_zwave_device")
 
         addon_info = await self._async_get_addon_info()

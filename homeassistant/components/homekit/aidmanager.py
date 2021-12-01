@@ -82,8 +82,7 @@ class AccessoryAidStorage:
         aidstore = get_aid_storage_filename_for_entry_id(self._entry)
         self.store = Store(self.hass, AID_MANAGER_STORAGE_VERSION, aidstore)
 
-        raw_storage = await self.store.async_load()
-        if not raw_storage:
+        if not (raw_storage := await self.store.async_load()):
             # There is no data about aid allocations yet
             return
 

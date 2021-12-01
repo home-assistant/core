@@ -1,11 +1,13 @@
 """The dhcp integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import fnmatch
 from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import threading
+from typing import Any, Final
 
 from aiodiscover import DiscoverHosts
 from aiodiscover.discovery import (
@@ -31,27 +33,75 @@ from homeassistant.const import (
     STATE_HOME,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
 )
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_dhcp
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
+from .const import DOMAIN
+
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
 MESSAGE_TYPE = "message-type"
-HOSTNAME = "hostname"
-MAC_ADDRESS = "macaddress"
-IP_ADDRESS = "ip"
+HOSTNAME: Final = "hostname"
+MAC_ADDRESS: Final = "macaddress"
+IP_ADDRESS: Final = "ip"
 DHCP_REQUEST = 3
 SCAN_INTERVAL = timedelta(minutes=60)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class DhcpServiceInfo(BaseServiceInfo):
+    """Prepared info from dhcp entries."""
+
+    ip: str
+    hostname: str
+    macaddress: str
+
+    # Used to prevent log flooding. To be removed in 2022.6
+    _warning_logged: bool = False
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Enable method for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={DOMAIN},
+                error_if_core=False,
+            )
+            self._warning_logged = True
+        return getattr(self, name)
+
+    def get(self, name: str, default: Any = None) -> Any:
+        """
+        Enable method for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={DOMAIN},
+                error_if_core=False,
+            )
+            self._warning_logged = True
+        if hasattr(self, name):
+            return getattr(self, name)
+        return default
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -150,11 +200,11 @@ class WatcherBase:
                 self.hass,
                 entry["domain"],
                 {"source": config_entries.SOURCE_DHCP},
-                {
-                    IP_ADDRESS: ip_address,
-                    HOSTNAME: lowercase_hostname,
-                    MAC_ADDRESS: data[MAC_ADDRESS],
-                },
+                DhcpServiceInfo(
+                    ip=ip_address,
+                    hostname=lowercase_hostname,
+                    macaddress=data[MAC_ADDRESS],
+                ),
             )
 
 

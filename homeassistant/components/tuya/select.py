@@ -19,6 +19,7 @@ from .const import (
     DEVICE_CLASS_TUYA_BASIC_ANTI_FLICKR,
     DEVICE_CLASS_TUYA_BASIC_NIGHTVISION,
     DEVICE_CLASS_TUYA_DECIBEL_SENSITIVITY,
+    DEVICE_CLASS_TUYA_FINGERBOT_MODE,
     DEVICE_CLASS_TUYA_IPC_WORK_MODE,
     DEVICE_CLASS_TUYA_LED_TYPE,
     DEVICE_CLASS_TUYA_LIGHT_MODE,
@@ -73,6 +74,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             name="Indicator Light Mode",
             device_class=DEVICE_CLASS_TUYA_LIGHT_MODE,
             entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Heater
+    # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
+    "qn": (
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            name="Temperature Level",
+            icon="mdi:thermometer-lines",
         ),
     ),
     # Siren Alarm
@@ -134,6 +144,22 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),
+    # IoT Switch?
+    # Note: Undocumented
+    "tdq": (
+        SelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            name="Power on Behavior",
+            device_class=DEVICE_CLASS_TUYA_RELAY_STATUS,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LIGHT_MODE,
+            name="Indicator Light Mode",
+            device_class=DEVICE_CLASS_TUYA_LIGHT_MODE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
     # Dimmer Switch
     # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
     "tgkg": (
@@ -165,6 +191,31 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.LED_TYPE_3,
             name="Light 3 Source Type",
             device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Dimmer
+    # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
+    "tgq": (
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_1,
+            name="Light Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.LED_TYPE_2,
+            name="Light 2 Source Type",
+            device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Fingerbot
+    "szjqr": (
+        SelectEntityDescription(
+            key=DPCode.MODE,
+            name="Mode",
+            device_class=DEVICE_CLASS_TUYA_FINGERBOT_MODE,
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),

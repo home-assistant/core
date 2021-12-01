@@ -123,7 +123,7 @@ async def async_aiohttp_proxy_web(
 ) -> web.StreamResponse | None:
     """Stream websession request to aiohttp web response."""
     try:
-        with async_timeout.timeout(timeout):
+        async with async_timeout.timeout(timeout):
             req = await web_coro
 
     except asyncio.CancelledError:
@@ -164,7 +164,7 @@ async def async_aiohttp_proxy_stream(
     # Suppressing something went wrong fetching data, closed connection
     with suppress(asyncio.TimeoutError, aiohttp.ClientError):
         while hass.is_running:
-            with async_timeout.timeout(timeout):
+            async with async_timeout.timeout(timeout):
                 data = await stream.read(buffer_size)
 
             if not data:

@@ -8,11 +8,12 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
-from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import get_device_info
 from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
@@ -76,20 +77,13 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         super().__init__(coordinator)
 
         mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
-        self._name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
-        self._unique_id = hass_data[METOFFICE_COORDINATES]
+        self._attr_device_info = get_device_info(
+            coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
+        )
+        self._attr_name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
+        self._attr_unique_id = hass_data[METOFFICE_COORDINATES]
         if not use_3hourly:
-            self._unique_id = f"{self._unique_id}_{MODE_DAILY}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique of the sensor."""
-        return self._unique_id
+            self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
 
     @property
     def condition(self):
@@ -122,11 +116,6 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
             )
             _visibility = f"{visibility_class} - {visibility_distance}"
         return _visibility
-
-    @property
-    def visibility_unit(self):
-        """Return the unit of measurement."""
-        return LENGTH_KILOMETERS
 
     @property
     def pressure(self):

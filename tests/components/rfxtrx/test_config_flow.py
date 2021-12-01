@@ -352,7 +352,7 @@ async def test_options_add_device(hass):
     assert result["step_id"] == "set_device_options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"fire_event": True, "signal_repetitions": 5}
+        result["flow_id"], user_input={"signal_repetitions": 5}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -362,7 +362,6 @@ async def test_options_add_device(hass):
     assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
-    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["fire_event"]
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
     assert "delay_off" not in entry.data["devices"]["0b1100cd0213c7f230010f71"]
 
@@ -442,7 +441,7 @@ async def test_options_add_remove_device(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"fire_event": True, "signal_repetitions": 5, "off_delay": "4"},
+        user_input={"signal_repetitions": 5, "off_delay": "4"},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -452,7 +451,6 @@ async def test_options_add_remove_device(hass):
     assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
-    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["fire_event"]
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["off_delay"] == 4
 
@@ -864,7 +862,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "signal_repetitions": 5,
             "data_bits": 4,
             "off_delay": "abcdef",
@@ -883,7 +880,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "signal_repetitions": 5,
             "data_bits": 4,
             "command_on": "0xE",
@@ -899,7 +895,6 @@ async def test_options_add_and_configure_device(hass):
     assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0913000022670e013970"]
-    assert not entry.data["devices"]["0913000022670e013970"]["fire_event"]
     assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
     assert entry.data["devices"]["0913000022670e013970"]["off_delay"] == 9
 
@@ -932,7 +927,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": True,
             "signal_repetitions": 5,
             "data_bits": 4,
             "command_on": "0xE",
@@ -945,7 +939,6 @@ async def test_options_add_and_configure_device(hass):
     await hass.async_block_till_done()
 
     assert entry.data["devices"]["0913000022670e013970"]
-    assert entry.data["devices"]["0913000022670e013970"]["fire_event"]
     assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
     assert "delay_off" not in entry.data["devices"]["0913000022670e013970"]
 
@@ -988,7 +981,6 @@ async def test_options_configure_rfy_cover_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "venetian_blind_mode": "EU",
         },
     )
@@ -1021,7 +1013,6 @@ async def test_options_configure_rfy_cover_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "venetian_blind_mode": "EU",
         },
     )
