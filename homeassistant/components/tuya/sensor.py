@@ -738,10 +738,9 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             return None
 
         # Get subkey value from Json string.
-        if (
-            self._status_range.type == "Json"
-            and self.entity_description.subkey is not None
-        ):
+        if self._status_range.type == "Json":
+            if self.entity_description.subkey is None:
+                return None
             values = ElectricityTypeData.from_json(value)
             return getattr(values, self.entity_description.subkey)
 
