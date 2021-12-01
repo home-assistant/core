@@ -77,7 +77,9 @@ async def test_form_other_error(
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_configured(mock_wall_connector_version, hass):
+async def test_form_already_configured(
+    mock_wall_connector_setup, mock_wall_connector_version, hass
+):
     """Test we get already configured."""
 
     entry = MockConfigEntry(
@@ -89,24 +91,22 @@ async def test_form_already_configured(mock_wall_connector_version, hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.tesla_wall_connector.async_setup_entry",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1"},
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1"},
+    )
+    await hass.async_block_till_done()
 
-        assert result2["type"] == "abort"
-        assert result2["reason"] == "already_configured"
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
 
     # Test config entry got updated with latest IP
     assert entry.data[CONF_HOST] == "1.1.1.1"
 
 
-async def test_dhcp_can_finish(mock_wall_connector_version, hass):
+async def test_dhcp_can_finish(
+    mock_wall_connector_setup, mock_wall_connector_version, hass
+):
     """Test DHCP discovery flow can finish right away."""
 
     result = await hass.config_entries.flow.async_init(
