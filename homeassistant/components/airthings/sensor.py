@@ -4,9 +4,10 @@ from __future__ import annotations
 from airthings import AirthingsDevice
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
     StateType,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -14,14 +15,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     PRESSURE_MBAR,
@@ -46,32 +39,32 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "temp": SensorEntityDescription(
         key="temp",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         name="Temperature",
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         name="Humidity",
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_MBAR,
         name="Pressure",
     ),
     "battery": SensorEntityDescription(
         key="battery",
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         name="Battery",
     ),
     "co2": SensorEntityDescription(
         key="co2",
-        device_class=DEVICE_CLASS_CO2,
+        device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         name="CO2",
     ),
@@ -96,7 +89,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "rssi": SensorEntityDescription(
         key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         name="RSSI",
         entity_registry_enabled_default=False,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
@@ -104,13 +97,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "pm1": SensorEntityDescription(
         key="pm1",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        device_class=DEVICE_CLASS_PM1,
+        device_class=SensorDeviceClass.PM1,
         name="PM1",
     ),
     "pm25": SensorEntityDescription(
         key="pm25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        device_class=DEVICE_CLASS_PM25,
+        device_class=SensorDeviceClass.PM25,
         name="PM25",
     ),
 }
@@ -140,7 +133,7 @@ async def async_setup_entry(
 class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
     """Representation of a Airthings Sensor device."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,

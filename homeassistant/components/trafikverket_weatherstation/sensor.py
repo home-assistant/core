@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -28,17 +29,19 @@ from homeassistant.const import (
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    ConfigType,
+    DiscoveryInfoType,
+)
 from homeassistant.util import Throttle
 
+from .const import ATTR_ACTIVE, ATTR_MEASURE_TIME, ATTRIBUTION, CONF_STATION, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by Trafikverket"
-ATTR_MEASURE_TIME = "measure_time"
-ATTR_ACTIVE = "active"
-
-CONF_STATION = "station"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
@@ -144,18 +147,40 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Trafikverket sensor platform."""
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType = None,
+) -> None:
+    """Import Trafikverket Weather configuration from YAML."""
+    _LOGGER.warning(
+        # Config flow added in Home Assistant Core 2021.12, remove import flow in 2022.4
+        "Loading Trafikverket Weather via platform setup is deprecated; Please remove it from your configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
-    sensor_name = config[CONF_NAME]
-    sensor_api = config[CONF_API_KEY]
-    sensor_station = config[CONF_STATION]
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Trafikverket sensor entry."""
+
+    sensor_name = entry.data[CONF_NAME]
+    sensor_api = entry.data[CONF_API_KEY]
+    sensor_station = entry.data[CONF_STATION]
 
     web_session = async_get_clientsession(hass)
 
     weather_api = TrafikverketWeather(web_session, sensor_api)
 
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    monitored_conditions = entry.data[CONF_MONITORED_CONDITIONS]
     entities = [
         TrafikverketWeatherStation(
             weather_api, sensor_name, sensor_station, description

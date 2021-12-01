@@ -4,8 +4,7 @@
         "already_configured": "Account is already configured"
       },
       "error": {
-        "invalid_auth": "Invalid authentication",
-        "cannot_connect": "Failed to connect"
+        "invalid_auth": "Invalid authentication"
       },
       "step": {
         "reauth_confirm": {

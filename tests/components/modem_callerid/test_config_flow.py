@@ -17,14 +17,14 @@ from homeassistant.data_entry_flow import (
 
 from . import _patch_config_flow_modem
 
-DISCOVERY_INFO = {
-    "device": phone_modem.DEFAULT_PORT,
-    "pid": "1340",
-    "vid": "0572",
-    "serial_number": "1234",
-    "description": "modem",
-    "manufacturer": "Connexant",
-}
+DISCOVERY_INFO = usb.UsbServiceInfo(
+    device=phone_modem.DEFAULT_PORT,
+    pid="1340",
+    vid="0572",
+    serial_number="1234",
+    description="modem",
+    manufacturer="Connexant",
+)
 
 
 def _patch_setup():

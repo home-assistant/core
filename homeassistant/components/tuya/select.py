@@ -19,6 +19,7 @@ from .const import (
     DEVICE_CLASS_TUYA_BASIC_ANTI_FLICKR,
     DEVICE_CLASS_TUYA_BASIC_NIGHTVISION,
     DEVICE_CLASS_TUYA_DECIBEL_SENSITIVITY,
+    DEVICE_CLASS_TUYA_FINGERBOT_MODE,
     DEVICE_CLASS_TUYA_IPC_WORK_MODE,
     DEVICE_CLASS_TUYA_LED_TYPE,
     DEVICE_CLASS_TUYA_LIGHT_MODE,
@@ -206,6 +207,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.LED_TYPE_2,
             name="Light 2 Source Type",
             device_class=DEVICE_CLASS_TUYA_LED_TYPE,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+    ),
+    # Fingerbot
+    "szjqr": (
+        SelectEntityDescription(
+            key=DPCode.MODE,
+            name="Mode",
+            device_class=DEVICE_CLASS_TUYA_FINGERBOT_MODE,
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     ),

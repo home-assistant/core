@@ -1,7 +1,7 @@
 """Config flow for Modern Forms."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from aiomodernforms import ModernFormsConnectionError, ModernFormsDevice
 import voluptuous as vol
@@ -30,20 +30,20 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        host = discovery_info["hostname"].rstrip(".")
+        host = discovery_info.hostname.rstrip(".")
         name, _ = host.rsplit(".")
 
         self.context.update(
             {
-                CONF_HOST: discovery_info["host"],
+                CONF_HOST: discovery_info.host,
                 CONF_NAME: name,
-                CONF_MAC: discovery_info["properties"].get(CONF_MAC),
+                CONF_MAC: discovery_info.properties.get(CONF_MAC),
                 "title_placeholders": {"name": name},
             }
         )
 
         # Prepare configuration flow
-        return await self._handle_config_flow(cast(dict, discovery_info), True)
+        return await self._handle_config_flow({}, True)
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None

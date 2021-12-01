@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Literal, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -18,6 +18,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.enum import StrEnum
 
 from .const import (
     ATTR_MAX,
@@ -28,7 +29,6 @@ from .const import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DOMAIN,
-    MODE_AUTO,
     SERVICE_SET_VALUE,
 )
 
@@ -39,6 +39,14 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class NumberMode(StrEnum):
+    """Modes for number entities."""
+
+    AUTO = "auto"
+    BOX = "box"
+    SLIDER = "slider"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -92,7 +100,7 @@ class NumberEntity(Entity):
     _attr_min_value: float = DEFAULT_MIN_VALUE
     _attr_state: None = None
     _attr_step: float
-    _attr_mode: Literal["auto", "slider", "box"] = MODE_AUTO
+    _attr_mode: NumberMode = NumberMode.AUTO
     _attr_value: float
 
     @property
@@ -128,7 +136,7 @@ class NumberEntity(Entity):
         return step
 
     @property
-    def mode(self) -> Literal["auto", "slider", "box"]:
+    def mode(self) -> NumberMode:
         """Return the mode of the entity."""
         return self._attr_mode
 
