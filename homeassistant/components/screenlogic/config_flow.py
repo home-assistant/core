@@ -56,18 +56,6 @@ def name_for_mac(mac):
     return f"Pentair: {short_mac(mac)}"
 
 
-async def async_get_mac_address(hass, ip_address, port):
-    """Connect to a screenlogic gateway and return the mac address."""
-    connected_socket = await hass.async_add_executor_job(
-        login.create_socket,
-        ip_address,
-        port,
-    )
-    if not connected_socket:
-        raise ScreenLogicError("Unknown socket error")
-    return await hass.async_add_executor_job(login.gateway_connect, connected_socket)
-
-
 class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow to setup screen logic devices."""
 
@@ -155,9 +143,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ip_address = user_input[CONF_IP_ADDRESS]
             port = user_input[CONF_PORT]
             try:
-                mac = format_mac(
-                    await async_get_mac_address(self.hass, ip_address, port)
-                )
+                mac = format_mac(await login.async_get_mac_address(ip_address, port))
             except ScreenLogicError as ex:
                 _LOGGER.debug(ex)
                 errors[CONF_IP_ADDRESS] = "cannot_connect"
