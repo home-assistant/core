@@ -13,6 +13,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.ssdp import SsdpChange
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONFIG_ENTRY_HOSTNAME,
@@ -28,7 +29,7 @@ from .const import (
 )
 
 
-def _friendly_name_from_discovery(discovery_info: Mapping[str, Any]) -> str:
+def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
     """Extract user-friendly name from discovery."""
     return (
         discovery_info.get("friendlyName")
@@ -37,13 +38,13 @@ def _friendly_name_from_discovery(discovery_info: Mapping[str, Any]) -> str:
     )
 
 
-def _is_complete_discovery(discovery_info: Mapping[str, Any]) -> bool:
+def _is_complete_discovery(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     """Test if discovery is complete and usable."""
     return (
-        ssdp.ATTR_UPNP_UDN in discovery_info
-        and discovery_info.get(ssdp.ATTR_SSDP_ST)
-        and discovery_info.get(ssdp.ATTR_SSDP_LOCATION)
-        and discovery_info.get(ssdp.ATTR_SSDP_USN)
+        ssdp.ATTR_UPNP_UDN in discovery_info.upnp
+        and discovery_info.ssdp_st
+        and discovery_info.ssdp_location
+        and discovery_info.ssdp_usn
     )
 
 
@@ -90,7 +91,9 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
     return True
 
 
-async def _async_discover_igd_devices(hass: HomeAssistant) -> list[Mapping[str, Any]]:
+async def _async_discover_igd_devices(
+    hass: HomeAssistant,
+) -> list[ssdp.SsdpServiceInfo]:
     """Discovery IGD devices."""
     return await ssdp.async_get_discovery_info_by_st(
         hass, ST_IGD_V1
@@ -206,7 +209,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_create_entry_from_discovery(discovery)
 
-    async def async_step_ssdp(self, discovery_info: Mapping) -> Mapping[str, Any]:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered UPnP/IGD device.
 
         This flow is triggered by the SSDP component. It will check if the
