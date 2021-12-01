@@ -234,7 +234,7 @@ EVENT_TIME_CHANGED: Final = "time_changed"
 
 # #### DEVICE CLASSES ####
 # DEVICE_CLASS_* below are deprecated as of 2021.12
-# use the BinarySensorDeviceClass enum instead.
+# use the SensorDeviceClass enum instead.
 DEVICE_CLASS_AQI: Final = "aqi"
 DEVICE_CLASS_BATTERY: Final = "battery"
 DEVICE_CLASS_CO: Final = "carbon_monoxide"
