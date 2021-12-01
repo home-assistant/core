@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 import pyatmo
 
@@ -88,7 +87,9 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
         self._home_id = home_id
 
         self._climate_state_class = f"{CLIMATE_STATE_CLASS_NAME}-{self._home_id}"
-        self._climate_state = data_handler.data[self._climate_state_class]
+        self._climate_state: pyatmo.AsyncClimate = data_handler.data[
+            self._climate_state_class
+        ]
 
         self._home = self._climate_state.homes[self._home_id]
 
@@ -147,11 +148,6 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
             )
             self.async_write_ha_state()
 
-    @property
-    def _data(self) -> pyatmo.AsyncClimate:
-        """Return data for this entity."""
-        return cast(pyatmo.AsyncClimate, self._climate_state)
-
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         for sid, schedule in self.hass.data[DOMAIN][DATA_SCHEDULES][
@@ -165,7 +161,7 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
                 option,
                 sid,
             )
-            await self._data.async_switch_home_schedule(schedule_id=sid)
+            await self._climate_state.async_switch_home_schedule(schedule_id=sid)
             break
 
     @callback
