@@ -60,7 +60,6 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "sensor.test_monitored",
-                        "state_characteristic": "mean",
                     },
                 ]
             },
@@ -148,7 +147,6 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test",
                         "entity_id": "binary_sensor.test_monitored",
-                        "state_characteristic": "mean",
                     },
                 ]
             },
@@ -166,8 +164,8 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
-        assert state.state == str(self.mean_binary)
-        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
+        assert state.state == str(len(self.values_binary))
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
         assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
         assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
         assert state.attributes.get("source_value_valid") is True
@@ -512,6 +510,11 @@ class TestStatisticsSensor(unittest.TestCase):
                         "platform": "statistics",
                         "name": "test_unitless_4",
                         "entity_id": "binary_sensor.test_monitored_unitless",
+                    },
+                    {
+                        "platform": "statistics",
+                        "name": "test_unitless_5",
+                        "entity_id": "binary_sensor.test_monitored_unitless",
                         "state_characteristic": "mean",
                     },
                 ]
@@ -542,6 +545,8 @@ class TestStatisticsSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test_unitless_3")
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
         state = self.hass.states.get("sensor.test_unitless_4")
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+        state = self.hass.states.get("sensor.test_unitless_5")
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
 
     def test_state_characteristics(self):

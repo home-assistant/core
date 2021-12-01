@@ -60,6 +60,16 @@ STAT_VALUE_MAX = "value_max"
 STAT_VALUE_MIN = "value_min"
 STAT_VARIANCE = "variance"
 
+STAT_DEFAULT = "default"
+DEPRECATION_WARNING = (
+    "The configuration parameter 'state_characteristics' will become "
+    "mandatory in a future release of the statistics integration. "
+    "Please add 'state_characteristics: %s' to the configuration of "
+    'sensor "%s" to keep the current behavior. Read the documentation '
+    "for further details: "
+    "https://www.home-assistant.io/integrations/statistics/"
+)
+
 STATS_NOT_A_NUMBER = (
     STAT_DATETIME_OLDEST,
     STAT_DATETIME_NEWEST,
@@ -91,7 +101,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_STATE_CHARACTERISTIC): vol.In(
+        vol.Optional(CONF_STATE_CHARACTERISTIC, default=STAT_DEFAULT): vol.In(
             [
                 STAT_AVERAGE_LINEAR,
                 STAT_AVERAGE_STEP,
@@ -114,6 +124,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 STAT_VALUE_MAX,
                 STAT_VALUE_MIN,
                 STAT_VARIANCE,
+                STAT_DEFAULT,
             ]
         ),
         vol.Optional(
@@ -173,6 +184,9 @@ class StatisticsSensor(SensorEntity):
         self.is_binary = self._source_entity_id.split(".")[0] == "binary_sensor"
         self._name = name
         self._state_characteristic = state_characteristic
+        if self._state_characteristic == STAT_DEFAULT:
+            self._state_characteristic = STAT_COUNT if self.is_binary else STAT_MEAN
+            _LOGGER.warning(DEPRECATION_WARNING, self._state_characteristic, name)
         self._samples_max_buffer_size = samples_max_buffer_size
         self._samples_max_age = samples_max_age
         self._precision = precision
