@@ -87,7 +87,6 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
             CONF_API_KEY: "1234567890",
             CONF_STATION: "Vallby",
         },
-        unique_id="Vallby",
     ).add_to_hass(hass)
 
     with patch(
