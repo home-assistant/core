@@ -5,6 +5,7 @@ import logging
 import math
 from typing import Any
 
+from aionanoleaf import Nanoleaf
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -25,6 +26,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.color import (
@@ -34,7 +36,6 @@ from homeassistant.util.color import (
 
 from .const import DOMAIN
 from .entity import NanoleafEntity
-from .hub import NanoleafHub
 
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
 DEFAULT_NAME = "Nanoleaf"
@@ -70,20 +71,20 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nanoleaf light."""
-    hub: NanoleafHub = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NanoleafLight(hub)])
+    nanoleaf: Nanoleaf = hass.data[DOMAIN][entry.entry_id]["device"]
+    async_add_entities([NanoleafLight(nanoleaf)])
 
 
 class NanoleafLight(NanoleafEntity, LightEntity):
     """Representation of a Nanoleaf Light."""
 
-    def __init__(self, hub: NanoleafHub) -> None:
+    def __init__(self, nanoleaf: Nanoleaf) -> None:
         """Initialize the Nanoleaf light."""
-        super().__init__(hub)
-        self._attr_unique_id = hub.nanoleaf.serial_no
-        self._attr_name = hub.nanoleaf.name
-        self._attr_min_mireds = math.ceil(1000000 / hub.nanoleaf.color_temperature_max)
-        self._attr_max_mireds = kelvin_to_mired(hub.nanoleaf.color_temperature_min)
+        super().__init__(nanoleaf)
+        self._attr_unique_id = nanoleaf.serial_no
+        self._attr_name = nanoleaf.name
+        self._attr_min_mireds = math.ceil(1000000 / nanoleaf.color_temperature_max)
+        self._attr_max_mireds = kelvin_to_mired(nanoleaf.color_temperature_min)
 
     @property
     def brightness(self) -> int:
@@ -179,4 +180,10 @@ class NanoleafLight(NanoleafEntity, LightEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity being added to Home Assistant."""
         await super().async_added_to_hass()
-        await self._hub.set_light_entity(self)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_update_light_{self._nanoleaf.serial_no}",
+                self.async_write_ha_state,
+            )
+        )
