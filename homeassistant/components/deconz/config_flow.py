@@ -206,7 +206,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered deCONZ bridge."""
         if (
-            discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
+            discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
             != DECONZ_MANUFACTURERURL
         ):
             return self.async_abort(reason="not_deconz_bridge")
