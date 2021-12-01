@@ -14,6 +14,10 @@
             "0": "Sensibilitat baixa",
             "1": "Sensibilitat alta"
         },
+        "tuya__fingerbot_mode": {
+            "click": "Polsador",
+            "switch": "Interruptor"
+        },
         "tuya__ipc_work_mode": {
             "0": "Mode de baix consum",
             "1": "Mode de funcionament continu"
