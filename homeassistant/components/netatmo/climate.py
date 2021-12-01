@@ -184,6 +184,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         super().__init__(data_handler)
 
         self._room = room
+        self._id = self._room.entity_id
 
         self._climate_state_class = (
             f"{CLIMATE_STATE_CLASS_NAME}-{self._room.home.entity_id}"
@@ -243,9 +244,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             )
 
         registry = await async_get_registry(self.hass)
-        device = registry.async_get_device({(DOMAIN, self._room.entity_id)})
+        device = registry.async_get_device({(DOMAIN, self._id)})
         assert device
-        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._room.home.entity_id] = device.id
+        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._id] = device.id
 
     @callback
     def handle_event(self, event: dict) -> None:

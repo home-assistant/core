@@ -136,7 +136,7 @@ async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
 
     # Assert webhook is established successfully
-    climate_entity_livingroom = "climate.netatmo_livingroom"
+    climate_entity_livingroom = "climate.livingroom"
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK)
     assert hass.states.get(climate_entity_livingroom).state == "heat"
