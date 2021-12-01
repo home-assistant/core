@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 from tololib.errors import ResponseTimedOutError
 
-from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.components.tolo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
@@ -15,7 +15,9 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-MOCK_DHCP_DATA = {IP_ADDRESS: "127.0.0.2", MAC_ADDRESS: "00:11:22:33:44:55"}
+MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
+    ip="127.0.0.2", macaddress="00:11:22:33:44:55", hostname="mock_hostname"
+)
 
 
 @pytest.fixture(name="toloclient")
