@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.entity_registry import async_get as get_entity_registry
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
@@ -177,6 +178,34 @@ class TestStatisticsSensor(unittest.TestCase):
         assert new_state.state == str(new_mean)
         assert new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert new_state.attributes.get("source_value_valid") is False
+
+    def test_unique_id(self):
+        """Test configuration defined unique_id."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "unique_id": "uniqueid_sensor_test",
+                    },
+                ]
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        registry = get_entity_registry(self.hass)
+        entity_id = registry.async_get_entity_id(
+            "sensor", DOMAIN, "uniqueid_sensor_test"
+        )
+        assert entity_id == "sensor.test"
+        registry.async_remove(entity_id)
 
     def test_sampling_size_non_default(self):
         """Test rotation."""

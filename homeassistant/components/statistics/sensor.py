@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -84,6 +85,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_STATE_CHARACTERISTIC, default=STAT_MEAN): vol.In(
             [
                 STAT_AVERAGE_LINEAR,
@@ -134,6 +136,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             StatisticsSensor(
                 source_entity_id=config.get(CONF_ENTITY_ID),
                 name=config.get(CONF_NAME),
+                unique_id=config.get(CONF_UNIQUE_ID),
                 state_characteristic=config.get(CONF_STATE_CHARACTERISTIC),
                 samples_max_buffer_size=config.get(CONF_SAMPLES_MAX_BUFFER_SIZE),
                 samples_max_age=config.get(CONF_MAX_AGE),
@@ -154,6 +157,7 @@ class StatisticsSensor(SensorEntity):
         self,
         source_entity_id,
         name,
+        unique_id,
         state_characteristic,
         samples_max_buffer_size,
         samples_max_age,
@@ -165,6 +169,7 @@ class StatisticsSensor(SensorEntity):
         self._source_entity_id = source_entity_id
         self.is_binary = self._source_entity_id.split(".")[0] == "binary_sensor"
         self._name = name
+        self._unique_id = unique_id
         self._state_characteristic = state_characteristic
         self._samples_max_buffer_size = samples_max_buffer_size
         self._samples_max_age = samples_max_age
@@ -286,6 +291,11 @@ class StatisticsSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return self._unique_id
 
     @property
     def state_class(self):
