@@ -927,7 +927,7 @@ async def test_service_info_compatibility(hass, caplog):
 
     # Ensure first call get logged
     assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
-    assert "Detected code that accessed discovery_info['vid']" in caplog.text
+    assert "Detected code that accessed discovery_info['topic']" in caplog.text
 
     # Ensure second call doesn't get logged
     caplog.clear()
