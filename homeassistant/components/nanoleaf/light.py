@@ -34,6 +34,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
+from . import NanoleafEntryData
 from .const import DOMAIN
 from .entity import NanoleafEntity
 
@@ -71,8 +72,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nanoleaf light."""
-    nanoleaf: Nanoleaf = hass.data[DOMAIN][entry.entry_id]["device"]
-    async_add_entities([NanoleafLight(nanoleaf)])
+    entry_data: NanoleafEntryData = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([NanoleafLight(entry_data.device)])
 
 
 class NanoleafLight(NanoleafEntity, LightEntity):
