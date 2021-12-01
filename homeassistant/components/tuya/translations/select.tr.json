@@ -14,6 +14,10 @@
             "0": "D\u00fc\u015f\u00fck hassasiyet",
             "1": "Y\u00fcksek hassasiyet"
         },
+        "tuya__fingerbot_mode": {
+            "click": "Bildirim",
+            "switch": "Anahtar"
+        },
         "tuya__ipc_work_mode": {
             "0": "D\u00fc\u015f\u00fck g\u00fc\u00e7 modu",
             "1": "S\u00fcrekli \u00e7al\u0131\u015fma modu"
