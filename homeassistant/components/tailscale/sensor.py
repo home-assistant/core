@@ -32,7 +32,7 @@ class TailscaleSensorEntityDescriptionMixin:
 class TailscaleSensorEntityDescription(
     SensorEntityDescription, TailscaleSensorEntityDescriptionMixin
 ):
-    """Describes a Tailscale binary sensor entity."""
+    """Describes a Tailscale sensor entity."""
 
 
 SENSORS: tuple[TailscaleSensorEntityDescription, ...] = (
@@ -75,7 +75,7 @@ class TailscaleSensorEntity(TailscaleEntity, SensorEntity):
         device: TailscaleDevice,
         description: TailscaleSensorEntityDescription,
     ) -> None:
-        """Initialize a Tailscale binary sensor."""
+        """Initialize a Tailscale sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self.device_id = device.device_id
