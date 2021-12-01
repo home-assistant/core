@@ -91,6 +91,9 @@ async def async_setup(hass, config):
     async def start_sip_server(service):
         await _start_sip_server(hass, service)
 
+    async def start_screen_stream(service):
+        await _start_screen_stream(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "cec_command", cec_command)
@@ -662,4 +665,12 @@ async def _start_sip_server(hass, call):
         return
 
     comm = r"su -c 'am start -n com.aispeaker.sipserver/.USipServerActivity --ez start_from_ais true'"
+    await _run(comm)
+
+
+async def _start_screen_stream(hass, call):
+    if not ais_global.has_root():
+        return
+
+    comm = r"su -c 'monkey -p pl.sviete.screenstream -c android.intent.category.LAUNCHER 1'"
     await _run(comm)
