@@ -9,10 +9,9 @@ from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant import util
-from homeassistant.components.plex.media_player import PlexMediaPlayer
-from homeassistant.helpers.entity_platform import EntityPlatform, async_get_platforms
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    DOMAIN as DOMAIN_MEDIA_PLAYER,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
@@ -21,8 +20,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
     SUPPORT_SELECT_SOUND_MODE,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -30,16 +29,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from .const import (
-    ATTR_PAYLOAD,
-    ATTR_SOUND_OUTPUT,
-    CONF_ON_ACTION,
-    CONF_PLEX_ENTITY,
-    CONF_SOURCES,
-    DOMAIN,
-    LIVE_TV_APP_ID,
-    PLEX_SOURCE,
-)
+from homeassistant.components.plex.media_player import PlexMediaPlayer
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
@@ -55,8 +45,19 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import EntityPlatform, async_get_platforms
 from homeassistant.helpers.script import Script
-from homeassistant.components.media_player.const import DOMAIN as DOMAIN_MEDIA_PLAYER
+
+from .const import (
+    ATTR_PAYLOAD,
+    ATTR_SOUND_OUTPUT,
+    CONF_ON_ACTION,
+    CONF_PLEX_ENTITY,
+    CONF_SOURCES,
+    DOMAIN,
+    LIVE_TV_APP_ID,
+    PLEX_SOURCE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
