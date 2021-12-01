@@ -4,7 +4,8 @@ from __future__ import annotations
 from typing import cast
 
 from homeassistant import config_entries
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import NumberEntity
+from homeassistant.components.number.const import MODE_SLIDER
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -46,7 +47,7 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     _attr_min_value = 1
     _attr_max_value = 100
     _attr_step = 1
-    _attr_mode = NumberMode.SLIDER
+    _attr_mode = MODE_SLIDER
     _attr_icon = "mdi:speedometer"
 
     def __init__(

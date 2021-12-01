@@ -124,27 +124,18 @@ def async_trigger_discovery(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
     domain_data = hass.data.setdefault(DOMAIN, {})
-    _LOGGER.warning("Setting up flux_led - call async_discover_devices")
-
     domain_data[FLUX_LED_DISCOVERY] = await async_discover_devices(
         hass, STARTUP_SCAN_TIMEOUT
     )
-    _LOGGER.warning("Setting up flux_led - call done async_discover_devices")
 
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
-    _LOGGER.warning(
-        "Calling async_trigger_discovery: %s", domain_data[FLUX_LED_DISCOVERY]
-    )
-
     async_trigger_discovery(hass, domain_data[FLUX_LED_DISCOVERY])
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
-
-    _LOGGER.warning("Calling done async_setup")
     return True
 
 
@@ -155,15 +146,10 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
-
     host = entry.data[CONF_HOST]
-    _LOGGER.warning("Setting up flux_led - async_setup_entry: %s", host)
-
     if not entry.unique_id:
         if discovery := await async_discover_device(hass, host):
             async_update_entry_from_discovery(hass, entry, discovery)
-
-    _LOGGER.warning("Setting up flux_led - async_wifi_bulb_for_host: %s", host)
 
     device: AIOWifiLedBulb = async_wifi_bulb_for_host(host)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
@@ -173,15 +159,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("%s: Device state updated: %s", device.ipaddr, device.raw_state)
         async_dispatcher_send(hass, signal)
 
-    _LOGGER.warning("Setting up flux_led: %s", host)
     try:
         await device.async_setup(_async_state_changed)
     except FLUX_LED_EXCEPTIONS as ex:
         raise ConfigEntryNotReady(
             str(ex) or f"Timed out trying to connect to {device.ipaddr}"
         ) from ex
-    _LOGGER.warning("DONE up flux_led: %s", host)
-
     coordinator = FluxLedUpdateCoordinator(hass, device)
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(
