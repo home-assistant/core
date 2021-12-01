@@ -30,7 +30,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     title = entry.title
     if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
         if not hass.data[DOMAIN]:
             del hass.data[DOMAIN]
         _LOGGER.debug("Unloaded entry for %s", title)
