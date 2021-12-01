@@ -703,16 +703,11 @@ PRECISION_TENTHS: Final = 0.1
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
-# Config: An entity which allows changing the configuration of a device
+# ENTITY_CATEGOR* below are deprecated as of 2021.12
+# use the EntityCategory enum instead.
 ENTITY_CATEGORY_CONFIG: Final = "config"
-# Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
 ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
-# System: An entity which is not useful for the user to interact with
 ENTITY_CATEGORY_SYSTEM: Final = "system"
-
-# Entity categories which will:
-# - Not be exposed to cloud, alexa, or google_home components
-# - Not be included in indirect service calls to devices or areas
 ENTITY_CATEGORIES: Final[list[str]] = [
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
