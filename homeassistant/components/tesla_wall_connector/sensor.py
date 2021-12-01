@@ -10,14 +10,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENTITY_CATEGORY_DIAGNOSTIC,
     FREQUENCY_HERTZ,
-    POWER_KILO_WATT,
     TEMP_CELSIUS,
 )
 
@@ -73,29 +72,52 @@ WALL_CONNECTOR_SENSORS = [
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     WallConnectorSensorDescription(
-        key="power",
-        name=prefix_entity_name("Power"),
-        native_unit_of_measurement=POWER_KILO_WATT,
-        value_fn=lambda data: round(
-            (
-                (
-                    data[WALLCONNECTOR_DATA_VITALS].currentA_a
-                    * data[WALLCONNECTOR_DATA_VITALS].voltageA_v
-                )
-                + (
-                    data[WALLCONNECTOR_DATA_VITALS].currentB_a
-                    * data[WALLCONNECTOR_DATA_VITALS].voltageB_v
-                )
-                + (
-                    data[WALLCONNECTOR_DATA_VITALS].currentC_a
-                    * data[WALLCONNECTOR_DATA_VITALS].voltageC_v
-                )
-            )
-            / 1000.0,
-            1,
-        ),
-        device_class=DEVICE_CLASS_POWER,
+        key="current_a_a",
+        name=prefix_entity_name("Phase A Current"),
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].currentA_a,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    WallConnectorSensorDescription(
+        key="current_b_a",
+        name=prefix_entity_name("Phase B Current"),
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].currentB_a,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    WallConnectorSensorDescription(
+        key="current_c_a",
+        name=prefix_entity_name("Phase C Current"),
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].currentC_a,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    WallConnectorSensorDescription(
+        key="voltage_a_v",
+        name=prefix_entity_name("Phase A Voltage"),
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].voltageA_v,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    WallConnectorSensorDescription(
+        key="voltage_b_v",
+        name=prefix_entity_name("Phase B Voltage"),
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].voltageB_v,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    WallConnectorSensorDescription(
+        key="voltage_c_v",
+        name=prefix_entity_name("Phase C Voltage"),
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].voltageC_v,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     WallConnectorSensorDescription(
         key="total_energy_kWh",
