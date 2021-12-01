@@ -221,7 +221,10 @@ async def test_existing_node_ready(hass, client, multisensor_6, integration):
     dev_reg = dr.async_get(hass)
     node = multisensor_6
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
-    air_temperature_device_id_ext = f"{air_temperature_device_id}-{node.manufacturer_id}:{node.product_type}:{node.product_id}"
+    air_temperature_device_id_ext = (
+        f"{air_temperature_device_id}-{node.manufacturer_id}:"
+        f"{node.product_type}:{node.product_id}"
+    )
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
@@ -259,13 +262,19 @@ async def test_existing_node_not_ready(hass, zp3111_not_ready, client, integrati
 async def test_existing_node_not_replaced_when_not_ready(
     hass, zp3111, zp3111_not_ready_state, zp3111_state, client, integration
 ):
-    """Test that an existing node is not replaced, and no customization lost, when a node added event with a non-ready node is received."""
+    """Test when a node added event with a non-ready node is received.
+    
+    The existing node should not be replaced, and no customization should be lost.
+    """
     dev_reg = dr.async_get(hass)
     er_reg = er.async_get(hass)
     kitchen_area = ar.async_get(hass).async_create("Kitchen")
 
     device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
-    device_id_ext = f"{device_id}-{zp3111.manufacturer_id}:{zp3111.product_type}:{zp3111.product_id}"
+    device_id_ext = (
+        f"{device_id}-{zp3111.manufacturer_id}:"
+        f"{zp3111.product_type}:{zp3111.product_id}"
+    )
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
@@ -853,7 +862,10 @@ async def test_replace_same_node(
     multisensor_6_state = deepcopy(multisensor_6_state)
 
     device_id = f"{client.driver.controller.home_id}-{node_id}"
-    multisensor_6_device_id = f"{device_id}-{multisensor_6.manufacturer_id}:{multisensor_6.product_type}:{multisensor_6.product_id}"
+    multisensor_6_device_id = (
+        f"{device_id}-{multisensor_6.manufacturer_id}:"
+        f"{multisensor_6.product_type}:{multisensor_6.product_id}"
+    )
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
@@ -866,7 +878,8 @@ async def test_replace_same_node(
 
     assert hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    # A replace node event has the extra field "replaced" set to True to distinguish it from an exclusion
+    # A replace node event has the extra field "replaced" set to True
+    # to distinguish it from an exclusion
     event = Event(
         type="node removed",
         data={
@@ -959,8 +972,15 @@ async def test_replace_different_node(
     hank_binary_switch_state["nodeId"] = node_id
 
     device_id = f"{client.driver.controller.home_id}-{node_id}"
-    multisensor_6_device_id = f"{device_id}-{multisensor_6.manufacturer_id}:{multisensor_6.product_type}:{multisensor_6.product_id}"
-    hank_device_id = f"{device_id}-{hank_binary_switch_state['manufacturerId']}:{hank_binary_switch_state['productType']}:{hank_binary_switch_state['productId']}"
+    multisensor_6_device_id = (
+        f"{device_id}-{multisensor_6.manufacturer_id}:"
+        f"{multisensor_6.product_type}:{multisensor_6.product_id}"
+    )
+    hank_device_id = (
+        f"{device_id}-{hank_binary_switch_state['manufacturerId']}:"
+        f"{hank_binary_switch_state['productType']}:"
+        f"{hank_binary_switch_state['productId']}"
+    )
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
@@ -973,7 +993,8 @@ async def test_replace_different_node(
 
     assert hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    # A replace node event has the extra field "replaced" set to True to distinguish it from an exclusion
+    # A replace node event has the extra field "replaced" set to True
+    # to distinguish it from an exclusion
     event = Event(
         type="node removed",
         data={
@@ -1054,14 +1075,23 @@ async def test_replace_different_node(
 
 
 async def test_node_model_change(hass, zp3111, zp3111_state, client, integration):
-    """Test that when a node's model is changed due to an updated device config file, the device and entities are not removed."""
-    # This is not 100% realistic test, since the model change would be seen when the integration is loaded, not via a runtime event. The same registration code path is used though, so it practically similar
+    """Test when a node's model is changed due to an updated device config file.
+    
+    The device and entities should not be removed.
+    """
+    # This is not 100% realistic test,
+    # since the model change would be seen when the integration is loaded,
+    # not via a runtime event.
+    # The same registration code path is used though, so it's practically similar.
     dev_reg = dr.async_get(hass)
     er_reg = er.async_get(hass)
     zp3111_state = deepcopy(zp3111_state)
 
     device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
-    device_id_ext = f"{device_id}-{zp3111.manufacturer_id}:{zp3111.product_type}:{zp3111.product_id}"
+    device_id_ext = (
+        f"{device_id}-{zp3111.manufacturer_id}:"
+        f"{zp3111.product_type}:{zp3111.product_id}"
+    )
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
@@ -1109,7 +1139,7 @@ async def test_node_model_change(hass, zp3111, zp3111_state, client, integration
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    # Device name changes, but the cusomization is the same
+    # Device name changes, but the customization is the same
     device = dev_reg.async_get(dev_id)
     assert device
     assert device.name == "New Device Description"
