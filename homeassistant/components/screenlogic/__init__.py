@@ -20,6 +20,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -34,7 +35,11 @@ from .services import async_load_screenlogic_services, async_unload_screenlogic_
 _LOGGER = logging.getLogger(__name__)
 
 
-REQUEST_REFRESH_DELAY = 1
+REQUEST_REFRESH_DELAY = 2
+HEATER_COOLDOWN_DELAY = 6
+
+# These seem to be constant across all controller models
+PRIMARY_CIRCUIT_IDS = [500, 505]  # [Spa, Pool]
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
 
@@ -219,6 +224,10 @@ class ScreenlogicEntity(CoordinatorEntity):
             name=self.gateway_name,
         )
 
+    async def _async_refresh_timed(self, now):
+        """Refresh from a timed called."""
+        await self.coordinator.async_request_refresh()
+
 
 class ScreenLogicCircuitEntity(ScreenlogicEntity):
     """ScreenLogic circuit entity."""
@@ -240,6 +249,14 @@ class ScreenLogicCircuitEntity(ScreenlogicEntity):
     async def async_turn_off(self, **kwargs) -> None:
         """Send the OFF command."""
         await self._async_set_circuit(ON_OFF.OFF)
+
+        # Turning off spa or pool circuit may require more time for the
+        # heater to reflect changes depending on the pool controller,
+        # so we schedule an extra refresh a bit farther out
+        if self._data_key in PRIMARY_CIRCUIT_IDS:
+            async_call_later(
+                self.hass, HEATER_COOLDOWN_DELAY, self._async_refresh_timed
+            )
 
     async def _async_set_circuit(self, circuit_value) -> None:
         if await self.gateway.async_set_circuit(self._data_key, circuit_value):
