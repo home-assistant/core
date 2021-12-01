@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Union, cast
 
 from simplipy import API
 from simplipy.device import Device, DeviceTypes
@@ -262,7 +262,9 @@ def _async_get_system_for_service_call(
             for entry in hass.config_entries.async_entries(DOMAIN):
                 if entry.entry_id in alarm_control_panel_device_entry.config_entries:
                     simplisafe = hass.data[DOMAIN][entry.entry_id]
-                    return simplisafe.systems[system_id]
+                    return cast(
+                        Union[SystemV2, SystemV3], simplisafe.systems[system_id]
+                    )
 
     raise ValueError(f"No system for device ID: {device_id}")
 
