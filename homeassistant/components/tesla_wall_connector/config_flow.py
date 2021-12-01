@@ -112,15 +112,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         if not errors:
-            existing_entry = await self.async_set_unique_id(
-                info[WALLCONNECTOR_SERIAL_NUMBER]
+            await self.async_set_unique_id(
+                unique_id=info[WALLCONNECTOR_SERIAL_NUMBER], raise_on_progress=True
             )
-            if existing_entry:
-                self.hass.config_entries.async_update_entry(
-                    existing_entry, data=user_input
-                )
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                return self.async_abort(reason="already_configured")
+            self._abort_if_unique_id_configured(
+                updates=user_input, reload_on_update=True
+            )
 
             return self.async_create_entry(title=info["title"], data=user_input)
 
