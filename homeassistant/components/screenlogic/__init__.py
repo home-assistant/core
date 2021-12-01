@@ -21,7 +21,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -29,7 +28,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .config_flow import async_discover_gateways_by_unique_id, name_for_mac
-from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .services import async_load_screenlogic_services, async_unload_screenlogic_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,12 +41,6 @@ HEATER_COOLDOWN_DELAY = 6
 PRIMARY_CIRCUIT_IDS = [500, 505]  # [Spa, Pool]
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Screenlogic component."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -72,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -101,9 +94,7 @@ async def async_get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
     """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id
     # Attempt to rediscover gateway to follow IP changes
-    discovered_gateways = hass.data[DOMAIN][
-        DISCOVERED_GATEWAYS
-    ] = await async_discover_gateways_by_unique_id(hass)
+    discovered_gateways = await async_discover_gateways_by_unique_id(hass)
     if mac in discovered_gateways:
         connect_info = discovered_gateways[mac]
     else:
