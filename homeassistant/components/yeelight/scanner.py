@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 from async_upnp_client.search import SsdpSearchListener
 
 from homeassistant import config_entries
-from homeassistant.components import network
+from homeassistant.components import network, ssdp
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
@@ -161,7 +161,12 @@ class YeelightScanner:
                 self._hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": config_entries.SOURCE_SSDP},
-                    data=response,
+                    data=ssdp.SsdpServiceInfo(
+                        ssdp_usn="",
+                        ssdp_st=SSDP_ST,
+                        ssdp_headers=response,
+                        upnp={},
+                    ),
                 )
             )
 
