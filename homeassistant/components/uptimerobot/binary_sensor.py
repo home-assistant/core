@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -27,7 +27,7 @@ async def async_setup_entry(
                 BinarySensorEntityDescription(
                     key=str(monitor.id),
                     name=monitor.friendly_name,
-                    device_class=DEVICE_CLASS_CONNECTIVITY,
+                    device_class=BinarySensorDeviceClass.CONNECTIVITY,
                 ),
                 monitor=monitor,
             )
