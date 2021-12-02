@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_SAFETY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -76,7 +76,7 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
 
         self._attr_name: str = f"Warning: {self._region_name} {self._slot_id}"
         self._attr_unique_id: str = f"{self._region}-{self._slot_id}"
-        self._attr_device_class: str = DEVICE_CLASS_SAFETY
+        self._attr_device_class: str = BinarySensorDeviceClass.SAFETY
 
     @property
     def is_on(self) -> bool:

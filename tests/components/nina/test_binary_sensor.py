@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from pynina import ApiError
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_SAFETY
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.nina.const import (
     ATTR_EXPIRES,
     ATTR_HEADLINE,
@@ -69,7 +69,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w1.attributes.get(ATTR_EXPIRES) is None
 
         assert entry_w1.unique_id == "083350000000-1"
-        assert state_w1.attributes.get("device_class") == DEVICE_CLASS_SAFETY
+        assert state_w1.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
         state_w2 = hass.states.get("binary_sensor.warning_aach_stadt_2")
         entry_w2 = entity_registry.async_get("binary_sensor.warning_aach_stadt_2")
@@ -82,7 +82,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w2.attributes.get(ATTR_EXPIRES) == "3021-11-22T05:19:00+01:00"
 
         assert entry_w2.unique_id == "083350000000-2"
-        assert state_w2.attributes.get("device_class") == DEVICE_CLASS_SAFETY
+        assert state_w2.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
         state_w3 = hass.states.get("binary_sensor.warning_aach_stadt_3")
         entry_w3 = entity_registry.async_get("binary_sensor.warning_aach_stadt_3")
@@ -95,7 +95,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w3.attributes.get(ATTR_EXPIRES) is None
 
         assert entry_w3.unique_id == "083350000000-3"
-        assert state_w3.attributes.get("device_class") == DEVICE_CLASS_SAFETY
+        assert state_w3.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
         state_w4 = hass.states.get("binary_sensor.warning_aach_stadt_4")
         entry_w4 = entity_registry.async_get("binary_sensor.warning_aach_stadt_4")
@@ -108,7 +108,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w4.attributes.get(ATTR_EXPIRES) is None
 
         assert entry_w4.unique_id == "083350000000-4"
-        assert state_w4.attributes.get("device_class") == DEVICE_CLASS_SAFETY
+        assert state_w4.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
         state_w5 = hass.states.get("binary_sensor.warning_aach_stadt_5")
         entry_w5 = entity_registry.async_get("binary_sensor.warning_aach_stadt_5")
@@ -121,7 +121,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get(ATTR_EXPIRES) is None
 
         assert entry_w5.unique_id == "083350000000-5"
-        assert state_w5.attributes.get("device_class") == DEVICE_CLASS_SAFETY
+        assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
 
 async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
@@ -162,7 +162,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w1.attributes.get(ATTR_EXPIRES) == ""
 
         assert entry_w1.unique_id == "083350000000-1"
-        assert state_w1.attributes.get("device_class") == DEVICE_CLASS_SAFETY
+        assert state_w1.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
         state_w2 = hass.states.get("binary_sensor.warning_aach_stadt_2")
         entry_w2 = entity_registry.async_get("binary_sensor.warning_aach_stadt_2")
@@ -175,7 +175,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w2.attributes.get(ATTR_EXPIRES) == "3021-11-22T05:19:00+01:00"
 
         assert entry_w2.unique_id == "083350000000-2"
-        assert state_w2.attributes.get("device_class") == DEVICE_CLASS_SAFETY
+        assert state_w2.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
         state_w3 = hass.states.get("binary_sensor.warning_aach_stadt_3")
         entry_w3 = entity_registry.async_get("binary_sensor.warning_aach_stadt_3")
@@ -188,7 +188,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w3.attributes.get(ATTR_EXPIRES) is None
 
         assert entry_w3.unique_id == "083350000000-3"
-        assert state_w3.attributes.get("device_class") == DEVICE_CLASS_SAFETY
+        assert state_w3.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
         state_w4 = hass.states.get("binary_sensor.warning_aach_stadt_4")
         entry_w4 = entity_registry.async_get("binary_sensor.warning_aach_stadt_4")
@@ -201,7 +201,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w4.attributes.get(ATTR_EXPIRES) is None
 
         assert entry_w4.unique_id == "083350000000-4"
-        assert state_w4.attributes.get("device_class") == DEVICE_CLASS_SAFETY
+        assert state_w4.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
         state_w5 = hass.states.get("binary_sensor.warning_aach_stadt_5")
         entry_w5 = entity_registry.async_get("binary_sensor.warning_aach_stadt_5")
@@ -214,7 +214,7 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         assert state_w5.attributes.get(ATTR_EXPIRES) is None
 
         assert entry_w5.unique_id == "083350000000-5"
-        assert state_w5.attributes.get("device_class") == DEVICE_CLASS_SAFETY
+        assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
 
 
 async def test_sensors_connection_error(hass: HomeAssistant) -> None:
