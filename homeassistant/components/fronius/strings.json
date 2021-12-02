@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{device}",
     "step": {
       "user": {
         "title": "Fronius SolarNet",
@@ -9,7 +10,7 @@
         }
       },
       "confirm_discovery": {
-        "description": "Do you want to setup {device}?"
+        "description": "Do you want to add {device} to Home Assistant?"
       }
     },
     "error": {

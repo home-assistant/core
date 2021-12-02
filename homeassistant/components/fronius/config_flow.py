@@ -147,6 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=title, data=self.info)
 
         self._set_confirm_only()
+        self.context.update({"title_placeholders": {"device": title}})
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
