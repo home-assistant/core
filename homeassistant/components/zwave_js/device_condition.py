@@ -147,7 +147,9 @@ async def async_get_conditions(
 
 
 @callback
-def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
+def async_condition_from_config(
+    hass: HomeAssistant, config: ConfigType
+) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
     condition_type = config[CONF_TYPE]
     device_id = config[CONF_DEVICE_ID]
