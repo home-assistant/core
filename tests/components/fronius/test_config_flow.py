@@ -271,7 +271,9 @@ async def test_import(hass, aioclient_mock):
 
 async def test_dhcp(hass, aioclient_mock):
     """Test starting a flow from discovery."""
-    with patch("asyncio.sleep"), patch(
+    with patch(
+        "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
+    ), patch(
         "pyfronius.Fronius.current_logger_info",
         return_value=LOGGER_INFO_RETURN_VALUE,
     ):
@@ -309,3 +311,18 @@ async def test_dhcp_already_configured(hass, aioclient_mock):
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_invalid(hass, aioclient_mock):
+    """Test starting a flow from discovery."""
+    with patch(
+        "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
+    ), patch("pyfronius.Fronius.current_logger_info", side_effect=FroniusError,), patch(
+        "pyfronius.Fronius.inverter_info",
+        side_effect=FroniusError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=MOCK_DHCP_DATA
+        )
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "invalid_host"

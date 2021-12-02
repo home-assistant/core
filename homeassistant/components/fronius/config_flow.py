@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any, Final
 
 from pyfronius import Fronius, FroniusError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.const import CONF_HOST, CONF_RESOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
@@ -17,10 +18,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, FroniusConfigEntryData
 
-if TYPE_CHECKING:
-    from homeassistant.components.dhcp import DhcpServiceInfo
-
 _LOGGER = logging.getLogger(__name__)
+
+DHCP_REQUEST_DELAY: Final = 60
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -125,7 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
         # Symo Datalogger devices need up to 1 minute at boot from DHCP request
         # to respond to API requests (connection refused until then)
-        await asyncio.sleep(60)
+        await asyncio.sleep(DHCP_REQUEST_DELAY)
         try:
             unique_id, self.info = await validate_host(self.hass, discovery_info.ip)
         except Exception:  # pylint: disable=broad-except
