@@ -608,7 +608,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.STATUS,
             name="Status Tuya",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
         ),
     ),
