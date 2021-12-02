@@ -92,7 +92,9 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="yxc_control_url_missing")
 
         self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
-        self.host = urlparse(discovery_info.ssdp_location or "").hostname or ""
+        self.host = urlparse(
+            discovery_info.ssdp_location
+        ).hostname  # type: ignore[assignment]
         self.upnp_description = discovery_info.ssdp_location
         await self.async_set_unique_id(self.serial_number)
         self._abort_if_unique_id_configured(
