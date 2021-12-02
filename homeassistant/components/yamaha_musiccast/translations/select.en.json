@@ -1,37 +1,37 @@
 {
     "state": {
-        "yamaha_musiccast__DIMMER": {
+        "yamaha_musiccast__dimmer": {
             "auto": "Auto"
         },
-        "yamaha_musiccast__zone_EQUALIZER_mode": {
+        "yamaha_musiccast__zone_equalizer_mode": {
             "auto": "Auto",
             "bypass": "Bypass",
             "manual": "Manual"
         },
-        "yamaha_musiccast__zone_LINK_AUDIO_DELAY": {
+        "yamaha_musiccast__zone_link_audio_delay": {
             "audio_sync": "Audio Synchronization",
             "audio_sync_off": "Audio Synchronization Off",
             "audio_sync_on": "Audio Synchronization On",
             "balanced": "Balanced",
             "lip_sync": "Lip Synchronization"
         },
-        "yamaha_musiccast__zone_LINK_AUDIO_QUALITY": {
+        "yamaha_musiccast__zone_link_audio_quality": {
             "compressed": "Compressed",
             "uncompressed": "Uncompressed"
         },
-        "yamaha_musiccast__zone_LINK_CONTROL": {
+        "yamaha_musiccast__zone_link_control": {
             "speed": "Speed",
             "stability": "Stability",
             "standard": "Standard"
         },
-        "yamaha_musiccast__zone_SLEEP": {
+        "yamaha_musiccast__zone_sleep": {
             "120 min": "120 Minutes",
             "30 min": "30 Minutes",
             "60 min": "60 Minutes",
             "90 min": "90 Minutes",
             "off": "Off"
         },
-        "yamaha_musiccast__zone_SURR_DECODER_TYPE": {
+        "yamaha_musiccast__zone_surr_decoder_type": {
             "auto": "Auto",
             "dolby_pl": "Dolby ProLogic",
             "dolby_pl2x_game": "Dolby ProLogic 2x Game",
@@ -43,7 +43,7 @@
             "dts_neural_x": "DTS Neural:X",
             "toggle": "Toggle"
         },
-        "yamaha_musiccast__zone_TONE_CONTROL_mode": {
+        "yamaha_musiccast__zone_tone_control_mode": {
             "auto": "Auto",
             "bypass": "Bypass",
             "manual": "Manual"

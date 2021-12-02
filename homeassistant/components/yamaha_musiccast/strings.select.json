@@ -1,21 +1,21 @@
 {
     "state": {
-        "yamaha_musiccast__DIMMER": {
+        "yamaha_musiccast__dimmer": {
             "auto": "Auto"
         },
-        "yamaha_musiccast__zone_SLEEP": {
+        "yamaha_musiccast__zone_sleep": {
             "off": "Off",
             "30 min": "30 Minutes",
             "60 min": "60 Minutes",
             "90 min": "90 Minutes",
             "120 min": "120 Minutes"
         },
-        "yamaha_musiccast__zone_TONE_CONTROL_mode": {
+        "yamaha_musiccast__zone_tone_control_mode": {
             "manual": "Manual",
             "auto": "Auto",
             "bypass": "Bypass"
         },
-        "yamaha_musiccast__zone_SURR_DECODER_TYPE": {
+        "yamaha_musiccast__zone_surr_decoder_type": {
             "toggle": "Toggle",
             "auto": "Auto",
             "dolby_pl": "Dolby ProLogic",
@@ -27,21 +27,21 @@
             "dts_neo6_cinema": "DTS Neo:6 Cinema",
             "dts_neo6_music": "DTS Neo:6 Music"
         },
-        "yamaha_musiccast__zone_EQUALIZER_mode": {
+        "yamaha_musiccast__zone_equalizer_mode": {
             "manual": "Manual",
             "auto": "Auto",
             "bypass": "Bypass"
         },
-        "yamaha_musiccast__zone_LINK_AUDIO_QUALITY": {
+        "yamaha_musiccast__zone_link_audio_quality": {
             "compressed": "Compressed",
             "uncompressed": "Uncompressed"
         },
-        "yamaha_musiccast__zone_LINK_CONTROL": {
+        "yamaha_musiccast__zone_link_control": {
             "standard": "Standard",
             "speed": "Speed",
             "stability": "Stability"
         },
-        "yamaha_musiccast__zone_LINK_AUDIO_DELAY": {
+        "yamaha_musiccast__zone_link_audio_delay": {
             "audio_sync_on": "Audio Synchronization On",
             "audio_sync_off": "Audio Synchronization Off",
             "balanced": "Balanced",
