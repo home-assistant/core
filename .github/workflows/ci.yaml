@@ -681,7 +681,7 @@ jobs:
             -p no:sugar \
             tests
       - name: Run pytest (partially)
-        if: needs.changes.outputs.test_full_suite == 'false'
+        if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version != '3.8'
         run: |
           . venv/bin/activate
           python3 -X dev -m pytest \
@@ -692,6 +692,20 @@ jobs:
             --cov homeassistant.components.${{ matrix.group }} \
             --cov-report=xml \
             --cov-report=term-missing \
+            -o console_output_style=count \
+            --durations=0 \
+            --durations-min=1 \
+            -p no:sugar \
+            tests/components/${{ matrix.group }}
+      - name: Run pytest (partially); no coverage
+        if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version == '3.8'
+        run: |
+          . venv/bin/activate
+          python3 -X dev -m pytest \
+            -qq \
+            --timeout=9 \
+            --durations=10 \
+            -n auto \
             -o console_output_style=count \
             --durations=0 \
             --durations-min=1 \
