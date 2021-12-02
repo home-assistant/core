@@ -1081,3 +1081,16 @@ def test_entity_registry_items():
     assert entities.get_entry(entry1.id) is None
     assert entities.get_entity_id(("test", "hue", "2345")) is None
     assert entities.get_entry(entry2.id) is None
+
+
+async def test_deprecated_disabled_by_str(hass, registry, caplog):
+    """Test deprecated str use of disabled_by converts to enum and logs a warning."""
+    entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        disabled_by=er.RegistryEntryDisabler.USER.value,
+    )
+
+    assert entry.disabled_by is er.RegistryEntryDisabler.USER
+    assert " str for entity registry disabled_by. This is deprecated " in caplog.text
