@@ -34,6 +34,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.setup import async_start_setup
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.enum import StrEnum
 
 from . import (
     config_validation as cv,
@@ -60,6 +61,41 @@ DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = getLogger(__name__)
+
+
+class Platform(StrEnum):
+    """Available platforms."""
+
+    AIR_QUALITY = "air_quality"
+    ALARM_CONTROL_PANEL = "alarm_control_panel"
+    BINARY_SENSOR = "binary_sensor"
+    BUTTON = "button"
+    CALENDAR = "calendar"
+    CAMERA = "camera"
+    CLIMATE = "climate"
+    COVER = "cover"
+    DEVICE_TRACKER = "device_tracker"
+    FAN = "fan"
+    GEO_LOCATION = "geo_location"
+    HUMIDIFIER = "humidifier"
+    IMAGE_PROCESSING = "image_processing"
+    LIGHT = "light"
+    LOCK = "lock"
+    MAILBOX = "mailbox"
+    MEDIA_PLAYER = "media_player"
+    NOTIFY = "notify"
+    NUMBER = "number"
+    REMOTE = "remote"
+    SCENE = "scene"
+    SELECT = "select"
+    SENSOR = "sensor"
+    SIREN = "siren"
+    SST = "sst"
+    SWITCH = "switch"
+    TTS = "tts"
+    VACUUM = "vacuum"
+    WATER_HEATER = "water_heater"
+    WEATHER = "weather"
 
 
 class AddEntitiesCallback(Protocol):
